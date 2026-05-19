@@ -103,4 +103,62 @@ describe("applyAssetChange", () => {
     // Full rollback: restore storage + disk
     expect(reconciler.rollback).toHaveBeenCalledTimes(1);
   });
+
+  it("should skip upload and upsert when all files are unchanged", async () => {
+    const data = Buffer.from("unchanged content");
+    const reconciler = makeReconciler() as any;
+    const assetService = makeAssetService();
+
+    // prevAssets already has the same hash as what op returns
+    assetService.findByFunction.mockResolvedValueOnce([
+      {filename: "index.ts", key: "functions/test-fn/index.ts", hash: hashBuffer(data)}
+    ]);
+
+    const op = jest.fn().mockResolvedValue([{filename: "index.ts", data}]);
+
+    await applyAssetChange(fn, op, reconciler, assetService, null);
+
+    expect(reconciler.uploadAsset).not.toHaveBeenCalled();
+    expect(assetService.upsertMany).not.toHaveBeenCalled();
+  });
+
+  it("should not call snapshotAssets when op throws", async () => {
+    const reconciler = makeReconciler() as any;
+    const assetService = makeAssetService();
+    const op = jest.fn().mockRejectedValue(new Error("compile failed"));
+
+    await expect(applyAssetChange(fn, op, reconciler, assetService, null)).rejects.toThrow(
+      "compile failed"
+    );
+
+    expect(reconciler.snapshotAssets).not.toHaveBeenCalled();
+  });
+
+  it("should only upload and snapshot changed files when some are unchanged", async () => {
+    const unchangedData = Buffer.from("same");
+    const changedData = Buffer.from("new content");
+    const reconciler = makeReconciler() as any;
+    const assetService = makeAssetService();
+
+    assetService.findByFunction.mockResolvedValueOnce([
+      {filename: "index.ts", key: "functions/test-fn/index.ts", hash: hashBuffer(unchangedData)},
+      {filename: "package.json", key: "functions/test-fn/package.json", hash: "old-hash"}
+    ]);
+
+    const op = jest.fn().mockResolvedValue([
+      {filename: "index.ts", data: unchangedData},
+      {filename: "package.json", data: changedData}
+    ]);
+
+    await applyAssetChange(fn, op, reconciler, assetService, null);
+
+    // Only the changed file was uploaded
+    expect(reconciler.uploadAsset).toHaveBeenCalledTimes(1);
+    expect(reconciler.uploadAsset).toHaveBeenCalledWith(fn.name, "package.json", changedData);
+
+    // Snapshot was scoped to only the overwritten key
+    expect(reconciler.snapshotAssets).toHaveBeenCalledWith([
+      expect.objectContaining({filename: "package.json"})
+    ]);
+  });
 });
