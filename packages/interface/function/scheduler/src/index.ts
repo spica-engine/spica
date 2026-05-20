@@ -22,6 +22,7 @@ export interface SchedulingOptions {
   debug: boolean;
   logger: boolean;
   invocationLogs: boolean;
+  workerLogOutput?: ("database" | "stdout")[];
   spawnEntrypointPath?: string;
   tsCompilerPath?: string;
   grpcPort?: number;
