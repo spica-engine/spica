@@ -1,7 +1,5 @@
 import {Inject, Injectable, Logger} from "@nestjs/common";
 import {createHash} from "crypto";
-import fs from "fs";
-import path from "path";
 import {ObjectId} from "@spica-server/database";
 import {FunctionAssetService} from "@spica-server/function-services";
 import {
@@ -12,7 +10,7 @@ import {
   FUNCTION_ASSET_STRATEGY,
   FunctionAssetStorageOptions
 } from "@spica-server/interface-function-asset-storage";
-import {Function, Options, FUNCTION_OPTIONS} from "@spica-server/interface-function";
+import {Function} from "@spica-server/interface-function";
 import {FunctionPreparationService} from "./function-preparation.service.js";
 
 export function hashBuffer(buf: Buffer): string {
@@ -36,44 +34,8 @@ export class FunctionAssetReconciler {
     @Inject(FUNCTION_ASSET_STORAGE_OPTIONS)
     private readonly storageOptions: FunctionAssetStorageOptions,
     private readonly assetService: FunctionAssetService,
-    @Inject(FUNCTION_OPTIONS) private readonly options: Options,
     private readonly preparationService: FunctionPreparationService
   ) {}
-
-  private getRuntimeFilePath(fn: Function, filename: FunctionAssetFilename): string {
-    return path.join(this.options.root, fn.name, filename);
-  }
-
-  /**
-   * Read a file from the local runtime disk and return its buffer + sha256 hash.
-   * Returns null if the file does not exist.
-   */
-  async readLocalAsset(
-    fn: Function,
-    filename: FunctionAssetFilename
-  ): Promise<{buffer: Buffer; hash: string} | null> {
-    const filePath = this.getRuntimeFilePath(fn, filename);
-    try {
-      const buffer = await fs.promises.readFile(filePath);
-      return {buffer, hash: hashBuffer(buffer)};
-    } catch (e: any) {
-      if (e.code === "ENOENT") return null;
-      throw e;
-    }
-  }
-
-  /**
-   * Write buffer to runtime disk for a given function + filename.
-   */
-  async writeLocalAsset(
-    fn: Function,
-    filename: FunctionAssetFilename,
-    data: Buffer
-  ): Promise<void> {
-    const filePath = this.getRuntimeFilePath(fn, filename);
-    await fs.promises.mkdir(path.dirname(filePath), {recursive: true});
-    await fs.promises.writeFile(filePath, data);
-  }
 
   /**
    * Upload a local asset to the configured strategy. Returns the metadata record.
@@ -129,7 +91,7 @@ export class FunctionAssetReconciler {
     if (!prevAsset) return;
     try {
       const data = await this.strategy.read(prevAsset.key);
-      await this.writeLocalAsset(fn, prevAsset.filename, data);
+      await this.preparationService.writeFileBuffer(fn, prevAsset.filename, data);
     } catch (e) {
       this.logger.error(
         `[rollback] Could not restore ${fn.name}/${prevAsset.filename}: ${e instanceof Error ? e.message : e}`
@@ -162,10 +124,20 @@ export class FunctionAssetReconciler {
   ): Promise<void> {
     if (!prevAsset) return;
     await this.restoreAsset(fn, prevAsset);
-    const prepareStep =
-      prevAsset.filename === "package.json"
-        ? () => this.preparationService.preparePackageJson(fn)
-        : () => this.preparationService.prepareIndex(fn);
+    let prepareStep: () => Promise<void>;
+    switch (prevAsset.filename) {
+      case "package.json":
+        prepareStep = () => this.preparationService.preparePackageJson(fn);
+        break;
+      case "index.ts":
+      case "index.mjs":
+        prepareStep = () => this.preparationService.prepareIndex(fn);
+        break;
+      default:
+        throw new Error(
+          `[rollback] Unknown asset filename "${prevAsset.filename}" for function ${fn.name}`
+        );
+    }
     await prepareStep().catch(e => {
       this.logger.error(`[rollback] Post-rollback prepare failed for ${fn.name}: ${errMsg(e)}`);
     });
@@ -220,7 +192,8 @@ export class FunctionAssetReconciler {
     let anyChanged = false;
 
     for (const asset of storedAssets) {
-      const local = await this.readLocalAsset(fn, asset.filename);
+      const buf = await this.preparationService.readFileBuffer(fn, asset.filename);
+      const local = buf ? {hash: hashBuffer(buf)} : null;
 
       if (local && local.hash === asset.hash) {
         this.logger.debug(`[reconcile] ${fn.name}/${asset.filename} hash match — skipping`);
@@ -232,7 +205,7 @@ export class FunctionAssetReconciler {
       );
 
       const data = await this.strategy.read(asset.key);
-      await this.writeLocalAsset(fn, asset.filename, data);
+      await this.preparationService.writeFileBuffer(fn, asset.filename, data);
       anyChanged = true;
     }
 

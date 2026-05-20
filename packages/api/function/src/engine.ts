@@ -264,33 +264,32 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   async update(fn: Function, index: string): Promise<void> {
-    const filePath = this.getFunctionBuildEntrypoint(fn);
-    await fs.promises.mkdir(path.dirname(filePath), {recursive: true});
-    return fs.promises.writeFile(filePath, index);
-  }
-
-  private getFilePath(fn: Function, scope: "index" | "dependency" | "tsconfig"): string {
-    switch (scope) {
-      case "dependency":
-        return path.join(this.getFunctionRoot(fn), "package.json");
-      case "tsconfig":
-        return path.join(this.getFunctionRoot(fn), "tsconfig.json");
-      case "index":
-        return this.getFunctionBuildEntrypoint(fn);
-    }
+    return this.preparationService.writeFileBuffer(
+      fn,
+      this.getIndexFilename(fn),
+      Buffer.from(index, "utf-8")
+    );
   }
 
   read(fn: Function, scope: "index" | "dependency" | "tsconfig"): Promise<string> {
-    let filePath = this.getFilePath(fn, scope);
-    return fs.promises
-      .readFile(filePath)
-      .then(b => b.toString())
-      .catch(e => {
-        if (e.code == "ENOENT") {
-          return Promise.reject("Not Found");
-        }
-        throw Error(e);
-      });
+    let filename: string;
+    switch (scope) {
+      case "index":
+        filename = this.getIndexFilename(fn);
+        break;
+      case "dependency":
+        filename = "package.json";
+        break;
+      case "tsconfig":
+        filename = "tsconfig.json";
+        break;
+      default:
+        throw new Error(`Unknown read scope: "${scope}"`);
+    }
+    return this.preparationService.readFileBuffer(fn, filename).then(buf => {
+      if (buf === null) return Promise.reject("Not Found");
+      return buf.toString();
+    });
   }
 
   getSchema(name: string): Promise<JSONSchema7 | null> {

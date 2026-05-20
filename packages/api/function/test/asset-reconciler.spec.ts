@@ -10,11 +10,7 @@ import {
   FUNCTION_ASSET_STRATEGY,
   FUNCTION_ASSET_STORAGE_OPTIONS
 } from "@spica-server/interface-function-asset-storage";
-import {FUNCTION_OPTIONS} from "@spica-server/interface-function";
 import {FunctionPreparationService} from "@spica-server/function/src/function-preparation.service";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
 
 describe("hashBuffer", () => {
   it("should return a hex sha256 hash", () => {
@@ -37,7 +33,6 @@ describe("assetKey", () => {
 describe("FunctionAssetReconciler", () => {
   let module: TestingModule;
   let reconciler: FunctionAssetReconciler;
-  let tmpDir: string;
 
   const mockStrategy = {
     read: jest.fn(),
@@ -54,25 +49,23 @@ describe("FunctionAssetReconciler", () => {
   };
 
   const mockPreparationService = {
-    prepare: jest.fn().mockResolvedValue(undefined)
+    prepare: jest.fn().mockResolvedValue(undefined),
+    readFileBuffer: jest.fn().mockResolvedValue(null),
+    writeFileBuffer: jest.fn().mockResolvedValue(undefined),
+    prepareIndex: jest.fn().mockResolvedValue(undefined),
+    preparePackageJson: jest.fn().mockResolvedValue(undefined)
   };
 
   beforeEach(async () => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "reconciler-test-"));
-
     module = await Test.createTestingModule({
       providers: [
         FunctionAssetReconciler,
         {provide: FUNCTION_ASSET_STRATEGY, useValue: mockStrategy},
         {
           provide: FUNCTION_ASSET_STORAGE_OPTIONS,
-          useValue: {strategy: "default", defaultPath: tmpDir}
+          useValue: {strategy: "default", defaultPath: "/tmp"}
         },
         {provide: FunctionAssetService, useValue: mockAssetService},
-        {
-          provide: FUNCTION_OPTIONS,
-          useValue: {root: tmpDir, timeout: 60, outDir: ".build"}
-        },
         {provide: FunctionPreparationService, useValue: mockPreparationService}
       ]
     }).compile();
@@ -82,7 +75,6 @@ describe("FunctionAssetReconciler", () => {
   });
 
   afterEach(async () => {
-    await fs.promises.rm(tmpDir, {recursive: true, force: true});
     await module.close();
   });
 
@@ -90,36 +82,6 @@ describe("FunctionAssetReconciler", () => {
     _id: new ObjectId(),
     name,
     language: "typescript" as any
-  });
-
-  describe("readLocalAsset", () => {
-    it("should return buffer + hash when file exists", async () => {
-      const fn = makeFn();
-      const dir = path.join(tmpDir, fn.name);
-      await fs.promises.mkdir(dir, {recursive: true});
-      await fs.promises.writeFile(path.join(dir, "index.ts"), "code");
-
-      const result = await reconciler.readLocalAsset(fn as any, "index.ts");
-      expect(result).not.toBeNull();
-      expect(result!.buffer.toString()).toBe("code");
-      expect(result!.hash).toBe(hashBuffer(Buffer.from("code")));
-    });
-
-    it("should return null when file does not exist", async () => {
-      const fn = makeFn();
-      const result = await reconciler.readLocalAsset(fn as any, "index.ts");
-      expect(result).toBeNull();
-    });
-  });
-
-  describe("writeLocalAsset", () => {
-    it("should create parent directories and write file", async () => {
-      const fn = makeFn("write-fn");
-      await reconciler.writeLocalAsset(fn as any, "index.ts", Buffer.from("written"));
-
-      const onDisk = await fs.promises.readFile(path.join(tmpDir, fn.name, "index.ts"), "utf-8");
-      expect(onDisk).toBe("written");
-    });
   });
 
   describe("reconcileFunction", () => {
@@ -136,11 +98,7 @@ describe("FunctionAssetReconciler", () => {
       const data = Buffer.from("matching");
       const hash = hashBuffer(data);
 
-      // Write file with matching hash to disk
-      const dir = path.join(tmpDir, fn.name);
-      await fs.promises.mkdir(dir, {recursive: true});
-      await fs.promises.writeFile(path.join(dir, "index.ts"), data);
-
+      mockPreparationService.readFileBuffer.mockResolvedValueOnce(data);
       mockAssetService.findByFunction.mockResolvedValueOnce([
         {filename: "index.ts", key: "functions/x/index.ts", hash, strategy: "default"}
       ]);
@@ -153,13 +111,10 @@ describe("FunctionAssetReconciler", () => {
     it("should download and restore when hash mismatches", async () => {
       const fn = makeFn();
       const remoteData = Buffer.from("remote-content");
+      const staleData = Buffer.from("stale");
+
+      mockPreparationService.readFileBuffer.mockResolvedValueOnce(staleData);
       mockStrategy.read.mockResolvedValueOnce(remoteData);
-
-      // Put a different file on disk
-      const dir = path.join(tmpDir, fn.name);
-      await fs.promises.mkdir(dir, {recursive: true});
-      await fs.promises.writeFile(path.join(dir, "index.ts"), "stale");
-
       mockAssetService.findByFunction.mockResolvedValueOnce([
         {
           filename: "index.ts",
@@ -171,17 +126,20 @@ describe("FunctionAssetReconciler", () => {
 
       await reconciler.reconcileFunction(fn as any);
       expect(mockStrategy.read).toHaveBeenCalledWith("functions/x/index.ts");
+      expect(mockPreparationService.writeFileBuffer).toHaveBeenCalledWith(
+        fn,
+        "index.ts",
+        remoteData
+      );
       expect(mockPreparationService.prepare).toHaveBeenCalledWith(fn);
-
-      const onDisk = await fs.promises.readFile(path.join(tmpDir, fn.name, "index.ts"));
-      expect(onDisk).toEqual(remoteData);
     });
 
     it("should download when file is missing locally", async () => {
       const fn = makeFn();
       const remoteData = Buffer.from("new-content");
-      mockStrategy.read.mockResolvedValueOnce(remoteData);
 
+      mockPreparationService.readFileBuffer.mockResolvedValueOnce(null);
+      mockStrategy.read.mockResolvedValueOnce(remoteData);
       mockAssetService.findByFunction.mockResolvedValueOnce([
         {
           filename: "index.ts",
@@ -192,10 +150,12 @@ describe("FunctionAssetReconciler", () => {
       ]);
 
       await reconciler.reconcileFunction(fn as any);
+      expect(mockPreparationService.writeFileBuffer).toHaveBeenCalledWith(
+        fn,
+        "index.ts",
+        remoteData
+      );
       expect(mockPreparationService.prepare).toHaveBeenCalledWith(fn);
-
-      const onDisk = await fs.promises.readFile(path.join(tmpDir, fn.name, "index.ts"));
-      expect(onDisk).toEqual(remoteData);
     });
   });
 
@@ -203,6 +163,8 @@ describe("FunctionAssetReconciler", () => {
     it("should call prepare for functions that changed", async () => {
       const fn = makeFn();
       const remoteData = Buffer.from("data");
+
+      mockPreparationService.readFileBuffer.mockResolvedValueOnce(null);
       mockStrategy.read.mockResolvedValueOnce(remoteData);
       mockAssetService.findByFunction.mockResolvedValueOnce([
         {
@@ -226,71 +188,110 @@ describe("FunctionAssetReconciler", () => {
     });
   });
 
-  describe("snapshotAssets", () => {
-    it("should return a map of key to buffer for each asset in storage", async () => {
+  describe("snapshotAsset", () => {
+    it("should return the buffer for an existing asset", async () => {
       const buf = Buffer.from("snapshot-content");
       mockStrategy.read.mockResolvedValueOnce(buf);
 
-      const result = await reconciler.snapshotAssets([{key: "functions/my-fn/index.ts"}]);
+      const result = await reconciler.snapshotAsset({key: "functions/my-fn/index.ts"});
 
-      expect(result.get("functions/my-fn/index.ts")).toEqual(buf);
+      expect(result).toEqual(buf);
     });
 
-    it("should silently skip keys missing from storage", async () => {
+    it("should return null when key is missing from storage", async () => {
       mockStrategy.read.mockRejectedValueOnce(new Error("not found"));
 
-      const result = await reconciler.snapshotAssets([{key: "functions/my-fn/index.ts"}]);
+      const result = await reconciler.snapshotAsset({key: "functions/my-fn/index.ts"});
 
-      expect(result.size).toBe(0);
+      expect(result).toBeNull();
+    });
+
+    it("should return null when prevAsset is null", async () => {
+      const result = await reconciler.snapshotAsset(null);
+
+      expect(result).toBeNull();
+      expect(mockStrategy.read).not.toHaveBeenCalled();
     });
   });
 
   describe("rollbackDisk", () => {
-    it("should prepare after restoring when prevAssets is non-empty", async () => {
+    it("should restore and call prepareIndex for index.ts", async () => {
       const fn = makeFn();
-      mockStrategy.read.mockResolvedValue(Buffer.from("old"));
+      const oldBuf = Buffer.from("old");
+      mockStrategy.read.mockResolvedValueOnce(oldBuf);
 
-      await reconciler.rollbackDisk(fn as any, [
-        {key: "functions/my-fn/index.ts", filename: "index.ts" as any}
-      ]);
+      await reconciler.rollbackDisk(fn as any, {
+        key: "functions/my-fn/index.ts",
+        filename: "index.ts"
+      });
 
-      expect(mockPreparationService.prepare).toHaveBeenCalledWith(fn);
+      expect(mockPreparationService.writeFileBuffer).toHaveBeenCalledWith(fn, "index.ts", oldBuf);
+      expect(mockPreparationService.prepareIndex).toHaveBeenCalledWith(fn);
     });
 
-    it("should skip prepare when prevAssets is empty", async () => {
+    it("should restore and call prepareIndex for index.mjs", async () => {
+      const fn = makeFn();
+      const oldBuf = Buffer.from("old");
+      mockStrategy.read.mockResolvedValueOnce(oldBuf);
+
+      await reconciler.rollbackDisk(fn as any, {
+        key: "functions/my-fn/index.mjs",
+        filename: "index.mjs"
+      });
+
+      expect(mockPreparationService.prepareIndex).toHaveBeenCalledWith(fn);
+    });
+
+    it("should restore and call preparePackageJson for package.json", async () => {
+      const fn = makeFn();
+      const oldBuf = Buffer.from("{}");
+      mockStrategy.read.mockResolvedValueOnce(oldBuf);
+
+      await reconciler.rollbackDisk(fn as any, {
+        key: "functions/my-fn/package.json",
+        filename: "package.json"
+      });
+
+      expect(mockPreparationService.writeFileBuffer).toHaveBeenCalledWith(
+        fn,
+        "package.json",
+        oldBuf
+      );
+      expect(mockPreparationService.preparePackageJson).toHaveBeenCalledWith(fn);
+    });
+
+    it("should skip prepare when prevAsset is null", async () => {
       const fn = makeFn();
 
-      await reconciler.rollbackDisk(fn as any, []);
+      await reconciler.rollbackDisk(fn as any, null);
 
-      expect(mockPreparationService.prepare).not.toHaveBeenCalled();
+      expect(mockPreparationService.prepareIndex).not.toHaveBeenCalled();
+      expect(mockPreparationService.preparePackageJson).not.toHaveBeenCalled();
     });
   });
 
   describe("rollback", () => {
-    it("should re-upload old buffer for pre-existing storage keys", async () => {
+    it("should re-upload old buffer for pre-existing storage key", async () => {
       const fn = makeFn();
       const oldBuf = Buffer.from("old-code");
-      const prevBuffers = new Map([["functions/my-fn/index.ts", oldBuf]]);
 
-      // restoreAssets (called by rollbackDisk) reads from storage
       mockStrategy.read.mockResolvedValue(oldBuf);
       mockStrategy.write.mockResolvedValue(undefined);
 
       await reconciler.rollback(
         fn as any,
-        [{key: "functions/my-fn/index.ts", filename: "index.ts" as any}],
-        ["functions/my-fn/index.ts"],
-        prevBuffers
+        {key: "functions/my-fn/index.ts", filename: "index.ts"},
+        "functions/my-fn/index.ts",
+        oldBuf
       );
 
       expect(mockStrategy.write).toHaveBeenCalledWith("functions/my-fn/index.ts", oldBuf);
     });
 
-    it("should delete new storage keys that were not in prevBuffers", async () => {
+    it("should delete the uploaded key when prevBuffer is null (new file)", async () => {
       const fn = makeFn();
-      const prevBuffers = new Map<string, Buffer>(); // empty — key was new
 
-      await reconciler.rollback(fn as any, [], ["functions/my-fn/index.ts"], prevBuffers);
+      await reconciler.rollback(fn as any, null, "functions/my-fn/index.ts", null);
 
       expect(mockStrategy.delete).toHaveBeenCalledWith("functions/my-fn/index.ts");
     });
