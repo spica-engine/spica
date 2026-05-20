@@ -122,7 +122,12 @@ export async function findByName<
 
 export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   await insertWithChanges(fs, engine, fn);
-  await engine.createFunction(fn);
+  await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
+    await engine.createFunction(fn);
+    const pkgContent = await engine.read(fn, "dependency");
+    return Buffer.from(pkgContent, "utf-8");
+  });
+
   return fn;
 }
 
@@ -173,6 +178,7 @@ export async function remove(
   engine.categorizeChanges(changes);
 
   await engine.deleteFunction(fn);
+  await engine.removeAssets(fn as Function & {_id: any});
 }
 
 export namespace index {
@@ -204,14 +210,16 @@ export namespace index {
       throw new NotFoundException("Cannot find function.");
     }
 
-    await engine.update(fn, index);
+    await engine.storeAssets(fn as Function & {_id: any}, engine.getIndexFilename(fn), async () => {
+      await engine.update(fn, index);
+      await engine.compile(fn);
+      return Buffer.from(index, "utf-8");
+    });
 
     const envResolvedFn = await findOneForRuntime(fs, id);
 
     const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated, engine.secretDecryptor);
     engine.categorizeChanges(changes);
-
-    return engine.compile(fn);
   }
 
   export async function filter(
@@ -283,7 +291,11 @@ export namespace dependencies {
     }
 
     if (deps.length) {
-      await engine.installPackages(fn, deps);
+      await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
+        await engine.installPackages(fn, deps as string[]);
+        const pkgContent = await engine.read(fn, "dependency");
+        return Buffer.from(pkgContent, "utf-8");
+      });
     }
   }
 
@@ -317,13 +329,17 @@ export namespace dependencies {
       throw new NotFoundException("Could not find the function.");
     }
 
-    await Promise.all(
-      deps.map(dep =>
-        engine.removePackage(fn, dep).catch(error => {
-          throw new BadRequestException(error.message);
-        })
-      )
-    );
+    await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
+      await Promise.all(
+        deps.map(dep =>
+          engine.removePackage(fn, dep).catch(error => {
+            throw new BadRequestException(error.message);
+          })
+        )
+      );
+      const pkgContent = await engine.read(fn, "dependency");
+      return Buffer.from(pkgContent, "utf-8");
+    });
   }
 }
 

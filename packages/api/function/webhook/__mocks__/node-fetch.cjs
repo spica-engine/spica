@@ -1,4 +1,4 @@
-export default jest.fn(() =>
+const fetchMock = jest.fn(() =>
   Promise.resolve({
     headers: {
       raw: () => {
@@ -10,3 +10,6 @@ export default jest.fn(() =>
     text: () => Promise.resolve("res_body")
   })
 );
+
+module.exports = fetchMock;
+module.exports.default = fetchMock;

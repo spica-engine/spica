@@ -414,6 +414,12 @@
     },
     {
       "path": "./packages/devkit/identity"
+    },
+    {
+      "path": "./packages/interface/function/asset-storage"
+    },
+    {
+      "path": "./packages/api/function/asset-storage"
     }
   ]
 }
