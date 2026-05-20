@@ -6,7 +6,6 @@ import {event} from "@spica-server/function-queue-proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
-import {rimraf} from "rimraf";
 import {FunctionService, FunctionAssetService} from "@spica-server/function-services";
 import {
   CollectionSlug,
@@ -110,19 +109,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       await this.registerTriggers();
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration
-        this.cmdSubs = this.commander.register(
-          this,
-          [
-            this.categorizeChanges,
-            this.createFunction,
-            this.deleteFunction,
-            this.update,
-            this.compile,
-            this.installPackages,
-            this.removePackage
-          ],
-          CommandType.SYNC
-        );
+        this.cmdSubs = this.commander.register(this, [this.categorizeChanges], CommandType.SYNC);
       }
     };
     return startupSequence();
@@ -255,8 +242,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   deleteFunction(fn: Function) {
-    const functionRoot = this.getFunctionRoot(fn);
-    return rimraf(functionRoot);
+    return this.preparationService.deleteFunctionDirectory(fn.name);
   }
 
   compile(fn: Function) {

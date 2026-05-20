@@ -1,6 +1,7 @@
 import {Inject, Injectable} from "@nestjs/common";
 import fs from "fs";
 import path from "path";
+import {rimraf} from "rimraf";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {Function, Options, FUNCTION_OPTIONS} from "@spica-server/interface-function";
 
@@ -47,6 +48,11 @@ export class FunctionPreparationService {
   /** Re-prepare only package.json: reinstall packages without recompiling. */
   preparePackageJson(fn: Function): Promise<void> {
     return this.installPackages(fn, []);
+  }
+
+  /** Delete a function's directory on disk. rimraf is idempotent — safe to call even if already gone. */
+  async deleteFunctionDirectory(name: string): Promise<void> {
+    await rimraf(path.join(this.options.root, name));
   }
 
   /**

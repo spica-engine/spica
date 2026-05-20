@@ -8,6 +8,7 @@ const collectionName = "function_assets";
 export class FunctionAssetService extends BaseCollection<FunctionAsset>(collectionName) {
   constructor(database: DatabaseService) {
     super(database, {
+      collectionOptions: {changeStreamPreAndPostImages: {enabled: true}},
       afterInit: () =>
         Promise.all([
           this.createIndex({functionId: 1, filename: 1}, {unique: true}),

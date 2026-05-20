@@ -122,15 +122,11 @@ export async function findByName<
 
 export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   await insertWithChanges(fs, engine, fn);
-  await engine.createFunction(fn);
-
-  if (fn._id) {
-    await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
-      await engine.createFunction(fn);
-      const pkgContent = await engine.read(fn, "dependency").catch(() => "{}");
-      return Buffer.from(pkgContent, "utf-8");
-    });
-  }
+  await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
+    await engine.createFunction(fn);
+    const pkgContent = await engine.read(fn, "dependency");
+    return Buffer.from(pkgContent, "utf-8");
+  });
 
   return fn;
 }

@@ -23,14 +23,27 @@ let mockAssetService: {watch: jest.Mock};
 let mockFunctionService: {findOne: jest.Mock};
 let mockReconciler: {reconcileFunction: jest.Mock};
 let mockTracker: {isSelfWrite: jest.Mock};
+let mockPreparationService: {deleteFunctionDirectory: jest.Mock};
 
 const buildWatcher = () =>
   new FunctionAssetWatcher(
     mockAssetService as any,
     mockFunctionService as any,
     mockReconciler as any,
-    mockTracker as any
+    mockTracker as any,
+    mockPreparationService as any
   );
+
+const makeDeleteChange = (key = "functions/my-function/index.ts") => ({
+  operationType: "delete",
+  documentKey: {_id: "507f1f77bcf86cd799439011"},
+  fullDocumentBeforeChange: {
+    functionId: {toHexString: () => "507f1f77bcf86cd799439011"},
+    filename: "index.ts",
+    hash: "abc123",
+    key
+  }
+});
 
 beforeEach(() => {
   changeSubject = new Subject();
@@ -49,6 +62,10 @@ beforeEach(() => {
 
   mockTracker = {
     isSelfWrite: jest.fn().mockReturnValue(false)
+  };
+
+  mockPreparationService = {
+    deleteFunctionDirectory: jest.fn().mockResolvedValue(undefined)
   };
 });
 
@@ -163,17 +180,66 @@ describe("FunctionAssetWatcher — edge cases", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Delete event handling
+// ---------------------------------------------------------------------------
+
+describe("FunctionAssetWatcher — delete events", () => {
+  it("should call deleteFunctionDirectory with the function name parsed from the key", async () => {
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+
+    changeSubject.next(makeDeleteChange("functions/my-function/index.ts"));
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(mockPreparationService.deleteFunctionDirectory).toHaveBeenCalledWith("my-function");
+
+    watcher.onModuleDestroy();
+  });
+
+  it("should NOT call reconcileFunction for a delete event", async () => {
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+
+    changeSubject.next(makeDeleteChange());
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(mockReconciler.reconcileFunction).not.toHaveBeenCalled();
+
+    watcher.onModuleDestroy();
+  });
+
+  it("should keep the subscription alive when deleteFunctionDirectory throws", async () => {
+    mockPreparationService.deleteFunctionDirectory
+      .mockRejectedValueOnce(new Error("rimraf failed"))
+      .mockResolvedValue(undefined);
+
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+
+    changeSubject.next(makeDeleteChange());
+    await new Promise(r => setTimeout(r, 0));
+
+    changeSubject.next(makeDeleteChange());
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(mockPreparationService.deleteFunctionDirectory).toHaveBeenCalledTimes(2);
+
+    watcher.onModuleDestroy();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Lifecycle
 // ---------------------------------------------------------------------------
 
 describe("FunctionAssetWatcher — lifecycle", () => {
-  it("should subscribe to assetService.watch on onModuleInit", () => {
+  it("should subscribe to assetService.watch on onModuleInit with correct pipeline and options", () => {
     const watcher = buildWatcher();
     watcher.onModuleInit();
 
     expect(mockAssetService.watch).toHaveBeenCalledTimes(1);
+    const [pipeline, options] = mockAssetService.watch.mock.calls[0];
     // Pipeline should filter on the relevant operationTypes
-    const [pipeline] = mockAssetService.watch.mock.calls[0];
     expect(pipeline).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -181,6 +247,8 @@ describe("FunctionAssetWatcher — lifecycle", () => {
         })
       ])
     );
+    // Must request pre-change document so delete events carry fullDocumentBeforeChange
+    expect(options).toMatchObject({fullDocumentBeforeChange: "whenAvailable"});
 
     watcher.onModuleDestroy();
   });
