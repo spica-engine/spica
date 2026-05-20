@@ -109,8 +109,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     const startupSequence = async () => {
-      const fns = await CRUD.findForRuntime(this.fs);
-      await this.reconciler.reconcileAll(fns as any);
+      const fns = await this.fs.find();
+      await this.reconciler.reconcileAll(fns);
       await this.registerTriggers();
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration
