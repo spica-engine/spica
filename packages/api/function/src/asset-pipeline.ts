@@ -46,7 +46,7 @@ export async function applyAssetChange(
     data = await op();
   } catch (e) {
     logger.error(`[asset-pipeline] Op failed for ${fn.name}/${filename}: ${errMsg(e)}. Restoring…`);
-    await reconciler.rollbackDisk(fn, prevAsset ?? null);
+    await reconciler.rollbackDisk(fn, prevAsset);
     throw e;
   }
 
@@ -54,7 +54,7 @@ export async function applyAssetChange(
   if (prevAsset && hashBuffer(data) === prevAsset.hash) return;
 
   // Step 4: snapshot existing storage object so we can restore it on rollback.
-  const prevBuffer = await reconciler.snapshotAsset(prevAsset ?? null);
+  const prevBuffer = await reconciler.snapshotAsset(prevAsset);
 
   // Step 5: upload to storage.
   let record: Awaited<ReturnType<typeof reconciler.uploadAsset>>;
@@ -64,7 +64,7 @@ export async function applyAssetChange(
     logger.error(
       `[asset-pipeline] Upload failed for ${fn.name}/${filename}: ${errMsg(e)}. Restoring…`
     );
-    await reconciler.rollback(fn, prevAsset ?? null, assetKey(fn.name, filename), prevBuffer);
+    await reconciler.rollback(fn, prevAsset, assetKey(fn.name, filename), prevBuffer);
     throw e;
   }
 
@@ -86,7 +86,7 @@ export async function applyAssetChange(
     logger.error(
       `[asset-pipeline] Metadata update failed for ${fn.name}/${filename}: ${errMsg(e)}. Restoring…`
     );
-    await reconciler.rollback(fn, prevAsset ?? null, record.key, prevBuffer);
+    await reconciler.rollback(fn, prevAsset, record.key, prevBuffer);
     throw e;
   }
 }

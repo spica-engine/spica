@@ -189,8 +189,6 @@ export class FunctionAssetReconciler {
       return;
     }
 
-    let anyChanged = false;
-
     for (const asset of storedAssets) {
       const buf = await this.preparationService.readFileBuffer(fn, asset.filename);
       const local = buf ? {hash: hashBuffer(buf)} : null;
@@ -206,11 +204,20 @@ export class FunctionAssetReconciler {
 
       const data = await this.strategy.read(asset.key);
       await this.preparationService.writeFileBuffer(fn, asset.filename, data);
-      anyChanged = true;
-    }
 
-    if (anyChanged) {
-      await this.preparationService.prepare(fn);
+      switch (asset.filename) {
+        case "index.ts":
+        case "index.mjs":
+          await this.preparationService.prepareIndex(fn);
+          break;
+        case "package.json":
+          await this.preparationService.preparePackageJson(fn);
+          break;
+        default:
+          this.logger.warn(
+            `[reconcile] Unknown asset filename "${asset.filename}" for function ${fn.name} — skipping prepare`
+          );
+      }
     }
   }
 
