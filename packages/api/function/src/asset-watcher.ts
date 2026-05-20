@@ -62,7 +62,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
             `[asset-watcher] Peer asset change detected for ${fn.name}/${filename} — reconciling`
           );
 
-          await this.reconciler.reconcileFunction(fn as any);
+          await this.reconciler.reconcileFunction(fn);
         } catch (err) {
           this.logger.error(
             `[asset-watcher] Error handling change: ${err instanceof Error ? err.message : err}`

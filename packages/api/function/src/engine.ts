@@ -17,15 +17,12 @@ import {
   ChangeKind,
   TargetChange,
   SCHEMA,
-  SchemaWithName,
-  EnvRelation,
-  SecretRelation
+  SchemaWithName
 } from "@spica-server/interface-function";
 import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
 
 import {createTargetChanges} from "./change.js";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
-import {FunctionAssetWatcher} from "./asset-watcher.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
 import {applyAssetChange} from "./asset-pipeline.js";
@@ -70,7 +67,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor,
     private reconciler: FunctionAssetReconciler,
     private assetService: FunctionAssetService,
-    private assetWatcher: FunctionAssetWatcher,
     private tracker: SelfWriteTracker,
     private preparationService: FunctionPreparationService
   ) {
