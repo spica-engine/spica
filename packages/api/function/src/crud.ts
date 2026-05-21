@@ -24,6 +24,7 @@ async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn
   let insertedFn;
   try {
     const r = await fs.insertOne(fn);
+    fn._id = r._id;
     insertedFn = await findOneForRuntime(fs, r._id);
   } catch (error: any) {
     if (error && error.code === 11000) {
