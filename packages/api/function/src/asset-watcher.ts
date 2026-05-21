@@ -36,7 +36,10 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
     ];
 
     this.subscription = this.assetService
-      .watch(pipeline, {fullDocumentBeforeChange: "whenAvailable"})
+      .watch(pipeline, {
+        fullDocument: "updateLookup",
+        fullDocumentBeforeChange: "whenAvailable"
+      })
       .subscribe({
         next: async change => {
           try {
