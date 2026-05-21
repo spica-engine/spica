@@ -3,6 +3,8 @@ import {Writable} from "stream";
 export interface StreamOptions {
   eventId: string;
   functionId: string;
+  functionName?: string;
+  handler?: string;
 }
 
 export interface SpawnOptions {

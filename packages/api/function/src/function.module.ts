@@ -64,6 +64,7 @@ export class FunctionModule {
           debug: options.debug,
           logger: options.logger,
           invocationLogs: options.invocationLogs,
+          workerLogOutput: options.workerLogOutput,
           spawnEntrypointPath: options.spawnEntrypointPath,
           tsCompilerPath: options.tsCompilerPath,
           grpcPort: options.grpcPort,
