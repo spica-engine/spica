@@ -43,6 +43,26 @@
     "./src/synchronizer/tsconfig": {
       "types": "./src/synchronizer/tsconfig/index.ts",
       "default": "./dist/src/synchronizer/tsconfig/index.js"
+    },
+    "./src/asset-reconciler": {
+      "types": "./src/asset-reconciler.ts",
+      "default": "./dist/src/asset-reconciler.js"
+    },
+    "./src/asset-pipeline": {
+      "types": "./src/asset-pipeline.ts",
+      "default": "./dist/src/asset-pipeline.js"
+    },
+    "./src/asset-write-tracker": {
+      "types": "./src/asset-write-tracker.ts",
+      "default": "./dist/src/asset-write-tracker.js"
+    },
+    "./src/asset-watcher": {
+      "types": "./src/asset-watcher.ts",
+      "default": "./dist/src/asset-watcher.js"
+    },
+    "./src/function-preparation.service": {
+      "types": "./src/function-preparation.service.ts",
+      "default": "./dist/src/function-preparation.service.js"
     }
   },
   "dependencies": {
@@ -60,6 +80,7 @@
     "@spica-server/database": "workspace:*",
     "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/env_var-services": "workspace:*",
+    "@spica-server/function-asset-storage": "workspace:*",
     "@spica-server/function-log": "workspace:*",
     "@spica-server/function-queue-proto": "workspace:*",
     "@spica-server/function-realtime": "workspace:*",
@@ -70,6 +91,7 @@
     "@spica-server/interface-asset": "workspace:*",
     "@spica-server/interface-env_var": "workspace:*",
     "@spica-server/interface-function": "workspace:*",
+    "@spica-server/interface-function-asset-storage": "workspace:*",
     "@spica-server/interface-function-pkgmanager": "workspace:*",
     "@spica-server/interface-function-scheduler": "workspace:*",
     "@spica-server/interface-replication": "workspace:*",

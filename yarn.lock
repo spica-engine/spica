@@ -8986,6 +8986,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/function-asset-storage@workspace:*, @spica-server/function-asset-storage@workspace:packages/api/function/asset-storage":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-asset-storage@workspace:packages/api/function/asset-storage"
+  dependencies:
+    "@aws-sdk/client-s3": "npm:^3.828.0"
+    "@google-cloud/storage": "npm:^7.15.0"
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/interface-function-asset-storage": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/function-compiler-javascript@workspace:*, @spica-server/function-compiler-javascript@workspace:packages/api/function/compiler/javascript":
   version: 0.0.0-use.local
   resolution: "@spica-server/function-compiler-javascript@workspace:packages/api/function/compiler/javascript"
@@ -9230,6 +9241,7 @@ __metadata:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/env_var-services": "workspace:*"
     "@spica-server/interface-function": "workspace:*"
+    "@spica-server/interface-function-asset-storage": "workspace:*"
     "@spica-server/secret-services": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
@@ -9281,6 +9293,7 @@ __metadata:
     "@spica-server/database-pipeline": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/env_var-services": "workspace:*"
+    "@spica-server/function-asset-storage": "workspace:*"
     "@spica-server/function-log": "workspace:*"
     "@spica-server/function-queue-proto": "workspace:*"
     "@spica-server/function-realtime": "workspace:*"
@@ -9291,6 +9304,7 @@ __metadata:
     "@spica-server/interface-asset": "workspace:*"
     "@spica-server/interface-env_var": "workspace:*"
     "@spica-server/interface-function": "workspace:*"
+    "@spica-server/interface-function-asset-storage": "workspace:*"
     "@spica-server/interface-function-pkgmanager": "workspace:*"
     "@spica-server/interface-function-scheduler": "workspace:*"
     "@spica-server/interface-replication": "workspace:*"
@@ -9440,6 +9454,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/interface-function-asset-storage@workspace:*, @spica-server/interface-function-asset-storage@workspace:packages/interface/function/asset-storage":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-function-asset-storage@workspace:packages/interface/function/asset-storage"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/interface-function-compiler@workspace:*, @spica-server/interface-function-compiler@workspace:packages/interface/function/compiler":
   version: 0.0.0-use.local
   resolution: "@spica-server/interface-function-compiler@workspace:packages/interface/function/compiler"
@@ -9509,6 +9531,7 @@ __metadata:
   dependencies:
     "@spica-server/database": "workspace:*"
     "@spica-server/interface-env_var": "workspace:*"
+    "@spica-server/interface-function-asset-storage": "workspace:*"
     "@spica-server/interface-secret": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
     rxjs: "npm:^7.8.1"

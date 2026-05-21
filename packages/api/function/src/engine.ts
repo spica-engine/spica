@@ -6,8 +6,7 @@ import {event} from "@spica-server/function-queue-proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
-import {rimraf} from "rimraf";
-import {FunctionService} from "@spica-server/function-services";
+import {FunctionService, FunctionAssetService} from "@spica-server/function-services";
 import {
   CollectionSlug,
   Options,
@@ -17,13 +16,16 @@ import {
   ChangeKind,
   TargetChange,
   SCHEMA,
-  SchemaWithName,
-  EnvRelation,
-  SecretRelation
+  SchemaWithName
 } from "@spica-server/interface-function";
 import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
 
 import {createTargetChanges} from "./change.js";
+import {FunctionAssetReconciler} from "./asset-reconciler.js";
+import {SelfWriteTracker} from "./asset-write-tracker.js";
+import {FunctionPreparationService} from "./function-preparation.service.js";
+import {applyAssetChange} from "./asset-pipeline.js";
+import {FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
 
 import HttpSchema from "./schema/http.json" with {type: "json"};
 import ScheduleSchema from "./schema/schedule.json" with {type: "json"};
@@ -61,7 +63,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug,
-    @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor
+    @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor,
+    private reconciler: FunctionAssetReconciler,
+    private assetService: FunctionAssetService,
+    private tracker: SelfWriteTracker,
+    private preparationService: FunctionPreparationService
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
@@ -97,24 +103,16 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleInit() {
-    this.registerTriggers().then(() => {
+    const startupSequence = async () => {
+      const fns = await this.fs.find();
+      await this.reconciler.reconcileAll(fns);
+      await this.registerTriggers();
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration
-        this.cmdSubs = this.commander.register(
-          this,
-          [
-            this.categorizeChanges,
-            this.createFunction,
-            this.deleteFunction,
-            this.update,
-            this.compile,
-            this.installPackages,
-            this.removePackage
-          ],
-          CommandType.SYNC
-        );
+        this.cmdSubs = this.commander.register(this, [this.categorizeChanges], CommandType.SYNC);
       }
-    });
+    };
+    return startupSequence();
   }
 
   registerTriggers() {
@@ -170,12 +168,52 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return path.join(this.options.root, fn.name);
   }
 
+  /**
+   * Run npm install + compile for a function. Used by reconciler after restoring
+   * assets from storage, and by CRUD pipeline after writing new files.
+   */
+  async prepareFunction(fn: Function): Promise<void> {
+    return this.preparationService.prepare(fn);
+  }
+
+  /**
+   * Store a single asset file for a function via the configured strategy.
+   *
+   * @param fn        The function whose asset is being changed.
+   * @param filename  The asset filename (e.g. "index.ts" or "package.json").
+   * @param op        Callback that performs all disk writes / installs / compiles
+   *                  and returns the new file buffer to upload.
+   */
+  async storeAssets(
+    fn: Function & {_id: ObjectId},
+    filename: FunctionAssetFilename,
+    op: () => Promise<Buffer>
+  ): Promise<void> {
+    return applyAssetChange(fn, filename, op, this.reconciler, this.assetService, this.tracker);
+  }
+
+  /**
+   * Returns the asset storage filename (e.g. "index.ts" or "index.mjs") for
+   * the function's build entrypoint, based on its language configuration.
+   */
+  getIndexFilename(fn: Function): FunctionAssetFilename {
+    return this.getFunctionLanguage(fn).description.entrypoints.build as FunctionAssetFilename;
+  }
+
+  /**
+   * Delete all stored assets for a function from both storage and metadata.
+   * No-op when asset storage is not configured.
+   */
+  async removeAssets(fn: Function & {_id: ObjectId}): Promise<void> {
+    return this.reconciler.deleteAll(fn);
+  }
+
   getPackages(fn: Function): Promise<Package[]> {
     return this.getDefaultPackageManager().ls(this.getFunctionRoot(fn));
   }
 
   installPackages(fn: Function, qualifiedNames: string | string[]): Promise<void> {
-    return this.getDefaultPackageManager().install(this.getFunctionRoot(fn), qualifiedNames);
+    return this.preparationService.installPackages(fn, qualifiedNames);
   }
 
   removePackage(fn: Function, name: string): Promise<void> {
@@ -204,48 +242,40 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   deleteFunction(fn: Function) {
-    const functionRoot = this.getFunctionRoot(fn);
-    return rimraf(functionRoot);
+    return this.preparationService.deleteFunctionDirectory(fn.name);
   }
 
   compile(fn: Function) {
-    const language = this.getFunctionLanguage(fn);
-    const outDirRelative = path.join(".", this.options.outDir);
-    return language.compile({
-      cwd: this.getFunctionRoot(fn),
-      outDir: outDirRelative,
-      entrypoints: language.description.entrypoints
-    });
+    return this.preparationService.compile(fn);
   }
 
   async update(fn: Function, index: string): Promise<void> {
-    const filePath = this.getFunctionBuildEntrypoint(fn);
-    await fs.promises.mkdir(path.dirname(filePath), {recursive: true});
-    return fs.promises.writeFile(filePath, index);
-  }
-
-  private getFilePath(fn: Function, scope: "index" | "dependency" | "tsconfig"): string {
-    switch (scope) {
-      case "dependency":
-        return path.join(this.getFunctionRoot(fn), "package.json");
-      case "tsconfig":
-        return path.join(this.getFunctionRoot(fn), "tsconfig.json");
-      case "index":
-        return this.getFunctionBuildEntrypoint(fn);
-    }
+    return this.preparationService.writeFileBuffer(
+      fn,
+      this.getIndexFilename(fn),
+      Buffer.from(index, "utf-8")
+    );
   }
 
   read(fn: Function, scope: "index" | "dependency" | "tsconfig"): Promise<string> {
-    let filePath = this.getFilePath(fn, scope);
-    return fs.promises
-      .readFile(filePath)
-      .then(b => b.toString())
-      .catch(e => {
-        if (e.code == "ENOENT") {
-          return Promise.reject("Not Found");
-        }
-        throw Error(e);
-      });
+    let filename: string;
+    switch (scope) {
+      case "index":
+        filename = this.getIndexFilename(fn);
+        break;
+      case "dependency":
+        filename = "package.json";
+        break;
+      case "tsconfig":
+        filename = "tsconfig.json";
+        break;
+      default:
+        throw new Error(`Unknown read scope: "${scope}"`);
+    }
+    return this.preparationService.readFileBuffer(fn, filename).then(buf => {
+      if (buf === null) return Promise.reject("Not Found");
+      return buf.toString();
+    });
   }
 
   getSchema(name: string): Promise<JSONSchema7 | null> {

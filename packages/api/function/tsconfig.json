@@ -1,10 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts",
-    "src/**/*.json"
-  ],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
       "path": "../status"
@@ -43,6 +39,9 @@
       "path": "../../interface/function"
     },
     {
+      "path": "../../interface/function/asset-storage"
+    },
+    {
       "path": "../../interface/env_var"
     },
     {
@@ -56,6 +55,9 @@
     },
     {
       "path": "services"
+    },
+    {
+      "path": "asset-storage"
     },
     {
       "path": "scheduler"

@@ -1,0 +1,5 @@
+{
+  "name": "interface/function/asset-storage",
+  "sourceRoot": "packages/interface/function/asset-storage/src",
+  "projectType": "library"
+}

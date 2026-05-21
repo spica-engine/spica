@@ -16,13 +16,13 @@ import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {registerAssetHandlers} from "./asset.js";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface-asset";
-import {
-  Function,
-  FunctionOptions,
-  FUNCTION_OPTIONS,
-  FunctionWithContent
-} from "@spica-server/interface-function";
+import {FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface-function";
 import {FunctionRealtimeModule} from "@spica-server/function-realtime";
+import {FunctionAssetStorageModule} from "@spica-server/function-asset-storage";
+import {FunctionAssetReconciler} from "./asset-reconciler.js";
+import {FunctionAssetWatcher} from "./asset-watcher.js";
+import {SelfWriteTracker} from "./asset-write-tracker.js";
+import {FunctionPreparationService} from "./function-preparation.service.js";
 
 @Module({})
 export class FunctionModule {
@@ -75,8 +75,10 @@ export class FunctionModule {
           logExpireAfterSeconds: options.logExpireAfterSeconds,
           path: options.path,
           entryLimit: options.entryLimit,
-          realtimeLogs: options.realtimeLogs
-        })
+          realtimeLogs: options.realtimeLogs,
+          assetStorage: options.assetStorage
+        }),
+        FunctionAssetStorageModule.forRoot(options.assetStorage)
       ],
       controllers: [FunctionController],
       providers: [
@@ -98,9 +100,14 @@ export class FunctionModule {
         {
           provide: Http,
           useClass: Axios
-        }
+        },
+        FunctionAssetReconciler,
+        FunctionAssetWatcher,
+        SelfWriteTracker,
+        FunctionPreparationService
       ]
     };
+
     if (options.realtime) {
       module.imports.push(FunctionRealtimeModule.register());
     }
