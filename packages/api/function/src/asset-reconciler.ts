@@ -181,6 +181,10 @@ export class FunctionAssetReconciler {
    * Reconcile a single function: compare local file hashes to stored metadata.
    * Downloads and restores any file whose hash doesn't match (or is missing),
    * then re-prepares the function if any file changed.
+   *
+   * All changed assets are written to disk first, then prepare steps run in
+   * deterministic order (package.json install before index compile) and each
+   * step runs at most once regardless of how many assets changed.
    */
   async reconcileFunction(fn: Function & {_id: ObjectId}): Promise<void> {
     const storedAssets = await this.assetService.findByFunction(fn._id);
@@ -189,6 +193,9 @@ export class FunctionAssetReconciler {
       return;
     }
 
+    const changedFilenames: FunctionAssetFilename[] = [];
+
+    // Phase 1: restore all changed assets to disk before running any prepare step.
     for (const asset of storedAssets) {
       const buf = await this.preparationService.readFileBuffer(fn, asset.filename);
       const local = buf ? {hash: hashBuffer(buf)} : null;
@@ -204,20 +211,29 @@ export class FunctionAssetReconciler {
 
       const data = await this.strategy.read(asset.key);
       await this.preparationService.writeFileBuffer(fn, asset.filename, data);
+      changedFilenames.push(asset.filename);
+    }
 
-      switch (asset.filename) {
-        case "index.ts":
-        case "index.mjs":
-          await this.preparationService.prepareIndex(fn);
-          break;
-        case "package.json":
-          await this.preparationService.preparePackageJson(fn);
-          break;
-        default:
-          this.logger.warn(
-            `[reconcile] Unknown asset filename "${asset.filename}" for function ${fn.name} — skipping prepare`
-          );
-      }
+    if (changedFilenames.length === 0) return;
+
+    // Phase 2: run prepare steps in deterministic order — install before compile.
+    // Each step runs at most once even if multiple assets changed.
+    const needsInstall = changedFilenames.includes("package.json");
+    const needsCompile = changedFilenames.some(f => f === "index.ts" || f === "index.mjs");
+    const unknownFilenames = changedFilenames.filter(
+      f => f !== "package.json" && f !== "index.ts" && f !== "index.mjs"
+    );
+
+    if (needsInstall) {
+      await this.preparationService.preparePackageJson(fn);
+    }
+    if (needsCompile) {
+      await this.preparationService.prepareIndex(fn);
+    }
+    for (const filename of unknownFilenames) {
+      this.logger.warn(
+        `[reconcile] Unknown asset filename "${filename}" for function ${fn.name} — skipping prepare`
+      );
     }
   }
 
