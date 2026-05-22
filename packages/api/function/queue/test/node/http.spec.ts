@@ -22,7 +22,7 @@ describe("Http", () => {
       param.value = "test";
       req.params = [param];
       const request = new Request(req);
-      expect(request.params.get("test")).toBe("test");
+      expect(request.params.test).toBe("test");
     });
 
     it("should set body as UInt8Array", () => {
@@ -58,6 +58,50 @@ describe("Http", () => {
       expect(request.method).toBe(req.method);
       expect(request.path).toBe(req.path);
       expect(request.url).toBe(req.url);
+    });
+
+    it("should look up headers case-insensitively", () => {
+      const req = new Http.Request();
+      const header = new Http.Header();
+      header.key = "Content-Type";
+      header.value = "application/json";
+      req.headers = [header];
+      const request = new Request(req);
+      expect(request.headers.get("content-type")).toBe("application/json");
+      expect(request.headers.get("Content-Type")).toBe("application/json");
+      expect(request.headers.get("CONTENT-TYPE")).toBe("application/json");
+    });
+
+    it("should retrieve headers via req.get()", () => {
+      const req = new Http.Request();
+      const header = new Http.Header();
+      header.key = "authorization";
+      header.value = "Bearer token";
+      req.headers = [header];
+      const request = new Request(req);
+      expect(request.get("Authorization")).toBe("Bearer token");
+      expect(request.get("authorization")).toBe("Bearer token");
+    });
+
+    it("should parse body when Content-Type header is mixed case", () => {
+      const header = new Http.Header();
+      header.key = "Content-Type";
+      header.value = "application/json";
+      const req = new Http.Request();
+      req.body = new Uint8Array(Buffer.from(JSON.stringify({ok: true})));
+      req.headers = [header];
+      const request = new Request(req);
+      expect(request.body).toEqual({ok: true});
+    });
+
+    it("should support express-style params property access", () => {
+      const req = new Http.Request();
+      const param = new Http.Param();
+      param.key = "id";
+      param.value = "42";
+      req.params = [param];
+      const request = new Request(req);
+      expect(request.params.id).toBe("42");
     });
   });
 
