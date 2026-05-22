@@ -1,0 +1,40 @@
+.tabBar {
+  height: 40px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 4px;
+  gap: 2px;
+  user-select: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: default;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-accent);
+  transition: background var(--transition-fast), color var(--transition-fast);
+  min-width: 0;
+  flex: 1;
+  max-width: 280px;
+  background: var(--color-accent-subtle);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.tabDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+}

@@ -14,7 +14,7 @@ import {
 } from "../../../../store/api";
 import type {SpicaFunction} from "../../../../store/api/functionApi";
 import SortableNavigationItem from "../SortableNavigationItem";
-import AddFunctionModal from "./AddFunctionModal";
+import FunctionModal from "./FunctionModal";
 import Confirmation from "../../../molecules/confirmation/Confirmation";
 
 const FUNCTION_ITEM_TYPE = "FUNCTION_NAVIGATION_ITEM";
@@ -250,16 +250,18 @@ const FunctionNavigation = () => {
           />
         ))}
       </div>
-      <button className={styles.addButton} onClick={() => setIsModalOpen(true)}>
+      <Button  className={styles.addButton} onClick={() => setIsModalOpen(true)}   color="transparent"
+          variant="text">
         <Icon name="plus" size="sm" />
         Add New Function
-      </button>
+      </Button>
 
-      <AddFunctionModal
+      <FunctionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreated={handleFunctionCreated}
+        onSaved={handleFunctionCreated}
       />
+
       {deletingFunction && (
         <Confirmation
           title="DELETE FUNCTION"

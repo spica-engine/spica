@@ -1,0 +1,7 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}

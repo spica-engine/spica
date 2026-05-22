@@ -277,22 +277,17 @@ const DATE_DEFINITION: FieldDefinition = {
     type: FieldKind.Date
   }),
   getDefaultValue: property => {
-    const defaultDateLabels: {[key: string]: string} = {
-      ":created_at": "Created At",
-      ":updated_at": "Updated At"
-    };
-    return defaultDateLabels[property.default] || "";
+    if (property.default === ":created_at" || property.default === ":updated_at") {
+      return new Date();
+    }
+    return property.default || "";
   },
   getDisplayValue: value => {
     const date = new Date(value);
     return isValidDate(date) ? date : null;
   },
-  getSaveReadyValue: value => {
-    const defaultDateLabels: {[key: string]: string} = {
-      "Created At": ":created_at",
-      "Updated At": ":updated_at"
-    };
-    if (defaultDateLabels[value]) return new Date();
+  getSaveReadyValue: (value, properties) => {
+    if (properties?.default === ":updated_at") return new Date();
     const date = new Date(value);
     return isValidDate(date) ? date : null;
   },
@@ -393,12 +388,21 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
   buildCreationFormApiProperty: form => {
     const base = buildBaseProperty(form);
     const fv = form.fieldValues;
+    const pv = form.presetValues;
     const multipleSelectionTab = form.multipleSelectionTab;
+    // Enum values live in presetValues.enumeratedValues (the chip input in the Presets tab).
+    // fieldValues.chip is checked as a backward-compat fallback.
+    const enumValues =
+      Array.isArray(pv?.enumeratedValues) && pv.enumeratedValues.length
+        ? pv.enumeratedValues
+        : Array.isArray(fv.chip) && fv.chip.length
+          ? fv.chip
+          : undefined;
     return {
       ...base,
       items: {
-        type: multipleSelectionTab?.multipleSelectionType,
-        enum: Array.isArray(fv.chip) && fv.chip.length ? fv.chip : undefined
+        type: multipleSelectionTab?.multipleSelectionType || "string",
+        enum: enumValues
       },
       maxItems: multipleSelectionTab?.maxItems
     };

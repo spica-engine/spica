@@ -107,7 +107,7 @@ export const TEXTAREA_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object(
 export const MULTISELECT_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
   ...BASE_FIELD_CREATION_FORM_SCHEMA,
   multipleSelectionTab: Yup.object({
-    multipleSelectionType: Yup.string().required("Multiple Selection Type is required")
+    multipleSelectionType: Yup.string().optional()
   })
 });
 export const RELATION_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({

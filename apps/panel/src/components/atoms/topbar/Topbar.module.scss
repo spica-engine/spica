@@ -47,3 +47,26 @@
   min-width: 0;
   flex: 1;
 }
+
+.hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-font-primary);
+  }
+
+  @media (max-width: 1280px) {
+    display: flex;
+  }
+}

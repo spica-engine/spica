@@ -41,8 +41,8 @@ function collectBucketIds(
   return collected;
 }
 
-export const useValueProperties = (bucket: BucketType) => {
-  const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers} =
+export const useValueProperties = (bucket: BucketType, initialEntry?: Record<string, any> | null) => {
+  const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers, initRelationValue} =
     useRelationInputHandlers();
 
   const bucketIds = useMemo(
@@ -55,6 +55,20 @@ export const useValueProperties = (bucket: BucketType) => {
       ensureHandlers(b.bucketId, b.bucketId);
     }
   }, [bucketIds, ensureHandlers]);
+
+  // When an existing entry is loaded (edit mode), fetch labels for pre-set relation values
+  useEffect(() => {
+    if (!initialEntry) return;
+    for (const [fieldKey, prop] of Object.entries(bucket.properties || {})) {
+      if ((prop as any).type === "relation" && (prop as any).bucketId) {
+        const relValue = initialEntry[fieldKey];
+        if (relValue !== undefined && relValue !== null && relValue !== "") {
+          initRelationValue((prop as any).bucketId, (prop as any).bucketId, relValue);
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialEntry]);
 
   const valueProperties = useMemo(() => {
     if (bucketIds.length > 0 && !Object.keys(relationStates).length) return {};
