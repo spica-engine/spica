@@ -12,6 +12,7 @@
   "dependencies": {
     "@spica-server/database": "workspace:*",
     "@spica-server/interface-env_var": "workspace:*",
+    "@spica-server/interface-function-asset-storage": "workspace:*",
     "@spica-server/interface-secret": "workspace:*",
     "rxjs": "^7.8.1"
   },

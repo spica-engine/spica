@@ -1,3 +1,5 @@
+import {FunctionAssetStorageOptions} from "@spica-server/interface-function-asset-storage";
+
 export type CollectionSlug = (collName: string) => Promise<string>;
 
 export interface Options {
@@ -11,6 +13,7 @@ export interface FunctionOptions {
   logExpireAfterSeconds: number;
   entryLimit?: number;
   realtimeLogs: boolean;
+  assetStorage: FunctionAssetStorageOptions;
 }
 
 export const FUNCTION_OPTIONS = Symbol.for("FUNCTION_OPTIONS");

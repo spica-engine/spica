@@ -8,6 +8,8 @@ import {SpawnOptions} from "@spica-server/interface-function-runtime";
 export class NodeWorker extends Worker {
   private _process: child_process.ChildProcess;
   private _quit = false;
+  private _attachedStdouts: Writable[] = [];
+  private _attachedStderrs: Writable[] = [];
 
   private get quit() {
     return this._process.killed || this._quit;
@@ -32,11 +34,24 @@ export class NodeWorker extends Worker {
   }
 
   attach(stdout?: Writable, stderr?: Writable): void {
-    this._process.stdout.unpipe();
-    this._process.stderr.unpipe();
-
-    this._process.stdout.pipe(stdout);
-    this._process.stderr.pipe(stderr);
+    if (stdout) {
+      const idx = this._attachedStdouts.indexOf(stdout);
+      if (idx !== -1) {
+        this._process.stdout.unpipe(stdout);
+        this._attachedStdouts.splice(idx, 1);
+      }
+      this._attachedStdouts.push(stdout);
+      this._process.stdout.pipe(stdout);
+    }
+    if (stderr) {
+      const idx = this._attachedStderrs.indexOf(stderr);
+      if (idx !== -1) {
+        this._process.stderr.unpipe(stderr);
+        this._attachedStderrs.splice(idx, 1);
+      }
+      this._attachedStderrs.push(stderr);
+      this._process.stderr.pipe(stderr);
+    }
   }
 
   kill() {

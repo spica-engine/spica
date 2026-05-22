@@ -66,7 +66,8 @@ describe("Function Controller", () => {
           logger: false,
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH,
-          realtime: false
+          realtime: false,
+          assetStorage: {strategy: "default", defaultPath: "./function-assets"}
         })
       ]
     }).compile();
