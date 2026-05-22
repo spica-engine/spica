@@ -38,6 +38,8 @@ const BucketEntryDrawer = ({
   const [updateBucketEntry, {isLoading: isUpdating, error: updateError}] = useUpdateBucketEntryMutation();
 
   const formContainerRef = useRef<HTMLDivElement>(null);
+  // Guards a single re-apply of entry values after async relation labels load
+  const labelReadyReappliedRef = useRef(false);
 
   const apiClient: IBucketApiClient = useMemo(
     () => ({
@@ -54,7 +56,7 @@ const BucketEntryDrawer = ({
     [injectedService, apiClient]
   );
 
-  const formattedProperties = useValueProperties(bucket);
+  const formattedProperties = useValueProperties(bucket, isEditMode ? entry : null);
 
   const [formState, formActions] = useBucketEntryForm({
     properties: formattedProperties,
@@ -87,6 +89,7 @@ const BucketEntryDrawer = ({
   // Pre-fill form when opening in edit mode
   useEffect(() => {
     if (isOpen && isEditMode && entry) {
+      labelReadyReappliedRef.current = false; // reset guard for new edit session
       const {_id, ...values} = entry;
       formActions.setValue(values);
     }
@@ -95,6 +98,38 @@ const BucketEntryDrawer = ({
       if (!isEditMode) formActions.reset();
     }
   }, [isOpen]);
+
+  // useInputRepresenter only re-calls getDisplayValue when `value` changes, not when
+  // `properties` change.  Once all relation states have finished loading their labels
+  // (primaryKey + initialFormattedValues), re-apply the same entry values so the hook
+  // re-processes them and the relation tags show the correct human-readable label.
+  useEffect(() => {
+    if (labelReadyReappliedRef.current || !isOpen || !isEditMode || !entry) return;
+
+    const relationEntries = Object.entries(formattedProperties).filter(
+      ([, p]) => (p as any)?.type === "relation"
+    );
+    if (relationEntries.length === 0) return;
+
+    const allReady = relationEntries.every(([, p]) => (p as any)?.relationState?.stateInitialized === true);
+    if (!allReady) return;
+
+    labelReadyReappliedRef.current = true;
+    const {_id, ...values} = entry;
+
+    // Replace raw relation values (full documents or plain IDs) with the formatted
+    // { label, value } objects stored in initialFormattedValues so that RelationInput
+    // can display human-readable labels instead of showing "undefined".
+    const overrides: Record<string, any> = {};
+    for (const [key, p] of relationEntries) {
+      const formatted = (p as any).relationState?.initialFormattedValues;
+      if (formatted !== undefined) {
+        overrides[key] = formatted;
+      }
+    }
+
+    formActions.setValue({...values, ...overrides});
+  }, [formattedProperties, isOpen, isEditMode, entry]);
 
   const normalizedValue =
     Object.keys(formState.value).length === 0 && formState.value.constructor === Object
@@ -121,10 +156,11 @@ const BucketEntryDrawer = ({
     }
 
     if (isEditMode && entry?._id) {
+      const prepared = service.prepareData(formState.value, formattedProperties, bucket.required || []);
       await updateBucketEntry({
         bucketId: bucket._id,
         entryId: entry._id,
-        data: formState.value
+        data: prepared
       }).unwrap().then(() => {
         onEntryCreated?.(true);
         onClose();

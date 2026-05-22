@@ -34,6 +34,7 @@ export type RelationInputHandlers = {
   loadMoreOptionsMap: React.RefObject<TypeGetMoreOptionsMap>;
   searchOptionsMap: React.RefObject<TypeSearchOptionsMap>;
   ensureHandlers: (bucketId: string, key: string, initialValue?: TypeInitialValues) => void;
+  initRelationValue: (bucketId: string, key: string, value: TypeInitialValues) => void;
 };
 
 export type TypeInitialValues =
@@ -291,5 +292,74 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
     [getPrimaryKey, populateHandlers]
   );
 
-  return {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers};
+  const initRelationValue = useCallback(
+    (bucketId: string, key: string, value: TypeInitialValues) => {
+      // Clear stale cached label so ensureInitialValueFormatting re-fetches it
+      setRelationStates(prev => ({
+        ...prev,
+        [key]: {...prev[key], initialFormattedValues: undefined, stateInitialized: false}
+      }));
+      getPrimaryKey(bucketId, key).then(primaryKey => {
+        if (!primaryKey) return;
+
+        // When the row was fetched with relation=true the API returns the full related
+        // document, not just the ID string. Build initialFormattedValues directly from
+        // that object without an extra getBucketEntry round-trip.
+        const buildFromRow = (obj: any): {value: string; label: string} | null => {
+          const id: string | undefined = obj?._id ?? obj?.value;
+          if (!id || typeof id !== "string") return null;
+          return {value: id, label: String(obj[primaryKey] ?? obj.label ?? "")};
+        };
+
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          const formatted = buildFromRow(value);
+          if (formatted) {
+            setRelationStates(prev => ({
+              ...prev,
+              [key]: {...prev[key], initialFormattedValues: formatted, stateInitialized: true}
+            }));
+            return;
+          }
+        }
+
+        if (Array.isArray(value)) {
+          if (value.length === 0) {
+            setRelationStates(prev => ({
+              ...prev,
+              [key]: {...prev[key], stateInitialized: true}
+            }));
+            return;
+          }
+          if (typeof value[0] === "object" && (value[0] as any)?._id) {
+            const formatted = (value as any[]).map(buildFromRow).filter(Boolean) as Array<{value: string; label: string}>;
+            setRelationStates(prev => ({
+              ...prev,
+              [key]: {...prev[key], initialFormattedValues: formatted, stateInitialized: true}
+            }));
+            return;
+          }
+        }
+
+        // Plain string ID(s) — normalize and let ensureInitialValueFormatting fetch the label
+        let normalizedValue: string | string[] | undefined;
+        if (typeof value === "string") {
+          normalizedValue = value;
+        } else if (Array.isArray(value)) {
+          normalizedValue = (value as any[])
+            .map((i: any) => (typeof i === "string" ? i : (i?._id ?? i?.value)))
+            .filter(Boolean) as string[];
+        } else if (value && typeof value === "object") {
+          const obj = value as any;
+          normalizedValue = obj._id ?? obj.value;
+        }
+
+        if (normalizedValue) {
+          ensureInitialValueFormatting(bucketId, key, normalizedValue);
+        }
+      });
+    },
+    [getPrimaryKey, ensureInitialValueFormatting]
+  );
+
+  return {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers, initRelationValue};
 };

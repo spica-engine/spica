@@ -280,7 +280,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   <div className={styles.compactInput}>
                     <DateInput
                       value={condition.value || null}
-                      onChange={d => handleValueChange(condition.id, d.toISOString().split('T')[0])}
+                      onChange={d => handleValueChange(condition.id, d.toISOString())}
+                      datePickerProps={{showTime: true, format: "YYYY-MM-DD HH:mm:ss"}}
                     />
                   </div>
                 ) : (

@@ -14,7 +14,7 @@ export const DefaultInputs = {
   defaultNumber: {type: "number", title: "Default Value"},
   defaultBoolean: {type: "boolean", title: "Default value", size: "extra-small"},
   defaultDate: {
-    type: "string",
+    type: "select",
     title: "Default Date",
     enum: [
       {label: "No Default", value: ""},
@@ -35,17 +35,16 @@ export const ValidationInputs = {
 
 export const SpecializedInputs = {
   preset: {
-    type: "string",
+    type: "select",
     title: "Presets",
     enum: ["Countries", "Days", "Email", "Phone Number"] as string[]
   },
   makeEnumerated: {type: "boolean", title: "Make field enumerated", size: "extra-small"},
   enumeratedValues: {type: "chip", title: "EnumeratedValues"},
   multipleSelectionType: {
-    type: "string",
+    type: "select",
     title: "Type",
-    enum: ["string", "number"] as string[],
-    required: true
+    enum: ["string", "number"] as string[]
   },
   arrayType: {
     type: "string",
@@ -68,10 +67,10 @@ export const SpecializedInputs = {
   arrayItemTitle: {type: "string", title: "Title"},
   arrayItemDescription: {type: "string", title: "Description"},
   chip: {type: "chip", title: ""},
-  bucket: {title: "Buckets", type: "string", enum: []},
+  bucket: {title: "Buckets", type: "select", enum: []},
   relationType: {
     title: "Relation Type",
-    type: "string",
+    type: "select",
     enum: [
       {label: "One To One", value: "onetoone"},
       {label: "One To Many", value: "onetomany"}

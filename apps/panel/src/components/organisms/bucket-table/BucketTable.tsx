@@ -9,7 +9,9 @@ import type {BucketType} from "../../../store/api/bucketApi";
 import { FieldKind } from "../../../domain/fields/types";
 import { useCreateBucketFieldMutation, useDeleteBucketFieldMutation } from "../../../store/api/bucketApi";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
+import AddFieldModal from "../add-field-modal/AddFieldModal";
 import { FIELD_REGISTRY } from "../../../domain/fields/registry";
+import { propertyToFieldFormState } from "../../../domain/fields/propertyToFormState";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import Confirmation from "../../molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
@@ -210,6 +212,12 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   const [deleteBucketField] = useDeleteBucketFieldMutation();
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
+  const [editingField, setEditingField] = useState<{
+    key: string;
+    kind: FieldKind;
+    formState: FieldFormState;
+  } | null>(null);
+
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
     `${bucket?._id}-fields-order`,
     bucket?.properties ? Object.keys(bucket.properties) : []
@@ -218,6 +226,11 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   const forbiddenFieldNames = useMemo(() => {
     return bucket?.properties ? Object.keys(bucket.properties) : [];
   }, [bucket]);
+
+  const editForbiddenFieldNames = useMemo(() => {
+    if (!editingField) return forbiddenFieldNames;
+    return forbiddenFieldNames.filter(n => n !== editingField.key);
+  }, [forbiddenFieldNames, editingField]);
 
   const handleSaveAndClose = useCallback(
     async (values: FieldFormState, kind: FieldKind): Promise<BucketType> => {
@@ -249,6 +262,50 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       return result.data;
     },
     [bucket, createBucketField]
+  );
+
+  const handleOpenEditField = useCallback(
+    (key: string, property: BucketProperty) => {
+      const formState = propertyToFieldFormState(key, property, bucket as unknown as BucketSchema);
+      setEditingField({key, kind: formState.type, formState});
+    },
+    [bucket]
+  );
+
+  const handleEditSaveAndClose = useCallback(
+    async (values: FieldFormState, kind: FieldKind): Promise<BucketType> => {
+      if (!bucket || !editingField) throw new Error("No bucket or editing field");
+
+      const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
+      const {requiredField, primaryField} = values.configurationValues;
+      const newTitle = values.fieldValues.title;
+      const oldKey = editingField.key;
+
+      const bucketType = bucket as unknown as BucketType;
+      const {[oldKey]: _removed, ...otherProperties} = (bucketType.properties ?? {}) as Record<string, any>;
+
+      const prevRequired = bucketType.required ?? [];
+      const required = [
+        ...prevRequired.filter((r: string) => r !== oldKey),
+        ...(requiredField ? [newTitle] : [])
+      ];
+
+      let primary = bucketType.primary === oldKey ? undefined : bucketType.primary;
+      if (primaryField) primary = newTitle;
+
+      const modifiedBucket: BucketType = {
+        ...bucketType,
+        properties: {...otherProperties, [newTitle]: fieldProperty},
+        required: required.length ? required : undefined,
+        primary
+      };
+
+      const result = await createBucketField(modifiedBucket);
+      if (!result.data) throw new Error("Failed to update bucket field");
+      setEditingField(null);
+      return result.data;
+    },
+    [bucket, editingField, createBucketField]
   );
 
   const getPropertyIcon = useCallback((type: string) => {
@@ -373,7 +430,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     return (params: { row: BucketDataRow; isFocused: boolean }) => {
       const value = params.row[key];
 
-      return (
+      const cell = (
         <CellComponent
           value={structuredClone(value)}
           propertyKey={key}
@@ -382,6 +439,16 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           onChange={(newValue) => handleValueChange(key, params.row._id, newValue)}
         />
       );
+
+      if (!onDataChange) {
+        return (
+          <div style={{pointerEvents: "none", userSelect: "none"}}>
+            {cell}
+          </div>
+        );
+      }
+
+      return cell;
     };
   }, [handleValueChange]);
 
@@ -404,6 +471,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           icon={icon}
           showDropdownIcon={true}
           fieldKey={key}
+          onEdit={() => handleOpenEditField(key, property)}
           onMoveRight={moveRightAllowed ? onMoveRight : undefined}
           onMoveLeft={moveLeftAllowed ? onMoveLeft : undefined}
           onSortAsc={onSortAsc}
@@ -423,7 +491,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     onSortAsc,
     onSortDesc,
     createDeleteHandler,
-    createPropertyRenderCell
+    createPropertyRenderCell,
+    handleOpenEditField
   ]);
 
   const renderCheckboxCell = useCallback((params: {row: BucketDataRow; isFocused: boolean}) => {
@@ -434,6 +503,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           type="checkbox"
           className={styles.rowCheckbox}
           checked={isChecked}
+          onClick={(e) => e.stopPropagation()}
           onChange={(e) => {
             e.stopPropagation();
             if (isChecked) {
@@ -563,6 +633,16 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       </div>
 
     </div>
+    {editingField && (
+      <AddFieldModal
+        isOpen={true}
+        onClose={() => setEditingField(null)}
+        initialFieldKind={editingField.kind}
+        initialValues={editingField.formState}
+        onSaveAndClose={handleEditSaveAndClose}
+        forbiddenFieldNames={editForbiddenFieldNames}
+      />
+    )}
 </>
   );
 };

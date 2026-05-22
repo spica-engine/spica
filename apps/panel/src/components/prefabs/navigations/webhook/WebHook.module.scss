@@ -1,25 +1,301 @@
-.webhookLink {
-  display: block;
-  text-decoration: none;
-}
+// ── Webhooks navigation ─────────────────────────────
 
-.addWebhookButtonContainer{
-  padding: var(--padding-md);
-  .addWebhookButton{
-    width: 100% !important;
+.webhooksItemContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: var(--spacing-5) var(--spacing-7) var(--spacing-10);
+
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 
+.stateText {
+  padding: var(--spacing-5) var(--spacing-7);
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
 
-.infoItem{
-  font-weight: bold !important;
+// ── Webhook item row ────────────────────────────────
+
+.webhookItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-5);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base-plus);
+  text-decoration: none;
+  user-select: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  margin-bottom: 1px;
+  position: relative;
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+
+    .dotsMenu {
+      opacity: 1;
+    }
+  }
+}
+
+.webhookItemActive {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  font-weight: var(--font-weight-medium);
+
+  .dotsMenu {
+    opacity: 1;
+  }
+}
+
+.webhookIcon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.webhookName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+// ── Status dot ──────────────────────────────────────
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusDotActive {
+  background: var(--color-success);
+}
+
+.statusDotInactive {
+  background: var(--color-border);
+}
+
+// ── Dots menu ───────────────────────────────────────
+
+.dotsMenu {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  color: var(--color-text-muted);
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+
+  &:hover {
+    color: var(--color-text-secondary);
+    background: var(--color-surface-2);
+  }
+}
+
+// ── Popover content ─────────────────────────────────
+
+.popoverLabel {
+  font-size: var(--font-size-sm) !important;
+  color: var(--color-text-muted) !important;
+}
+
+.popoverValue {
+  font-weight: 600 !important;
   font-size: var(--font-size-sm) !important;
 }
 
-.active{
+.runningActive {
   color: var(--color-success) !important;
 }
 
-.inactive{
+.runningInactive {
   color: var(--color-danger) !important;
 }
+
+// ── Popover toggle row ──────────────────────────────
+
+.popoverRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggleSwitch {
+  width: 28px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--color-border);
+  position: relative;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    transition: left var(--transition-fast);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.toggleSwitchOn {
+  background: var(--color-success);
+
+  &::after {
+    left: 14px;
+  }
+}
+
+// ── Drawer (shared structure) ───────────────────────────
+
+.drawerScrollable {
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.drawerContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  height: 48px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.drawerHeaderInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.drawerTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.drawerSubtitle {
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  line-height: 1.4;
+  margin-top: 1px;
+}
+
+.drawerClose {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md-sm);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border: none;
+  background: none;
+  padding: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+  }
+}
+
+.drawerBody {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+}
+
+// ── Add Webhook button ──────────────────────────────
+
+.addWebhookBtnWrapper {
+  padding: var(--spacing-4) var(--spacing-7) var(--spacing-8);
+}
+
+.addWebhookBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: 1.5px dashed var(--color-border);
+  background: transparent;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  transition: all var(--transition-base);
+  width: 100%;
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background: var(--color-accent-subtle);
+  }
+}
+

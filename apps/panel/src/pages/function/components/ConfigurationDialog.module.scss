@@ -1,0 +1,47 @@
+.configDrawer {
+  padding: var(--padding-md, 16px);
+}
+
+.fieldLabel {
+  font-size: var(--font-size-xs, 11px);
+  color: var(--color-font-primary);
+  font-weight: 500;
+}
+
+.input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.15));
+  border-radius: 4px;
+  background: var(--color-bg-primary, rgba(255, 255, 255, 0.04));
+  color: var(--color-font-primary);
+  font-size: var(--font-size-sm, 13px);
+  outline: none;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: var(--color-primary, #6366f1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.select {
+  @extend .input;
+  cursor: pointer;
+}
+
+.slider {
+  width: 100%;
+  cursor: pointer;
+}
+
+.configActions {
+  margin-top: 16px;
+}
+
+.errorText {
+  color: #ef4444;
+}

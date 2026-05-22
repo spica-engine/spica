@@ -1,67 +1,421 @@
-.webhookContainer{
-  padding: var(--padding-md) 0;
+// ── Page container ──────────────────────────────────
+
+.webhookContainer {
+  padding: 0;
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow-y: auto;
 }
 
-.infoContainer {
-  display: grid;
-  width: 100%;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--gap-md) var(--gap-lg);
-  align-items: start;
+// ── Action bar ──────────────────────────────────────
 
-  .infoFullWidth {
-    grid-column: 1 / -1;
-  }
-}
-
-
-.field {
+.actionBar {
   display: flex;
-  flex-direction: column;
-  gap: var(--gap-xs);
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--color-surface, var(--color-menu-background));
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
 }
 
-.label {
-  font-size: var(--font-size-sm);
-  color: var(--color-font-secondary);
+// ── Detail card ─────────────────────────────────────
+
+.detailCard {
+  background: var(--color-surface, var(--color-menu-background));
+  border-bottom: 1px solid var(--color-border);
+  padding: 20px 24px 24px;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.detailTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary, var(--color-font-primary));
+  letter-spacing: -0.2px;
+}
+
+.detailStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.statusActive {
+  background: rgba(18, 183, 106, 0.1);
+  color: var(--color-success);
+}
+
+.statusInactive {
+  background: var(--color-surface-2, #f7f8fa);
+  color: var(--color-text-muted, var(--color-font-secondary));
+}
+
+// ── Detail grid ─────────────────────────────────────
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.detailCell {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  padding-right: 32px;
+}
+
+.detailCellRight {
+  padding-right: 0;
+  padding-left: 16px;
+  border-left: 1px solid var(--color-border);
+}
+
+.dcLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.dcValue {
+  font-size: 13px;
+  color: var(--color-text-primary, var(--color-font-primary));
   font-weight: 500;
 }
 
-.value {
-  font-size: var(--font-size-md);
-  color: var(--color-font-primary);
-  font-weight: bold;
+.dcMono {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  color: var(--color-text-secondary, var(--color-font-secondary));
+  word-break: break-all;
 }
+
+.dcBold {
+  font-weight: 600;
+  color: var(--color-text-primary, var(--color-font-primary));
+}
+
+// ── Running toggle cell ──────────────────────────────
+
+.runningCell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.toggleSwitch {
+  width: 38px;
+  height: 21px;
+  border-radius: 11px;
+  flex-shrink: 0;
+  background: var(--color-surface-2, #eef0f3);
+  border: 1.5px solid var(--color-border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  display: inline-block;
+  padding: 0;
+
+  &::after {
+    content: "";
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--color-border);
+    top: 1px;
+    left: 1px;
+    transition: transform 0.18s, background 0.18s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.toggleSwitchOn {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+
+  &::after {
+    transform: translateX(17px);
+    background: #fff;
+  }
+}
+
+.toggleLabel {
+  font-size: 12px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  color: var(--color-text-muted, var(--color-font-secondary));
+}
+
+// ── Description row ──────────────────────────────────
+
+.descRow {
+  padding: 12px 0 0;
+  border-bottom: none;
+  align-items: flex-start;
+}
+
+.descText {
+  font-size: 13px;
+  color: var(--color-text-secondary, var(--color-font-secondary));
+  line-height: 1.6;
+  flex: 1;
+}
+
+.noDescription {
+  color: var(--color-text-muted, var(--color-font-secondary));
+  font-style: italic;
+}
+
+// ── Logs section ─────────────────────────────────────
+
+.logsSection {
+  padding: 20px 24px;
+  flex: 1;
+}
+
+.logsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.logsTitle {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, var(--color-font-secondary));
+}
+
+.logsFilter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.logFilterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface, var(--color-menu-background));
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary, var(--color-font-secondary));
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover {
+    background: var(--color-surface-2);
+    border-color: var(--color-border);
+  }
+}
+
+.logFilterBtnActive {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.logsTable {
+  background: var(--color-surface, var(--color-menu-background));
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.logRow {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  padding: 10px 16px;
+  transition: background 0.08s;
+  cursor: default;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--color-surface-2);
+  }
+}
+
+.logDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.dotOk {
+  background: var(--color-success);
+}
+
+.dotWarn {
+  background: var(--color-warning, #f79009);
+}
+
+.dotErr {
+  background: var(--color-danger);
+}
+
+.dotInfo {
+  background: var(--color-info, #2e90fa);
+}
+
+.logMsg {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--color-text-secondary, var(--color-font-secondary));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logTs {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 11.5px;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+.logsEmpty {
+  padding: 24px 16px;
+}
+
+.logsEmptyRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+
+  span {
+    font-size: 12.5px;
+    color: var(--color-text-muted, var(--color-font-secondary));
+  }
+}
+
+// ── Misc ─────────────────────────────────────────────
 
 .empty {
-  color: var(--color-font-secondary);
+  color: var(--color-text-muted, var(--color-font-secondary));
   font-size: var(--font-size-md);
+  padding: 24px;
 }
 
-.actionButtons {
-  padding: 0 var(--padding-md);
+/* ── Edit Webhook Drawer ─────────────────────────────────────────── */
+.drawerScrollable {
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
-.logsPage{
+.drawerContent {
   display: flex;
-  height: 100% !important;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.logsList{
-  padding: var(--padding-md) 0 !important;
-  flex: 1 !important;
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  height: 48px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
 }
 
-.logItem{
-  padding: 0 var(--padding-md) !important;
-   &:nth-child(even){
-    background-color: var(--color-zebra) !important;
-   }
+.drawerHeaderInfo {
+  flex: 1;
+  min-width: 0;
 }
 
-.editDrawerContent {
-  padding: var(--padding-md);
+.drawerTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
 }
+
+.drawerSubtitle {
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  line-height: 1.4;
+  margin-top: 1px;
+}
+
+.drawerClose {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md-sm);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border: none;
+  background: none;
+  padding: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+  }
+}
+
+.drawerBody {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+}
+

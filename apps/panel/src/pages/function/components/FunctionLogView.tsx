@@ -3,115 +3,186 @@
  * email: rio.kenan@gmail.com
  */
 
-import {memo, useCallback, useMemo, useState} from "react";
-import {Button, FlexElement, Icon, Text} from "oziko-ui-kit";
-import {useGetFunctionLogsQuery} from "../../../store/api/functionApi";
-import type {FunctionLog} from "../../../store/api/functionApi";
-import styles from "../FunctionPage.module.scss";
+import {memo, useCallback, useMemo} from "react";
+import {useClearFunctionLogsMutation, useGetFunctionLogsQuery} from "../../../store/api/functionApi";
+import useFunctionLogFilterState from "../../../hooks/useFunctionLogFilterState";
+import {
+  LOG_LEVEL_LABELS,
+  type SeverityFilter,
+} from "../../../utils/functionLogLevels";
+import {
+  formatRowTimestamp,
+  getLogDate,
+} from "../../../utils/functionLogUtils";
+import FunctionLogRail from "./FunctionLogRail";
+import FunctionLogTable from "./FunctionLogTable";
+import FunctionLogToolbar from "./FunctionLogToolbar";
+import styles from "./FunctionLogView.module.scss";
 
 type FunctionLogViewProps = {
   functionId: string;
+  functionName: string;
+  defaultHandlerName: string;
+  isOpen: boolean;
+  onToggle: () => void;
 };
 
-const LOG_LEVELS: {value: number; label: string}[] = [
-  {value: 0, label: "Debug"},
-  {value: 1, label: "Log"},
-  {value: 2, label: "Info"},
-  {value: 3, label: "Warning"},
-  {value: 4, label: "Error"},
-];
+const FunctionLogView = ({
+  functionId,
+  functionName,
+  defaultHandlerName,
+  isOpen,
+  onToggle,
+}: FunctionLogViewProps) => {
+  const {
+    defaultRange,
+    queryRange,
+    setQueryRange,
+    draftBegin,
+    setDraftBegin,
+    draftEnd,
+    setDraftEnd,
+    searchQuery,
+    setSearchQuery,
+    handlerFilter,
+    severityFilter,
+    setSeverityFilter,
+    selectedLevels,
+    isFilterOpen,
+    setIsFilterOpen,
+    expandedLogIds,
+    setExpandedLogIds,
+    sortDirection,
+    setSortDirection,
+    handleFilterToggle,
+    handleReset,
+    isFilterApplied,
+    toggleRow,
+  } = useFunctionLogFilterState();
 
-const LEVEL_CLASS: Record<number, string> = {
-  0: styles.logDebug,
-  1: styles.logInfo,
-  2: styles.logInfo,
-  3: styles.logWarning,
-  4: styles.logError,
-};
+  const {data: logs = [], isFetching, refetch} = useGetFunctionLogsQuery(
+    {
+      functions: [functionId],
+      begin: queryRange.begin.toISOString(),
+      end: queryRange.end.toISOString(),
+      limit: 100,
+      sort: {_id: -1},
+      levels: selectedLevels,
+    },
+    {skip: !functionId || !isOpen}
+  );
 
-const PAGE_SIZE = 40;
+  const [clearFunctionLogs, {isLoading: isClearingLogs}] = useClearFunctionLogsMutation();
 
-const FunctionLogView = ({functionId}: FunctionLogViewProps) => {
-  const [skip, setSkip] = useState(0);
-  const [selectedLevels, setSelectedLevels] = useState<number[]>([]);
+  const handleApplyFilter = useCallback(() => {
+    const nextBegin = new Date(draftBegin);
+    const nextEnd = new Date(draftEnd);
+    if (Number.isNaN(nextBegin.getTime()) || Number.isNaN(nextEnd.getTime()) || nextBegin > nextEnd) {
+      return;
+    }
 
-  const today = useMemo(() => {
-    const d = new Date();
-    return {
-      begin: new Date(d.setHours(0, 0, 0, 0)).toISOString(),
-      end: new Date(d.setHours(23, 59, 59, 999)).toISOString(),
-    };
-  }, []);
+    setQueryRange({begin: nextBegin, end: nextEnd});
+    setExpandedLogIds([]);
+    setIsFilterOpen(false);
+  }, [draftBegin, draftEnd, setExpandedLogIds, setIsFilterOpen, setQueryRange]);
 
-  const {data: logs = [], isLoading, refetch} = useGetFunctionLogsQuery({
-    functions: [functionId],
-    begin: today.begin,
-    end: today.end,
-    limit: PAGE_SIZE,
-    skip,
-    sort: {_id: -1},
-    ...(selectedLevels.length > 0 ? {levels: selectedLevels} : {}),
-  });
+  const handleClearLogs = useCallback(async () => {
+    if (!functionId) {
+      return;
+    }
 
-  const handleRefresh = useCallback(() => {
-    setSkip(0);
+    await clearFunctionLogs({
+      functionId,
+      begin: queryRange.begin.toISOString(),
+      end: queryRange.end.toISOString(),
+    });
+
     refetch();
-  }, [refetch]);
+  }, [clearFunctionLogs, functionId, queryRange.begin, queryRange.end, refetch]);
 
-  const handleLoadMore = useCallback(() => {
-    setSkip(prev => prev + PAGE_SIZE);
-  }, []);
+  const filteredLogs = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const normalizedHandler = handlerFilter.trim().toLowerCase();
 
-  const toggleLevel = useCallback((level: number) => {
-    setSelectedLevels(prev =>
-      prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level]
-    );
-    setSkip(0);
-  }, []);
+    return logs
+      .filter(log => {
+        const timestamp = getLogDate(log);
+        if (timestamp < queryRange.begin || timestamp > queryRange.end) {
+          return false;
+        }
 
-  const formatTimestamp = useCallback((log: FunctionLog) => {
-    const ts = Number.parseInt(log._id.substring(0, 8), 16) * 1000;
-    return new Date(ts).toLocaleString();
-  }, []);
+        if (normalizedHandler && !defaultHandlerName.toLowerCase().includes(normalizedHandler)) {
+          return false;
+        }
+
+        if (!normalizedSearch) {
+          return true;
+        }
+
+        const searchableContent = [
+          functionName,
+          defaultHandlerName,
+          LOG_LEVEL_LABELS[log.level] ?? "",
+          log.content,
+          formatRowTimestamp(log),
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return searchableContent.includes(normalizedSearch);
+      })
+      .sort((left, right) => {
+        const delta = getLogDate(left).getTime() - getLogDate(right).getTime();
+        return sortDirection === "asc" ? delta : -delta;
+      });
+  }, [defaultHandlerName, functionName, handlerFilter, logs, queryRange.begin, queryRange.end, searchQuery, sortDirection]);
 
   return (
     <div className={styles.logView}>
-      <FlexElement dimensionX="fill" alignment="spaceBetween" className={styles.logToolbar}>
-        <FlexElement gap={8} alignment="leftCenter">
-          <Text size="small" className={styles.logTitle}>Logs</Text>
-          {LOG_LEVELS.map(level => (
-            <button
-              key={level.value}
-              className={`${styles.levelFilter} ${selectedLevels.includes(level.value) ? styles.levelActive : ""}`}
-              onClick={() => toggleLevel(level.value)}
-            >
-              {level.label}
-            </button>
-          ))}
-        </FlexElement>
-        <FlexElement gap={4}>
-          <Button variant="icon" color="transparent" onClick={handleRefresh}>
-            <Icon name="refresh" size="sm" />
-          </Button>
-        </FlexElement>
-      </FlexElement>
-      <div className={styles.logList}>
-        {isLoading && <Text size="small" className={styles.logEmpty}>Loading...</Text>}
-        {!isLoading && logs.length === 0 && (
-          <Text size="small" className={styles.logEmpty}>No logs found</Text>
-        )}
-        {logs.map(log => (
-          <div key={log._id} className={`${styles.logEntry} ${LEVEL_CLASS[log.level] ?? ""}`}>
-            <span className={styles.logTimestamp}>{formatTimestamp(log)}</span>
-            <span className={styles.logContent}>{log.content}</span>
-          </div>
-        ))}
-        {!isLoading && logs.length >= PAGE_SIZE && (
-          <button className={styles.loadMoreButton} onClick={handleLoadMore}>
-            Load more
-          </button>
-        )}
-      </div>
+      <FunctionLogRail
+        functionName={functionName}
+        isOpen={isOpen}
+        resultCount={filteredLogs.length}
+        onToggle={onToggle}
+      />
+
+      {isOpen && (
+        <div className={styles.logSurface}>
+          <FunctionLogToolbar
+            queryRange={queryRange}
+            draftBegin={draftBegin}
+            draftEnd={draftEnd}
+            isFilterOpen={isFilterOpen}
+            isFilterApplied={isFilterApplied}
+            isFetching={isFetching}
+            isClearingLogs={isClearingLogs}
+            hasLogs={logs.length > 0}
+            onDraftBeginChange={setDraftBegin}
+            onDraftEndChange={setDraftEnd}
+            onFilterToggle={handleFilterToggle}
+            onFilterClose={() => setIsFilterOpen(false)}
+            onFilterReset={handleReset}
+            onFilterApply={handleApplyFilter}
+            onRefresh={refetch}
+            onClear={handleClearLogs}
+          />
+
+          <FunctionLogTable
+            logs={filteredLogs}
+            isFetching={isFetching}
+            functionName={functionName}
+            defaultHandlerName={defaultHandlerName}
+            searchQuery={searchQuery}
+            severityFilter={severityFilter}
+            sortDirection={sortDirection}
+            expandedLogIds={expandedLogIds}
+            onSearchChange={setSearchQuery}
+            onSeverityChange={setSeverityFilter}
+            onSortDirectionChange={setSortDirection}
+            onToggleRow={toggleRow}
+          />
+        </div>
+      )}
     </div>
   );
 };

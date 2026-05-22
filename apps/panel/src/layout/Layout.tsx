@@ -23,7 +23,7 @@ const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const token = useSelector(selectToken) ?? "";
-  const {logout} = useAuth();
+  const {logout, user} = useAuth();
 
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -126,12 +126,17 @@ const Layout = () => {
     }
   }, [token]);
 
-  const name = decoded?.identifier ?? "";
+  const name = decoded?.identifier ?? user?.email ?? "";
+  const email = user?.email ?? (decoded?.identifier?.includes("@") ? decoded.identifier : "");
 
   const handleLogout = useCallback(() => {
     logout();
     navigate("/passport/identify");
   }, [logout, navigate]);
+
+  const handleSettings = useCallback(() => {
+    navigate("/config/user");
+  }, [navigate]);
 
   const handleProfile = useCallback(() => {
     const identityId = decoded?._id;
@@ -161,13 +166,14 @@ const Layout = () => {
     >
       <SideBar
         onNavigatorToggle={setNavigatorOpen}
+        inDrawer
       />
     </Drawer>
   );
 
   return (
     <div className={styles.layout}>
-      {isDrawerOpen && drawerSidebar}
+      {drawerSidebar}
 
       <div
         className={`${styles.sidebar} ${
@@ -178,7 +184,15 @@ const Layout = () => {
       </div>
       <div className={styles.main}>
         <div className={styles.toolbar}>
-          <Topbar token={token} name={name} onDrawerOpen={openDrawer} onProfile={handleProfile} onLogout={handleLogout} />
+          <Topbar
+            token={token}
+            name={name}
+            email={email}
+            onDrawerOpen={openDrawer}
+            onProfile={handleProfile}
+            onSettings={handleSettings}
+            onLogout={handleLogout}
+          />
         </div>
         <div className={styles.content}>
           <Outlet />
