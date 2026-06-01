@@ -66,15 +66,27 @@ export class HttpQueue {
   }
 }
 
+class RequestHeaders extends Map<string, string | string[]> {
+  get(key: string): string | string[] | undefined {
+    return super.get(key.toLowerCase());
+  }
+  has(key: string): boolean {
+    return super.has(key.toLowerCase());
+  }
+  set(key: string, value: string | string[]): this {
+    return super.set(key.toLowerCase(), value);
+  }
+}
+
 export class Request {
   statusCode: number;
   statusMessage: string;
   method: string;
   url: string;
   path: string;
-  headers = new Map<string, string | string[]>();
-  query: unknown = {};
-  params = new Map<string, string>();
+  headers = new RequestHeaders();
+  query: Record<string, any> = {};
+  params: Record<string, string> = {};
   cookies = new Map<string, string>();
   body: Array<unknown> | object | Uint8Array | undefined;
 
@@ -86,11 +98,11 @@ export class Request {
     this.path = req.path;
 
     if (req.headers) {
-      this.headers = new Map(req.headers.map(h => [h.key, h.value]));
+      req.headers.forEach(h => this.headers.set(h.key, h.value));
     }
 
     if (req.params) {
-      this.params = new Map(req.params.map(h => [h.key, h.value]));
+      this.params = Object.fromEntries(req.params.map(h => [h.key, h.value]));
     }
 
     if (req.query) {
@@ -100,6 +112,10 @@ export class Request {
     if (req.body) {
       this.body = parseBody(req.body, this.headers.get("content-type"));
     }
+  }
+
+  get(name: string): string | string[] | undefined {
+    return this.headers.get(name);
   }
 }
 
