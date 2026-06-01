@@ -154,20 +154,15 @@
 }
 
 .addButton {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-5);
-  padding: var(--spacing-4) var(--spacing-5);
+
+  
   margin: var(--spacing-5) var(--spacing-7);
+    padding: var(--spacing-4) var(--spacing-5);
   border-radius: var(--radius-md);
-  cursor: pointer;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-base);
+  border: 1px dashed var(--color-border) !important;
+  color: var(--color-text-muted) !important;
   font-family: var(--font-sans);
-  background: transparent;
-  border: 1px dashed var(--color-border);
-  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
-  width: calc(100% - var(--spacing-7) * 2);
+  min-width: unset !important;
 
   &:hover {
     border-color: var(--color-accent);

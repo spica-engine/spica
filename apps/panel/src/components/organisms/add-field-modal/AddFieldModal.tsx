@@ -1,4 +1,4 @@
-import {memo, useCallback, useState, type ReactNode} from "react";
+import {memo, useCallback, useEffect, useState, type ReactNode} from "react";
 import {createPortal} from "react-dom";
 import {Icon} from "oziko-ui-kit";
 import type {IconName} from "oziko-ui-kit";
@@ -10,30 +10,57 @@ import type {FieldFormState} from "../../../domain/fields/types";
 import type {BucketType} from "src/store/api/bucketApi";
 
 type AddFieldModalProps = {
-  children: (props: {onOpen: () => void; className?: string}) => ReactNode;
+  /** Render-prop trigger — used in "add" mode. Optional when `isOpen` is provided. */
+  children?: (props: {onOpen: () => void; className?: string}) => ReactNode;
   onSaveAndClose: (values: FieldFormState, kind: FieldKind) => void | Promise<BucketType>;
   forbiddenFieldNames?: string[];
   containerClassName?: string;
+  /** Controlled open state — used in "edit" mode where the trigger is external. */
+  isOpen?: boolean;
+  /** Called when the user closes the modal in controlled mode. */
+  onClose?: () => void;
+  /** Pre-select this field type when the modal opens (edit mode). */
+  initialFieldKind?: FieldKind;
+  /** Pre-fill the config form with these values (edit mode). */
+  initialValues?: FieldFormState;
 };
 
 const AddFieldModal = ({
   children,
   onSaveAndClose,
   forbiddenFieldNames = [],
-  containerClassName
+  containerClassName,
+  isOpen: controlledIsOpen,
+  onClose: controlledOnClose,
+  initialFieldKind,
+  initialValues
 }: AddFieldModalProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<FieldKind | null>(null);
 
+  const isControlled = controlledIsOpen !== undefined;
+  const actualIsOpen = isControlled ? controlledIsOpen : internalOpen;
+
+  // Sync selectedType when controlled modal opens with a pre-selected type
+  useEffect(() => {
+    if (actualIsOpen) {
+      setSelectedType(initialFieldKind ?? FieldKind.String);
+    }
+  }, [actualIsOpen, initialFieldKind]);
+
   const handleOpen = useCallback(() => {
-    setIsOpen(true);
-    setSelectedType(FieldKind.String);
-  }, []);
+    setInternalOpen(true);
+    setSelectedType(initialFieldKind ?? FieldKind.String);
+  }, [initialFieldKind]);
 
   const handleClose = useCallback(() => {
-    setIsOpen(false);
+    if (isControlled) {
+      controlledOnClose?.();
+    } else {
+      setInternalOpen(false);
+    }
     setSelectedType(null);
-  }, []);
+  }, [isControlled, controlledOnClose]);
 
   const handleTypeSelect = useCallback((kind: FieldKind) => {
     setSelectedType(kind);
@@ -64,10 +91,12 @@ const AddFieldModal = ({
 
   return (
     <>
-      <div className={containerClassName}>
-        {children({onOpen: handleOpen})}
-      </div>
-      {isOpen &&
+      {children && (
+        <div className={containerClassName}>
+          {children({onOpen: handleOpen})}
+        </div>
+      )}
+      {actualIsOpen &&
         createPortal(
           <div className={styles.overlay} onClick={handleOverlayClick}>
             <div className={styles.modalWrap}>
@@ -100,6 +129,7 @@ const AddFieldModal = ({
                       fieldType={selectedType}
                       forbiddenFieldNames={forbiddenFieldNames}
                       popupType="add-field"
+                      initialValues={selectedType === initialFieldKind ? initialValues : undefined}
                     />
                   </div>
                 ) : (

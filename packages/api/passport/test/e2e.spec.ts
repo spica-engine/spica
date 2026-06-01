@@ -571,6 +571,28 @@ describe("E2E Tests", () => {
       );
       expect(refreshToken.token).toBeUndefined();
     });
+
+    it("should identify via GET /passport/identify and return a valid token", async () => {
+      const response = await req.get("/passport/identify", {
+        identifier: "spica",
+        password: "spica"
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.body).toBeDefined();
+      expect(response.body.token).toBeDefined();
+      expect(response.body.scheme).toEqual("IDENTITY");
+      expect(response.headers["warning"]).toContain("299");
+    });
+
+    it("should return 401 via GET /passport/identify when credentials are wrong", async () => {
+      const response = await req.get("/passport/identify", {
+        identifier: "spica",
+        password: "wrongpassword"
+      });
+
+      expect(response.statusCode).toEqual(401);
+    });
   });
 
   describe("SSO", () => {

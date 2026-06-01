@@ -3,9 +3,9 @@
  * email: rio.kenan@gmail.com
  */
 
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {useParams, useNavigate} from "react-router-dom";
-import {Button, FlexElement, Icon, Text} from "oziko-ui-kit";
+import type {KeyboardEvent} from "react";
 import {
   functionApi,
   useGetFunctionQuery,
@@ -19,22 +19,16 @@ import {
   useInjectSecretMutation,
   useEjectSecretMutation,
 } from "../../store/api/functionApi";
-import {useGetFunctionLogsQuery, useClearFunctionLogsMutation} from "../../store/api/functionApi";
-import type {FunctionLog} from "../../store/api/functionApi";
 import type {FunctionTrigger, ResolvedEnvVar, ResolvedSecret} from "../../store/api/functionApi";
 import {useAppDispatch} from "../../store/hook";
 import Loader from "../../components/atoms/loader/Loader";
-import Confirmation from "../../components/molecules/confirmation/Confirmation";
-import PanelAccordion, {PanelAccordionItem} from "../../components/molecules/panel-accordion/PanelAccordion";
-import CodeEditor from "./components/CodeEditor";
-import ImportedFunctionPanel from "./components/ImportedFunctionPanel";
-import TriggerPanel from "./components/TriggerPanel";
-import DependencyPanel from "./components/DependencyPanel";
-import EnvironmentPanel from "./components/EnvironmentPanel";
-import FunctionLogList from "../function-log/FunctionLogList";
-import FunctionLogFilter from "../function-log/FunctionLogFilter";
-import ConfigurationDialog from "./components/ConfigurationDialog";
-import {LOG_LEVEL_LABELS as LEVEL_LABELS} from "../../utils/functionLogLevels";
+import FunctionModal from "../../components/prefabs/navigations/function/FunctionModal";
+import FunctionDeleteConfirmation from "./components/FunctionDeleteConfirmation";
+import FunctionEditorLayout from "./components/FunctionEditorLayout";
+import FunctionEditorPanel from "./components/FunctionEditorPanel";
+import FunctionHeader from "./components/FunctionHeader";
+import FunctionLogFooter from "./components/FunctionLogFooter";
+import FunctionSidebar from "./components/FunctionSidebar";
 import styles from "./FunctionPage.module.scss";
 
 const IMPORT_REGEX = /^import\s+\*\s+as\s+(\w+)\s+from\s+["']\.\.\/\.\.\/([^/]+)\/\.build["'];?\s*$/gm;
@@ -58,7 +52,6 @@ const FunctionPage = () => {
   const [ejectEnvVar] = useEjectEnvVarMutation();
   const [injectSecret] = useInjectSecretMutation();
   const [ejectSecret] = useEjectSecretMutation();
-  const [clearFunctionLogs, {isLoading: isClearingLogs}] = useClearFunctionLogsMutation();
 
   const [code, setCode] = useState("");
   const [lastSavedCode, setLastSavedCode] = useState("");
@@ -71,79 +64,8 @@ const FunctionPage = () => {
   const [localEnvVars, setLocalEnvVars] = useState<ResolvedEnvVar[]>([]);
   const [localSecrets, setLocalSecrets] = useState<ResolvedSecret[]>([]);
   const [isSidebarSaving, setIsSidebarSaving] = useState(false);
-  const [logSearchQuery, setLogSearchQuery] = useState("");
-  const [logDateRange, setLogDateRange] = useState(() => {
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
-    const begin = new Date();
-    begin.setHours(0, 0, 0, 0);
-    return {begin, end};
-  });
-  const [logLevelFilter, setLogLevelFilter] = useState({info: true, warning: true, error: true, success: true});
-  const [logLevelFilterOpen, setLogLevelFilterOpen] = useState(false);
   const [isNameEditing, setIsNameEditing] = useState(false);
   const [editingName, setEditingName] = useState("");
-  const logFilterWrapperRef = useRef<HTMLDivElement | null>(null);
-
-  const logSelectedLevels = useMemo(() => {
-    const {info, warning, error} = logLevelFilter;
-    if (info && warning && error) return [];
-    const levels: number[] = [];
-    if (info) levels.push(0, 1, 2);
-    if (warning) levels.push(3);
-    if (error) levels.push(4);
-    return levels;
-  }, [logLevelFilter]);
-
-  const {data: fnLogs = [], refetch: refetchLogs, isFetching: isLogsFetching} = useGetFunctionLogsQuery(
-    {
-      functions: [functionId],
-      begin: logDateRange.begin.toISOString(),
-      end: logDateRange.end.toISOString(),
-      limit: 100,
-      sort: {_id: -1},
-      levels: logSelectedLevels.length > 0 ? logSelectedLevels : undefined,
-    },
-    {skip: !functionId || !showLogs}
-  );
-
-  const logFunctionNames = useMemo<Record<string, string>>(
-    () => (fn ? {[functionId]: fn.name} : {}),
-    [fn, functionId]
-  );
-
-  const logHandlerNames = useMemo<Record<string, string>>(() => {
-    if (!fn) return {};
-    const triggers = fn.triggers;
-    let handler = "default";
-    if (Array.isArray(triggers) && triggers.length > 0) {
-      handler = triggers[0].handler ?? "default";
-    } else if (triggers && typeof triggers === "object") {
-      const firstKey = Object.keys(triggers)[0];
-      if (firstKey) handler = firstKey;
-    }
-    return {[functionId]: handler};
-  }, [fn, functionId]);
-
-  const filteredLogs = useMemo<FunctionLog[]>(() => {
-    if (!logSearchQuery.trim()) return fnLogs;
-    const q = logSearchQuery.toLowerCase();
-    return fnLogs.filter(log => {
-      const fnName = (logFunctionNames[log.function] ?? log.function).toLowerCase();
-      const handler = (logHandlerNames[log.function] ?? "default").toLowerCase();
-      const content = log.content.toLowerCase();
-      const severity = (LEVEL_LABELS[log.level] ?? "").toLowerCase();
-      const ts = Number.parseInt(log._id.substring(0, 8), 16) * 1000;
-      const timestamp = new Date(ts).toLocaleString().toLowerCase();
-      return (
-        fnName.includes(q) ||
-        handler.includes(q) ||
-        content.includes(q) ||
-        severity.includes(q) ||
-        timestamp.includes(q)
-      );
-    });
-  }, [fnLogs, logSearchQuery, logFunctionNames, logHandlerNames]);
 
   const serverTriggers = useMemo<FunctionTrigger[]>(() => {
     if (!fn) return [];
@@ -221,30 +143,6 @@ const FunctionPage = () => {
       subscriptions.forEach(s => s.unsubscribe());
     };
   }, [importedFunctionIds, dispatch]);
-
-  useEffect(() => {
-    if (!logLevelFilterOpen) {
-      return;
-    }
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!(event.target instanceof Node)) {
-        return;
-      }
-
-      if (logFilterWrapperRef.current?.contains(event.target)) {
-        return;
-      }
-
-      setLogLevelFilterOpen(false);
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-    };
-  }, [logLevelFilterOpen]);
 
   const hasUnsavedChanges = code !== lastSavedCode;
   const hasSidebarChanges =
@@ -330,24 +228,6 @@ const FunctionPage = () => {
     }
   }, [functionId, deleteFunction, navigate]);
 
-  const handleLogFilterApply = useCallback(
-    (begin: Date, end: Date, _functions: string[], levels: number[]) => {
-      setLogDateRange({begin, end});
-      // legacy callback kept for compatibility; levels managed by logLevelFilter UI
-    },
-    []
-  );
-
-  const handleLogReset = useCallback(() => {
-    setLogSearchQuery("");
-    setLogLevelFilter({info: true, warning: true, error: true, success: true});
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
-    const begin = new Date();
-    begin.setHours(0, 0, 0, 0);
-    setLogDateRange({begin, end});
-  }, []);
-
   const handleNameEditStart = useCallback(() => {
     if (!fn) return;
     setEditingName(fn.name);
@@ -374,38 +254,37 @@ const FunctionPage = () => {
   }, [fn, editingName, updateFunction]);
 
   const handleNameEditKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
+    (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") handleNameEditSave();
       if (e.key === "Escape") setIsNameEditing(false);
     },
     [handleNameEditSave]
   );
 
-  const handleClearLogs = useCallback(async () => {
-    if (!functionId) return;
-    await clearFunctionLogs({
-      functionId,
-      begin: logDateRange.begin.toISOString(),
-      end: logDateRange.end.toISOString(),
-    });
-    refetchLogs();
-  }, [functionId, clearFunctionLogs, logDateRange, refetchLogs]);
-
-  const isLogFilterApplied = (() => {
-    if (logSearchQuery.trim() !== "" || logSelectedLevels.length > 0) return true;
-    const today = new Date();
-    return (
-      logDateRange.begin.toDateString() !== today.toDateString() ||
-      logDateRange.begin.getHours() !== 0 ||
-      logDateRange.begin.getMinutes() !== 0 ||
-      logDateRange.end.toDateString() !== today.toDateString() ||
-      logDateRange.end.getHours() !== 23 ||
-      logDateRange.end.getMinutes() !== 59
-    );
-  })();
-
   const toggleLogs = useCallback(() => setShowLogs(prev => !prev), []);
   const toggleSidebar = useCallback(() => setShowSidebar(prev => !prev), []);
+
+  const defaultLogHandlerName = useMemo(() => {
+    const triggers = fn?.triggers;
+    if (Array.isArray(triggers) && triggers.length > 0) {
+      return triggers[0].handler ?? "default";
+    }
+    if (triggers && typeof triggers === "object") {
+      const firstKey = Object.keys(triggers)[0];
+      if (firstKey) {
+        return firstKey;
+      }
+    }
+    return "default";
+  }, [fn]);
+
+  const editorLanguage = fn?.language === "typescript" ? "typescript" : "javascript";
+
+  const deleteErrorMessage = deleteError
+    ? (deleteError as {data?: {message?: string}; message?: string})?.data?.message ??
+      (deleteError as Error)?.message ??
+      "Delete failed"
+    : undefined;
 
   if (isFnLoading || isIndexLoading) {
     return (
@@ -420,241 +299,83 @@ const FunctionPage = () => {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={`${styles.codeArea} ${!showSidebar ? styles.codeAreaExpanded : ""}`}>
-        {/* Function Tab Bar */}
-        <div className={styles.fnTabBar}>
-          <div className={styles.fnTab}>
-            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <polyline points="16 18 22 12 16 6" />
-              <polyline points="8 6 2 12 8 18" />
-            </svg>
-            {isNameEditing ? (
-              <input
-                className={styles.fnTabEditInput}
-                value={editingName}
-                autoFocus
-                onChange={e => setEditingName(e.target.value)}
-                onBlur={handleNameEditSave}
-                onKeyDown={handleNameEditKeyDown}
-              />
-            ) : (
-              <span className={styles.fnTabName} onClick={handleNameEditStart} title="Click to rename">
-                {fn.name}
-              </span>
-            )}
-            <span className={styles.fnTabDot} />
-            <div className={styles.fnTabActions}>
-              <button className={styles.fnTabBtn} title="Edit configuration" onClick={() => setIsEditOpen(true)}>
-                <Icon name="pencil" size="sm" />
-              </button>
-              <button
-                className={styles.fnTabBtn}
-                title="Save code"
-                onClick={handleSaveIndex}
-                disabled={isIndexSaving || !hasUnsavedChanges}
-              >
-                <Icon name="save" size="sm" />
-              </button>
-              {lastSaveTime && !isIndexSaving && (
-                <span className={styles.saveStatus}>Saved {lastSaveTime.toLocaleTimeString()}</span>
-              )}
-              {isIndexSaving && <span className={styles.saveStatus}>Saving…</span>}
-              <button className={styles.fnTabBtn} title="Toggle sidebar" onClick={toggleSidebar}>
-                <Icon name={showSidebar ? "chevronRight" : "chevronLeft"} size="sm" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Editor */}
-        <div className={styles.editorWrapper}>
-          <CodeEditor
-            value={code}
-            language={fn.language ?? "javascript"}
+    <>
+      <FunctionEditorLayout
+        showSidebar={showSidebar}
+        header={
+          <FunctionHeader
+            functionName={fn.name}
+            isNameEditing={isNameEditing}
+            editingName={editingName}
+            onEditStart={handleNameEditStart}
+            onEditingNameChange={setEditingName}
+            onEditSave={handleNameEditSave}
+            onEditKeyDown={handleNameEditKeyDown}
+            onOpenConfiguration={() => setIsEditOpen(true)}
+            onSaveCode={handleSaveIndex}
+            onToggleSidebar={toggleSidebar}
+            showSidebar={showSidebar}
+            hasUnsavedChanges={hasUnsavedChanges}
+            isSaving={isIndexSaving}
+            lastSaveTime={lastSaveTime}
+          />
+        }
+        editor={
+          <FunctionEditorPanel
+            code={code}
+            language={editorLanguage}
             onChange={setCode}
             onSave={handleSaveIndex}
             functionId={functionId}
             extraLibs={extraLibs}
           />
-        </div>
-
-        {/* Log bar + Log panel */}
-        <div className={styles.footerBar}>
-          {/* Always-visible 32px bar */}
-          <div className={styles.logBar}>
-            <button className={styles.logBarToggle} onClick={toggleLogs}>
-              <svg
-                width="12"
-                height="12"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-                style={{transition: "transform 0.2s", transform: showLogs ? "rotate(180deg)" : "none"}}
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-              Logs
-            </button>
-            <div className={styles.logBarRight}>
-              <input
-                className={styles.logSearchInput}
-                placeholder="Search logs…"
-                value={logSearchQuery}
-                onChange={e => setLogSearchQuery(e.target.value)}
-              />
-              <div ref={logFilterWrapperRef} className={styles.logFilterWrapper}>
-                <button
-                  className={styles.logBarBtn}
-                  onClick={() => setLogLevelFilterOpen(prev => !prev)}
-                >
-                  <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-                  </svg>
-                  Filter
-                </button>
-                {logLevelFilterOpen && (
-                  <div className={styles.logFilterDropdown}>
-                    {(["info", "warning", "error", "success"] as const).map(key => (
-                      <label key={key} className={styles.logFilterLabel}>
-                        <input
-                          type="checkbox"
-                          checked={logLevelFilter[key]}
-                          onChange={e =>
-                            setLogLevelFilter(prev => ({...prev, [key]: e.target.checked}))
-                          }
-                        />
-                        {key.charAt(0).toUpperCase() + key.slice(1)}
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <button className={styles.logBarBtn} onClick={handleLogReset}>
-                Reset
-              </button>
-              <button
-                className={styles.logBarBtn}
-                onClick={handleClearLogs}
-                disabled={isClearingLogs || fnLogs.length === 0}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-
-          {/* Log list */}
-          {showLogs && (
-            <div className={styles.footerLogWrapper}>
-              <FunctionLogList
-                logs={filteredLogs}
-                searchQuery=""
-                onSearchChange={() => {}}
-                functionNames={logFunctionNames}
-                handlerNames={logHandlerNames}
-                onRefresh={refetchLogs}
-                onReset={handleLogReset}
-                isFilterApplied={false}
-                isRefreshing={isLogsFetching}
-                hideToolbar
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Right sidebar */}
-      <div className={`${styles.sidebar} ${!showSidebar ? styles.sidebarHidden : ""}`}>
-        <div className={styles.sidebarContent}>
-          <PanelAccordion>
-            <PanelAccordionItem header="Imported Functions" defaultOpen>
-              <ImportedFunctionPanel code={code} onCodeChange={setCode} currentFunctionId={functionId} />
-            </PanelAccordionItem>
-            <PanelAccordionItem header="Triggers" defaultOpen>
-              <TriggerPanel
-                triggers={localTriggers}
-                enqueuers={information?.enqueuers ?? []}
-                handlers={handlers}
-                onChange={setLocalTriggers}
-              />
-            </PanelAccordionItem>
-            <PanelAccordionItem header="Dependencies" defaultOpen>
-              <DependencyPanel functionId={functionId} />
-            </PanelAccordionItem>
-            <PanelAccordionItem header="Environment" defaultOpen>
-              <EnvironmentPanel
-                envVars={localEnvVars}
-                secrets={localSecrets}
-                onEnvVarsChange={setLocalEnvVars}
-                onSecretsChange={setLocalSecrets}
-              />
-            </PanelAccordionItem>
-          </PanelAccordion>
-        </div>
-        <FlexElement className={styles.saveButtonContainer} direction="vertical" dimensionX="fill">
-          <Button
-            fullWidth
-            variant="solid"
-            color="primary"
-            className={styles.saveButton}
-            onClick={handleSaveSidebar}
-            disabled={(!hasSidebarChanges && !hasUnsavedChanges) || isSidebarSaving}
-          >
-            <Icon name="save" size="sm" />
-            {isSidebarSaving ? "Saving..." : "Save"}
-          </Button>
-        </FlexElement>
-      </div>
-
-      {/* Edit drawer */}
-      <ConfigurationDialog
-        isOpen={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
-        initialFunction={fn}
-        onSaved={() => {}}
+        }
+        footer={
+          <FunctionLogFooter
+            functionId={functionId}
+            functionName={fn.name}
+            defaultHandlerName={defaultLogHandlerName}
+            isOpen={showLogs}
+            onToggle={toggleLogs}
+          />
+        }
+        sidebar={
+          <FunctionSidebar
+            showSidebar={showSidebar}
+            code={code}
+            functionId={functionId}
+            triggers={localTriggers}
+            enqueuers={information?.enqueuers ?? []}
+            handlers={handlers}
+            envVars={localEnvVars}
+            secrets={localSecrets}
+            hasChanges={hasSidebarChanges}
+            isSaving={isSidebarSaving}
+            hasUnsavedCodeChanges={hasUnsavedChanges}
+            onCodeChange={setCode}
+            onTriggersChange={setLocalTriggers}
+            onEnvVarsChange={setLocalEnvVars}
+            onSecretsChange={setLocalSecrets}
+            onSave={handleSaveSidebar}
+          />
+        }
       />
 
-      {/* Delete confirmation */}
-      {isDeleteOpen && (
-        <Confirmation
-          title="DELETE FUNCTION"
-          description={
-            <>
-              <span>This action will permanently delete this function.</span>
-              <span>
-                Please type <strong>agree</strong> to confirm deletion.
-              </span>
-            </>
-          }
-          inputPlaceholder="Type Here"
-          confirmLabel={
-            <>
-              <Icon name="delete" />
-              Delete
-            </>
-          }
-          cancelLabel={
-            <>
-              <Icon name="close" />
-              Cancel
-            </>
-          }
-          confirmCondition={(input) => input === "agree"}
-          showInput
-          onConfirm={handleDeleteConfirm}
-          onCancel={() => setIsDeleteOpen(false)}
-          loading={isDeleting}
-          error={
-            deleteError
-              ? (deleteError as {data?: {message?: string}; message?: string})?.data?.message ??
-                (deleteError as Error)?.message ??
-                "Delete failed"
-              : undefined
-          }
-        />
-      )}
-    </div>
+      <FunctionModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        functionToEdit={fn}
+        onSaved={() => setIsEditOpen(false)}
+      />
+
+      <FunctionDeleteConfirmation
+        isOpen={isDeleteOpen}
+        loading={isDeleting}
+        error={deleteErrorMessage}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setIsDeleteOpen(false)}
+      />
+    </>
   );
 };
 

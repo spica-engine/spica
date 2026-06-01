@@ -1,14 +1,38 @@
 import React, {type FC, useMemo, useState, useEffect} from "react";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useLocation} from "react-router-dom";
 import styles from "./SideBar.module.scss";
 import {Button, Icon, type IconName, createTheme} from "oziko-ui-kit";
 import Logo from "../../atoms/logo/Logo";
 import {getNavigationComponent} from "../../../components/prefabs/navigations/navigation-registry";
 import {sideBarItems, type SideBarItem} from "../../../pages/home/sidebarItems";
 
+const pathToSidebarId: Array<[RegExp, string]> = [
+  [/^\/bucket/, "bucket"],
+  [/^\/function/, "function"],
+  [/^\/passport\/observability/, "observability"],
+  [/^\/activity/, "observability"],
+  [/^\/passport/, "accessManagement"],
+  [/^\/config/, "config"],
+  [/^\/webhook/, "webhook"],
+  [/^\/storage/, "storage"],
+  [/^\/version-control/, "versionControl"],
+  [/^\/dashboard/, "dashboard"],
+];
+
+const getActiveItemFromPath = (pathname: string): SideBarItem => {
+  for (const [pattern, id] of pathToSidebarId) {
+    if (pattern.test(pathname)) {
+      const found = sideBarItems.find(i => i.id === id);
+      if (found) return found;
+    }
+  }
+  return sideBarItems.find(i => !i.separator) ?? sideBarItems[0];
+};
+
 type TypeSideBar = {
   toggleIconName?: IconName;
   onNavigatorToggle?: (isOpen: boolean) => void;
+  inDrawer?: boolean;
 };
 
 const railSvgMap: Record<string, React.ReactElement> = {
@@ -77,12 +101,14 @@ const railSvgMap: Record<string, React.ReactElement> = {
 
 const SideBar: FC<TypeSideBar> = ({
   toggleIconName = "chevronLeft",
-  onNavigatorToggle
+  onNavigatorToggle,
+  inDrawer = false
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showNavigator, setShowNavigator] = useState(true);
   const [activeSideBarItem, setActiveSideBarItem] = useState<SideBarItem>(
-    sideBarItems.find(i => !i.separator) ?? sideBarItems[0]
+    () => getActiveItemFromPath(location.pathname)
   );
   const [isDark, setIsDark] = useState<boolean>(
     () => localStorage.getItem("themeMode") === "dark"
@@ -91,6 +117,10 @@ const SideBar: FC<TypeSideBar> = ({
   useEffect(() => {
     createTheme({palette: {mode: isDark ? "dark" : "light"}});
   }, []);
+
+  useEffect(() => {
+    setActiveSideBarItem(getActiveItemFromPath(location.pathname));
+  }, [location.pathname]);
 
   const {mainItems, bottomItems} = useMemo(() => {
     const main: SideBarItem[] = [];
@@ -134,7 +164,7 @@ const SideBar: FC<TypeSideBar> = ({
     : null;
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${inDrawer ? styles.inDrawer : ""}`}>
       <div className={styles.menuContainer}>
         <div className={styles.logo}>
           <Logo />

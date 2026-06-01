@@ -64,6 +64,27 @@ export class BucketEntryTransformer {
     } else if (property?.type === "array" && property.items) {
       if (!Array.isArray(val)) return val;
       return val.map(v => this.cleanValue(v, property.items));
+    } else if (property?.type === "relation") {
+      const isOneToMany = (property as any).relationType === "onetomany";
+      // Extract string ID from any relation value shape:
+      // - plain string "id"
+      // - display format   {value: "id", label: "..."}
+      // - resolved object  {_id: "id", title: "..."}  (API response with relation:true)
+      const extractId = (v: any): string | undefined => {
+        if (typeof v === "string") return v;
+        return v?.value ?? v?._id ?? undefined;
+      };
+      if (isOneToMany) {
+        return Array.isArray(val)
+          ? val.map(extractId).filter(Boolean)
+          : extractId(val)
+            ? [extractId(val)]
+            : undefined;
+      } else {
+        // onetoone — backend expects a plain string, not an array
+        const raw = Array.isArray(val) ? val[0] : val;
+        return extractId(raw);
+      }
     }
 
     return this.cleanSimpleValue(val, property?.type, required || false, preferUndefined || false);
