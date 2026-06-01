@@ -3,21 +3,34 @@
  * email: rio.kenan@gmail.com
  */
 
-import {memo, useCallback, useEffect, useMemo, useState} from "react";
-import {Button, FlexElement, Icon, Input, Modal, Select, Text} from "oziko-ui-kit";
+import React, {memo, useCallback, useEffect, useMemo, useState} from "react";
+import {Button, Drawer, FlexElement, Icon, Input, NumberInput, Select, StringInput, Text} from "oziko-ui-kit";
 import {
   useCreateFunctionMutation,
+  useUpdateFunctionMutation,
   useUpdateFunctionIndexMutation,
   useGetFunctionInformationQuery
 } from "../../../../store/api/functionApi";
-import type {SpicaFunction, Enqueuer} from "../../../../store/api/functionApi";
+import type {SpicaFunction, Enqueuer, TriggerMap} from "../../../../store/api/functionApi";
 import {resolveRenderer, SchemaFieldProvider} from "./schema-fields";
-import styles from "./AddFunctionModal.module.scss";
+import styles from "./FunctionModal.module.scss";
 
-type AddFunctionModalProps = {
+type FunctionModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onCreated: (fn: SpicaFunction) => void;
+  functionToEdit?: SpicaFunction;
+  onSaved: (fn: SpicaFunction) => void;
+};
+
+const getTriggerFromFunction = (fn: SpicaFunction): { type: string; options: Record<string, any> } => {
+  if (!fn.triggers) return {type: "http", options: {}};
+  if (Array.isArray(fn.triggers)) {
+    const first = fn.triggers[0];
+    return {type: first?.type ?? "http", options: first?.options ?? {}};
+  }
+  const map = fn.triggers as TriggerMap;
+  const defaultTrigger = map.default;
+  return {type: defaultTrigger?.type ?? "http", options: defaultTrigger?.options ?? {}};
 };
 
 const LANGUAGE_OPTIONS = [
@@ -90,7 +103,8 @@ const getExampleCode = (type: string, options: Record<string, any>): string => {
   return TRIGGER_EXAMPLES[type] ?? TRIGGER_EXAMPLES.http;
 };
 
-const AddFunctionModal = ({isOpen, onClose, onCreated}: AddFunctionModalProps) => {
+const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModalProps) => {
+  const isEditMode = !!functionToEdit;
   const [name, setName] = useState("");
   const [language, setLanguage] = useState<string>("javascript");
   const [timeout, setTimeout] = useState(10);
@@ -100,7 +114,10 @@ const AddFunctionModal = ({isOpen, onClose, onCreated}: AddFunctionModalProps) =
 
   const {data: information} = useGetFunctionInformationQuery();
   const [createFunction, {isLoading: isCreating}] = useCreateFunctionMutation();
+  const [updateFunction, {isLoading: isUpdating}] = useUpdateFunctionMutation();
   const [updateIndex] = useUpdateFunctionIndexMutation();
+
+  const isSaving = isCreating || isUpdating;
 
   const maxTimeout = information?.timeout ?? 120;
 
@@ -115,8 +132,24 @@ const AddFunctionModal = ({isOpen, onClose, onCreated}: AddFunctionModalProps) =
   );
 
   useEffect(() => {
+    if (!isOpen) return;
+    if (functionToEdit) {
+      setName(functionToEdit.name ?? "");
+      setLanguage(functionToEdit.language ?? "javascript");
+      setTimeout(functionToEdit.timeout ?? 10);
+      const trigger = getTriggerFromFunction(functionToEdit);
+      setTriggerType(trigger.type);
+      setTriggerOptionValues(trigger.options);
+    } else {
+      resetForm();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, functionToEdit?._id]);
+
+  useEffect(() => {
+    if (isEditMode) return;
     setTriggerOptionValues(getDefaultTriggerOptions(information?.enqueuers ?? [], triggerType));
-  }, [triggerType, information]);
+  }, [triggerType, information, isEditMode]);
 
   const handleTriggerOptionChange = useCallback((key: string, value: any) => {
     setTriggerOptionValues(prev => ({...prev, [key]: value}));
@@ -190,25 +223,41 @@ const AddFunctionModal = ({isOpen, onClose, onCreated}: AddFunctionModalProps) =
     }
 
     try {
-      const result = await createFunction({
-        name: trimmed,
-        language: language as "javascript" | "typescript",
-        timeout,
-        triggers: {
-          default: {type: triggerType, active: true, options: triggerOptionValues}
+      if (isEditMode && functionToEdit?._id) {
+        const result = await updateFunction({
+          id: functionToEdit._id,
+          body: {
+            name: trimmed,
+            language: language as "javascript" | "typescript",
+            timeout,
+            triggers: {
+              default: {type: triggerType, active: true, options: triggerOptionValues}
+            }
+          }
+        }).unwrap();
+        onSaved(result);
+        onClose();
+      } else {
+        const result = await createFunction({
+          name: trimmed,
+          language: language as "javascript" | "typescript",
+          timeout,
+          triggers: {
+            default: {type: triggerType, active: true, options: triggerOptionValues}
+          }
+        }).unwrap();
+
+        const exampleCode = getExampleCode(triggerType, triggerOptionValues);
+        if (result._id) {
+          await updateIndex({id: result._id, index: exampleCode}).unwrap();
         }
-      }).unwrap();
 
-      const exampleCode = getExampleCode(triggerType, triggerOptionValues);
-      if (result._id) {
-        await updateIndex({id: result._id, index: exampleCode}).unwrap();
+        resetForm();
+        onSaved(result);
+        onClose();
       }
-
-      resetForm();
-      onCreated(result);
-      onClose();
     } catch (err: any) {
-      setError(err?.data?.message ?? err?.message ?? "Failed to create function.");
+      setError(err?.data?.message ?? err?.message ?? (isEditMode ? "Failed to update function." : "Failed to create function."));
     }
   }, [
     name,
@@ -216,14 +265,15 @@ const AddFunctionModal = ({isOpen, onClose, onCreated}: AddFunctionModalProps) =
     timeout,
     triggerType,
     triggerOptionValues,
+    isEditMode,
+    functionToEdit,
     createFunction,
+    updateFunction,
     updateIndex,
     resetForm,
-    onCreated,
+    onSaved,
     onClose
   ]);
-
-  const formatTimeout = (val: number) => (val >= 60 ? `${(val / 60).toFixed(1)}m` : `${val}s`);
 
   const renderField = useCallback(
     (key: string, schema: any, value: any, onChange: (val: any) => void, prefix = "") => {
@@ -265,114 +315,125 @@ const AddFunctionModal = ({isOpen, onClose, onCreated}: AddFunctionModalProps) =
     );
   };
 
-  if (!isOpen) return null;
-
   const baseUrl = (import.meta.env.VITE_BASE_URL as string) || "";
 
   return (
-    <Modal showCloseButton={false} onClose={handleClose} className={styles.modal} isOpen>
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <Text className={styles.headerText}>ADD NEW FUNCTION</Text>
+    <Drawer
+      placement="right"
+      size={420}
+      isOpen={isOpen}
+      onClose={handleClose}
+      showCloseButton={false}
+      scrollableContentClassName={styles.scrollableWrapper}
+    >
+      <div className={styles.drawerContent}>
+        <div className={styles.drawerHeader}>
+          <div className={styles.drawerHeaderInfo}>
+            <div className={styles.drawerTitle}>{isEditMode ? "Edit Function" : "Add New Function"}</div>
+            <div className={styles.drawerSubtitle}>function&nbsp;·&nbsp;{isEditMode ? "edit" : "new"}</div>
+          </div>
+          <button className={styles.drawerClose} onClick={handleClose}>
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
-        <div className={styles.scrollBody}>
-          <FlexElement
-            direction="vertical"
-            dimensionX="fill"
-            alignment="leftCenter"
-            gap={12}
-            className={styles.formBody}
-          >
-            <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
-              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                Name
-              </Text>
-              <FlexElement gap={5} className={styles.inputContainer}>
-                <Icon name="formatQuoteClose" size="md" />
-                <Input
-                  placeholder="Function name"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className={styles.input}
-                />
-              </FlexElement>
-            </FlexElement>
+        <div className={styles.drawerBody}>
+          <StringInput
+            label="Name"
+            value={name}
+            onChange={setName}
+          />
 
-            <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
-              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                Language
-              </Text>
-              <Select
-                options={LANGUAGE_OPTIONS}
-                value={language}
-                onChange={v => setLanguage(v as string)}
-                dimensionX="fill"
-              />
-            </FlexElement>
-
-            <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
-              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                Timeout ({formatTimeout(timeout)})
-              </Text>
-              <input
-                type="range"
-                className={styles.slider}
-                min={1}
-                max={maxTimeout}
-                step={1}
-                value={timeout}
-                onChange={e => setTimeout(Number(e.target.value))}
-              />
-            </FlexElement>
-
-            <Text size="xlarge" dimensionX="fill" className={styles.triggerHeading}>
-              Trigger
+          <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
+            <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
+              Language
             </Text>
-
-            <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
-              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                Type
-              </Text>
-              <Select
-                options={triggerTypeSelectOptions}
-                value={triggerType}
-                onChange={v => handleTriggerTypeChange(v as string)}
-                dimensionX="fill"
-              />
-            </FlexElement>
-
-            <SchemaFieldProvider value={schemaFieldContextValue}>
-              {renderTriggerOptionFields()}
-            </SchemaFieldProvider>
-
-            {triggerType === "http" && triggerOptionValues.path && (
-              <Text size="small" className={styles.httpUrlPreview}>
-                {baseUrl}/fn-execute{triggerOptionValues.path}
-              </Text>
-            )}
-
-            {error && (
-              <Text variant="danger" className={styles.errorText}>
-                {error}
-              </Text>
-            )}
+            <Select
+              options={LANGUAGE_OPTIONS}
+              value={language}
+              onChange={v => setLanguage(v as string)}
+              dimensionX="fill"
+            />
           </FlexElement>
+
+          <div className={styles.timeoutField}>
+            <div className={styles.timeoutHeader}>
+              <Text size="small" className={styles.fieldLabel}>Timeout</Text>
+              <div className={styles.timeoutValue}>
+                <span className={styles.timeoutNumber}>{timeout}</span>
+                <span className={styles.timeoutUnit}>seconds</span>
+              </div>
+            </div>
+            <input
+              type="range"
+              className={styles.slider}
+              min={1}
+              max={maxTimeout}
+              step={1}
+              value={timeout}
+              style={{"--pct": `${((timeout - 1) / (maxTimeout - 1)) * 100}%`} as React.CSSProperties}
+              onChange={e => setTimeout(Number(e.target.value))}
+            />
+            <div className={styles.timeoutRange}>
+              <span className={styles.timeoutRangeLabel}>1s</span>
+              <span className={styles.timeoutRangeLabel}>{maxTimeout}s</span>
+            </div>
+          </div>
+
+          <div className={styles.triggerHeading}>Trigger</div>
+
+          <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
+            <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
+              Type
+            </Text>
+            <Select
+              options={triggerTypeSelectOptions}
+              value={triggerType}
+              onChange={v => handleTriggerTypeChange(v as string)}
+              dimensionX="fill"
+            />
+          </FlexElement>
+
+          <SchemaFieldProvider value={schemaFieldContextValue}>
+            {renderTriggerOptionFields()}
+          </SchemaFieldProvider>
+
+          {triggerType === "http" && triggerOptionValues.path && (
+            <Text size="small" className={styles.httpUrlPreview}>
+              {baseUrl}/fn-execute{triggerOptionValues.path}
+            </Text>
+          )}
+
+          {error && (
+            <Text variant="danger" className={styles.errorText}>
+              {error}
+            </Text>
+          )}
         </div>
 
-        <div className={styles.footer}>
-          <Button onClick={handleSave} variant="solid" color="primary" disabled={isCreating || !name.trim() || !triggerType} loading={isCreating}>
-            <Icon name="plus" />
-            <Text color="white" className={styles.createButtonText}>Create</Text>
+        <div className={styles.drawerFooter}>
+          <Button
+            onClick={handleSave}
+            variant="solid"
+            color="primary"
+            disabled={isSaving || !name.trim() || !triggerType}
+            loading={isSaving}
+          >
+            <Icon name={isEditMode ? "check" : "plus"} />
+            {isEditMode ? "Save" : "Create"}
           </Button>
-          <Button variant="text" onClick={handleClose} disabled={isCreating}>
+          <Button variant="text" onClick={handleClose} disabled={isSaving}>
             <Icon name="close" />
-            <Text>Cancel</Text>
+            Cancel
           </Button>
         </div>
       </div>
-    </Modal>
+    </Drawer>
   );
 };
 
-export default memo(AddFunctionModal);
+export default memo(FunctionModal);
+

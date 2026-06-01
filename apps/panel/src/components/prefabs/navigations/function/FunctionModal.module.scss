@@ -1,0 +1,263 @@
+/* ── Drawer shell ──────────────────────────────────────────────────── */
+.scrollableWrapper {
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.drawerContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────────────────────────────── */
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  height: 48px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.drawerHeaderInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.drawerTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.drawerSubtitle {
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  line-height: 1.4;
+  margin-top: 1px;
+}
+
+.drawerClose {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md-sm);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border: none;
+  background: none;
+  padding: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+  }
+}
+
+/* ── Scrollable body ───────────────────────────────────────────────── */
+.drawerBody {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  width: 100%;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+}
+
+/* ── Footer ────────────────────────────────────────────────────────── */
+.drawerFooter {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* ── Shared field styles ───────────────────────────────────────────── */
+.fieldLabel {
+  color: var(--color-font-secondary);
+  font-weight: 500;
+}
+
+.slider {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    var(--color-accent) var(--pct, 0%),
+    var(--color-border) var(--pct, 0%)
+  );
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    cursor: pointer;
+    border: 2.5px solid var(--color-surface);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+    transition: transform 0.12s;
+
+    &:hover {
+      transform: scale(1.15);
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    cursor: pointer;
+    border: 2.5px solid var(--color-surface);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+    transition: transform 0.12s;
+  }
+}
+
+/* ── Timeout field ─────────────────────────────────────────────────── */
+.timeoutField {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.timeoutHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.timeoutValue {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.timeoutNumber {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.timeoutUnit {
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+}
+
+.timeoutRange {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.timeoutRangeLabel {
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.triggerHeading {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 10px;
+  margin-top: 2px;
+}
+
+.httpUrlPreview {
+  font-size: var(--font-size-xs) !important;
+  color: var(--color-font-tertiary);
+  word-break: break-all;
+  font-family: monospace;
+}
+
+.errorText {
+  font-size: var(--font-size-xs) !important;
+}
+
+/* ── Complex field containers (used by ObjectField / ArrayObjectField) */
+.nestedGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding-left: var(--padding-md);
+  border-left: 2px solid var(--color-border, #333);
+}
+
+.arrayRow {
+  width: 100%;
+  padding: var(--padding-xs);
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-input-background);
+}
+
+.addRowButton,
+.removeRowButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--color-font-secondary, #999);
+  padding: 4px;
+  border-radius: var(--border-radius-sm);
+
+  &:hover {
+    color: var(--color-primary);
+    background-color: var(--color-hover-background, rgba(255, 255, 255, 0.05));
+  }
+}
+
+.removeRowButton {
+  flex-shrink: 0;
+  color: var(--color-danger, #e74c3c);
+
+  &:hover {
+    color: var(--color-danger-hover, #c0392b);
+  }
+}

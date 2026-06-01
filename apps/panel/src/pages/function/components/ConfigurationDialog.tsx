@@ -12,7 +12,7 @@ import {
   useGetFunctionInformationQuery,
 } from "../../../store/api/functionApi";
 import type {SpicaFunction, FunctionTrigger, Enqueuer} from "../../../store/api/functionApi";
-import styles from "../FunctionPage.module.scss";
+import styles from "./ConfigurationDialog.module.scss";
 
 type ConfigurationDialogProps = {
   isOpen: boolean;

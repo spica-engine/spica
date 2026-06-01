@@ -4,10 +4,18 @@ import styles from "./Topbar.module.scss";
 import ProfilePopover from "../../molecules/profile-popover/ProfilePopover";
 import {useCopyToClipboard} from "../../../hooks/useCopyToClipboard";
 
-type TypeTopbar = {token: string; name: string; onDrawerOpen?: () => void; onProfile?: () => void; onLogout?: () => void};
+type TypeTopbar = {
+  token: string;
+  name: string;
+  email?: string;
+  onDrawerOpen?: () => void;
+  onProfile?: () => void;
+  onSettings?: () => void;
+  onLogout?: () => void;
+};
 
 
-const Topbar: FC<TypeTopbar> = ({token, name, onDrawerOpen, onProfile, onLogout}) => {
+const Topbar: FC<TypeTopbar> = ({token, name, email, onDrawerOpen, onProfile, onSettings, onLogout}) => {
   const {copied, copy} = useCopyToClipboard();
 
   return (
@@ -18,6 +26,17 @@ const Topbar: FC<TypeTopbar> = ({token, name, onDrawerOpen, onProfile, onLogout}
       root={{
         children: (
           <>
+            <button
+              className={styles.hamburger}
+              onClick={onDrawerOpen}
+              title="Open menu"
+            >
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
             {token && (
               <button
                 className={styles.jwtChip}
@@ -46,7 +65,10 @@ const Topbar: FC<TypeTopbar> = ({token, name, onDrawerOpen, onProfile, onLogout}
       suffix={{
         children: (
             <ProfilePopover
+              name={name}
+              email={email}
               profileOnClick={onProfile}
+              settingsOnClick={onSettings}
               logoutOnClick={onLogout}
             />
 

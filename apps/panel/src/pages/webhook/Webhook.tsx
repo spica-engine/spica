@@ -6,18 +6,18 @@
 import React, { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
+  useGetWebhooksQuery,
   useGetWebhookQuery,
   useGetWebhookLogsQuery,
   useDeleteWebhookMutation,
 } from "../../store/api/webhookApi";
 import Loader from "../../components/atoms/loader/Loader";
-import Page from "../../components/organisms/page-layout/Page";
 import AddWebhookForm from "../../components/prefabs/navigations/webhook/AddWebhookForm";
 import { WebhookDetails } from "./components/WebhookDetails";
 import { WebhookLogs } from "./components/WebhookLogs";
 import Confirmation from "../../components/molecules/confirmation/Confirmation";
 import styles from "./Webhook.module.scss";
-import { Button, Drawer, FlexElement, Icon, Text } from "oziko-ui-kit";
+import { Button, Drawer, Icon } from "oziko-ui-kit";
 
 const Webhook = () => {
   const { webhookId = "" } = useParams<{ webhookId: string }>();
@@ -25,6 +25,8 @@ const Webhook = () => {
   const { data: webhook, isLoading } = useGetWebhookQuery(webhookId, {
     skip: !webhookId,
   });
+  const { data: allWebhooksData } = useGetWebhooksQuery();
+  const allWebhooks = allWebhooksData?.data ?? [];
   const { data: logs = [], isLoading: isLoadingLogs } = useGetWebhookLogsQuery(
     { webhooks: webhookId ? [webhookId] : undefined, limit: 20 },
     { skip: !webhookId }
@@ -50,11 +52,17 @@ const Webhook = () => {
     if (!webhook?._id) return;
     try {
       await deleteWebhook(webhook._id).unwrap();
-      navigate(-1);
+      const remaining = allWebhooks.filter((w) => w._id !== webhook._id);
+      const lastWebhook = remaining[remaining.length - 1];
+      if (lastWebhook?._id) {
+        navigate(`/webhook/${lastWebhook._id}`);
+      } else {
+        navigate("/webhook");
+      }
     } finally {
       handleCloseDeleteConfirmation();
     }
-  }, [webhook?._id, deleteWebhook, navigate, handleCloseDeleteConfirmation]);
+  }, [webhook, deleteWebhook, navigate, allWebhooks, handleCloseDeleteConfirmation]);
 
   if (isLoading) {
     return <Loader />;
@@ -62,20 +70,15 @@ const Webhook = () => {
 
   if (!webhook) {
     return (
-      <Page title="Webhook">
+      <div className={styles.webhookContainer}>
         <div className={styles.empty}>Webhook not found</div>
-      </Page>
+      </div>
     );
   }
 
   return (
     <div className={styles.webhookContainer}>
-      <FlexElement
-        dimensionX="fill"
-        alignment="rightCenter"
-        gap={10}
-        className={styles.actionButtons}
-      >
+      <div className={styles.actionBar}>
         <Button color="default" onClick={handleOpenEditDrawer}>
           <Icon name="pencil" />
           Edit
@@ -84,7 +87,8 @@ const Webhook = () => {
           <Icon name="delete" />
           Delete
         </Button>
-      </FlexElement>
+      </div>
+
       <WebhookDetails webhook={webhook} />
       <WebhookLogs logs={logs} isLoading={isLoadingLogs} />
 
@@ -94,21 +98,31 @@ const Webhook = () => {
         isOpen={isEditDrawerOpen}
         onClose={handleCloseEditDrawer}
         showCloseButton={false}
+        scrollableContentClassName={styles.drawerScrollable}
       >
-        <FlexElement
-          dimensionX="fill"
-          direction="vertical"
-          gap={16}
-          alignment="leftTop"
-          className={styles.editDrawerContent}
-        >
-          <Text size="large">Edit Webhook</Text>
-          <AddWebhookForm
-            key={isEditDrawerOpen ? webhook._id : "closed"}
-            onClose={handleCloseEditDrawer}
-            initialWebhook={webhook}
-          />
-        </FlexElement>
+        <div className={styles.drawerContent}>
+          <div className={styles.drawerHeader}>
+            <div className={styles.drawerHeaderInfo}>
+              <div className={styles.drawerTitle}>Edit Webhook</div>
+              <div className={styles.drawerSubtitle}>
+                {webhook.title}&nbsp;&middot;&nbsp;edit webhook
+              </div>
+            </div>
+            <button className={styles.drawerClose} onClick={handleCloseEditDrawer}>
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+          <div className={styles.drawerBody}>
+            <AddWebhookForm
+              key={isEditDrawerOpen ? webhook._id : "closed"}
+              onClose={handleCloseEditDrawer}
+              initialWebhook={webhook}
+            />
+          </div>
+        </div>
       </Drawer>
 
       {isDeleteConfirmationOpen ? (

@@ -165,7 +165,7 @@ export class PassportIdentityController {
   async completeIdentifyWithState(state: string, identity: Identity, expires: number) {
     const res = this.stateReqs.get(state);
     this.stateReqs.delete(state);
-    if (!res || res.headerSent) {
+    if (!res || res.headersSent) {
       return;
     }
 
@@ -201,7 +201,7 @@ export class PassportIdentityController {
 
   async _identify(identifier: string, password: string, state: string, expires: number, res) {
     const catchError = e => {
-      if (!res.headerSent) {
+      if (!res.headersSent) {
         res.status(e.status || 500).json(e.response || e);
       }
     };
@@ -239,14 +239,14 @@ export class PassportIdentityController {
     @Query("identifier") identifier: string,
     @Query("password") password: string,
     @Query("state") state: string,
-    @Req() req: any,
+    @Res() res: any,
     @Query("expires", NUMBER) expires?: number
   ) {
-    req.res.append(
+    res.append(
       "Warning",
       `299 "Identify with 'GET' method has been deprecated. Use 'POST' instead."`
     );
-    this._identify(identifier, password, state, expires, req.res);
+    return this._identify(identifier, password, state, expires, res);
   }
 
   @Post("identify")

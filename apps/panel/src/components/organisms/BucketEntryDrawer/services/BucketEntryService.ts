@@ -72,5 +72,14 @@ export class BucketEntryService {
       };
     }
   }
+
+  prepareData(
+    value: Record<string, any>,
+    properties: Properties,
+    requiredFields: string[]
+  ): Record<string, any> {
+    const normalized = this.transformer.normalizeForSave(value, properties);
+    return this.transformer.cleanAllValues(normalized, properties, requiredFields);
+  }
 }
 

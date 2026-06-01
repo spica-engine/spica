@@ -1,20 +1,21 @@
 @use "styles/shared/global.scss";
 
 :root {
-  --font-size-base: 16px;
-  --font-size-xs: 0.625rem;
-  /* 10px */
-  --font-size-sm: 0.75rem;
-  /* 12px */
-  --font-size-md: 0.875rem;
-  /* 14px */
-  --font-size-lg: 1rem;
-  /* 16px */
-  --font-size-xl: 1.125rem;
-  /* 18px */
+  --font-size-2xs:       9px;
+  --font-size-xs:        10px;
+  --font-size-sm:        11px;
+  --font-size-sm-plus:   11.5px;
+  --font-size-base:      12px;
+  --font-size-base-plus: 12.5px;
+  --font-size-button:    12px;
+  --font-size-md:        13px;
+  --font-size-lg:        14px;
+  --font-size-xl:        20px;
+  --font-size-2xl:       22px;
 
   --font-family-base: 'DM Sans', sans-serif;
   --font-sans: var(--font-family-base);
+  --font-mono: "JetBrains Mono", source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 
   --color-primary: #1c1c50;
   --color-primary-rgb: 28, 28, 80;
@@ -160,7 +161,7 @@ body {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-family: var(--font-mono);
 }
 
 *,

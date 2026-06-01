@@ -1,6 +1,6 @@
 import styles from "./Bucket.module.scss";
 import {useExecuteBatchMutation, type BatchResponse, type BatchResponseItem} from "../../store/api/batchApi";
-import {useUpdateBucketEntryMutation, useGetBucketsQuery} from "../../store/api/bucketApi";
+import {useGetBucketsQuery} from "../../store/api/bucketApi";
 import {useParams} from "react-router-dom";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
@@ -24,7 +24,6 @@ export default function Bucket() {
   const [isNewEntryDrawerOpen, setIsNewEntryDrawerOpen] = useState(false);
   const {data: buckets = []} = useGetBucketsQuery();
   const [executeBatchRequest] = useExecuteBatchMutation();
-  const [updateBucketEntry] = useUpdateBucketEntryMutation();
   const dispatch = useAppDispatch();
   const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
   const [appliedSort, setAppliedSort] = useState<Record<string, 1 | -1> | null>(null);
@@ -122,26 +121,6 @@ export default function Bucket() {
     };
   }, [buckets]);
   
-  const handleDataChange = useCallback(
-    async (rowId: string, propertyKey: string, newValue: any) => {
-      try {
-        await updateBucketEntry({
-          bucketId,
-          entryId: rowId,
-          data: {
-            [propertyKey]: newValue
-          }
-        }).unwrap();
-        
-        // Optionally refresh data
-        handleRefresh();
-      } catch (error) {
-        console.error("Failed to save data:", error);
-      }
-    },
-    [bucketId]
-  );
-
   const deleteBucketEntries = useCallback(
     async (entryIds: string[], bucketId: string): Promise<{failed: string[]; succeeded: string[]}> => {
       if (!entryIds.length) {
@@ -231,7 +210,6 @@ export default function Bucket() {
         <BucketTableNew
           bucket={bucket as any}
           data={bucketData?.data ?? []}
-          onDataChange={handleDataChange}
           onRowClick={handleRowClick}
           onNewEntry={handleOpenNewEntry}
           onSort={setAppliedSort}
