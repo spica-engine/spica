@@ -58,7 +58,6 @@ const DeleteWarningParagraph = ({
   const count = selectedEntries.size;
   const isSingle = count === 1;
 
-  console.log({dependentRelations, bucketData, selectedEntries});
   const relationTitles = dependentRelations.map(relation => relation.title);
   const dependentEntries =
     dependentRelations.length > 0 ? bucketData.filter(entry => selectedEntries.has(entry._id)) : [];

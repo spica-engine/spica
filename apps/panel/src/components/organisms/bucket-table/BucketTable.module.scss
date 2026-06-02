@@ -1,6 +1,11 @@
 .tableContainer {
   display: flex;
   width: 100%;
+  /* Give the oziko Table a bounded height so its internal scroll area
+     (.tableArea, overflow:auto) scrolls with a pinned sticky <thead>, instead of
+     the whole page scrolling. The Table owns the scrollbar; this wrapper clips. */
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   position: relative;
 }
@@ -12,8 +17,9 @@
   border-left: 1px solid var(--color-border);
   z-index: 12;
   background: var(--color-surface);
-  max-height: calc(100% - 6px);
-  overflow: hidden;
+  /* overflow must stay visible so the sticky header below pins relative to the
+     scrolling table container rather than this column. */
+  align-self: stretch;
 }
 
 .newFieldContainerEmpty {
@@ -32,6 +38,9 @@
   cursor: pointer;
   background: var(--color-surface-2);
   border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 11;
   transition: color 0.12s, background 0.12s;
   white-space: nowrap;
 

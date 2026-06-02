@@ -86,10 +86,6 @@
   bottom: 0;
 }
 
-[class^="Portal-module_container__"] {
-  z-index: 4;
-}
-
 .descriptionText {
   gap: var(--confirm-modal-gap);
   display: flex;

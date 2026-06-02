@@ -131,6 +131,11 @@
   --sidebar-with-navigator-width: calc(var(--sidebar-width) + var(--navigator-w));
 
   --file-card-image-height: 240px;
+
+  // Overlay layer: ui-kit drawers, modals, popovers, tooltips and dropdowns all
+  // render into a body-level Portal container. This sits above every in-app
+  // layer (highest in-app z-index is ~1100) so overlays are always front-most.
+  --z-index-portal: 2000;
 }
 
 @font-face {
@@ -162,6 +167,15 @@ body {
 
 code {
   font-family: var(--font-mono);
+}
+
+// Keep every ui-kit overlay (drawer / modal / popover / tooltip / dropdown) on
+// the front-most layer. They all mount into a body-level Portal container; since
+// the app root is not a stacking context, in-app elements with their own
+// z-index (e.g. the bucket table's sticky header / "New Field" column) would
+// otherwise paint over overlays. Pinning the Portal container high prevents that.
+[class^="Portal-module_container__"] {
+  z-index: var(--z-index-portal);
 }
 
 *,

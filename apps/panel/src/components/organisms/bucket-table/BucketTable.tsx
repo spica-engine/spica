@@ -26,6 +26,9 @@ interface BucketTableNewProps {
   loading?: boolean;
   visibleColumns?: Record<string, boolean>;
   onSort?: (sort: Record<string, 1 | -1> | null) => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
 
@@ -204,13 +207,59 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   onRowClick,
   loading = false,
   visibleColumns,
-  onSort
+  onSort,
+  onLoadMore,
+  hasMore = false,
+  isLoadingMore = false
 }) => {
   const {selectedEntries, selectEntry, deselectEntry, selectEntries, resetSelection} = useEntrySelection(bucket._id);
 
   const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll: when the actual scroll element nears the bottom, ask the
+  // parent to load the next page. The oziko Table scrolls inside its own
+  // descendant (`.tableArea`, overflow:auto), so search descendants first, then
+  // fall back to the container itself and its ancestors.
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container || !onLoadMore) return;
+
+    const isScrollable = (el: HTMLElement): boolean => {
+      const {overflowY} = window.getComputedStyle(el);
+      return /(auto|scroll|overlay)/.test(overflowY) && el.scrollHeight > el.clientHeight + 1;
+    };
+
+    const findScrollable = (root: HTMLElement): HTMLElement | null => {
+      if (isScrollable(root)) return root;
+      for (const el of Array.from(root.querySelectorAll<HTMLElement>("*"))) {
+        if (isScrollable(el)) return el;
+      }
+      let anc = root.parentElement;
+      while (anc) {
+        if (isScrollable(anc)) return anc;
+        anc = anc.parentElement;
+      }
+      return null;
+    };
+
+    const scrollEl = findScrollable(container);
+    if (!scrollEl) return;
+
+    const onScroll = () => {
+      if (!hasMore || isLoadingMore) return;
+      const distanceToBottom = scrollEl.scrollHeight - (scrollEl.scrollTop + scrollEl.clientHeight);
+      if (distanceToBottom <= 300) {
+        onLoadMore();
+      }
+    };
+
+    scrollEl.addEventListener("scroll", onScroll, {passive: true});
+    // Handle the case where the freshly loaded page already sits near the bottom.
+    onScroll();
+    return () => scrollEl.removeEventListener("scroll", onScroll);
+  }, [onLoadMore, hasMore, isLoadingMore, data.length]);
 
   const [editingField, setEditingField] = useState<{
     key: string;
