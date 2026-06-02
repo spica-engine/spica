@@ -1,6 +1,5 @@
 import styles from "./Bucket.module.scss";
-import {useExecuteBatchMutation, type BatchResponse, type BatchResponseItem} from "../../store/api/batchApi";
-import {useGetBucketsQuery} from "../../store/api/bucketApi";
+import {bucketApi, useGetBucketsQuery, useDeleteBucketEntryMutation} from "../../store/api/bucketApi";
 import {useParams} from "react-router-dom";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
@@ -9,9 +8,8 @@ import Loader from "../../components/atoms/loader/Loader";
 import {useBucketColumns} from "../../hooks/useBucketColumns";
 import {useBucketSearch} from "../../hooks/useBucketSearch";
 import {useBucketData} from "../../hooks/useBucketData";
-import {useAppDispatch, useAppSelector} from "../../store/hook";
+import {useAppDispatch} from "../../store/hook";
 import {resetBucketSelection} from "../../store";
-import {selectParsedToken} from "../../store/slices/authSlice";
 import BucketTableNew from "../../components/organisms/bucket-table/BucketTable";
 import {BucketLookupContext, type BucketLookup} from "../../contexts/BucketLookupContext";
 import BucketEntryDrawer from "../../components/organisms/BucketEntryDrawer/BucketEntryDrawer";
@@ -23,7 +21,7 @@ export default function Bucket() {
   const [editingEntry, setEditingEntry] = useState<Record<string, any> | null>(null);
   const [isNewEntryDrawerOpen, setIsNewEntryDrawerOpen] = useState(false);
   const {data: buckets = []} = useGetBucketsQuery();
-  const [executeBatchRequest] = useExecuteBatchMutation();
+  const [deleteBucketEntry] = useDeleteBucketEntryMutation();
   const dispatch = useAppDispatch();
   const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
   const [appliedSort, setAppliedSort] = useState<Record<string, 1 | -1> | null>(null);
@@ -82,12 +80,11 @@ export default function Bucket() {
     return merged;
   }, [searchQuery, appliedFilter, appliedSort]);
 
-  const {bucketData, bucketDataLoading, refreshLoading, handleRefresh} =
+  const {bucketData, bucketDataLoading, refreshLoading, handleRefresh, loadMore, hasMore, isFetchingMore} =
     useBucketData(bucketId, mergedSearchQuery);
 
   const isTableLoading = useMemo(() => formattedColumns.length <= 1, [formattedColumns]);
-  const authToken = useAppSelector(selectParsedToken);
-  
+
   // Create bucket lookup service for dependency injection
   const bucketLookup: BucketLookup = useMemo(() => {
     const idToTitleMap = new Map<string, string>();
@@ -127,51 +124,56 @@ export default function Bucket() {
         return {failed: [], succeeded: []};
       }
 
-      try {
-        const hasToken = typeof authToken === "string" && authToken.trim().length > 0;
-        const authorizationHeader = hasToken ? {Authorization: `IDENTITY ${authToken}`} : undefined;
+      // Delete each entry with a direct DELETE request. allSettled keeps a single
+      // failure from aborting the rest, so partial successes are reported per id.
+      const results = await Promise.allSettled(
+        entryIds.map(entryId => deleteBucketEntry({bucketId, entryId}).unwrap())
+      );
 
-        const batchResult: BatchResponse = await executeBatchRequest({
-          requests: entryIds.map(entryId => ({
-            id: entryId,
-            method: "DELETE" as const,
-            url: `/bucket/${bucketId}/data/${entryId}`,
-            headers: authorizationHeader
-          }))
-        }).unwrap();
+      const succeeded: string[] = [];
+      const rejected: string[] = [];
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          succeeded.push(entryIds[index]);
+        } else {
+          rejected.push(entryIds[index]);
+        }
+      });
 
-        const responses: BatchResponseItem[] = batchResult.responses ?? [];
+      // A rejected request doesn't always mean the entry survived: the API can
+      // return 500 from a post-delete step (e.g. clearing relations) after the
+      // document has already been removed. Verify each rejected id by fetching
+      // it — a deleted entry comes back empty, so only ids that still resolve to
+      // a real document are reported as genuine failures.
+      const failed: string[] = [];
+      if (rejected.length) {
+        const checks = await Promise.allSettled(
+          rejected.map(entryId => {
+            const subscription = dispatch(
+              bucketApi.endpoints.getBucketEntry.initiate({bucketId, entryId}, {forceRefetch: true})
+            );
+            return subscription
+              .unwrap()
+              .then((entry: any) => Boolean(entry && entry._id))
+              .finally(() => subscription.unsubscribe());
+          })
+        );
 
-        const getResponseStatus = (responseItem: BatchResponseItem): number | undefined => {
-          const candidates = [
-            responseItem.error?.status,
-            responseItem.response?.status,
-            responseItem.response?.statusCode
-          ];
-
-          return candidates.find((status): status is number => typeof status === "number");
-        };
-
-        const isFailedResponse = (responseItem: BatchResponseItem): boolean => {
-          if (responseItem.error) {
-            return true;
+        checks.forEach((check, index) => {
+          const entryId = rejected[index];
+          const stillExists = check.status === "fulfilled" && check.value === true;
+          if (stillExists) {
+            console.error(`Failed to delete bucket entry ${entryId}`);
+            failed.push(entryId);
+          } else {
+            succeeded.push(entryId);
           }
-
-          const status = getResponseStatus(responseItem);
-          return typeof status === "number" && (status < 200 || status >= 300);
-        };
-
-        const failedIds = responses.filter(isFailedResponse).map(responseItem => responseItem.id);
-
-        const succeededIds = entryIds.filter(id => !failedIds.includes(id));
-
-        return {failed: failedIds, succeeded: succeededIds};
-      } catch (error) {
-        console.error("Failed to delete bucket entries:", error);
-        return {failed: entryIds, succeeded: []};
+        });
       }
+
+      return {succeeded, failed};
     },
-    [executeBatchRequest, authToken]
+    [deleteBucketEntry, dispatch]
   );
 
   const handleRowClick = useCallback(
@@ -215,6 +217,9 @@ export default function Bucket() {
           onSort={setAppliedSort}
           loading={bucketDataLoading}
           visibleColumns={visibleColumns}
+          onLoadMore={loadMore}
+          hasMore={hasMore}
+          isLoadingMore={isFetchingMore}
         />
 
       </div>

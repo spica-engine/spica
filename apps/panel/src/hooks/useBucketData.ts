@@ -1,6 +1,8 @@
-import {useState, useCallback, useMemo, useRef} from "react";
-import {useGetBucketDataQuery} from "../store/api/bucketApi";
+import {useState, useCallback, useMemo, useRef, useEffect} from "react";
+import {useGetBucketDataQuery, useLazyGetBucketDataQuery} from "../store/api/bucketApi";
 import type {BucketDataQueryType} from "../store/api/bucketApi";
+
+const DEFAULT_PAGE_SIZE = 25;
 
 function smoothScrollToTop(el: HTMLElement): Promise<void> {
   return new Promise(resolve => {
@@ -27,6 +29,19 @@ function smoothScrollToTop(el: HTMLElement): Promise<void> {
   });
 }
 
+function dedupeById(rows: any[]): any[] {
+  const seen = new Set<string>();
+  const result: any[] = [];
+  for (const row of rows) {
+    const id = row?._id;
+    const key = typeof id === "string" ? id : JSON.stringify(row);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(row);
+  }
+  return result;
+}
+
 interface UseBucketDataResult {
   bucketData: {
     data: any[];
@@ -37,7 +52,9 @@ interface UseBucketDataResult {
   refreshLoading: boolean;
   tableRef: React.MutableRefObject<HTMLElement | null>;
   handleRefresh: () => Promise<any>;
-  loadMoreBucketData: () => Promise<void>;
+  loadMore: () => void;
+  hasMore: boolean;
+  isFetchingMore: boolean;
 }
 
 export function useBucketData(
@@ -58,11 +75,13 @@ export function useBucketData(
       bucketId: resolvedBucketId,
       paginate: true,
       relation: true,
-      limit: 25,
+      limit: DEFAULT_PAGE_SIZE,
       sort: {_id: -1},
       ...searchQuery,
     };
   }, [resolvedBucketId, searchQuery]);
+
+  const pageSize = (queryArgs?.limit as number) ?? DEFAULT_PAGE_SIZE;
 
   const {
     data: bucketDataResponse,
@@ -76,9 +95,31 @@ export function useBucketData(
     }
   );
 
+  // Pages loaded beyond the first page via "load more". Reset whenever the
+  // first page reloads (filter/sort/search change, refetch, or cache invalidation
+  // after create/delete) so we never show stale or duplicated rows.
+  const [extraData, setExtraData] = useState<any[]>([]);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [fetchMore] = useLazyGetBucketDataQuery();
+
+  useEffect(() => {
+    setExtraData([]);
+  }, [bucketDataResponse]);
+
+  const firstPage = bucketDataResponse?.data ?? [];
+  const total = bucketDataResponse?.meta?.total ?? 0;
+
+  const combinedData = useMemo(
+    () => dedupeById([...firstPage, ...extraData]),
+    [firstPage, extraData]
+  );
+
+  const hasMore = !!queryArgs && combinedData.length < total;
+
   const bucketData = bucketDataResponse
     ? {
-        ...bucketDataResponse,
+        data: combinedData,
+        meta: bucketDataResponse.meta,
         bucketId: resolvedBucketId!
       }
     : null;
@@ -86,13 +127,30 @@ export function useBucketData(
   const [refreshLoading, setRefreshLoading] = useState(false);
   const tableRef = useRef<HTMLElement | null>(null);
 
-  const loadMoreBucketData = useCallback(async () => {
-    console.log("Load more data - implement pagination logic here");
-  }, []);
+  const loadMore = useCallback(() => {
+    if (!queryArgs || isFetchingMore || combinedData.length >= total) {
+      return;
+    }
+
+    setIsFetchingMore(true);
+    fetchMore({...queryArgs, skip: combinedData.length, limit: pageSize})
+      .unwrap()
+      .then(page => {
+        const rows = page?.data ?? [];
+        if (rows.length) {
+          setExtraData(prev => dedupeById([...prev, ...rows]));
+        }
+      })
+      .catch(() => {
+        // Swallow — the next scroll will retry; the first page is still shown.
+      })
+      .finally(() => setIsFetchingMore(false));
+  }, [queryArgs, isFetchingMore, combinedData.length, total, fetchMore, pageSize]);
 
   const handleRefresh = useCallback(async () => {
     if (tableRef.current) await smoothScrollToTop(tableRef.current);
     setRefreshLoading(true);
+    setExtraData([]);
     const result = await refreshBucketData();
     setRefreshLoading(false);
     return result;
@@ -104,8 +162,8 @@ export function useBucketData(
     refreshLoading,
     tableRef,
     handleRefresh,
-    loadMoreBucketData
+    loadMore,
+    hasMore,
+    isFetchingMore
   };
 }
-
-
