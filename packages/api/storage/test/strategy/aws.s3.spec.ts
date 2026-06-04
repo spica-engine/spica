@@ -47,6 +47,11 @@ describe("AWSS3", () => {
     it("should store credentials path", () => {
       expect(service["credentialsPath"]).toEqual(credentialsPath);
     });
+
+    it("should initialize s3 client with the default credential provider chain when credentials path is not provided", () => {
+      const serviceWithoutCredentials = new AWSS3(undefined, "test-bucket", 60000);
+      expect(serviceWithoutCredentials.s3).toBeDefined();
+    });
   });
 
   describe("getConfig", () => {

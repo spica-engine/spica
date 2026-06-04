@@ -17,6 +17,11 @@ describe("AWSS3Strategy", () => {
     jest.resetAllMocks();
   });
 
+  it("should initialize s3 client with the default credential provider chain when credentials path is not provided", () => {
+    const strategyWithoutCredentials = new AWSS3Strategy(undefined, bucketName);
+    expect(strategyWithoutCredentials["s3"]).toBeDefined();
+  });
+
   it("should read a file by streaming body", async () => {
     const {Readable} = await import("stream");
     const fakeBody = Readable.from([Buffer.from("content")]);
