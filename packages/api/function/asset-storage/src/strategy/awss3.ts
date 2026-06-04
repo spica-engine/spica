@@ -18,13 +18,13 @@ export class AWSS3Strategy implements FunctionAssetStrategy {
   private readonly s3: S3Client;
 
   constructor(
-    private readonly credentialsPath: string,
+    private readonly credentialsPath: string | undefined,
     private readonly bucketName: string,
     s3?: S3Client
   ) {
     if (s3) {
       this.s3 = s3;
-    } else {
+    } else if (this.credentialsPath) {
       const config = this.getCredentials();
       this.s3 = new S3Client({
         credentials: {
@@ -33,11 +33,16 @@ export class AWSS3Strategy implements FunctionAssetStrategy {
         },
         region: config.region
       });
+    } else {
+      // No credentials file provided: fall back to the AWS SDK default
+      // credential provider chain (environment variables, web identity tokens
+      // such as EKS IRSA, ECS/EC2 instance profiles, shared config files).
+      this.s3 = new S3Client({});
     }
   }
 
   private getCredentials(): AwsCredentials {
-    return JSON.parse(readFileSync(this.credentialsPath, "utf-8"));
+    return JSON.parse(readFileSync(this.credentialsPath!, "utf-8"));
   }
 
   async read(key: string): Promise<Buffer> {

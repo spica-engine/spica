@@ -355,7 +355,7 @@ const args = yargsInstance
     "function-asset-awss3-credentials-path": {
       string: true,
       description:
-        "Path to the AWS credentials JSON file ({accessKeyId, secretAccessKey, region}) for function asset storage."
+        "Path to the AWS credentials JSON file ({accessKeyId, secretAccessKey, region}) for function asset storage. Optional; when omitted, the AWS SDK default credential provider chain is used (environment variables, web identity tokens such as EKS IRSA, instance profiles)."
     },
     "function-asset-awss3-bucket-name": {
       string: true,
@@ -400,7 +400,8 @@ const args = yargsInstance
     },
     "awss3-credentials-path": {
       string: true,
-      description: "Path for the credentials file to authorize on aws."
+      description:
+        "Path for the credentials file to authorize on aws. Optional; when omitted, the AWS SDK default credential provider chain is used (environment variables, web identity tokens such as EKS IRSA, instance profiles)."
     },
     "awss3-bucket-name": {
       string: true,
@@ -696,21 +697,18 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       );
     }
 
-    if (
-      args["storage-strategy"] == "awss3" &&
-      (!args["awss3-credentials-path"] || !args["awss3-bucket-name"])
-    ) {
+    if (args["storage-strategy"] == "awss3" && !args["awss3-bucket-name"]) {
       throw new TypeError(
-        "--awss3-credentials-path and --awss3-bucket-name options must be present when --storage-strategy is set to 'awss3'."
+        "--awss3-bucket-name option must be present when --storage-strategy is set to 'awss3'."
       );
     }
 
     if (
       args["function-asset-storage-strategy"] == "awss3" &&
-      (!args["function-asset-awss3-credentials-path"] || !args["function-asset-awss3-bucket-name"])
+      !args["function-asset-awss3-bucket-name"]
     ) {
       throw new TypeError(
-        "--function-asset-awss3-credentials-path and --function-asset-awss3-bucket-name must be present when --function-asset-storage-strategy is set to 'awss3'."
+        "--function-asset-awss3-bucket-name must be present when --function-asset-storage-strategy is set to 'awss3'."
       );
     }
 

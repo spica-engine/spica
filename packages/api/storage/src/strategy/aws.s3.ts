@@ -15,40 +15,28 @@ import {S3Store} from "@tus/s3-store";
 import {BaseStrategy} from "./base-strategy.js";
 import {ProxyReadResult} from "./strategy.js";
 import {StorageObjectMeta} from "@spica-server/interface-storage";
+import type {S3ClientConfig} from "@aws-sdk/client-s3";
 
 export class AWSS3 extends BaseStrategy {
   s3: S3Client;
 
   constructor(
-    private credentialsPath: string,
+    private credentialsPath: string | undefined,
     private bucketName: string,
     resumableUploadExpiresIn: number
   ) {
     super(resumableUploadExpiresIn);
-    const config = this.getConfig();
-    this.s3 = new S3Client({
-      credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey
-      },
-      region: config.region
-    });
+    this.s3 = new S3Client(this.getClientConfig());
 
     this.initializeTusServer();
   }
 
   protected initializeTusServer() {
-    const config = this.getConfig();
-
     const datastore = new S3Store({
       partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MiB,
       s3ClientConfig: {
         bucket: this.bucketName,
-        region: config.region,
-        credentials: {
-          accessKeyId: config.accessKeyId,
-          secretAccessKey: config.secretAccessKey
-        }
+        ...this.getClientConfig()
       },
       expirationPeriodInMilliseconds: this.resumableUploadExpiresIn
     });
@@ -57,7 +45,24 @@ export class AWSS3 extends BaseStrategy {
   }
 
   getConfig() {
-    return JSON.parse(readFileSync(this.credentialsPath, "utf-8"));
+    return JSON.parse(readFileSync(this.credentialsPath!, "utf-8"));
+  }
+
+  private getClientConfig(): S3ClientConfig {
+    // When no credentials file is provided, fall back to the AWS SDK default
+    // credential provider chain (environment variables, web identity tokens
+    // such as EKS IRSA, ECS/EC2 instance profiles, shared config files).
+    if (!this.credentialsPath) {
+      return {};
+    }
+    const config = this.getConfig();
+    return {
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey
+      },
+      region: config.region
+    };
   }
 
   writeStream(id: string, data: ReadStream, mimeType?: string): Promise<void> {
