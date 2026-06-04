@@ -95,7 +95,7 @@ Use `/release <version>` (`.claude/commands/release.md`) to execute a full relea
 | Artifact | Where | Tag format |
 |---|---|---|
 | Docker images | Docker Hub `spicaengine/{api,panel,migrate,mongoreplicationcontroller}` | `<version>` |
-| npm packages | npmjs.com `@spica/{cli,devkit-auth,devkit-bucket,devkit-database,devkit-identity,devkit-storage}` | `<version>` |
+| npm packages | npmjs.com `@spica/cli` + `@spica-devkit/{auth,bucket,database,identity,storage}` | `<version>` |
 | Helm chart | GCS bucket `gs://spica-charts` / `https://spica-charts.storage.googleapis.com` | `<version>` |
 
 ### GitHub Actions workflows involved

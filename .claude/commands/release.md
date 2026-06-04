@@ -95,7 +95,7 @@ curl -s "https://hub.docker.com/v2/repositories/spicaengine/mongoreplicationcont
 ### npm packages
 Check all six packages are published at the new version:
 ```bash
-for pkg in "@spica/cli" "@spica/devkit-auth" "@spica/devkit-bucket" "@spica/devkit-database" "@spica/devkit-identity" "@spica/devkit-storage"; do
+for pkg in "@spica/cli" "@spica-devkit/auth" "@spica-devkit/bucket" "@spica-devkit/database" "@spica-devkit/identity" "@spica-devkit/storage"; do
   ver=$(npm view "$pkg" version 2>/dev/null || echo "NOT FOUND")
   echo "$pkg: $ver"
 done
