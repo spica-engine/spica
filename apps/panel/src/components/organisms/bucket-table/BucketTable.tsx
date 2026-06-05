@@ -32,6 +32,49 @@ interface BucketTableNewProps {
 }
 
 
+type BucketIndex = {definition: Record<string, number | string>; options?: Record<string, any>};
+
+/**
+ * Recompute the bucket-level `indexes` array for a single field after a field
+ * create/edit. The backend (BucketService.updateIndexes) turns each entry into a
+ * real MongoDB index, so the "Unique Values" / "Indexed field in database"
+ * toggles must be expressed here — they have no valid home on the property
+ * itself (the bucket schema only allows `translate`/`history` in property
+ * `options`).
+ *
+ * We only manage the single-field index the UI toggles control; any other
+ * (e.g. compound) indexes are left untouched. The previous single-field index
+ * for the field is dropped first, which also covers renames and disabling.
+ * A unique index implies "indexed", so `unique` alone is enough to create one.
+ */
+function applyFieldIndex(
+  indexes: BucketIndex[] | undefined,
+  fieldName: string,
+  opts: {index?: boolean; unique?: boolean},
+  oldFieldName: string = fieldName
+): BucketIndex[] {
+  const isSingleFieldIndexOn = (idx: BucketIndex, field: string) => {
+    const keys = Object.keys(idx?.definition ?? {});
+    return keys.length === 1 && keys[0] === field;
+  };
+
+  const next = (indexes ?? []).filter(
+    idx => !isSingleFieldIndexOn(idx, oldFieldName) && !isSingleFieldIndexOn(idx, fieldName)
+  );
+
+  const wantsUnique = !!opts.unique;
+  const wantsIndex = wantsUnique || !!opts.index;
+
+  if (wantsIndex) {
+    next.push({
+      definition: {[fieldName]: 1},
+      ...(wantsUnique ? {options: {unique: true}} : {})
+    });
+  }
+
+  return next;
+}
+
 function moveElement<T>(arr: T[], direction: "left" | "right", target: T): T[] {
   const index = arr.indexOf(target);
   if (index === -1) return arr;
@@ -127,6 +170,11 @@ const ColumnHeader = ({
     handleClose();
   }, [onSortDesc, fieldKey]);
 
+  const handleEdit = useCallback(() => {
+    onEdit?.();
+    handleClose();
+  }, [onEdit]);
+
   return (
     <>
       <div className={styles.columnHeaderWrapper}>
@@ -140,7 +188,7 @@ const ColumnHeader = ({
             onClose={handleClose}
             content={
               <ColumnActionsMenu
-                onEdit={onEdit}
+                onEdit={onEdit ? handleEdit : undefined}
                 onMoveRight={onMoveRight ? handleMoveRight : undefined}
                 onMoveLeft={onMoveLeft ? handleMoveLeft : undefined}
                 onSortAsc={handleSortAsc}
@@ -288,7 +336,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       }
 
       const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
-      const {requiredField, primaryField} = values.configurationValues;
+      const {requiredField, primaryField, uniqueValues, index} =
+        values.configurationValues as Record<string, boolean | undefined>;
       const {title} = values.fieldValues;
 
       const bucketType = bucket as unknown as BucketType;
@@ -300,8 +349,9 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           [title]: fieldProperty
         },
         required: requiredField ? [...(bucketType.required || []), title] : bucketType.required,
-        primary: primaryField ? title : bucket.primary
-      };
+        primary: primaryField ? title : bucket.primary,
+        indexes: applyFieldIndex((bucketType as any).indexes, title, {index, unique: uniqueValues})
+      } as BucketType;
 
       const result = await createBucketField(modifiedBucket);
       if (!result.data) {
@@ -326,7 +376,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       if (!bucket || !editingField) throw new Error("No bucket or editing field");
 
       const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
-      const {requiredField, primaryField} = values.configurationValues;
+      const {requiredField, primaryField, uniqueValues, index} =
+        values.configurationValues as Record<string, boolean | undefined>;
       const newTitle = values.fieldValues.title;
       const oldKey = editingField.key;
 
@@ -342,12 +393,20 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       let primary = bucketType.primary === oldKey ? undefined : bucketType.primary;
       if (primaryField) primary = newTitle;
 
+      const indexes = applyFieldIndex(
+        (bucketType as any).indexes,
+        newTitle,
+        {index, unique: uniqueValues},
+        oldKey
+      );
+
       const modifiedBucket: BucketType = {
         ...bucketType,
         properties: {...otherProperties, [newTitle]: fieldProperty},
         required: required.length ? required : undefined,
-        primary
-      };
+        primary,
+        indexes
+      } as BucketType;
 
       const result = await createBucketField(modifiedBucket);
       if (!result.data) throw new Error("Failed to update bucket field");

@@ -30,6 +30,11 @@ const DependencyPanel = ({functionId}: DependencyPanelProps) => {
     dependencies = Object.entries(depsRaw).map(([name, version]) => ({name, version: String(version)}));
   }
 
+  // Imported functions are installed as `@spica-fn/*` dependencies but are
+  // surfaced in the dedicated "Imported Functions" panel, so keep them out of
+  // the npm dependency list here.
+  dependencies = dependencies.filter(dep => !dep.name.startsWith("@spica-fn/"));
+
   const isPending = isInstalling || isRemoving;
 
   const handleAdd = useCallback(async () => {

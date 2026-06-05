@@ -4,13 +4,18 @@ export {
   authApi,
   useGetStrategiesQuery,
   useLoginMutation,
+  useVerifyAuthFactorMutation,
   useLogoutMutation,
+  isAuthFactorChallenge,
 } from './authApi';
 
 export type {
   Strategy,
   LoginRequest,
   LoginResponse,
+  LoginSuccessResponse,
+  AuthFactorChallengeResponse,
+  VerifyAuthFactorRequest,
 } from './authApi';
 
 export {
@@ -89,6 +94,10 @@ export {
   useVerifyIdentityQuery,
   useAddIdentityPolicyMutation,
   useRemoveIdentityPolicyMutation,
+  useGetAuthFactorsQuery,
+  useStartFactorVerificationMutation,
+  useCompleteFactorVerificationMutation,
+  useDeleteAuthFactorMutation,
 } from './identityApi';
 
 export type {
@@ -96,6 +105,9 @@ export type {
   IdentityListResponse,
   CreateIdentityRequest,
   UpdateIdentityRequest,
+  AuthFactorMeta,
+  AuthFactorSchema,
+  StartFactorVerificationResponse,
 } from './identityApi';
 
 export {

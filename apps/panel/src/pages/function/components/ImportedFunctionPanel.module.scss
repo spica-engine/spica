@@ -16,12 +16,11 @@
 
 .selectWrapper {
   width: 100%;
-
-  &:focus-within {
-    padding-bottom: 228px;
-  }
 }
 
+// The dropdown floats above the sidebar sections (like the Environment panel's
+// select). It must not reserve inline space — doing so inserts a large empty
+// gap that pushes the sidebar down when the dropdown opens.
 .importSelectDropdown {
   z-index: 1100;
 }

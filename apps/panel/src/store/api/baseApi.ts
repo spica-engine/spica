@@ -15,6 +15,19 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
+// Endpoints that legitimately return 401 as part of an in-progress auth flow
+// (wrong password, wrong/expired MFA code). A 401 here means "this attempt was
+// rejected", NOT "the session expired" — so it must surface to the caller as an
+// error instead of force-logging-out and redirecting.
+const AUTH_FLOW_PATHS = [
+  'passport/identify', // login + login factor-authentication
+  'start-factor-verification', // 2FA enrollment: begin
+  'complete-factor-verification', // 2FA enrollment: confirm code
+];
+
+const getRequestUrl = (args: string | FetchArgs): string =>
+  typeof args === 'string' ? args : args.url;
+
 const baseQueryWithReauth: BaseQueryFn<
   string | FetchArgs,
   unknown,
@@ -23,8 +36,13 @@ const baseQueryWithReauth: BaseQueryFn<
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error?.status === 401) {
-    api.dispatch(clearToken());
-    api.dispatch({ type: 'NAVIGATE', payload: '/passport/identify' });
+    const url = getRequestUrl(args);
+    const isAuthFlow = AUTH_FLOW_PATHS.some(path => url?.includes(path));
+
+    if (!isAuthFlow) {
+      api.dispatch(clearToken());
+      api.dispatch({ type: 'NAVIGATE', payload: '/passport/identify' });
+    }
   }
 
   return result;

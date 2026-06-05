@@ -45,7 +45,8 @@ function buildPartialFormState(
   property: Record<string, any>,
   kind: FieldKind,
   required: string[] | undefined,
-  primary: string | undefined
+  primary: string | undefined,
+  indexFlags: {index: boolean; uniqueValues: boolean} = {index: false, uniqueValues: false}
 ): Partial<FieldFormState> {
   const isRequired = required?.includes(fieldKey) ?? false;
   const isPrimary = primary === fieldKey;
@@ -58,7 +59,9 @@ function buildPartialFormState(
   const baseConfigValues: Record<string, any> = {
     translate: property.options?.translate ?? false,
     requiredField: isRequired,
-    primaryField: isPrimary
+    primaryField: isPrimary,
+    index: indexFlags.index,
+    uniqueValues: indexFlags.uniqueValues
   };
 
   let specificFieldValues: Record<string, any> = {};
@@ -202,10 +205,26 @@ function buildPartialFormState(
  * @param property - The API property object
  * @param bucket   - The parent bucket (needed for required/primary metadata)
  */
+/**
+ * Reads the single-field index/uniqueness toggles for `fieldKey` out of the
+ * bucket-level `indexes` array (where the API stores them). Mirrors the write
+ * side in BucketTable's `applyFieldIndex`.
+ */
+function fieldIndexFlags(
+  indexes: BucketSchema["indexes"],
+  fieldKey: string
+): {index: boolean; uniqueValues: boolean} {
+  const single = (indexes ?? []).find((idx: any) => {
+    const keys = Object.keys(idx?.definition ?? {});
+    return keys.length === 1 && keys[0] === fieldKey;
+  });
+  return {index: !!single, uniqueValues: !!(single as any)?.options?.unique};
+}
+
 export function propertyToFieldFormState(
   fieldKey: string,
   property: BucketProperty,
-  bucket: Pick<BucketSchema, "required" | "primary">
+  bucket: Pick<BucketSchema, "required" | "primary" | "indexes">
 ): FieldFormState {
   const kind = apiTypeToFieldKind(property.type);
   const partial = buildPartialFormState(
@@ -213,7 +232,8 @@ export function propertyToFieldFormState(
     property as Record<string, any>,
     kind,
     bucket.required,
-    bucket.primary
+    bucket.primary,
+    fieldIndexFlags(bucket.indexes, fieldKey)
   );
   const merged = initForm(kind, partial as FieldFormState);
   if (partial.innerFields !== undefined) {
