@@ -27,8 +27,7 @@ describe("start", () => {
     jest.spyOn(DockerOrchestrator.prototype, "startApi").mockImplementation(track("startApi"));
     jest.spyOn(DockerOrchestrator.prototype, "teardown").mockResolvedValue(undefined);
 
-    jest.spyOn(api, "waitForReady").mockResolvedValue(undefined);
-    jest.spyOn(api, "login").mockResolvedValue("tok123");
+    jest.spyOn(api, "awaitReady").mockResolvedValue("tok123");
     jest
       .spyOn(api, "createApiKey")
       .mockResolvedValue({_id: "k1", name: "e2e", key: "secret-key"});
@@ -100,7 +99,12 @@ describe("start", () => {
 
   it("logs in as the default identity and creates a full-access api key", async () => {
     const instance = await start({name: "inst", installResources: false});
-    expect(api.login).toHaveBeenCalledWith(instance.url, "spica", "spica");
+    expect(api.awaitReady).toHaveBeenCalledWith(
+      instance.url,
+      "spica",
+      "spica",
+      expect.any(Number)
+    );
     expect(api.createApiKey).toHaveBeenCalledWith(expect.anything(), "e2e", {fullAccess: true});
   });
 
@@ -118,7 +122,7 @@ describe("start", () => {
   });
 
   it("tears the half-started instance down and rethrows on failure", async () => {
-    (api.waitForReady as jest.Mock).mockRejectedValue(new Error("api never came up"));
+    (api.awaitReady as jest.Mock).mockRejectedValue(new Error("api never came up"));
     await expect(start({name: "inst", installResources: false})).rejects.toThrow(
       "api never came up"
     );

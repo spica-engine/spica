@@ -81,8 +81,8 @@ class SpicaInstanceImpl implements SpicaInstance {
     return api.createApiKey(this.http, name, options);
   }
 
-  waitForReady(timeoutMs?: number): Promise<void> {
-    return api.waitForReady(this.url, timeoutMs);
+  async waitForReady(timeoutMs?: number): Promise<void> {
+    await api.awaitReady(this.url, this.identifier, this.password, timeoutMs);
   }
 
   installResources(resourcePath = this.resourcePath): Promise<{errors: string[]}> {
@@ -146,9 +146,8 @@ export async function start(options: StartOptions = {}): Promise<SpicaInstance> 
     });
     await orchestrator.startApi(name, port, version, args, network);
 
-    await api.waitForReady(url, options.readyTimeoutMs ?? 120_000);
-
-    const token = await api.login(url, identifier, password);
+    // A successful login is the readiness gate (works across api versions).
+    const token = await api.awaitReady(url, identifier, password, options.readyTimeoutMs ?? 120_000);
     const http = createClient(url, `IDENTITY ${token}`);
     const apikey = await api.createApiKey(http, "e2e", {fullAccess: true});
 

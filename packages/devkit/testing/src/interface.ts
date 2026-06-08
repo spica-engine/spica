@@ -87,7 +87,7 @@ export interface SpicaInstance extends SpicaInstanceInfo {
   loginAs(identifier: string, password: string, expires?: number): Promise<string>;
   /** Create an api key (full-access by default). */
   createApiKey(name: string, options?: CreateApiKeyOptions): Promise<ApiKeyInfo>;
-  /** Poll GET /status/ready until the api responds or the timeout elapses. */
+  /** Wait until the api accepts a login (its readiness gate), or the timeout elapses. */
   waitForReady(timeoutMs?: number): Promise<void>;
 
   /** (Re)install the CLI-format resources from a folder (defaults to the start resourcePath). */

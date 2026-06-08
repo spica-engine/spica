@@ -7,21 +7,29 @@ import {SpicaInstance} from "../src/interface";
  *
  *   SPICA_E2E_DOCKER=1 yarn nx test devkit/testing
  *
- * Pin the api version with SPICA_E2E_VERSION for deterministic runs.
+ * Override the api version with SPICA_E2E_VERSION. The default is pinned (not "latest") so
+ * the suite is deterministic and exercises a release that exposes the public /status routes.
  */
 const RUN = process.env.SPICA_E2E_DOCKER === "1";
+const DEFAULT_VERSION = "0.18.41";
 const describeIf = RUN ? describe : describe.skip;
 
 describeIf("@spica-devkit/testing (integration)", () => {
   jest.setTimeout(300_000);
 
   let spica: SpicaInstance;
+  let startError: Error | undefined;
 
   beforeAll(async () => {
-    spica = await start({
-      version: process.env.SPICA_E2E_VERSION || "latest",
-      installResources: false
-    });
+    try {
+      spica = await start({
+        version: process.env.SPICA_E2E_VERSION || DEFAULT_VERSION,
+        installResources: false
+      });
+    } catch (e: any) {
+      // Keep a flat message - raw axios/docker errors are not worker-serializable.
+      startError = new Error(e?.message || String(e));
+    }
   });
 
   afterAll(async () => {
@@ -30,12 +38,24 @@ describeIf("@spica-devkit/testing (integration)", () => {
     }
   });
 
+  beforeEach(() => {
+    if (startError) throw startError;
+  });
+
+  // status: () => true so non-2xx never throws a circular axios error out of the test.
   function authed() {
     return axios.create({
       baseURL: spica.url,
-      headers: {Authorization: `APIKEY ${spica.apikey.key}`}
+      headers: {Authorization: `APIKEY ${spica.apikey.key}`},
+      validateStatus: () => true
     });
   }
+
+  it("starts and exposes connection details", () => {
+    expect(spica.url).toMatch(/^http:\/\/localhost:\d+$/);
+    expect(spica.token).toBeTruthy();
+    expect(spica.apikey.key).toBeTruthy();
+  });
 
   it("serves a ready status without auth", async () => {
     const res = await axios.get(`${spica.url}/status/ready`, {validateStatus: () => true});
@@ -50,23 +70,24 @@ describeIf("@spica-devkit/testing (integration)", () => {
   it("creates, fills, reads, then resets a bucket end-to-end", async () => {
     const http = authed();
 
-    const bucket = (
-      await http.post("/bucket", {
-        title: "Cars",
-        description: "test bucket",
-        primary: "name",
-        properties: {name: {type: "string", title: "name", options: {position: "bottom"}}}
-      })
-    ).data;
+    const created = await http.post("/bucket", {
+      title: "Cars",
+      description: "test bucket",
+      primary: "name",
+      properties: {name: {type: "string", title: "name"}}
+    });
+    expect(created.status).toBeLessThan(300);
+    const bucket = created.data;
 
-    await http.post(`/bucket/${bucket._id}/data`, {name: "Tesla"});
+    const inserted = await http.post(`/bucket/${bucket._id}/data`, {name: "Tesla"});
+    expect(inserted.status).toBeLessThan(300);
 
-    const before = (await http.get(`/bucket/${bucket._id}/data`)).data;
-    expect(before.length).toBe(1);
+    const before = await http.get(`/bucket/${bucket._id}/data`);
+    expect(before.data.length).toBe(1);
 
     await spica.reset(["bucket-data"]);
 
-    const after = (await http.get(`/bucket/${bucket._id}/data`)).data;
-    expect(after.length).toBe(0);
+    const after = await http.get(`/bucket/${bucket._id}/data`);
+    expect(after.data.length).toBe(0);
   });
 });
