@@ -21,8 +21,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
-      issues: write
+      pull-requests: read
+      issues: read
+      # Required so the action can exchange this for the Claude GitHub App token,
+      # which is what actually posts the review (it does not use GITHUB_TOKEN's
+      # permissions above - hence these can stay read-only).
       id-token: write
 
     steps:
