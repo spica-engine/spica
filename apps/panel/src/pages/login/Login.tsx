@@ -11,12 +11,30 @@ import useAuthService from "../../hooks/useAuthService";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import { Navigate } from "react-router-dom";
 import logo from "../../assets/images/logo.svg";
+import type { AuthFactorChallengeResponse } from "../../store/api";
+import OtpInput from "../../components/molecules/otp-input/OtpInput";
+
+const OTP_LENGTH = 6;
 
 const Login = () => {
   const [token] = useLocalStorage("token", undefined);
-  const { fetchStrategies, strategies, login, loginLoading, loginError } = useAuthService();
+  const {
+    fetchStrategies,
+    strategies,
+    login,
+    loginLoading,
+    loginError,
+    verifyFactor,
+    verifyFactorLoading,
+    verifyFactorError,
+  } = useAuthService();
   const [showPassword, setShowPassword] = useState(false);
   const starsRef = useRef<HTMLDivElement>(null);
+
+  // Set once the credentials step returns an MFA challenge — switches the card
+  // to the factor-verification step.
+  const [challenge, setChallenge] = useState<AuthFactorChallengeResponse | null>(null);
+  const [otp, setOtp] = useState("");
 
   const formik = useFormik({
     initialValues: { identifier: "", password: "" },
@@ -26,10 +44,34 @@ const Login = () => {
       if (!values.password) errors.password = "Please enter your password";
       return errors;
     },
-    onSubmit: values => login(values.identifier, values.password),
+    onSubmit: async values => {
+      const factorChallenge = await login(values.identifier, values.password);
+      if (factorChallenge) {
+        setOtp("");
+        setChallenge(factorChallenge);
+      }
+    },
     validateOnChange: false,
     validateOnBlur: false,
   });
+
+  // The TOTP challenge may be an instruction string or a QR data-URL (first-time
+  // setup). Detect the image case so we render it as an image rather than text.
+  const challengeIsQr = !!challenge && /^data:image\//.test(challenge.challenge);
+
+  const submitOtp = (code: string) => {
+    if (!challenge || code.length < OTP_LENGTH || verifyFactorLoading) return;
+    verifyFactor(challenge.answerUrl, code).catch(() => {
+      // Wrong/expired code: clear the boxes so the user can retry. The error
+      // surfaces via verifyFactorError below.
+      setOtp("");
+    });
+  };
+
+  const backToCredentials = () => {
+    setChallenge(null);
+    setOtp("");
+  };
 
   const getErrorMessage = (error: any): string => {
     if (typeof error === "string") return error;
@@ -103,8 +145,75 @@ const Login = () => {
           {/* Body */}
           <form
             className={styles.cardBody}
-            onSubmit={e => { e.preventDefault(); formik.handleSubmit(); }}
+            onSubmit={e => {
+              e.preventDefault();
+              if (challenge) {
+                submitOtp(otp);
+              } else {
+                formik.handleSubmit();
+              }
+            }}
           >
+            {challenge ? (
+              <>
+                {/* ─── MFA step ─────────────────────────────────────────── */}
+                <button type="button" className={styles.mfaBack} onClick={backToCredentials}>
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                  </svg>
+                  Back
+                </button>
+
+                <div className={styles.mfaHead}>
+                  <div className={styles.mfaIcon}>
+                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+                  <div className={styles.mfaTitle}>Two-factor authentication</div>
+                  <div className={styles.mfaSubtitle}>
+                    {challengeIsQr
+                      ? "Scan the QR code with your authenticator app, then enter the 6 digit code."
+                      : challenge.challenge || "Enter the 6 digit code from your authenticator app."}
+                  </div>
+                </div>
+
+                {challengeIsQr && (
+                  <div className={styles.mfaQrWrap}>
+                    <img className={styles.mfaQr} src={challenge.challenge} alt="Authenticator QR code" />
+                  </div>
+                )}
+
+                {verifyFactorError && (
+                  <div className={styles.errorBox}>
+                    <div className={styles.errorText}>{getErrorMessage(verifyFactorError)}</div>
+                  </div>
+                )}
+
+                <OtpInput
+                  value={otp}
+                  onChange={setOtp}
+                  length={OTP_LENGTH}
+                  disabled={verifyFactorLoading}
+                  hasError={!!verifyFactorError}
+                  onComplete={submitOtp}
+                />
+
+                <Button
+                  dimensionX="fill"
+                  type="submit"
+                  loading={verifyFactorLoading}
+                  disabled={otp.length < OTP_LENGTH || verifyFactorLoading}
+                  style={{ height: 38 }}
+                >
+                  <Icon name="login" size="xs" />
+                  Verify
+                </Button>
+              </>
+            ) : (
+            <>
             {loginError && (
               <div className={styles.errorBox}>
                 <div className={styles.errorText}>{getErrorMessage(loginError)}</div>
@@ -235,6 +344,8 @@ const Login = () => {
                 {strategy.title}
               </Button>
             ))}
+            </>
+            )}
           </form>
 
           {/* Foot */}

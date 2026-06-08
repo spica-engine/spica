@@ -7,6 +7,24 @@ export interface AuthFactorMeta {
   description?: string;
 }
 
+/** A factor type the server offers, returned by `GET passport/identity/factors`. */
+export interface AuthFactorSchema {
+  type: string;
+  title: string;
+  description: string;
+  config: Record<string, { type: string; enum?: any[] }>;
+}
+
+/**
+ * Response of `start-factor-verification`. `challenge` is the setup payload to
+ * present to the user — for TOTP first-time setup it is a `data:image/...` QR
+ * code data-URL; `answerUrl` is where the confirming code must be POSTed.
+ */
+export interface StartFactorVerificationResponse {
+  challenge: string;
+  answerUrl: string;
+}
+
 export interface Identity {
   _id?: string;
   identifier: string;
@@ -129,6 +147,48 @@ export const identityApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Identity', id }, 'Identity'],
     }),
+
+    // ── Multi-factor authentication (2FA) ──────────────────────────────────
+    // Available factor types (currently just "totp").
+    getAuthFactors: builder.query<AuthFactorSchema[], void>({
+      query: () => 'passport/identity/factors',
+    }),
+
+    // Begin enrolling a factor on an identity. Returns a challenge (TOTP QR
+    // data-URL) the user confirms by POSTing a code to the answer url.
+    startFactorVerification: builder.mutation<
+      StartFactorVerificationResponse,
+      { id: string; meta: AuthFactorMeta }
+    >({
+      query: ({ id, meta }) => ({
+        url: `passport/identity/${id}/start-factor-verification`,
+        method: 'POST',
+        body: meta,
+      }),
+    }),
+
+    // Confirm enrollment with the code from the authenticator app. On success
+    // the factor is persisted on the identity, so refresh it.
+    completeFactorVerification: builder.mutation<
+      { message: string },
+      { id: string; answer: string }
+    >({
+      query: ({ id, answer }) => ({
+        url: `passport/identity/${id}/complete-factor-verification`,
+        method: 'POST',
+        body: { answer },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Identity', id }, 'Identity'],
+    }),
+
+    // Disable 2FA: remove the registered factor from the identity.
+    deleteAuthFactor: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `passport/identity/${id}/factors`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, id) => [{ type: 'Identity', id }, 'Identity'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -143,6 +203,10 @@ export const {
   useVerifyIdentityQuery,
   useAddIdentityPolicyMutation,
   useRemoveIdentityPolicyMutation,
+  useGetAuthFactorsQuery,
+  useStartFactorVerificationMutation,
+  useCompleteFactorVerificationMutation,
+  useDeleteAuthFactorMutation,
 } = identityApi;
 
 export const identityApiReducerPath = identityApi.reducerPath;

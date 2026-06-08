@@ -7,6 +7,7 @@ import {
   type Identity,
 } from "../../store/api/identityApi";
 import EntityDrawer from "../../components/organisms/entity-drawer/EntityDrawer";
+import TwoFactorSection from "./TwoFactorSection";
 
 type IdentityDrawerProps = {
   isOpen: boolean;
@@ -33,6 +34,11 @@ const IdentityDrawer: React.FC<IdentityDrawerProps> = ({ isOpen, selectedIdentit
       removePolicyMutation={removePolicy}
       isCreating={isCreating}
       isUpdating={isUpdating}
+      extraContent={
+        selectedIdentity?._id ? (
+          <TwoFactorSection identity={selectedIdentity} />
+        ) : undefined
+      }
     />
   );
 };

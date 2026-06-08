@@ -18,6 +18,8 @@ type EntityDrawerProps<TEntity extends EntityWithPolicies> = {
   removePolicyMutation: (arg: any) => { unwrap: () => Promise<any> };
   isCreating: boolean;
   isUpdating: boolean;
+  /** Optional content rendered in the drawer body after the form fields. */
+  extraContent?: React.ReactNode;
 };
 
 function EntityDrawer<TEntity extends EntityWithPolicies>({
@@ -32,6 +34,7 @@ function EntityDrawer<TEntity extends EntityWithPolicies>({
   removePolicyMutation,
   isCreating,
   isUpdating,
+  extraContent,
 }: EntityDrawerProps<TEntity>) {
   const { data: policies } = useGetPoliciesQuery();
   const formContainerRef = useRef<HTMLDivElement>(null);
@@ -102,6 +105,7 @@ function EntityDrawer<TEntity extends EntityWithPolicies>({
         <div className={drawerStyles.drawerBody} ref={formContainerRef}>
           <FlexElement direction="vertical" gap={10} className={formStyles.formContent}>
             {fields}
+            {extraContent}
           </FlexElement>
         </div>
 

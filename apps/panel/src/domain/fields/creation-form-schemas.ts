@@ -96,9 +96,19 @@ export const PresetPanel = {
 export const ConfigDefs = {
   primaryField: {type: "boolean", title: "Primary Field", size: "extra-small"},
   translate: {type: "boolean", title: "Translatable", size: "extra-small"},
-  uniqueValues: {type: "boolean", title: "Unique Values", size: "extra-small"},
+  uniqueValues: {
+    type: "boolean",
+    title: "Unique Values",
+    description: "Prevents duplicate values by creating a unique database index. Unique fields are always indexed.",
+    size: "extra-small"
+  },
   requiredField: {type: "boolean", title: "Required Field", size: "extra-small"},
-  index: {type: "boolean", title: "Indexed field in database", size: "extra-small"},
+  index: {
+    type: "boolean",
+    title: "Indexed field in database",
+    description: "Creates a database index to speed up filtering and sorting on this field.",
+    size: "extra-small"
+  },
   dependent: {type: "boolean", title: "Dependent", size: "extra-small"}
 } as const;
 

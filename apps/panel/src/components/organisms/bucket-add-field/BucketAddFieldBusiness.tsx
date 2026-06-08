@@ -24,6 +24,33 @@ function isObjectEffectivelyEmpty(obj: Object): boolean {
   return Object.values(obj).every(value => isObjectEffectivelyEmpty(value));
 }
 
+/**
+ * Keep the "Unique Values" and "Indexed field in database" toggles consistent
+ * with how the backend models them: uniqueness is enforced by a *unique index*,
+ * so a unique field is always indexed (see BucketService.updateIndexes). We
+ * therefore treat "index" as the base capability and "unique" as a refinement:
+ *   • turning Unique on  → also turns Index on
+ *   • turning Index off  → also turns Unique off
+ * Only applied when the field type actually exposes both toggles.
+ */
+function normalizeIndexConfig(
+  prev: Record<string, any> = {},
+  next: Record<string, any>
+): Record<string, any> {
+  if (!("uniqueValues" in next) || !("index" in next)) return next;
+
+  const result = {...next};
+  const uniqueTurnedOn = !prev.uniqueValues && next.uniqueValues;
+  const indexTurnedOff = prev.index && !next.index;
+
+  if (uniqueTurnedOn) result.index = true;
+  if (indexTurnedOff) result.uniqueValues = false;
+  // Safety invariant: unique ⇒ indexed.
+  if (result.uniqueValues) result.index = true;
+
+  return result;
+}
+
 export type BucketAddFieldBusinessProps = {
   onClose?: () => void;
   onSaveAndClose: (values: FieldFormState) => void | Promise<BucketType>;
@@ -185,6 +212,15 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     formValuesAttribute: keyof FieldFormState
   ) =>
     setFormValues(prev => {
+      if (formValuesAttribute === "configurationValues") {
+        return {
+          ...prev,
+          configurationValues: normalizeIndexConfig(
+            prev.configurationValues as Record<string, any>,
+            values as Record<string, any>
+          )
+        };
+      }
       return {...prev, [formValuesAttribute]: values};
     });
 
