@@ -8390,6 +8390,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-devkit/testing@workspace:packages/devkit/testing":
+  version: 0.0.0-use.local
+  resolution: "@spica-devkit/testing@workspace:packages/devkit/testing"
+  dependencies:
+    "@spica/cli": "workspace:*"
+    "@types/dockerode": "npm:^3.3.34"
+    axios: "npm:^1.8.2"
+    dockerode: "npm:^4.0.4"
+    get-port: "npm:^7.1.0"
+    mongodb: "npm:^6.12.0"
+  peerDependencies:
+    "@spica/cli": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/activity-services@workspace:*, @spica-server/activity-services@workspace:packages/api/activity/services":
   version: 0.0.0-use.local
   resolution: "@spica-server/activity-services@workspace:packages/api/activity/services"
@@ -10276,7 +10291,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@spica/cli@workspace:apps/cli":
+"@spica/cli@workspace:*, @spica/cli@workspace:apps/cli":
   version: 0.0.0-use.local
   resolution: "@spica/cli@workspace:apps/cli"
   dependencies:
