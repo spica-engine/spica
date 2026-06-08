@@ -420,6 +420,9 @@
     },
     {
       "path": "./packages/api/function/asset-storage"
+    },
+    {
+      "path": "./packages/devkit/testing"
     }
   ]
 }
