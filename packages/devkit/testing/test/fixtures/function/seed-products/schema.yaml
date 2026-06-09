@@ -1,0 +1,11 @@
+name: SeedProducts
+language: javascript
+timeout: 60
+triggers:
+  seed:
+    type: http
+    active: true
+    options:
+      method: Post
+      path: /seed
+      preflight: false
