@@ -109,7 +109,7 @@ export const api = {
     const res = await axios.post(
       `${url}/passport/identify`,
       {identifier, password, expires},
-      {validateStatus: () => true}
+      {validateStatus: () => true, timeout: 10_000}
     );
     const token = res.data && res.data.token;
     if (!token) {
@@ -141,9 +141,11 @@ export const api = {
       }
     }
 
-    for (const policyId of policyIds) {
-      await client.put(`passport/apikey/${created._id}/policy/${policyId}`, {});
-    }
+    await Promise.all(
+      Array.from(policyIds).map(policyId =>
+        client.put(`passport/apikey/${created._id}/policy/${policyId}`, {})
+      )
+    );
 
     return {_id: created._id, name: created.name, key: created.key};
   }

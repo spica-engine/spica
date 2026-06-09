@@ -11,6 +11,13 @@ import {HttpClient} from "./http";
  */
 export const resourceInstaller = {
   async install(http: HttpClient, resourcePath: string): Promise<{errors: string[]}> {
+    // These import the CLI's internal sync engine directly rather than via a public API.
+    // If the CLI ever moves or renames these files the failure will be a runtime error, not
+    // a compile-time one. TODO: ask the CLI package to re-export buildPlan/applyPlan/ALL_MODULES
+    // from its top-level or a documented sub-path so this coupling can be enforced by TS.
+    // The `as any` casts below are required because the CLI's internal HttpClient type differs
+    // structurally from this package's HttpClient (extra methods, different generics); the
+    // runtime shapes are compatible.
     const {buildPlan, applyPlan} = await import("@spica/cli/src/commands/sync/planner");
     const {ALL_MODULES} = await import("@spica/cli/src/commands/sync/modules/index");
     const plan = await buildPlan(ALL_MODULES as any, http as any, resourcePath);

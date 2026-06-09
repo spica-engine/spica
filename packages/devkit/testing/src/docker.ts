@@ -3,15 +3,11 @@ import {Stream} from "stream";
 import {ImagePullPolicy} from "./interface";
 
 function streamToBuffer(stream: Stream): Promise<Buffer> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
-    if (process.platform.includes("win")) {
-      stream.once("resume", () => {
-        setTimeout(() => resolve(Buffer.concat(chunks)), 2000);
-      });
-    }
     stream.on("data", chunk => chunks.push(chunk));
     stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("error", reject);
   });
 }
 
@@ -76,12 +72,12 @@ export class DockerOrchestrator {
       {image: "spicaengine/api", tag: version},
       {image: "mongo", tag: mongoVersion}
     ];
-    for (const {image, tag} of images) {
-      if (policy === "if-not-present" && (await this.doesImageExist(image, tag))) {
-        continue;
-      }
-      await this.pullImage(image, tag);
-    }
+    await Promise.all(
+      images.map(async ({image, tag}) => {
+        if (policy === "if-not-present" && (await this.doesImageExist(image, tag))) return;
+        await this.pullImage(image, tag);
+      })
+    );
   }
 
   async createNetwork(name: string): Promise<Docker.Network> {
@@ -232,16 +228,16 @@ export class DockerOrchestrator {
     const filters = this.labelFilter(name);
 
     const containers = await this.docker.listContainers({all: true, filters});
-    await Promise.all(
+    await Promise.allSettled(
       containers.map(info => this.docker.getContainer(info.Id).remove({v: true, force: true}))
     );
 
     const networks = await this.docker.listNetworks({filters});
-    await Promise.all(networks.map(info => this.docker.getNetwork(info.Id).remove()));
+    await Promise.allSettled(networks.map(info => this.docker.getNetwork(info.Id).remove()));
 
     if (!retainVolumes) {
       const {Volumes = []} = await this.docker.listVolumes({filters});
-      await Promise.all(Volumes.map(vol => this.docker.getVolume(vol.Name).remove()));
+      await Promise.allSettled(Volumes.map(vol => this.docker.getVolume(vol.Name).remove()));
     }
   }
 }

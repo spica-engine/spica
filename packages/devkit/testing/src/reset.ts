@@ -44,10 +44,8 @@ export const resetHandlers: Record<
       await dropIfExists(db, name);
     }
   },
-  bucket: async db => {
-    for (const name of await bucketDataCollections(db)) {
-      await dropIfExists(db, name);
-    }
+  bucket: async (db, ctx) => {
+    await resetHandlers["bucket-data"](db, ctx);
     await dropIfExists(db, "buckets");
   },
   identity: async (db, ctx) => {
@@ -91,7 +89,10 @@ export async function runReset(
   ctx: ResetContext,
   modules: ResetModule[]
 ): Promise<void> {
-  const client = new MongoClient(mongoUrl);
+  const client = new MongoClient(mongoUrl, {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 5000
+  });
   try {
     await client.connect();
     const db = client.db(ctx.databaseName);
