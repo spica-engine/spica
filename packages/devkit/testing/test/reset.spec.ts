@@ -1,7 +1,5 @@
-import {MongoClient, ObjectId} from "mongodb";
+import {MongoClient} from "mongodb";
 import {runReset, expandModules, resetHandlers, ResetContext} from "../src/reset";
-
-const APIKEY_ID = "5f9f1b9b9b9b9b9b9b9b9b9b";
 
 function makeDb(collectionNames: string[]) {
   const collections: Record<string, any> = {};
@@ -26,8 +24,7 @@ function makeDb(collectionNames: string[]) {
 
 const ctx: ResetContext = {
   databaseName: "inst",
-  defaultIdentifier: "spica",
-  apikeyId: APIKEY_ID
+  defaultIdentifier: "spica"
 };
 
 describe("reset", () => {
@@ -84,12 +81,10 @@ describe("reset", () => {
     });
   });
 
-  it("apikey deletes every key except the instance's own", async () => {
+  it("apikey clears every key (the instance authenticates with the default identity, not a key)", async () => {
     wire(["apikey"]);
     await runReset("mongodb://localhost:1/?directConnection=true", ctx, ["apikey"]);
-    const arg = db.collections["apikey"].deleteMany.mock.calls[0][0];
-    expect(arg._id.$ne).toBeInstanceOf(ObjectId);
-    expect(arg._id.$ne.toHexString()).toBe(APIKEY_ID);
+    expect(db.collections["apikey"].deleteMany).toHaveBeenCalledWith({});
   });
 
   it("function and storage drop their collections", async () => {

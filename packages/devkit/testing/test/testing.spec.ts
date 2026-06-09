@@ -28,34 +28,27 @@ describe("start", () => {
     jest.spyOn(DockerOrchestrator.prototype, "teardown").mockResolvedValue(undefined);
 
     jest.spyOn(api, "awaitReady").mockResolvedValue("tok123");
-    jest
-      .spyOn(api, "createApiKey")
-      .mockResolvedValue({_id: "k1", name: "e2e", key: "secret-key"});
     jest.spyOn(resourceInstaller, "install").mockResolvedValue({errors: []});
   });
 
   afterEach(() => jest.restoreAllMocks());
 
-  it("returns a handle with host-reachable urls (no /api suffix) and credentials", async () => {
+  it("exposes only publicUrl (no /api suffix) and no credentials", async () => {
     const instance = await start({name: "inst", installResources: false});
 
-    expect(instance.name).toBe("inst");
-    expect(instance.databaseName).toBe("inst");
-    expect(instance.url).toMatch(/^http:\/\/localhost:\d+$/);
-    expect(instance.url).not.toContain("/api");
-    expect(instance.publicUrl).toBe(instance.url);
-    expect(instance.mongoUrl).toMatch(/^mongodb:\/\/localhost:\d+\/\?directConnection=true$/);
-    expect(instance.token).toBe("tok123");
-    expect(instance.identifier).toBe("spica");
-    expect(instance.apikey).toEqual({_id: "k1", name: "e2e", key: "secret-key"});
-    expect(instance.initializeOptionsIdentity()).toEqual({
-      identity: "tok123",
-      publicUrl: instance.url
-    });
-    expect(instance.initializeOptionsApikey()).toEqual({
-      apikey: "secret-key",
-      publicUrl: instance.url
-    });
+    expect(instance.publicUrl).toMatch(/^http:\/\/localhost:\d+$/);
+    expect(instance.publicUrl).not.toContain("/api");
+
+    // none of the internal connection details / credentials are part of the public surface
+    expect((instance as any).token).toBeUndefined();
+    expect((instance as any).apikey).toBeUndefined();
+    expect((instance as any).identifier).toBeUndefined();
+    expect((instance as any).mongoUrl).toBeUndefined();
+
+    // the lifecycle methods are the rest of the surface
+    expect(typeof instance.waitForReady).toBe("function");
+    expect(typeof instance.reset).toBe("function");
+    expect(typeof instance.teardown).toBe("function");
   });
 
   it("brings the stack up in the correct order", async () => {
@@ -76,7 +69,7 @@ describe("start", () => {
     expect(args).toContain("--database-name=inst");
     expect(args).toContain("--database-replica-set=inst");
     expect(args).toContain("--database-uri=mongodb://inst-db-0");
-    expect(args).toContain(`--public-url=${instance.url}`);
+    expect(args).toContain(`--public-url=${instance.publicUrl}`);
     expect(args).toContain("--passport-default-identity-identifier=spica");
     expect(args).toContain("--passport-default-identity-password=spica");
     expect(args).toContain("--persistent-path=/var/data");
@@ -97,22 +90,23 @@ describe("start", () => {
     expect(args).toContain("--activity-stream=false");
   });
 
-  it("logs in as the default identity and creates a full-access api key", async () => {
+  it("uses the default identity as the readiness gate (no api key is created)", async () => {
     const instance = await start({name: "inst", installResources: false});
     expect(api.awaitReady).toHaveBeenCalledWith(
-      instance.url,
+      instance.publicUrl,
       "spica",
       "spica",
       expect.any(Number)
     );
-    expect(api.createApiKey).toHaveBeenCalledWith(expect.anything(), "e2e", {fullAccess: true});
   });
 
-  it("installs resources by default with the same authenticated client", async () => {
+  it("installs resources with a client authenticated by the default identity's token", async () => {
     await start({name: "inst", resourcePath: "./fixtures"});
+
     const installArgs = (resourceInstaller.install as jest.Mock).mock.calls[0];
-    const apikeyClient = (api.createApiKey as jest.Mock).mock.calls[0][0];
-    expect(installArgs[0]).toBe(apikeyClient); // same unwrapping client
+    const client: any = installArgs[0];
+    // the install client carries the IDENTITY token returned by awaitReady — not an api key
+    expect(client.defaults.headers.common["Authorization"]).toBe("IDENTITY tok123");
     expect(installArgs[1]).toBe("./fixtures");
   });
 

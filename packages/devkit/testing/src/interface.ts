@@ -40,77 +40,25 @@ export type ResetModule =
   | "storage"
   | "all";
 
-export interface ApiKeyInfo {
-  _id: string;
-  name: string;
-  key: string;
-}
-
-export interface SpicaInstanceInfo {
-  /** Namespace label applied to every docker resource of this instance. */
-  name: string;
-  /** Host-reachable api base url, e.g. "http://localhost:54231" (NO /api suffix - there is no ingress). */
-  url: string;
-  /** Same as `url`; provided for symmetry with the other devkits' initialize({publicUrl}). */
-  publicUrl: string;
-  /** Host-reachable mongo url with directConnection enabled (used by reset()). */
-  mongoUrl: string;
-  /** Database name the api was started with (equals `name`). */
-  databaseName: string;
-  /** IDENTITY token obtained by logging in as the default identity. */
-  token: string;
-  identifier: string;
-  password: string;
-  /** Auto-created, full-access api key. */
-  apikey: ApiKeyInfo;
-}
-
-export interface InstallResourcesOptions {
-  /** Max resources applied in parallel per module. Default 10. */
-  concurrency?: number;
-  /**
-   * Abort the whole install on the first failing resource instead of installing the rest
-   * best-effort. Default false — failures are collected and returned in `errors`.
-   */
-  abortOnError?: boolean;
-}
-
-export interface CreateApiKeyOptions {
-  /** Attach every policy returned by GET /passport/policy. Default true. */
-  fullAccess?: boolean;
-  /** Explicit policy ids to attach (in addition to fullAccess, if set). */
-  policies?: string[];
-  /**
-   * Use this exact key string instead of a server-generated one. Lets a test provision the
-   * specific api key a project's functions authenticate with (e.g. a hardcoded SECRET_API_KEY)
-   * purely through the api — no database seeding required.
-   */
-  key?: string;
-}
-
 export interface TeardownOptions {
   /** Keep the data volumes instead of removing them. Default false. */
   retainVolumes?: boolean;
 }
 
-export interface SpicaInstance extends SpicaInstanceInfo {
-  /** Options object to initialize another devkit with this instance's IDENTITY token. */
-  initializeOptionsIdentity(): {identity: string; publicUrl: string};
-  /** Options object to initialize another devkit with this instance's api key. */
-  initializeOptionsApikey(): {apikey: string; publicUrl: string};
+/**
+ * A disposable Spica instance. The package owns only its lifecycle — start (+ install),
+ * reset between tests, and teardown — and exposes nothing else. Everything a test does with
+ * the running server (authenticating, creating api keys, making requests, writing
+ * expectations) is the test writer's job: point the other devkits (@spica-devkit/auth,
+ * @spica-devkit/identity, …) or raw HTTP at `publicUrl`, authenticating with the credentials
+ * passed to start() (default identifier/password "spica"/"spica").
+ */
+export interface SpicaInstance {
+  /** Host-reachable api base url, e.g. "http://localhost:54231" (NO /api suffix - there is no ingress). */
+  readonly publicUrl: string;
 
-  /** Log in as an arbitrary identity and return a fresh IDENTITY token. */
-  loginAs(identifier: string, password: string, expires?: number): Promise<string>;
-  /** Create an api key (full-access by default). */
-  createApiKey(name: string, options?: CreateApiKeyOptions): Promise<ApiKeyInfo>;
   /** Wait until the api accepts a login (its readiness gate), or the timeout elapses. */
   waitForReady(timeoutMs?: number): Promise<void>;
-
-  /** (Re)install the CLI-format resources from a folder (defaults to the start resourcePath). */
-  installResources(
-    resourcePath?: string,
-    options?: InstallResourcesOptions
-  ): Promise<{errors: string[]}>;
   /** Quickly wipe state between tests by dropping the targeted mongo collections. */
   reset(modules?: ResetModule[]): Promise<void>;
   /** Stop and remove every container, network and (unless retained) volume of this instance. */

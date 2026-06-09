@@ -1,6 +1,15 @@
 import {buildPlan, applyPlan, ALL_MODULES} from "@spica-server/sync";
 import {HttpClient} from "./http";
-import {InstallResourcesOptions} from "./interface";
+
+export interface InstallResourcesOptions {
+  /** Max resources applied in parallel per module. Default 10. */
+  concurrency?: number;
+  /**
+   * Abort the whole install on the first failing resource instead of installing the rest
+   * best-effort. Default false — failures are collected and returned in `errors`.
+   */
+  abortOnError?: boolean;
+}
 
 /**
  * Installs CLI-format resources (bucket/, function/, policy/, env-var/, secret/) from a

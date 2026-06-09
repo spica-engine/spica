@@ -1,18 +1,19 @@
 import crypto from "crypto";
 import {DockerOrchestrator} from "./docker";
-import {api, createClient, HttpClient} from "./http";
+import {api, createClient} from "./http";
 import {resourceInstaller} from "./resources";
 import {runReset, ResetContext} from "./reset";
-import {
-  ApiKeyInfo,
-  CreateApiKeyOptions,
-  InstallResourcesOptions,
-  ResetModule,
-  SpicaInstance,
-  SpicaInstanceInfo,
-  StartOptions,
-  TeardownOptions
-} from "./interface";
+import {ResetModule, SpicaInstance, StartOptions, TeardownOptions} from "./interface";
+
+/** Internal connection + credential bundle; never exposed on the public instance. */
+interface InstanceInternals {
+  name: string;
+  url: string;
+  mongoUrl: string;
+  databaseName: string;
+  identifier: string;
+  password: string;
+}
 
 function buildApiArgs(opts: {
   name: string;
@@ -40,77 +41,42 @@ function buildApiArgs(opts: {
 }
 
 class SpicaInstanceImpl implements SpicaInstance {
-  name: string;
-  url: string;
-  publicUrl: string;
-  mongoUrl: string;
-  databaseName: string;
-  token: string;
-  identifier: string;
-  password: string;
-  apikey: ApiKeyInfo;
+  /** The only thing a test writer sees — everything else is the test writer's own concern. */
+  readonly publicUrl: string;
 
-  private http: HttpClient;
-  private orchestrator: DockerOrchestrator;
-  private resourcePath: string;
+  private readonly internals: InstanceInternals;
+  private readonly orchestrator: DockerOrchestrator;
 
-  constructor(init: {
-    info: SpicaInstanceInfo;
-    http: HttpClient;
-    orchestrator: DockerOrchestrator;
-    resourcePath: string;
-  }) {
-    Object.assign(this, init.info);
-    this.http = init.http;
+  constructor(init: {internals: InstanceInternals; orchestrator: DockerOrchestrator}) {
+    this.internals = init.internals;
+    this.publicUrl = init.internals.url;
     this.orchestrator = init.orchestrator;
-    this.resourcePath = init.resourcePath;
-  }
-
-  initializeOptionsIdentity() {
-    return {identity: this.token, publicUrl: this.publicUrl};
-  }
-
-  initializeOptionsApikey() {
-    return {apikey: this.apikey.key, publicUrl: this.publicUrl};
-  }
-
-  loginAs(identifier: string, password: string, expires?: number): Promise<string> {
-    return api.login(this.url, identifier, password, expires);
-  }
-
-  createApiKey(name: string, options?: CreateApiKeyOptions): Promise<ApiKeyInfo> {
-    return api.createApiKey(this.http, name, options);
   }
 
   async waitForReady(timeoutMs?: number): Promise<void> {
-    await api.awaitReady(this.url, this.identifier, this.password, timeoutMs);
-  }
-
-  installResources(
-    resourcePath = this.resourcePath,
-    options?: InstallResourcesOptions
-  ): Promise<{errors: string[]}> {
-    return resourceInstaller.install(this.http, resourcePath, options);
+    const {url, identifier, password} = this.internals;
+    await api.awaitReady(url, identifier, password, timeoutMs);
   }
 
   reset(modules: ResetModule[] = ["all"]): Promise<void> {
     const ctx: ResetContext = {
-      databaseName: this.databaseName,
-      defaultIdentifier: this.identifier,
-      apikeyId: this.apikey._id
+      databaseName: this.internals.databaseName,
+      defaultIdentifier: this.internals.identifier
     };
-    return runReset(this.mongoUrl, ctx, modules);
+    return runReset(this.internals.mongoUrl, ctx, modules);
   }
 
   teardown(options: TeardownOptions = {}): Promise<void> {
-    return this.orchestrator.teardown(this.name, options.retainVolumes ?? false);
+    return this.orchestrator.teardown(this.internals.name, options.retainVolumes ?? false);
   }
 }
 
 /**
- * Start a disposable Spica instance (single-node mongo replica set + api only), install
- * the resources found in `resourcePath`, and return a handle carrying everything needed to
- * point the other devkit packages at it.
+ * Start a disposable Spica instance (single-node mongo replica set + api only) and, unless
+ * disabled, install the resources found in `resourcePath` — in one step. The returned handle
+ * exposes only `publicUrl` plus `waitForReady`/`reset`/`teardown`; authenticating and acting
+ * against the server is the test writer's job (point another devkit at `publicUrl` with the
+ * identifier/password passed here, default "spica"/"spica").
  */
 export async function start(options: StartOptions = {}): Promise<SpicaInstance> {
   const name = options.name || `spica-test-${crypto.randomBytes(4).toString("hex")}`;
@@ -152,35 +118,20 @@ export async function start(options: StartOptions = {}): Promise<SpicaInstance> 
     });
     await orchestrator.startApi(name, port, version, args, network);
 
-    // A successful login is the readiness gate (works across api versions).
+    // A successful login is the readiness gate (works across api versions). The default
+    // identity is granted every *FullAccess policy at bootstrap, so its IDENTITY token is all
+    // we need to install resources — no separate api key.
     const token = await api.awaitReady(url, identifier, password, options.readyTimeoutMs ?? 120_000);
-    const identityHttp = createClient(url, `IDENTITY ${token}`);
-    const apikey = await api.createApiKey(identityHttp, "e2e", {fullAccess: true});
-    // Use the durable api key for all subsequent calls — the identity token expires (~1 day).
-    const http = createClient(url, `APIKEY ${apikey.key}`);
-
-    const instance = new SpicaInstanceImpl({
-      info: {
-        name,
-        url,
-        publicUrl: url,
-        mongoUrl,
-        databaseName: name,
-        token,
-        identifier,
-        password,
-        apikey
-      },
-      http,
-      orchestrator,
-      resourcePath
-    });
 
     if (installResources) {
-      await instance.installResources(resourcePath);
+      const http = createClient(url, `IDENTITY ${token}`);
+      await resourceInstaller.install(http, resourcePath);
     }
 
-    return instance;
+    return new SpicaInstanceImpl({
+      internals: {name, url, mongoUrl, databaseName: name, identifier, password},
+      orchestrator
+    });
   } catch (error) {
     // Never leak a half-started instance.
     await orchestrator.teardown(name, false).catch(teardownErr =>

@@ -11,28 +11,48 @@ import {SpicaInstance} from "../src/interface";
  *
  * Override the api version with SPICA_E2E_VERSION. The default is pinned (not "latest") so
  * the suite is deterministic and exercises a release that exposes the public /status routes.
+ *
+ * The package exposes only `publicUrl` + waitForReady/reset/teardown, so — like any test
+ * writer — this suite authenticates the server itself: it logs in as the default identity
+ * (the documented "spica"/"spica" credentials it started with) to get an IDENTITY token.
  */
 const RUN = process.env.SPICA_E2E_DOCKER === "1";
 const DEFAULT_VERSION = "0.18.41";
 const describeIf = RUN ? describe : describe.skip;
 const VERSION = process.env.SPICA_E2E_VERSION || DEFAULT_VERSION;
 
-// CLI-format resources (bucket/, policy/, function/) installed by the sync engine.
+// Default credentials start() bootstraps the instance with.
+const IDENTIFIER = "spica";
+const PASSWORD = "spica";
+
+// CLI-format resources (bucket/, policy/, function/) installed by start().
 const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures");
 
 function unwrapList(data: any): any[] {
   return Array.isArray(data) ? data : (data?.data ?? []);
 }
 
+async function identify(url: string): Promise<string> {
+  const res = await axios.post(
+    `${url}/passport/identify`,
+    {identifier: IDENTIFIER, password: PASSWORD},
+    {validateStatus: () => true}
+  );
+  return res.data.token;
+}
+
 describeIf("@spica-devkit/testing (integration)", () => {
   jest.setTimeout(300_000);
 
   let spica: SpicaInstance;
+  let token: string;
   let startError: Error | undefined;
 
   beforeAll(async () => {
     try {
-      spica = await start({version: VERSION, installResources: false});
+      // one step: fresh instance + install the fixture resources
+      spica = await start({version: VERSION, resourcePath: FIXTURES});
+      token = await identify(spica.publicUrl);
     } catch (e: any) {
       // Keep a flat message - raw axios/docker errors are not worker-serializable.
       startError = new Error(e?.message || String(e));
@@ -52,92 +72,47 @@ describeIf("@spica-devkit/testing (integration)", () => {
   // status: () => true so non-2xx never throws a circular axios error out of the test.
   function client(authorization: string) {
     return axios.create({
-      baseURL: spica.url,
+      baseURL: spica.publicUrl,
       headers: {Authorization: authorization},
       validateStatus: () => true
     });
   }
-  const authed = () => client(`APIKEY ${spica.apikey.key}`);
+  const authed = () => client(`IDENTITY ${token}`);
 
   // ── bring-up ────────────────────────────────────────────────────────────────
-  it("starts and exposes connection details", () => {
-    expect(spica.url).toMatch(/^http:\/\/localhost:\d+$/);
-    expect(spica.token).toBeTruthy();
-    expect(spica.apikey.key).toBeTruthy();
+  it("exposes only the public url, no credentials or connection internals", () => {
+    expect(spica.publicUrl).toMatch(/^http:\/\/localhost:\d+$/);
+    expect((spica as any).token).toBeUndefined();
+    expect((spica as any).apikey).toBeUndefined();
+    expect((spica as any).mongoUrl).toBeUndefined();
+    expect((spica as any).identifier).toBeUndefined();
   });
 
   it("serves a ready status without auth", async () => {
-    const res = await axios.get(`${spica.url}/status/ready`, {validateStatus: () => true});
+    const res = await axios.get(`${spica.publicUrl}/status/ready`, {validateStatus: () => true});
     expect(res.status).toBe(200);
   });
 
-  // ── auth ──────────────────────────────────────────────────────────────────
-  it("authorizes requests with the auto-created api key", async () => {
-    const res = await authed().get("/passport/apikey");
+  it("the default identity authorizes admin requests", async () => {
+    const res = await authed().get("/bucket");
     expect(res.status).toBe(200);
   });
 
-  it("authorizes requests with the IDENTITY token", async () => {
-    const res = await client(`IDENTITY ${spica.token}`).get("/bucket");
-    expect(res.status).toBe(200);
-  });
-
-  it("mints an additional working api key via createApiKey", async () => {
-    const key = await spica.createApiKey("e2e-extra");
-    expect(key.key).toBeTruthy();
-    const res = await client(`APIKEY ${key.key}`).get("/passport/apikey");
-    expect(res.status).toBe(200);
-  });
-
-  // ── resource installation (the headline feature) ────────────────────────────
-  describe("installResources", () => {
-    let installErrors: string[];
-
-    beforeAll(async () => {
-      if (startError) return;
-      ({errors: installErrors} = await spica.installResources(FIXTURES));
-    });
-
-    // Remove exactly what the fixture installed so it doesn't linger into the later tests
-    // (reset() has no "policy" module and a mongo-level function drop wouldn't unregister
-    // the loaded trigger, so delete each via the api).
-    afterAll(async () => {
-      if (startError) return;
-      const http = authed();
-
-      const fn = unwrapList((await http.get("/function")).data).find(
-        (f: any) => f.name === "SeedProducts"
-      );
-      if (fn) await http.delete(`/function/${fn._id}`);
-
-      const policy = unwrapList((await http.get("/passport/policy")).data).find(
-        (p: any) => p.name === "Products Read Only"
-      );
-      if (policy) await http.delete(`/passport/policy/${policy._id}`);
-
-      const bucket = unwrapList((await http.get("/bucket")).data).find(
-        (b: any) => b.title === "Products"
-      );
-      if (bucket) await http.delete(`/bucket/${bucket._id}`);
-    });
-
-    it("applies the fixture with no errors", () => {
-      expect(installErrors).toEqual([]);
-    });
-
-    it("creates the bucket from disk", async () => {
+  // ── resources installed by start (the headline feature) ──────────────────────
+  describe("resources installed by start()", () => {
+    it("created the bucket from disk", async () => {
       const res = await authed().get("/bucket");
       const products = unwrapList(res.data).find((b: any) => b.title === "Products");
       expect(products).toBeDefined();
       expect(products.properties.stock.type).toBe("number");
     });
 
-    it("creates the policy from disk", async () => {
+    it("created the policy from disk", async () => {
       const res = await authed().get("/passport/policy");
       expect(unwrapList(res.data).some((p: any) => p.name === "Products Read Only")).toBe(true);
     });
 
-    it("creates the function and uploads its index from disk", async () => {
+    it("created the function and uploaded its index from disk", async () => {
       const res = await authed().get("/function");
       const fn = unwrapList(res.data).find((f: any) => f.name === "SeedProducts");
       expect(fn).toBeDefined();
@@ -178,22 +153,19 @@ describeIf("@spica-devkit/testing (integration)", () => {
   });
 
   // ── reset matrix ────────────────────────────────────────────────────────────
-  it("reset(['apikey']) preserves the instance's own key and drops the others", async () => {
-    const extra = await spica.createApiKey("e2e-disposable");
-
+  it("reset(['apikey']) clears every api key the test created", async () => {
+    const created = (await authed().post("/passport/apikey", {name: "disposable", active: true}))
+      .data;
     const before = unwrapList((await authed().get("/passport/apikey")).data).map((k: any) => k._id);
-    expect(before).toContain(extra._id);
+    expect(before).toContain(created._id);
 
     await spica.reset(["apikey"]);
 
-    // the instance's own key must still authorize (the preservation guarantee)…
-    const listAfter = await authed().get("/passport/apikey");
-    expect(listAfter.status).toBe(200);
-
-    // …while every other key is gone.
-    const after = unwrapList(listAfter.data).map((k: any) => k._id);
-    expect(after).toContain(spica.apikey._id);
-    expect(after).not.toContain(extra._id);
+    // every key is gone…
+    const after = unwrapList((await authed().get("/passport/apikey")).data);
+    expect(after.length).toBe(0);
+    // …and the instance is still usable via the default identity (which reset preserves)
+    expect((await authed().get("/bucket")).status).toBe(200);
   });
 
   it("reset(['bucket']) drops the bucket schemas as well", async () => {
@@ -210,7 +182,7 @@ describeIf("@spica-devkit/testing teardown", () => {
 
   it("removes the instance so the api port stops responding", async () => {
     const spica = await start({version: VERSION, installResources: false});
-    const url = spica.url;
+    const url = spica.publicUrl;
 
     const up = await axios.get(`${url}/status/ready`, {validateStatus: () => true});
     expect(up.status).toBe(200);

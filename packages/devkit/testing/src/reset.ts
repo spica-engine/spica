@@ -1,12 +1,10 @@
-import {Db, MongoClient, ObjectId} from "mongodb";
+import {Db, MongoClient} from "mongodb";
 import {ResetModule} from "./interface";
 
 export interface ResetContext {
   databaseName: string;
   /** The bootstrap identity to preserve when resetting identities. */
   defaultIdentifier: string;
-  /** The instance's own api key to preserve when resetting api keys. */
-  apikeyId: string;
 }
 
 async function dropIfExists(db: Db, collection: string): Promise<void> {
@@ -57,8 +55,10 @@ export const resetHandlers: Record<
     await db.collection("user").deleteMany({username: {$ne: ctx.defaultIdentifier}});
     await dropIfExists(db, "refresh_token");
   },
-  apikey: async (db, ctx) => {
-    await db.collection("apikey").deleteMany({_id: {$ne: new ObjectId(ctx.apikeyId)}});
+  apikey: async db => {
+    // The instance authenticates resource installs with the default identity, not an api key,
+    // so there is none of its own to preserve — clear every key the test created.
+    await db.collection("apikey").deleteMany({});
   },
   function: async db => {
     await dropIfExists(db, "function");

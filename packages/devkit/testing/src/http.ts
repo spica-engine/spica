@@ -1,5 +1,4 @@
 import axios, {AxiosInstance, AxiosRequestConfig} from "axios";
-import {ApiKeyInfo, CreateApiKeyOptions} from "./interface";
 
 /**
  * Minimal shape of the client expected by the CLI sync engine (buildPlan/applyPlan):
@@ -97,58 +96,5 @@ export const api = {
         lastError
       )}`
     );
-  },
-
-  /** Log in via POST /passport/identify (single attempt) and return the IDENTITY token. */
-  async login(
-    url: string,
-    identifier: string,
-    password: string,
-    expires?: number
-  ): Promise<string> {
-    const res = await axios.post(
-      `${url}/passport/identify`,
-      {identifier, password, expires},
-      {validateStatus: () => true, timeout: 10_000}
-    );
-    const token = res.data && res.data.token;
-    if (!token) {
-      throw new Error(
-        `Login for "${identifier}" failed (status ${res.status}): ${stringify(res.data)}`
-      );
-    }
-    return token;
-  },
-
-  /** Create an api key and, by default, attach every policy so it has full access. */
-  async createApiKey(
-    client: HttpClient,
-    name: string,
-    options: CreateApiKeyOptions = {}
-  ): Promise<ApiKeyInfo> {
-    const {fullAccess = true, policies = [], key} = options;
-    const created = await client.post<ApiKeyInfo & {policies?: string[]}>("passport/apikey", {
-      name,
-      active: true,
-      // Spica's POST /passport/apikey honours a provided key and only generates one when omitted.
-      ...(key ? {key} : {})
-    });
-
-    const policyIds = new Set<string>(policies);
-    if (fullAccess) {
-      const all = await client.get<any>("passport/policy");
-      const list: Array<{_id: string}> = Array.isArray(all) ? all : (all && all.data) || [];
-      for (const policy of list) {
-        policyIds.add(policy._id);
-      }
-    }
-
-    await Promise.all(
-      Array.from(policyIds).map(policyId =>
-        client.put(`passport/apikey/${created._id}/policy/${policyId}`, {})
-      )
-    );
-
-    return {_id: created._id, name: created.name, key: created.key};
   }
 };
