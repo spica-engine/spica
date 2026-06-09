@@ -74,6 +74,16 @@ describe("reset", () => {
     expect(db.collections["refresh_token"].drop).toHaveBeenCalled();
   });
 
+  it("identity also clears the passport/user model collection, preserving the default", async () => {
+    // Regression: identities created via POST /passport/user live in a separate `user`
+    // collection (username-keyed); reset(['identity']) must wipe those too or they survive.
+    wire(["identity", "user", "refresh_token"]);
+    await runReset("mongodb://localhost:1/?directConnection=true", ctx, ["identity"]);
+    expect(db.collections["user"].deleteMany).toHaveBeenCalledWith({
+      username: {$ne: "spica"}
+    });
+  });
+
   it("apikey deletes every key except the instance's own", async () => {
     wire(["apikey"]);
     await runReset("mongodb://localhost:1/?directConnection=true", ctx, ["apikey"]);
