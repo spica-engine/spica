@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import {DockerOrchestrator} from "./docker";
 import {api, createClient} from "./http";
-import {resourceInstaller} from "./resources";
+import {assertSelectionModules, resourceInstaller} from "./resources";
 import {runReset, ResetContext} from "./reset";
 import {ResetModule, SpicaInstance, StartOptions, TeardownOptions} from "./interface";
 
@@ -87,8 +87,13 @@ export async function start(options: StartOptions = {}): Promise<SpicaInstance> 
   const masterKey = options.masterKey || crypto.randomBytes(16).toString("hex");
   const resourcePath = options.resourcePath || "./";
   const imagePullPolicy = options.imagePullPolicy || "if-not-present";
-  const installResources = options.installResources !== false;
+  const installResources = options.installResources ?? true;
   const passportSecret = crypto.randomBytes(16).toString("hex");
+
+  // Fail fast on a bad selection (typo in a module name) before booting a container.
+  if (installResources !== true && installResources !== false) {
+    assertSelectionModules(installResources);
+  }
 
   // get-port is ESM-only; load it dynamically so the CommonJS build keeps working.
   const getPort = (await import("get-port")).default;
@@ -123,9 +128,11 @@ export async function start(options: StartOptions = {}): Promise<SpicaInstance> 
     // we need to install resources — no separate api key.
     const token = await api.awaitReady(url, identifier, password, options.readyTimeoutMs ?? 120_000);
 
-    if (installResources) {
+    if (installResources !== false) {
       const http = createClient(url, `IDENTITY ${token}`);
-      await resourceInstaller.install(http, resourcePath);
+      await resourceInstaller.install(http, resourcePath, {
+        selection: installResources === true ? undefined : installResources
+      });
     }
 
     return new SpicaInstanceImpl({

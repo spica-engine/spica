@@ -1,5 +1,19 @@
 export type ImagePullPolicy = "if-not-present" | "always";
 
+/** The resource modules the sync engine understands (also the folder names on disk). */
+export type ResourceModuleName = "bucket" | "function" | "policy" | "env-var" | "secret";
+
+/**
+ * Which resources to install. Maps a module name to `true` (install every resource of that
+ * module) or a list of resource folder names (install only those). Modules left out are not
+ * installed at all. Selecting a resource does not pull in its dependencies (a function's
+ * `@spica-fn/*` siblings, referenced buckets/env-vars) — list the complete set you need.
+ *
+ * Use this to install only the slice a feature test touches instead of the whole project, so
+ * each test file boots fast.
+ */
+export type ResourceSelection = Partial<Record<ResourceModuleName, true | string[]>>;
+
 export interface StartOptions {
   /** spicaengine/api image tag. Default "latest". */
   version?: string;
@@ -25,8 +39,13 @@ export interface StartOptions {
   apiOptions?: Record<string, string | number | boolean>;
   /** Image pull policy. Default "if-not-present". */
   imagePullPolicy?: ImagePullPolicy;
-  /** Install the resources found in resourcePath after the api boots. Default true. */
-  installResources?: boolean;
+  /**
+   * What to install from resourcePath after the api boots:
+   * - `true` (default) — install every resource,
+   * - `false` — install nothing,
+   * - a {@link ResourceSelection} — install only the named modules/resources (faster bring-up).
+   */
+  installResources?: boolean | ResourceSelection;
   /** How long to wait for the api to accept logins (POST /passport/identify) before failing. Default 120_000 ms. */
   readyTimeoutMs?: number;
 }

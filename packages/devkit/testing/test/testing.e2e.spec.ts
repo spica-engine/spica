@@ -175,6 +175,40 @@ describeIf("@spica-devkit/testing (integration)", () => {
   });
 });
 
+// Selective install gets its own short-lived instance with a different selection.
+describeIf("@spica-devkit/testing selective install", () => {
+  jest.setTimeout(300_000);
+
+  it("installs only the selected resources, leaving the rest out", async () => {
+    // FIXTURES holds a bucket (products), a policy and a function (seed-products); ask for
+    // only the bucket.
+    const spica = await start({
+      version: VERSION,
+      resourcePath: FIXTURES,
+      installResources: {bucket: ["products"]}
+    });
+
+    try {
+      const token = await identify(spica.publicUrl);
+      const authed = axios.create({
+        baseURL: spica.publicUrl,
+        headers: {Authorization: `IDENTITY ${token}`},
+        validateStatus: () => true
+      });
+
+      // the selected bucket landed…
+      const buckets = unwrapList((await authed.get("/bucket")).data);
+      expect(buckets.some((b: any) => b.title === "Products")).toBe(true);
+
+      // …while the unselected function was never installed
+      const fns = unwrapList((await authed.get("/function")).data);
+      expect(fns.some((f: any) => f.name === "SeedProducts")).toBe(false);
+    } finally {
+      await spica.teardown({retainVolumes: false});
+    }
+  });
+});
+
 // Teardown is verified in isolation so it can dispose of its own short-lived instance
 // without affecting the shared one above.
 describeIf("@spica-devkit/testing teardown", () => {

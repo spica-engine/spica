@@ -1,5 +1,6 @@
-import {buildPlan, applyPlan, ALL_MODULES} from "@spica-server/sync";
+import {buildPlan, applyPlan, ALL_MODULES, MODULE_NAMES, ResourceModule} from "@spica-server/sync";
 import {HttpClient} from "./http";
+import {ResourceModuleName, ResourceSelection} from "./interface";
 
 export interface InstallResourcesOptions {
   /** Max resources applied in parallel per module. Default 10. */
@@ -9,6 +10,49 @@ export interface InstallResourcesOptions {
    * best-effort. Default false — failures are collected and returned in `errors`.
    */
   abortOnError?: boolean;
+  /** Install only the named modules/resources instead of everything. */
+  selection?: ResourceSelection;
+}
+
+/** Throw if a selection names a module the sync engine doesn't know. Cheap + synchronous. */
+export function assertSelectionModules(selection: ResourceSelection): void {
+  const unknown = Object.keys(selection).filter(name => !MODULE_NAMES.includes(name));
+  if (unknown.length) {
+    throw new Error(
+      `Unknown module(s) in installResources selection: ${unknown.join(", ")}. ` +
+        `Available: ${MODULE_NAMES.join(", ")}`
+    );
+  }
+}
+
+/**
+ * Resolve a selection to the modules buildPlan should read, in the canonical apply order
+ * (policy → bucket → env-var → secret → function). A module selected with a list gets a
+ * wrapped `readLocal` that returns only the named resources (and fails on an unknown name).
+ */
+function selectModules(selection: ResourceSelection): ResourceModule[] {
+  assertSelectionModules(selection);
+
+  return ALL_MODULES.filter(mod => mod.name in selection).map(mod => {
+    const wanted = selection[mod.name as ResourceModuleName];
+    if (wanted === true || wanted === undefined) return mod;
+
+    const slugs = new Set(wanted);
+    return {
+      ...mod,
+      readLocal: async (rootDir: string) => {
+        const all = await mod.readLocal(rootDir);
+        const available = new Set(all.map(r => r.slug));
+        const missing = wanted.filter(name => !available.has(name));
+        if (missing.length) {
+          throw new Error(
+            `${mod.displayName} resources not found under ${rootDir}: ${missing.join(", ")}`
+          );
+        }
+        return all.filter(r => slugs.has(r.slug));
+      }
+    };
+  });
 }
 
 /**
@@ -21,12 +65,11 @@ export interface InstallResourcesOptions {
  * faithful to how the CLI applies resources. Exposed as an object so tests can spy on
  * `install`.
  *
- * Resources are applied best-effort by default (abortOnError: false): a single failing
- * resource (e.g. one function whose server-side dependency install fails) does NOT abort
- * the whole install, so the rest of the project still lands and every failure is returned
- * in `errors`. Installing a real, multi-resource project is the common case, and aborting
- * on the first failure would leave the instance half-provisioned and throw instead of
- * honouring the `{errors}` contract. Pass `abortOnError: true` to fail fast instead.
+ * Pass `selection` to install only a slice of the project (a feature test rarely needs the
+ * whole thing). Resources are applied best-effort by default (abortOnError: false): a single
+ * failing resource (e.g. one function whose server-side dependency install fails) does NOT
+ * abort the whole install, so the rest still lands and every failure is returned in `errors`.
+ * Pass `abortOnError: true` to fail fast instead.
  */
 export const resourceInstaller = {
   async install(
@@ -34,8 +77,9 @@ export const resourceInstaller = {
     resourcePath: string,
     options: InstallResourcesOptions = {}
   ): Promise<{errors: string[]}> {
-    const {concurrency = 10, abortOnError = false} = options;
-    const plan = await buildPlan(ALL_MODULES, http, resourcePath);
+    const {concurrency = 10, abortOnError = false, selection} = options;
+    const modules = selection ? selectModules(selection) : ALL_MODULES;
+    const plan = await buildPlan(modules, http, resourcePath);
     return applyPlan(plan, http, {concurrency, abortOnError});
   }
 };
