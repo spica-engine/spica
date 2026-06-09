@@ -98,6 +98,29 @@ describeIf("@spica-devkit/testing (integration)", () => {
       ({errors: installErrors} = await spica.installResources(FIXTURES));
     });
 
+    // Remove exactly what the fixture installed so it doesn't linger into the later tests
+    // (reset() has no "policy" module and a mongo-level function drop wouldn't unregister
+    // the loaded trigger, so delete each via the api).
+    afterAll(async () => {
+      if (startError) return;
+      const http = authed();
+
+      const fn = unwrapList((await http.get("/function")).data).find(
+        (f: any) => f.name === "SeedProducts"
+      );
+      if (fn) await http.delete(`/function/${fn._id}`);
+
+      const policy = unwrapList((await http.get("/passport/policy")).data).find(
+        (p: any) => p.name === "Products Read Only"
+      );
+      if (policy) await http.delete(`/passport/policy/${policy._id}`);
+
+      const bucket = unwrapList((await http.get("/bucket")).data).find(
+        (b: any) => b.title === "Products"
+      );
+      if (bucket) await http.delete(`/bucket/${bucket._id}`);
+    });
+
     it("applies the fixture with no errors", () => {
       expect(installErrors).toEqual([]);
     });
