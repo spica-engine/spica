@@ -126,10 +126,12 @@ export const api = {
     name: string,
     options: CreateApiKeyOptions = {}
   ): Promise<ApiKeyInfo> {
-    const {fullAccess = true, policies = []} = options;
+    const {fullAccess = true, policies = [], key} = options;
     const created = await client.post<ApiKeyInfo & {policies?: string[]}>("passport/apikey", {
       name,
-      active: true
+      active: true,
+      // Spica's POST /passport/apikey honours a provided key and only generates one when omitted.
+      ...(key ? {key} : {})
     });
 
     const policyIds = new Set<string>(policies);

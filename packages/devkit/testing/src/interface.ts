@@ -80,6 +80,12 @@ export interface CreateApiKeyOptions {
   fullAccess?: boolean;
   /** Explicit policy ids to attach (in addition to fullAccess, if set). */
   policies?: string[];
+  /**
+   * Use this exact key string instead of a server-generated one. Lets a test provision the
+   * specific api key a project's functions authenticate with (e.g. a hardcoded SECRET_API_KEY)
+   * purely through the api — no database seeding required.
+   */
+  key?: string;
 }
 
 export interface TeardownOptions {
