@@ -439,6 +439,23 @@ export function diffObjectFields(
 }
 
 /**
+ * Diff two schema-typed objects, casting away explicit types so modules do not need
+ * to repeat `local as Record<string, unknown>` on every call.
+ * Shared by the simple schema modules (bucket, env-var, policy, secret).
+ */
+export function diffSchemaFields<T extends object>(
+  local: T,
+  remote: T,
+  ignoredFields: string[]
+): string[] {
+  return diffObjectFields(
+    local as Record<string, unknown>,
+    remote as Record<string, unknown>,
+    ignoredFields
+  );
+}
+
+/**
  * Build a unified diff string between two text representations.
  */
 export function buildUnifiedDiff(oldContent: string, newContent: string, filename: string): string {

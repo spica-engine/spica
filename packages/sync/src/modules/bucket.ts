@@ -1,6 +1,5 @@
-import path from "path";
-import {diffObjectFields, renderSchemaDetail} from "../planner";
-import {readLocalSchemas, removeDir, sanitizeSlug, unwrapList, writeYaml} from "../fs-utils";
+import {diffSchemaFields, renderSchemaDetail} from "../planner";
+import {deleteLocalSchema, readLocalSchemas, sanitizeSlug, unwrapList, writeLocalSchema} from "../fs-utils";
 import {ResourceModule} from "../types";
 
 interface Bucket {
@@ -47,20 +46,15 @@ export const bucketModule: ResourceModule<Bucket> = {
   },
 
   async writeLocal(rootDir, remote) {
-    const dir = path.join(rootDir, "bucket", remote.slug);
-    writeYaml(path.join(dir, "schema.yaml"), remote.data);
+    writeLocalSchema(rootDir, "bucket", remote);
   },
 
   async deleteLocal(rootDir, slug) {
-    removeDir(path.join(rootDir, "bucket", slug));
+    deleteLocalSchema(rootDir, "bucket", slug);
   },
 
   diffFields(local, remote) {
-    return diffObjectFields(
-      local as Record<string, unknown>,
-      remote as Record<string, unknown>,
-      IGNORED_FIELDS
-    );
+    return diffSchemaFields(local, remote, IGNORED_FIELDS);
   },
 
   renderDetail(local, remote) {

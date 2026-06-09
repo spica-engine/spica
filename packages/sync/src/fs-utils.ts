@@ -91,3 +91,24 @@ export async function readLocalSchemas<T>(
   }
   return results;
 }
+
+/**
+ * Write a remote schema resource to disk at `<rootDir>/<moduleName>/<slug>/schema.yaml`.
+ * Shared by the simple schema modules (bucket, env-var, policy, secret).
+ */
+export function writeLocalSchema<T>(
+  rootDir: string,
+  moduleName: string,
+  remote: {slug: string; data: T}
+): void {
+  const dir = path.join(rootDir, moduleName, remote.slug);
+  writeYaml(path.join(dir, "schema.yaml"), remote.data);
+}
+
+/**
+ * Delete a local schema resource folder at `<rootDir>/<moduleName>/<slug>/`.
+ * Shared by the simple schema modules (bucket, env-var, policy, secret).
+ */
+export function deleteLocalSchema(rootDir: string, moduleName: string, slug: string): void {
+  removeDir(path.join(rootDir, moduleName, slug));
+}

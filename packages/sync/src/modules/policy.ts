@@ -1,7 +1,6 @@
-import path from "path";
 import {SyncHttpClient} from "../http";
-import {diffObjectFields, renderSchemaDetail} from "../planner";
-import {omit, readLocalSchemas, removeDir, sanitizeSlug, writeYaml} from "../fs-utils";
+import {diffSchemaFields, renderSchemaDetail} from "../planner";
+import {deleteLocalSchema, omit, readLocalSchemas, sanitizeSlug, writeLocalSchema} from "../fs-utils";
 import {LocalResource, RemoteResource, ResourceModule} from "../types";
 
 interface Policy {
@@ -54,20 +53,15 @@ export const policyModule: ResourceModule<Policy> = {
   },
 
   async writeLocal(rootDir, remote) {
-    const dir = path.join(rootDir, "policy", remote.slug);
-    writeYaml(path.join(dir, "schema.yaml"), remote.data);
+    writeLocalSchema(rootDir, "policy", remote);
   },
 
   async deleteLocal(rootDir, slug) {
-    removeDir(path.join(rootDir, "policy", slug));
+    deleteLocalSchema(rootDir, "policy", slug);
   },
 
   diffFields(local, remote) {
-    return diffObjectFields(
-      local as Record<string, unknown>,
-      remote as Record<string, unknown>,
-      IGNORED_FIELDS
-    );
+    return diffSchemaFields(local, remote, IGNORED_FIELDS);
   },
 
   renderDetail(local, remote) {

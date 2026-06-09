@@ -95,6 +95,7 @@ Quickly clears state by **dropping the relevant MongoDB collections directly** (
 | `bucket-data`   | drops every `bucket_<id>` data collection (schemas kept)       |
 | `bucket`        | drops data collections **and** the `buckets` schema collection |
 | `identity`      | deletes non-default identities and clears refresh tokens       |
+| `user`          | deletes non-default passport/user entries (username-keyed)     |
 | `apikey`        | deletes every api key the test created                         |
 | `function`      | drops the `function` collection                                |
 | `storage`       | drops the `storage` metadata collection                        |
