@@ -48,12 +48,14 @@ export const resetHandlers: Record<
   },
   identity: async (db, ctx) => {
     await db.collection("identity").deleteMany({identifier: {$ne: ctx.defaultIdentifier}});
-    // The passport/user model stores its identities in a separate `user` collection
-    // (username-keyed) rather than `identity`. Clear those too, preserving any row that
-    // matches the bootstrap identifier. deleteMany on a missing collection is a no-op, so
-    // this is safe on older api versions that have no `user` collection.
-    await db.collection("user").deleteMany({username: {$ne: ctx.defaultIdentifier}});
     await dropIfExists(db, "refresh_token");
+  },
+  user: async (db, ctx) => {
+    // The passport/user model stores its identities in a `user` collection (username-keyed),
+    // separate from the legacy `identity` collection. Clear those, preserving any row that
+    // matches the bootstrap identifier. deleteMany on a missing collection is a no-op, so this
+    // is safe on older api versions that have no `user` collection.
+    await db.collection("user").deleteMany({username: {$ne: ctx.defaultIdentifier}});
   },
   apikey: async db => {
     // The instance authenticates resource installs with the default identity, not an api key,
@@ -74,7 +76,8 @@ const ALL_ORDER: Array<Exclude<ResetModule, "all">> = [
   "bucket",
   "storage",
   "apikey",
-  "identity"
+  "identity",
+  "user"
 ];
 
 export function expandModules(modules: ResetModule[]): Array<Exclude<ResetModule, "all">> {

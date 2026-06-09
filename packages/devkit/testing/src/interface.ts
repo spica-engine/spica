@@ -54,6 +54,7 @@ export type ResetModule =
   | "bucket-data"
   | "bucket"
   | "identity"
+  | "user"
   | "apikey"
   | "function"
   | "storage"

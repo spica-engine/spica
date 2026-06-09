@@ -62,23 +62,26 @@ describe("reset", () => {
     expect(db.collections["buckets"].drop).toHaveBeenCalled();
   });
 
-  it("identity deletes non-default identities and clears refresh tokens", async () => {
-    wire(["identity", "refresh_token"]);
+  it("identity deletes non-default identities and clears refresh tokens, leaving users alone", async () => {
+    wire(["identity", "user", "refresh_token"]);
     await runReset("mongodb://localhost:1/?directConnection=true", ctx, ["identity"]);
     expect(db.collections["identity"].deleteMany).toHaveBeenCalledWith({
       identifier: {$ne: "spica"}
     });
     expect(db.collections["refresh_token"].drop).toHaveBeenCalled();
+    // identity and user are now separate modules — resetting identity must not touch user
+    expect(db.collections["user"]).toBeUndefined();
   });
 
-  it("identity also clears the passport/user model collection, preserving the default", async () => {
-    // Regression: identities created via POST /passport/user live in a separate `user`
-    // collection (username-keyed); reset(['identity']) must wipe those too or they survive.
-    wire(["identity", "user", "refresh_token"]);
-    await runReset("mongodb://localhost:1/?directConnection=true", ctx, ["identity"]);
+  it("user clears the passport/user model collection, preserving the default, and nothing else", async () => {
+    // Identities created via POST /passport/user live in a separate `user` collection
+    // (username-keyed); reset(['user']) wipes those without touching the legacy identity store.
+    wire(["identity", "user"]);
+    await runReset("mongodb://localhost:1/?directConnection=true", ctx, ["user"]);
     expect(db.collections["user"].deleteMany).toHaveBeenCalledWith({
       username: {$ne: "spica"}
     });
+    expect(db.collections["identity"]).toBeUndefined();
   });
 
   it("apikey clears every key (the instance authenticates with the default identity, not a key)", async () => {
@@ -113,7 +116,8 @@ describe("reset", () => {
         "bucket",
         "storage",
         "apikey",
-        "identity"
+        "identity",
+        "user"
       ]);
     });
 
@@ -124,7 +128,7 @@ describe("reset", () => {
 
   it("exposes a handler per module", () => {
     expect(Object.keys(resetHandlers).sort()).toEqual(
-      ["apikey", "bucket", "bucket-data", "function", "identity", "storage"].sort()
+      ["apikey", "bucket", "bucket-data", "function", "identity", "storage", "user"].sort()
     );
   });
 });

@@ -168,6 +168,27 @@ describeIf("@spica-devkit/testing (integration)", () => {
     expect((await authed().get("/bucket")).status).toBe(200);
   });
 
+  it("reset(['user']) clears passport/user identities but leaves the default identity", async () => {
+    // a passport/user-model identity (separate from the bootstrap identity)
+    const created = (
+      await authed().post("/passport/user", {username: "ephemeral@test.io", password: "pass1234"})
+    ).data;
+    const before = unwrapList((await authed().get("/passport/user")).data).map((u: any) => u._id);
+    expect(before).toContain(created._id);
+
+    await spica.reset(["user"]);
+
+    // the user is gone…
+    expect(unwrapList((await authed().get("/passport/user")).data).length).toBe(0);
+    // …while the bootstrap identity (legacy `identity` collection) still authenticates
+    const stillUp = await axios.post(
+      `${spica.publicUrl}/passport/identify`,
+      {identifier: IDENTIFIER, password: PASSWORD},
+      {validateStatus: () => true}
+    );
+    expect(stillUp.status).toBe(200);
+  });
+
   it("reset(['bucket']) drops the bucket schemas as well", async () => {
     await spica.reset(["bucket"]);
     const res = await authed().get("/bucket");
