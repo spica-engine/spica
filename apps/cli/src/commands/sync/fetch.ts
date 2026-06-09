@@ -4,9 +4,9 @@ import caporalCore from "@caporal/core";
 const {CaporalValidator} = caporalCore;
 import {bold, green, red, yellow} from "colorette";
 import {httpService} from "../../http";
-import {buildPlan, fetchToDisk, renderPlan} from "./planner";
+import {buildPlan, fetchToDisk, renderPlan, resolveModules, MODULE_NAMES} from "@spica-server/sync";
 import {confirm} from "./prompt";
-import {resolveModules, MODULE_NAMES} from "./modules/index";
+import {cliReporter} from "./reporter";
 
 async function fetch_({args, options}: ActionParameters) {
   const rootDir = path.resolve((args.dir as string | undefined) ?? process.cwd());
@@ -23,7 +23,7 @@ async function fetch_({args, options}: ActionParameters) {
   const http = await httpService.createFromCurrentCtx();
 
   console.log(bold("\nBuilding plan…"));
-  const p = await buildPlan(modules, http, rootDir, detailed, false);
+  const p = await buildPlan(modules, http, rootDir, detailed, false, cliReporter);
 
   // Fetch perspective: deletes = new remote files to write, updates = changed to overwrite,
   // creates = local-only stale files (removed only with --clean)
@@ -52,7 +52,8 @@ async function fetch_({args, options}: ActionParameters) {
     const {written, deleted, errors} = await fetchToDisk(p, http, rootDir, {
       concurrency,
       abortOnError,
-      clean
+      clean,
+      reporter: cliReporter
     });
 
     if (errors.length) {

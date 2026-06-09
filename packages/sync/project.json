@@ -1,0 +1,5 @@
+{
+  "name": "sync",
+  "sourceRoot": "packages/sync/src",
+  "projectType": "library"
+}

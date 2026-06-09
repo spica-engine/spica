@@ -1,9 +1,8 @@
 import {bold, cyan, green, red, yellow} from "colorette";
 import isEqual from "lodash/isEqual.js";
 import {createTwoFilesPatch} from "diff";
-import ora from "ora";
-import {spin} from "../../console";
-import {httpService} from "../../http";
+import {SyncHttpClient} from "./http";
+import {SyncReporter, silentReporter} from "./reporter";
 import {
   ChangeKind,
   LocalResource,
@@ -18,23 +17,22 @@ import {
 
 export async function buildPlan(
   modules: ResourceModule[],
-  http: httpService.Client,
+  http: SyncHttpClient,
   rootDir: string,
   detailed = false,
-  detectRenames = true
+  detectRenames = true,
+  reporter: SyncReporter = silentReporter
 ): Promise<Plan> {
   const modulePlans: ModulePlan[] = [];
 
   for (const mod of modules) {
     const [locals, remotes] = await Promise.all([
-      spin<LocalResource[]>({
-        text: `Reading local ${mod.displayName} files`,
-        op: () => mod.readLocal(rootDir)
-      }),
-      spin<RemoteResource[]>({
-        text: `Fetching remote ${mod.displayName}`,
-        op: () => mod.readRemote(http)
-      })
+      reporter.task<LocalResource[]>(`Reading local ${mod.displayName} files`, () =>
+        mod.readLocal(rootDir)
+      ),
+      reporter.task<RemoteResource[]>(`Fetching remote ${mod.displayName}`, () =>
+        mod.readRemote(http)
+      )
     ]);
 
     const localBySlug = new Map(locals.map(l => [l.slug, l]));
@@ -288,21 +286,23 @@ function renderUnifiedDiff(diff: string): void {
 export interface ApplyOptions {
   concurrency?: number;
   abortOnError?: boolean;
+  reporter?: SyncReporter;
 }
 
 export async function applyPlan(
   plan: Plan,
-  http: httpService.Client,
+  http: SyncHttpClient,
   opts: ApplyOptions = {}
 ): Promise<{errors: string[]}> {
   const concurrency = opts.concurrency ?? 10;
+  const reporter = opts.reporter ?? silentReporter;
   const errors: string[] = [];
 
   const handleErr = (label: string, e: unknown) => {
     const msg = formatError(e);
     const full = `${label}: ${msg}`;
     if (opts.abortOnError) throw new Error(full);
-    console.warn(bold(yellow(`  ⚠  ${full}`)));
+    reporter.warn(full);
     errors.push(full);
   };
 
@@ -314,7 +314,8 @@ export async function applyPlan(
         deletes.map(e => ({slug: e.slug, run: () => mod.delete(http, e.remote!.id)})),
         concurrency,
         `Deleting ${mod.displayName}`,
-        handleErr
+        handleErr,
+        reporter
       );
     }
 
@@ -323,7 +324,8 @@ export async function applyPlan(
         updates.map(e => ({slug: e.slug, run: () => mod.update(http, e.local!, e.remote!.id)})),
         concurrency,
         `Updating ${mod.displayName}`,
-        handleErr
+        handleErr,
+        reporter
       );
     }
 
@@ -332,7 +334,8 @@ export async function applyPlan(
         creates.map(e => ({slug: e.slug, run: () => mod.create(http, e.local!)})),
         concurrency,
         `Creating ${mod.displayName}`,
-        handleErr
+        handleErr,
+        reporter
       );
     }
   }
@@ -346,15 +349,17 @@ export interface FetchOptions {
   clean?: boolean;
   concurrency?: number;
   abortOnError?: boolean;
+  reporter?: SyncReporter;
 }
 
 export async function fetchToDisk(
   plan: Plan,
-  http: httpService.Client,
+  http: SyncHttpClient,
   rootDir: string,
   opts: FetchOptions = {}
 ): Promise<{written: number; deleted: number; errors: string[]}> {
   const concurrency = opts.concurrency ?? 10;
+  const reporter = opts.reporter ?? silentReporter;
   const errors: string[] = [];
   let written = 0;
   let deleted = 0;
@@ -363,7 +368,7 @@ export async function fetchToDisk(
     const msg = formatError(e);
     const full = `${label}: ${msg}`;
     if (opts.abortOnError) throw new Error(full);
-    console.warn(bold(yellow(`  ⚠  ${full}`)));
+    reporter.warn(full);
     errors.push(full);
   };
 
@@ -383,7 +388,8 @@ export async function fetchToDisk(
         })),
         concurrency,
         `Writing ${mod.displayName}`,
-        handleErr
+        handleErr,
+        reporter
       );
     }
 
@@ -399,7 +405,8 @@ export async function fetchToDisk(
         })),
         concurrency,
         `Deleting ${mod.displayName}`,
-        handleErr
+        handleErr,
+        reporter
       );
     }
   }
@@ -440,17 +447,18 @@ async function runConcurrently(
   tasks: Array<{slug: string; run: () => Promise<void>}>,
   concurrency: number,
   label: string,
-  onError: (label: string, e: unknown) => void
+  onError: (label: string, e: unknown) => void,
+  reporter: SyncReporter
 ): Promise<void> {
   if (!tasks.length) return;
 
   const total = tasks.length;
   let done = 0;
 
-  // Use ora directly instead of spin() to ensure errors thrown by onError
-  // (abortOnError path) propagate to the caller's try/catch rather than being
-  // intercepted by spin()'s process.exit() rejection handler.
-  const spinner = ora({text: `${label} (0/${total})`, color: "yellow"}).start();
+  // Drive progress through the injected reporter so errors thrown by onError
+  // (abortOnError path) propagate to the caller's try/catch. The CLI reporter
+  // renders this with ora; the silent default does nothing.
+  const progress = reporter.progress(label, total);
   try {
     const limit = Math.max(1, Math.min(total, concurrency));
     let batch: typeof tasks = [];
@@ -464,16 +472,16 @@ async function runConcurrently(
               .catch((e: unknown) => onError(`${label}: ${task.slug}`, e))
               .finally(() => {
                 done++;
-                spinner.text = `${label}: ${task.slug} (${done}/${total})`;
+                progress.update(task.slug, done, total);
               })
           )
         );
         batch = [];
       }
     }
-    spinner.succeed();
+    progress.succeed();
   } catch (e) {
-    spinner.fail();
+    progress.fail();
     throw e;
   }
 }

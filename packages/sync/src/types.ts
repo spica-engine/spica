@@ -1,4 +1,4 @@
-import {httpService} from "../../http";
+import {SyncHttpClient} from "./http";
 
 // ─── Dev-watcher extension types ─────────────────────────────────────────────
 
@@ -17,7 +17,7 @@ export interface DevEventContext {
   /** The filename within the slug dir (e.g. "schema.yaml", "index.ts") */
   file: string;
   /** The HTTP client for API calls */
-  http: httpService.Client;
+  http: SyncHttpClient;
   /** Absolute path to the project root */
   rootDir: string;
   /** Retrieve the cached remote ID for this module's slug */
@@ -117,14 +117,14 @@ export interface ResourceModule<T = any> {
   /** Read all local resources from the project directory */
   readLocal(rootDir: string): Promise<LocalResource<T>[]>;
   /** Fetch all remote resources from the Spica API */
-  readRemote(http: httpService.Client): Promise<RemoteResource<T>[]>;
+  readRemote(http: SyncHttpClient): Promise<RemoteResource<T>[]>;
 
   /** Apply a create to the remote API */
-  create(http: httpService.Client, local: LocalResource<T>): Promise<void>;
+  create(http: SyncHttpClient, local: LocalResource<T>): Promise<void>;
   /** Apply an update to the remote API; remoteId is the _id on the server */
-  update(http: httpService.Client, local: LocalResource<T>, remoteId: string): Promise<void>;
+  update(http: SyncHttpClient, local: LocalResource<T>, remoteId: string): Promise<void>;
   /** Delete a remote resource */
-  delete(http: httpService.Client, remoteId: string): Promise<void>;
+  delete(http: SyncHttpClient, remoteId: string): Promise<void>;
 
   /** Write a remote resource to disk */
   writeLocal(rootDir: string, remote: RemoteResource<T>): Promise<void>;

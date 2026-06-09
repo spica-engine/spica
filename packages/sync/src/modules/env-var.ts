@@ -1,67 +1,73 @@
 import path from "path";
 import yaml from "yaml";
-import {httpService} from "../../../http";
+import {SyncHttpClient} from "../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
-import {listFolders, omit, readYaml, removeDir, sanitizeSlug, unwrapList, writeYaml} from "../fs-utils";
+import {
+  listFolders,
+  omit,
+  readYaml,
+  removeDir,
+  sanitizeSlug,
+  unwrapList,
+  writeYaml
+} from "../fs-utils";
 import {LocalResource, RemoteResource, ResourceModule} from "../types";
 
-interface Secret {
+interface EnvVar {
   _id?: string;
   key: string;
   value?: string;
   [key: string]: unknown;
 }
 
-// "value" is excluded from diff/render: the API never returns it (projected out server-side),
-// so comparing or displaying it would cause permanent false-positives and secret leakage.
-const IGNORED_FIELDS = ["_id", "value"];
+const IGNORED_FIELDS = ["_id"];
 
-export const secretModule: ResourceModule<Secret> = {
-  name: "secret",
-  displayName: "Secret",
+export const envVarModule: ResourceModule<EnvVar> = {
+  name: "env-var",
+  displayName: "Environment Variable",
   identityField: "key",
   ignoredFields: IGNORED_FIELDS,
 
   async readLocal(rootDir) {
-    const dir = path.join(rootDir, "secret");
+    const dir = path.join(rootDir, "env-var");
     const slugs = listFolders(dir);
-    const results: LocalResource<Secret>[] = [];
+    const results: LocalResource<EnvVar>[] = [];
     for (const slug of slugs) {
-      const data = readYaml<Secret>(path.join(dir, slug, "schema.yaml"));
+      const data = readYaml<EnvVar>(path.join(dir, slug, "schema.yaml"));
       if (data) results.push({slug, data});
     }
     return results;
   },
 
   async readRemote(http) {
-    const res = await http.get<Secret[] | {data: Secret[]}>("secret");
+    const res = await http.get<EnvVar[] | {data: EnvVar[]}>("env-var");
     const items = unwrapList(res);
-    return items.map(s => ({
-      slug: sanitizeSlug(s.key),
-      id: s._id!,
-      data: s
+    return items.map(e => ({
+      slug: sanitizeSlug(e.key),
+      id: e._id!,
+      data: e
     }));
   },
 
   async create(http, local) {
-    await http.post("secret", local.data);
+    await http.post("env-var", local.data);
   },
 
   async update(http, local, remoteId) {
-    await http.put(`secret/${remoteId}`, local.data);
+    await http.put(`env-var/${remoteId}`, local.data);
   },
 
   async delete(http, remoteId) {
-    await http.delete(`secret/${remoteId}`);
+    await http.delete(`env-var/${remoteId}`);
   },
 
   async writeLocal(rootDir, remote) {
-    const dir = path.join(rootDir, "secret", remote.slug);
+    const dir = path.join(rootDir, "env-var", remote.slug);
     writeYaml(path.join(dir, "schema.yaml"), remote.data);
   },
 
   async deleteLocal(rootDir, slug) {
-    removeDir(path.join(rootDir, "secret", slug));
+    removeDir(path.join(rootDir, "env-var", slug));
   },
 
   diffFields(local, remote) {

@@ -7,7 +7,8 @@ from code, in any test framework.
 It starts a **minimal** stack — a single-node MongoDB replica set plus the Spica API
 container only (no panel, no ingress) — so it is fast enough to use from a test suite.
 
-> Requires a running Docker daemon and the `@spica/cli` package (installed alongside it).
+> Requires a running Docker daemon. The Spica resource-sync engine is bundled in, so no
+> separate CLI install is needed.
 
 ## Usage
 
@@ -32,13 +33,13 @@ afterAll(() => spica.teardown());
 
 `start(options?)` returns a handle with everything needed to connect:
 
-| field | description |
-|---|---|
-| `url` / `publicUrl` | host-reachable api base (no `/api` suffix — there is no ingress) |
-| `token` | IDENTITY token for the default identity |
-| `apikey` | an auto-created **full-access** api key (`{_id, name, key}`) |
-| `identifier` / `password` | the default identity credentials |
-| `mongoUrl` | host-reachable mongo url (used by `reset()`) |
+| field                     | description                                                      |
+| ------------------------- | ---------------------------------------------------------------- |
+| `url` / `publicUrl`       | host-reachable api base (no `/api` suffix — there is no ingress) |
+| `token`                   | IDENTITY token for the default identity                          |
+| `apikey`                  | an auto-created **full-access** api key (`{_id, name, key}`)     |
+| `identifier` / `password` | the default identity credentials                                 |
+| `mongoUrl`                | host-reachable mongo url (used by `reset()`)                     |
 
 Helpers on the handle: `loginAs`, `createApiKey`, `waitForReady`, `installResources`,
 `reset`, `teardown`, plus `initializeOptionsIdentity()` / `initializeOptionsApikey()`.
@@ -54,15 +55,15 @@ Helpers on the handle: `loginAs`, `createApiKey`, `waitForReady`, `installResour
 
 Quickly clears state by **dropping the relevant MongoDB collections directly** (fastest path):
 
-| module | effect |
-|---|---|
-| `bucket-data` | drops every `bucket_<id>` data collection (schemas kept) |
-| `bucket` | drops data collections **and** the `buckets` schema collection |
-| `identity` | deletes non-default identities and clears refresh tokens |
-| `apikey` | deletes every api key except the instance's own |
-| `function` | drops the `function` collection |
-| `storage` | drops the `storage` metadata collection |
-| `all` (default) | all of the above |
+| module          | effect                                                         |
+| --------------- | -------------------------------------------------------------- |
+| `bucket-data`   | drops every `bucket_<id>` data collection (schemas kept)       |
+| `bucket`        | drops data collections **and** the `buckets` schema collection |
+| `identity`      | deletes non-default identities and clears refresh tokens       |
+| `apikey`        | deletes every api key except the instance's own                |
+| `function`      | drops the `function` collection                                |
+| `storage`       | drops the `storage` metadata collection                        |
+| `all` (default) | all of the above                                               |
 
 **Caveats (mongo-direct bypasses the api's cascade logic):**
 

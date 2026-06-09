@@ -1,4 +1,4 @@
-import {sanitizeSlug, unwrapList} from "@spica/cli/src/commands/sync/fs-utils";
+import {sanitizeSlug, unwrapList} from "@spica-server/sync";
 
 // ─── sanitizeSlug ─────────────────────────────────────────────────────────────
 

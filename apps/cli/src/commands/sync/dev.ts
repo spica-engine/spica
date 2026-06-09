@@ -6,11 +6,19 @@ import {bold, cyan, green, red, yellow} from "colorette";
 import ora from "ora";
 import {httpService} from "../../http";
 import {context} from "../../context";
-import {buildPlan, applyPlan, renderPlan} from "./planner";
+import {
+  buildPlan,
+  applyPlan,
+  renderPlan,
+  resolveModules,
+  MODULE_NAMES,
+  readYaml,
+  DevEventContext,
+  ResourceModule,
+  LocalResource
+} from "@spica-server/sync";
 import {confirm} from "./prompt";
-import {resolveModules, MODULE_NAMES} from "./modules/index";
-import {readYaml} from "./fs-utils";
-import {DevEventContext, ResourceModule, LocalResource} from "./types";
+import {cliReporter} from "./reporter";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -136,7 +144,9 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
 
   // ── helpers ────────────────────────────────────────────────────────────────
 
-  function parseFilePath(absolutePath: string): {moduleName: string; slug: string; file: string} | null {
+  function parseFilePath(
+    absolutePath: string
+  ): {moduleName: string; slug: string; file: string} | null {
     const rel = path.relative(rootDir, absolutePath);
     const parts = rel.split(path.sep);
     if (parts.length < 3) return null;
@@ -197,16 +207,16 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
       clearRemoteId(mod.name, pending.slug);
       setRemoteId(mod.name, slug, pending.remoteId);
       const renameLabel = `${yellow("~")}  ${bold(mod.displayName)}  ${bold(pending.slug)} ${cyan("→")} ${bold(slug)}`;
-      await spinOp(renameLabel, "updated (rename)", () => mod.update(http, local, pending.remoteId));
+      await spinOp(renameLabel, "updated (rename)", () =>
+        mod.update(http, local, pending.remoteId)
+      );
       return;
     }
 
     const remoteId = getRemoteId(mod.name, slug);
     if (remoteId) {
-      await spinOp(
-        `${yellow("~")}  ${bold(mod.displayName)}  ${bold(slug)}`,
-        "updated",
-        () => mod.update(http, local, remoteId)
+      await spinOp(`${yellow("~")}  ${bold(mod.displayName)}  ${bold(slug)}`, "updated", () =>
+        mod.update(http, local, remoteId)
       );
     } else {
       await spinOp(
@@ -225,10 +235,8 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
     if (!local) return;
     const remoteId = getRemoteId(mod.name, slug);
     if (!remoteId) return handleSchemaAdd(mod, slug);
-    await spinOp(
-      `${yellow("~")}  ${bold(mod.displayName)}  ${bold(slug)}`,
-      "updated",
-      () => mod.update(http, local, remoteId)
+    await spinOp(`${yellow("~")}  ${bold(mod.displayName)}  ${bold(slug)}`, "updated", () =>
+      mod.update(http, local, remoteId)
     );
   }
 
@@ -242,10 +250,8 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
     const timer = setTimeout(async () => {
       pendingDeletes.delete(pendingKey);
       clearRemoteId(mod.name, slug);
-      await spinOp(
-        `${red("-")}  ${bold(mod.displayName)}  ${bold(slug)}`,
-        "deleted",
-        () => mod.delete(http, remoteId)
+      await spinOp(`${red("-")}  ${bold(mod.displayName)}  ${bold(slug)}`, "deleted", () =>
+        mod.delete(http, remoteId)
       );
     }, renameWindowMs);
 
@@ -266,19 +272,17 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
       file,
       http,
       rootDir,
-      getRemoteId: (s) => getRemoteId(mod.name, s),
+      getRemoteId: s => getRemoteId(mod.name, s),
       setRemoteId: (s, id) => setRemoteId(mod.name, s, id),
-      clearRemoteId: (s) => clearRemoteId(mod.name, s),
+      clearRemoteId: s => clearRemoteId(mod.name, s),
       schedulePendingDelete(s, remoteId) {
         const pendingKey = `${mod.name}:${s}`;
         if (pendingDeletes.has(pendingKey)) return;
         const timer = setTimeout(async () => {
           pendingDeletes.delete(pendingKey);
           clearRemoteId(mod.name, s);
-          await spinOp(
-            `${red("-")}  ${bold(mod.displayName)}  ${bold(s)}`,
-            "deleted",
-            () => mod.delete(http, remoteId)
+          await spinOp(`${red("-")}  ${bold(mod.displayName)}  ${bold(s)}`, "deleted", () =>
+            mod.delete(http, remoteId)
           );
         }, renameWindowMs);
         pendingDeletes.set(pendingKey, {timer, moduleName: mod.name, slug: s, remoteId});
@@ -303,7 +307,10 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
 
   // ── main dispatcher ────────────────────────────────────────────────────────
 
-  async function handleEvent(type: "add" | "change" | "unlink", absolutePath: string): Promise<void> {
+  async function handleEvent(
+    type: "add" | "change" | "unlink",
+    absolutePath: string
+  ): Promise<void> {
     const parsed = parseFilePath(absolutePath);
     if (!parsed) return;
 
@@ -360,7 +367,7 @@ async function dev({args, options}: ActionParameters) {
   try {
     ctx = await context.getCurrent();
   } catch (err) {
-    console.log(`\n${bold(red(`✗ ${formatError(err)}`))}`)
+    console.log(`\n${bold(red(`✗ ${formatError(err)}`))}`);
     process.exitCode = 1;
     return;
   }
@@ -384,9 +391,9 @@ async function dev({args, options}: ActionParameters) {
   console.log(bold("\nBuilding plan…"));
   let plan: Awaited<ReturnType<typeof buildPlan>>;
   try {
-    plan = await buildPlan(modules, http, rootDir, false);
+    plan = await buildPlan(modules, http, rootDir, false, true, cliReporter);
   } catch (err) {
-    console.log(`\n${bold(red(`✗ Failed to build plan: ${formatError(err)}`))}`)
+    console.log(`\n${bold(red(`✗ Failed to build plan: ${formatError(err)}`))}`);
     process.exitCode = 1;
     return;
   }
@@ -408,7 +415,11 @@ async function dev({args, options}: ActionParameters) {
 
     console.log(bold("\nApplying changes…"));
     try {
-      const {errors} = await applyPlan(plan, http, {concurrency: 5, abortOnError: true});
+      const {errors} = await applyPlan(plan, http, {
+        concurrency: 5,
+        abortOnError: true,
+        reporter: cliReporter
+      });
       if (errors.length) {
         // abortOnError=true means applyPlan threw before we get here, but guard anyway
         console.log(bold(red(`\n✗ Apply failed with ${errors.length} error(s).`)));
@@ -416,7 +427,7 @@ async function dev({args, options}: ActionParameters) {
         return;
       }
     } catch (err) {
-      console.log(`\n${bold(red(`✗ ${formatError(err)}`))}`)
+      console.log(`\n${bold(red(`✗ ${formatError(err)}`))}`);
       process.exitCode = 1;
       return;
     }

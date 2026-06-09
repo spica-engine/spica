@@ -1,6 +1,7 @@
 import getConfig from "../rollup.config.js";
 
-// dockerode and get-port are not in the shared externals list, and @spica/cli is
-// consumed via deep subpath imports (its own dist) - keep all of them external so
-// rollup neither bundles them nor walks into the CLI's caporal/ora dependency graph.
-module.exports = getConfig("testing", [], ["dockerode", "get-port", /^@spica\/cli(\/.*)?$/]);
+// dockerode and get-port are kept external (they're declared runtime deps and are
+// loaded lazily / are ESM-only). The shared sync engine (@spica-server/sync) is a
+// workspace library and is intentionally NOT external, so rollup inlines it (and its
+// small deps: yaml/lodash/diff/colorette) into the published bundle.
+module.exports = getConfig("testing", [], ["dockerode", "get-port"]);

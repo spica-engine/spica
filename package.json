@@ -26,6 +26,7 @@
       "packages/database/realtime",
       "packages/database/testing",
       "packages/filter",
+      "packages/sync",
       "packages/realtime",
       "packages/representative",
       "packages/transaction",

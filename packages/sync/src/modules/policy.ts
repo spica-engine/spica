@@ -1,6 +1,6 @@
 import path from "path";
 import yaml from "yaml";
-import {httpService} from "../../../http";
+import {SyncHttpClient} from "../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
 import {listFolders, omit, readYaml, removeDir, sanitizeSlug, writeYaml} from "../fs-utils";
 import {LocalResource, RemoteResource, ResourceModule} from "../types";

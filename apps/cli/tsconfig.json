@@ -12,6 +12,9 @@
     },
     {
       "path": "../../packages/interface/asset"
+    },
+    {
+      "path": "../../packages/sync"
     }
   ]
 }

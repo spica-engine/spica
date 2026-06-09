@@ -7,7 +7,7 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../apps/cli"
+      "path": "../../sync"
     }
   ]
 }

@@ -24,11 +24,8 @@
     "get-port": "^7.1.0",
     "mongodb": "^6.12.0"
   },
-  "peerDependencies": {
-    "@spica/cli": "workspace:*"
-  },
   "devDependencies": {
-    "@spica/cli": "workspace:*",
+    "@spica-server/sync": "workspace:*",
     "@types/dockerode": "^3.3.34"
   }
 }

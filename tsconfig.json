@@ -356,6 +356,9 @@
       "path": "./packages/filter"
     },
     {
+      "path": "./packages/sync"
+    },
+    {
       "path": "./packages/core"
     },
     {

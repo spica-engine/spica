@@ -1,0 +1,18 @@
+{
+  "name": "@spica-server/sync",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "colorette": "^2.0.20",
+    "diff": "^4.0.4",
+    "lodash": "^4.17.21",
+    "yaml": "^2.7.1"
+  }
+}

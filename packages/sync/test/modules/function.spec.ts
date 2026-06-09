@@ -2,7 +2,7 @@ import os from "os";
 import path from "path";
 import fs from "fs";
 import yaml from "yaml";
-import {functionModule} from "@spica/cli/src/commands/sync/modules/function";
+import {functionModule} from "@spica-server/sync";
 
 function makeTmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "spica-fn-test-"));

@@ -8394,14 +8394,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-devkit/testing@workspace:packages/devkit/testing"
   dependencies:
-    "@spica/cli": "workspace:*"
+    "@spica-server/sync": "workspace:*"
     "@types/dockerode": "npm:^3.3.34"
     axios: "npm:^1.8.2"
     dockerode: "npm:^4.0.4"
     get-port: "npm:^7.1.0"
     mongodb: "npm:^6.12.0"
-  peerDependencies:
-    "@spica/cli": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -10285,13 +10283,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/sync@workspace:*, @spica-server/sync@workspace:packages/sync":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/sync@workspace:packages/sync"
+  dependencies:
+    colorette: "npm:^2.0.20"
+    diff: "npm:^4.0.4"
+    lodash: "npm:^4.17.21"
+    yaml: "npm:^2.7.1"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/transaction@workspace:*, @spica-server/transaction@workspace:packages/transaction":
   version: 0.0.0-use.local
   resolution: "@spica-server/transaction@workspace:packages/transaction"
   languageName: unknown
   linkType: soft
 
-"@spica/cli@workspace:*, @spica/cli@workspace:apps/cli":
+"@spica/cli@workspace:apps/cli":
   version: 0.0.0-use.local
   resolution: "@spica/cli@workspace:apps/cli"
   dependencies:
@@ -16117,7 +16126,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"diff@npm:^4.0.1":
+"diff@npm:^4.0.1, diff@npm:^4.0.4":
   version: 4.0.4
   resolution: "diff@npm:4.0.4"
   checksum: 10c0/855fb70b093d1d9643ddc12ea76dca90dc9d9cdd7f82c08ee8b9325c0dc5748faf3c82e2047ced5dcaa8b26e58f7903900be2628d0380a222c02d79d8de385df

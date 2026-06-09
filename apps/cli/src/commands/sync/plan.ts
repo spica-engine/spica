@@ -1,8 +1,8 @@
 import path from "path";
 import {ActionParameters, Command, Program} from "@caporal/core";
 import {httpService} from "../../http";
-import {buildPlan, renderPlan} from "./planner";
-import {resolveModules, MODULE_NAMES} from "./modules/index";
+import {buildPlan, renderPlan, resolveModules, MODULE_NAMES} from "@spica-server/sync";
+import {cliReporter} from "./reporter";
 
 async function plan({args, options}: ActionParameters) {
   try {
@@ -16,7 +16,7 @@ async function plan({args, options}: ActionParameters) {
     const modules = resolveModules(moduleFilter);
     const http = await httpService.createFromCurrentCtx();
 
-    const p = await buildPlan(modules, http, rootDir, detailed);
+    const p = await buildPlan(modules, http, rootDir, detailed, true, cliReporter);
     renderPlan(p, {detailed, json});
 
     process.exitCode = 0;

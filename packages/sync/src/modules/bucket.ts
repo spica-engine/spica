@@ -1,8 +1,16 @@
 import path from "path";
 import yaml from "yaml";
-import {httpService} from "../../../http";
+import {SyncHttpClient} from "../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
-import {listFolders, omit, readYaml, removeDir, sanitizeSlug, unwrapList, writeYaml} from "../fs-utils";
+import {
+  listFolders,
+  omit,
+  readYaml,
+  removeDir,
+  sanitizeSlug,
+  unwrapList,
+  writeYaml
+} from "../fs-utils";
 import {LocalResource, RemoteResource, ResourceModule} from "../types";
 
 interface Bucket {
