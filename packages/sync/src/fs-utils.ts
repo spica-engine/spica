@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import yaml from "yaml";
+import {LocalResource} from "./types";
 
 /** Ensure a directory exists, creating it recursively if needed. */
 export function ensureDir(dir: string): void {
@@ -70,4 +71,23 @@ export function sanitizeSlug(slug: string): string {
 export function unwrapList<T>(res: T[] | {data: T[]}): T[] {
   if (Array.isArray(res)) return res;
   return (res as {data: T[]}).data ?? [];
+}
+
+/**
+ * Read all schema-only resources for a module from disk.
+ * Each resource lives at `<rootDir>/<moduleName>/<slug>/schema.yaml`.
+ * Shared by the simple schema modules (bucket, env-var, policy, secret).
+ */
+export async function readLocalSchemas<T>(
+  rootDir: string,
+  moduleName: string
+): Promise<LocalResource<T>[]> {
+  const dir = path.join(rootDir, moduleName);
+  const slugs = listFolders(dir);
+  const results: LocalResource<T>[] = [];
+  for (const slug of slugs) {
+    const data = readYaml<T>(path.join(dir, slug, "schema.yaml"));
+    if (data) results.push({slug, data});
+  }
+  return results;
 }

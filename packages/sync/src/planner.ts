@@ -1,8 +1,10 @@
 import {bold, cyan, green, red, yellow} from "colorette";
 import isEqual from "lodash/isEqual.js";
 import {createTwoFilesPatch} from "diff";
+import yaml from "yaml";
 import {SyncHttpClient} from "./http";
 import {SyncReporter, silentReporter} from "./reporter";
+import {omit} from "./fs-utils";
 import {
   ChangeKind,
   LocalResource,
@@ -441,6 +443,20 @@ export function diffObjectFields(
  */
 export function buildUnifiedDiff(oldContent: string, newContent: string, filename: string): string {
   return createTwoFilesPatch(`remote/${filename}`, `local/${filename}`, oldContent, newContent);
+}
+
+/**
+ * Render a unified diff for a single-schema resource's `renderDetail` implementation.
+ * Shared by the simple schema modules (bucket, env-var, policy, secret).
+ */
+export function renderSchemaDetail(
+  localData: object,
+  remoteData: object,
+  ignoredFields: string[]
+): Record<string, string> {
+  const localYaml = yaml.stringify(omit(localData, ignoredFields));
+  const remoteYaml = yaml.stringify(omit(remoteData, ignoredFields));
+  return {schema: buildUnifiedDiff(remoteYaml, localYaml, "schema.yaml")};
 }
 
 async function runConcurrently(

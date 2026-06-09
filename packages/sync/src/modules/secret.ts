@@ -1,17 +1,7 @@
 import path from "path";
-import yaml from "yaml";
-import {SyncHttpClient} from "../http";
-import {buildUnifiedDiff, diffObjectFields} from "../planner";
-import {
-  listFolders,
-  omit,
-  readYaml,
-  removeDir,
-  sanitizeSlug,
-  unwrapList,
-  writeYaml
-} from "../fs-utils";
-import {LocalResource, RemoteResource, ResourceModule} from "../types";
+import {diffObjectFields, renderSchemaDetail} from "../planner";
+import {readLocalSchemas, removeDir, sanitizeSlug, unwrapList, writeYaml} from "../fs-utils";
+import {ResourceModule} from "../types";
 
 interface Secret {
   _id?: string;
@@ -30,15 +20,8 @@ export const secretModule: ResourceModule<Secret> = {
   identityField: "key",
   ignoredFields: IGNORED_FIELDS,
 
-  async readLocal(rootDir) {
-    const dir = path.join(rootDir, "secret");
-    const slugs = listFolders(dir);
-    const results: LocalResource<Secret>[] = [];
-    for (const slug of slugs) {
-      const data = readYaml<Secret>(path.join(dir, slug, "schema.yaml"));
-      if (data) results.push({slug, data});
-    }
-    return results;
+  readLocal(rootDir) {
+    return readLocalSchemas<Secret>(rootDir, "secret");
   },
 
   async readRemote(http) {
@@ -81,11 +64,7 @@ export const secretModule: ResourceModule<Secret> = {
   },
 
   renderDetail(local, remote) {
-    const localYaml = yaml.stringify(omit(local.data, IGNORED_FIELDS));
-    const remoteYaml = yaml.stringify(omit(remote.data, IGNORED_FIELDS));
-    return {
-      schema: buildUnifiedDiff(remoteYaml, localYaml, "schema.yaml")
-    };
+    return renderSchemaDetail(local.data, remote.data, IGNORED_FIELDS);
   },
 
   summaryLine(resource) {
