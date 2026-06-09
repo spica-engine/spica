@@ -6,6 +6,7 @@ import {runReset, ResetContext} from "./reset";
 import {
   ApiKeyInfo,
   CreateApiKeyOptions,
+  InstallResourcesOptions,
   ResetModule,
   SpicaInstance,
   SpicaInstanceInfo,
@@ -85,8 +86,11 @@ class SpicaInstanceImpl implements SpicaInstance {
     await api.awaitReady(this.url, this.identifier, this.password, timeoutMs);
   }
 
-  installResources(resourcePath = this.resourcePath): Promise<{errors: string[]}> {
-    return resourceInstaller.install(this.http, resourcePath);
+  installResources(
+    resourcePath = this.resourcePath,
+    options?: InstallResourcesOptions
+  ): Promise<{errors: string[]}> {
+    return resourceInstaller.install(this.http, resourcePath, options);
   }
 
   reset(modules: ResetModule[] = ["all"]): Promise<void> {

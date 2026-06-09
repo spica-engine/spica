@@ -65,6 +65,16 @@ export interface SpicaInstanceInfo {
   apikey: ApiKeyInfo;
 }
 
+export interface InstallResourcesOptions {
+  /** Max resources applied in parallel per module. Default 10. */
+  concurrency?: number;
+  /**
+   * Abort the whole install on the first failing resource instead of installing the rest
+   * best-effort. Default false — failures are collected and returned in `errors`.
+   */
+  abortOnError?: boolean;
+}
+
 export interface CreateApiKeyOptions {
   /** Attach every policy returned by GET /passport/policy. Default true. */
   fullAccess?: boolean;
@@ -91,7 +101,10 @@ export interface SpicaInstance extends SpicaInstanceInfo {
   waitForReady(timeoutMs?: number): Promise<void>;
 
   /** (Re)install the CLI-format resources from a folder (defaults to the start resourcePath). */
-  installResources(resourcePath?: string): Promise<{errors: string[]}>;
+  installResources(
+    resourcePath?: string,
+    options?: InstallResourcesOptions
+  ): Promise<{errors: string[]}>;
   /** Quickly wipe state between tests by dropping the targeted mongo collections. */
   reset(modules?: ResetModule[]): Promise<void>;
   /** Stop and remove every container, network and (unless retained) volume of this instance. */
