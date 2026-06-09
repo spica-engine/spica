@@ -118,7 +118,7 @@ export async function start(options: StartOptions = {}): Promise<SpicaInstance> 
   const mongoVersion = options.mongoVersion || "8.0";
   const identifier = options.identifier || "spica";
   const password = options.password || "spica";
-  const masterKey = options.masterKey || name;
+  const masterKey = options.masterKey || crypto.randomBytes(16).toString("hex");
   const resourcePath = options.resourcePath || "./";
   const imagePullPolicy = options.imagePullPolicy || "if-not-present";
   const installResources = options.installResources !== false;
@@ -126,8 +126,10 @@ export async function start(options: StartOptions = {}): Promise<SpicaInstance> 
 
   // get-port is ESM-only; load it dynamically so the CommonJS build keeps working.
   const getPort = (await import("get-port")).default;
-  const port = await getPort(options.port ? {port: options.port} : undefined);
-  const mongoPort = await getPort();
+  const [port, mongoPort] = await Promise.all([
+    getPort(options.port ? {port: options.port} : undefined),
+    getPort()
+  ]);
   const url = `http://localhost:${port}`;
   const mongoUrl = `mongodb://localhost:${mongoPort}/?directConnection=true`;
 
@@ -152,8 +154,10 @@ export async function start(options: StartOptions = {}): Promise<SpicaInstance> 
 
     // A successful login is the readiness gate (works across api versions).
     const token = await api.awaitReady(url, identifier, password, options.readyTimeoutMs ?? 120_000);
-    const http = createClient(url, `IDENTITY ${token}`);
-    const apikey = await api.createApiKey(http, "e2e", {fullAccess: true});
+    const identityHttp = createClient(url, `IDENTITY ${token}`);
+    const apikey = await api.createApiKey(identityHttp, "e2e", {fullAccess: true});
+    // Use the durable api key for all subsequent calls — the identity token expires (~1 day).
+    const http = createClient(url, `APIKEY ${apikey.key}`);
 
     const instance = new SpicaInstanceImpl({
       info: {
@@ -179,7 +183,9 @@ export async function start(options: StartOptions = {}): Promise<SpicaInstance> 
     return instance;
   } catch (error) {
     // Never leak a half-started instance.
-    await orchestrator.teardown(name, false).catch(() => {});
+    await orchestrator.teardown(name, false).catch(teardownErr =>
+      console.warn(`[spica/testing] cleanup teardown failed: ${teardownErr}`)
+    );
     throw error;
   }
 }

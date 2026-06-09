@@ -15,7 +15,7 @@ export interface StartOptions {
   identifier?: string;
   /** Password of the default identity. Default "spica". */
   password?: string;
-  /** --master-key value. Defaults to the instance name. */
+  /** --master-key value. Defaults to a random 16-byte hex string. */
   masterKey?: string;
   /**
    * Extra api flags, e.g. {"activity-stream": false}. Applied before the generated
@@ -27,7 +27,7 @@ export interface StartOptions {
   imagePullPolicy?: ImagePullPolicy;
   /** Install the resources found in resourcePath after the api boots. Default true. */
   installResources?: boolean;
-  /** How long to wait for GET /status/ready before failing. Default 120_000 ms. */
+  /** How long to wait for the api to accept logins (POST /passport/identify) before failing. Default 120_000 ms. */
   readyTimeoutMs?: number;
 }
 

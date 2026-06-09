@@ -247,12 +247,16 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
     const pendingKey = `${mod.name}:${slug}`;
     if (pendingDeletes.has(pendingKey)) return;
 
-    const timer = setTimeout(async () => {
-      pendingDeletes.delete(pendingKey);
-      clearRemoteId(mod.name, slug);
-      await spinOp(`${red("-")}  ${bold(mod.displayName)}  ${bold(slug)}`, "deleted", () =>
-        mod.delete(http, remoteId)
-      );
+    const timer = setTimeout(() => {
+      Promise.resolve()
+        .then(async () => {
+          pendingDeletes.delete(pendingKey);
+          clearRemoteId(mod.name, slug);
+          await spinOp(`${red("-")}  ${bold(mod.displayName)}  ${bold(slug)}`, "deleted", () =>
+            mod.delete(http, remoteId)
+          );
+        })
+        .catch(err => warn(`Delete failed for ${slug}: ${formatError(err)}`));
     }, renameWindowMs);
 
     pendingDeletes.set(pendingKey, {timer, moduleName: mod.name, slug, remoteId});
@@ -278,12 +282,16 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
       schedulePendingDelete(s, remoteId) {
         const pendingKey = `${mod.name}:${s}`;
         if (pendingDeletes.has(pendingKey)) return;
-        const timer = setTimeout(async () => {
-          pendingDeletes.delete(pendingKey);
-          clearRemoteId(mod.name, s);
-          await spinOp(`${red("-")}  ${bold(mod.displayName)}  ${bold(s)}`, "deleted", () =>
-            mod.delete(http, remoteId)
-          );
+        const timer = setTimeout(() => {
+          Promise.resolve()
+            .then(async () => {
+              pendingDeletes.delete(pendingKey);
+              clearRemoteId(mod.name, s);
+              await spinOp(`${red("-")}  ${bold(mod.displayName)}  ${bold(s)}`, "deleted", () =>
+                mod.delete(http, remoteId)
+              );
+            })
+            .catch(err => warn(`Delete failed for ${s}: ${formatError(err)}`));
         }, renameWindowMs);
         pendingDeletes.set(pendingKey, {timer, moduleName: mod.name, slug: s, remoteId});
       },
@@ -463,9 +471,15 @@ async function dev({args, options}: ActionParameters) {
     awaitWriteFinish: {stabilityThreshold: 200, pollInterval: 50}
   });
 
-  watcher.on("add", (p: string) => dispatcher.handleEvent("add", p));
-  watcher.on("change", (p: string) => dispatcher.handleEvent("change", p));
-  watcher.on("unlink", (p: string) => dispatcher.handleEvent("unlink", p));
+  watcher.on("add", (p: string) =>
+    dispatcher.handleEvent("add", p).catch(err => console.warn(`[sync/dev] add: ${formatError(err)}`))
+  );
+  watcher.on("change", (p: string) =>
+    dispatcher.handleEvent("change", p).catch(err => console.warn(`[sync/dev] change: ${formatError(err)}`))
+  );
+  watcher.on("unlink", (p: string) =>
+    dispatcher.handleEvent("unlink", p).catch(err => console.warn(`[sync/dev] unlink: ${formatError(err)}`))
+  );
   watcher.on("error", (err: unknown) =>
     console.warn(bold(yellow(`\n⚠  Watcher error: ${formatError(err)}`)))
   );

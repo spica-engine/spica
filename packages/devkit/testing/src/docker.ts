@@ -157,8 +157,9 @@ export class DockerOrchestrator {
       return (await streamToBuffer(await exec.start({}))).toString();
     };
 
+    const TRANSIENT_ERRORS = ["ECONNREFUSED", "ECONNRESET", "MongoNetworkError"];
     let output = await run(false);
-    for (let retry = 0; retry < 5 && output.indexOf("ECONNREFUSED") !== -1; retry++) {
+    for (let retry = 0; retry < 5 && TRANSIENT_ERRORS.some(s => output.includes(s)); retry++) {
       await sleep(1000);
       output = await run(false);
     }
@@ -228,16 +229,26 @@ export class DockerOrchestrator {
     const filters = this.labelFilter(name);
 
     const containers = await this.docker.listContainers({all: true, filters});
-    await Promise.allSettled(
+    const cResults = await Promise.allSettled(
       containers.map(info => this.docker.getContainer(info.Id).remove({v: true, force: true}))
     );
+    const cFails = cResults.filter(r => r.status === "rejected").length;
+    if (cFails) console.warn(`[spica/testing] teardown(${name}): ${cFails} container removal(s) failed`);
 
     const networks = await this.docker.listNetworks({filters});
-    await Promise.allSettled(networks.map(info => this.docker.getNetwork(info.Id).remove()));
+    const nResults = await Promise.allSettled(
+      networks.map(info => this.docker.getNetwork(info.Id).remove())
+    );
+    const nFails = nResults.filter(r => r.status === "rejected").length;
+    if (nFails) console.warn(`[spica/testing] teardown(${name}): ${nFails} network removal(s) failed`);
 
     if (!retainVolumes) {
       const {Volumes = []} = await this.docker.listVolumes({filters});
-      await Promise.allSettled(Volumes.map(vol => this.docker.getVolume(vol.Name).remove()));
+      const vResults = await Promise.allSettled(
+        Volumes.map(vol => this.docker.getVolume(vol.Name).remove())
+      );
+      const vFails = vResults.filter(r => r.status === "rejected").length;
+      if (vFails) console.warn(`[spica/testing] teardown(${name}): ${vFails} volume removal(s) failed`);
     }
   }
 }
