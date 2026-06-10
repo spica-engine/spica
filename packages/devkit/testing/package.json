@@ -1,0 +1,31 @@
+{
+  "name": "@spica-devkit/testing",
+  "license": "AGPLv3",
+  "version": "0.0.0-PLACEHOLDER",
+  "description": "Spin up disposable Spica instances to run e2e tests against your resources.",
+  "author": "spica",
+  "keywords": [
+    "spica",
+    "devkit",
+    "testing",
+    "e2e"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "axios": "^1.8.2",
+    "dockerode": "^4.0.4",
+    "get-port": "^7.1.0",
+    "mongodb": "^6.12.0"
+  },
+  "devDependencies": {
+    "@spica-server/sync": "workspace:*",
+    "@types/dockerode": "^3.3.34"
+  }
+}

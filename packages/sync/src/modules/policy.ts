@@ -1,8 +1,6 @@
-import path from "path";
-import yaml from "yaml";
-import {httpService} from "../../../http";
-import {buildUnifiedDiff, diffObjectFields} from "../planner";
-import {listFolders, omit, readYaml, removeDir, sanitizeSlug, writeYaml} from "../fs-utils";
+import {SyncHttpClient} from "../http";
+import {diffSchemaFields, renderSchemaDetail} from "../planner";
+import {deleteLocalSchema, omit, readLocalSchemas, sanitizeSlug, writeLocalSchema} from "../fs-utils";
 import {LocalResource, RemoteResource, ResourceModule} from "../types";
 
 interface Policy {
@@ -22,15 +20,8 @@ export const policyModule: ResourceModule<Policy> = {
   identityField: "name",
   ignoredFields: IGNORED_FIELDS,
 
-  async readLocal(rootDir) {
-    const dir = path.join(rootDir, "policy");
-    const slugs = listFolders(dir);
-    const results: LocalResource<Policy>[] = [];
-    for (const slug of slugs) {
-      const data = readYaml<Policy>(path.join(dir, slug, "schema.yaml"));
-      if (data) results.push({slug, data});
-    }
-    return results;
+  readLocal(rootDir) {
+    return readLocalSchemas<Policy>(rootDir, "policy");
   },
 
   async readRemote(http) {
@@ -62,28 +53,19 @@ export const policyModule: ResourceModule<Policy> = {
   },
 
   async writeLocal(rootDir, remote) {
-    const dir = path.join(rootDir, "policy", remote.slug);
-    writeYaml(path.join(dir, "schema.yaml"), remote.data);
+    writeLocalSchema(rootDir, "policy", remote);
   },
 
   async deleteLocal(rootDir, slug) {
-    removeDir(path.join(rootDir, "policy", slug));
+    deleteLocalSchema(rootDir, "policy", slug);
   },
 
   diffFields(local, remote) {
-    return diffObjectFields(
-      local as Record<string, unknown>,
-      remote as Record<string, unknown>,
-      IGNORED_FIELDS
-    );
+    return diffSchemaFields(local, remote, IGNORED_FIELDS);
   },
 
   renderDetail(local, remote) {
-    const localYaml = yaml.stringify(omit(local.data, IGNORED_FIELDS));
-    const remoteYaml = yaml.stringify(omit(remote.data, IGNORED_FIELDS));
-    return {
-      schema: buildUnifiedDiff(remoteYaml, localYaml, "schema.yaml")
-    };
+    return renderSchemaDetail(local.data, remote.data, IGNORED_FIELDS);
   },
 
   summaryLine(resource) {

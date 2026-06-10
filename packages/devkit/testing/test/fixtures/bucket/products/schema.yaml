@@ -1,0 +1,10 @@
+title: Products
+description: e2e fixture bucket installed from disk by the sync engine
+primary: name
+properties:
+  name:
+    type: string
+    title: name
+  stock:
+    type: number
+    title: stock

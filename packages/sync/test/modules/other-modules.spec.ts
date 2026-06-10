@@ -2,10 +2,10 @@ import os from "os";
 import path from "path";
 import fs from "fs";
 import yaml from "yaml";
-import {envVarModule} from "@spica/cli/src/commands/sync/modules/env-var";
-import {secretModule} from "@spica/cli/src/commands/sync/modules/secret";
-import {policyModule} from "@spica/cli/src/commands/sync/modules/policy";
-import {resolveModules} from "@spica/cli/src/commands/sync/modules/index";
+import {envVarModule} from "@spica-server/sync";
+import {secretModule} from "@spica-server/sync";
+import {policyModule} from "@spica-server/sync";
+import {resolveModules} from "@spica-server/sync";
 
 function makeTmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "spica-module-test-"));

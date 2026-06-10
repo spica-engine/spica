@@ -2,7 +2,7 @@ import os from "os";
 import path from "path";
 import fs from "fs";
 import yaml from "yaml";
-import {bucketModule} from "@spica/cli/src/commands/sync/modules/bucket";
+import {bucketModule} from "@spica-server/sync";
 
 function makeTmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "spica-bucket-test-"));

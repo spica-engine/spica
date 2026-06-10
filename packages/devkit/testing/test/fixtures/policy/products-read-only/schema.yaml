@@ -1,0 +1,7 @@
+name: Products Read Only
+description: e2e fixture policy installed from disk by the sync engine
+statement:
+  - action: bucket:data:index
+    module: bucket:data
+  - action: bucket:data:show
+    module: bucket:data

@@ -3,8 +3,8 @@ import path from "path";
 import fs from "fs";
 import yaml from "yaml";
 import {createDevDispatcher, DevState} from "@spica/cli/src/commands/sync/dev";
-import {ResourceModule, LocalResource, RemoteResource} from "@spica/cli/src/commands/sync/types";
-import {functionModule} from "@spica/cli/src/commands/sync/modules/function";
+import {ResourceModule, LocalResource, RemoteResource} from "@spica-server/sync";
+import {functionModule} from "@spica-server/sync";
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -447,10 +447,7 @@ describe("DevDispatcher — function: unlink of index/package is silently ignore
         warnLogger: m => warns.push(m)
       });
 
-      await dispatcher.handleEvent(
-        "unlink",
-        path.join(dir, "function", "MyFn", "index.mjs")
-      );
+      await dispatcher.handleEvent("unlink", path.join(dir, "function", "MyFn", "index.mjs"));
 
       expect(mod.delete).not.toHaveBeenCalled();
       expect(mod.update).not.toHaveBeenCalled();
@@ -483,10 +480,7 @@ describe("DevDispatcher — function: unlink of index/package is silently ignore
         warnLogger: m => warns2.push(m)
       });
 
-      await dispatcher2.handleEvent(
-        "unlink",
-        path.join(dir, "function", "MyFn", "package.json")
-      );
+      await dispatcher2.handleEvent("unlink", path.join(dir, "function", "MyFn", "package.json"));
 
       expect(mod2.delete).not.toHaveBeenCalled();
       expect(warns2).toHaveLength(0);
@@ -641,10 +635,7 @@ describe("DevDispatcher — function rename: promoted to single update", () => {
         "unlink",
         path.join(dir, "function", "old-fn-name", "schema.yaml")
       );
-      await dispatcher.handleEvent(
-        "add",
-        path.join(dir, "function", "new-fn-name", "schema.yaml")
-      );
+      await dispatcher.handleEvent("add", path.join(dir, "function", "new-fn-name", "schema.yaml"));
 
       expect(mod.delete).not.toHaveBeenCalled();
       expect(mod.create).not.toHaveBeenCalled();
@@ -683,10 +674,7 @@ describe("DevDispatcher — dispose cancels pending timers", () => {
         renameWindowMs: 500
       });
 
-      await dispatcher.handleEvent(
-        "unlink",
-        path.join(dir, "bucket", "my-bucket", "schema.yaml")
-      );
+      await dispatcher.handleEvent("unlink", path.join(dir, "bucket", "my-bucket", "schema.yaml"));
 
       // Dispose before timer fires
       dispatcher.dispose();

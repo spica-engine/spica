@@ -4,9 +4,9 @@ import caporalCore from "@caporal/core";
 const {CaporalValidator} = caporalCore;
 import {bold, green, red, yellow} from "colorette";
 import {httpService} from "../../http";
-import {applyPlan, buildPlan, renderPlan} from "./planner";
+import {applyPlan, buildPlan, renderPlan, resolveModules, MODULE_NAMES} from "@spica-server/sync";
 import {confirm} from "./prompt";
-import {resolveModules, MODULE_NAMES} from "./modules/index";
+import {cliReporter} from "./reporter";
 
 async function apply({args, options}: ActionParameters) {
   const rootDir = path.resolve((args.dir as string | undefined) ?? process.cwd());
@@ -22,7 +22,7 @@ async function apply({args, options}: ActionParameters) {
   const http = await httpService.createFromCurrentCtx();
 
   console.log(bold("\nBuilding plan…"));
-  const p = await buildPlan(modules, http, rootDir, detailed);
+  const p = await buildPlan(modules, http, rootDir, detailed, true, cliReporter);
 
   const totalChanges = p.modules.reduce(
     (n, m) => n + m.creates.length + m.updates.length + m.deletes.length,
@@ -47,7 +47,7 @@ async function apply({args, options}: ActionParameters) {
 
   console.log(bold("\nApplying changes…"));
   try {
-    const {errors} = await applyPlan(p, http, {concurrency, abortOnError});
+    const {errors} = await applyPlan(p, http, {concurrency, abortOnError, reporter: cliReporter});
 
     if (errors.length) {
       console.log(bold(yellow(`\n⚠  Completed with ${errors.length} error(s):`)));

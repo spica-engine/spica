@@ -356,6 +356,9 @@
       "path": "./packages/filter"
     },
     {
+      "path": "./packages/sync"
+    },
+    {
       "path": "./packages/core"
     },
     {
@@ -420,6 +423,9 @@
     },
     {
       "path": "./packages/api/function/asset-storage"
+    },
+    {
+      "path": "./packages/devkit/testing"
     }
   ]
 }

@@ -5,13 +5,8 @@ import {
   diffObjectFields,
   buildUnifiedDiff,
   renderPlan
-} from "@spica/cli/src/commands/sync/planner";
-import {
-  ChangeKind,
-  LocalResource,
-  RemoteResource,
-  ResourceModule
-} from "@spica/cli/src/commands/sync/types";
+} from "@spica-server/sync";
+import {ChangeKind, LocalResource, RemoteResource, ResourceModule} from "@spica-server/sync";
 
 function makeMockModule(
   name: string,

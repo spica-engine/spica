@@ -3,7 +3,7 @@ import fs from "fs";
 import yaml from "yaml";
 import isEqual from "lodash/isEqual.js";
 import {bold, cyan, green, red, yellow} from "colorette";
-import {httpService} from "../../../http";
+import {SyncHttpClient} from "../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
 import {
   ensureDir,
@@ -69,8 +69,17 @@ function normalizeSchema(schema: FunctionSchema): FunctionSchema {
 
 function isNotFoundError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
-  const c = error as {status?: number; statusCode?: number; response?: {status?: number; statusCode?: number}};
-  return c.status === 404 || c.statusCode === 404 || c.response?.status === 404 || c.response?.statusCode === 404;
+  const c = error as {
+    status?: number;
+    statusCode?: number;
+    response?: {status?: number; statusCode?: number};
+  };
+  return (
+    c.status === 404 ||
+    c.statusCode === 404 ||
+    c.response?.status === 404 ||
+    c.response?.statusCode === 404
+  );
 }
 
 // ─── Extended interface with granular read/write operations ──────────────────
@@ -82,13 +91,17 @@ export interface FunctionModule extends ResourceModule<FunctionData> {
   readDependencies(rootDir: string, slug: string): Record<string, string>;
   // ── Granular writes (async) ────────────────────────────────────────────────
   /** POST schema → returns the new remote _id, or undefined on failure. */
-  createSchema(http: httpService.Client, schema: FunctionSchema): Promise<string | undefined>;
+  createSchema(http: SyncHttpClient, schema: FunctionSchema): Promise<string | undefined>;
   /** PUT schema + sync env_vars/secrets. */
-  updateSchema(http: httpService.Client, remoteId: string, schema: FunctionSchema): Promise<void>;
+  updateSchema(http: SyncHttpClient, remoteId: string, schema: FunctionSchema): Promise<void>;
   /** POST the index file content. */
-  uploadIndex(http: httpService.Client, remoteId: string, index: string): Promise<void>;
+  uploadIndex(http: SyncHttpClient, remoteId: string, index: string): Promise<void>;
   /** Delta-sync dependencies (add new / remove missing). */
-  uploadDependencies(http: httpService.Client, remoteId: string, deps: Record<string, string>): Promise<void>;
+  uploadDependencies(
+    http: SyncHttpClient,
+    remoteId: string,
+    deps: Record<string, string>
+  ): Promise<void>;
 }
 
 export const functionModule: FunctionModule = {
@@ -390,7 +403,9 @@ export const functionModule: FunctionModule = {
           clearRemoteId(pending.slug);
           setRemoteId(slug, pending.remoteId);
           const renameLabel = `${yellow("~")}  ${bold(self.displayName)}  ${bold(pending.slug)} ${cyan("→")} ${bold(slug)}`;
-          await spin(renameLabel, "updated (rename)", () => self.updateSchema(http, pending.remoteId, schema));
+          await spin(renameLabel, "updated (rename)", () =>
+            self.updateSchema(http, pending.remoteId, schema)
+          );
           return;
         }
       }
@@ -398,7 +413,9 @@ export const functionModule: FunctionModule = {
       const remoteId = getRemoteId(slug);
       if (remoteId) {
         // Already tracked remotely — re-add is a schema update
-        await spin(fnLabel(yellow("~"), slug, "schema"), "updated", () => self.updateSchema(http, remoteId, schema));
+        await spin(fnLabel(yellow("~"), slug, "schema"), "updated", () =>
+          self.updateSchema(http, remoteId, schema)
+        );
       } else {
         // Brand new function — create schema only; index and deps arrive via their own add events
         await spin(fnLabel(green("+"), slug), "created", async () => {
@@ -418,7 +435,7 @@ export const functionModule: FunctionModule = {
     // For "add" events on code files, waitForRemoteId handles the race where
     // index/package arrive before schema.yaml has been processed.
 
-    const isSchema   = file === "schema.yaml";
+    const isSchema = file === "schema.yaml";
 
     if (type === "add" && isSchema) {
       await onSchemaAdd();
@@ -427,10 +444,8 @@ export const functionModule: FunctionModule = {
       if (id) {
         const schema = self.readSchema(rootDir, slug);
         if (schema) {
-          await spin(
-            fnLabel(yellow("~"), slug, "schema"),
-            "updated",
-            () => self.updateSchema(http, id, schema)
+          await spin(fnLabel(yellow("~"), slug, "schema"), "updated", () =>
+            self.updateSchema(http, id, schema)
           );
         }
       }
@@ -439,13 +454,17 @@ export const functionModule: FunctionModule = {
       if (id) {
         const schema = self.readSchema(rootDir, slug);
         const index = self.readIndex(rootDir, slug, schema?.language);
-        await spin(fnLabel(yellow("~"), slug, "index"), "updated", () => self.uploadIndex(http, id, index));
+        await spin(fnLabel(yellow("~"), slug, "index"), "updated", () =>
+          self.uploadIndex(http, id, index)
+        );
       }
     } else if (type !== "unlink" && isPackageFile(file)) {
       const id = getRemoteId(slug) ?? (type === "add" ? await waitForRemoteId() : undefined);
       if (id) {
         const deps = self.readDependencies(rootDir, slug);
-        await spin(fnLabel(yellow("~"), slug, "deps"), "updated", () => self.uploadDependencies(http, id, deps));
+        await spin(fnLabel(yellow("~"), slug, "deps"), "updated", () =>
+          self.uploadDependencies(http, id, deps)
+        );
       }
     } else if (type === "unlink" && isSchema) {
       const id = getRemoteId(slug);
