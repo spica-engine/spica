@@ -116,6 +116,14 @@ Use `/release <version>` (`.claude/commands/release.md`) to execute a full relea
 - `DOCKERHUB_TOKEN` + `DOCKERHUB_USERNAME` (var) — Docker Hub credentials for `spicaengine` org
 - `GCP_CREDENTIALS` — GCP service account JSON for Helm chart sync to GCS
 
+## Comments
+
+- Code must be self-explanatory; do not add comments that restate WHAT the code does.
+- Only comment to explain WHY — non-obvious rationale, tradeoffs, workarounds, or surprising constraints.
+- Prefer clear names and structure over explanatory comments.
+- This applies strictly to source code. Test files may use comments more liberally.
+- Misleading comments are worse than none: if code changes, a stale WHAT-comment lies to the reader.
+
 ## Additional Instructions
 
 @.claude/instructions/performance-optimization.md
