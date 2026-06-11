@@ -7,6 +7,7 @@
   "targets": {
     "bundle": {
       "executor": "@nx/esbuild:esbuild",
+      "dependsOn": [{"projects": ["sync"], "target": "build"}],
       "outputs": ["{workspaceRoot}/dist/apps/cli"],
       "options": {
         "main": "apps/cli/index.ts",
