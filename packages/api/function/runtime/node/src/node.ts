@@ -35,23 +35,28 @@ export class NodeWorker extends Worker {
 
   attach(stdout?: Writable, stderr?: Writable): void {
     if (stdout) {
-      const idx = this._attachedStdouts.indexOf(stdout);
-      if (idx !== -1) {
-        this._process.stdout.unpipe(stdout);
-        this._attachedStdouts.splice(idx, 1);
-      }
       this._attachedStdouts.push(stdout);
       this._process.stdout.pipe(stdout);
     }
     if (stderr) {
-      const idx = this._attachedStderrs.indexOf(stderr);
-      if (idx !== -1) {
-        this._process.stderr.unpipe(stderr);
-        this._attachedStderrs.splice(idx, 1);
-      }
       this._attachedStderrs.push(stderr);
       this._process.stderr.pipe(stderr);
     }
+  }
+
+  detach(): void {
+    if (this._process.stdout) {
+      for (const stdout of this._attachedStdouts) {
+        this._process.stdout.unpipe(stdout);
+      }
+    }
+    if (this._process.stderr) {
+      for (const stderr of this._attachedStderrs) {
+        this._process.stderr.unpipe(stderr);
+      }
+    }
+    this._attachedStdouts = [];
+    this._attachedStderrs = [];
   }
 
   kill() {

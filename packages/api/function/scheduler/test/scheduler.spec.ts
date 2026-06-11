@@ -152,6 +152,39 @@ describe("Scheduler", () => {
     expect(attachSpy).toHaveBeenCalledTimes(1);
   });
 
+  it("should not accumulate attached output streams across executions on the same worker", () => {
+    // Reproduces the duplicate-logs bug: a worker is reused for sequential
+    // executions of the same function. Every execution attaches a fresh set of
+    // log output streams, so without detaching the previous set the pipes pile
+    // up and each console.log is written to the database once per past run
+    // (1, then 2, then 3 ... duplicates).
+    const outputCount = scheduler["outputs"].length;
+
+    const makeEvent = () =>
+      new event.Event({
+        target: new event.Target({
+          id: "1",
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+        }),
+        type: -1 as any
+      });
+
+    for (let run = 0; run < 3; run++) {
+      scheduler.enqueue(makeEvent());
+
+      const [, worker] = findWorkerFromEventId("1");
+      // Exactly one set of output streams must be attached per execution,
+      // regardless of how many times the worker has already run.
+      expect(worker["_attachedStdouts"].length).toEqual(outputCount);
+      expect(worker["_attachedStderrs"].length).toEqual(outputCount);
+
+      // simulate the execution completing so the same worker is reused next run
+      completeEvent("1");
+    }
+  });
+
   it("should spawn a worker after event scheduled", () => {
     const ev = new event.Event({
       target: new event.Target({

@@ -9,5 +9,6 @@ export abstract class Runtime {
 
 export abstract class Worker extends EventEmitter {
   abstract attach(stdout?: Writable, stderr?: Writable): void;
+  abstract detach(): void;
   abstract kill(): Promise<void>;
 }
