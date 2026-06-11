@@ -312,6 +312,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         functionName: path.basename(event.target.cwd),
         handler: event.target.handler
       };
+      worker.detach();
       const pairs = this.outputs.map(o => o.create(streamOptions));
       for (const [stdout, stderr] of pairs) {
         worker.attach(stdout, stderr);
