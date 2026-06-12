@@ -5,4 +5,5 @@ FROM base AS runner
 WORKDIR /app
 COPY dist .
 RUN yarn install --production --network-timeout 600000
+ENV NODE_ENV=production
 ENTRYPOINT ["node","src/main.js"]
