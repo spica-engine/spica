@@ -546,7 +546,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   getBucketResolver() {
-    return (id: string | ObjectId) => this.bucketService.findOne({_id: new ObjectId(id)});
+    return this.bucketService.resolveSchema;
   }
 
   send(client, kind: ChunkKind, status: number, message: string) {

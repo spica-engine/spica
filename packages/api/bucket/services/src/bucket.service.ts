@@ -1,4 +1,12 @@
-import {Inject, Injectable, NotFoundException, Optional} from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleDestroy,
+  OnModuleInit,
+  Optional
+} from "@nestjs/common";
 import {Validator} from "@spica-server/core-schema";
 import {Default} from "@spica-server/interface-core";
 import {
@@ -11,7 +19,8 @@ import {
   WithId
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference-services";
-import {BehaviorSubject, Observable} from "rxjs";
+import {deepCopy} from "@spica-server/core-patch";
+import {BehaviorSubject, Observable, Subscription} from "rxjs";
 import {getBucketDataCollection} from "./index.js";
 import {
   IndexDefinition,
@@ -23,8 +32,16 @@ import {
 import * as crypto from "crypto";
 
 @Injectable()
-export class BucketService extends BaseCollection<Bucket>("buckets") {
+export class BucketService
+  extends BaseCollection<Bucket>("buckets")
+  implements OnModuleInit, OnModuleDestroy
+{
   schemaChangeEmitter: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
+
+  private readonly logger = new Logger(BucketService.name);
+  private schemaCache = new Map<string, Bucket>();
+  private cacheSub?: Subscription;
+  private destroyed = false;
 
   constructor(
     db: DatabaseService,
@@ -36,6 +53,72 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
       collectionOptions: {changeStreamPreAndPostImages: {enabled: true}}
     });
   }
+
+  async onModuleInit() {
+    await this.warmSchemaCache();
+    this.startSchemaCacheWatch();
+  }
+
+  onModuleDestroy() {
+    this.destroyed = true;
+    this.cacheSub?.unsubscribe();
+  }
+
+  private async warmSchemaCache() {
+    const all = await super.find();
+    this.schemaCache = new Map(all.map(bucket => [bucket._id.toString(), bucket]));
+  }
+
+  private startSchemaCacheWatch() {
+    if (this.destroyed) {
+      return;
+    }
+    this.cacheSub = this.watch(
+      [{$match: {operationType: {$in: ["insert", "update", "replace", "delete"]}}}],
+      {fullDocument: "updateLookup"}
+    ).subscribe({
+      next: change => {
+        if (!("documentKey" in change)) {
+          return;
+        }
+        const id = (change.documentKey._id as ObjectId)?.toString();
+        if (!id) {
+          return;
+        }
+        if (change.operationType === "delete") {
+          this.schemaCache.delete(id);
+        } else if ("fullDocument" in change && change.fullDocument) {
+          this.schemaCache.set(id, change.fullDocument);
+        }
+      },
+      // observer.error terminates the stream; a non-resumable error would otherwise
+      // leave the cache silently stale, so reload and re-open the watcher.
+      error: async error => {
+        if (this.destroyed) {
+          return;
+        }
+        this.logger.error(
+          `bucket schema cache watch error: ${error instanceof Error ? error.message : error}`
+        );
+        try {
+          await this.warmSchemaCache();
+        } catch (e) {
+          this.logger.error(
+            `bucket schema cache re-warm failed: ${e instanceof Error ? e.message : e}`
+          );
+        }
+        this.startSchemaCacheWatch();
+      }
+    });
+  }
+
+  // Returns a copy: callers (relation/ACL resolution) alias and mutate the schema,
+  // and findOne historically handed out a fresh object each call. The cold-miss
+  // findOne is already fresh, so only the cache hit needs copying.
+  resolveSchema = (id: string | ObjectId): Bucket | Promise<Bucket> => {
+    const cached = this.schemaCache.get(id.toString());
+    return cached ? deepCopy(cached) : this.findOne({_id: new ObjectId(id)});
+  };
 
   getPreferences() {
     return this.pref.get<BucketPreferences>("bucket");
@@ -81,6 +164,8 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
     const insertedBucket = await super.insertOne(bucket);
 
+    this.schemaCache.set(insertedBucket._id.toString(), deepCopy(insertedBucket));
+
     await this.db.createCollection(getBucketDataCollection(insertedBucket._id));
 
     await this.updateIndexes(bucket);
@@ -93,9 +178,11 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     doc: Bucket,
     options?: FindOneAndReplaceOptions
   ): Promise<WithId<Bucket>> {
-    return super
-      .findOneAndReplace(filter, doc, options)
-      .then(r => this.updateIndexes({...doc, _id: filter._id as ObjectId}).then(() => r));
+    return super.findOneAndReplace(filter, doc, options).then(r => {
+      const replaced = {...doc, _id: filter._id as ObjectId} as WithId<Bucket>;
+      this.schemaCache.set(replaced._id.toString(), deepCopy(replaced));
+      return this.updateIndexes(replaced).then(() => r);
+    });
   }
 
   async drop(id: string | ObjectId) {
@@ -103,6 +190,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     if (!schema) {
       throw new NotFoundException(`Bucket with ID ${id} does not exist.`);
     }
+    this.schemaCache.delete(id.toString());
     await this.db.dropCollection(getBucketDataCollection(id));
     return schema;
   }
