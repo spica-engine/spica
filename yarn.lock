@@ -8674,6 +8674,7 @@ __metadata:
   resolution: "@spica-server/bucket-services@workspace:packages/api/bucket/services"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/core-patch": "workspace:*"
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"

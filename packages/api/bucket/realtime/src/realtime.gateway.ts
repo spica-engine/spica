@@ -546,7 +546,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   getBucketResolver() {
-    return (id: string | ObjectId) => this.bucketService.findOne({_id: new ObjectId(id)});
+    return this.bucketService.resolveSchema;
   }
 
   send(client, kind: ChunkKind, status: number, message: string) {
@@ -563,7 +563,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return document;
     }
 
-    const schema = await this.bucketService.findOne({_id: new ObjectId(req.params.id)});
+    const schema = await this.getBucketResolver()(new ObjectId(req.params.id));
     if (!schema?.properties) {
       return document;
     }
@@ -573,7 +573,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   private async decryptDocuments(_client: any, req: any) {
     const bucketId = req.params.id;
-    const schema = await this.bucketService.findOne({_id: new ObjectId(bucketId)});
+    const schema = await this.getBucketResolver()(new ObjectId(bucketId));
     if (!schema) return undefined;
     return (document: any) => {
       if (!document) return document;
