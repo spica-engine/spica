@@ -91,8 +91,6 @@ export class BucketService
           this.schemaCache.set(id, change.fullDocument);
         }
       },
-      // observer.error terminates the stream; a non-resumable error would otherwise
-      // leave the cache silently stale, so reload and re-open the watcher.
       error: async error => {
         if (this.destroyed) {
           return;
@@ -112,9 +110,6 @@ export class BucketService
     });
   }
 
-  // Returns a copy: callers (relation/ACL resolution) alias and mutate the schema,
-  // and findOne historically handed out a fresh object each call. The cold-miss
-  // findOne is already fresh, so only the cache hit needs copying.
   resolveSchema = (id: string | ObjectId): Bucket | Promise<Bucket> => {
     const cached = this.schemaCache.get(id.toString());
     return cached ? deepCopy(cached) : this.findOne({_id: new ObjectId(id)});
