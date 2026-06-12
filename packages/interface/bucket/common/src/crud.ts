@@ -23,7 +23,7 @@ export interface CrudParams {
 export interface CrudFactories<T> {
   collection: (schema: Bucket) => BaseCollection<T>;
   preference: () => Promise<BucketPreferences>;
-  schema: (id: string | ObjectId) => Promise<Bucket>;
+  schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
 }
 
 export interface CrudPagination<T> {

@@ -173,7 +173,7 @@ export async function findDocuments<T>(
 async function buildAclProjection(
   schema: Bucket,
   user: any,
-  schemaResolver: (id: string | ObjectId) => Promise<Bucket>,
+  schemaResolver: (id: string | ObjectId) => Promise<Bucket> | Bucket,
   hashSecret?: string
 ) {
   const properties = schema.properties as Record<string, {acl?: string}>;
@@ -223,7 +223,7 @@ export async function insertDocument(
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
-    schema: (id: string | ObjectId) => Promise<Bucket>;
+    schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
     deleteOne: (documentId: ObjectId) => Promise<void>;
   },
   hashSecret?: string,
@@ -275,7 +275,7 @@ export async function replaceDocument(
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
-    schema: (id: string | ObjectId) => Promise<Bucket>;
+    schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
   },
   options: {
     returnDocument: ReturnDocument;
@@ -322,7 +322,7 @@ export async function patchDocument(
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
-    schema: (id: string | ObjectId) => Promise<Bucket>;
+    schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
   },
   options: {
     returnDocument: ReturnDocument;
@@ -368,7 +368,7 @@ export async function deleteDocument(
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<BucketDocument>;
-    schema: (schema: string | ObjectId) => Promise<Bucket>;
+    schema: (schema: string | ObjectId) => Promise<Bucket> | Bucket;
   },
   hashSecret?: string,
   encryptionSecret?: string
@@ -404,7 +404,7 @@ export async function deleteDocument(
 
 async function executeWriteRule(
   schema: Bucket,
-  resolve: (id: string) => Promise<Bucket>,
+  resolve: (id: string) => Promise<Bucket> | Bucket,
   document: BucketDocument,
   collection: BaseCollection<unknown>,
   auth: object,

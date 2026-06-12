@@ -149,7 +149,7 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        schema: this.bs.resolveSchema
       },
       this.hashSecret,
       this.encryptionSecret
@@ -245,7 +245,7 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        schema: this.bs.resolveSchema
       },
       this.hashSecret,
       this.encryptionSecret
@@ -304,7 +304,7 @@ export class BucketDataController {
       {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+        schema: this.bs.resolveSchema,
         deleteOne: documentId => this.deleteOne(strategyType, req, bucketId, documentId)
       },
       this.hashSecret,
@@ -365,7 +365,7 @@ export class BucketDataController {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
-    const schemaResolver = (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)});
+    const schemaResolver = this.bs.resolveSchema;
     const previousDocument = await replaceDocument(
       schema,
       {...document, _id: documentId},
@@ -461,7 +461,7 @@ export class BucketDataController {
       {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        schema: this.bs.resolveSchema
       },
       {returnDocument: ReturnDocument.AFTER},
       this.hashSecret,
@@ -523,7 +523,7 @@ export class BucketDataController {
       {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        schema: this.bs.resolveSchema
       },
       this.hashSecret,
       this.encryptionSecret

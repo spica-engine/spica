@@ -278,7 +278,7 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: this.bs.resolveSchema
         },
         this.hashSecret,
         this.encryptionSecret
@@ -351,7 +351,7 @@ export class GraphqlController implements OnModuleInit {
         {req: context, applyAcl: this.shouldApplyAcl(context)},
         {
           collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+          schema: this.bs.resolveSchema,
           deleteOne: async documentId => {
             const deleteFn = this.delete(bucket, false);
             await deleteFn(root, {_id: documentId}, context, info);
@@ -389,7 +389,7 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: this.bs.resolveSchema
         },
         this.hashSecret,
         this.encryptionSecret
@@ -434,7 +434,7 @@ export class GraphqlController implements OnModuleInit {
         {req: context, applyAcl: this.shouldApplyAcl(context)},
         {
           collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: this.bs.resolveSchema
         },
         undefined,
         this.hashSecret,
@@ -476,7 +476,7 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: this.bs.resolveSchema
         },
         this.hashSecret,
         this.encryptionSecret
@@ -519,7 +519,7 @@ export class GraphqlController implements OnModuleInit {
           previousDocument,
           bucket,
           this.encryptionSecret,
-          bucketId => this.bs.findOne({_id: new ObjectId(bucketId)})
+          this.bs.resolveSchema
         );
       }
 
@@ -536,7 +536,7 @@ export class GraphqlController implements OnModuleInit {
         {req: context, applyAcl: this.shouldApplyAcl(context)},
         {
           collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: this.bs.resolveSchema
         },
         {returnDocument: ReturnDocument.AFTER},
         this.hashSecret,
@@ -576,7 +576,7 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: this.bs.resolveSchema
         },
         this.hashSecret,
         this.encryptionSecret
@@ -621,7 +621,7 @@ export class GraphqlController implements OnModuleInit {
         {req: context, applyAcl: this.shouldApplyAcl(context)},
         {
           collection: schema => this.bds.children(schema),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: this.bs.resolveSchema
         },
         this.hashSecret,
         this.encryptionSecret
