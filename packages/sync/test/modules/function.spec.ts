@@ -132,6 +132,32 @@ describe("functionModule.readRemote", () => {
     expect(result[0].data.schema.env_vars).toEqual(["ev-id-1"]);
     expect(result[0].data.schema.secrets).toEqual(["sec-id-1"]);
   });
+
+  it("unwraps a paginated {data: [...]} response from the function endpoint", async () => {
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function")
+        return Promise.resolve({data: [{_id: "fn1", name: "MyFn", language: "javascript"}]});
+      if (url === "function/fn1/index") return Promise.resolve({index: ""});
+      if (url === "function/fn1/dependencies") return Promise.resolve([]);
+      return Promise.resolve([]);
+    });
+
+    const result = await functionModule.readRemote(mockHttp);
+    expect(result).toHaveLength(1);
+    expect(result[0].slug).toBe("MyFn");
+  });
+
+  // Regression: a context URL pointing at the panel returns an HTML SPA page with
+  // HTTP 200. Previously `fns.map` crashed cryptically; now we fail with a hint
+  // instead of silently treating it as an empty remote.
+  it("throws a helpful error when the endpoint returns a non-list body (e.g. panel HTML)", async () => {
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function") return Promise.resolve("<!doctype html><html><body>Panel</body></html>");
+      return Promise.resolve([]);
+    });
+
+    await expect(functionModule.readRemote(mockHttp)).rejects.toThrow(/context URL/);
+  });
 });
 
 describe("functionModule.create", () => {

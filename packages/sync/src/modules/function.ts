@@ -13,6 +13,7 @@ import {
   readYaml,
   removeDir,
   sanitizeSlug,
+  unwrapList,
   writeText,
   writeYaml
 } from "../fs-utils";
@@ -144,7 +145,8 @@ export const functionModule: FunctionModule = {
   },
 
   async readRemote(http) {
-    const fns = await http.get<FunctionSchema[]>("function");
+    const res = await http.get<FunctionSchema[] | {data: FunctionSchema[]}>("function");
+    const fns = unwrapList(res);
 
     return Promise.all(
       fns.map(async fn => {
