@@ -66,11 +66,24 @@ export function sanitizeSlug(slug: string): string {
 
 /**
  * Unwrap a list response that may be paginated ({ data: T[] }) or a plain array (T[]).
- * Use this defensively whenever the API might paginate.
+ *
+ * Throws on anything else: a non-list body (e.g. the panel's HTML SPA fallback
+ * served with HTTP 200 when the context URL points at the panel instead of the
+ * API) would otherwise be silently treated as an empty remote, producing a
+ * plan that wipes or recreates everything. Fail loudly with a hint instead.
  */
 export function unwrapList<T>(res: T[] | {data: T[]}): T[] {
   if (Array.isArray(res)) return res;
-  return (res as {data: T[]}).data ?? [];
+  if (res && typeof res === "object" && Array.isArray((res as {data: T[]}).data)) {
+    return (res as {data: T[]}).data;
+  }
+  const body = res as unknown;
+  const got =
+    typeof body === "string" ? `${body.slice(0, 80).replace(/\s+/g, " ")}…` : typeof body;
+  throw new Error(
+    `Expected a list response but got: ${got}. ` +
+      `Check that your context URL points at the Spica API (e.g. ".../api"), not the panel.`
+  );
 }
 
 /**

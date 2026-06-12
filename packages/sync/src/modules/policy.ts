@@ -1,6 +1,13 @@
 import {SyncHttpClient} from "../http";
 import {diffSchemaFields, renderSchemaDetail} from "../planner";
-import {deleteLocalSchema, omit, readLocalSchemas, sanitizeSlug, writeLocalSchema} from "../fs-utils";
+import {
+  deleteLocalSchema,
+  omit,
+  readLocalSchemas,
+  sanitizeSlug,
+  unwrapList,
+  writeLocalSchema
+} from "../fs-utils";
 import {LocalResource, RemoteResource, ResourceModule} from "../types";
 
 interface Policy {
@@ -26,8 +33,7 @@ export const policyModule: ResourceModule<Policy> = {
 
   async readRemote(http) {
     const res = await http.get<{data: Policy[]} | Policy[]>("passport/policy");
-    // The policy endpoint may paginate and return {data: [...]}
-    const items: Policy[] = Array.isArray(res) ? res : ((res as any).data ?? []);
+    const items = unwrapList(res);
     // Filter out system policies which cannot be modified
     return items
       .filter(p => !p.system)

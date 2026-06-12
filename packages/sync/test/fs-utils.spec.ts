@@ -46,15 +46,19 @@ describe("unwrapList", () => {
     expect(unwrapList({data: items})).toEqual(items);
   });
 
-  it("returns an empty array when data is undefined", () => {
-    expect(unwrapList({} as any)).toEqual([]);
-  });
-
   it("returns an empty array when data is an empty array", () => {
     expect(unwrapList({data: []})).toEqual([]);
   });
 
   it("returns a plain empty array as-is", () => {
     expect(unwrapList([])).toEqual([]);
+  });
+
+  it("throws on an object without a data array", () => {
+    expect(() => unwrapList({} as any)).toThrow(/context URL/);
+  });
+
+  it("throws with a hint when the body is a non-list (e.g. panel HTML)", () => {
+    expect(() => unwrapList("<!doctype html><html></html>" as any)).toThrow(/context URL/);
   });
 });
