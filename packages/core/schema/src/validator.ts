@@ -3,8 +3,8 @@ import {default as Ajv, ValidationError} from "ajv";
 import formats from "ajv-formats";
 //@ts-ignore
 import got from "got";
-import {from, isObservable} from "rxjs";
-import {skip, take, tap} from "rxjs/operators";
+import {from, isObservable, Subscription} from "rxjs";
+import {shareReplay, skip, take, tap} from "rxjs/operators";
 import defaultVocabulary from "./default.js";
 import formatVocabulary from "./format.js";
 import {Default, Format, Keyword, ModuleOptions, UriResolver} from "@spica-server/interface-core";
@@ -17,6 +17,7 @@ export {ValidationError};
 export class Validator {
   private _ajv: Ajv;
   private _resolvers = new Set<UriResolver>();
+  private _schemaSubscriptions = new Map<string, Subscription>();
   private _defaults: Map<string, Default>;
 
   get defaults(): Default[] {
@@ -69,7 +70,9 @@ export class Validator {
       const result = interceptor(uri);
       if (!!result) {
         if (isObservable(result)) {
-          result
+          this._schemaSubscriptions.get(uri)?.unsubscribe();
+          const shared = result.pipe(shareReplay({bufferSize: 1, refCount: true}));
+          const subscription = shared
             .pipe(
               skip(1),
               tap(schema => {
@@ -78,7 +81,8 @@ export class Validator {
               })
             )
             .subscribe();
-          return result.pipe(take(1)).toPromise();
+          this._schemaSubscriptions.set(uri, subscription);
+          return shared.pipe(take(1)).toPromise();
         } else {
           return from(result).toPromise();
         }
@@ -104,6 +108,13 @@ export class Validator {
   }
 
   removeSchema(schemaUri?: string) {
+    if (schemaUri) {
+      this._schemaSubscriptions.get(schemaUri)?.unsubscribe();
+      this._schemaSubscriptions.delete(schemaUri);
+    } else {
+      this._schemaSubscriptions.forEach(sub => sub.unsubscribe());
+      this._schemaSubscriptions.clear();
+    }
     this._ajv.removeSchema(schemaUri);
   }
 

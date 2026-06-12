@@ -3,7 +3,7 @@ import {BucketService, compile} from "@spica-server/bucket-services";
 import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/core-schema";
 import {ObjectId} from "@spica-server/database";
 import {combineLatest, Observable, Subject} from "rxjs";
-import {map, takeUntil} from "rxjs/operators";
+import {map, shareReplay, takeUntil} from "rxjs/operators";
 import {Bucket, BucketPreferences} from "@spica-server/interface-bucket";
 
 @Injectable()
@@ -13,7 +13,7 @@ export class BucketSchemaResolver implements OnModuleDestroy {
   onDestroySubject = new Subject();
 
   constructor(private bucketService: BucketService) {
-    this.preferenceWatcher = this.bucketService.watchPreferences(true);
+    this.preferenceWatcher = this.bucketService.watchPreferences(true).pipe(shareReplay(1));
   }
 
   onModuleDestroy() {

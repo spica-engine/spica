@@ -1,7 +1,7 @@
 import {Format} from "@spica-server/interface-core";
 import {Validator} from "@spica-server/core-schema/src/validator";
 import {JSONSchema7} from "json-schema";
-import {BehaviorSubject} from "rxjs";
+import {BehaviorSubject, Observable} from "rxjs";
 
 describe("schema validator", () => {
   let validator: Validator;
@@ -134,6 +134,38 @@ describe("schema validator", () => {
       validator.validate(validatedSchema, {prop: "notatextanymore"})
     ).rejects.toBeDefined();
     await expect(validator.validate(validatedSchema, {prop: 2})).resolves.toBeUndefined();
+  });
+
+  it("should not leak watcher subscriptions when a resolved schema is re-fetched", async () => {
+    const source = new BehaviorSubject({
+      $id: "http://spica.internal/leak",
+      type: "object",
+      properties: {prop: {type: "string"}}
+    });
+
+    let active = 0;
+    let opened = 0;
+    const watcher = new Observable(observer => {
+      opened++;
+      active++;
+      const inner = source.subscribe(observer);
+      return () => {
+        active--;
+        inner.unsubscribe();
+      };
+    });
+
+    validator.registerUriResolver(uri =>
+      uri === "http://spica.internal/leak" ? watcher : undefined
+    );
+
+    for (let i = 0; i < 4; i++) {
+      await validator.validate("http://spica.internal/leak", {prop: ""});
+      validator.removeSchema("http://spica.internal/leak");
+    }
+
+    expect(opened).toBe(4);
+    expect(active).toBe(0);
   });
 
   it("should resolve referenced schema and validate", async () => {
