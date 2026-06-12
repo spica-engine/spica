@@ -1,11 +1,7 @@
 import {RealtimeOptionsBuilder} from "@spica-server/realtime";
 import * as expression from "@spica-server/bucket-expression";
 import {aggregate} from "@spica-server/bucket-expression";
-import {
-  authIdToString,
-  filterReviver,
-  constructFilterValues
-} from "@spica-server/bucket-common";
+import {authIdToString, filterReviver, constructFilterValues} from "@spica-server/bucket-common";
 import {Bucket} from "@spica-server/interface-bucket";
 
 export class BucketDataOptionsBuilder extends RealtimeOptionsBuilder {
@@ -19,14 +15,11 @@ export class BucketDataOptionsBuilder extends RealtimeOptionsBuilder {
   async applyBucketFilter(
     rawFilter: string,
     schema: Bucket,
-    bucketResolver: (id: string) => Promise<Bucket>
+    bucketResolver: (id: string) => Promise<Bucket> | Bucket
   ): Promise<this> {
     this.ensureAndFilter();
 
-    let parsedFilter = parseFilter(
-      (value: string) => JSON.parse(value, filterReviver),
-      rawFilter
-    );
+    let parsedFilter = parseFilter((value: string) => JSON.parse(value, filterReviver), rawFilter);
 
     if (parsedFilter) {
       parsedFilter = await constructFilterValues(parsedFilter, schema, bucketResolver);
@@ -57,7 +50,7 @@ export class BucketDataOptionsBuilder extends RealtimeOptionsBuilder {
   static async fromBucketQuery(
     req: any,
     schema: Bucket,
-    bucketResolver: (id: string) => Promise<Bucket>,
+    bucketResolver: (id: string) => Promise<Bucket> | Bucket,
     shouldApplyAcl: boolean
   ): Promise<any> {
     const builder = new BucketDataOptionsBuilder();
@@ -69,11 +62,7 @@ export class BucketDataOptionsBuilder extends RealtimeOptionsBuilder {
     }
 
     if (normalizedReq.query.has("filter")) {
-      await builder.applyBucketFilter(
-        normalizedReq.query.get("filter"),
-        schema,
-        bucketResolver
-      );
+      await builder.applyBucketFilter(normalizedReq.query.get("filter"), schema, bucketResolver);
     }
 
     if (normalizedReq.query.has("sort")) {

@@ -38,4 +38,4 @@ export type RelationDefinition = {
   dependent: boolean;
 };
 
-export type RelationResolver = (id: string) => Promise<Bucket>;
+export type RelationResolver = (id: string) => Promise<Bucket> | Bucket;
