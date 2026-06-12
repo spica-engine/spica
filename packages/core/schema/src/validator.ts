@@ -111,6 +111,9 @@ export class Validator {
     if (schemaUri) {
       this._schemaSubscriptions.get(schemaUri)?.unsubscribe();
       this._schemaSubscriptions.delete(schemaUri);
+    } else {
+      this._schemaSubscriptions.forEach(sub => sub.unsubscribe());
+      this._schemaSubscriptions.clear();
     }
     this._ajv.removeSchema(schemaUri);
   }
