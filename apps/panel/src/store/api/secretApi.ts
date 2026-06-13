@@ -7,7 +7,7 @@ export interface Secret {
 
 export interface SecretInput {
   key: string;
-  value: string;
+  value?: string;
 }
 
 export interface SecretListResponse {

@@ -18,6 +18,11 @@ export class ServicesModule {
         {
           provide: SECRET_DECRYPTOR,
           useValue: (secret: Secret): DecryptedSecret => {
+            if (!secret.value) {
+              return {
+                ...secret
+              };
+            }
             return {
               ...secret,
               value: decrypt(secret.value, options.encryptionSecret)

@@ -60,6 +60,16 @@ describe("Secret CRUD", () => {
       expect(result.key).toBe("CUSTOM_ID_KEY");
       expect((result as any).value).toBeUndefined();
     });
+
+    it("should insert a secret without storing value when omitted", async () => {
+      const result = await CRUD.insert(ss, {key: "VALUELESS_KEY"});
+
+      const raw = await ss.findOne({_id: result._id});
+
+      expect(result.key).toBe("VALUELESS_KEY");
+      expect((result as any).value).toBeUndefined();
+      expect(raw.value).toBeUndefined();
+    });
   });
 
   describe("findOne", () => {
@@ -166,6 +176,18 @@ describe("Secret CRUD", () => {
 
       expect(raw.value).not.toBe("updated_value");
       expect(isEncryptedData(raw.value)).toBe(true);
+    });
+
+    it("should preserve stored value when updating without value", async () => {
+      const inserted = await CRUD.insert(ss, {key: "REPLACE_KEY", value: "old_value"});
+      const before = await ss.findOne({_id: inserted._id});
+
+      const replaced = await CRUD.replace(ss, inserted._id, {key: "RENAMED_KEY"});
+      const after = await ss.findOne({_id: inserted._id});
+
+      expect(replaced.key).toBe("RENAMED_KEY");
+      expect((replaced as any).value).toBeUndefined();
+      expect(after.value).toEqual(before.value);
     });
 
     it("should throw NotFoundException for non-existent id", async () => {

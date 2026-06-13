@@ -3,6 +3,7 @@ import {ActionParameters, Command, Program} from "@caporal/core";
 import {httpService} from "../../http";
 import {buildPlan, renderPlan, resolveModules, MODULE_NAMES} from "@spica-server/sync";
 import {cliReporter} from "./reporter";
+import {findLocalSecretsWithValues, renderSecretValueWarnings} from "./secret-warning";
 
 async function plan({args, options}: ActionParameters) {
   try {
@@ -18,6 +19,9 @@ async function plan({args, options}: ActionParameters) {
 
     const p = await buildPlan(modules, http, rootDir, detailed, true, cliReporter);
     renderPlan(p, {detailed, json});
+    if (!json) {
+      renderSecretValueWarnings(await findLocalSecretsWithValues(modules, rootDir));
+    }
 
     process.exitCode = 0;
   } catch (err: unknown) {

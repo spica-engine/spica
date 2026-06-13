@@ -19,6 +19,7 @@ import {
 } from "@spica-server/sync";
 import {confirm} from "./prompt";
 import {cliReporter} from "./reporter";
+import {findLocalSecretsWithValues, renderSecretValueWarnings} from "./secret-warning";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -412,6 +413,7 @@ async function dev({args, options}: ActionParameters) {
   );
 
   renderPlan(plan, {detailed: false});
+  renderSecretValueWarnings(await findLocalSecretsWithValues(modules, rootDir));
 
   if (totalChanges > 0) {
     const ok = await confirm("\nApply these changes?");

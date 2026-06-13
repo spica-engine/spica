@@ -115,10 +115,12 @@ describe("Secret", () => {
       expect(found.body.key).toBe("DB_PASS");
     });
 
-    it("should return validation errors when value is missing", async () => {
-      const res = await req.post("/secret", {key: "NO_VALUE"}).catch(r => r);
+    it("should create a secret when value is omitted", async () => {
+      const {body} = await req.post("/secret", {key: "NO_VALUE"});
 
-      expect(res.statusCode).toBe(400);
+      expect(body._id).toBeDefined();
+      expect(body.key).toBe("NO_VALUE");
+      expect(body.value).toBeUndefined();
     });
 
     it("should return validation errors when key is missing", async () => {
@@ -148,6 +150,22 @@ describe("Secret", () => {
       expect(updated._id).toBe(inserted._id);
       expect(updated.key).toBe("NEW_KEY");
       expect(updated.value).toBeUndefined();
+    });
+
+    it("should update key without changing stored value when value is omitted", async () => {
+      const {body: inserted} = await req.post("/secret", {key: "OLD_KEY", value: "old_val"});
+
+      const {body: updated} = await req.put(`/secret/${inserted._id}`, {
+        key: "RENAMED_KEY"
+      });
+
+      expect(updated._id).toBe(inserted._id);
+      expect(updated.key).toBe("RENAMED_KEY");
+      expect(updated.value).toBeUndefined();
+
+      const {body: found} = await req.get(`/secret/${inserted._id}`);
+      expect(found.key).toBe("RENAMED_KEY");
+      expect(found.value).toBeUndefined();
     });
 
     it("should return 404 for non-existent secret", async () => {

@@ -7,6 +7,7 @@ import {httpService} from "../../http";
 import {applyPlan, buildPlan, renderPlan, resolveModules, MODULE_NAMES} from "@spica-server/sync";
 import {confirm} from "./prompt";
 import {cliReporter} from "./reporter";
+import {findLocalSecretsWithValues, renderSecretValueWarnings} from "./secret-warning";
 
 async function apply({args, options}: ActionParameters) {
   const rootDir = path.resolve((args.dir as string | undefined) ?? process.cwd());
@@ -30,6 +31,7 @@ async function apply({args, options}: ActionParameters) {
   );
 
   renderPlan(p, {detailed});
+  renderSecretValueWarnings(await findLocalSecretsWithValues(modules, rootDir));
 
   if (totalChanges === 0) {
     process.exitCode = 0;

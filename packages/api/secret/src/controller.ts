@@ -52,7 +52,7 @@ export class SecretController {
     @Body(Schema.validate("http://spica.internal/secret"))
     body: {
       key: string;
-      value: string;
+      value?: string;
     }
   ) {
     return CRUD.insert(this.ss, body).catch(error => {
@@ -66,7 +66,7 @@ export class SecretController {
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/secret"))
-    body: {key: string; value: string}
+    body: {key: string; value?: string}
   ) {
     return CRUD.replace(this.ss, id, body).catch(error => {
       throw new HttpException(error.message, error.status || 500);

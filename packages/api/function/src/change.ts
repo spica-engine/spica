@@ -133,7 +133,9 @@ function normalizeEnvVars(envVars: EnvVar[]) {
 function normalizeSecrets(secrets: Secret[], decryptor: SecretDecryptor) {
   return (secrets || []).reduce((acc, curr) => {
     const decrypted = decryptor(curr);
-    acc[decrypted.key] = decrypted.value;
+    if (typeof decrypted.value == "string") {
+      acc[decrypted.key] = decrypted.value;
+    }
     return acc;
   }, {});
 }

@@ -1,10 +1,27 @@
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {SecretService} from "@spica-server/secret-services";
-import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface-secret";
+import {HiddenSecret, Secret} from "@spica-server/interface-secret";
 import {encrypt} from "@spica-server/core-encryption";
 import {SecretPipelineBuilder} from "./pipeline.builder.js";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
+
+type SecretInput = {
+  _id?: ObjectId | string;
+  key: string;
+  value?: string;
+};
+
+type StoredSecretInsert = {
+  _id?: ObjectId;
+  key: string;
+  value?: Secret["value"];
+};
+
+type StoredSecretUpdate = {
+  key: string;
+  value?: Secret["value"];
+};
 
 export async function find(
   ss: SecretService,
@@ -58,17 +75,20 @@ export async function findOne(ss: SecretService, id: ObjectId): Promise<HiddenSe
   return res;
 }
 
-export async function insert(ss: SecretService, body: DecryptedSecret): Promise<HiddenSecret> {
-  const secret: Secret = {
-    key: body.key,
-    value: encrypt(body.value, ss.encryptionSecret)
+export async function insert(ss: SecretService, body: SecretInput): Promise<HiddenSecret> {
+  const secret: StoredSecretInsert = {
+    key: body.key
   };
+
+  if (typeof body.value == "string") {
+    secret.value = encrypt(body.value, ss.encryptionSecret);
+  }
 
   if (body._id) {
     secret._id = new ObjectId(body._id);
   }
 
-  const insertedSecret = await ss.insertOne(secret);
+  const insertedSecret = await ss.insertOne(secret as Secret);
   delete insertedSecret.value;
   return insertedSecret as HiddenSecret;
 }
@@ -76,13 +96,19 @@ export async function insert(ss: SecretService, body: DecryptedSecret): Promise<
 export async function replace(
   ss: SecretService,
   id: ObjectId,
-  body: DecryptedSecret
+  body: SecretInput
 ): Promise<HiddenSecret> {
-  const encrypted = encrypt(body.value, ss.encryptionSecret);
+  const set: StoredSecretUpdate = {
+    key: body.key
+  };
 
-  const result = await ss.findOneAndReplace(
+  if (typeof body.value == "string") {
+    set.value = encrypt(body.value, ss.encryptionSecret);
+  }
+
+  const result = await ss.findOneAndUpdate(
     {_id: id},
-    {_id: id, key: body.key, value: encrypted},
+    {$set: set},
     {returnDocument: ReturnDocument.AFTER}
   );
 
