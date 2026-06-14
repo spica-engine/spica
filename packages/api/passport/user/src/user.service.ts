@@ -18,6 +18,7 @@ import {
   hash as hashValue,
   hash as hashToken
 } from "@spica-server/core-encryption";
+import {AuthFactor} from "@spica-server/passport-authfactor";
 
 @Injectable()
 export class UserService extends BaseCollection<User>("user") {
@@ -26,7 +27,8 @@ export class UserService extends BaseCollection<User>("user") {
     private validator: Validator,
     private jwt: JwtService,
     private refreshTokenService: RefreshTokenService,
-    @Inject(USER_OPTIONS) private userOptions: UserOptions
+    @Inject(USER_OPTIONS) private userOptions: UserOptions,
+    private authFactor: AuthFactor
   ) {
     super(database, {
       entryLimit: userOptions.entryLimit,
@@ -57,8 +59,12 @@ export class UserService extends BaseCollection<User>("user") {
       policies?: string[];
     };
 
+    const sanitizedAuthFactor = user.authFactor
+      ? this.authFactor.sanitizeFactorMeta(user.authFactor)
+      : undefined;
+
     const token = this.jwt.sign(
-      {...user, password: undefined, lastPasswords: undefined},
+      {...user, password: undefined, lastPasswords: undefined, authFactor: sanitizedAuthFactor},
       {
         header: {
           username: user.username,

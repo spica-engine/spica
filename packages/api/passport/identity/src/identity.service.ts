@@ -11,6 +11,7 @@ import {hash, compare} from "./hash.js";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";
 import {v4 as uuidv4} from "uuid";
+import {AuthFactor} from "@spica-server/passport-authfactor";
 
 @Injectable()
 export class IdentityService extends BaseCollection<Identity>("identity") {
@@ -19,7 +20,8 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     private validator: Validator,
     private jwt: JwtService,
     private refreshTokenService: RefreshTokenService,
-    @Inject(IDENTITY_OPTIONS) private identityOptions: IdentityOptions
+    @Inject(IDENTITY_OPTIONS) private identityOptions: IdentityOptions,
+    private authFactor: AuthFactor
   ) {
     super(database, {
       entryLimit: identityOptions.entryLimit,
@@ -39,8 +41,17 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       policies?: string[];
     };
 
+    const sanitizedAuthFactor = identity.authFactor
+      ? this.authFactor.sanitizeFactorMeta(identity.authFactor)
+      : undefined;
+
     const token = this.jwt.sign(
-      {...identity, password: undefined, lastPasswords: undefined},
+      {
+        ...identity,
+        password: undefined,
+        lastPasswords: undefined,
+        authFactor: sanitizedAuthFactor
+      },
       {
         header: {
           identifier: identity.identifier,

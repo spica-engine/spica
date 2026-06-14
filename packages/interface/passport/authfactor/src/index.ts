@@ -4,6 +4,7 @@ export interface Factor {
   start(): Promise<string>;
   authenticate(payload: any): Promise<boolean>;
   getMeta(): FactorMeta;
+  getSecretFields(): string[];
 }
 
 export interface FactorMeta {
