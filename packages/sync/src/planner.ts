@@ -191,7 +191,7 @@ export function renderPlan(plan: Plan, opts: RenderOptions = {}): void {
           for (const [section, diff] of Object.entries(e.diffs)) {
             if (!diff) continue;
             console.log(`      ${bold(section)}:`);
-            renderUnifiedDiff(diff);
+            renderUnifiedDiff(diff, true);
           }
         }
       }
@@ -271,12 +271,12 @@ function dim(s: string): string {
   return `\x1b[2m${s}\x1b[0m`;
 }
 
-function renderUnifiedDiff(diff: string): void {
+function renderUnifiedDiff(diff: string, reversed = false): void {
   for (const line of diff.split("\n")) {
     if (line.startsWith("+")) {
-      process.stdout.write(green("      " + line) + "\n");
+      process.stdout.write((reversed ? red : green)("      " + line) + "\n");
     } else if (line.startsWith("-")) {
-      process.stdout.write(red("      " + line) + "\n");
+      process.stdout.write((reversed ? green : red)("      " + line) + "\n");
     } else {
       process.stdout.write(dim("      " + line) + "\n");
     }
