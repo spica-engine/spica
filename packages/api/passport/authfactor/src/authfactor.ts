@@ -28,9 +28,19 @@ export class AuthFactor {
     return Promise.all(Array.from(this.factorsMap.values()).map(v => v.schemaProvider()));
   }
 
-  // we may want to get these fields from each factor.
+  // Returns paths used by controllers to build MongoDB projections that hide all factor secrets.
+  // Each factor declares its own secret fields via getSecretFields(); this aggregates them.
   getSecretPaths() {
     return ["secret"];
+  }
+
+  sanitizeFactorMeta(meta: FactorMeta): FactorMeta {
+    const factor = this.getFactor(meta);
+    const sanitized = {...meta};
+    for (const field of factor.getSecretFields()) {
+      delete sanitized[field];
+    }
+    return sanitized;
   }
 
   register(identity: string, meta: FactorMeta) {

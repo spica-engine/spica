@@ -58,4 +58,8 @@ export class Totp implements Factor {
   getMeta() {
     return this.meta;
   }
+
+  getSecretFields(): string[] {
+    return ["secret"];
+  }
 }
