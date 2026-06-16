@@ -27,7 +27,15 @@ export namespace httpService {
         if (!error.response) {
           return Promise.reject(error);
         }
-        return Promise.reject(error.response.data || error.response);
+        const data = error.response.data || error.response;
+        if (data instanceof Error) {
+          return Promise.reject(data);
+        }
+        const message =
+          typeof data === "string"
+            ? data
+            : data?.message || data?.error || JSON.stringify(data);
+        return Promise.reject(new Error(message));
       }
     );
     instance.defaults.headers.common["Authorization"] = authorization;
