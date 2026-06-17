@@ -219,14 +219,19 @@ export class IdentityController {
     )
   )
   async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
-    const res = this.deleteIdentityFactor(id.toHexString());
+    // deleteIdentityFactor only clears any in-progress activation; an already-activated factor is
+    // no longer in that transient map, so existence must be derived from the persisted record.
+    this.deleteIdentityFactor(id.toHexString());
     this.authFactor.unregister(id.toHexString());
 
-    if (!res) {
+    const identity = await this.identityService.findOneAndUpdate(
+      {_id: id},
+      {$unset: {authFactor: ""}}
+    );
+
+    if (!identity) {
       throw new NotFoundException(`Identity with ID ${id} not found`);
     }
-
-    await this.identityService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
   }
 
   @Get(":id")

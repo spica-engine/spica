@@ -4,6 +4,7 @@ import {SchemaModule, hash} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {PassportModule} from "@spica-server/passport";
+import {AuthFactor} from "@spica-server/passport-authfactor";
 import {REQUEST_SERVICE} from "@spica-server/interface-passport";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
@@ -896,9 +897,10 @@ describe("E2E Tests", () => {
 
   describe("2FA", () => {
     let identity;
+    let module;
 
     beforeEach(async () => {
-      const module = await Test.createTestingModule(moduleMetaData).compile();
+      module = await Test.createTestingModule(moduleMetaData).compile();
 
       req = module.get(Request);
       app = module.createNestApplication();
@@ -994,6 +996,32 @@ describe("E2E Tests", () => {
           expect(res.body.token).toBeDefined();
         });
 
+        it("should still enforce 2fa when the replica is missing the in-memory factor state", async () => {
+          const challenge = await activate2fa(identity);
+
+          // Reproduce a second replica that never received the registration broadcast:
+          // the factor is persisted in the database but absent from this instance's in-memory map.
+          const authFactor = module.get(AuthFactor);
+          authFactor.unregister(identity._id);
+          expect(authFactor.hasFactor(identity._id)).toEqual(false);
+
+          let res = await req.post("/passport/identify", {
+            identifier: "identityWith2fa",
+            password: "password"
+          });
+
+          expect(res.body).toEqual({
+            challenge: "Please enter the 6 digit code",
+            answerUrl: `passport/identify/${identity._id}/factor-authentication`
+          });
+          expect(res.body.token).not.toBeDefined();
+
+          const totp = generateTotp(challenge);
+          res = await req.post(res.body.answerUrl, {answer: totp});
+          expect(res.statusCode).toEqual(200);
+          expect(res.body.token).toBeDefined();
+        });
+
         it("should not login if 2fa code is incorrect", async () => {
           await activate2fa(identity);
 
@@ -1019,6 +1047,10 @@ describe("E2E Tests", () => {
             {},
             {Authorization: `IDENTITY ${token}`}
           );
+
+          // Prove deactivation is persisted, not just cleared from this instance's in-memory map:
+          // a replica without that state must also see 2fa as deactivated.
+          module.get(AuthFactor).unregister(identity._id);
 
           const res = await req.post("/passport/identify", {
             identifier: "identityWith2fa",

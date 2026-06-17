@@ -217,14 +217,16 @@ export class UserController {
     )
   )
   async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
-    const res = this.deleteUserFactor(id.toHexString());
+    // deleteUserFactor only clears any in-progress activation; an already-activated factor is
+    // no longer in that transient map, so existence must be derived from the persisted record.
+    this.deleteUserFactor(id.toHexString());
     this.authFactor.unregister(id.toHexString());
 
-    if (!res) {
+    const user = await this.userService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
+
+    if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-
-    await this.userService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
   }
 
   @Get(":id")
