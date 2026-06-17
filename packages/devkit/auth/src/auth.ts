@@ -90,7 +90,7 @@ export async function signIn(
       password,
       expires: tokenLifeSpan
     },
-    {headers}
+    {headers, skipAuthCheck: true}
   );
 
   const verified = await service.get<VerifiedToken>(`${userSegment}/verify`, {
@@ -235,7 +235,7 @@ export function remove(id: string, headers?: object): Promise<any> {
  * @returns Promise resolving to the new access token
  */
 export async function refreshAccessToken(accessToken: string, headers?: object): Promise<string> {
-  checkInitialized(authorization, service);
+  checkInitialized(authorization, service, {skipAuthCheck: true});
 
   const response = await service.post<TokenScheme>(
     `${userSegment}/session/refresh`,
@@ -449,7 +449,7 @@ export function requestPasswordReset(
   return service.post<PasswordResetStartResponse>(
     `${userSegment}/forgot-password/start`,
     {username, provider},
-    {headers}
+    {headers, skipAuthCheck: true}
   );
 }
 
@@ -475,7 +475,7 @@ export function completePasswordReset(
   return service.post<PasswordResetCompleteResponse>(
     `${userSegment}/forgot-password/verify`,
     {username, code, newPassword, provider},
-    {headers}
+    {headers, skipAuthCheck: true}
   );
 }
 
@@ -498,7 +498,7 @@ export function passwordlessLogin(
   return service.post<PasswordlessLoginStartResponse>(
     `${userSegment}/passwordless-login/start`,
     {username, provider},
-    {headers}
+    {headers, skipAuthCheck: true}
   );
 }
 
@@ -524,7 +524,7 @@ export async function completePasswordlessLogin(
   const response = await service.post<PasswordlessLoginCompleteResponse>(
     `${userSegment}/passwordless-login/verify`,
     {username, code, provider},
-    {headers}
+    {headers, skipAuthCheck: true}
   );
 
   const verified = await service.get<VerifiedToken>(`${userSegment}/verify`, {

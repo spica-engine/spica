@@ -22,9 +22,9 @@ export class Axios implements HttpService {
         request.maxBodyLength = Number.MAX_SAFE_INTEGER;
         request.maxContentLength = Number.MAX_SAFE_INTEGER;
 
-        if (!request.headers["Authorization"]) {
+        if (!(request as any).skipAuthCheck && !request.headers["Authorization"]) {
           throw new Error(
-            "You should call initialize method with a valid apikey or identity token."
+            "You should call initialize method with a valid apikey, identity or user token."
           );
         }
         return request;
