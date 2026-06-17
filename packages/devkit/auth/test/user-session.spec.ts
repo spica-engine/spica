@@ -96,7 +96,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "/passport/login",
         {username: "testuser", password: "testpass", expires: undefined},
-        {headers: undefined}
+        {headers: undefined, skipAuthCheck: true}
       );
 
       expect(getSpy).toHaveBeenCalledTimes(1);
@@ -112,7 +112,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "/passport/login",
         {username: "testuser", password: "testpass", expires: 3600},
-        {headers: undefined}
+        {headers: undefined, skipAuthCheck: true}
       );
     });
 
@@ -123,7 +123,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "/passport/login",
         {username: "testuser", password: "testpass", expires: undefined},
-        {headers: {"X-Custom": "value"}}
+        {headers: {"X-Custom": "value"}, skipAuthCheck: true}
       );
     });
   });
@@ -155,7 +155,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/passwordless-login/verify",
         {username: "testuser", code: "123456", provider: "phone"},
-        {headers: undefined}
+        {headers: undefined, skipAuthCheck: true}
       );
 
       expect(getSpy).toHaveBeenCalledTimes(1);
@@ -171,7 +171,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/passwordless-login/verify",
         {username: "testuser", code: "123456", provider: "email"},
-        {headers: {"X-Custom": "value"}}
+        {headers: {"X-Custom": "value"}, skipAuthCheck: true}
       );
     });
   });
@@ -504,7 +504,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/forgot-password/start",
         {username: "someuser", provider: "email"},
-        {headers: undefined}
+        {headers: undefined, skipAuthCheck: true}
       );
     });
   });

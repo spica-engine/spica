@@ -204,7 +204,7 @@ describe("@spica-devkit/auth", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/forgot-password/start",
         {username: "testuser", provider: "email"},
-        {headers: undefined}
+        {headers: undefined, skipAuthCheck: true}
       );
     });
 
@@ -215,7 +215,7 @@ describe("@spica-devkit/auth", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/forgot-password/verify",
         {username: "testuser", code: "123456", newPassword: "newpass", provider: "email"},
-        {headers: undefined}
+        {headers: undefined, skipAuthCheck: true}
       );
     });
 
@@ -226,7 +226,7 @@ describe("@spica-devkit/auth", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/passwordless-login/start",
         {username: "testuser", provider: "email"},
-        {headers: undefined}
+        {headers: undefined, skipAuthCheck: true}
       );
     });
 
@@ -237,7 +237,7 @@ describe("@spica-devkit/auth", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/passwordless-login/verify",
         {username: "testuser", code: "123456", provider: "email"},
-        {headers: undefined}
+        {headers: undefined, skipAuthCheck: true}
       );
 
       expect(getSpy).toHaveBeenCalledTimes(1);
@@ -255,7 +255,7 @@ describe("@spica-devkit/auth", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/passwordless-login/verify",
         {username: "testuser", code: "123456", provider: "phone"},
-        {headers: {Accept: "application/json"}}
+        {headers: {Accept: "application/json"}, skipAuthCheck: true}
       );
     });
   });
