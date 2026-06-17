@@ -216,7 +216,7 @@ export class PassportUserController {
 
   async _login(username: string, password: string, state: string, expires: number, res) {
     const catchError = e => {
-      if (!res.headerSent) {
+      if (!res.headersSent) {
         res.status(e.status || 500).json(e.response || e);
       }
     };
