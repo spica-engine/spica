@@ -20,6 +20,9 @@ export function findRelations(
   path: string = "",
   targets: Map<string, RelationType>
 ) {
+  if (!schema) {
+    return targets;
+  }
   path = path ? `${path}.` : ``;
   for (const field of Object.keys(schema)) {
     if (isObject(schema[field])) {

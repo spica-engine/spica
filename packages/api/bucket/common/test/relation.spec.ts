@@ -45,6 +45,12 @@ describe("Relation", () => {
     expect(isArray(schema)).toBe(false);
   });
 
+  it("should return targets without throwing when schema is null or undefined", () => {
+    const targets = new Map();
+    expect(findRelations(null, "id1", "", targets)).toBe(targets);
+    expect(findRelations(undefined, "id1", "", targets)).toBe(targets);
+  });
+
   it("should find relations", () => {
     const schema = {
       nested_relation: {
