@@ -36,6 +36,18 @@ describe("@spica-devkit/bucket", () => {
     });
   });
 
+  describe("initialize", () => {
+    it("should initialize with user token", () => {
+      Bucket.initialize({user: "TEST_USER_TOKEN"});
+      const connection = Bucket.data.realtime.getAll("bucket_id");
+
+      const url = new URL("ws://test/bucket/bucket_id/data");
+      url.searchParams.append("Authorization", "USER TEST_USER_TOKEN");
+
+      expect(connection["_config"].url).toEqual(url.toString());
+    });
+  });
+
   describe("bucket", () => {
     const bucket: Bucket.Bucket = {
       title: "User Bucket",

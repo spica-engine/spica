@@ -9,6 +9,7 @@ import {getWsObs} from "./operators";
 import {
   ApikeyInitialization,
   IdentityInitialization,
+  UserInitialization,
   IndexResult,
   HttpService
 } from "@spica-server/interface-function-packages";
@@ -24,7 +25,7 @@ let wsUrl;
 
 let service: HttpService;
 
-export function initialize(options: ApikeyInitialization | IdentityInitialization) {
+export function initialize(options: ApikeyInitialization | IdentityInitialization | UserInitialization) {
   const {authorization: _authorization, publicUrl, service: _service} = _initialize(options);
 
   authorization = _authorization;
