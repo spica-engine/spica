@@ -169,7 +169,12 @@ export class PassportIdentityController {
       return;
     }
 
-    const {tokenSchema, refreshTokenSchema} = await this.signIdentity(identity, expires);
+    const {tokenSchema, refreshTokenSchema, factorRes} = await this.signIdentity(identity, expires);
+
+    if (factorRes) {
+      return res.status(200).json(factorRes);
+    }
+
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
     res.status(200).json(tokenSchema);
   }

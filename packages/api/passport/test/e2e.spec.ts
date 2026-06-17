@@ -1,6 +1,6 @@
 import {Controller, Get, INestApplication, ModuleMetadata, Req, Res} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {SchemaModule, hash} from "@spica-server/core-schema";
+import {SchemaModule, hash, OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {PassportModule} from "@spica-server/passport";
@@ -219,7 +219,7 @@ describe("E2E Tests", () => {
   const moduleMetaData: ModuleMetadata = {
     controllers: [SAMLController, OAuthController],
     imports: [
-      SchemaModule.forRoot(),
+      SchemaModule.forRoot({formats: [OBJECT_ID, DATE_TIME]}),
       DatabaseTestingModule.replicaSet(),
       ConfigModule.forRoot(),
       PassportModule.forRoot({
@@ -1017,6 +1017,51 @@ describe("E2E Tests", () => {
           expect(res.body.token).not.toBeDefined();
 
           const totp = generateTotp(challenge);
+          res = await req.post(res.body.answerUrl, {answer: totp});
+          expect(res.statusCode).toEqual(200);
+          expect(res.body.token).toBeDefined();
+        });
+
+        it("should still enforce 2fa on user login when the replica is missing the in-memory factor state", async () => {
+          const user = await req
+            .post(
+              "/passport/user",
+              {username: "userWith2fa", password: "password"},
+              {Authorization: `IDENTITY ${token}`}
+            )
+            .then(r => r.body);
+
+          const totpSchema = await req
+            .get(`/passport/user/factors`, {}, {Authorization: `IDENTITY ${token}`})
+            .then(r => r.body.find(f => f.type == "totp"));
+
+          const {answerUrl: activationAnswerUrl, challenge} = await req
+            .post(`/passport/user/${user._id}/start-factor-verification`, totpSchema, {
+              Authorization: `IDENTITY ${token}`
+            })
+            .then(r => r.body as {challenge: string; answerUrl: string});
+
+          let totp = generateTotp(challenge);
+          await req.post(activationAnswerUrl, {answer: totp}, {Authorization: `IDENTITY ${token}`});
+
+          // Reproduce a second replica that never received the registration broadcast:
+          // the factor is persisted in the database but absent from this instance's in-memory map.
+          const authFactor = module.get(AuthFactor);
+          authFactor.unregister(user._id);
+          expect(authFactor.hasFactor(user._id)).toEqual(false);
+
+          let res = await req.post("/passport/login", {
+            username: "userWith2fa",
+            password: "password"
+          });
+
+          expect(res.body).toEqual({
+            challenge: "Please enter the 6 digit code",
+            answerUrl: `passport/login/${user._id}/factor-authentication`
+          });
+          expect(res.body.token).not.toBeDefined();
+
+          totp = generateTotp(challenge);
           res = await req.post(res.body.answerUrl, {answer: totp});
           expect(res.statusCode).toEqual(200);
           expect(res.body.token).toBeDefined();

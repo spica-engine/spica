@@ -168,11 +168,16 @@ export class PassportUserController {
   async completeLoginWithState(state: string, user: User, expires: number) {
     const res = this.stateReqs.get(state);
     this.stateReqs.delete(state);
-    if (!res || res.headerSent) {
+    if (!res || res.headersSent) {
       return;
     }
 
-    const {tokenSchema, refreshTokenSchema} = await this.signUser(user, expires);
+    const {tokenSchema, refreshTokenSchema, factorRes} = await this.signUser(user, expires);
+
+    if (factorRes) {
+      return res.status(200).json(factorRes);
+    }
+
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
     res.status(200).json(tokenSchema);
   }
