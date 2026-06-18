@@ -169,7 +169,12 @@ export class PassportIdentityController {
       return;
     }
 
-    const {tokenSchema, refreshTokenSchema} = await this.signIdentity(identity, expires);
+    const {tokenSchema, refreshTokenSchema, factorRes} = await this.signIdentity(identity, expires);
+
+    if (factorRes) {
+      return res.status(200).json(factorRes);
+    }
+
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
     res.status(200).json(tokenSchema);
   }
@@ -179,7 +184,14 @@ export class PassportIdentityController {
     const refreshTokenSchema = await this.identityService.signRefreshToken(identity);
 
     const id = identity._id.toHexString();
-    if (this.authFactor.hasFactor(id)) {
+    // Enforce 2FA from the persisted record, not the in-memory AuthFactor map: that map is
+    // per-replica and only synced opportunistically, so a replica that missed the registration
+    // broadcast would otherwise skip the challenge and let the user bypass 2FA.
+    if (identity.authFactor) {
+      if (!this.authFactor.hasFactor(id)) {
+        this.authFactor.register(id, identity.authFactor);
+      }
+
       this.setIdentityToken(id, tokenSchema);
       this.setRefreshToken(id, refreshTokenSchema);
 

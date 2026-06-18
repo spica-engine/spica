@@ -168,11 +168,16 @@ export class PassportUserController {
   async completeLoginWithState(state: string, user: User, expires: number) {
     const res = this.stateReqs.get(state);
     this.stateReqs.delete(state);
-    if (!res || res.headerSent) {
+    if (!res || res.headersSent) {
       return;
     }
 
-    const {tokenSchema, refreshTokenSchema} = await this.signUser(user, expires);
+    const {tokenSchema, refreshTokenSchema, factorRes} = await this.signUser(user, expires);
+
+    if (factorRes) {
+      return res.status(200).json(factorRes);
+    }
+
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
     res.status(200).json(tokenSchema);
   }
@@ -182,7 +187,14 @@ export class PassportUserController {
     const refreshTokenSchema = await this.userService.signRefreshToken(user);
 
     const id = user._id.toHexString();
-    if (this.authFactor.hasFactor(id)) {
+    // Enforce 2FA from the persisted record, not the in-memory AuthFactor map: that map is
+    // per-replica and only synced opportunistically, so a replica that missed the registration
+    // broadcast would otherwise skip the challenge and let the user bypass 2FA.
+    if (user.authFactor) {
+      if (!this.authFactor.hasFactor(id)) {
+        this.authFactor.register(id, user.authFactor);
+      }
+
       this.setUserToken(id, tokenSchema);
       this.setRefreshToken(id, refreshTokenSchema);
 
@@ -204,7 +216,7 @@ export class PassportUserController {
 
   async _login(username: string, password: string, state: string, expires: number, res) {
     const catchError = e => {
-      if (!res.headerSent) {
+      if (!res.headersSent) {
         res.status(e.status || 500).json(e.response || e);
       }
     };
