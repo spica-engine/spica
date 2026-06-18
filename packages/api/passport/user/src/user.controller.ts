@@ -18,7 +18,8 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   Optional,
-  NotFoundException
+  NotFoundException,
+  Logger
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
@@ -85,12 +86,21 @@ export class UserController {
     }
     this.userService
       .find({
-        authFactor: {$exists: true}
+        authFactor: {$exists: true, $ne: null}
       })
       .then(users => {
         for (const user of users) {
+          if (!user.authFactor) {
+            continue;
+          }
           this.authFactor.register(user._id.toHexString(), user.authFactor);
         }
+      })
+      .catch(error => {
+        Logger.error(
+          `Failed to register persisted auth factors on startup: ${error}`,
+          UserController.name
+        );
       });
   }
 

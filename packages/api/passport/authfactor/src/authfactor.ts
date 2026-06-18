@@ -54,6 +54,10 @@ export class AuthFactor {
   }
 
   getFactor(meta: FactorMeta): Factor {
+    if (!meta) {
+      throw Error("Factor meta is missing.");
+    }
+
     const factor = this.factorsMap.get(meta.type);
 
     if (!factor) {
