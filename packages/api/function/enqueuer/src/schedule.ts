@@ -72,8 +72,14 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
       this.queue.enqueue(ev);
     };
 
+    // A scheduled tick is identified by its planned fire time, which node-schedule reports
+    // identically on every replica. A shifted (re-dispatched) event instead carries an
+    // eventId that is broadcast to every surviving replica, while each one recomputes
+    // firedAt from its own clock — so only the shared eventId can dedup the handoff.
+    const discriminator = eventId || firedAt;
+
     const meta = {
-      _id: `${target.cwd}-${target.handler}-${options.frequency}-${options.timezone}-${firedAt}`,
+      _id: `${target.cwd}-${target.handler}-${options.frequency}-${options.timezone}-${discriminator}`,
       cwd: target.cwd,
       handler: target.handler,
       frequency: options.frequency,
@@ -82,9 +88,9 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     };
 
     if (this.jobReducer) {
-      this.jobReducer.do(meta, enqueue);
+      return this.jobReducer.do(meta, enqueue);
     } else {
-      enqueue();
+      return enqueue();
     }
   }
 
