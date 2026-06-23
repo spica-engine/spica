@@ -202,13 +202,14 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     // rollback will cost much, in fact api could crash, best-effort deletion is enough, so we do not use transaction here
     try {
       await this.service.delete(result.name);
-      const folderName = result.name;
 
-      const escapedName = this.escapeRegex(folderName);
+      const escapedName = this.escapeRegex(result.name);
+      const childFilter = {name: {$regex: new RegExp(`^${escapedName}`)}};
 
-      await this._coll.deleteMany({
-        name: {$regex: new RegExp(`^${escapedName}`)}
-      });
+      const children = await this._coll.find(childFilter).toArray();
+      await Promise.allSettled(children.map(child => this.service.delete(child.name)));
+
+      await this._coll.deleteMany(childFilter);
     } catch (error) {
       this.logger.error(
         `Failed to delete storage object ${result.name} from storage:`,
