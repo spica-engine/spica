@@ -141,7 +141,7 @@ const CodeEditor = ({value, language, onChange, onSave, readOnly, functionId, ex
     <Editor
       height="100%"
       language={language}
-      path="file:///main.tsx"
+      path={`file:///${functionId || "default"}/index.tsx`}
       value={value}
       onChange={handleChange}
       beforeMount={handleBeforeMount}
