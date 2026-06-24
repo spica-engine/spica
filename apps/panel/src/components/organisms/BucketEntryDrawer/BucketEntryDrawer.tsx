@@ -131,10 +131,13 @@ const BucketEntryDrawer = ({
     formActions.setValue({...values, ...overrides});
   }, [formattedProperties, isOpen, isEditMode, entry]);
 
-  const normalizedValue =
-    Object.keys(formState.value).length === 0 && formState.value.constructor === Object
-      ? ""
-      : formState.value;
+  // While the drawer is closing, the parent flips edit mode off in the same render, but
+  // formState still holds the edit-session value. Feeding that stale value (e.g. a single
+  // relation object) to the representer during the close render crashes the relation input
+  // with "n.map is not a function". Render an empty value until the close-effect reset runs.
+  const isEmptyObjectValue =
+    Object.keys(formState.value).length === 0 && formState.value.constructor === Object;
+  const normalizedValue = !isOpen || isEmptyObjectValue ? "" : formState.value;
 
   const inputRepresentation = useInputRepresenter({
     properties: formattedProperties,

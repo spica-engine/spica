@@ -458,14 +458,18 @@ const RELATION_DEFINITION: FieldDefinition = {
 
     const initialFormattedValues = property?.relationState?.initialFormattedValues;
     const getValue = (v: {_id?: string; value?: string}) => v._id ?? v.value ?? v;
+    const findInitialLabel = (v: {value?: string; _id?: string}) => {
+      if (!initialFormattedValues) return undefined;
+      if (Array.isArray(initialFormattedValues)) {
+        return initialFormattedValues.find(
+          (i: {value: string; _id: string}) =>
+            i.value === v.value || i.value === v._id || (typeof v === "string" && i.value === v)
+        )?.label;
+      }
+      return initialFormattedValues.label;
+    };
     const getLabel = (v: {[key: string]: string}) =>
-      v[primaryKey] ??
-      v.label ??
-      initialFormattedValues?.label ??
-      initialFormattedValues?.find(
-        (i: {value: string; _id: string}) =>
-          i.value === v.value || i.value === v._id || (typeof v === "string" && i.value === v)
-      )?.label;
+      v[primaryKey] ?? v.label ?? findInitialLabel(v);
 
     if (property?.relationType === "onetomany") {
       const values = Array.isArray(value)
