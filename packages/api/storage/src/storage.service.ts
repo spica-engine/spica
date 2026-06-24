@@ -231,9 +231,12 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
       const folderDeletionPromises = objects.map(async object => {
         const escapedName = this.escapeRegex(object.name);
-        await this._coll.deleteMany({
-          name: {$regex: new RegExp(`^${escapedName}`)}
-        });
+        const childFilter = {name: {$regex: new RegExp(`^${escapedName}`)}};
+
+        const children = await this._coll.find(childFilter).toArray();
+        await Promise.allSettled(children.map(child => this.service.delete(child.name)));
+
+        await this._coll.deleteMany(childFilter);
       });
 
       await Promise.all(folderDeletionPromises);
