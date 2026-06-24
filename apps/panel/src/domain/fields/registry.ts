@@ -461,11 +461,12 @@ const RELATION_DEFINITION: FieldDefinition = {
     const getLabel = (v: {[key: string]: string}) =>
       v[primaryKey] ??
       v.label ??
-      initialFormattedValues?.label ??
-      initialFormattedValues?.find(
-        (i: {value: string; _id: string}) =>
-          i.value === v.value || i.value === v._id || (typeof v === "string" && i.value === v)
-      )?.label;
+      (Array.isArray(initialFormattedValues)
+        ? initialFormattedValues.find(
+            (i: {value: string; _id: string}) =>
+              i.value === v.value || i.value === v._id || (typeof v === "string" && i.value === v)
+          )?.label
+        : (initialFormattedValues as any)?.label);
 
     if (property?.relationType === "onetomany") {
       const values = Array.isArray(value)

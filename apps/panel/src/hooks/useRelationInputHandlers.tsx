@@ -24,7 +24,7 @@ export type RelationState = {
   total: number;
   lastSearch: string;
   primaryKey: string;
-  initialFormattedValues?: FormattedInitialValue | FormattedInitialValue[];
+  initialFormattedValues?: FormattedInitialValue[];
   stateInitialized: boolean;
 };
 
@@ -245,7 +245,7 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
         return initialValue;
       }
 
-      let formattedValue: {label: string; value: string} | Array<{label: string; value: string}> | undefined = undefined;
+      let formattedValue: Array<{label: string; value: string}> | undefined = undefined;
       const primaryKey = relationStatesRef.current[key]?.primaryKey;
       if (Array.isArray(initialValue)) {
         const formattedValues: Array<{label: string; value: string}> = [];
@@ -265,10 +265,10 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
       } else {
         try {
           const row = await getBucketEntry({bucketId, entryId: initialValue as string}).unwrap();
-          formattedValue = {
+          formattedValue = [{
             value: (row as any)?._id || "",
             label: primaryKey ? (row as any)?.[primaryKey] || "" : ""
-          };
+          }];
         } catch (error) {
           console.error("Failed to fetch row data:", error);
           formattedValue = undefined;
@@ -316,7 +316,7 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
           if (formatted) {
             setRelationStates(prev => ({
               ...prev,
-              [key]: {...prev[key], initialFormattedValues: formatted, stateInitialized: true}
+              [key]: {...prev[key], initialFormattedValues: [formatted], stateInitialized: true}
             }));
             return;
           }
