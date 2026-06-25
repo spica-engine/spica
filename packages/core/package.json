@@ -18,9 +18,9 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.15",
+    "@nestjs/common": "^10.4.22",
     "@spica-server/interface-core": "workspace:*",
-    "body-parser": "^1.20.3",
+    "body-parser": "^1.20.5",
     "matcher": "^5.0.0",
     "type-is": "^1.6.18"
   },

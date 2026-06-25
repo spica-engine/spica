@@ -10,15 +10,15 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.15",
-    "@nestjs/websockets": "^10.4.15",
+    "@nestjs/common": "^10.4.22",
+    "@nestjs/websockets": "^10.4.22",
     "@spica-server/database-realtime": "workspace:*",
     "@spica-server/interface-realtime": "workspace:*",
     "@spica-server/passport-guard-services": "workspace:*",
     "@spica-server/realtime": "workspace:*"
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.4.15",
+    "@nestjs/testing": "^10.4.22",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/core-websocket": "workspace:*",
     "@spica-server/database-testing": "workspace:*",

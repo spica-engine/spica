@@ -10,7 +10,7 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.15",
+    "@nestjs/common": "^10.4.22",
     "@spica-server/asset": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/dashboard-realtime": "workspace:*",
@@ -19,11 +19,11 @@
     "@spica-server/interface-dashboard": "workspace:*",
     "@spica-server/interface-representative": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
-    "rxjs": "^7.8.1",
-    "yaml": "^2.7.0"
+    "rxjs": "^7.8.2",
+    "yaml": "^2.7.1"
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.4.15",
+    "@nestjs/testing": "^10.4.22",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/core-websocket": "workspace:*",
     "@spica-server/database-testing": "workspace:*",

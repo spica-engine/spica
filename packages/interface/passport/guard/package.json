@@ -10,6 +10,6 @@
     }
   },
   "devDependencies": {
-    "@nestjs/common": "^10.4.15"
+    "@nestjs/common": "^10.4.22"
   }
 }

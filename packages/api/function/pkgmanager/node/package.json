@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "@spica-server/interface-function-pkgmanager": "workspace:*",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.2"
   }
 }
