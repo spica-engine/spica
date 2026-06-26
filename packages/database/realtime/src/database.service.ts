@@ -1,5 +1,5 @@
-import {Injectable, OnModuleDestroy} from "@nestjs/common";
-import {ChangeStream, DatabaseService, Document} from "@spica-server/database";
+import {Inject, Injectable, OnModuleDestroy, Optional} from "@nestjs/common";
+import {ChangeStream, DATABASE_CHANGE_STREAM_AWAIT_TIME, DatabaseService, Document} from "@spica-server/database";
 import {StreamChunk} from "@spica-server/interface-realtime";
 import {Observable} from "rxjs";
 import {FindOptions} from "@spica-server/interface-database";
@@ -9,7 +9,10 @@ import {PassThrough, Readable} from "stream";
 
 @Injectable()
 export class RealtimeDatabaseService implements OnModuleDestroy {
-  constructor(private database: DatabaseService) {}
+  constructor(
+    private database: DatabaseService,
+    @Optional() @Inject(DATABASE_CHANGE_STREAM_AWAIT_TIME) private changeStreamAwaitTimeMS?: number
+  ) {}
 
   private changeStreams = new Map<string, {stream: ChangeStream; hub: PassThrough; cursorReadable: Readable}>();
   private getChangeStream(name: string) {
@@ -17,7 +20,13 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
       return this.changeStreams.get(name)!;
     }
 
-    const stream = this.database.collection(name).watch([], {fullDocument: "updateLookup"});
+    const watchOptions: {fullDocument: "updateLookup"; maxAwaitTimeMS?: number} = {
+      fullDocument: "updateLookup"
+    };
+    if (this.changeStreamAwaitTimeMS !== undefined) {
+      watchOptions.maxAwaitTimeMS = this.changeStreamAwaitTimeMS;
+    }
+    const stream = this.database.collection(name).watch([], watchOptions);
     const hub = new PassThrough({objectMode: true});
     // Improvement 1: unlimited listeners — prevents MaxListenersExceededWarning with many subscribers
     hub.setMaxListeners(0);

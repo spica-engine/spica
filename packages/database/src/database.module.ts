@@ -1,27 +1,30 @@
-import {DynamicModule, Global, Module} from "@nestjs/common";
+import {DynamicModule, Global, Module, Provider} from "@nestjs/common";
 import {MongoClient, MongoClientOptions} from "mongodb";
 import {DatabaseService} from "./database.service.js";
+
+export const DATABASE_CHANGE_STREAM_AWAIT_TIME = "DATABASE_CHANGE_STREAM_AWAIT_TIME";
 
 @Global()
 @Module({})
 export class DatabaseModule {
   static withConnection(
     uri: string,
-    options: Partial<MongoClientOptions> & {database: string}
+    options: Partial<MongoClientOptions> & {database: string; changeStreamAwaitTimeMS?: number}
   ): DynamicModule {
-    const dbProvider = [
+    const {database, changeStreamAwaitTimeMS, ...mongoOptions} = options;
+    const dbProvider: Provider[] = [
       {
         provide: MongoClient,
-        useFactory: async () => {
-          const opts = {...options};
-          delete opts.database;
-          return MongoClient.connect(uri, opts);
-        }
+        useFactory: async () => MongoClient.connect(uri, mongoOptions)
       },
       {
         provide: DatabaseService,
-        useFactory: async client => await client.db(options.database),
+        useFactory: async (client: MongoClient) => client.db(database),
         inject: [MongoClient]
+      },
+      {
+        provide: DATABASE_CHANGE_STREAM_AWAIT_TIME,
+        useValue: changeStreamAwaitTimeMS
       }
     ];
     return {

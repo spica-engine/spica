@@ -91,6 +91,11 @@ const args = yargsInstance
       description: "Read preference for the database connection.",
       default: "primary",
       choices: ["primary", "primaryPreferred", "secondary", "secondaryPreferred", "nearest"]
+    },
+    "database-change-stream-await-time": {
+      number: true,
+      description:
+        "Maximum time in milliseconds for the server to wait for new data before returning an empty change stream batch. Maps to MongoDB maxAwaitTimeMS."
     }
   })
   .demandOption("database-name")
@@ -779,7 +784,8 @@ const modules = [
     replicaSet: args["database-replica-set"],
     maxPoolSize: args["database-pool-size"],
     appName: "spica",
-    readPreference: args["database-read-preference"]
+    readPreference: args["database-read-preference"],
+    changeStreamAwaitTimeMS: args["database-change-stream-await-time"]
   }),
   EnvVarModule.forRoot({
     realtime: true
