@@ -19,7 +19,26 @@ export class DatabaseModule {
       },
       {
         provide: DatabaseService,
-        useFactory: async (client: MongoClient) => client.db(database),
+        useFactory: async (client: MongoClient) => {
+          const db = client.db(database);
+          // MongoDB has no connection-level default for a change stream's maxAwaitTimeMS, and change
+          // streams are opened all over the codebase: BaseCollection.watch(), direct _coll.watch(),
+          // db.collection(name).watch(), and the realtime service. They ALL obtain their collection
+          // through db.collection(name), so wrapping it here makes every change stream inherit the
+          // configured maxAwaitTimeMS from a single place. Caller-supplied options still win, and
+          // omitting the flag leaves behavior unchanged (backward compatible).
+          if (typeof changeStreamAwaitTimeMS === "number") {
+            const getCollection = db.collection.bind(db);
+            (db as any).collection = (name: string, opts?: any) => {
+              const collection = getCollection(name, opts) as any;
+              const watch = collection.watch.bind(collection);
+              collection.watch = (pipeline?: any[], watchOptions?: any) =>
+                watch(pipeline, {maxAwaitTimeMS: changeStreamAwaitTimeMS, ...watchOptions});
+              return collection;
+            };
+          }
+          return db;
+        },
         inject: [MongoClient]
       },
       {
