@@ -1,43 +1,25 @@
 import {BaseCollection} from "@spica-server/database";
-import {ChangeStream} from "mongodb";
-import {PartialObserver} from "rxjs";
+import {PartialObserver, Observable, share} from "rxjs";
 import {MemoryOptions, IPubSub} from "@spica-server/interface-replication";
 
 export class MongoMemory<T> implements IPubSub<T> {
-  private _changeStream: ChangeStream;
-  public get changeStream(): ChangeStream {
-    if (!this._changeStream) {
-      this._changeStream = this.service._coll.watch([
-        {
-          $match: {
-            operationType: {$in: this.options.changeType}
-          }
-        }
-      ]);
-    }
-
-    return this._changeStream;
-  }
+  private changeStream$: Observable<any>;
 
   constructor(
     private service: BaseCollection<any>,
     private options: MemoryOptions
-  ) {}
+  ) {
+    this.changeStream$ = this.service
+      .watch([{$match: {operationType: {$in: this.options.changeType}}}])
+      .pipe(share());
+  }
 
   publish(document: T) {
     this.service._coll.insertOne(document).then(r => ({...document, _id: r.insertedId}));
   }
 
   subscribe(observer: PartialObserver<T>) {
-    const stream = this.changeStream;
-
-    const callback = change => observer.next(change.fullDocument);
-    stream.on("change", callback);
-
-    return {
-      unsubscribe: () => {
-        stream.removeListener("change", callback);
-      }
-    };
+    const sub = this.changeStream$.subscribe(change => observer.next(change.fullDocument));
+    return {unsubscribe: () => sub.unsubscribe()};
   }
 }

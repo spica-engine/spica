@@ -35,10 +35,7 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
         }
       });
 
-      const stream = this._coll.watch([], {
-        fullDocument: "updateLookup"
-      });
-      stream.on("change", change => {
+      const sub = this.watch([], {fullDocument: "updateLookup"}).subscribe(change => {
         switch (change.operationType) {
           case "replace":
           case "update":
@@ -55,9 +52,7 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
             break;
         }
       });
-      return () => {
-        stream.close();
-      };
+      return () => sub.unsubscribe();
     });
   }
 }
