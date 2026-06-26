@@ -91,6 +91,12 @@ const args = yargsInstance
       description: "Read preference for the database connection.",
       default: "primary",
       choices: ["primary", "primaryPreferred", "secondary", "secondaryPreferred", "nearest"]
+    },
+    "database-change-stream-await-time": {
+      number: true,
+      description:
+        "Maximum time in milliseconds for the server to wait for new data before returning an empty change stream batch. Maps to MongoDB maxAwaitTimeMS.",
+      default: 1000
     }
   })
   .demandOption("database-name")
@@ -644,6 +650,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       throw new TypeError("--bucket-cache-ttl must be a positive number");
     }
 
+    if (!Number.isInteger(args["database-change-stream-await-time"]) || args["database-change-stream-await-time"] < 1) {
+      throw new TypeError("--database-change-stream-await-time must be a positive integer");
+    }
+
     if (
       args["passport-identity-token-expiration-seconds-limit"] <
       args["passport-identity-token-expires-in"]
@@ -779,7 +789,8 @@ const modules = [
     replicaSet: args["database-replica-set"],
     maxPoolSize: args["database-pool-size"],
     appName: "spica",
-    readPreference: args["database-read-preference"]
+    readPreference: args["database-read-preference"],
+    changeStreamAwaitTimeMS: args["database-change-stream-await-time"]
   }),
   EnvVarModule.forRoot({
     realtime: true
