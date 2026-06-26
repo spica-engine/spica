@@ -1,9 +1,6 @@
 import {DynamicModule, Global, Module, Provider} from "@nestjs/common";
 import {MongoClient, MongoClientOptions} from "mongodb";
 import {DatabaseService} from "./database.service.js";
-import {withChangeStreamDefaults} from "./change-stream.js";
-
-export const DATABASE_CHANGE_STREAM_AWAIT_TIME = "DATABASE_CHANGE_STREAM_AWAIT_TIME";
 
 @Global()
 @Module({})
@@ -21,16 +18,11 @@ export class DatabaseModule {
       {
         provide: DatabaseService,
         useFactory: async (client: MongoClient) => {
-          const db = client.db(database);
-          return typeof changeStreamAwaitTimeMS === "number"
-            ? withChangeStreamDefaults(db, {maxAwaitTimeMS: changeStreamAwaitTimeMS})
-            : db;
+          const db = client.db(database) as DatabaseService;
+          db.changeStreamAwaitTimeMS = changeStreamAwaitTimeMS;
+          return db;
         },
         inject: [MongoClient]
-      },
-      {
-        provide: DATABASE_CHANGE_STREAM_AWAIT_TIME,
-        useValue: changeStreamAwaitTimeMS
       }
     ];
     return {
