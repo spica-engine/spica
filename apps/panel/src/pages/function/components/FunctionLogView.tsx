@@ -8,7 +8,6 @@ import {useClearFunctionLogsMutation, useGetFunctionLogsQuery} from "../../../st
 import useFunctionLogFilterState from "../../../hooks/useFunctionLogFilterState";
 import {
   LOG_LEVEL_LABELS,
-  type SeverityFilter,
 } from "../../../utils/functionLogLevels";
 import {
   formatRowTimestamp,
@@ -45,8 +44,8 @@ const FunctionLogView = ({
     searchQuery,
     setSearchQuery,
     handlerFilter,
-    severityFilter,
-    setSeverityFilter,
+    severityFilters,
+    toggleSeverityFilter,
     selectedLevels,
     isFilterOpen,
     setIsFilterOpen,
@@ -173,11 +172,11 @@ const FunctionLogView = ({
             functionName={functionName}
             defaultHandlerName={defaultHandlerName}
             searchQuery={searchQuery}
-            severityFilter={severityFilter}
+            severityFilters={severityFilters}
             sortDirection={sortDirection}
             expandedLogIds={expandedLogIds}
             onSearchChange={setSearchQuery}
-            onSeverityChange={setSeverityFilter}
+            onSeverityChange={toggleSeverityFilter}
             onSortDirectionChange={setSortDirection}
             onToggleRow={toggleRow}
           />

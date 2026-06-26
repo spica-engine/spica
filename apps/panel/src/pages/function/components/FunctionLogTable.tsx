@@ -12,6 +12,7 @@ import styles from "./FunctionLogView.module.scss";
 
 const ROW_SEVERITY_CLASS: Record<SeverityFilter, string> = {
   all: styles.severityAll,
+  log: styles.severityLog,
   info: styles.severityInfo,
   warning: styles.severityWarning,
   error: styles.severityError,
@@ -24,7 +25,7 @@ type FunctionLogTableProps = {
   functionName: string;
   defaultHandlerName: string;
   searchQuery: string;
-  severityFilter: SeverityFilter;
+  severityFilters: SeverityFilter[];
   sortDirection: "asc" | "desc";
   expandedLogIds: string[];
   onSearchChange: (value: string) => void;
@@ -39,7 +40,7 @@ const FunctionLogTable = ({
   functionName,
   defaultHandlerName,
   searchQuery,
-  severityFilter,
+  severityFilters,
   sortDirection,
   expandedLogIds,
   onSearchChange,
@@ -65,8 +66,10 @@ const FunctionLogTable = ({
 
         <div className={styles.severityChips}>
           {SEVERITY_CHIPS.map(chip => {
-            const selected = severityFilter === chip.key;
-            const chipClassName = chip.key === "all" ? styles.severityAll : ROW_SEVERITY_CLASS[chip.key];
+            const selected = chip.key === "all"
+              ? severityFilters.length === 0
+              : severityFilters.includes(chip.key);
+            const chipClassName = ROW_SEVERITY_CLASS[chip.key];
 
             return (
               <button

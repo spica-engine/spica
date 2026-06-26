@@ -463,6 +463,17 @@
   color: var(--color-accent);
 }
 
+.severityLog .severityDot {
+  background: var(--color-teal, #14b8a6);
+}
+
+.severityLog.severityChipSelected,
+.severityLog.severityBadge {
+  border-color: var(--color-teal, #14b8a6);
+  background: rgba(20, 184, 166, 0.08);
+  color: var(--color-teal, #14b8a6);
+}
+
 .severityInfo .severityDot {
   background: var(--color-blue);
 }

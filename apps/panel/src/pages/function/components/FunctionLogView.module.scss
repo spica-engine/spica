@@ -344,6 +344,20 @@
   }
 }
 
+.severityLog {
+  .severityDot {
+    background: var(--log-teal, #14b8a6);
+    color: #fff;
+  }
+
+  &.severityChipSelected,
+  &.severityBadge {
+    color: var(--log-teal, #14b8a6);
+    border-color: rgba(20, 184, 166, 0.22);
+    background: var(--log-teal-bg, rgba(20, 184, 166, 0.08));
+  }
+}
+
 .severityInfo {
   .severityDot {
     background: var(--log-blue);
