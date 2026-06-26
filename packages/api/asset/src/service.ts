@@ -15,14 +15,9 @@ export class AssetService extends BaseCollection<Asset>("asset") {
 
       emitAssets();
 
-      const stream = this._coll.watch([], {fullDocument: "updateLookup"});
-      stream.on("change", () => emitAssets());
+      const sub = this.watch([], {fullDocument: "updateLookup"}).subscribe(() => emitAssets());
 
-      return () => {
-        if (!stream.closed) {
-          stream.close();
-        }
-      };
+      return () => sub.unsubscribe();
     });
   }
 }

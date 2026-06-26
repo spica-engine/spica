@@ -29,26 +29,15 @@ export class PreferenceService extends BaseCollection("preferences") {
         this.get<T>(scope).then(pref => observer.next(pref));
       }
 
-      const watcher = this._coll.watch(
-        [
-          {
-            $match: {
-              "fullDocument.scope": {$eq: scope}
-            }
-          }
-        ],
+      const sub = this.watch(
+        [{$match: {"fullDocument.scope": {$eq: scope}}}],
         {fullDocument: "updateLookup"}
-      );
-      watcher["on"]("change", change => {
+      ).subscribe(change => {
         if ("fullDocument" in change) {
           observer.next(change.fullDocument as T);
         }
       });
-      return () => {
-        if (!watcher.closed) {
-          watcher.close();
-        }
-      };
+      return () => sub.unsubscribe();
     });
   }
 

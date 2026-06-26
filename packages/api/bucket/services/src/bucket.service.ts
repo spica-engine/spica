@@ -195,26 +195,13 @@ export class BucketService
       if (propagateOnStart) {
         super.findOne({_id: new ObjectId(bucketId)}).then(bucket => observer.next(bucket));
       }
-      const stream = this._coll.watch(
-        [
-          {
-            $match: {
-              "fullDocument._id": {$eq: new ObjectId(bucketId)}
-            }
-          }
-        ],
-        {
-          fullDocument: "updateLookup"
-        }
-      );
-      stream.on("change", change =>
+      const sub = this.watch(
+        [{$match: {"fullDocument._id": {$eq: new ObjectId(bucketId)}}}],
+        {fullDocument: "updateLookup"}
+      ).subscribe(change =>
         observer.next("fullDocument" in change ? change.fullDocument : undefined)
       );
-      return () => {
-        if (!stream.closed) {
-          stream.close();
-        }
-      };
+      return () => sub.unsubscribe();
     });
   }
 
