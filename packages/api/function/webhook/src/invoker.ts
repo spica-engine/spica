@@ -51,12 +51,7 @@ export class WebhookInvoker implements OnModuleDestroy {
     const bodyTemplate = handlebars.compile(body, {strict: true});
     const stream = this.db.collection(trigger.options.collection).watch(
       [{$match: {operationType: trigger.options.type.toLowerCase()}}],
-      {
-        fullDocument: "updateLookup",
-        ...(this.db.changeStreamAwaitTimeMS !== undefined && {
-          maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS
-        })
-      }
+      {fullDocument: "updateLookup", maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS}
     );
     stream.on("change", (rawChange: any) => {
       const change = {

@@ -196,11 +196,10 @@ export class _MixinCollection<T> {
 
   watch(pipeline?: object[], options?: ChangeStreamOptions): Observable<ChangeStreamDocument<T>> {
     return new Observable(observer => {
-      const defaults: ChangeStreamOptions =
-        this.db.changeStreamAwaitTimeMS !== undefined
-          ? {maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS}
-          : {};
-      const stream = this._coll.watch(pipeline, {...defaults, ...options});
+      const stream = this._coll.watch(pipeline, {
+        maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS,
+        ...options
+      });
       stream.on("change", change => observer.next(change));
       stream.on("error", error => observer.error(error));
 

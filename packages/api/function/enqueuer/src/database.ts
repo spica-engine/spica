@@ -40,12 +40,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   subscribe(target: event.Target, options: DatabaseOptions): void {
     const stream = this.db.collection(options.collection).watch(
       [{$match: {operationType: options.type.toLowerCase()}}],
-      {
-        fullDocument: "updateLookup",
-        ...(this.db.changeStreamAwaitTimeMS !== undefined && {
-          maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS
-        })
-      }
+      {fullDocument: "updateLookup", maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS}
     );
 
     stream.on("change", change => this.onChangeHandler(change, target));

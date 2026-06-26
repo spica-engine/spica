@@ -95,7 +95,8 @@ const args = yargsInstance
     "database-change-stream-await-time": {
       number: true,
       description:
-        "Maximum time in milliseconds for the server to wait for new data before returning an empty change stream batch. Maps to MongoDB maxAwaitTimeMS."
+        "Maximum time in milliseconds for the server to wait for new data before returning an empty change stream batch. Maps to MongoDB maxAwaitTimeMS.",
+      default: 1000
     }
   })
   .demandOption("database-name")
@@ -647,6 +648,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 
     if (args["bucket-cache"] && args["bucket-cache-ttl"] < 1) {
       throw new TypeError("--bucket-cache-ttl must be a positive number");
+    }
+
+    if (!Number.isInteger(args["database-change-stream-await-time"]) || args["database-change-stream-await-time"] < 1) {
+      throw new TypeError("--database-change-stream-await-time must be a positive integer");
     }
 
     if (
