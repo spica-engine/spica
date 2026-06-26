@@ -1,11 +1,7 @@
 import { baseApi } from './baseApi';
+import type { AuthFactorMeta, StartFactorVerificationResponse } from './types';
 
-export interface AuthFactorMeta {
-  type: string;
-  config: Record<string, any>;
-  title?: string;
-  description?: string;
-}
+export type { AuthFactorMeta, StartFactorVerificationResponse };
 
 /** A factor type the server offers, returned by `GET passport/identity/factors`. */
 export interface AuthFactorSchema {
@@ -13,16 +9,6 @@ export interface AuthFactorSchema {
   title: string;
   description: string;
   config: Record<string, { type: string; enum?: any[] }>;
-}
-
-/**
- * Response of `start-factor-verification`. `challenge` is the setup payload to
- * present to the user — for TOTP first-time setup it is a `data:image/...` QR
- * code data-URL; `answerUrl` is where the confirming code must be POSTed.
- */
-export interface StartFactorVerificationResponse {
-  challenge: string;
-  answerUrl: string;
 }
 
 export interface Identity {

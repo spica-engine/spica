@@ -1,16 +1,7 @@
 import { baseApi } from './baseApi';
+import type { AuthFactorMeta, StartFactorVerificationResponse } from './types';
 
-export interface AuthFactorMeta {
-  type: string;
-  config: Record<string, any>;
-  title?: string;
-  description?: string;
-}
-
-export interface StartFactorVerificationResponse {
-  challenge: string;
-  answerUrl: string;
-}
+export type { AuthFactorMeta, StartFactorVerificationResponse };
 
 export interface ProfilerEntry {
   _id?: string;
