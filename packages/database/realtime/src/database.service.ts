@@ -17,7 +17,10 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
       return this.changeStreams.get(name)!;
     }
 
-    const stream = this.database.collection(name).watch([], {fullDocument: "updateLookup"});
+    const stream = this.database.collection(name).watch([], {
+      fullDocument: "updateLookup",
+      maxAwaitTimeMS: this.database.changeStreamAwaitTimeMS
+    });
     const hub = new PassThrough({objectMode: true});
     // Improvement 1: unlimited listeners — prevents MaxListenersExceededWarning with many subscribers
     hub.setMaxListeners(0);
