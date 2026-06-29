@@ -29,7 +29,7 @@
     "node-schedule": "^2.1.1",
     "rxjs": "^7.8.1",
     "uniqid": "^5.4.0",
-    "ws": "^8.18.0"
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@spica-server/core-testing": "workspace:*",

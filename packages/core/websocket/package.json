@@ -12,7 +12,7 @@
   "dependencies": {
     "@nestjs/platform-ws": "^10.4.15",
     "path-to-regexp": "^8.2.0",
-    "ws": "^8.18.0"
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@types/ws": "^8.5.13"
