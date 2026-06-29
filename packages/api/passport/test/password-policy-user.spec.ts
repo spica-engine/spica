@@ -6,13 +6,18 @@ import {PassportModule} from "@spica-server/passport";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
-import {ConfigModule} from "@spica-server/config";
+import {ConfigModule, ConfigService} from "@spica-server/config";
 
 describe("Password Policy - User", () => {
   let app: INestApplication;
   let req: Request;
   let database: DatabaseService;
+  let configService: ConfigService;
   let adminToken: string;
+
+  function setConfig(module: string, options: object) {
+    return configService.findOneAndReplace({module}, {module, options}, {upsert: true});
+  }
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -71,6 +76,7 @@ describe("Password Policy - User", () => {
     app = module.createNestApplication();
     req = module.get(Request);
     database = module.get(DatabaseService);
+    configService = module.get(ConfigService);
 
     await app.listen(req.socket);
 
@@ -103,19 +109,15 @@ describe("Password Policy - User", () => {
 
   describe("with user password policy config", () => {
     beforeAll(async () => {
-      await database.collection("config").insertOne({
-        module: "user",
-        options: {
-          password: {
-            minLength: 8,
-            minLowercase: 1,
-            minUppercase: 1,
-            minNumber: 1,
-            minSpecialCharacter: 1
-          }
+      await setConfig("user", {
+        password: {
+          minLength: 8,
+          minLowercase: 1,
+          minUppercase: 1,
+          minNumber: 1,
+          minSpecialCharacter: 1
         }
       });
-      await new Promise(resolve => setTimeout(resolve, 2000));
     });
 
     afterAll(async () => {
@@ -263,24 +265,17 @@ describe("Password Policy - User", () => {
     beforeAll(async () => {
       await database.collection("config").deleteMany({module: "identity"});
       await database.collection("config").deleteMany({module: "user"});
-      await database.collection("config").insertOne({
-        module: "identity",
-        options: {
-          password: {
-            minLength: 12,
-            minUppercase: 3
-          }
+      await setConfig("identity", {
+        password: {
+          minLength: 12,
+          minUppercase: 3
         }
       });
-      await database.collection("config").insertOne({
-        module: "user",
-        options: {
-          password: {
-            minLength: 6
-          }
+      await setConfig("user", {
+        password: {
+          minLength: 6
         }
       });
-      await new Promise(resolve => setTimeout(resolve, 2000));
     });
 
     afterAll(async () => {

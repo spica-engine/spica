@@ -6,6 +6,7 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {PassportModule} from "@spica-server/passport";
+import {ConfigModule} from "@spica-server/config";
 
 describe("User Controller CRUD Operations", () => {
   let module: TestingModule;
@@ -23,6 +24,7 @@ describe("User Controller CRUD Operations", () => {
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         CoreTestingModule,
+        ConfigModule.forRoot(),
         PassportModule.forRoot({
           publicUrl: "http://localhost:3000",
           samlCertificateTTL: 604800,

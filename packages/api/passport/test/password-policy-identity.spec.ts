@@ -6,13 +6,22 @@ import {PassportModule} from "@spica-server/passport";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
-import {ConfigModule} from "@spica-server/config";
+import {ConfigModule, ConfigService} from "@spica-server/config";
 
 describe("Password Policy - Identity", () => {
   let app: INestApplication;
   let req: Request;
   let database: DatabaseService;
+  let configService: ConfigService;
   let adminToken: string;
+
+  function setIdentityConfig(options: object) {
+    return configService.findOneAndReplace(
+      {module: "identity"},
+      {module: "identity", options},
+      {upsert: true}
+    );
+  }
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -71,6 +80,7 @@ describe("Password Policy - Identity", () => {
     app = module.createNestApplication();
     req = module.get(Request);
     database = module.get(DatabaseService);
+    configService = module.get(ConfigService);
 
     await app.listen(req.socket);
 
@@ -103,21 +113,15 @@ describe("Password Policy - Identity", () => {
 
   describe("with password policy config", () => {
     beforeAll(async () => {
-      await database.collection("config").insertOne({
-        module: "identity",
-        options: {
-          password: {
-            minLength: 8,
-            minLowercase: 1,
-            minUppercase: 1,
-            minNumber: 1,
-            minSpecialCharacter: 1
-          }
+      await setIdentityConfig({
+        password: {
+          minLength: 8,
+          minLowercase: 1,
+          minUppercase: 1,
+          minNumber: 1,
+          minSpecialCharacter: 1
         }
       });
-
-      // Wait for change stream to propagate
-      await new Promise(resolve => setTimeout(resolve, 2000));
     });
 
     afterAll(async () => {
@@ -217,16 +221,11 @@ describe("Password Policy - Identity", () => {
 
   describe("with partial password policy (only minLength)", () => {
     beforeAll(async () => {
-      await database.collection("config").deleteMany({module: "identity"});
-      await database.collection("config").insertOne({
-        module: "identity",
-        options: {
-          password: {
-            minLength: 6
-          }
+      await setIdentityConfig({
+        password: {
+          minLength: 6
         }
       });
-      await new Promise(resolve => setTimeout(resolve, 2000));
     });
 
     afterAll(async () => {
@@ -257,15 +256,11 @@ describe("Password Policy - Identity", () => {
   describe("when password policy config is updated at runtime", () => {
     beforeAll(async () => {
       await database.collection("config").deleteMany({module: "identity"});
-      await database.collection("config").insertOne({
-        module: "identity",
-        options: {
-          password: {
-            minLength: 3
-          }
+      await setIdentityConfig({
+        password: {
+          minLength: 3
         }
       });
-      await new Promise(resolve => setTimeout(resolve, 2000));
     });
 
     afterAll(async () => {
@@ -284,16 +279,11 @@ describe("Password Policy - Identity", () => {
       expect(initialRes.statusCode).toEqual(201);
 
       // Update the password policy to a stricter minLength while the app is running.
-      await database.collection("config").updateOne(
-        {module: "identity"},
-        {
-          $set: {
-            "options.password.minLength": 6
-          }
-        },
-        {upsert: true}
-      );
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await setIdentityConfig({
+        password: {
+          minLength: 6
+        }
+      });
 
       // This password met the old policy but should now be rejected by the new one.
       const resShort = await req.post(
