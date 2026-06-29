@@ -11,8 +11,9 @@ import {
   WithId
 } from "@spica-server/database";
 import {EnvVar} from "@spica-server/interface-env_var";
+import {CollectionChangeEvent} from "@spica-server/replication";
 import {Observable} from "rxjs";
-import {CollectionChangeEvent, EnvVarChangeDispatcher} from "./change-dispatcher.js";
+import {EnvVarChangeDispatcher} from "./change-dispatcher.js";
 
 @Injectable()
 export class EnvVarService extends BaseCollection<EnvVar>("env_var") {

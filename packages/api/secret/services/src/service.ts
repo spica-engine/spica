@@ -11,8 +11,9 @@ import {
   WithId
 } from "@spica-server/database";
 import {Secret} from "@spica-server/interface-secret";
+import {CollectionChangeEvent} from "@spica-server/replication";
 import {Observable} from "rxjs";
-import {CollectionChangeEvent, SecretChangeDispatcher} from "./change-dispatcher.js";
+import {SecretChangeDispatcher} from "./change-dispatcher.js";
 
 export const SECRET_ENCRYPTION_SECRET = Symbol.for("SECRET_ENCRYPTION_SECRET");
 

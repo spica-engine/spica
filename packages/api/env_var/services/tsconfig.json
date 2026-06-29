@@ -6,9 +6,6 @@
       "path": "../../replication"
     },
     {
-      "path": "../../../interface/replication"
-    },
-    {
       "path": "../../../interface/env_var"
     },
     {

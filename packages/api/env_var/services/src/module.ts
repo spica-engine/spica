@@ -1,5 +1,4 @@
 import {Global, Module} from "@nestjs/common";
-import {EnvVarService} from "./service.js";
 import {EnvVarChangeDispatcher} from "./change-dispatcher.js";
 
 // EnvVarService is re-provided by every module that needs it (EnvVarModule, function services),
@@ -10,12 +9,4 @@ import {EnvVarChangeDispatcher} from "./change-dispatcher.js";
   providers: [EnvVarChangeDispatcher],
   exports: [EnvVarChangeDispatcher]
 })
-export class ServicesModule {
-  static forRoot() {
-    return {
-      module: ServicesModule,
-      providers: [EnvVarChangeDispatcher, EnvVarService],
-      exports: [EnvVarChangeDispatcher, EnvVarService]
-    };
-  }
-}
+export class ServicesModule {}
