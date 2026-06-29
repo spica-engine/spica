@@ -127,7 +127,6 @@ describe("Password Policy - Identity", () => {
     afterAll(async () => {
       await database.collection("config").deleteMany({module: "identity"});
       await database.collection("identity").deleteMany({identifier: {$ne: "spica"}});
-      await new Promise(resolve => setTimeout(resolve, 1000));
     });
 
     it("should reject password shorter than minLength", async () => {
@@ -231,7 +230,6 @@ describe("Password Policy - Identity", () => {
     afterAll(async () => {
       await database.collection("config").deleteMany({module: "identity"});
       await database.collection("identity").deleteMany({identifier: {$ne: "spica"}});
-      await new Promise(resolve => setTimeout(resolve, 1000));
     });
 
     it("should reject password shorter than minLength", async () => {
@@ -266,7 +264,6 @@ describe("Password Policy - Identity", () => {
     afterAll(async () => {
       await database.collection("config").deleteMany({module: "identity"});
       await database.collection("identity").deleteMany({identifier: {$ne: "spica"}});
-      await new Promise(resolve => setTimeout(resolve, 1000));
     });
 
     it("should start validating passwords with the new policy without restart", async () => {

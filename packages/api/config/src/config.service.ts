@@ -4,6 +4,7 @@ import {
   DatabaseService,
   Filter,
   FindOneAndReplaceOptions,
+  ReturnDocument,
   UpdateFilter,
   UpdateOptions,
   WithId
@@ -37,7 +38,13 @@ export class ConfigService extends BaseCollection<BaseConfig>("config") {
     options?: FindOneAndReplaceOptions
   ): Promise<WithId<BaseConfig>> {
     const result = await super.findOneAndReplace(filter, doc, options);
-    await this.dispatchChange(filter);
+    // When the caller asks for the post-write document (the controller does), dispatch it
+    // directly; otherwise re-read. Avoids an extra round-trip on the common update path.
+    if (result && options?.returnDocument === ReturnDocument.AFTER) {
+      this.changeDispatcher.dispatch({module: result.module, options: result.options});
+    } else {
+      await this.dispatchChange(filter);
+    }
     return result;
   }
 
@@ -45,6 +52,10 @@ export class ConfigService extends BaseCollection<BaseConfig>("config") {
     return this.changeDispatcher.watch(module);
   }
 
+  // Read-after-write so the dispatched snapshot reflects the persisted document. A concurrent
+  // write to the same module could be reflected instead, but config writes are rare admin
+  // actions where that race is acceptable, and reconstructing the payload from update operators
+  // would be far more fragile.
   private async dispatchChange(filter: Filter<BaseConfig>): Promise<void> {
     const config = await this.findOne(filter);
     if (config) {

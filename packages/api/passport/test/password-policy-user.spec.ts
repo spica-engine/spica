@@ -123,7 +123,6 @@ describe("Password Policy - User", () => {
     afterAll(async () => {
       await database.collection("config").deleteMany({module: "user"});
       await database.collection("user").deleteMany({});
-      await new Promise(resolve => setTimeout(resolve, 1000));
     });
 
     it("should reject password shorter than minLength on user create", async () => {
@@ -282,7 +281,6 @@ describe("Password Policy - User", () => {
       await database.collection("config").deleteMany({module: "identity"});
       await database.collection("config").deleteMany({module: "user"});
       await database.collection("user").deleteMany({});
-      await new Promise(resolve => setTimeout(resolve, 1000));
     });
 
     it("should enforce user policy (minLength 6), not identity policy", async () => {
