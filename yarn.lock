@@ -8961,6 +8961,9 @@ __metadata:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/database": "workspace:*"
     "@spica-server/interface-env_var": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
+    "@spica-server/replication": "workspace:*"
+    rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
 
@@ -10173,7 +10176,10 @@ __metadata:
     "@spica-server/core": "workspace:*"
     "@spica-server/core-encryption": "workspace:*"
     "@spica-server/database": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
     "@spica-server/interface-secret": "workspace:*"
+    "@spica-server/replication": "workspace:*"
+    rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
 

@@ -16,6 +16,10 @@ import {Function, FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interfa
 
 const collectionName = "function";
 
+// An env-var/secret insert has no functions referencing it yet, so only these operations
+// can affect an existing function's resolved environment.
+const relevantOperations = ["update", "replace", "delete"];
+
 @Injectable()
 export class FunctionService extends BaseCollection<Function>(collectionName) {
   constructor(
@@ -41,15 +45,7 @@ export class FunctionService extends BaseCollection<Function>(collectionName) {
     envVarId: ObjectId;
     operationType: "replace" | "update" | "delete";
   }> {
-    const watchPipeline = [
-      {
-        $match: {
-          operationType: {
-            $in: ["update", "replace", "delete"]
-          }
-        }
-      }
-    ];
+    const isRelevantOperation = change => relevantOperations.includes(change.operationType);
     const filterOnlyDocumentIds = change => !!change.documentKey?._id;
     const mapChangeToUpdate = change => {
       return {
@@ -72,8 +68,13 @@ export class FunctionService extends BaseCollection<Function>(collectionName) {
       });
 
     return this.evs
-      .watch(watchPipeline)
-      .pipe(filter(filterOnlyDocumentIds), map(mapChangeToUpdate), switchMap(getFunctionsOfEnv));
+      .watchChanges()
+      .pipe(
+        filter(isRelevantOperation),
+        filter(filterOnlyDocumentIds),
+        map(mapChangeToUpdate),
+        switchMap(getFunctionsOfEnv)
+      );
   }
 
   watchFunctionsForSecretChanges(): Observable<{
@@ -81,15 +82,7 @@ export class FunctionService extends BaseCollection<Function>(collectionName) {
     secretId: ObjectId;
     operationType: "replace" | "update" | "delete";
   }> {
-    const watchPipeline = [
-      {
-        $match: {
-          operationType: {
-            $in: ["update", "replace", "delete"]
-          }
-        }
-      }
-    ];
+    const isRelevantOperation = change => relevantOperations.includes(change.operationType);
     const filterOnlyDocumentIds = change => !!change.documentKey?._id;
     const mapChangeToUpdate = change => {
       return {
@@ -112,7 +105,12 @@ export class FunctionService extends BaseCollection<Function>(collectionName) {
       });
 
     return this.ss
-      .watch(watchPipeline)
-      .pipe(filter(filterOnlyDocumentIds), map(mapChangeToUpdate), switchMap(getFunctionsOfSecret));
+      .watchChanges()
+      .pipe(
+        filter(isRelevantOperation),
+        filter(filterOnlyDocumentIds),
+        map(mapChangeToUpdate),
+        switchMap(getFunctionsOfSecret)
+      );
   }
 }

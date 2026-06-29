@@ -5,9 +5,9 @@ import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {FunctionService} from "@spica-server/function-services";
 import {INestApplication} from "@nestjs/common";
-import {EnvVarService} from "@spica-server/env_var-services";
+import {EnvVarService, EnvVarChangeDispatcher} from "@spica-server/env_var-services";
 import {TargetChange, ChangeKind} from "@spica-server/interface-function";
-import {SecretService} from "@spica-server/secret-services";
+import {SecretService, SecretChangeDispatcher} from "@spica-server/secret-services";
 import {encrypt} from "@spica-server/core-encryption";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
@@ -58,8 +58,8 @@ describe("Engine", () => {
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
 
-    evs = new EnvVarService(database);
-    ss = new SecretService(database, "test-encryption-secret");
+    evs = new EnvVarService(database, new EnvVarChangeDispatcher());
+    ss = new SecretService(database, "test-encryption-secret", new SecretChangeDispatcher());
 
     fs = new FunctionService(database, evs, ss, {} as any);
     engine = new FunctionEngine(
