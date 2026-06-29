@@ -119,7 +119,7 @@ spec:
             timeoutSeconds: {{ .Values.database.livenessProbeTimeoutSeconds }}
             failureThreshold: {{ .Values.database.livenessProbeFailureThreshold }}
           readinessProbe:
-            # TCP probe (see livenessProbe note). The startupProbe below keeps a real mongosh ping,
+            # TCP probe (see livenessProbe note). The startupProbe above keeps a real mongosh ping,
             # so the pod is only marked "started" once mongo actually answers a command; after that,
             # readiness just needs to confirm the listener is up — no recurring mongosh spawns.
             tcpSocket:
