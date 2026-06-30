@@ -5,6 +5,7 @@ import {StatusModule} from "@spica-server/status";
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
+import {ATTACH_STATUS_TRACKER} from "@spica-server/interface-status";
 
 const MbInKb = 1000 * 1000;
 
@@ -115,6 +116,31 @@ describe("Status Interceptor", () => {
           }
         }
       });
+    });
+  });
+
+  describe("ATTACH_STATUS_TRACKER provider", () => {
+    async function getTracker(httpStatusTracking: boolean) {
+      const module = await Test.createTestingModule({
+        imports: [
+          DatabaseTestingModule.standalone(),
+          CoreTestingModule,
+          StatusModule.forRoot({expireAfterSeconds: 60 * 60, httpStatusTracking}),
+          PassportTestingModule.initialize()
+        ]
+      }).compile();
+
+      const tracker = module.get(ATTACH_STATUS_TRACKER, {strict: false});
+      await module.close();
+      return tracker;
+    }
+
+    it("should provide a tracker when httpStatusTracking is enabled", async () => {
+      expect(typeof (await getTracker(true))).toEqual("function");
+    });
+
+    it("should not provide a tracker when httpStatusTracking is disabled", async () => {
+      expect(await getTracker(false)).toBeUndefined();
     });
   });
 
