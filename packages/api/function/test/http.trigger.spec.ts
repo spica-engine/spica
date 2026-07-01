@@ -1,6 +1,8 @@
 import {Test} from "@nestjs/testing";
 import {FunctionModule} from "@spica-server/function";
 import os from "os";
+import fs from "fs";
+import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
@@ -23,6 +25,8 @@ import {SecretModule} from "@spica-server/secret";
 describe("Function HTTP Trigger Schema", () => {
   let app: INestApplication;
   let request: Request;
+
+  const assetsPath = fs.mkdtempSync(path.join(os.tmpdir(), "spica-fn-assets-"));
 
   const baseFunction = {
     name: "http-trigger-fn",
@@ -79,7 +83,7 @@ describe("Function HTTP Trigger Schema", () => {
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH,
           realtime: false,
-          assetStorage: {strategy: "default", defaultPath: "./function-assets"}
+          assetStorage: {strategy: "default", defaultPath: assetsPath}
         })
       ]
     }).compile();
@@ -90,6 +94,8 @@ describe("Function HTTP Trigger Schema", () => {
   });
 
   afterEach(async () => await app.close().catch(console.error));
+
+  afterAll(() => fs.rmSync(assetsPath, {recursive: true, force: true}));
 
   // ─── CREATE ────────────────────────────────────────────────────────────────
 

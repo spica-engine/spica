@@ -30,6 +30,7 @@ import {event} from "@spica-server/function-queue-proto";
 import {Runtime, Worker} from "@spica-server/function-runtime";
 import {
   DatabaseOutput,
+  EventLogRouter,
   StandartStream,
   StandardStreamOutput
 } from "@spica-server/function-runtime-io";
@@ -201,9 +202,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   killFreeWorkers() {
     const freeWorkers = Array.from(this.workers.entries()).filter(
       ([key, worker]) =>
-        worker.state == WorkerState.Initial ||
-        worker.state == WorkerState.Fresh ||
-        worker.state == WorkerState.Targeted
+        worker.isIdle() &&
+        (worker.state == WorkerState.Initial ||
+          worker.state == WorkerState.Fresh ||
+          worker.state == WorkerState.Targeted)
     );
     const killWorkers = freeWorkers.map(([key, worker]) => {
       return worker.kill();
@@ -256,6 +258,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   timeouts = new Map<string, NodeJS.Timeout>();
 
+  eventToWorker = new Map<string, string>();
+
+  // One demux per concurrent worker (capacity > 1), keyed by worker id.
+  logRouters = new Map<string, {stdout: EventLogRouter; stderr: EventLogRouter}>();
+
   getStatus() {
     const workers = Array.from(this.workers.values());
 
@@ -277,12 +284,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     const sameTargets = workers.filter(({worker}) => worker.hasSameTarget(target.id));
 
-    const available = sameTargets.find(
-      ({worker}) =>
-        worker.state != WorkerState.Busy &&
-        worker.state != WorkerState.Timeouted &&
-        worker.state != WorkerState.Outdated
-    );
+    const available = sameTargets.find(({worker}) => worker.hasFreeSlot());
     if (available) {
       return available;
     }
@@ -312,10 +314,31 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         functionName: path.basename(event.target.cwd),
         handler: event.target.handler
       };
-      worker.detach();
       const pairs = this.outputs.map(o => o.create(streamOptions));
-      for (const [stdout, stderr] of pairs) {
-        worker.attach(stdout, stderr);
+
+      if (worker.capacity > 1) {
+        // Concurrent worker: one persistent demux per channel routes each event's
+        // framed logs to its own sinks, since detach/attach can't isolate
+        // simultaneously-running events sharing the process stdout.
+        let routers = this.logRouters.get(workerId);
+        if (!routers) {
+          routers = {stdout: new EventLogRouter(), stderr: new EventLogRouter()};
+          this.logRouters.set(workerId, routers);
+          worker.attach(routers.stdout.input, routers.stderr.input);
+        }
+        routers.stdout.register(
+          event.id,
+          pairs.map(([stdout]) => stdout)
+        );
+        routers.stderr.register(
+          event.id,
+          pairs.map(([, stderr]) => stderr)
+        );
+      } else {
+        worker.detach();
+        for (const [stdout, stderr] of pairs) {
+          worker.attach(stdout, stderr);
+        }
       }
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
@@ -328,19 +351,25 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       const channels = pairs.map(([stdout, stderr]) => (this.options.logger ? stdout : stderr));
 
       const timeoutFn = () => {
-        worker.markAsTimeouted();
+        this.timeouts.delete(event.id);
+        // The handler can't be cancelled; only kill the worker once every lane is
+        // wedged, otherwise a single timeout would take healthy siblings down with it.
+        const allLanesStuck = worker.markLaneStuck();
+        if (allLanesStuck) {
+          worker.markAsTimeouted();
+        }
         for (const channel of channels) {
           if (channel.writable) {
             channel.write(timeoutMsg);
           }
         }
-        worker.kill();
+        if (allLanesStuck) {
+          worker.kill();
+        }
       };
 
-      if (this.timeouts.has(workerId)) {
-        clearTimeout(this.timeouts.get(workerId));
-      }
-      this.timeouts.set(workerId, setTimeout(timeoutFn, timeoutInMs));
+      this.eventToWorker.set(event.id, workerId);
+      this.timeouts.set(event.id, setTimeout(timeoutFn, timeoutInMs));
 
       if (this.options.invocationLogs) {
         this.logInvocations(event);
@@ -371,6 +400,21 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.eventQueue.delete(id);
   }
   complete(id: string, succedded: boolean) {
+    const timeout = this.timeouts.get(id);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.timeouts.delete(id);
+    }
+
+    const workerId = this.eventToWorker.get(id);
+    this.eventToWorker.delete(id);
+
+    const routers = workerId && this.logRouters.get(workerId);
+    if (routers) {
+      routers.stdout.unregister(id);
+      routers.stderr.unregister(id);
+    }
+
     this.print(`an event has been completed ${id} with status ${succedded ? "success" : "fail"}`);
   }
 
@@ -397,8 +441,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   lostWorker(id: string) {
     this.workers.delete(id);
 
-    clearTimeout(this.timeouts.get(id));
-    this.timeouts.delete(id);
+    for (const [eventId, workerId] of this.eventToWorker) {
+      if (workerId == id) {
+        clearTimeout(this.timeouts.get(eventId));
+        this.timeouts.delete(eventId);
+        this.eventToWorker.delete(eventId);
+      }
+    }
+
+    this.logRouters.delete(id);
 
     this.print(`lost a worker ${id}`);
 
@@ -430,6 +481,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     const node = this.runtimes.get("node") as Node;
     const worker = node.spawn({
       id,
+      concurrency: this.options.maxConcurrencyPerWorker,
       env: {
         __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
         __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
@@ -441,6 +493,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         LOGGER: this.options.logger ? "true" : undefined,
         FUNCTION_GRPC_MAX_MESSAGE_SIZE: this.options.functionGrpcMaxMessageSizeBytes
           ? String(this.options.functionGrpcMaxMessageSizeBytes)
+          : undefined,
+        WORKER_MAX_CONCURRENCY: this.options.maxConcurrencyPerWorker
+          ? String(this.options.maxConcurrencyPerWorker)
           : undefined
       },
       entrypointPath: this.options.spawnEntrypointPath

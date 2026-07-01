@@ -25,31 +25,87 @@ export class ScheduleWorker extends NodeWorker {
     this._state = value;
   }
 
-  private target: event.Target;
-  private schedule: Schedule;
+  private target!: event.Target;
+
+  // capacity = number of events this worker can run in-process at once (one per lane).
+  // Each idle lane parks its pop callback in `pending`; `inFlight` counts busy lanes.
+  public readonly capacity: number;
+  private inFlight = 0;
+  private stuckLanes = 0;
+  private pending: Schedule[] = [];
+
+  constructor(options: SpawnOptions) {
+    super(options);
+    this.capacity = Math.max(1, options.concurrency || 1);
+  }
 
   private transitionMap = {
     [WorkerState.Initial]: [WorkerState.Fresh],
-    [WorkerState.Fresh]: [WorkerState.Busy],
-    [WorkerState.Targeted]: [WorkerState.Busy, WorkerState.Timeouted, WorkerState.Outdated],
-    [WorkerState.Busy]: [WorkerState.Targeted, WorkerState.Timeouted, WorkerState.Outdated],
+    [WorkerState.Fresh]: [WorkerState.Busy, WorkerState.Targeted],
+    [WorkerState.Targeted]: [
+      WorkerState.Busy,
+      WorkerState.Targeted,
+      WorkerState.Timeouted,
+      WorkerState.Outdated
+    ],
+    [WorkerState.Busy]: [
+      WorkerState.Busy,
+      WorkerState.Targeted,
+      WorkerState.Timeouted,
+      WorkerState.Outdated
+    ],
     [WorkerState.Timeouted]: [WorkerState.Outdated],
     [WorkerState.Outdated]: [WorkerState.Timeouted]
   };
 
   public execute(event: event.Event) {
-    this.transitionTo(WorkerState.Busy);
     this.target = event.target;
-    this.schedule(event);
+    this.inFlight++;
+    this.transitionTo(this.inFlight >= this.capacity ? WorkerState.Busy : WorkerState.Targeted);
+    const schedule = this.pending.shift();
+    schedule!(event);
   }
 
   public markAsAvailable(schedule: Schedule) {
+    this.pending.push(schedule);
+
+    if (this.state == WorkerState.Initial) {
+      this.transitionTo(WorkerState.Fresh);
+      return;
+    }
+
+    // Further lanes parking their first pop before the worker is targeted.
+    if (this.state == WorkerState.Fresh) {
+      return;
+    }
+
+    // A lane finished its event and is asking for the next one.
+    if (this.inFlight > 0) {
+      this.inFlight--;
+    }
     if (this.state == WorkerState.Busy) {
       this.transitionTo(WorkerState.Targeted);
-    } else if (this.state == WorkerState.Initial) {
-      this.transitionTo(WorkerState.Fresh);
     }
-    this.schedule = schedule;
+  }
+
+  public hasFreeSlot() {
+    return (
+      this.pending.length > 0 &&
+      this.inFlight < this.capacity &&
+      this.state != WorkerState.Timeouted &&
+      this.state != WorkerState.Outdated
+    );
+  }
+
+  public isIdle() {
+    return this.inFlight == 0;
+  }
+
+  // A timed-out lane keeps running the (uncancellable) handler; report when every
+  // lane is wedged so the scheduler can replace the worker.
+  public markLaneStuck() {
+    this.stuckLanes++;
+    return this.stuckLanes >= this.capacity;
   }
 
   public markAsTimeouted() {
