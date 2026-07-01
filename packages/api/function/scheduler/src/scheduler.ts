@@ -30,6 +30,7 @@ import {event} from "@spica-server/function-queue-proto";
 import {Runtime, Worker} from "@spica-server/function-runtime";
 import {
   DatabaseOutput,
+  EventLogRouter,
   StandartStream,
   StandardStreamOutput
 } from "@spica-server/function-runtime-io";
@@ -259,6 +260,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   eventToWorker = new Map<string, string>();
 
+  // One demux per concurrent worker (capacity > 1), keyed by worker id.
+  logRouters = new Map<string, {stdout: EventLogRouter; stderr: EventLogRouter}>();
+
   getStatus() {
     const workers = Array.from(this.workers.values());
 
@@ -310,10 +314,31 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         functionName: path.basename(event.target.cwd),
         handler: event.target.handler
       };
-      worker.detach();
       const pairs = this.outputs.map(o => o.create(streamOptions));
-      for (const [stdout, stderr] of pairs) {
-        worker.attach(stdout, stderr);
+
+      if (worker.capacity > 1) {
+        // Concurrent worker: one persistent demux per channel routes each event's
+        // framed logs to its own sinks, since detach/attach can't isolate
+        // simultaneously-running events sharing the process stdout.
+        let routers = this.logRouters.get(workerId);
+        if (!routers) {
+          routers = {stdout: new EventLogRouter(), stderr: new EventLogRouter()};
+          this.logRouters.set(workerId, routers);
+          worker.attach(routers.stdout.input, routers.stderr.input);
+        }
+        routers.stdout.register(
+          event.id,
+          pairs.map(([stdout]) => stdout)
+        );
+        routers.stderr.register(
+          event.id,
+          pairs.map(([, stderr]) => stderr)
+        );
+      } else {
+        worker.detach();
+        for (const [stdout, stderr] of pairs) {
+          worker.attach(stdout, stderr);
+        }
       }
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
@@ -380,7 +405,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       clearTimeout(timeout);
       this.timeouts.delete(id);
     }
+
+    const workerId = this.eventToWorker.get(id);
     this.eventToWorker.delete(id);
+
+    const routers = workerId && this.logRouters.get(workerId);
+    if (routers) {
+      routers.stdout.unregister(id);
+      routers.stderr.unregister(id);
+    }
 
     this.print(`an event has been completed ${id} with status ${succedded ? "success" : "fail"}`);
   }
@@ -415,6 +448,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.eventToWorker.delete(eventId);
       }
     }
+
+    this.logRouters.delete(id);
 
     this.print(`lost a worker ${id}`);
 

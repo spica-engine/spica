@@ -25,11 +25,11 @@ export class ScheduleWorker extends NodeWorker {
     this._state = value;
   }
 
-  private target: event.Target;
+  private target!: event.Target;
 
   // capacity = number of events this worker can run in-process at once (one per lane).
   // Each idle lane parks its pop callback in `pending`; `inFlight` counts busy lanes.
-  private readonly capacity: number;
+  public readonly capacity: number;
   private inFlight = 0;
   private stuckLanes = 0;
   private pending: Schedule[] = [];
@@ -63,7 +63,7 @@ export class ScheduleWorker extends NodeWorker {
     this.inFlight++;
     this.transitionTo(this.inFlight >= this.capacity ? WorkerState.Busy : WorkerState.Targeted);
     const schedule = this.pending.shift();
-    schedule(event);
+    schedule!(event);
   }
 
   public markAsAvailable(schedule: Schedule) {
