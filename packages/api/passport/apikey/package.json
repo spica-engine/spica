@@ -18,7 +18,7 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.15",
+    "@nestjs/common": "^10.4.22",
     "@nestjs/passport": "^10.0.3",
     "@spica-server/activity-services": "workspace:*",
     "@spica-server/asset": "workspace:*",
@@ -32,7 +32,7 @@
     "@spica-server/interface-representative": "workspace:*",
     "@spica-server/passport-apikey-realtime": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
-    "nanoid": "^3.3.0",
+    "nanoid": "^3.3.15",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "uniqid": "^5.4.0"

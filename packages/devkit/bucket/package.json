@@ -19,8 +19,8 @@
   "dependencies": {
     "@types/json-schema": "^7.0.15",
     "axios": "^1.7.9",
-    "rxjs": "^7.8.1",
-    "ws": "^8.18.0"
+    "rxjs": "^7.8.2",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@spica-devkit/internal_common": "workspace:*",

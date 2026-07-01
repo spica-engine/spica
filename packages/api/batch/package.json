@@ -10,14 +10,14 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.15",
+    "@nestjs/common": "^10.4.22",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/interface-batch": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
-    "axios": "^1.8.2"
+    "axios": "^1.8.4"
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.4.15",
+    "@nestjs/testing": "^10.4.22",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/passport-testing": "workspace:*"
   }

@@ -11,14 +11,14 @@
   "dependencies": {
     "cli-color": "^2.0.4",
     "mongodb": "^6.12.0",
-    "semver": "^7.7.1",
-    "yargs": "^17.7.2"
+    "semver": "^7.7.4",
+    "yargs": "^17.7.3"
   },
   "devDependencies": {
     "@spica-server/database-testing": "workspace:*",
     "@types/cli-color": "^2.0.6",
-    "@types/node": "^22.10.7",
+    "@types/node": "^22.10.10",
     "@types/semver": "^7.5.8",
-    "@types/yargs": "^17.0.33"
+    "@types/yargs": "^17.0.35"
   }
 }

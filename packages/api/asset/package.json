@@ -10,7 +10,7 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.15",
+    "@nestjs/common": "^10.4.22",
     "@spica-server/core": "workspace:*",
     "@spica-server/core-differ": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
@@ -19,13 +19,13 @@
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/representative": "workspace:*",
     "archiver": "^7.0.1",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.4.15",
+    "@nestjs/testing": "^10.4.22",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/database-testing": "workspace:*",
     "@spica-server/passport-testing": "workspace:*",
-    "@types/archiver": "^6.0.3"
+    "@types/archiver": "^6.0.4"
   }
 }

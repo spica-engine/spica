@@ -10,12 +10,12 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.15",
+    "@nestjs/common": "^10.4.22",
     "@spica-server/interface-core": "workspace:*",
-    "got": "^14.4.6",
-    "ws": "^8.18.0"
+    "got": "^14.4.9",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@types/ws": "^8.5.13"
+    "@types/ws": "^8.5.14"
   }
 }
