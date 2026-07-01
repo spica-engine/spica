@@ -57,6 +57,14 @@ if (!process.env.WORKER_ID) {
     id: process.env.WORKER_ID
   });
   await initialize();
+
+  // Each lane keeps one pop outstanding, so the scheduler can hand this worker up
+  // to `laneCount` concurrent events. The lane count is the in-process concurrency cap.
+  const laneCount = Math.max(1, Number(process.env.WORKER_MAX_CONCURRENCY) || 1);
+  await Promise.all(Array.from({length: laneCount}, () => runLane(queue, pop)));
+})();
+
+async function runLane(queue: EventQueue, pop: event.Pop) {
   let ev: event.Event | void;
   while (
     (ev = await queue.pop(pop).catch((e: any) => {
@@ -68,7 +76,7 @@ if (!process.env.WORKER_ID) {
   ) {
     await _process(ev, queue);
   }
-})();
+}
 
 async function initialize() {
   if (process.env.__EXPERIMENTAL_DEVKIT_DATABASE_CACHE) {
