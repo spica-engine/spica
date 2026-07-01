@@ -7,7 +7,13 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
+      "path": "../replication"
+    },
+    {
       "path": "../passport/guard"
+    },
+    {
+      "path": "../../interface/replication"
     },
     {
       "path": "../../interface/config"

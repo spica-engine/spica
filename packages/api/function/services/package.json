@@ -14,6 +14,7 @@
     "@spica-server/env_var-services": "workspace:*",
     "@spica-server/interface-function": "workspace:*",
     "@spica-server/interface-function-asset-storage": "workspace:*",
+    "@spica-server/replication": "workspace:*",
     "@spica-server/secret-services": "workspace:*",
     "rxjs": "^7.8.2"
   }

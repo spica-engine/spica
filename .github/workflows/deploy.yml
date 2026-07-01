@@ -4,7 +4,7 @@ env:
   NX_NO_CLOUD: true
   VERSION: master
   BASE_URL: /
-  VITE_BASE_URL: https://master.spicaengine.com/api
+  VITE_BASE_URL: /api
 
 on:
   push:

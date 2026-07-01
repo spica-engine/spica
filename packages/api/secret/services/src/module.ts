@@ -1,5 +1,6 @@
 import {Global, Module} from "@nestjs/common";
 import {SecretService, SECRET_ENCRYPTION_SECRET} from "./service.js";
+import {SecretChangeDispatcher} from "./change-dispatcher.js";
 import {decrypt} from "@spica-server/core-encryption";
 import {Secret, DecryptedSecret, SECRET_DECRYPTOR} from "@spica-server/interface-secret";
 
@@ -10,6 +11,7 @@ export class ServicesModule {
     return {
       module: ServicesModule,
       providers: [
+        SecretChangeDispatcher,
         SecretService,
         {
           provide: SECRET_ENCRYPTION_SECRET,
@@ -25,7 +27,7 @@ export class ServicesModule {
           }
         }
       ],
-      exports: [SecretService, SECRET_DECRYPTOR]
+      exports: [SecretChangeDispatcher, SecretService, SECRET_DECRYPTOR]
     };
   }
 }

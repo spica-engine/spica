@@ -9173,9 +9173,12 @@ __metadata:
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-config": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
+    "@spica-server/replication": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
+    rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
 
@@ -9386,6 +9389,8 @@ __metadata:
     "@nestjs/common": "npm:^10.4.22"
     "@spica-server/database": "workspace:*"
     "@spica-server/interface-env_var": "workspace:*"
+    "@spica-server/replication": "workspace:*"
+    rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
 
@@ -9684,6 +9689,7 @@ __metadata:
     "@spica-server/env_var-services": "workspace:*"
     "@spica-server/interface-function": "workspace:*"
     "@spica-server/interface-function-asset-storage": "workspace:*"
+    "@spica-server/replication": "workspace:*"
     "@spica-server/secret-services": "workspace:*"
     rxjs: "npm:^7.8.2"
   languageName: unknown
@@ -10599,6 +10605,8 @@ __metadata:
     "@spica-server/core-encryption": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/interface-secret": "workspace:*"
+    "@spica-server/replication": "workspace:*"
+    rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
 
