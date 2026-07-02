@@ -124,7 +124,9 @@ const BucketEntryDrawer = ({
     for (const [key, p] of relationEntries) {
       const formatted = (p as any).relationState?.initialFormattedValues;
       if (formatted !== undefined) {
-        overrides[key] = formatted;
+        const relationType = (p as any).relationType;
+        // initialFormattedValues is always an array; onetoone form value should be a single object
+        overrides[key] = relationType === "onetomany" ? formatted : (formatted[0] ?? formatted);
       }
     }
 
