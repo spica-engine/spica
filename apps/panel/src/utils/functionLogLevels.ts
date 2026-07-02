@@ -3,7 +3,7 @@
  * Single source of truth — import from here instead of defining locally.
  */
 
-export type SeverityFilter = "all" | "info" | "warning" | "error" | "debug";
+export type SeverityFilter = "all" | "log" | "info" | "warning" | "error" | "debug";
 
 export const LOG_LEVEL_LABELS: Record<number, string> = {
   0: "Debug",
@@ -23,6 +23,7 @@ export const LOG_LEVEL_OPTIONS = [
 
 export const SEVERITY_CHIPS: Array<{key: SeverityFilter; label: string; dotLabel?: string}> = [
   {key: "all", label: "All"},
+  {key: "log", label: "Log", dotLabel: "L"},
   {key: "info", label: "Info", dotLabel: "I"},
   {key: "warning", label: "Warning", dotLabel: "W"},
   {key: "error", label: "Error", dotLabel: "E"},
@@ -30,7 +31,8 @@ export const SEVERITY_CHIPS: Array<{key: SeverityFilter; label: string; dotLabel
 ];
 
 export const SEVERITY_LEVEL_MAP: Record<Exclude<SeverityFilter, "all">, number[]> = {
-  info: [1, 2],
+  log: [1],
+  info: [2],
   warning: [3],
   error: [4],
   debug: [0],
@@ -42,6 +44,9 @@ export function getSeverityFilter(level: number): SeverityFilter {
   }
   if (level === 3) {
     return "warning";
+  }
+  if (level === 1) {
+    return "log";
   }
   if (level === 0) {
     return "debug";
@@ -60,6 +65,9 @@ export function getSeverityBadge(level: number) {
   }
   if (severity === "debug") {
     return "D";
+  }
+  if (severity === "log") {
+    return "L";
   }
   return "I";
 }
