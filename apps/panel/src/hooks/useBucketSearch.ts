@@ -5,7 +5,6 @@ const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
   ({
-    paginate: true,
     relation: true,
     limit: 25,
     filter: {
