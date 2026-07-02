@@ -1,4 +1,7 @@
 import { baseApi } from './baseApi';
+import type { AuthFactorMeta, StartFactorVerificationResponse } from './types';
+
+export type { AuthFactorMeta, StartFactorVerificationResponse };
 
 export interface ProfilerEntry {
   _id?: string;
@@ -138,6 +141,37 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [{ type: 'User', id }, 'User'],
     }),
 
+    startUserFactorVerification: builder.mutation<
+      StartFactorVerificationResponse,
+      { id: string; meta: AuthFactorMeta }
+    >({
+      query: ({ id, meta }) => ({
+        url: `passport/user/${id}/start-factor-verification`,
+        method: 'POST',
+        body: meta,
+      }),
+    }),
+
+    completeUserFactorVerification: builder.mutation<
+      { message: string },
+      { id: string; answer: string }
+    >({
+      query: ({ id, answer }) => ({
+        url: `passport/user/${id}/complete-factor-verification`,
+        method: 'POST',
+        body: { answer },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'User', id }, 'User'],
+    }),
+
+    deleteUserAuthFactor: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `passport/user/${id}/factors`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, id) => [{ type: 'User', id }, 'User'],
+    }),
+
     getUserProfile: builder.query<ProfilerEntry[], ProfilerQueryParams | void>({
       query: (params) => {
         const queryParams: Record<string, string> = {};
@@ -162,6 +196,9 @@ export const {
   useDeleteUserMutation,
   useAddUserPolicyMutation,
   useRemoveUserPolicyMutation,
+  useStartUserFactorVerificationMutation,
+  useCompleteUserFactorVerificationMutation,
+  useDeleteUserAuthFactorMutation,
   useGetUserProfileQuery,
   useLazyGetUserProfileQuery,
 } = userApi;
