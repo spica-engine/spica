@@ -1,5 +1,6 @@
 import {Module, Global, DynamicModule} from "@nestjs/common";
 import {BucketService} from "./bucket.service.js";
+import {BucketChangeDispatcher} from "./change-dispatcher.js";
 import {SchemaModule} from "@spica-server/core-schema";
 import {BucketDataService} from "./bucket-data.service.js";
 import {
@@ -23,10 +24,12 @@ export class ServicesModule {
         {provide: BUCKET_DATA_LIMIT, useValue: bucketDataLimit},
         {provide: BUCKET_DATA_HASH_SECRET, useValue: hashSecret},
         {provide: BUCKET_DATA_ENCRYPTION_SECRET, useValue: encryptionSecret},
+        BucketChangeDispatcher,
         BucketService,
         BucketDataService
       ],
       exports: [
+        BucketChangeDispatcher,
         BucketService,
         BucketDataService,
         BUCKET_DATA_HASH_SECRET,
