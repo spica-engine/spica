@@ -54,9 +54,7 @@ export class BucketService
     private changeDispatcher: BucketChangeDispatcher,
     @Optional() @Inject(BUCKET_DATA_LIMIT) private bucketDataLimit
   ) {
-    super(db, {
-      collectionOptions: {changeStreamPreAndPostImages: {enabled: true}}
-    });
+    super(db);
   }
 
   async onModuleInit() {

@@ -25,51 +25,33 @@ describe("Enable changeStreamPreAndPostImages for collections", () => {
     db = connection.db(args[3]);
   });
 
-  it("should enable changeStreamPreAndPostImages for collections", async () => {
+  it("should enable changeStreamPreAndPostImages only for the function_assets collection", async () => {
+    await db
+      .collection("function_assets")
+      .insertOne({_id: new ObjectId(), functionId: new ObjectId(), filename: "index.ts"});
     await db.collection("buckets").insertOne({_id: new ObjectId(), name: "test bucket"});
     await db
       .collection("function")
       .insertOne({_id: new ObjectId(), name: "test function", env: {}});
-    await db.collection("env_var").insertOne({_id: new ObjectId(), name: "test env var"});
-    await db.collection("policies").insertOne({_id: new ObjectId(), name: "test policy"});
-    await db.collection("webhooks").insertOne({_id: new ObjectId(), name: "test webhook"});
 
     await run([...args, "--from", "0.15.0", "--to", "0.16.0", "--continue-if-versions-are-equal"]);
 
+    const assetsInfo = (await db.listCollections({name: "function_assets"}).toArray()) as any;
+    expect(assetsInfo[0].options?.changeStreamPreAndPostImages?.enabled).toBe(true);
+
     const bucketsInfo = (await db.listCollections({name: "buckets"}).toArray()) as any;
-    expect(bucketsInfo[0].options?.changeStreamPreAndPostImages?.enabled).toBe(true);
+    expect(bucketsInfo[0].options?.changeStreamPreAndPostImages?.enabled).toBe(undefined);
 
     const functionInfo = (await db.listCollections({name: "function"}).toArray()) as any;
-    expect(functionInfo[0].options?.changeStreamPreAndPostImages?.enabled).toBe(true);
-
-    const envVarInfo = (await db.listCollections({name: "env_var"}).toArray()) as any;
-    expect(envVarInfo[0].options?.changeStreamPreAndPostImages?.enabled).toBe(true);
-
-    const policiesInfo = (await db.listCollections({name: "policies"}).toArray()) as any;
-    expect(policiesInfo[0].options?.changeStreamPreAndPostImages?.enabled).toBe(true);
-
-    const webhooksInfo = (await db.listCollections({name: "webhooks"}).toArray()) as any;
-    expect(webhooksInfo[0].options?.changeStreamPreAndPostImages?.enabled).toBe(undefined);
+    expect(functionInfo[0].options?.changeStreamPreAndPostImages?.enabled).toBe(undefined);
   });
 
-  it("should enable changeStreamPreAndPostImages only for existing collections", async () => {
+  it("should skip when the function_assets collection does not exist", async () => {
     await db.collection("buckets").insertOne({_id: new ObjectId(), name: "test bucket"});
-    await db
-      .collection("function")
-      .insertOne({_id: new ObjectId(), name: "test function", env: {}});
 
     await run([...args, "--from", "0.15.0", "--to", "0.16.0", "--continue-if-versions-are-equal"]);
 
-    const bucketsInfo = (await db.listCollections({name: "buckets"}).toArray()) as any;
-    expect(bucketsInfo[0].options?.changeStreamPreAndPostImages?.enabled).toBe(true);
-
-    const functionInfo = (await db.listCollections({name: "function"}).toArray()) as any;
-    expect(functionInfo[0].options?.changeStreamPreAndPostImages?.enabled).toBe(true);
-
-    const envVarInfo = (await db.listCollections({name: "env_var"}).toArray()) as any;
-    expect(envVarInfo.length).toBe(0);
-
-    const policiesInfo = (await db.listCollections({name: "policies"}).toArray()) as any;
-    expect(policiesInfo.length).toBe(0);
+    const assetsInfo = (await db.listCollections({name: "function_assets"}).toArray()) as any;
+    expect(assetsInfo.length).toBe(0);
   });
 });
