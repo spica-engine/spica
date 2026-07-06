@@ -28,8 +28,8 @@
 .textAreaRoot{
 
     >textarea{
-        border-radius: var(--border-radius-sm) !important;
-        padding: var(--padding-sm) !important;
+        border-radius: var(--radius-sm) !important;
+        padding: var(--spacing-7) !important;
     }
 }
 
@@ -39,7 +39,7 @@
 
 
 .textareaInput {
-    padding: var(--padding-sm) !important;
+    padding: var(--spacing-7) !important;
  }
 .textAreaClearButton{
 
@@ -51,15 +51,31 @@
 
 .textareaCellContainer {
     width: 100%;
+    height: 100%;
 }
 
 
 
 // Display cells
 .valueCell {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 0 var(--spacing-7);
+    box-sizing: border-box;
+    cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+// Standard gutter for the non-converted cells whose inner wrapper padding is
+// zeroed by .bucketCell (they keep their always-open oziko inputs).
+.gutterCell {
+    width: 100%;
+    padding: 0 var(--spacing-7);
+    box-sizing: border-box;
 }
 
 
@@ -67,7 +83,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #666;
+    color: var(--color-text-muted);
     font-style: italic;
 }
 
@@ -120,6 +136,14 @@
    }
 }
 
+// Selected boolean cell: keep the interactive Switch snug to the left, vertically
+// centered in the row, matching the at-rest read glyph's placement.
+.booleanSwitch {
+    display: inline-flex;
+    align-items: center;
+    width: unset !important;
+}
+
 // Multiple selection cell
 .multiSelectCell {
     width: 100%;
@@ -128,7 +152,9 @@
 
 .multiSelectCellWrapper {
     width: 100%;
-    
+    padding: 0 var(--spacing-7);
+    box-sizing: border-box;
+
     .multiSelectInput{
         background-color: transparent !important;
     }
@@ -147,14 +173,14 @@
 }
 
 .emptyValue {
-    color: #999;
+    color: var(--color-text-muted);
     font-style: italic;
 }
 
 .multiSelectPopover {
     min-width: 250px;
     max-width: 400px;
-    padding: 8px;
+    padding: var(--spacing-7);
 }
 
 .locationCellContainer{
@@ -167,14 +193,187 @@
     width: 100%;
     height: 100%;
     border: var(--border-default);
-    border-radius: var(--border-radius-sm);
-    
+    border-radius: var(--radius-sm);
+
     .monaco-editor {
-        border-radius: var(--border-radius-sm);
+        border-radius: var(--radius-sm);
     }
+}
+
+.jsonEditorError {
+    display: block;
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+    word-break: break-word;
 }
 .colorCellContainer {
     width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
+    padding: 0 var(--spacing-7);
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+// Airtable-style inline editing: read-only display at rest, focus ring on
+// select, active-edit accent while editing. Shared by all primitive cells.
+.readDisplay {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-5);
+    // One standard gutter on both axes; the cell's inner wrapper padding is
+    // zeroed (see BucketTable .bucketCell) so this element spans the full td and
+    // the inset selection ring below hugs the borders with no side gap.
+    padding: 0 var(--spacing-7);
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    color: var(--color-text-primary);
+}
+
+// Single relation value (id or primary) shown at rest by the relation cell.
+.relationValue {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// Compact read-only badges shown at rest by the array cell.
+.arrayReadDisplay {
+    gap: var(--spacing-5);
+}
+
+.arrayBadge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 120px;
+    padding: 0 var(--spacing-6);
+    height: 18px;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.arrayBadgeMore {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+// Roomier surface for the Object/Array/JSON/Relation inline editors (Task 2).
+// Recursive nested object/array fields (e.g. theme_config with nested
+// colors/environments) can grow taller than the viewport, pushing lower inputs
+// out of reach; cap the surface and scroll internally so every field stays
+// reachable. Monaco (JsonCell) keeps its own internal code scroll — this only
+// caps the outer surface, so the two never fight over the same content.
+// Width is depth-driven: ObjectCell/ArrayCell set --complex-editor-width from
+// their schema's nesting depth (see schemaDepth.ts). The fallback keeps the
+// old fixed floor for any consumer that doesn't set the var.
+.complexEditorPopover {
+    padding: var(--spacing-8);
+    width: var(--complex-editor-width, 240px);
+    min-width: 240px;
+    min-height: 120px;
+    max-height: min(60vh, 480px);
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+// The relation picker needs more room than the default complex editor so its
+// `_id + primary` option rows read without clipping into empty white rows.
+.relationEditorPopover {
+    width: max-content;
+    min-width: 360px;
+}
+
+// The oziko Popover container defaults to height:max-content, which shrinks the
+// trigger and leaves a vertical gap between the selection ring and the cell
+// borders. Force the trigger chain to fill the full cell so the ring is
+// full-height — identical to the non-popover String cell.
+.cellShellContainer {
+    width: 100%;
+    height: 100% !important;
+}
+
+.cellSelected {
+    // Inset shadow keeps the ring inside the cell box — no layout shift.
+    box-shadow: inset 0 0 0 2px var(--color-accent);
+    border-radius: var(--radius-sm);
+}
+
+.cellEditing {
+    box-shadow: inset 0 0 0 2px var(--color-accent);
+    background: var(--color-surface);
+    border-radius: var(--radius-sm);
+}
+
+.editInput {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 0 var(--spacing-7);
+    font: inherit;
+    color: inherit;
+    box-sizing: border-box;
+}
+
+.textareaEdit {
+    width: 100%;
+    min-height: 120px;
+    border: none;
+    outline: none;
+    resize: vertical;
+    font: inherit;
+    padding: var(--spacing-7);
+    box-sizing: border-box;
+}
+
+// Airtable-style expand affordance: a hover-revealed icon button that opens the
+// full entry drawer. The <tr> is rendered by oziko (global); the button class is
+// scoped, so reveal keys off the global row hover.
+.expandCell {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// Bare pencil icon — no border, background or box. Subtle at rest, fades to
+// full opacity when its row is hovered (the <tr> is oziko-global, so the reveal
+// keys off the global row hover).
+.expandButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    opacity: 0.35;
+    transition: opacity 0.12s ease-in-out;
+}
+
+:global(tr):hover .expandButton {
+    opacity: 1;
+}
+
+.expandButton:focus-visible {
+    opacity: 1;
 }

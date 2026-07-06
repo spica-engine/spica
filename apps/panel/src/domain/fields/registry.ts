@@ -289,7 +289,9 @@ const DATE_DEFINITION: FieldDefinition = {
   getSaveReadyValue: (value, properties) => {
     if (properties?.default === ":updated_at") return new Date();
     const date = new Date(value);
-    return isValidDate(date) ? date : null;
+    // Empty/cleared date must be omitted (undefined), not sent as null — the API
+    // rejects null for a date field. Required-empty is caught by field validation.
+    return isValidDate(date) ? date : undefined;
   },
   validateCreationForm: form => runYupValidation(DATE_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
@@ -453,25 +455,31 @@ const RELATION_DEFINITION: FieldDefinition = {
   getDefaultValue: property =>
     property.default || (property.relationType === "onetomany" ? [] : undefined),
   getDisplayValue: (value, property) => {
-    if (!value) return null;
+    const isOneToMany = property?.relationType === "onetomany";
+    if (value == null || value === "") return isOneToMany ? [] : null;
     const primaryKey = property?.relationState?.primaryKey;
 
-    const initialFormattedValues = property?.relationState?.initialFormattedValues;
-    const getValue = (v: {_id?: string; value?: string}) => v._id ?? v.value ?? v;
-    const getLabel = (v: {[key: string]: string}) =>
-      v[primaryKey] ??
-      v.label ??
-      initialFormattedValues?.label ??
-      initialFormattedValues?.find(
-        (i: {value: string; _id: string}) =>
-          i.value === v.value || i.value === v._id || (typeof v === "string" && i.value === v)
-      )?.label;
+    const rawFormatted = property?.relationState?.initialFormattedValues;
+    // initialFormattedValues is a single object for onetoone and an array for
+    // onetomany; normalize to an array so `.find` never runs on a non-array.
+    const formattedList = Array.isArray(rawFormatted)
+      ? rawFormatted
+      : rawFormatted
+        ? [rawFormatted]
+        : [];
+    const getValue = (v: any) => v?._id ?? v?.value ?? v;
+    const getLabel = (v: any) =>
+      v?.[primaryKey] ??
+      v?.label ??
+      formattedList.find(
+        (i: {value: string; _id?: string}) =>
+          i.value === v?.value || i.value === v?._id || (typeof v === "string" && i.value === v)
+      )?.label ??
+      (!Array.isArray(rawFormatted) ? (rawFormatted as any)?.label : undefined);
 
-    if (property?.relationType === "onetomany") {
-      const values = Array.isArray(value)
-        ? value.map(i => ({value: getValue(i), label: getLabel(i)}))
-        : [{value: getValue(value), label: getLabel(value)}];
-      return values;
+    if (isOneToMany) {
+      const list = Array.isArray(value) ? value : [value];
+      return list.map(i => ({value: getValue(i), label: getLabel(i)}));
     }
 
     return {
@@ -998,7 +1006,10 @@ const JSON_DEFINITION: FieldDefinition = {
       return null;
     }
   },
-  getSaveReadyValue: value => JSON.stringify(value),
+  // JsonFieldInput already writes a parsed object/array/primitive into form state;
+  // re-stringifying here would send a string and the API rejects it (must be object).
+  // An empty editor yields null — omit it so an empty JSON field is not submitted.
+  getSaveReadyValue: value => (value === undefined || value === null || value === "" ? undefined : value),
   validateCreationForm: form => runYupValidation(JSON_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Json, properties, required),

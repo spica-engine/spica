@@ -12,7 +12,7 @@ export const MultipleSelectionCell: React.FC<CellRendererProps> = ({
   const normalizedValue = Array.isArray(value) ? value : [];
 
   return (
-    <div className={styles.multiSelectCellWrapper}>
+    <div className={styles.multiSelectCellWrapper} onClick={e => e.stopPropagation()}>
       <MultipleSelectionMinimizedInput
         dimensionY={34}
         options={options}

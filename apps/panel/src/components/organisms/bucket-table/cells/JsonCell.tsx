@@ -1,27 +1,26 @@
-import React, { useCallback, useRef, useState } from 'react'
-import type { CellRendererProps } from '../types'
-import { Popover, Button, FlexElement } from 'oziko-ui-kit'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
+import type {CellRendererProps} from '../types'
+import {Popover, Button, FlexElement} from 'oziko-ui-kit'
 import Editor from '@monaco-editor/react'
-import type { editor } from 'monaco-editor'
+import type {editor} from 'monaco-editor'
+import {useCellState} from '../useCellSelection'
 import styles from './Cells.module.scss'
 
 const JSON_EDITOR_LANGUAGE = 'json'
-const DEFAULT_EMPTY_JSON = '{}'
 const DISPLAY_TEXT_MAX_LENGTH = 50
 const POPOVER_WIDTH = 400
 const POPOVER_HEIGHT = 400
 const JSON_INDENT_SPACES = 2
 
-interface JsonParseResult {
-  success: boolean
-  value?: any
-  error?: string
-}
+const cx = (...classes: (string | false | undefined)[]) => classes.filter(Boolean).join(' ')
 
-interface PendingValue {
-  value: any
-  baseValue: any
-}
+const isPlainObject = (value: any): boolean =>
+  value !== null && typeof value === 'object' && !Array.isArray(value)
+
+// A circular structure makes JSON.stringify throw; String(val) would then leak the
+// literal "[object Object]", so fall back to a neutral placeholder for objects/arrays.
+const safeStringFallback = (val: any): string =>
+  typeof val === 'object' && val !== null ? (Array.isArray(val) ? '[…]' : '{…}') : String(val)
 
 const valueToJsonString = (val: any): string => {
   if (val === null || val === undefined) {
@@ -30,17 +29,33 @@ const valueToJsonString = (val: any): string => {
   try {
     return JSON.stringify(val, null, JSON_INDENT_SPACES)
   } catch {
-    return String(val)
+    return safeStringFallback(val)
   }
 }
 
-const jsonStringToValue = (jsonStr: string = ''): JsonParseResult => {
-  if (!jsonStr.trim()) {
-    return { success: true, value: null }
+const compactPreview = (val: any): string => {
+  if (val === null || val === undefined) {
+    return ''
   }
   try {
-    const parsed = JSON.parse(jsonStr)
-    return { success: true, value: parsed }
+    return JSON.stringify(val)
+  } catch {
+    return safeStringFallback(val)
+  }
+}
+
+interface JsonParseResult {
+  success: boolean
+  value?: any
+  error?: string
+}
+
+const parseJson = (jsonStr = ''): JsonParseResult => {
+  if (!jsonStr.trim()) {
+    return {success: true, value: null}
+  }
+  try {
+    return {success: true, value: JSON.parse(jsonStr)}
   } catch (error) {
     return {
       success: false,
@@ -49,121 +64,113 @@ const jsonStringToValue = (jsonStr: string = ''): JsonParseResult => {
   }
 }
 
-const isPlainObject = (value: any): boolean => {
-  return (
-    value !== null &&
-    value !== undefined &&
-    typeof value === 'object' &&
-    !Array.isArray(value)
-  )
-}
-
-const mergeRemovedKeys = (oldValue: Record<string, any>, newValue: Record<string, any>): Record<string, any> => {
-  const oldKeys = Object.keys(oldValue)
-  const newKeys = Object.keys(newValue)
-  const removedKeys = oldKeys.filter(key => !newKeys.includes(key))
-
-  if (removedKeys.length === 0) {
-    return newValue
+// Spica's bucket-data PATCH endpoint applies RFC 7386 JSON Merge Patch, so a key
+// present in the stored object but absent from the edited object would survive
+// unless explicitly nulled. Recurse so key removal works at any depth; non-object
+// values (arrays, primitives, null) replace wholesale, which merge patch already
+// does correctly.
+const buildMergePatchValue = (oldVal: any, newVal: any): any => {
+  if (!isPlainObject(oldVal) || !isPlainObject(newVal)) {
+    return newVal
   }
-
-  const mergedValue = { ...newValue }
-  removedKeys.forEach(key => {
-    mergedValue[key] = null
-  })
-  return mergedValue
+  const patch: Record<string, any> = {}
+  for (const key of Object.keys(newVal)) {
+    patch[key] = key in oldVal ? buildMergePatchValue(oldVal[key], newVal[key]) : newVal[key]
+  }
+  for (const key of Object.keys(oldVal)) {
+    if (!(key in newVal)) {
+      patch[key] = null
+    }
+  }
+  return patch
 }
 
 const getMonacoEditorOptions = (): editor.IStandaloneEditorConstructionOptions => ({
-  minimap: { enabled: false },
+  minimap: {enabled: false},
   scrollBeyondLastLine: false,
   wordWrap: 'on',
   formatOnPaste: true,
   formatOnType: true,
   lineNumbers: 'on',
   folding: true,
-  automaticLayout: true,
+  automaticLayout: true
 })
 
-export const JsonCell: React.FC<CellRendererProps> = ({
-  value,
-  onChange,
-}) => {
-  const [isOpen, setIsOpen] = useState(false)
+export const JsonCell: React.FC<CellRendererProps> = ({value, onChange, propertyKey, rowId}) => {
+  const {isSelected, isEditing, select, requestEdit, exitEdit} = useCellState(rowId, propertyKey)
   const [editValue, setEditValue] = useState<string>(() => valueToJsonString(value))
   const [jsonError, setJsonError] = useState<string | null>(null)
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
 
-  const handleEditorChange = useCallback((newValue: string | undefined = '') => {
-    setEditValue(newValue)
+  // Reseed the editor from the committed value each time edit mode opens so a
+  // cancelled edit never leaks into the next session.
+  useEffect(() => {
+    if (isEditing) {
+      setEditValue(valueToJsonString(value))
+      setJsonError(null)
+    }
+  }, [isEditing, value])
 
-    if (!newValue.trim()) {
+  const handleEditorChange = useCallback((next: string | undefined = '') => {
+    setEditValue(next)
+    if (!next.trim()) {
       setJsonError(null)
       return
     }
-
-    const result = jsonStringToValue(newValue)
-    setJsonError(result.success ? null : (result.error || 'Invalid JSON'))
+    const result = parseJson(next)
+    setJsonError(result.success ? null : result.error || 'Invalid JSON')
   }, [])
 
   const handleSave = useCallback(() => {
-    const result = jsonStringToValue(editValue)
+    const result = parseJson(editValue)
     if (!result.success) {
+      setJsonError(result.error || 'Invalid JSON')
       return
     }
-
-    let valueToSend = result.value
-
-    if (isPlainObject(value) && isPlainObject(result.value)) {
-      valueToSend = mergeRemovedKeys(value, result.value)
-    }
-
-    onChange(valueToSend)
+    onChange(buildMergePatchValue(value, result.value))
     setJsonError(null)
-    setIsOpen(false)
-  }, [editValue, onChange, value])
+    exitEdit()
+  }, [editValue, onChange, value, exitEdit])
 
   const handleCancel = useCallback(() => {
     setEditValue(valueToJsonString(value))
     setJsonError(null)
-    setIsOpen(false)
-  }, [value])
-
-  const handleOpen = useCallback(() => {
-    setEditValue(valueToJsonString(value))
-    setIsOpen(true)
-  }, [value])
-
-  const formattedJson = valueToJsonString(value)
-  const displayText = formattedJson.length > DISPLAY_TEXT_MAX_LENGTH
-    ? `${formattedJson.substring(0, DISPLAY_TEXT_MAX_LENGTH)}...`
-    : formattedJson || DEFAULT_EMPTY_JSON
+    exitEdit()
+  }, [value, exitEdit])
 
   const monacoOptions = getMonacoEditorOptions()
+  const preview = compactPreview(value)
+  const displayText =
+    preview.length > DISPLAY_TEXT_MAX_LENGTH
+      ? `${preview.substring(0, DISPLAY_TEXT_MAX_LENGTH)}…`
+      : preview
 
   return (
     <Popover
-      open={isOpen}
+      open={isEditing}
       onClose={handleCancel}
       content={
-        <FlexElement dimensionX="fill" dimensionY="fill" gap={8} direction="vertical">
-          <FlexElement
-            dimensionX="fill"
-            dimensionY="fill"
-            className={styles.monacoEditorWrapper}
-            onKeyDown={(e) => e.stopPropagation()}
+        <div className={styles.complexEditorPopover} onClick={e => e.stopPropagation()}>
+          <FlexElement dimensionX="fill" dimensionY="fill" gap={8} direction="vertical">
+            <FlexElement
+              dimensionX={POPOVER_WIDTH}
+              dimensionY={POPOVER_HEIGHT}
+              className={styles.monacoEditorWrapper}
+              onKeyDown={e => e.stopPropagation()}
             >
               <Editor
                 defaultLanguage={JSON_EDITOR_LANGUAGE}
                 value={editValue}
                 onChange={handleEditorChange}
-                onMount={(editor) => {
-                  editorRef.current = editor
-                  editor.updateOptions(monacoOptions)
+                onMount={editorInstance => {
+                  editorRef.current = editorInstance
+                  editorInstance.updateOptions(monacoOptions)
                 }}
                 options={monacoOptions}
               />
             </FlexElement>
+
+            {jsonError && <span className={styles.jsonEditorError}>{jsonError}</span>}
 
             <FlexElement dimensionX="fill" alignment="rightCenter" gap={8}>
               <Button variant="filled" onClick={handleCancel}>
@@ -174,17 +181,25 @@ export const JsonCell: React.FC<CellRendererProps> = ({
               </Button>
             </FlexElement>
           </FlexElement>
-        }
-        contentProps={{
-          className: styles.jsonPopoverContent,
-          dimensionX: POPOVER_WIDTH,
-          dimensionY: POPOVER_HEIGHT,
+        </div>
+      }
+      containerProps={{dimensionX: 'fill', dimensionY: 'fill', className: styles.cellShellContainer}}
+      childrenProps={{dimensionX: 'fill', dimensionY: 'fill'}}
+    >
+      <span
+        className={cx(styles.readDisplay, isSelected && styles.cellSelected)}
+        title={valueToJsonString(value)}
+        onClick={e => {
+          e.stopPropagation()
+          isSelected ? requestEdit() : select()
+        }}
+        onDoubleClick={e => {
+          e.stopPropagation()
+          requestEdit()
         }}
       >
-        <span className={styles.valueCell} title={formattedJson} onClick={handleOpen}>
-          {displayText}
-        </span>
-      </Popover>
+        {displayText ? displayText : <span className={styles.emptyValue}>empty</span>}
+      </span>
+    </Popover>
   )
 }
-
