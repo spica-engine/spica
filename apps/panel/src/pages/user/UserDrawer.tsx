@@ -7,6 +7,7 @@ import {
   type User,
 } from "../../store/api/userApi";
 import EntityDrawer from "../../components/organisms/entity-drawer/EntityDrawer";
+import TwoFactorSection from "./TwoFactorSection";
 
 type UserDrawerProps = {
   isOpen: boolean;
@@ -33,6 +34,11 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ isOpen, selectedUser, onClose }
       removePolicyMutation={removePolicy}
       isCreating={isCreating}
       isUpdating={isUpdating}
+      extraContent={
+        selectedUser?._id ? (
+          <TwoFactorSection user={selectedUser} />
+        ) : undefined
+      }
     />
   );
 };
