@@ -1,105 +1,116 @@
-.diagramWrapper {
+.diagram {
   position: relative;
   width: 100%;
   height: 100vh;
-  overflow: hidden;
-}
 
-.diagramContainer {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  user-select: none;
-}
+  :global(.react-flow__edge-path) {
+    stroke: var(--color-font-tertiary);
+    transition:
+      stroke var(--transition-duration) ease,
+      opacity var(--transition-duration) ease;
+  }
 
-.diagramContent {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  min-width: 100%;
-  min-height: 100%;
-  pointer-events: none;
-}
+  :global(.react-flow__arrowhead) {
+    fill: var(--color-font-tertiary);
+  }
 
-.relationsSvg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-
-.loadingMessage {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  font-size: var(--font-size-xl);
-  color: var(--color-font-tertiary);
-}
-
-.relationCircle {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--border-radius-circle);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-font-secondary);
-  font-weight: bold;
-  z-index: 16;
-  box-shadow: 0 var(--padding-xs) var(--padding-sm-plus) rgba(0, 0, 0, 0.2);
-}
-
-.field {
-  &.relation {
-    position: relative;
-    background-color: rgba(144, 202, 249, 0.2);
+  :global(.react-flow__edge:hover .react-flow__edge-path) {
+    stroke: var(--color-primary);
   }
 }
 
-.relationIndicator {
-  font-size: var(--font-size-sm);
-  color: var(--color-info);
-  margin-left: var(--padding-sm-plus);
-}
-
-path {
-  &.relationPath {
-    stroke-dasharray: none;
-    transition: stroke-width 0.2s ease;
-    vector-effect: non-scaling-stroke;
-
-    &:hover {
-      stroke-width: 3px;
-      stroke: var(--color-info);
-    }
+// Focused edges take a distinct accent stroke so connected relations read as
+// highlighted rather than merely surviving the dim applied to everything else.
+.edgeFocused {
+  :global(.react-flow__edge-path) {
+    stroke: var(--color-primary) !important;
+    stroke-opacity: 1;
   }
 }
 
-.nestedRelation {
-  stroke-dasharray: 5,5;
-}
-
-.relationLine {
-  z-index: 5;
-  pointer-events: none;
-  overflow: visible;
-  transition: opacity var(--transition-duration) ease, z-index var(--transition-duration) ease;
-
-  &.unfocused {
+.edgeDimmed {
+  :global(.react-flow__edge-path) {
     opacity: var(--disabled-opacity);
   }
+}
 
-  &.focused {
-    z-index: 10;
+.errorBanner {
+  position: absolute;
+  top: var(--padding-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: var(--padding-sm) var(--padding-lg);
+  border-radius: var(--border-radius-md);
+  background: var(--color-danger-light);
+  color: var(--color-danger-dark);
+  box-shadow: 0 3px var(--padding-md) rgba(var(--color-black-rgb), 0.2);
+
+  .retryButton {
+    color: var(--color-danger-dark) !important;
+    font-weight: 600;
   }
 }
 
+.skeleton {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: var(--gap-xl);
+  width: 100%;
+  height: 100%;
+
+  .skeletonNode {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--border-radius-circle);
+    background: var(--color-soft-light);
+    animation: diagramPulse 1.4s ease-in-out infinite;
+  }
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-md);
+  width: 100%;
+  height: 100%;
+  color: var(--color-font-tertiary);
+
+  .emptyIcon {
+    font-size: var(--font-size-xl);
+    color: var(--color-primary);
+  }
+
+  .emptyTitle {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--color-font-primary);
+  }
+
+  .emptyText {
+    font-size: var(--font-size-md);
+  }
+
+  .emptyButton {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+  }
+}
+
+@keyframes diagramPulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
