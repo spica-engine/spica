@@ -6,10 +6,7 @@
 import {memo, useCallback, useMemo} from "react";
 import {useClearFunctionLogsMutation, useGetFunctionLogsQuery} from "../../../store/api/functionApi";
 import useFunctionLogFilterState from "../../../hooks/useFunctionLogFilterState";
-import {
-  LOG_LEVEL_LABELS,
-  type SeverityFilter,
-} from "../../../utils/functionLogLevels";
+import {LOG_LEVEL_LABELS} from "../../../utils/functionLogLevels";
 import {
   formatRowTimestamp,
   getLogDate,
@@ -45,8 +42,8 @@ const FunctionLogView = ({
     searchQuery,
     setSearchQuery,
     handlerFilter,
-    severityFilter,
-    setSeverityFilter,
+    severityFilters,
+    toggleSeverity,
     selectedLevels,
     isFilterOpen,
     setIsFilterOpen,
@@ -173,11 +170,11 @@ const FunctionLogView = ({
             functionName={functionName}
             defaultHandlerName={defaultHandlerName}
             searchQuery={searchQuery}
-            severityFilter={severityFilter}
+            severityFilters={severityFilters}
             sortDirection={sortDirection}
             expandedLogIds={expandedLogIds}
             onSearchChange={setSearchQuery}
-            onSeverityChange={setSeverityFilter}
+            onSeverityToggle={toggleSeverity}
             onSortDirectionChange={setSortDirection}
             onToggleRow={toggleRow}
           />

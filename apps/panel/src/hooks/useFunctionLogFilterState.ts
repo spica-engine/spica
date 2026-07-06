@@ -1,5 +1,5 @@
 import {useCallback, useMemo, useState} from "react";
-import {SEVERITY_LEVEL_MAP, type SeverityFilter} from "../utils/functionLogLevels";
+import {getLevelsForSeverities, type ActiveSeverity, type SeverityFilter} from "../utils/functionLogLevels";
 import {formatDateTimeLocal, getDefaultRange, isSameDayRange, type DateRange} from "../utils/functionLogUtils";
 
 type UseFunctionLogFilterStateOptions = {
@@ -15,12 +15,25 @@ const useFunctionLogFilterState = ({onSyncDrafts, onReset}: UseFunctionLogFilter
   const [searchQuery, setSearchQuery] = useState("");
   const [handlerFilter, setHandlerFilter] = useState("");
   const [draftHandlerFilter, setDraftHandlerFilter] = useState("");
-  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
+  const [severityFilters, setSeverityFilters] = useState<ActiveSeverity[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [expandedLogIds, setExpandedLogIds] = useState<string[]>([]);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-  const selectedLevels = severityFilter === "all" ? undefined : SEVERITY_LEVEL_MAP[severityFilter];
+  // Multi-select: an empty selection means "all". Toggling "all" clears the
+  // selection; toggling a concrete severity adds/removes it from the union.
+  const toggleSeverity = useCallback((key: SeverityFilter) => {
+    if (key === "all") {
+      setSeverityFilters([]);
+      return;
+    }
+
+    setSeverityFilters(current =>
+      current.includes(key) ? current.filter(item => item !== key) : [...current, key]
+    );
+  }, []);
+
+  const selectedLevels = useMemo(() => getLevelsForSeverities(severityFilters), [severityFilters]);
 
   const syncFilterDrafts = useCallback(() => {
     setDraftBegin(formatDateTimeLocal(queryRange.begin));
@@ -45,7 +58,7 @@ const useFunctionLogFilterState = ({onSyncDrafts, onReset}: UseFunctionLogFilter
     setSearchQuery("");
     setHandlerFilter("");
     setDraftHandlerFilter("");
-    setSeverityFilter("all");
+    setSeverityFilters([]);
     setSortDirection("desc");
     setExpandedLogIds([]);
     setIsFilterOpen(false);
@@ -53,8 +66,8 @@ const useFunctionLogFilterState = ({onSyncDrafts, onReset}: UseFunctionLogFilter
   }, [onReset]);
 
   const isFilterApplied = useMemo(
-    () => severityFilter !== "all" || handlerFilter.trim() !== "" || !isSameDayRange(queryRange, defaultRange),
-    [defaultRange, handlerFilter, queryRange, severityFilter]
+    () => severityFilters.length > 0 || handlerFilter.trim() !== "" || !isSameDayRange(queryRange, defaultRange),
+    [defaultRange, handlerFilter, queryRange, severityFilters]
   );
 
   const toggleRow = useCallback((logId: string) => {
@@ -77,8 +90,8 @@ const useFunctionLogFilterState = ({onSyncDrafts, onReset}: UseFunctionLogFilter
     setHandlerFilter,
     draftHandlerFilter,
     setDraftHandlerFilter,
-    severityFilter,
-    setSeverityFilter,
+    severityFilters,
+    toggleSeverity,
     selectedLevels,
     isFilterOpen,
     setIsFilterOpen,

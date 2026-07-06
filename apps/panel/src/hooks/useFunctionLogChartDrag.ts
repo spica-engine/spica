@@ -19,6 +19,7 @@ type DragState = {
   startRatio: number;
   endRatio: number;
   pointerRatio: number;
+  anchorRatio: number;
 };
 
 const DEFAULT_DRAG_STATE: DragState = {
@@ -26,12 +27,22 @@ const DEFAULT_DRAG_STATE: DragState = {
   startRatio: 0,
   endRatio: 1,
   pointerRatio: 0,
+  anchorRatio: 0,
 };
+
+// A brush wider than this is treated as "no active selection" so a fresh
+// pointer-down starts a new range instead of panning the full track.
+const FULL_RANGE_EPSILON = MIN_BRUSH_SIZE;
+
+// Below this drag width a create gesture is a click, which clears the selection.
+const CLICK_THRESHOLD = MIN_BRUSH_SIZE;
 
 export function useFunctionLogChartDrag() {
   const [brushRange, setBrushRange] = useState<BrushRange>(DEFAULT_BRUSH_RANGE);
   const chartTrackRef = useRef<HTMLDivElement | null>(null);
   const dragStateRef = useRef<DragState>(DEFAULT_DRAG_STATE);
+  const rafRef = useRef<number | null>(null);
+  const latestClientXRef = useRef(0);
 
   const getRatioFromClientX = useCallback((clientX: number) => {
     if (!chartTrackRef.current) {
@@ -46,39 +57,74 @@ export function useFunctionLogChartDrag() {
     return clampRatio((clientX - rect.left) / rect.width);
   }, []);
 
-  const handleDragMove = useCallback(
-    (event: PointerEvent) => {
-      const dragState = dragStateRef.current;
-      if (!dragState.mode) {
-        return;
-      }
+  const applyDragMove = useCallback(() => {
+    rafRef.current = null;
 
-      const ratio = getRatioFromClientX(event.clientX);
-
-      if (dragState.mode === "start") {
-        setBrushRange(clampBrush(Math.min(ratio, dragState.endRatio - MIN_BRUSH_SIZE), dragState.endRatio));
-        return;
-      }
-
-      if (dragState.mode === "end") {
-        setBrushRange(clampBrush(dragState.startRatio, Math.max(ratio, dragState.startRatio + MIN_BRUSH_SIZE)));
-        return;
-      }
-
-      const delta = ratio - dragState.pointerRatio;
-      const width = dragState.endRatio - dragState.startRatio;
-      const startRatio = clampRatio(Math.min(1 - width, Math.max(0, dragState.startRatio + delta)));
-      setBrushRange({startRatio, endRatio: startRatio + width});
-    },
-    [getRatioFromClientX]
-  );
-
-  const stopDragging = useCallback(() => {
-    if (!dragStateRef.current.mode) {
+    const dragState = dragStateRef.current;
+    if (!dragState.mode) {
       return;
     }
 
-    dragStateRef.current.mode = null;
+    const ratio = getRatioFromClientX(latestClientXRef.current);
+
+    if (dragState.mode === "create") {
+      const start = Math.min(dragState.anchorRatio, ratio);
+      const end = Math.max(dragState.anchorRatio, ratio);
+      setBrushRange({startRatio: clampRatio(start), endRatio: clampRatio(end)});
+      return;
+    }
+
+    if (dragState.mode === "start") {
+      setBrushRange(clampBrush(Math.min(ratio, dragState.endRatio - MIN_BRUSH_SIZE), dragState.endRatio));
+      return;
+    }
+
+    if (dragState.mode === "end") {
+      setBrushRange(clampBrush(dragState.startRatio, Math.max(ratio, dragState.startRatio + MIN_BRUSH_SIZE)));
+      return;
+    }
+
+    const delta = ratio - dragState.pointerRatio;
+    const width = dragState.endRatio - dragState.startRatio;
+    const startRatio = clampRatio(Math.min(1 - width, Math.max(0, dragState.startRatio + delta)));
+    setBrushRange({startRatio, endRatio: startRatio + width});
+  }, [getRatioFromClientX]);
+
+  // Throttle pointermove to one update per animation frame to keep dragging smooth.
+  const handleDragMove = useCallback(
+    (event: PointerEvent) => {
+      if (!dragStateRef.current.mode) {
+        return;
+      }
+
+      latestClientXRef.current = event.clientX;
+
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(applyDragMove);
+      }
+    },
+    [applyDragMove]
+  );
+
+  const stopDragging = useCallback(() => {
+    const dragState = dragStateRef.current;
+    if (!dragState.mode) {
+      return;
+    }
+
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+
+    // A create gesture with no meaningful drag is a click that clears the selection.
+    if (dragState.mode === "create") {
+      setBrushRange(current =>
+        current.endRatio - current.startRatio < CLICK_THRESHOLD ? DEFAULT_BRUSH_RANGE : current
+      );
+    }
+
+    dragState.mode = null;
     document.body.style.userSelect = "";
   }, []);
 
@@ -89,16 +135,21 @@ export function useFunctionLogChartDrag() {
     return () => {
       window.removeEventListener("pointermove", handleDragMove);
       window.removeEventListener("pointerup", stopDragging);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
   }, [handleDragMove, stopDragging]);
 
   const beginDragging = useCallback(
     (mode: Exclude<DragMode, null>, clientX: number, range: BrushRange) => {
+      const pointerRatio = getRatioFromClientX(clientX);
       dragStateRef.current = {
         mode,
         startRatio: range.startRatio,
         endRatio: range.endRatio,
-        pointerRatio: getRatioFromClientX(clientX),
+        pointerRatio,
+        anchorRatio: pointerRatio,
       };
       document.body.style.userSelect = "none";
     },
@@ -109,25 +160,28 @@ export function useFunctionLogChartDrag() {
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const ratio = getRatioFromClientX(event.clientX);
       const threshold = 0.02;
+      const hasSelection = brushRange.endRatio - brushRange.startRatio < 1 - FULL_RANGE_EPSILON;
 
-      if (Math.abs(ratio - brushRange.startRatio) <= threshold) {
-        beginDragging("start", event.clientX, brushRange);
-        return;
+      if (hasSelection) {
+        if (Math.abs(ratio - brushRange.startRatio) <= threshold) {
+          beginDragging("start", event.clientX, brushRange);
+          return;
+        }
+
+        if (Math.abs(ratio - brushRange.endRatio) <= threshold) {
+          beginDragging("end", event.clientX, brushRange);
+          return;
+        }
+
+        if (ratio > brushRange.startRatio && ratio < brushRange.endRatio) {
+          beginDragging("range", event.clientX, brushRange);
+          return;
+        }
       }
 
-      if (Math.abs(ratio - brushRange.endRatio) <= threshold) {
-        beginDragging("end", event.clientX, brushRange);
-        return;
-      }
-
-      if (ratio > brushRange.startRatio && ratio < brushRange.endRatio) {
-        beginDragging("range", event.clientX, brushRange);
-        return;
-      }
-
-      const nextRange = clampBrush(ratio, Math.min(1, ratio + 0.16));
-      setBrushRange(nextRange);
-      beginDragging("end", event.clientX, nextRange);
+      // No active selection (or pointer landed outside it): anchor a fresh range.
+      setBrushRange({startRatio: ratio, endRatio: ratio});
+      beginDragging("create", event.clientX, {startRatio: ratio, endRatio: ratio});
     },
     [beginDragging, brushRange, getRatioFromClientX]
   );

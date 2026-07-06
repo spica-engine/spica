@@ -1,0 +1,301 @@
+@use "../../../styles/mixins";
+
+.functionWorkflowGraph {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+
+  :global(.react-flow__attribution) {
+    display: none;
+  }
+
+  :global(.react-flow__edge-path) {
+    stroke: var(--color-info);
+    stroke-width: 2;
+    opacity: 0.75;
+  }
+
+  :global(.react-flow__edge-text) {
+    fill: var(--color-font-secondary);
+    font-size: var(--font-size-xs);
+    // Halo the glyphs with the themed canvas colour instead of an opaque label
+    // rect, so the label stays legible without punching a white gap in the curve.
+    paint-order: stroke;
+    stroke: var(--color-layout-background);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+  }
+
+  // The default label background rect is what reads as a white break on the
+  // stroke — make it transparent so the connection line stays continuous.
+  :global(.react-flow__edge-textbg) {
+    fill: transparent;
+  }
+}
+
+// Highlight the focused function's connections with the primary accent so they read
+// as a clearly different colour from the idle (--color-info) edges.
+.edgeFocused {
+  :global(.react-flow__edge-path) {
+    stroke: var(--color-primary);
+    stroke-width: 3;
+    opacity: 1;
+  }
+
+  :global(.react-flow__edge-text) {
+    fill: var(--color-primary);
+    opacity: 1;
+  }
+}
+
+// Non-connected edges stay visible but fade to idle so they recede behind the
+// highlighted ones. Theme-aware via the shared tokens.
+.edgeDimmed {
+  :global(.react-flow__edge-path) {
+    stroke: var(--color-info);
+    opacity: 0.14;
+  }
+
+  :global(.react-flow__edge-text) {
+    opacity: 0.18;
+  }
+}
+
+.graphState {
+  @include mixins.flexColCenter;
+  gap: var(--gap-md);
+  width: 100%;
+  height: 100%;
+  padding: var(--padding-lg);
+  text-align: center;
+}
+
+.stateTitle {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-font-primary);
+}
+
+.stateText {
+  font-size: var(--font-size-sm);
+  color: var(--color-font-tertiary);
+}
+
+.retryButton {
+  padding: var(--padding-sm) var(--padding-lg);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md, 8px);
+  background: transparent;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.skeletonConstellation {
+  position: relative;
+  width: 260px;
+  height: 160px;
+
+  .skeletonHub,
+  .skeletonSatellite,
+  .skeletonGroup {
+    position: absolute;
+    display: block;
+    border-radius: var(--radius-md, 8px);
+    background: var(--color-soft);
+    animation: workflowPulse 1.4s ease-in-out infinite;
+  }
+
+  .skeletonHubA {
+    top: 40px;
+    left: 30px;
+    width: 90px;
+    height: 54px;
+  }
+
+  .skeletonHubB {
+    top: 92px;
+    left: 120px;
+    width: 90px;
+    height: 54px;
+  }
+
+  .skeletonSatelliteA {
+    top: 0;
+    left: 0;
+    width: 46px;
+    height: 30px;
+  }
+
+  .skeletonSatelliteB {
+    top: 20px;
+    left: 150px;
+    width: 46px;
+    height: 30px;
+  }
+
+  .skeletonGroup {
+    top: 60px;
+    right: 0;
+    width: 40px;
+    height: 100px;
+  }
+}
+
+@keyframes workflowPulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.functionHub {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+  padding: var(--padding-md) var(--padding-md);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-soft-light);
+  color: var(--color-font-primary);
+  box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.18);
+  transition:
+    opacity var(--transition-duration) ease,
+    box-shadow var(--transition-duration) ease,
+    border-color var(--transition-duration) ease;
+
+  &.sizeSm {
+    min-width: 150px;
+  }
+
+  &.sizeMd {
+    min-width: 180px;
+  }
+
+  &.sizeLg {
+    min-width: 214px;
+    padding: var(--padding-lg) var(--padding-md);
+  }
+
+  &.focused {
+    border-color: var(--color-primary);
+    box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.45);
+  }
+
+  &.related {
+    border-color: var(--color-info);
+  }
+
+  &.dimmed {
+    opacity: 0.28;
+  }
+
+  .hubCore {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+  }
+
+  .hubIcon {
+    color: var(--color-primary);
+  }
+
+  .hubHandler {
+    font-family: "JetBrains Mono", monospace;
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    color: var(--color-font-primary);
+  }
+
+  .hubName {
+    font-size: var(--font-size-xs);
+    color: var(--color-font-tertiary);
+  }
+
+  .hubBadges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  .hubHandle {
+    width: var(--gap-sm);
+    height: var(--gap-sm);
+    background: var(--color-primary);
+    border: none;
+  }
+}
+
+.hubBadge {
+  font-size: var(--font-size-2xs, 9px);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm, 4px);
+}
+
+.badgeData {
+  background: rgba(var(--color-primary-rgb), 0.12);
+  color: var(--color-primary);
+}
+
+.dataSatellite {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  min-width: 130px;
+  padding: var(--padding-sm) var(--padding-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 10px);
+  background: var(--color-soft);
+  color: var(--color-font-primary);
+  transition: opacity var(--transition-duration) ease;
+
+  &.bucket .satelliteIcon {
+    color: var(--color-info);
+  }
+
+  &.database .satelliteIcon {
+    color: var(--color-accent);
+  }
+
+  &.focused {
+    border-color: var(--color-primary);
+  }
+
+  &.related {
+    border-color: var(--color-info);
+  }
+
+  &.dimmed {
+    opacity: 0.24;
+  }
+
+  .satelliteBody {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .satelliteLabel {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+  }
+
+  .satellitePhase {
+    font-family: "JetBrains Mono", monospace;
+    font-size: var(--font-size-2xs, 9px);
+    color: var(--color-font-tertiary);
+  }
+
+  .satelliteHandle {
+    width: 7px;
+    height: 7px;
+    background: var(--color-info);
+    border: none;
+  }
+}

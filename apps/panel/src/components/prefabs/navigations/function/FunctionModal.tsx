@@ -22,15 +22,31 @@ type FunctionModalProps = {
   onSaved: (fn: SpicaFunction) => void;
 };
 
-const getTriggerFromFunction = (fn: SpicaFunction): { type: string; options: Record<string, any> } => {
-  if (!fn.triggers) return {type: "http", options: {}};
+const buildTriggersMap = (fn: SpicaFunction): TriggerMap => {
+  if (!fn.triggers) return {};
   if (Array.isArray(fn.triggers)) {
-    const first = fn.triggers[0];
-    return {type: first?.type ?? "http", options: first?.options ?? {}};
+    return fn.triggers.reduce<TriggerMap>((acc, trigger, i) => {
+      const key = trigger.handler ?? (i === 0 ? "default" : `handler_${i}`);
+      acc[key] = {type: trigger.type, active: trigger.active ?? true, options: trigger.options ?? {}};
+      return acc;
+    }, {});
   }
-  const map = fn.triggers as TriggerMap;
-  const defaultTrigger = map.default;
-  return {type: defaultTrigger?.type ?? "http", options: defaultTrigger?.options ?? {}};
+  return {...(fn.triggers as TriggerMap)};
+};
+
+const getPrimaryTriggerKey = (map: TriggerMap): string => {
+  if (map.default) return "default";
+  const firstKey = Object.keys(map)[0];
+  return firstKey ?? "default";
+};
+
+const getTriggerFromFunction = (
+  fn: SpicaFunction
+): {key: string; type: string; options: Record<string, any>} => {
+  const map = buildTriggersMap(fn);
+  const key = getPrimaryTriggerKey(map);
+  const trigger = map[key];
+  return {key, type: trigger?.type ?? "http", options: trigger?.options ?? {}};
 };
 
 const LANGUAGE_OPTIONS = [
@@ -106,10 +122,12 @@ const getExampleCode = (type: string, options: Record<string, any>): string => {
 const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModalProps) => {
   const isEditMode = !!functionToEdit;
   const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
   const [language, setLanguage] = useState<string>("javascript");
   const [timeout, setTimeout] = useState(10);
   const [triggerType, setTriggerType] = useState<string>("http");
   const [triggerOptionValues, setTriggerOptionValues] = useState<Record<string, any>>({});
+  const [editingTriggerKey, setEditingTriggerKey] = useState("default");
   const [error, setError] = useState("");
 
   const {data: information} = useGetFunctionInformationQuery();
@@ -135,9 +153,11 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
     if (!isOpen) return;
     if (functionToEdit) {
       setName(functionToEdit.name ?? "");
+      setCategory(functionToEdit.category ?? "");
       setLanguage(functionToEdit.language ?? "javascript");
       setTimeout(functionToEdit.timeout ?? 10);
       const trigger = getTriggerFromFunction(functionToEdit);
+      setEditingTriggerKey(trigger.key);
       setTriggerType(trigger.type);
       setTriggerOptionValues(trigger.options);
     } else {
@@ -148,7 +168,10 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
 
   useEffect(() => {
     if (isEditMode) return;
-    setTriggerOptionValues(getDefaultTriggerOptions(information?.enqueuers ?? [], triggerType));
+    const defaults = getDefaultTriggerOptions(information?.enqueuers ?? [], triggerType);
+    // Http schema defaults method to "Get"; the product default is "All" (matches any verb).
+    if (triggerType === "http") defaults.method = "All";
+    setTriggerOptionValues(defaults);
   }, [triggerType, information, isEditMode]);
 
   const handleTriggerOptionChange = useCallback((key: string, value: any) => {
@@ -193,10 +216,12 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
 
   const resetForm = useCallback(() => {
     setName("");
+    setCategory("");
     setLanguage("javascript");
     setTimeout(10);
     setTriggerType("http");
     setTriggerOptionValues({});
+    setEditingTriggerKey("default");
     setError("");
   }, []);
 
@@ -222,17 +247,26 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
       return;
     }
 
+    const trimmedCategory = category.trim();
+
     try {
       if (isEditMode && functionToEdit?._id) {
+        const existingTriggers = buildTriggersMap(functionToEdit);
+        const editedTrigger = existingTriggers[editingTriggerKey];
+        existingTriggers[editingTriggerKey] = {
+          type: triggerType,
+          active: editedTrigger?.active ?? true,
+          options: triggerOptionValues
+        };
+
         const result = await updateFunction({
           id: functionToEdit._id,
           body: {
             name: trimmed,
             language: language as "javascript" | "typescript",
             timeout,
-            triggers: {
-              default: {type: triggerType, active: true, options: triggerOptionValues}
-            }
+            category: trimmedCategory || undefined,
+            triggers: existingTriggers
           }
         }).unwrap();
         onSaved(result);
@@ -242,6 +276,7 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
           name: trimmed,
           language: language as "javascript" | "typescript",
           timeout,
+          category: trimmedCategory || undefined,
           triggers: {
             default: {type: triggerType, active: true, options: triggerOptionValues}
           }
@@ -261,10 +296,12 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
     }
   }, [
     name,
+    category,
     language,
     timeout,
     triggerType,
     triggerOptionValues,
+    editingTriggerKey,
     isEditMode,
     functionToEdit,
     createFunction,
@@ -345,6 +382,12 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
             label="Name"
             value={name}
             onChange={setName}
+          />
+
+          <StringInput
+            label="Category"
+            value={category}
+            onChange={setCategory}
           />
 
           <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>

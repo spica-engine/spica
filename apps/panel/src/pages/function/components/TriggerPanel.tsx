@@ -36,7 +36,7 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
   const handleAddTrigger = useCallback(() => {
     const newTrigger: FunctionTrigger = {
       type: "http",
-      options: {}
+      options: {method: "All"}
     };
     onChange([...triggers, newTrigger]);
   }, [triggers, onChange]);
@@ -50,7 +50,11 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
 
   const handleTypeChange = useCallback(
     (index: number, type: FunctionTrigger["type"]) => {
-      onChange(triggers.map((t, i) => (i === index ? {...t, type, options: {}} : t)));
+      onChange(
+        triggers.map((t, i) =>
+          i === index ? {...t, type, options: type === "http" ? {method: "All"} : {}} : t
+        )
+      );
     },
     [triggers, onChange]
   );
