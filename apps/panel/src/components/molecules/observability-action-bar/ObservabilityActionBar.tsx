@@ -16,6 +16,7 @@ type ObservabilityActionBarProps = {
   isFetching?: boolean;
   onFilterChange: (filter: ProfilerFilterValues) => void;
   onRefetch: () => void;
+  onBack?: () => void;
   children?: React.ReactNode;
 };
 
@@ -26,6 +27,7 @@ const ObservabilityActionBar = ({
   isFetching,
   onFilterChange,
   onRefetch,
+  onBack,
   children,
 }: ObservabilityActionBarProps) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -33,8 +35,14 @@ const ObservabilityActionBar = ({
 
   return (
     <div className={styles.container}>
-      {/* LEFT: title + subtitle + optional extra */}
+      {/* LEFT: optional back + title + subtitle + optional extra */}
       <div className={styles.toolbarLeft}>
+        {onBack && (
+          <Button shape="chip" variant="outlined" color="default" onClick={onBack}>
+            <Icon name="chevronLeft" size={16} />
+            Buckets
+          </Button>
+        )}
         <Icon name="filterCenterFocus" size={18} />
         <span className={localStyles.title}>{title}</span>
         <span className={localStyles.subtitle}>{subtitle}</span>
