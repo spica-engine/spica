@@ -22,8 +22,8 @@
     }
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.12.5",
-    "@nestjs/common": "^10.4.15",
+    "@grpc/grpc-js": "^1.12.7",
+    "@nestjs/common": "^10.4.22",
     "@spica-server/bucket-hooks-proto": "workspace:*",
     "@spica-server/bucket-services": "workspace:*",
     "@spica-server/database": "workspace:*",

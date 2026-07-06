@@ -6,22 +6,22 @@
     "@monaco-editor/react": "^4.7.0",
     "@projectstorm/react-canvas-core": "^7.0.3",
     "@projectstorm/react-diagrams": "^7.0.4",
-    "@reduxjs/toolkit": "^2.9.0",
+    "@reduxjs/toolkit": "^2.9.2",
     "docx-preview": "^0.3.7",
     "file-saver": "^2.0.5",
-    "formik": "^2.4.6",
+    "formik": "^2.4.9",
     "jwt-decode": "^4.0.0",
     "monaco-editor": "^0.52.2",
     "oziko-ui-kit": "^0.0.148",
-    "react": "^19.0.0",
+    "react": "^19.0.7",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
-    "react-dom": "^19.0.0",
-    "react-grid-layout": "^1.5.1",
+    "react-dom": "^19.0.7",
+    "react-grid-layout": "^1.5.3",
     "react-infinite-scroll-component": "^6.1.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.11.2",
     "tui-image-editor": "^3.15.3",
-    "yup": "^1.7.0"
+    "yup": "^1.7.1"
   }
 }

@@ -10,8 +10,8 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.15",
-    "@nestjs/websockets": "^10.4.15",
+    "@nestjs/common": "^10.4.22",
+    "@nestjs/websockets": "^10.4.22",
     "@spica-server/database-realtime": "workspace:*",
     "@spica-server/interface-passport-user": "workspace:*",
     "@spica-server/interface-realtime": "workspace:*",

@@ -14,8 +14,8 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.15",
-    "@nestjs/websockets": "^10.4.15",
+    "@nestjs/common": "^10.4.22",
+    "@nestjs/websockets": "^10.4.22",
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/database-realtime": "workspace:*",
@@ -26,7 +26,7 @@
     "@spica-server/realtime": "workspace:*"
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.4.15",
+    "@nestjs/testing": "^10.4.22",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/core-websocket": "workspace:*",
     "@spica-server/database-testing": "workspace:*",

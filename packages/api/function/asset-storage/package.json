@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.828.0",
-    "@google-cloud/storage": "^7.15.0",
-    "@nestjs/common": "^10.4.15",
+    "@google-cloud/storage": "^7.15.2",
+    "@nestjs/common": "^10.4.22",
     "@spica-server/interface-function-asset-storage": "workspace:*"
   }
 }

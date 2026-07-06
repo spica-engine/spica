@@ -36,26 +36,26 @@
   },
   "dependencies": {
     "@caporal/core": "^2.0.7",
-    "axios": "^1.8.2",
+    "axios": "^1.8.4",
     "chokidar": "^4.0.3",
     "colorette": "^2.0.20",
     "columnify": "^1.6.0",
-    "cosmiconfig": "^9.0.0",
-    "dockerode": "^4.0.4",
+    "cosmiconfig": "^9.0.2",
+    "dockerode": "^4.0.12",
     "dotenv": "^16.4.7",
     "get-port": "^7.1.0",
     "jsonpath": "^1.1.1",
-    "open": "^10.1.0",
+    "open": "^10.1.2",
     "ora": "^8.2.0",
     "pretty-ms": "^9.2.0",
-    "semver": "^7.7.1",
+    "semver": "^7.7.4",
     "typescript": "^5.7.3",
     "yaml": "^2.7.1"
   },
   "devDependencies": {
-    "@types/dockerode": "^3.3.34",
+    "@types/dockerode": "^3.3.47",
     "@types/json-schema": "^7.0.15",
-    "@types/node": "^22.10.7",
+    "@types/node": "^22.10.10",
     "@types/semver": "^7.5.8"
   }
 }

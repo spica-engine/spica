@@ -339,7 +339,6 @@ async function create({args: cmdArgs, options}: ActionParameters) {
       const client = await machine.createContainer({
         Image: `spicaengine/panel:${options.imageVersion}`,
         name: `${name}-spica`,
-        Env: ["BASE_URL=/"],
         Labels: {namespace: name},
         HostConfig: {
           RestartPolicy: {

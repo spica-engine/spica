@@ -10,15 +10,15 @@
     }
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.12.5",
+    "@grpc/grpc-js": "^1.12.7",
     "@spica-server/function-queue-proto": "workspace:*",
-    "amqplib": "^0.10.7",
+    "amqplib": "^0.10.9",
     "uniqid": "^5.4.0",
-    "ws": "^8.18.0"
+    "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@types/amqplib": "^0.10.7",
+    "@types/amqplib": "^0.10.8",
     "@types/uniqid": "^5.3.4",
-    "@types/ws": "^8.5.13"
+    "@types/ws": "^8.5.14"
   }
 }

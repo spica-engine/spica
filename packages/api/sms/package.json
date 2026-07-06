@@ -10,11 +10,11 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.15",
+    "@nestjs/common": "^10.4.22",
     "@spica-server/interface-sms": "workspace:*",
     "twilio": "^5.11.2"
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.4.15"
+    "@nestjs/testing": "^10.4.22"
   }
 }

@@ -12,7 +12,7 @@
   "dependencies": {
     "colorette": "^2.0.20",
     "diff": "^4.0.4",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "yaml": "^2.7.1"
   }
 }

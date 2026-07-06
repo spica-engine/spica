@@ -1,7 +1,7 @@
 import {Context} from "../../migrate";
 
 export default async function (ctx: Context) {
-  const collections = ["buckets", "function", "env_var", "policies"];
+  const collections = ["function_assets"];
 
   for (const collectionName of collections) {
     try {
