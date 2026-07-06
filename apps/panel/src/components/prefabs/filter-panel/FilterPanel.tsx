@@ -1,12 +1,15 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import type { FilterField, FilterConditionRow } from './types';
-import { OPERATORS_BY_TYPE, DEFAULT_OPERATOR, operatorNeedsValue, conditionsToMongoFilter } from './filterPanelUtils';
+import { OPERATORS_BY_TYPE, DEFAULT_OPERATOR, operatorNeedsValue, conditionsToMongoFilter, isConditionActive, formatConditionValue, parseRelationIds } from './filterPanelUtils';
 import styles from './FilterPanel.module.scss';
-import { StringInput, NumberInput, DateInput, BooleanInput, EnumInput } from 'oziko-ui-kit';
+import { StringInput, NumberInput, DateInput, BooleanInput, EnumInput, Popover } from 'oziko-ui-kit';
+import RelationPicker from '../relation-picker/RelationPicker';
 
 interface FilterPanelProps {
   fields: FilterField[];
-  onApply: (filter: Record<string, any> | null) => void;
+  /** Applied conditions to pre-fill the rows with when (re)opened. */
+  initialConditions?: FilterConditionRow[];
+  onApply: (filter: Record<string, any> | null, conditions: FilterConditionRow[]) => void;
   onClear: () => void;
   onRequestClose?: () => void;
   className?: string;
@@ -53,6 +56,20 @@ const FieldTypeIcon = ({ type }: { type: string }) => {
           <line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
         </svg>
       );
+    case 'id':
+      return (
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <line x1="4" y1="9" x2="20" y2="9" /><line x1="4" y1="15" x2="20" y2="15" />
+          <line x1="10" y1="3" x2="8" y2="21" /><line x1="14" y1="3" x2="12" y2="21" />
+        </svg>
+      );
+    case 'relation':
+      return (
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </svg>
+      );
     default: // string
       return (
         <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -88,26 +105,88 @@ const PlusIcon = () => (
   </svg>
 );
 
+// Multi-select relation value editor: reuses the RelationPicker to pick related
+// entries, storing their ids as a comma-separated string in the condition value.
+const RelationValueInput: React.FC<{
+  bucketId?: string;
+  value: string;
+  onChange: (value: string) => void;
+}> = ({ bucketId, value, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const ids = useMemo(() => parseRelationIds(value), [value]);
+
+  const addId = useCallback((id: string) => {
+    if (!id || ids.includes(id)) return;
+    onChange([...ids, id].join(','));
+  }, [ids, onChange]);
+
+  const removeId = useCallback((id: string) => {
+    onChange(ids.filter(existing => existing !== id).join(','));
+  }, [ids, onChange]);
+
+  const handleSelect = useCallback((selection: any) => {
+    const id = typeof selection === 'string' ? selection : selection?.id;
+    if (id) addId(id);
+  }, [addId]);
+
+  return (
+    <div className={styles.relValueWrap}>
+      {ids.map(id => (
+        <span key={id} className={styles.relChip} title={id}>
+          <span className={styles.relChipId}>{id}</span>
+          <span
+            className={styles.relChipRm}
+            role="button"
+            tabIndex={0}
+            onClick={() => removeId(id)}
+            onKeyDown={e => e.key === 'Enter' && removeId(id)}
+          >
+            <CloseIcon size={10} />
+          </span>
+        </span>
+      ))}
+      <Popover
+        open={open}
+        onClose={() => setOpen(false)}
+        content={
+          <div className={styles.relPickerPopover} onClick={e => e.stopPropagation()}>
+            <RelationPicker
+              bucketId={bucketId}
+              onSelect={handleSelect}
+              onCancel={() => setOpen(false)}
+            />
+          </div>
+        }
+      >
+        <button
+          type="button"
+          className={styles.relAddBtn}
+          onClick={() => setOpen(true)}
+          disabled={!bucketId}
+        >
+          <PlusIcon />
+          {ids.length ? 'Add more' : 'Select entries'}
+        </button>
+      </Popover>
+    </div>
+  );
+};
+
 const FilterPanel: React.FC<FilterPanelProps> = ({
   fields,
+  initialConditions,
   onApply,
   onClear,
   onRequestClose,
   className,
 }) => {
-  const [conditions, setConditions] = useState<FilterConditionRow[]>([createEmptyCondition()]);
+  const [conditions, setConditions] = useState<FilterConditionRow[]>(() =>
+    initialConditions && initialConditions.length ? initialConditions : [createEmptyCondition()]
+  );
 
   const fieldMap = useMemo(() => new Map(fields.map(f => [f.key, f])), [fields]);
 
-  const activeCount = useMemo(
-    () =>
-      conditions.filter(c => {
-        if (!c.field) return false;
-        if (!operatorNeedsValue(c.operator)) return true;
-        return c.value.trim() !== '';
-      }).length,
-    [conditions]
-  );
+  const activeCount = useMemo(() => conditions.filter(isConditionActive).length, [conditions]);
 
   const handleFieldChange = useCallback((id: string, fieldKey: string) => {
     const field = fieldMap.get(fieldKey);
@@ -143,7 +222,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   }, []);
 
   const handleApply = useCallback(() => {
-    onApply(conditionsToMongoFilter(conditions, fields));
+    onApply(conditionsToMongoFilter(conditions, fields), conditions);
     onRequestClose?.();
   }, [conditions, fields, onApply, onRequestClose]);
 
@@ -157,18 +236,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     const next = conditions.filter(c => c.id !== id);
     const newConditions = next.length ? next : [createEmptyCondition()];
     setConditions(newConditions);
-    onApply(conditionsToMongoFilter(newConditions, fields));
+    onApply(conditionsToMongoFilter(newConditions, fields), newConditions);
   }, [conditions, fields, onApply]);
 
-  const activeTags = useMemo(
-    () =>
-      conditions.filter(c => {
-        if (!c.field) return false;
-        if (!operatorNeedsValue(c.operator)) return true;
-        return c.value.trim() !== '';
-      }),
-    [conditions]
-  );
+  const activeTags = useMemo(() => conditions.filter(isConditionActive), [conditions]);
 
   const panelClass = [
     styles.filterPanel,
@@ -255,7 +326,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
               {/* Value input */}
               <div className={!showValueInput ? styles.valInputHidden : undefined}>
-                {field?.type === 'boolean' ? (
+                {field?.type === 'relation' ? (
+                  <RelationValueInput
+                    bucketId={field.relationBucketId}
+                    value={condition.value}
+                    onChange={v => handleValueChange(condition.id, v)}
+                  />
+                ) : field?.type === 'boolean' ? (
                   <BooleanInput
                     checked={condition.value !== 'false'}
                     onChange={checked => handleValueChange(condition.id, checked ? 'true' : 'false')}
@@ -318,13 +395,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           <div className={styles.filterTagsRow}>
             {activeTags.map(tag => {
               const f = fieldMap.get(tag.field);
-              const displayVal = operatorNeedsValue(tag.operator)
-                ? f?.type === 'enum'
-                  ? f.enumOptions?.find(o => String(o.value) === tag.value)?.label ?? tag.value
-                  : f?.type === 'boolean'
-                  ? tag.value === 'true' ? 'True' : 'False'
-                  : `"${tag.value}"`
-                : '';
+              const displayVal = formatConditionValue(tag, f);
               return (
                 <div key={tag.id} className={styles.filterTag}>
                   <span className={styles.filterTagField}>{f?.label ?? tag.field}</span>

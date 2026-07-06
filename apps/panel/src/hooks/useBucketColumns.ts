@@ -3,6 +3,22 @@ import type {BucketType} from "../store/api/bucketApi";
 import type {ColumnType} from "../components/organisms/bucket-table/BucketTable";
 import useLocalStorage from "./useLocalStorage";
 
+// Types whose values can't be matched with a case-insensitive text regex.
+// Everything else (string, textarea, richtext, color, hash, encrypted, and any
+// custom scalar text field) is treated as searchable.
+const NON_SEARCHABLE_TYPES = new Set([
+  "relation",
+  "location",
+  "object",
+  "array",
+  "multiselect",
+  "json",
+  "storage",
+  "boolean",
+  "number",
+  "date"
+]);
+
 interface UseBucketColumnsResult {
   formattedColumns: ColumnType[];
   filteredColumns: ColumnType[];
@@ -48,10 +64,17 @@ export function useBucketColumns(
 
   const searchableColumns = useMemo(
     () =>
-      formattedColumns
-        .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
-        .map(({key}) => key),
-    [formattedColumns]
+      // Derive from bucket.properties directly (not formattedColumns) so the
+      // regex filter targets the real property KEY the document is stored under.
+      // formattedColumns exposes `key: title`, which silently breaks search
+      // whenever a field's title differs from its key (e.g. an "id" field).
+      // Blocklist structural / non-text types instead of allow-listing a few
+      // string types, so text-like fields (color, hash, encrypted, and any
+      // custom scalar text field) are all searched.
+      Object.entries(bucket?.properties ?? {})
+        .filter(([, prop]: [string, any]) => !NON_SEARCHABLE_TYPES.has(prop?.type))
+        .map(([key]) => key),
+    [bucket]
   );
 
   const defaultVisibleColumns = useMemo(

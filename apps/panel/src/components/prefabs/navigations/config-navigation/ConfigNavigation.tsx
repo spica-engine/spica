@@ -2,13 +2,16 @@ import {Icon} from "oziko-ui-kit";
 import styles from "../Navigation.module.scss";
 import configStyles from "./Config.module.scss";
 import React from "react";
-import {useNavigate, useParams} from "react-router-dom";
+import {useLocation, useNavigate, useParams} from "react-router-dom";
 import {useGetConfigSchemasQuery} from "../../../../store/api/configApi";
 
 const ConfigNavigation = () => {
   const navigate = useNavigate();
+  const {pathname} = useLocation();
   const {module: activeModule} = useParams<{module: string}>();
   const {data: schemas} = useGetConfigSchemasQuery();
+
+  const isDataStrategyActive = pathname === "/config/data-strategy";
 
   const items = schemas
     ? Object.keys(schemas).map(key => ({module: key, label: key}))
@@ -23,6 +26,18 @@ const ConfigNavigation = () => {
       </div>
 
       <div className={configStyles.itemsContainer}>
+        <div
+          className={`${configStyles.configItem}${isDataStrategyActive ? ` ${configStyles.configItemActive}` : ""}`}
+          onClick={() => navigate("/config/data-strategy")}
+        >
+          <Icon
+            name="bucket"
+            size="sm"
+            style={{flexShrink: 0, opacity: isDataStrategyActive ? 1 : 0.6} as React.CSSProperties}
+          />
+          <span className={configStyles.configItemTitle}>Data Strategy</span>
+        </div>
+
         {items.map(item => (
           <div
             key={item.module}

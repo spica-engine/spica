@@ -1,36 +1,14 @@
-.trigger {
-  cursor: pointer;
-
-}
-
-.popoverContent {
-  min-width: 360px;
-  max-width: 480px;
-}
-
-
-.clearButton {
-   padding: 0 !important;
-   min-width: unset !important;
-}
-
-.rootLabel {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.compactLabel {
+.relationColumns {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-3);
+  gap: var(--spacing-2);
   min-width: 0;
   max-width: 100%;
 
-  .compactId {
+  .idColumn {
     flex-shrink: 0;
-    max-width: 120px;
-    padding: 0 var(--spacing-3);
+    max-width: 140px;
+    padding: 0 var(--spacing-2);
     border-radius: var(--radius-sm);
     background-color: var(--background-hover, rgba(0, 0, 0, 0.04));
     font-family: monospace;
@@ -41,7 +19,7 @@
     white-space: nowrap;
   }
 
-  .compactPrimary {
+  .primaryColumn {
     min-width: 0;
     font-size: var(--font-size-sm);
     color: var(--color-text-primary);

@@ -95,16 +95,31 @@ const RelationMinimized: React.FC<RelationMinimizedProps> = ({
       return <Text size="medium" className={styles.placeholder}>{label}</Text>;
     }
 
-    let label: string | null = null;
+    const primary = (() => {
+      if (isRelationSelected(value) && value.columns?.length) {
+        return value.columns[0].value;
+      }
+      if (isRelationSelected(value) && value.label) {
+        return value.label;
+      }
+      return resolveLabel ? resolveLabel(id) : null;
+    })();
 
-    if (isRelationSelected(value) && value.label) {
-      label = value.label;
-    } else if (resolveLabel) {
-      label = resolveLabel(id);
-    }
-
-    const displayText = label || id;
-    return <Text size="medium">{displayText}</Text>;
+    // Compact single-line trigger: the id badge and (when resolved) the primary
+    // value sit side by side, kept tight to fit the 32px inline-editing input
+    // rather than the full column grid used by the picker rows.
+    return (
+      <span className={styles.compactLabel}>
+        <span className={styles.compactId} title={id}>
+          {id}
+        </span>
+        {primary && (
+          <span className={styles.compactPrimary} title={primary}>
+            {primary}
+          </span>
+        )}
+      </span>
+    );
   })();
 
   const currentValueId = extractRelationId(value);

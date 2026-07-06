@@ -8,10 +8,12 @@ import Confirmation from "../confirmation/Confirmation";
 import type {BucketDataType, BucketType, Property} from "src/store/api/bucketApi";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 import BucketEntryDrawer from "../../organisms/BucketEntryDrawer/BucketEntryDrawer";
+import BucketIndexManager from "../../organisms/bucket-index-manager/BucketIndexManager";
 import {useEntrySelection} from "../../../hooks/useEntrySelection";
 import FilterPanel from "../../prefabs/filter-panel/FilterPanel";
 import SortPanel from "../../prefabs/sort-panel/SortPanel";
-import type {FilterField, SortField} from "../../prefabs/filter-panel/types";
+import type {FilterField, FilterConditionRow, SortField} from "../../prefabs/filter-panel/types";
+import {conditionsToMongoFilter, isConditionActive, formatConditionValue} from "../../prefabs/filter-panel/filterPanelUtils";
 
 type BucketActionBarProps = {
   onRefresh: () => Promise<BucketDataType | void>;
@@ -124,10 +126,25 @@ const BucketActionBar = ({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteEntryError, setDeleteEntryError] = useState<string | null>(null);
   const [isNewEntryDrawerOpen, setIsNewEntryDrawerOpen] = useState(false);
+  const [isIndexManagerOpen, setIsIndexManagerOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [activeFilterCount, setActiveFilterCount] = useState(0);
+  // The human-readable conditions currently applied — persisted here so the
+  // popover can re-hydrate its rows and the chips row can render/remove them
+  // even after the FilterPanel unmounts on close.
+  const [appliedConditions, setAppliedConditions] = useState<FilterConditionRow[]>([]);
+  // Bumped on each Filter popover open so FilterPanel remounts and re-seeds its
+  // rows from `appliedConditions` regardless of whether the popover keeps its
+  // content mounted while closed.
+  const [filterHydrationKey, setFilterHydrationKey] = useState(0);
   const [activeSortCount, setActiveSortCount] = useState(0);
+
+  const activeFilterCount = appliedConditions.length;
+
+  const filterFieldMap = useMemo(
+    () => new Map(filterFields.map(f => [f.key, f])),
+    [filterFields]
+  );
 
   const sortFields: SortField[] = useMemo(
     () => filterFields.map(f => ({key: f.key, label: f.label})),
@@ -135,17 +152,31 @@ const BucketActionBar = ({
   );
 
   const handleFilterApply = useCallback(
-    (filter: Record<string, any> | null) => {
-      setActiveFilterCount(filter ? Object.keys(filter).length || 1 : 0);
+    (filter: Record<string, any> | null, conditions: FilterConditionRow[]) => {
+      setAppliedConditions(conditions.filter(isConditionActive));
       onFilter(filter);
     },
     [onFilter]
   );
 
   const handleFilterClear = useCallback(() => {
-    setActiveFilterCount(0);
+    setAppliedConditions([]);
     onFilter(null);
   }, [onFilter]);
+
+  const handleRemoveFilterChip = useCallback(
+    (id: string) => {
+      const next = appliedConditions.filter(c => c.id !== id);
+      setAppliedConditions(next);
+      onFilter(next.length ? conditionsToMongoFilter(next, filterFields) : null);
+    },
+    [appliedConditions, filterFields, onFilter]
+  );
+
+  const handleFilterToggle = useCallback(() => {
+    setIsFilterOpen(prev => !prev);
+    setFilterHydrationKey(k => k + 1);
+  }, []);
 
   const handleSortApply = useCallback(
     (sort: Record<string, 1 | -1> | null) => {
@@ -160,7 +191,13 @@ const BucketActionBar = ({
     onSort(null);
   }, [onSort]);
 
-  useEffect(() => setSearchValue(""), [bucket?._id]);
+  // Switching buckets must not carry a previous bucket's search or filter over:
+  // the applied conditions reference fields that may not exist on the new schema.
+  useEffect(() => {
+    setSearchValue("");
+    setAppliedConditions([]);
+    onFilter(null);
+  }, [bucket?._id, onFilter]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -245,6 +282,7 @@ const BucketActionBar = ({
   }, [visibleColumns]);
 
   return (
+    <>
     <div className={styles.container}>
         {/* LEFT: search + filter chips */}
         <div className={styles.toolbarLeft}>
@@ -266,7 +304,9 @@ const BucketActionBar = ({
             content={
               filterFields.length > 0 ? (
                 <FilterPanel
+                  key={filterHydrationKey}
                   fields={filterFields}
+                  initialConditions={appliedConditions}
                   onApply={handleFilterApply}
                   onClear={handleFilterClear}
                   onRequestClose={() => setIsFilterOpen(false)}
@@ -279,7 +319,7 @@ const BucketActionBar = ({
               variant="outlined"
               color="default"
               className={`${(isFilterOpen || activeFilterCount > 0) ? styles.chipActive : ""}`}
-              onClick={() => setIsFilterOpen(prev => !prev)}
+              onClick={handleFilterToggle}
             >
               <Icon name="filter" />
               Filter
@@ -420,7 +460,12 @@ const BucketActionBar = ({
               )}
             </Button>
           </Popover>
-          <BucketMorePopup bucket={bucket} />
+          <BucketMorePopup bucket={bucket} onManageIndexes={() => setIsIndexManagerOpen(true)} />
+          <BucketIndexManager
+            bucket={bucket}
+            isOpen={isIndexManagerOpen}
+            onClose={() => setIsIndexManagerOpen(false)}
+          />
           <div className={styles.newEntryWrapper}>
             <Button onClick={() => setIsNewEntryDrawerOpen(true)}>
               <Icon name="plus" />
@@ -434,6 +479,31 @@ const BucketActionBar = ({
             />
           </div>
         </div>
+    </div>
+
+      {appliedConditions.length > 0 && (
+        <div className={styles.filterChipsBar}>
+          {appliedConditions.map(condition => {
+            const field = filterFieldMap.get(condition.field);
+            const value = formatConditionValue(condition, field);
+            return (
+              <div key={condition.id} className={styles.filterChip}>
+                <span className={styles.filterChipField}>{field?.label ?? condition.field}</span>
+                <span className={styles.filterChipOp}>{condition.operator}</span>
+                {value && <span className={styles.filterChipVal}>{value}</span>}
+                <button
+                  type="button"
+                  className={styles.filterChipRemove}
+                  aria-label={`Remove ${field?.label ?? condition.field} filter`}
+                  onClick={() => handleRemoveFilterChip(condition.id)}
+                >
+                  <Icon name="close" size={12} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {isDeleteConfirmationOpen && (
         <Confirmation
@@ -470,7 +540,7 @@ const BucketActionBar = ({
           onCancel={handleCloseEntryDeletionForm}
         />
       )}
-    </div>
+    </>
   );
 };
 

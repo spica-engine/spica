@@ -13,6 +13,8 @@ export interface BucketLookup {
   setRelationLabel(bucketId: string, documentId: string, label: string): void;
   
   getBucketProperties(bucketId: string): Record<string, any> | undefined;
+
+  getBucketPrimaryKey(bucketId: string): string | undefined;
 }
 
 export const BucketLookupContext = createContext<BucketLookup | undefined>(undefined);
