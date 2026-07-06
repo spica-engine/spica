@@ -1,0 +1,50 @@
+.dateRangePicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-md);
+  width: 100%;
+
+  .presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-sm);
+  }
+
+  .presetButton {
+    padding: var(--padding-xs) var(--padding-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    background-color: var(--color-surface);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+
+    &.active {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+      background-color: var(--color-accent-light, var(--color-surface));
+    }
+  }
+
+  .custom {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+  }
+
+  .input {
+    padding: var(--padding-xs) var(--padding-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    color-scheme: light dark;
+  }
+
+  .separator {
+    color: var(--color-text-muted);
+  }
+}

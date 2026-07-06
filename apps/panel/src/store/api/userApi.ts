@@ -1,4 +1,5 @@
 import { baseApi } from './baseApi';
+import type { AuthFactorMeta, StartFactorVerificationResponse } from './identityApi';
 
 export interface ProfilerEntry {
   _id?: string;
@@ -138,6 +139,52 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [{ type: 'User', id }, 'User'],
     }),
 
+    // ── Multi-factor authentication (2FA) ──────────────────────────────────
+    // Spica users are passport entities backed by the same auth-factor machinery
+    // as identities; these endpoints mirror `passport/identity/:id/*` factors.
+    getUserAuthFactors: builder.query<
+      { type: string; title: string; description: string; config: Record<string, any> }[],
+      void
+    >({
+      query: () => 'passport/user/factors',
+    }),
+
+    // Begin enrolling a factor on a user. Returns a challenge (TOTP QR data-URL)
+    // the user confirms by POSTing a code to the answer url.
+    startUserFactorVerification: builder.mutation<
+      StartFactorVerificationResponse,
+      { id: string; meta: AuthFactorMeta }
+    >({
+      query: ({ id, meta }) => ({
+        url: `passport/user/${id}/start-factor-verification`,
+        method: 'POST',
+        body: meta,
+      }),
+    }),
+
+    // Confirm enrollment with the code from the authenticator app. On success the
+    // factor is persisted on the user record, so refresh it.
+    completeUserFactorVerification: builder.mutation<
+      { message: string },
+      { id: string; answer: string }
+    >({
+      query: ({ id, answer }) => ({
+        url: `passport/user/${id}/complete-factor-verification`,
+        method: 'POST',
+        body: { answer },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'User', id }, 'User'],
+    }),
+
+    // Disable 2FA: remove the registered factor from the user.
+    deleteUserAuthFactor: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `passport/user/${id}/factors`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, id) => [{ type: 'User', id }, 'User'],
+    }),
+
     getUserProfile: builder.query<ProfilerEntry[], ProfilerQueryParams | void>({
       query: (params) => {
         const queryParams: Record<string, string> = {};
@@ -162,6 +209,10 @@ export const {
   useDeleteUserMutation,
   useAddUserPolicyMutation,
   useRemoveUserPolicyMutation,
+  useGetUserAuthFactorsQuery,
+  useStartUserFactorVerificationMutation,
+  useCompleteUserFactorVerificationMutation,
+  useDeleteUserAuthFactorMutation,
   useGetUserProfileQuery,
   useLazyGetUserProfileQuery,
 } = userApi;

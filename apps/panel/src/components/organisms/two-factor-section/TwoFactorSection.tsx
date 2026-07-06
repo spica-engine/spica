@@ -1,12 +1,10 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button, Icon } from "oziko-ui-kit";
-import {
-  useStartFactorVerificationMutation,
-  useCompleteFactorVerificationMutation,
-  useDeleteAuthFactorMutation,
-  type Identity,
-} from "../../store/api/identityApi";
-import OtpInput from "../../components/molecules/otp-input/OtpInput";
+import type {
+  AuthFactorMeta,
+  StartFactorVerificationResponse,
+} from "../../../store/api/identityApi";
+import OtpInput from "../../molecules/otp-input/OtpInput";
 import styles from "./TwoFactorSection.module.scss";
 
 const OTP_LENGTH = 6;
@@ -17,21 +15,45 @@ const getErrorMessage = (error: any, fallback: string): string => {
   return error.data?.message || error.data?.error || error.error || error.message || fallback;
 };
 
+/** RTK Query mutation triggers expose `.unwrap()`; we only depend on that surface. */
+type Unwrappable<T> = { unwrap: () => Promise<T> };
+
 type TwoFactorSectionProps = {
-  identity: Identity;
+  entityId: string;
+  /** Persisted 2FA state for the entity (truthy `authFactor`). */
+  enabled: boolean;
+  /** Noun used in the disable-confirmation copy, e.g. "identity" or "user". */
+  entityNoun?: string;
+  startVerification: (args: {
+    id: string;
+    meta: AuthFactorMeta;
+  }) => Unwrappable<StartFactorVerificationResponse>;
+  completeVerification: (args: { id: string; answer: string }) => Unwrappable<unknown>;
+  disableFactor: (id: string) => Unwrappable<unknown>;
+  isStarting: boolean;
+  isVerifying: boolean;
+  isDisabling: boolean;
 };
 
 /**
- * Enable/disable TOTP two-factor auth for a single identity. Self-contained:
- * it drives the start → confirm → persist flow against the passport factor
- * endpoints and manages its own state, independent of the drawer's Save button.
+ * Enable/disable TOTP two-factor auth for a single passport entity (identity or
+ * user). Self-contained: it drives the start → confirm → persist flow against
+ * the passport factor endpoints supplied by the caller and manages its own
+ * state, independent of the drawer's Save button. Decoupled from any specific
+ * store slice so both the Identity and User modules can reuse it.
  */
-const TwoFactorSection = ({ identity }: TwoFactorSectionProps) => {
-  const id = identity._id ?? "";
-
-  const [startVerification, { isLoading: isStarting }] = useStartFactorVerificationMutation();
-  const [completeVerification, { isLoading: isVerifying }] = useCompleteFactorVerificationMutation();
-  const [disableFactor, { isLoading: isDisabling }] = useDeleteAuthFactorMutation();
+const TwoFactorSection = ({
+  entityId,
+  enabled,
+  entityNoun = "account",
+  startVerification,
+  completeVerification,
+  disableFactor,
+  isStarting,
+  isVerifying,
+  isDisabling,
+}: TwoFactorSectionProps) => {
+  const id = entityId ?? "";
 
   // QR challenge while enrolling; null when not in the setup flow.
   const [challenge, setChallenge] = useState<string | null>(null);
@@ -41,12 +63,12 @@ const TwoFactorSection = ({ identity }: TwoFactorSectionProps) => {
   const [error, setError] = useState<string | null>(null);
   const [confirmingDisable, setConfirmingDisable] = useState(false);
 
-  // Optimistic overrides so the UI flips immediately, before the identity list
+  // Optimistic overrides so the UI flips immediately, before the entity list
   // refetch (triggered by tag invalidation) propagates a fresh `authFactor`.
   const [justEnabled, setJustEnabled] = useState(false);
   const [justDisabled, setJustDisabled] = useState(false);
 
-  const enabled = justEnabled || (!!identity.authFactor && !justDisabled);
+  const isEnabled = justEnabled || (enabled && !justDisabled);
 
   const resetSetup = () => {
     setChallenge(null);
@@ -101,7 +123,7 @@ const TwoFactorSection = ({ identity }: TwoFactorSectionProps) => {
   const isEnrolling = challenge !== null;
 
   return (
-    <div className={styles.section}>
+    <div className={styles.twoFactorSection}>
       <div className={styles.header}>
         <div className={styles.headerText}>
           <div className={styles.title}>
@@ -112,9 +134,9 @@ const TwoFactorSection = ({ identity }: TwoFactorSectionProps) => {
             Require a time-based one-time code (Google Authenticator, Authy, …) at login.
           </div>
         </div>
-        <span className={`${styles.badge} ${enabled ? styles.badgeOn : styles.badgeOff}`}>
+        <span className={`${styles.badge} ${isEnabled ? styles.badgeOn : styles.badgeOff}`}>
           <span className={styles.dot} />
-          {enabled ? "Enabled" : "Disabled"}
+          {isEnabled ? "Enabled" : "Disabled"}
         </span>
       </div>
 
@@ -195,11 +217,11 @@ const TwoFactorSection = ({ identity }: TwoFactorSectionProps) => {
         )}
 
         {/* Enabled, with disable confirmation */}
-        {!isEnrolling && enabled && (
+        {!isEnrolling && isEnabled && (
           confirmingDisable ? (
             <>
               <div className={styles.confirmText}>
-                Disable two-factor authentication for this identity? They will sign in with
+                Disable two-factor authentication for this {entityNoun}? They will sign in with
                 only their password.
               </div>
               {error && <div className={styles.error}>{error}</div>}
@@ -241,7 +263,7 @@ const TwoFactorSection = ({ identity }: TwoFactorSectionProps) => {
         )}
 
         {/* Disabled, idle */}
-        {!isEnrolling && !enabled && (
+        {!isEnrolling && !isEnabled && (
           <>
             {error && <div className={styles.error}>{error}</div>}
             <Button
@@ -261,4 +283,4 @@ const TwoFactorSection = ({ identity }: TwoFactorSectionProps) => {
   );
 };
 
-export default TwoFactorSection;
+export default React.memo(TwoFactorSection);

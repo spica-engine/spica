@@ -82,10 +82,6 @@
     flex-shrink: 0;
   }
 
-  .versionControl {
-    cursor: pointer;
-  }
-
   .navigatorContainer {
     width: var(--navigator-w);
     transition: width var(--transition-duration) ease-in;

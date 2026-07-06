@@ -7,7 +7,7 @@ type TypeQuicklinks = {
   currentVersion?: string;
 };
 
-const Quicklinks: FC<TypeQuicklinks> = ({currentVersion = "v0.0.0"}) => {
+const Quicklinks: FC<TypeQuicklinks> = ({currentVersion = "0.0.0-dev"}) => {
   return (
     <FlexElement
       className={styles.quickLinks}
@@ -17,38 +17,14 @@ const Quicklinks: FC<TypeQuicklinks> = ({currentVersion = "v0.0.0"}) => {
       dimensionY={"fill"}
       gap={10}
     >
-      <h1 className={styles.title}>Quicklinks</h1>
-      <a
-        className={styles.links}
-        onClick={() => {
-          window.open(environment.SPICA_DOCS_URL, "_blank");
-        }}
-      >
-        Documentation
-      </a>
-      <a
-        className={styles.links}
-        onClick={() => {
-          window.open(environment.SPICA_GITHUB_URL, "_blank");
-        }}
-      >
-        Github
-      </a>
-      <a
-        className={styles.links}
-        onClick={() => {
-          window.open(environment.SPICA_YOUTUBE_EXAMPLE_URL, "_blank");
-        }}
-      >
-        Youtube
-      </a>
+      <h1 className={styles.title}>Current Release</h1>
       <a
         className={styles.links}
         onClick={() => {
           window.open(environment.SPICA_RELEASES_URL, "_blank");
         }}
       >
-        Releases (Current release {currentVersion})
+        {currentVersion}
       </a>
     </FlexElement>
   );
