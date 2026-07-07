@@ -60,6 +60,10 @@ if (!process.env.WORKER_ID) {
   });
   await initialize();
 
+  if (process.env.WARM) {
+    await preload();
+  }
+
   // Each lane keeps one pop outstanding, so the scheduler can hand this worker up
   // to LANE_COUNT concurrent events. The lane count is the in-process concurrency cap.
   await Promise.all(Array.from({length: LANE_COUNT}, () => runLane(queue, pop)));
@@ -88,6 +92,32 @@ async function initialize() {
     globalThis.require = createRequire(path.join(process.cwd(), "external/npm/node_modules"));
     await import("./experimental_database.js");
     globalThis.require = _require;
+  }
+}
+
+/*
+  Warm start: run everything a cold worker would only do lazily inside _process
+  (chdir, env, module import) BEFORE the worker blocks on its first event. The
+  import() executes the user module's top-level imports and global assignments and
+  populates Node's ES module cache, so _process' own import() (same resolved path)
+  is a cache hit and only the handler invocation remains on the event's critical path.
+  On failure we swallow the error and fall through to the normal cold path so the
+  error surfaces per-event exactly as it does today.
+*/
+async function preload() {
+  try {
+    const env = JSON.parse(process.env.WARM_ENV || "{}");
+    for (const key of Object.keys(env)) {
+      process.env[key] = env[key];
+    }
+
+    process.chdir(process.env.WARM_CWD!);
+
+    globalThis.require = createRequire(path.join(process.cwd(), "node_modules"));
+
+    await import(path.join(process.cwd(), ".build", process.env.ENTRYPOINT!));
+  } catch (e) {
+    console.error(e);
   }
 }
 

@@ -16,11 +16,15 @@ import {
   Filter,
   FindOneAndReplaceOptions,
   ObjectId,
+  UpdateFilter,
+  UpdateOptions,
   WithId
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference-services";
 import {deepCopy} from "@spica-server/core-patch";
 import {BehaviorSubject, Observable, Subscription} from "rxjs";
+import {filter, switchMap} from "rxjs/operators";
+import {BucketChangeDispatcher} from "./change-dispatcher.js";
 import {getBucketDataCollection} from "./index.js";
 import {
   IndexDefinition,
@@ -47,11 +51,10 @@ export class BucketService
     db: DatabaseService,
     private pref: PreferenceService,
     private validator: Validator,
+    private changeDispatcher: BucketChangeDispatcher,
     @Optional() @Inject(BUCKET_DATA_LIMIT) private bucketDataLimit
   ) {
-    super(db, {
-      collectionOptions: {changeStreamPreAndPostImages: {enabled: true}}
-    });
+    super(db);
   }
 
   async onModuleInit() {
@@ -73,40 +76,24 @@ export class BucketService
     if (this.destroyed) {
       return;
     }
-    this.cacheSub = this.watch(
-      [{$match: {operationType: {$in: ["insert", "update", "replace", "delete"]}}}],
-      {fullDocument: "updateLookup"}
-    ).subscribe({
-      next: change => {
-        if (!("documentKey" in change)) {
-          return;
-        }
-        const id = (change.documentKey._id as ObjectId)?.toString();
-        if (!id) {
-          return;
-        }
+    this.cacheSub = this.changeDispatcher.watch().subscribe({
+      next: async change => {
+        const id = change.documentKey._id.toString();
         if (change.operationType === "delete") {
           this.schemaCache.delete(id);
-        } else if ("fullDocument" in change && change.fullDocument) {
-          this.schemaCache.set(id, change.fullDocument);
-        }
-      },
-      error: async error => {
-        if (this.destroyed) {
           return;
         }
+        const bucket = await super.findOne({_id: change.documentKey._id});
+        if (bucket) {
+          this.schemaCache.set(id, bucket);
+        } else {
+          this.schemaCache.delete(id);
+        }
+      },
+      error: error =>
         this.logger.error(
           `bucket schema cache watch error: ${error instanceof Error ? error.message : error}`
-        );
-        try {
-          await this.warmSchemaCache();
-        } catch (e) {
-          this.logger.error(
-            `bucket schema cache re-warm failed: ${e instanceof Error ? e.message : e}`
-          );
-        }
-        this.startSchemaCacheWatch();
-      }
+        )
     });
   }
 
@@ -160,6 +147,10 @@ export class BucketService
     const insertedBucket = await super.insertOne(bucket);
 
     this.schemaCache.set(insertedBucket._id.toString(), deepCopy(insertedBucket));
+    this.changeDispatcher.dispatch({
+      operationType: "insert",
+      documentKey: {_id: insertedBucket._id}
+    });
 
     await this.db.createCollection(getBucketDataCollection(insertedBucket._id));
 
@@ -176,6 +167,10 @@ export class BucketService
     return super.findOneAndReplace(filter, doc, options).then(r => {
       const replaced = {...doc, _id: filter._id as ObjectId} as WithId<Bucket>;
       this.schemaCache.set(replaced._id.toString(), deepCopy(replaced));
+      this.changeDispatcher.dispatch({
+        operationType: "replace",
+        documentKey: {_id: replaced._id}
+      });
       return this.updateIndexes(replaced).then(() => r);
     });
   }
@@ -186,21 +181,39 @@ export class BucketService
       throw new NotFoundException(`Bucket with ID ${id} does not exist.`);
     }
     this.schemaCache.delete(id.toString());
+    this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: schema._id}});
     await this.db.dropCollection(getBucketDataCollection(id));
     return schema;
   }
 
+  async updateMany(
+    filter: Filter<Bucket>,
+    update: UpdateFilter<Bucket> | Partial<Bucket>,
+    options?: UpdateOptions
+  ): Promise<number> {
+    const affected = await super.find(filter, {projection: {_id: 1}});
+    const result = await super.updateMany(filter, update, options);
+    for (const {_id} of affected) {
+      this.changeDispatcher.dispatch({operationType: "update", documentKey: {_id}});
+    }
+    return result;
+  }
+
   watchBucket(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
+    const _id = new ObjectId(bucketId);
     return new Observable(observer => {
       if (propagateOnStart) {
-        super.findOne({_id: new ObjectId(bucketId)}).then(bucket => observer.next(bucket));
+        super.findOne({_id}).then(bucket => observer.next(bucket));
       }
-      const sub = this.watch(
-        [{$match: {"fullDocument._id": {$eq: new ObjectId(bucketId)}}}],
-        {fullDocument: "updateLookup"}
-      ).subscribe(change =>
-        observer.next("fullDocument" in change ? change.fullDocument : undefined)
-      );
+      const sub = this.changeDispatcher
+        .watch()
+        .pipe(
+          filter(
+            change => change.documentKey._id.equals(_id) && change.operationType !== "delete"
+          ),
+          switchMap(change => super.findOne({_id: change.documentKey._id}))
+        )
+        .subscribe(bucket => observer.next(bucket));
       return () => sub.unsubscribe();
     });
   }

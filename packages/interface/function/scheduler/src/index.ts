@@ -20,6 +20,7 @@ export interface SchedulingOptions {
   corsOptions: CorsOptions;
   maxConcurrency: number;
   maxConcurrencyPerWorker?: number;
+  maxWarmWorkers: number;
   debug: boolean;
   logger: boolean;
   invocationLogs: boolean;
@@ -39,7 +40,9 @@ export enum WorkerState {
   "Targeted",
   "Busy",
   "Timeouted",
-  "Outdated"
+  "Outdated",
+  "Warming",
+  "Warm"
 }
 
 export const ENQUEUER = Symbol.for("SCHEDULER_ENQUEUER");

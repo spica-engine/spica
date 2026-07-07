@@ -40,8 +40,16 @@ export class ScheduleWorker extends NodeWorker {
   }
 
   private transitionMap = {
-    [WorkerState.Initial]: [WorkerState.Fresh],
+    [WorkerState.Initial]: [WorkerState.Fresh, WorkerState.Warming],
+    // Fresh/Warm -> Targeted covers a first execute that leaves free lanes (capacity > 1).
     [WorkerState.Fresh]: [WorkerState.Busy, WorkerState.Targeted],
+    [WorkerState.Warming]: [WorkerState.Warm, WorkerState.Timeouted, WorkerState.Outdated],
+    [WorkerState.Warm]: [
+      WorkerState.Busy,
+      WorkerState.Targeted,
+      WorkerState.Timeouted,
+      WorkerState.Outdated
+    ],
     [WorkerState.Targeted]: [
       WorkerState.Busy,
       WorkerState.Targeted,
@@ -66,6 +74,11 @@ export class ScheduleWorker extends NodeWorker {
     schedule!(event);
   }
 
+  public markAsWarming(target: event.Target) {
+    this.target = target;
+    this.transitionTo(WorkerState.Warming);
+  }
+
   public markAsAvailable(schedule: Schedule) {
     this.pending.push(schedule);
 
@@ -74,8 +87,14 @@ export class ScheduleWorker extends NodeWorker {
       return;
     }
 
-    // Further lanes parking their first pop before the worker is targeted.
-    if (this.state == WorkerState.Fresh) {
+    // First lane of a pre-warmed worker graduates it to Warm (servable reserve).
+    if (this.state == WorkerState.Warming) {
+      this.transitionTo(WorkerState.Warm);
+      return;
+    }
+
+    // Further lanes of an untargeted/warm worker just park their pop.
+    if (this.state == WorkerState.Fresh || this.state == WorkerState.Warm) {
       return;
     }
 
@@ -129,5 +148,9 @@ export class ScheduleWorker extends NodeWorker {
 
   public hasSameTarget(targetId: string) {
     return this.target && this.target.id == targetId;
+  }
+
+  public get targetId(): string | undefined {
+    return this.target?.id;
   }
 }

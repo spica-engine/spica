@@ -55,6 +55,7 @@ export class FunctionModule {
         SchedulerModule.forRoot({
           maxConcurrency: options.maxConcurrency,
           maxConcurrencyPerWorker: options.maxConcurrencyPerWorker,
+          maxWarmWorkers: options.maxWarmWorkers,
           databaseName: options.databaseName,
           databaseReplicaSet: options.databaseReplicaSet,
           databaseUri: options.databaseUri,
