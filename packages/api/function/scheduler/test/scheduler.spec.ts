@@ -28,6 +28,7 @@ describe("Scheduler", () => {
       allowedOrigins: ["*"]
     },
     maxConcurrency: 2,
+    maxWarmWorkers: 10,
     debug: false,
     logger: false,
     workerLogOutput: ["database"] as ("database" | "stdout")[],
@@ -50,6 +51,37 @@ describe("Scheduler", () => {
 
   function allWorkers() {
     return Array.from(scheduler["workers"].entries());
+  }
+
+  function warmWorkers() {
+    return Array.from(scheduler["workers"].entries()).filter(
+      ([_, w]) => w.state == WorkerState.Warm
+    );
+  }
+
+  function warmingWorkers() {
+    return Array.from(scheduler["workers"].entries()).filter(
+      ([_, w]) => w.state == WorkerState.Warming
+    );
+  }
+
+  // A real warm worker signals readiness by calling gRPC `pop` after it finishes
+  // pre-loading; here we simulate that by promoting every Warming worker to Warm.
+  function connectWarmingWorkers() {
+    for (const [id, w] of Array.from(scheduler["workers"].entries())) {
+      if (w.state == WorkerState.Warming) {
+        scheduler.gotWorker(id, () => {});
+      }
+    }
+  }
+
+  function makeTarget(id: string) {
+    return new event.Target({
+      id,
+      cwd: compilation.cwd,
+      handler: "default",
+      context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+    });
   }
 
   const now = new Date(2015, 1, 1, 1, 1, 31, 0);
@@ -383,6 +415,158 @@ describe("Scheduler", () => {
     expect(activateds.every(([_, worker]) => worker.hasSameTarget("1"))).toBe(true);
 
     expect(freeWorkers().length).toEqual(1);
+  });
+
+  describe("warm workers", () => {
+    it("should spawn warm workers on reconcile and mark them Warm once ready", () => {
+      spawnSpy.mockClear();
+
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+
+      expect(spawnSpy).toHaveBeenCalledTimes(2);
+      expect(spawnSpy.mock.calls[0][0].env).toEqual(
+        expect.objectContaining({WARM: "true", WARM_CWD: compilation.cwd})
+      );
+      expect(warmingWorkers().length).toEqual(2);
+      expect(warmingWorkers().every(([_, w]) => w.hasSameTarget("1"))).toBe(true);
+
+      connectWarmingWorkers();
+
+      expect(warmingWorkers().length).toEqual(0);
+      expect(warmWorkers().length).toEqual(2);
+    });
+
+    it("should clamp the warm worker count to maxWarmWorkers", () => {
+      spawnSpy.mockClear();
+
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 999);
+
+      const warm = warmingWorkers().length + warmWorkers().length;
+      expect(warm).toEqual(schedulerOptions.maxWarmWorkers);
+    });
+
+    it("should prefer a warm worker over the cold fresh worker on assignment", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 1);
+      connectWarmingWorkers();
+
+      const [[warmId]] = warmWorkers();
+
+      // the untouched cold fresh worker from init
+      expect(freeWorkers().length).toEqual(1);
+
+      scheduler.enqueue(
+        new event.Event({
+          target: makeTarget("1"),
+          type: -1 as any
+        })
+      );
+
+      // the warm worker took the event instead of the cold fresh worker
+      const worker = scheduler["workers"].get(warmId);
+      expect(worker.state).toEqual(WorkerState.Busy);
+      expect(worker.hasSameTarget("1")).toBe(true);
+
+      // cold fresh reserve is untouched, and the warm reserve is being refilled
+      expect(freeWorkers().length).toEqual(1);
+      expect(warmingWorkers().length).toEqual(1);
+    });
+
+    it("should not count warm workers against the concurrency limit", () => {
+      // maxConcurrency is 2, but 3 concurrent same-target events are all served
+      // because the 3 warm workers are not gated by concurrency.
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 3);
+      connectWarmingWorkers();
+
+      expect(warmWorkers().length).toEqual(3);
+
+      for (let i = 0; i < 3; i++) {
+        scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
+      }
+
+      expect(scheduler.eventQueue.size).toEqual(0);
+
+      const busySameTarget = allWorkers().filter(
+        ([_, w]) => w.state == WorkerState.Busy && w.hasSameTarget("1")
+      );
+      expect(busySameTarget.length).toEqual(3);
+    });
+
+    it("should graduate a warm worker and reuse it before the reserve", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 1);
+      connectWarmingWorkers();
+
+      const [[warmId]] = warmWorkers();
+
+      scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
+      // graduated worker finishes and becomes Targeted (idle, reusable)
+      completeEvent("1");
+
+      const graduated = scheduler["workers"].get(warmId);
+      expect(graduated.state).toEqual(WorkerState.Targeted);
+
+      // reserve was refilled after the warm worker was consumed
+      connectWarmingWorkers();
+      expect(warmWorkers().length).toEqual(1);
+
+      // the next event reuses the graduated worker, leaving the reserve intact
+      scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
+
+      expect(scheduler["workers"].get(warmId).state).toEqual(WorkerState.Busy);
+      expect(warmWorkers().length).toEqual(1);
+    });
+
+    it("should kill warm workers when the reserve is reduced to zero", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+      connectWarmingWorkers();
+      expect(warmWorkers().length).toEqual(2);
+
+      const killSpies = warmWorkers().map(([_, w]) => jest.spyOn(w, "kill"));
+
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 0);
+
+      expect(warmWorkers().length).toEqual(0);
+      expect(warmingWorkers().length).toEqual(0);
+      expect(scheduler.warmConfigs.has("1")).toBe(false);
+      killSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(1));
+    });
+
+    it("should trim in-flight warming workers before ready ones when the reserve is reduced", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 1);
+      connectWarmingWorkers();
+
+      const [[readyId, readyWorker]] = warmWorkers();
+      const readyKill = jest.spyOn(readyWorker, "kill");
+
+      // grow the reserve; the two refills stay Warming because we don't connect them
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 3);
+      expect(warmWorkers().length).toEqual(1);
+      expect(warmingWorkers().length).toEqual(2);
+
+      const warmingKills = warmingWorkers().map(([_, w]) => jest.spyOn(w, "kill"));
+
+      // reduce back to 1: the two in-flight workers are killed, the ready one is kept
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 1);
+
+      expect(warmingWorkers().length).toEqual(0);
+      expect(warmWorkers().length).toEqual(1);
+      expect(scheduler["workers"].get(readyId).state).toEqual(WorkerState.Warm);
+      expect(readyKill).not.toHaveBeenCalled();
+      warmingKills.forEach(spy => expect(spy).toHaveBeenCalledTimes(1));
+    });
+
+    it("should outdate and kill warm workers when their target is outdated", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 1);
+      connectWarmingWorkers();
+
+      const [[, worker]] = warmWorkers();
+      const kill = jest.spyOn(worker, "kill");
+
+      scheduler.outdateWorkers("1");
+
+      expect(worker.state).toEqual(WorkerState.Outdated);
+      expect(kill).toHaveBeenCalledTimes(1);
+      expect(warmWorkers().length).toEqual(0);
+    });
   });
 
   describe("onModuleDestroy", () => {

@@ -316,6 +316,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         })
       });
       enqueuer.subscribe(target, change.options);
+      this.scheduler.reconcileWarmWorkers(target, change.target.warmWorkers ?? 0);
     } else {
       this.logger.warn(`Couldn't find enqueuer ${change.type}.`);
     }
@@ -327,14 +328,17 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private unsubscribe(change: TargetChange) {
+    const target = new event.Target({
+      id: change.target.id,
+      cwd: path.join(this.options.root, change.target.name),
+      handler: change.target.handler
+    });
+
     for (const enqueuer of this.scheduler.enqueuers) {
-      const target = new event.Target({
-        id: change.target.id,
-        cwd: path.join(this.options.root, change.target.name),
-        handler: change.target.handler
-      });
       enqueuer.unsubscribe(target);
     }
+
+    this.scheduler.reconcileWarmWorkers(target, 0);
   }
 
   private getFunctionLanguage(fn: Function) {

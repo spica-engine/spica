@@ -29,8 +29,10 @@ export class ScheduleWorker extends NodeWorker {
   private schedule: Schedule;
 
   private transitionMap = {
-    [WorkerState.Initial]: [WorkerState.Fresh],
+    [WorkerState.Initial]: [WorkerState.Fresh, WorkerState.Warming],
     [WorkerState.Fresh]: [WorkerState.Busy],
+    [WorkerState.Warming]: [WorkerState.Warm, WorkerState.Timeouted, WorkerState.Outdated],
+    [WorkerState.Warm]: [WorkerState.Busy, WorkerState.Timeouted, WorkerState.Outdated],
     [WorkerState.Targeted]: [WorkerState.Busy, WorkerState.Timeouted, WorkerState.Outdated],
     [WorkerState.Busy]: [WorkerState.Targeted, WorkerState.Timeouted, WorkerState.Outdated],
     [WorkerState.Timeouted]: [WorkerState.Outdated],
@@ -43,9 +45,16 @@ export class ScheduleWorker extends NodeWorker {
     this.schedule(event);
   }
 
+  public markAsWarming(target: event.Target) {
+    this.target = target;
+    this.transitionTo(WorkerState.Warming);
+  }
+
   public markAsAvailable(schedule: Schedule) {
     if (this.state == WorkerState.Busy) {
       this.transitionTo(WorkerState.Targeted);
+    } else if (this.state == WorkerState.Warming) {
+      this.transitionTo(WorkerState.Warm);
     } else if (this.state == WorkerState.Initial) {
       this.transitionTo(WorkerState.Fresh);
     }

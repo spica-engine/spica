@@ -203,7 +203,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       ([key, worker]) =>
         worker.state == WorkerState.Initial ||
         worker.state == WorkerState.Fresh ||
-        worker.state == WorkerState.Targeted
+        worker.state == WorkerState.Targeted ||
+        worker.state == WorkerState.Warm ||
+        worker.state == WorkerState.Warming
     );
     const killWorkers = freeWorkers.map(([key, worker]) => {
       return worker.kill();
@@ -256,16 +258,22 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   timeouts = new Map<string, NodeJS.Timeout>();
 
+  warmConfigs = new Map<string, {desired: number; target: event.Target}>();
+
   getStatus() {
     const workers = Array.from(this.workers.values());
 
     const initial = workers.filter(w => w.state == WorkerState.Initial).length;
     const fresh = workers.filter(w => w.state == WorkerState.Fresh).length;
-    const activated = workers.length - initial - fresh;
+    const warm = workers.filter(
+      w => w.state == WorkerState.Warm || w.state == WorkerState.Warming
+    ).length;
+    const activated = workers.length - initial - fresh - warm;
 
     return {
       activated: activated,
       fresh: fresh,
+      warm: warm,
       unit: "count"
     };
   }
@@ -277,18 +285,22 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     const sameTargets = workers.filter(({worker}) => worker.hasSameTarget(target.id));
 
-    const available = sameTargets.find(
-      ({worker}) =>
-        worker.state != WorkerState.Busy &&
-        worker.state != WorkerState.Timeouted &&
-        worker.state != WorkerState.Outdated
-    );
-    if (available) {
-      return available;
+    // 1. Reuse an already-graduated, idle same-target worker (its module is cache-warm).
+    const reusable = sameTargets.find(({worker}) => worker.state == WorkerState.Targeted);
+    if (reusable) {
+      return reusable;
     }
 
+    // 2. Tap the pre-warmed reserve — the first-hit and concurrency-burst path.
+    const warm = sameTargets.find(({worker}) => worker.state == WorkerState.Warm);
+    if (warm) {
+      return warm;
+    }
+
+    // 3. Fall back to the shared cold worker. Warm/Warming workers are intentionally
+    // excluded from the concurrency count so the reserve never blocks a cold spawn.
     const activeTargetWorkers = sameTargets.filter(
-      ({worker}) => worker.state != WorkerState.Timeouted && worker.state != WorkerState.Outdated
+      ({worker}) => worker.state == WorkerState.Targeted || worker.state == WorkerState.Busy
     );
     const fresh = workers.find(({worker}) => worker.state == WorkerState.Fresh);
     if (activeTargetWorkers.length < this.options.maxConcurrency) {
@@ -353,6 +365,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       this.print(`assigning ${event.id} to ${workerId}`);
 
       this.scaleWorkers();
+      this.scaleWarmWorkers(event.target.id);
     }
   }
 
@@ -412,7 +425,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       .filter(worker => worker.hasSameTarget(targetId))
       .forEach(worker => {
         if (worker.state != WorkerState.Outdated) {
+          const wasWarm =
+            worker.state == WorkerState.Warm || worker.state == WorkerState.Warming;
           worker.markAsOutdated();
+          // Warm workers never execute on their own, so they can't drain by finishing
+          // an event — kill them now. The reserve is refilled by the engine's reconcile
+          // (which follows every real code/env change with the fresh target).
+          if (wasWarm) {
+            worker.kill();
+          }
         }
       });
   }
@@ -426,29 +447,103 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    this.spawnWorker();
+  }
+
+  private spawnWorker(extraEnv: {[key: string]: string} = {}): ScheduleWorker {
     const id: string = uniqid();
     const node = this.runtimes.get("node") as Node;
+    const env: {[key: string]: string} = {
+      __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
+      __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
+      __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
+      __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
+      __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
+        ? "true"
+        : "",
+      ...extraEnv
+    };
+
+    if (this.options.logger) {
+      env.LOGGER = "true";
+    }
+    if (this.options.functionGrpcMaxMessageSizeBytes) {
+      env.FUNCTION_GRPC_MAX_MESSAGE_SIZE = String(this.options.functionGrpcMaxMessageSizeBytes);
+    }
+
     const worker = node.spawn({
       id,
-      env: {
-        __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
-        __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
-        __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
-        __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
-        __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
-          ? "true"
-          : "",
-        LOGGER: this.options.logger ? "true" : undefined,
-        FUNCTION_GRPC_MAX_MESSAGE_SIZE: this.options.functionGrpcMaxMessageSizeBytes
-          ? String(this.options.functionGrpcMaxMessageSizeBytes)
-          : undefined
-      },
+      env,
       entrypointPath: this.options.spawnEntrypointPath
     });
 
     worker.once("exit", () => this.lostWorker(id));
 
     this.workers.set(id, worker);
+
+    return worker;
+  }
+
+  /**
+   * Declare how many pre-warmed workers a function should keep on standby.
+   * Idempotent: called once per active trigger of the function, and with 0 when
+   * the function/trigger is removed. The count is clamped to `maxWarmWorkers`.
+   */
+  reconcileWarmWorkers(target: event.Target, desired: number) {
+    const fnId = target.id;
+    const clamped = Math.max(0, Math.min(desired || 0, this.options.maxWarmWorkers || 0));
+
+    if (clamped == 0) {
+      this.warmConfigs.delete(fnId);
+    } else {
+      this.warmConfigs.set(fnId, {desired: clamped, target});
+    }
+
+    this.scaleWarmWorkers(fnId);
+  }
+
+  private scaleWarmWorkers(fnId: string) {
+    const config = this.warmConfigs.get(fnId);
+    const desired = config ? config.desired : 0;
+
+    const warmWorkers = Array.from(this.workers.values()).filter(
+      worker =>
+        worker.hasSameTarget(fnId) &&
+        (worker.state == WorkerState.Warm || worker.state == WorkerState.Warming)
+    );
+
+    if (config && warmWorkers.length < desired) {
+      for (let i = warmWorkers.length; i < desired; i++) {
+        this.spawnWarmWorker(config.target);
+      }
+    } else if (warmWorkers.length > desired) {
+      // trim in-flight spawns first so the ready, immediately-servable reserve is kept
+      const ordered = warmWorkers.sort((a, b) =>
+        a.state == WorkerState.Warming ? -1 : b.state == WorkerState.Warming ? 1 : 0
+      );
+      for (const worker of ordered.slice(0, warmWorkers.length - desired)) {
+        worker.markAsOutdated();
+        worker.kill();
+      }
+    }
+  }
+
+  private spawnWarmWorker(target: event.Target) {
+    const env = (target.context?.env || []).reduce(
+      (acc, e) => {
+        acc[e.key] = e.value;
+        return acc;
+      },
+      {} as {[key: string]: string}
+    );
+
+    const worker = this.spawnWorker({
+      WARM: "true",
+      WARM_CWD: target.cwd,
+      WARM_ENV: JSON.stringify(env)
+    });
+
+    worker.markAsWarming(target);
   }
 
   /**

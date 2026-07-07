@@ -26,6 +26,7 @@ export interface Function<
   triggers: Triggers;
   timeout: number;
   language: string;
+  warmWorkers?: number;
 }
 
 export interface Triggers {
@@ -89,6 +90,7 @@ export interface TargetChange {
     handler?: string;
     context?: Context;
     name?: string;
+    warmWorkers?: number;
   };
 }
 

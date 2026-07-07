@@ -44,6 +44,7 @@ describe("Engine", () => {
             allowedHeaders: ["*"]
           },
           maxConcurrency: 1,
+          maxWarmWorkers: 0,
           debug: false,
           logger: false,
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,

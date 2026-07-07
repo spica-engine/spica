@@ -79,7 +79,8 @@ export function hasContextChange(
   return (
     diff(previousFn.env_vars, currentFn.env_vars).length > 0 ||
     diff(previousFn.secrets, currentFn.secrets).length > 0 ||
-    previousFn.timeout != currentFn.timeout
+    previousFn.timeout != currentFn.timeout ||
+    previousFn.warmWorkers != currentFn.warmWorkers
   );
 }
 
@@ -104,7 +105,8 @@ export function createTargetChanges<CK extends ChangeKind>(
       target: {
         id: fn._id.toString(),
         handler,
-        name: fn.name
+        name: fn.name,
+        warmWorkers: fn.warmWorkers
       }
     };
 
