@@ -306,6 +306,45 @@ describe("Engine", () => {
     expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(0);
   });
 
+  it("should outdate then refresh the warm reserve when the function is updated", async () => {
+    await fs.insertOne({
+      _id: new ObjectId(hexString),
+      env_vars: [],
+      language: "js",
+      timeout: 10,
+      name: "warm_fn",
+      warmWorkers: 2,
+      triggers: {test_handler: {active: true, options: {}, type: "http"}}
+    });
+
+    // use the real unsubscribe so the update actually reaches scheduler.outdateWorkers
+    unsubscribeSpy.mockRestore();
+    const outdateSpy = jest.spyOn(scheduler, "outdateWorkers");
+    const reconcileSpy = jest.spyOn(scheduler, "reconcileWarmWorkers");
+
+    engine["categorizeChanges"]([
+      {
+        kind: ChangeKind.Updated,
+        type: "http",
+        options: {},
+        target: {
+          id: hexString,
+          handler: "test_handler",
+          name: "warm_fn",
+          context: {env: {}, timeout: 10}
+        }
+      }
+    ]);
+
+    // update -> updateSubscription -> unsubscribe -> schedulerUnsubscription -> outdateWorkers
+    // (stale warm/warming workers are killed)
+    expect(outdateSpy).toHaveBeenCalledWith(hexString);
+
+    // ...then the reserve is respawned from the function's current state (warmWorkers=2)
+    await waitForCalls(reconcileSpy);
+    expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(2);
+  });
+
   it("should reload function environments when environment variable changed", async () => {
     const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);

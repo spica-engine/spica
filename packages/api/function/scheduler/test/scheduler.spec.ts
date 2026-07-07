@@ -588,6 +588,34 @@ describe("Scheduler", () => {
       expect(spawnSpy).not.toHaveBeenCalled();
     });
 
+    it("should refresh the reserve on update: kill outdated workers, respawn fresh, no double-refill", () => {
+      // mirrors the engine update flow (outdateWorkers -> reconcileWarmWorkers)
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+      connectWarmingWorkers();
+      expect(warmWorkers().length).toEqual(2);
+
+      const [[oldId, oldWorker]] = warmWorkers();
+      const oldKill = jest.spyOn(oldWorker, "kill");
+
+      // step 1: the update outdates the current reserve (kills warm/warming workers)
+      scheduler.outdateWorkers("1");
+      expect(oldWorker.state).toEqual(WorkerState.Outdated);
+      expect(oldKill).toHaveBeenCalled();
+      expect(warmWorkers().length).toEqual(0);
+
+      // step 2: reconcile respawns a fresh reserve with the new code/env
+      spawnSpy.mockClear();
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+      expect(spawnSpy).toHaveBeenCalledTimes(2);
+      expect(warmingWorkers().length).toEqual(2);
+
+      // the outdated workers dying must NOT trigger an extra refill — they exit
+      // Outdated, not Warm/Warming, so lostWorker's replenish path is skipped
+      spawnSpy.mockClear();
+      scheduler.lostWorker(oldId);
+      expect(spawnSpy).not.toHaveBeenCalled();
+    });
+
     it("should outdate and kill warm workers when their target is outdated", () => {
       scheduler.reconcileWarmWorkers(makeTarget("1"), 1);
       connectWarmingWorkers();
