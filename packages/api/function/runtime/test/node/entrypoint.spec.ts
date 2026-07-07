@@ -69,6 +69,25 @@ describe("Entrypoint", () => {
     });
   }
 
+  function spawnWarm(stdout: Writable, warmEnv: {[key: string]: string}) {
+    const worker = runtime.spawn({
+      id: String(++id),
+      env: {
+        __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
+        __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
+        __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET,
+        WARM: "true",
+        WARM_CWD: compilation.cwd,
+        WARM_ENV: JSON.stringify(warmEnv)
+      },
+      entrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH
+    });
+
+    worker.attach(stdout, stdout);
+
+    return worker;
+  }
+
   beforeEach(async () => {
     let schedule;
     let event;
@@ -135,6 +154,49 @@ describe("Entrypoint", () => {
         })
       );
     });
+  });
+
+  it("should preload the module top-level code during warm start before any event", async () => {
+    // The module logs a sentinel at import time and reads an env var applied from
+    // WARM_ENV. A cold worker only imports on an event; here no event is enqueued,
+    // so seeing the sentinel proves the warm worker pre-loaded before blocking.
+    await initializeFn(
+      `console.log("PRELOADED::" + process.env.WARM_MARK); export default function() {}`
+    );
+
+    const out = new PassThrough();
+    const preloaded = new Promise<void>(resolve => {
+      let buf = "";
+      out.on("data", d => {
+        buf += d.toString();
+        if (buf.includes("PRELOADED::hello")) {
+          resolve();
+        }
+      });
+    });
+
+    const worker = spawnWarm(out, {WARM_MARK: "hello"});
+
+    await preloaded;
+
+    // the pre-loaded module is cache-warm, so an event still runs the handler and completes
+    const completed = new Promise<void>(resolve => {
+      queue["_complete"] = () => resolve();
+    });
+
+    queue.enqueue(
+      new event.Event({
+        type: -1 as any,
+        target: new event.Target({
+          handler: "default",
+          cwd: compilation.cwd,
+          context: new event.SchedulingContext({env: [], timeout: 60})
+        })
+      })
+    );
+
+    await completed;
+    await worker.kill();
   });
 
   it("should exit abnormally when worker id was not set", async () => {

@@ -47,6 +47,12 @@
       "type": "number",
       "description": "Order of the function"
     },
+    "warmWorkers": {
+      "type": "number",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of pre-warmed workers kept ready for this function so events skip the cold module load"
+    },
     "category": {
       "type": "string",
       "description": "Category name of the function"

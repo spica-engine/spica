@@ -26,6 +26,7 @@ export interface Function<
   triggers: Triggers;
   timeout: number;
   language: string;
+  warmWorkers?: number;
 }
 
 export interface Triggers {
