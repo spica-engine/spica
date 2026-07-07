@@ -35,7 +35,6 @@ import {
 } from "@spica-server/function-runtime-io";
 import {generateLog} from "@spica-server/function-runtime-logger";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface-replication";
 import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/interface-status";
 import {GuardService} from "@spica-server/passport-guard-services";
 import uniqid from "uniqid";
@@ -74,10 +73,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker,
     private guardService: GuardService
   ) {
-    if (this.commander) {
-      this.commander.register(this, [this.outdateWorkers], CommandType.SYNC);
-    }
-
     this.outputs = this.createOutputs(database);
 
     this.languages.set("typescript", new Typescript(options.tsCompilerPath));
@@ -447,8 +442,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       .filter(worker => worker.hasSameTarget(targetId))
       .forEach(worker => {
         if (worker.state != WorkerState.Outdated) {
-          const wasWarm =
-            worker.state == WorkerState.Warm || worker.state == WorkerState.Warming;
+          const wasWarm = worker.state == WorkerState.Warm || worker.state == WorkerState.Warming;
           worker.markAsOutdated();
           // Warm workers never execute on their own, so they can't drain by finishing
           // an event — kill them now. The reserve is refilled by the engine's reconcile
