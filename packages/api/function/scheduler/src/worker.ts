@@ -83,4 +83,8 @@ export class ScheduleWorker extends NodeWorker {
   public hasSameTarget(targetId: string) {
     return this.target && this.target.id == targetId;
   }
+
+  public get targetId(): string | undefined {
+    return this.target?.id;
+  }
 }

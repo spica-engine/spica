@@ -226,7 +226,13 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     return Promise.all(Array.from(this.languages.values()).map(l => l.kill()));
   }
 
+  private disabled = false;
+
   async onModuleDestroy() {
+    // stop replenishing the warm reserve while we tear workers down, otherwise
+    // killing warm workers here would immediately respawn them.
+    this.disabled = true;
+
     await this.drainEventQueue();
 
     await this.killFreeWorkers();
@@ -408,12 +414,26 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   lostWorker(id: string) {
+    const worker = this.workers.get(id);
+    // An unexpected death (crash / OOM / external kill) leaves the worker still in
+    // Warm/Warming state — intentional teardown (trim, outdate) marks it Outdated
+    // first, so it won't match here. Refill the reserve so a low-traffic function's
+    // pre-warmed pool doesn't silently shrink until its next event.
+    const lostWarmWorker =
+      worker &&
+      (worker.state == WorkerState.Warm || worker.state == WorkerState.Warming) &&
+      worker.targetId;
+
     this.workers.delete(id);
 
     clearTimeout(this.timeouts.get(id));
     this.timeouts.delete(id);
 
     this.print(`lost a worker ${id}`);
+
+    if (lostWarmWorker && !this.disabled && this.warmConfigs.has(worker.targetId)) {
+      this.scaleWarmWorkers(worker.targetId);
+    }
 
     if (!this.workers.size) {
       this.onLastWorkerLost.next("");

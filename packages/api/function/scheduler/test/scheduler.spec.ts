@@ -554,6 +554,40 @@ describe("Scheduler", () => {
       warmingKills.forEach(spy => expect(spy).toHaveBeenCalledTimes(1));
     });
 
+    it("should replenish the reserve when a warm worker is lost unexpectedly", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+      connectWarmingWorkers();
+      expect(warmWorkers().length).toEqual(2);
+
+      const [[lostId]] = warmWorkers();
+
+      spawnSpy.mockClear();
+      // simulate a crash/OOM/external kill: the worker exits while still Warm,
+      // i.e. without the Outdated marking that intentional teardown applies
+      scheduler.lostWorker(lostId);
+
+      // a replacement is spawned to restore the reserve to its desired size
+      expect(spawnSpy).toHaveBeenCalledTimes(1);
+      expect(warmWorkers().length).toEqual(1);
+      expect(warmingWorkers().length).toEqual(1);
+
+      connectWarmingWorkers();
+      expect(warmWorkers().length).toEqual(2);
+    });
+
+    it("should not replenish the reserve while shutting down", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+      connectWarmingWorkers();
+
+      const [[lostId]] = warmWorkers();
+
+      scheduler["disabled"] = true;
+      spawnSpy.mockClear();
+      scheduler.lostWorker(lostId);
+
+      expect(spawnSpy).not.toHaveBeenCalled();
+    });
+
     it("should outdate and kill warm workers when their target is outdated", () => {
       scheduler.reconcileWarmWorkers(makeTarget("1"), 1);
       connectWarmingWorkers();
