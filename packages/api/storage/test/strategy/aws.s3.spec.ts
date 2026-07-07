@@ -140,62 +140,24 @@ describe("AWSS3", () => {
   });
 
   describe("delete", () => {
-    it("should list and delete all objects matching prefix", async () => {
-      sendMock
-        .mockResolvedValueOnce({
-          Contents: [{Key: "folder/file1.txt"}, {Key: "folder/file2.txt"}],
-          IsTruncated: false
-        })
-        .mockResolvedValueOnce({});
+    it("should delete object directly by its exact key", async () => {
+      sendMock.mockResolvedValueOnce({});
+
+      await service.delete("folder/file.txt");
+
+      expect(sendMock).toHaveBeenCalledTimes(1);
+      const command = sendMock.mock.calls[0][0];
+      expect(command.input).toEqual({Bucket: "test-bucket", Key: "folder/file.txt"});
+    });
+
+    it("should delete folder marker by its exact key without listing", async () => {
+      sendMock.mockResolvedValueOnce({});
 
       await service.delete("folder/");
 
-      expect(sendMock).toHaveBeenCalledTimes(2);
-
-      const listCommand = sendMock.mock.calls[0][0];
-      expect(listCommand.input).toEqual({
-        Bucket: "test-bucket",
-        Prefix: "folder/",
-        ContinuationToken: undefined
-      });
-
-      const deleteCommand = sendMock.mock.calls[1][0];
-      expect(deleteCommand.input.Bucket).toEqual("test-bucket");
-      expect(deleteCommand.input.Delete.Objects).toEqual([
-        {Key: "folder/file1.txt"},
-        {Key: "folder/file2.txt"}
-      ]);
-    });
-
-    it("should handle paginated deletion with continuation token", async () => {
-      sendMock
-        .mockResolvedValueOnce({
-          Contents: [{Key: "a.txt"}],
-          IsTruncated: true,
-          NextContinuationToken: "token2"
-        })
-        .mockResolvedValueOnce({}) // delete batch 1
-        .mockResolvedValueOnce({
-          Contents: [{Key: "b.txt"}],
-          IsTruncated: false
-        })
-        .mockResolvedValueOnce({}); // delete batch 2
-
-      await service.delete("prefix");
-
-      expect(sendMock).toHaveBeenCalledTimes(4);
-    });
-
-    it("should handle empty contents gracefully", async () => {
-      sendMock.mockResolvedValueOnce({
-        Contents: undefined,
-        IsTruncated: false
-      });
-
-      await service.delete("empty/");
-
-      // Only the list call, no delete call
       expect(sendMock).toHaveBeenCalledTimes(1);
+      const command = sendMock.mock.calls[0][0];
+      expect(command.input).toEqual({Bucket: "test-bucket", Key: "folder/"});
     });
   });
 
