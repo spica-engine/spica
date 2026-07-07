@@ -105,8 +105,7 @@ export function createTargetChanges<CK extends ChangeKind>(
       target: {
         id: fn._id.toString(),
         handler,
-        name: fn.name,
-        warmWorkers: fn.warmWorkers
+        name: fn.name
       }
     };
 

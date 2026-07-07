@@ -90,7 +90,6 @@ export interface TargetChange {
     handler?: string;
     context?: Context;
     name?: string;
-    warmWorkers?: number;
   };
 }
 

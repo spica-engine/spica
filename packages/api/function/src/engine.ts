@@ -158,6 +158,40 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
           break;
       }
     }
+
+    // Warm workers are a per-function reserve, so reconcile them once per affected
+    // function from the function's authoritative state — not per trigger. Driving it
+    // per trigger would let removing one trigger of a multi-trigger function drain the
+    // whole reserve, and a multi-trigger update thrash it (kill/respawn per trigger).
+    const affectedFunctionIds = new Set(changes.map(change => change.target.id));
+    for (const functionId of affectedFunctionIds) {
+      this.reconcileWarmWorkersForFunction(functionId);
+    }
+  }
+
+  private async reconcileWarmWorkersForFunction(functionId: string): Promise<void> {
+    const fn = await this.findFunctionForRuntime(functionId);
+
+    // the function no longer exists (deleted / invalid id) — drain whatever reserve it holds
+    if (!fn) {
+      this.scheduler.reconcileWarmWorkers(new event.Target({id: functionId}), 0);
+      return;
+    }
+
+    const triggers = fn.triggers || {};
+    const hasActiveTrigger = Object.keys(triggers).some(handler => triggers[handler]?.active);
+    const desired = hasActiveTrigger ? fn.warmWorkers ?? 0 : 0;
+    const [change] = createTargetChanges(fn, ChangeKind.Added, this.secretDecryptor);
+    const target = change ? this.buildTarget(change) : new event.Target({id: functionId});
+    this.scheduler.reconcileWarmWorkers(target, desired);
+  }
+
+  private async findFunctionForRuntime(functionId: string) {
+    try {
+      return await CRUD.findOneForRuntime(this.fs, new ObjectId(functionId));
+    } catch {
+      return null;
+    }
   }
 
   private getDefaultPackageManager(): DelegatePkgManager {
@@ -295,28 +329,30 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return enq.find(e => e.description.name == name);
   }
 
+  private buildTarget(change: TargetChange): event.Target {
+    return new event.Target({
+      id: change.target.id,
+      cwd: path.join(this.options.root, change.target.name),
+      handler: change.target.handler,
+      context: new event.SchedulingContext({
+        env: Object.keys(change.target.context?.env || {}).reduce((envs, key) => {
+          envs.push(
+            new event.SchedulingContext.Env({
+              key,
+              value: change.target.context.env[key]
+            })
+          );
+          return envs;
+        }, []),
+        timeout: change.target.context?.timeout
+      })
+    });
+  }
+
   private subscribe(change: TargetChange) {
     const enqueuer = this.getEnqueuer(change.type);
     if (enqueuer) {
-      const target = new event.Target({
-        id: change.target.id,
-        cwd: path.join(this.options.root, change.target.name),
-        handler: change.target.handler,
-        context: new event.SchedulingContext({
-          env: Object.keys(change.target.context.env).reduce((envs, key) => {
-            envs.push(
-              new event.SchedulingContext.Env({
-                key,
-                value: change.target.context.env[key]
-              })
-            );
-            return envs;
-          }, []),
-          timeout: change.target.context.timeout
-        })
-      });
-      enqueuer.subscribe(target, change.options);
-      this.scheduler.reconcileWarmWorkers(target, change.target.warmWorkers ?? 0);
+      enqueuer.subscribe(this.buildTarget(change), change.options);
     } else {
       this.logger.warn(`Couldn't find enqueuer ${change.type}.`);
     }
@@ -337,8 +373,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     for (const enqueuer of this.scheduler.enqueuers) {
       enqueuer.unsubscribe(target);
     }
-
-    this.scheduler.reconcileWarmWorkers(target, 0);
   }
 
   private getFunctionLanguage(fn: Function) {

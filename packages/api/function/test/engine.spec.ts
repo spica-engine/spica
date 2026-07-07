@@ -248,6 +248,64 @@ describe("Engine", () => {
     expect(unsubscribeSpy).toHaveBeenCalledWith({...changes[0], kind: ChangeKind.Removed});
   });
 
+  async function waitForCalls(spy: jest.SpyInstance, min = 1, timeout = 3000) {
+    const start = Date.now();
+    while (spy.mock.calls.length < min && Date.now() - start < timeout) {
+      await new Promise(r => setTimeout(r, 20));
+    }
+  }
+
+  it("should reconcile warm workers per function, surviving a single-trigger removal", async () => {
+    await fs.insertOne({
+      _id: new ObjectId(hexString),
+      env_vars: [],
+      language: "js",
+      timeout: 10,
+      name: "multi_fn",
+      warmWorkers: 2,
+      triggers: {
+        a: {active: true, options: {}, type: "http"},
+        b: {active: true, options: {}, type: "http"}
+      }
+    });
+
+    const reconcileSpy = jest.spyOn(scheduler, "reconcileWarmWorkers");
+
+    // remove only trigger 'b'; the function still has active trigger 'a' in the DB
+    engine["categorizeChanges"]([
+      {
+        kind: ChangeKind.Removed,
+        type: "http",
+        options: {},
+        target: {id: hexString, handler: "b", name: "multi_fn"}
+      }
+    ]);
+
+    await waitForCalls(reconcileSpy);
+
+    // desired is derived from the function (warmWorkers=2, still has an active trigger),
+    // NOT drained to 0 by the single-trigger removal
+    expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(2);
+  });
+
+  it("should drain the warm reserve when the function no longer exists", async () => {
+    const reconcileSpy = jest.spyOn(scheduler, "reconcileWarmWorkers");
+
+    // no function stored for this id -> lookup fails -> reserve drained to 0
+    engine["categorizeChanges"]([
+      {
+        kind: ChangeKind.Removed,
+        type: "http",
+        options: {},
+        target: {id: hexString, handler: "a", name: "gone"}
+      }
+    ]);
+
+    await waitForCalls(reconcileSpy);
+
+    expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(0);
+  });
+
   it("should reload function environments when environment variable changed", async () => {
     const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);
