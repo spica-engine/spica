@@ -575,6 +575,20 @@ describe("Scheduler", () => {
       expect(warmWorkers().length).toEqual(2);
     });
 
+    it("should not refill when a worker is lost while still warming", () => {
+      // a module that hard-crashes during preload dies in Warming; refilling there
+      // would spin an unthrottled respawn loop, so lostWorker must not replenish
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 1);
+      expect(warmingWorkers().length).toEqual(1);
+
+      const [[warmingId]] = warmingWorkers();
+
+      spawnSpy.mockClear();
+      scheduler.lostWorker(warmingId);
+
+      expect(spawnSpy).not.toHaveBeenCalled();
+    });
+
     it("should not replenish the reserve while shutting down", () => {
       scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
       connectWarmingWorkers();

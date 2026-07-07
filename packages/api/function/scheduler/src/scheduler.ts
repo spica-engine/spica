@@ -415,14 +415,16 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   lostWorker(id: string) {
     const worker = this.workers.get(id);
-    // An unexpected death (crash / OOM / external kill) leaves the worker still in
-    // Warm/Warming state — intentional teardown (trim, outdate) marks it Outdated
-    // first, so it won't match here. Refill the reserve so a low-traffic function's
+    // An unexpected death of a ready worker (crash / OOM / external kill after it
+    // preloaded) leaves it in Warm state — intentional teardown (trim, outdate) marks
+    // it Outdated first, so it won't match here. Refill so a low-traffic function's
     // pre-warmed pool doesn't silently shrink until its next event.
-    const lostWarmWorker =
-      worker &&
-      (worker.state == WorkerState.Warm || worker.state == WorkerState.Warming) &&
-      worker.targetId;
+    //
+    // We deliberately do NOT refill a worker lost while still Warming: a module that
+    // hard-crashes during preload (top-level process.exit / OOM / native crash, which
+    // preload()'s try/catch can't intercept) dies in Warming, and refilling there would
+    // spin an unthrottled respawn loop. Reaching Warm proves preload succeeds.
+    const lostWarmWorker = worker && worker.state == WorkerState.Warm && worker.targetId;
 
     this.workers.delete(id);
 
