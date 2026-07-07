@@ -12,10 +12,10 @@ export class CoreStatusServiceModule {
       providers: [
         {
           provide: ATTACH_STATUS_TRACKER,
-          useFactory: service => {
-            return attachStatusTrackerFactory(service);
+          useFactory: (service, options: StatusOptions) => {
+            return options.httpStatusTracking ? attachStatusTrackerFactory(service) : undefined;
           },
-          inject: [StatusService]
+          inject: [StatusService, STATUS_OPTIONS]
         },
 
         {provide: STATUS_OPTIONS, useValue: options},

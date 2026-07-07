@@ -19,13 +19,13 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "axios": "^1.8.2",
-    "dockerode": "^4.0.4",
+    "axios": "^1.8.4",
+    "dockerode": "^4.0.12",
     "get-port": "^7.1.0",
     "mongodb": "^6.12.0"
   },
   "devDependencies": {
     "@spica-server/sync": "workspace:*",
-    "@types/dockerode": "^3.3.34"
+    "@types/dockerode": "^3.3.47"
   }
 }

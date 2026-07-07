@@ -4,6 +4,7 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {BucketDataService} from "../src/bucket-data.service";
 import {BucketService} from "../src/bucket.service";
+import {BucketChangeDispatcher} from "../src/change-dispatcher";
 
 describe("Bucket Service", () => {
   describe("index", () => {
@@ -18,16 +19,10 @@ describe("Bucket Service", () => {
           PreferenceTestingModule,
           SchemaModule.forChild()
         ],
-        providers: [BucketService, BucketDataService]
+        providers: [BucketChangeDispatcher, BucketService, BucketDataService]
       }).compile();
       bs = module.get(BucketService);
       bds = module.get(BucketDataService);
-
-      await bs.db
-        .createCollection("buckets", {
-          changeStreamPreAndPostImages: {enabled: true}
-        })
-        .catch(console.warn);
     });
 
     afterEach(async () => {

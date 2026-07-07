@@ -107,32 +107,23 @@ spec:
             timeoutSeconds: {{ .Values.database.startupProbeTimeoutSeconds }}
             failureThreshold: {{ .Values.database.startupProbeFailureThreshold }}
           livenessProbe:
-            exec:
-              command:
-                - mongosh
-                - --username
-                - $(ROOT_USERNAME)
-                - --password
-                - $(ROOT_PASSWORD)
-                - --authenticationDatabase
-                - admin
-                - --eval
-                - "db.adminCommand('ping')"
+            # TCP probe instead of an exec'd mongosh: mongo-8 images ship only mongosh (a Node.js
+            # process), so an exec liveness check spawned a full mongosh + pooled SCRAM auths every
+            # period — heavy, traffic-independent CPU and connection-churn logs on every instance.
+            # mongod runs with --bind_ip_all on 27017, so a TCP connect succeeds iff it's accepting
+            # connections; a hung-but-listening mongod is rare and an aggressive liveness restart of
+            # a database is itself risky, so TCP is the safer default here.
+            tcpSocket:
+              port: 27017
             periodSeconds: {{ .Values.database.livenessProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.database.livenessProbeTimeoutSeconds }}
             failureThreshold: {{ .Values.database.livenessProbeFailureThreshold }}
           readinessProbe:
-            exec:
-              command:
-                - mongosh
-                - --username
-                - $(ROOT_USERNAME)
-                - --password
-                - $(ROOT_PASSWORD)
-                - --authenticationDatabase
-                - admin
-                - --eval
-                - "db.adminCommand('ping')"
+            # TCP probe (see livenessProbe note). The startupProbe above keeps a real mongosh ping,
+            # so the pod is only marked "started" once mongo actually answers a command; after that,
+            # readiness just needs to confirm the listener is up — no recurring mongosh spawns.
+            tcpSocket:
+              port: 27017
             periodSeconds: {{ .Values.database.readinessProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.database.readinessProbeTimeoutSeconds }}
             failureThreshold: {{ .Values.database.readinessProbeFailureThreshold }}

@@ -10,10 +10,10 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.15",
+    "@nestjs/common": "^10.4.22",
     "@spica-server/interface-representative": "workspace:*",
     "dotenv": "^16.4.7",
-    "rxjs": "^7.8.1",
-    "yaml": "^2.7.0"
+    "rxjs": "^7.8.2",
+    "yaml": "^2.7.1"
   }
 }

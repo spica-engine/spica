@@ -6,7 +6,6 @@ import {
   GetObjectCommandInput,
   PutObjectCommand,
   DeleteObjectCommand,
-  DeleteObjectsCommand,
   CopyObjectCommand,
   ListObjectsV2Command
 } from "@aws-sdk/client-s3";
@@ -99,31 +98,12 @@ export class AWSS3 extends BaseStrategy {
   }
 
   async delete(id: string): Promise<void> {
-    let continuationToken: string | undefined = undefined;
-    do {
-      const listResponse = await this.s3.send(
-        new ListObjectsV2Command({
-          Bucket: this.bucketName,
-          Prefix: id,
-          ContinuationToken: continuationToken
-        })
-      );
-
-      const objects = listResponse.Contents ?? [];
-
-      if (objects.length > 0) {
-        await this.s3.send(
-          new DeleteObjectsCommand({
-            Bucket: this.bucketName,
-            Delete: {
-              Objects: objects.map(obj => ({Key: obj.Key!}))
-            }
-          })
-        );
-      }
-
-      continuationToken = listResponse.IsTruncated ? listResponse.NextContinuationToken : undefined;
-    } while (continuationToken);
+    await this.s3.send(
+      new DeleteObjectCommand({
+        Bucket: this.bucketName,
+        Key: id
+      })
+    );
   }
 
   async url(id: string): Promise<string> {

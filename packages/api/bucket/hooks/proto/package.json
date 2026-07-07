@@ -10,7 +10,7 @@
     }
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.12.5",
+    "@grpc/grpc-js": "^1.12.7",
     "google-protobuf": "^3.21.4"
   }
 }
