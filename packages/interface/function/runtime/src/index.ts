@@ -13,6 +13,7 @@ export interface SpawnOptions {
     [key: string]: string;
   };
   entrypointPath?: string;
+  concurrency?: number;
 }
 
 export interface Description {

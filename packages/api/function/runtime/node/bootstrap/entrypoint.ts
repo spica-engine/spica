@@ -33,11 +33,13 @@ import {
 import {createRequire} from "module";
 import * as path from "path";
 
-import {getLoggerConsole} from "@spica-server/function-runtime-logger";
+import {getLoggerConsole, logContext} from "@spica-server/function-runtime-logger";
 
 if (process.env.LOGGER) {
   console = getLoggerConsole();
 }
+
+const LANE_COUNT = Math.max(1, Number(process.env.WORKER_EVENT_CONCURRENCY) || 1);
 
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
   exitAbnormally("Environment variable FUNCTION_GRPC_ADDRESS was not set.");
@@ -57,9 +59,17 @@ if (!process.env.WORKER_ID) {
     id: process.env.WORKER_ID
   });
   await initialize();
+
   if (process.env.WARM) {
     await preload();
   }
+
+  // Each lane keeps one pop outstanding, so the scheduler can hand this worker up
+  // to LANE_COUNT concurrent events. The lane count is the in-process concurrency cap.
+  await Promise.all(Array.from({length: LANE_COUNT}, () => runLane(queue, pop)));
+})();
+
+async function runLane(queue: EventQueue, pop: event.Pop) {
   let ev: event.Event | void;
   while (
     (ev = await queue.pop(pop).catch((e: any) => {
@@ -69,9 +79,12 @@ if (!process.env.WORKER_ID) {
       return Promise.reject(e);
     }))
   ) {
-    await _process(ev, queue);
+    // Tag logs with the event id only under concurrency; at LANE_COUNT == 1 the
+    // frame format stays byte-identical to the non-concurrent worker.
+    const store = LANE_COUNT > 1 ? {eventId: ev.id} : {};
+    await logContext.run(store, () => _process(ev as event.Event, queue));
   }
-})();
+}
 
 async function initialize() {
   if (process.env.__EXPERIMENTAL_DEVKIT_DATABASE_CACHE) {
@@ -108,14 +121,27 @@ async function preload() {
   }
 }
 
-async function _process(ev: event.Event, queue: EventQueue) {
+let workerContextInitialized = false;
+
+function initializeWorkerContext(ev: event.Event) {
+  if (workerContextInitialized) {
+    return;
+  }
+  // A worker is pinned to a single function for its lifetime (the scheduler only
+  // routes same-target events to it, and env/secret changes outdate it), so cwd
+  // and env are constant. Set them once instead of on every event — mutating
+  // these process globals per event would race across concurrent lanes.
   process.chdir(ev.target.cwd);
-
   process.env.TIMEOUT = String(ev.target.context.timeout);
-
   for (const env of ev.target.context.env) {
     process.env[env.key] = env.value;
   }
+  globalThis.require = createRequire(path.join(ev.target.cwd, "node_modules"));
+  workerContextInitialized = true;
+}
+
+async function _process(ev: event.Event, queue: EventQueue) {
+  initializeWorkerContext(ev);
 
   const callArguments: any[] = [];
 
@@ -311,9 +337,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
       break;
   }
 
-  globalThis.require = createRequire(path.join(process.cwd(), "node_modules"));
-
-  let module = await import(path.join(process.cwd(), ".build", process.env.ENTRYPOINT!));
+  let module = await import(path.join(ev.target.cwd, ".build", process.env.ENTRYPOINT!));
 
   if ("default" in module && module.default.__esModule) {
     module = module.default; // Do not ask me why

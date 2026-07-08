@@ -1,6 +1,8 @@
 import {Test} from "@nestjs/testing";
 import {FunctionModule} from "@spica-server/function";
 import os from "os";
+import fs from "fs";
+import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
@@ -13,6 +15,8 @@ import {SecretModule} from "@spica-server/secret";
 describe("Function Controller", () => {
   let app: INestApplication;
   let request: Request;
+
+  const assetsPath = fs.mkdtempSync(path.join(os.tmpdir(), "spica-fn-assets-"));
   const fnSchema = {
     name: "test",
     description: "test",
@@ -68,7 +72,7 @@ describe("Function Controller", () => {
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH,
           realtime: false,
-          assetStorage: {strategy: "default", defaultPath: "./function-assets"}
+          assetStorage: {strategy: "default", defaultPath: assetsPath}
         })
       ]
     }).compile();
@@ -79,6 +83,8 @@ describe("Function Controller", () => {
   });
 
   afterEach(async () => await app.close().catch(console.error));
+
+  afterAll(() => fs.rmSync(assetsPath, {recursive: true, force: true}));
 
   describe("filtering", () => {
     it("should filter functions by index", async () => {

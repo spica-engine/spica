@@ -94,3 +94,64 @@ describe("ScheduleWorker state machine", () => {
     expect(() => worker.markAsWarming(target("1"))).toThrow(/can not transition/);
   });
 });
+
+describe("ScheduleWorker in-process lanes", () => {
+  let spawnSpy: jest.SpyInstance;
+  let mockProcess: any;
+
+  beforeEach(() => {
+    mockProcess = {
+      stdout: new PassThrough(),
+      stderr: new PassThrough(),
+      kill: jest.fn(),
+      once: jest.fn().mockReturnThis(),
+      killed: false
+    };
+    spawnSpy = jest.spyOn(child_process, "spawn").mockReturnValue(mockProcess as any);
+  });
+
+  afterEach(() => {
+    spawnSpy.mockRestore();
+  });
+
+  function target(id: string) {
+    return new event.Target({id, cwd: "/tmp/fn", handler: "default"});
+  }
+
+  // A capacity-K worker with all K lanes parked and `busy` of them running an event.
+  function busyWorker(capacity: number, busy: number): ScheduleWorker {
+    const worker = new ScheduleWorker({
+      id: "worker-id",
+      env: {},
+      entrypointPath: "fake-path",
+      concurrency: capacity
+    });
+    for (let i = 0; i < capacity; i++) {
+      worker.markAsAvailable(() => {});
+    }
+    for (let i = 0; i < busy; i++) {
+      worker.execute(new event.Event({target: target("1"), type: -1 as any}));
+    }
+    return worker;
+  }
+
+  it("stays Targeted while free lanes remain and only turns Busy when full", () => {
+    const worker = busyWorker(3, 2);
+    expect(worker.state).toEqual(WorkerState.Targeted);
+    expect(worker.canServe("1")).toBe(true);
+
+    worker.execute(new event.Event({target: target("1"), type: -1 as any}));
+    expect(worker.state).toEqual(WorkerState.Busy);
+    // no free lane left, so it must not be picked for reuse
+    expect(worker.canServe("1")).toBe(false);
+  });
+
+  it("times out the whole worker at the worker level", () => {
+    // A single worker-keyed timeout retires the worker regardless of how many lanes are
+    // busy — the concurrency feature keeps master's worker-level timeout semantics.
+    const worker = busyWorker(3, 3);
+
+    expect(() => worker.markAsTimeouted()).not.toThrow();
+    expect(worker.state).toEqual(WorkerState.Timeouted);
+  });
+});

@@ -30,6 +30,7 @@ import {event} from "@spica-server/function-queue-proto";
 import {Runtime, Worker} from "@spica-server/function-runtime";
 import {
   DatabaseOutput,
+  EventLogRouter,
   StandartStream,
   StandardStreamOutput
 } from "@spica-server/function-runtime-io";
@@ -196,11 +197,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   killFreeWorkers() {
     const freeWorkers = Array.from(this.workers.entries()).filter(
       ([key, worker]) =>
-        worker.state == WorkerState.Initial ||
-        worker.state == WorkerState.Fresh ||
-        worker.state == WorkerState.Targeted ||
-        worker.state == WorkerState.Warm ||
-        worker.state == WorkerState.Warming
+        worker.isIdle() &&
+        (worker.state == WorkerState.Initial ||
+          worker.state == WorkerState.Fresh ||
+          worker.state == WorkerState.Targeted ||
+          worker.state == WorkerState.Warm ||
+          worker.state == WorkerState.Warming)
     );
     const killWorkers = freeWorkers.map(([key, worker]) => {
       return worker.kill();
@@ -257,7 +259,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   eventQueue = new Map<string, event.Event>();
 
+  // Keyed by worker id: one timeout per worker, extended on each new event assigned to
+  // it (a busy worker's deadline is its most recently started event). Firing kills it.
   timeouts = new Map<string, NodeJS.Timeout>();
+
+  // One demux per concurrent worker (capacity > 1), keyed by worker id.
+  logRouters = new Map<string, {stdout: EventLogRouter; stderr: EventLogRouter}>();
 
   warmConfigs = new Map<string, {desired: number; target: event.Target}>();
 
@@ -279,33 +286,29 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     };
   }
 
-  takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} {
+  takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} | undefined {
     const workers = Array.from(this.workers.entries()).map(([id, worker]) => {
       return {id, worker};
     });
 
-    const sameTargets = workers.filter(({worker}) => worker.hasSameTarget(target.id));
-
-    // 1. Reuse an already-graduated, idle same-target worker (its module is cache-warm).
-    const reusable = sameTargets.find(({worker}) => worker.state == WorkerState.Targeted);
+    // 1. Reuse an already-graduated same-target worker that still has a free lane
+    // (its module is cache-warm).
+    const reusable = workers.find(({worker}) => worker.canServe(target.id));
     if (reusable) {
       return reusable;
     }
 
     // 2. Tap the pre-warmed reserve — the first-hit and concurrency-burst path.
-    const warm = sameTargets.find(({worker}) => worker.state == WorkerState.Warm);
+    const warm = workers.find(({worker}) => worker.canServeWarm(target.id));
     if (warm) {
       return warm;
     }
 
     // 3. Fall back to the shared cold worker. Warm/Warming workers are intentionally
     // excluded from the concurrency count so the reserve never blocks a cold spawn.
-    const activeTargetWorkers = sameTargets.filter(
-      ({worker}) => worker.state == WorkerState.Targeted || worker.state == WorkerState.Busy
-    );
-    const fresh = workers.find(({worker}) => worker.state == WorkerState.Fresh);
-    if (activeTargetWorkers.length < this.options.maxConcurrency) {
-      return fresh;
+    const activeCount = workers.filter(({worker}) => worker.isActiveFor(target.id)).length;
+    if (activeCount < this.options.maxConcurrency) {
+      return workers.find(({worker}) => worker.isFresh());
     }
     return;
   }
@@ -325,10 +328,31 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         functionName: path.basename(event.target.cwd),
         handler: event.target.handler
       };
-      worker.detach();
       const pairs = this.outputs.map(o => o.create(streamOptions));
-      for (const [stdout, stderr] of pairs) {
-        worker.attach(stdout, stderr);
+
+      if (worker.capacity > 1) {
+        // Concurrent worker: one persistent demux per channel routes each event's
+        // framed logs to its own sinks, since detach/attach can't isolate
+        // simultaneously-running events sharing the process stdout.
+        let routers = this.logRouters.get(workerId);
+        if (!routers) {
+          routers = {stdout: new EventLogRouter(), stderr: new EventLogRouter()};
+          this.logRouters.set(workerId, routers);
+          worker.attach(routers.stdout.input, routers.stderr.input);
+        }
+        routers.stdout.register(
+          event.id,
+          pairs.map(([stdout]) => stdout)
+        );
+        routers.stderr.register(
+          event.id,
+          pairs.map(([, stderr]) => stderr)
+        );
+      } else {
+        worker.detach();
+        for (const [stdout, stderr] of pairs) {
+          worker.attach(stdout, stderr);
+        }
       }
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
@@ -384,7 +408,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.print(`an event got cancelled ${id}`);
     this.eventQueue.delete(id);
   }
+
   complete(id: string, succedded: boolean) {
+    // The worker's timeout is worker-keyed (extended per event, cleared on death), so a
+    // completing event only needs to stop routing its own logs on concurrent workers.
+    for (const routers of this.logRouters.values()) {
+      routers.stdout.unregister(id);
+      routers.stderr.unregister(id);
+    }
+
     this.print(`an event has been completed ${id} with status ${succedded ? "success" : "fail"}`);
   }
 
@@ -426,6 +458,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     clearTimeout(this.timeouts.get(id));
     this.timeouts.delete(id);
 
+    this.logRouters.delete(id);
+
     this.print(`lost a worker ${id}`);
 
     if (lostWarmWorker && !this.disabled && this.warmConfigs.has(worker.targetId)) {
@@ -455,9 +489,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   private scaleWorkers() {
-    const hasFreshWorker = Array.from(this.workers.values()).find(
-      worker => worker.state == WorkerState.Fresh
-    );
+    const hasFreshWorker = Array.from(this.workers.values()).find(worker => worker.isFresh());
 
     if (hasFreshWorker) {
       return;
@@ -486,9 +518,13 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     if (this.options.functionGrpcMaxMessageSizeBytes) {
       env.FUNCTION_GRPC_MAX_MESSAGE_SIZE = String(this.options.functionGrpcMaxMessageSizeBytes);
     }
+    if (this.options.eventConcurrency) {
+      env.WORKER_EVENT_CONCURRENCY = String(this.options.eventConcurrency);
+    }
 
     const worker = node.spawn({
       id,
+      concurrency: this.options.eventConcurrency,
       env,
       entrypointPath: this.options.spawnEntrypointPath
     });

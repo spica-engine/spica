@@ -417,6 +417,62 @@ describe("Scheduler", () => {
     expect(freeWorkers().length).toEqual(1);
   });
 
+  describe("per-worker concurrency routing", () => {
+    // Stub workers exercise takeAWorker's capacity logic without spawning processes.
+    function stubWorker(target: string, inFlight: number, capacity: number, pending: number) {
+      const hasSameTarget = (id: string) => target == id;
+      const hasFreeSlot = () => pending > 0 && inFlight < capacity;
+      return {
+        state: WorkerState.Targeted,
+        hasSameTarget,
+        canServe(id: string) {
+          return hasSameTarget(id) && hasFreeSlot();
+        },
+        canServeWarm() {
+          return false;
+        },
+        isActiveFor(id: string) {
+          return hasSameTarget(id);
+        },
+        isFresh() {
+          return false;
+        }
+      } as any;
+    }
+
+    function target(id: string) {
+      return new event.Target({
+        id,
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+      });
+    }
+
+    it("should reuse a same-target worker that still has a free lane", () => {
+      scheduler.workers.clear();
+      const worker = stubWorker("1", 1, 3, 2);
+      scheduler.workers.set("w1", worker);
+
+      const picked = scheduler.takeAWorker(target("1"));
+
+      expect(picked).toBeDefined();
+      expect(picked.id).toEqual("w1");
+      expect(picked.worker).toBe(worker);
+    });
+
+    it("should not reuse a same-target worker whose lanes are all busy", () => {
+      scheduler.workers.clear();
+      const saturated = stubWorker("1", 3, 3, 0);
+      scheduler.workers.set("w1", saturated);
+
+      // No fresh worker to fall back to and concurrency is exhausted for this target.
+      const picked = scheduler.takeAWorker(target("1"));
+
+      expect(picked).toBeUndefined();
+    });
+  });
+
   describe("warm workers", () => {
     it("should spawn warm workers on reconcile and mark them Warm once ready", () => {
       spawnSpy.mockClear();

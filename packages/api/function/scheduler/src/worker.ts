@@ -25,24 +25,53 @@ export class ScheduleWorker extends NodeWorker {
     this._state = value;
   }
 
-  private target: event.Target;
-  private schedule: Schedule;
+  private target!: event.Target;
+
+  // capacity = number of events this worker can run in-process at once (one per lane).
+  // A lane is either idle (its pop callback parked in `idleLanes`) or busy (counted in
+  // `inFlight`).
+  public readonly capacity: number;
+  private inFlight = 0;
+  private idleLanes: Schedule[] = [];
+
+  constructor(options: SpawnOptions) {
+    super(options);
+    this.capacity = Math.max(1, options.concurrency || 1);
+  }
 
   private transitionMap = {
     [WorkerState.Initial]: [WorkerState.Fresh, WorkerState.Warming],
-    [WorkerState.Fresh]: [WorkerState.Busy],
+    // Fresh/Warm -> Targeted covers a first execute that leaves free lanes (capacity > 1).
+    [WorkerState.Fresh]: [WorkerState.Busy, WorkerState.Targeted],
     [WorkerState.Warming]: [WorkerState.Warm, WorkerState.Timeouted, WorkerState.Outdated],
-    [WorkerState.Warm]: [WorkerState.Busy, WorkerState.Timeouted, WorkerState.Outdated],
-    [WorkerState.Targeted]: [WorkerState.Busy, WorkerState.Timeouted, WorkerState.Outdated],
-    [WorkerState.Busy]: [WorkerState.Targeted, WorkerState.Timeouted, WorkerState.Outdated],
+    [WorkerState.Warm]: [
+      WorkerState.Busy,
+      WorkerState.Targeted,
+      WorkerState.Timeouted,
+      WorkerState.Outdated
+    ],
+    [WorkerState.Targeted]: [
+      WorkerState.Busy,
+      WorkerState.Targeted,
+      WorkerState.Timeouted,
+      WorkerState.Outdated
+    ],
+    [WorkerState.Busy]: [
+      WorkerState.Busy,
+      WorkerState.Targeted,
+      WorkerState.Timeouted,
+      WorkerState.Outdated
+    ],
     [WorkerState.Timeouted]: [WorkerState.Outdated],
     [WorkerState.Outdated]: [WorkerState.Timeouted]
   };
 
   public execute(event: event.Event) {
-    this.transitionTo(WorkerState.Busy);
     this.target = event.target;
-    this.schedule(event);
+    this.inFlight++;
+    this.transitionTo(this.inFlight >= this.capacity ? WorkerState.Busy : WorkerState.Targeted);
+    const schedule = this.idleLanes.shift();
+    schedule!(event);
   }
 
   public markAsWarming(target: event.Target) {
@@ -51,14 +80,72 @@ export class ScheduleWorker extends NodeWorker {
   }
 
   public markAsAvailable(schedule: Schedule) {
+    this.idleLanes.push(schedule);
+
+    if (this.state == WorkerState.Initial) {
+      this.transitionTo(WorkerState.Fresh);
+      return;
+    }
+
+    // First lane of a pre-warmed worker graduates it to Warm (servable reserve).
+    if (this.state == WorkerState.Warming) {
+      this.transitionTo(WorkerState.Warm);
+      return;
+    }
+
+    // Further lanes of an untargeted/warm worker just park their pop.
+    if (this.state == WorkerState.Fresh || this.state == WorkerState.Warm) {
+      return;
+    }
+
+    // A lane finished its event and is asking for the next one.
+    if (this.inFlight > 0) {
+      this.inFlight--;
+    }
     if (this.state == WorkerState.Busy) {
       this.transitionTo(WorkerState.Targeted);
-    } else if (this.state == WorkerState.Warming) {
-      this.transitionTo(WorkerState.Warm);
-    } else if (this.state == WorkerState.Initial) {
-      this.transitionTo(WorkerState.Fresh);
     }
-    this.schedule = schedule;
+  }
+
+  // Private on purpose: a free lane is only meaningful together with the worker's
+  // state and target, so callers go through canServe*/isActiveFor and never risk
+  // picking a saturated worker. A parked idle lane already implies inFlight < capacity
+  // (inFlight + idleLanes.length <= capacity), so that need not be re-checked here.
+  private hasFreeSlot() {
+    return (
+      this.idleLanes.length > 0 &&
+      this.state != WorkerState.Timeouted &&
+      this.state != WorkerState.Outdated
+    );
+  }
+
+  // Reuse an already-graduated same-target worker with a free lane (its module cache
+  // is warm and it already counts against this function's concurrency budget).
+  public canServe(targetId: string) {
+    return (
+      this.hasSameTarget(targetId) && this.state == WorkerState.Targeted && this.hasFreeSlot()
+    );
+  }
+
+  // Same, but for a worker still sitting in the pre-warmed reserve.
+  public canServeWarm(targetId: string) {
+    return this.hasSameTarget(targetId) && this.state == WorkerState.Warm && this.hasFreeSlot();
+  }
+
+  // Already handed at least one event of this function, so it counts toward the limit.
+  public isActiveFor(targetId: string) {
+    return (
+      this.hasSameTarget(targetId) &&
+      (this.state == WorkerState.Targeted || this.state == WorkerState.Busy)
+    );
+  }
+
+  public isFresh() {
+    return this.state == WorkerState.Fresh;
+  }
+
+  public isIdle() {
+    return this.inFlight == 0;
   }
 
   public markAsTimeouted() {
