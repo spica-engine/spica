@@ -73,15 +73,17 @@ export const StorageCell: React.FC<CellRendererProps> = ({
 
   return (
     <>
-      <StorageMinimizedInput
-        file={typeFile}
-        placeholder="Click or Drag&Drop"
-        onUpload={handleUpload}
-        onClickShowFileSelect={handleClickShowFileSelect}
-        onDelete={handleDelete}
-        dimensionX="fill"
-        className={styles.storageCell}
-      />
+      <div className={styles.gutterCell} onClick={e => e.stopPropagation()}>
+        <StorageMinimizedInput
+          file={typeFile}
+          placeholder="Click or Drag&Drop"
+          onUpload={handleUpload}
+          onClickShowFileSelect={handleClickShowFileSelect}
+          onDelete={handleDelete}
+          dimensionX="fill"
+          className={styles.storageCell}
+        />
+      </div>
       <StorageFileSelect
         isOpen={isModalOpen}
         onClose={handleCloseModal}

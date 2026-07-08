@@ -1,8 +1,19 @@
+.picker {
+   min-width: 340px;
+   max-width: 480px;
+   width: 100%;
+}
+
+.list {
+   width: 100%;
+}
+
 .scrollableContainer {
    max-height: 250px;
    overflow-y: auto;
    width: 100%;
-   
+   scrollbar-gutter: stable;
+
    .item{
       border-bottom: var(--border-default);
       padding: var(--padding-md);
@@ -26,6 +37,51 @@
         outline: 2px solid var(--focus-color, #4285f4);
         outline-offset: -2px;
       }
+   }
+}
+
+// Shared column template so the header and every option row line up as a
+// two-column table: fixed id column + flexible primary column.
+$relation-option-columns: 220px 1fr;
+
+.optionHeader {
+   display: grid;
+   grid-template-columns: $relation-option-columns;
+   gap: var(--spacing-5);
+   width: 100%;
+   padding: var(--padding-xs) var(--padding-md);
+   font-size: var(--font-size-xs);
+   font-weight: 600;
+   text-transform: uppercase;
+   color: var(--color-font-secondary);
+   border-bottom: var(--border-default);
+}
+
+.optionRow {
+   display: grid;
+   grid-template-columns: $relation-option-columns;
+   align-items: center;
+   gap: var(--spacing-5);
+   width: 100%;
+   min-width: 0;
+
+   .optionId {
+     min-width: 0;
+     font-family: monospace;
+     font-size: var(--font-size-sm);
+     color: var(--color-text-secondary, var(--color-font-secondary));
+     overflow: hidden;
+     text-overflow: ellipsis;
+     white-space: nowrap;
+   }
+
+   .optionPrimary {
+     min-width: 0;
+     font-size: var(--font-size-sm);
+     color: var(--color-text-primary);
+     overflow: hidden;
+     text-overflow: ellipsis;
+     white-space: nowrap;
    }
 }
 

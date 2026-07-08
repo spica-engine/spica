@@ -34,6 +34,20 @@ export const OPERATORS_BY_TYPE: Record<FilterFieldType, { label: string; value: 
     { label: 'equals', value: 'equals' },
     { label: 'not equals', value: 'not equals' },
   ],
+  // ObjectId is matched by exact hex; regex/range operators would break backend coercion.
+  id: [
+    { label: 'equals', value: 'equals' },
+    { label: 'not equals', value: 'not equals' },
+  ],
+  // Relations store the related entry id(s); match against the raw hex the
+  // backend coerces to ObjectId. Selecting entries yields a set, so `in` covers
+  // both single (equals) and multi selection.
+  relation: [
+    { label: 'is any of', value: 'in' },
+    { label: 'is none of', value: 'not in' },
+    { label: 'is empty', value: 'is empty' },
+    { label: 'is not empty', value: 'is not empty' },
+  ],
 };
 
 export const DEFAULT_OPERATOR: Record<FilterFieldType, string> = {
@@ -42,6 +56,8 @@ export const DEFAULT_OPERATOR: Record<FilterFieldType, string> = {
   date: 'equals',
   boolean: 'is',
   enum: 'equals',
+  id: 'equals',
+  relation: 'in',
 };
 
 const NO_VALUE_OPERATORS = new Set([
@@ -53,7 +69,39 @@ export function operatorNeedsValue(operator: string): boolean {
   return !NO_VALUE_OPERATORS.has(operator);
 }
 
+// A condition contributes to the applied filter (and gets a chip) only when it
+// has a field and either a value or a no-value operator like "is empty".
+export function isConditionActive(c: FilterConditionRow): boolean {
+  if (!c.field) return false;
+  if (!operatorNeedsValue(c.operator)) return true;
+  return c.value.trim() !== '';
+}
+
+// Human-readable value for a condition chip/tag; resolves enum/boolean labels.
+export function formatConditionValue(c: FilterConditionRow, field?: FilterField): string {
+  if (!operatorNeedsValue(c.operator)) return '';
+  if (field?.type === 'enum') {
+    return field.enumOptions?.find(o => String(o.value) === c.value)?.label ?? c.value;
+  }
+  if (field?.type === 'boolean') {
+    return c.value === 'true' ? 'True' : 'False';
+  }
+  if (field?.type === 'relation') {
+    const count = parseRelationIds(c.value).length;
+    return count === 1 ? '1 entry' : `${count} entries`;
+  }
+  return c.value;
+}
+
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Relation conditions serialize their selected entry ids as a comma-separated
+// string in `condition.value`, so chips and repopulation stay plain strings.
+export const parseRelationIds = (value: string): string[] =>
+  value
+    .split(',')
+    .map(id => id.trim())
+    .filter(Boolean);
 
 function buildMongoCondition(
   condition: FilterConditionRow,
@@ -143,6 +191,18 @@ function buildMongoCondition(
 
     case 'is':
       return { [fieldKey]: { $eq: value === 'true' } };
+
+    case 'in': {
+      const ids = parseRelationIds(value);
+      if (!ids.length) return null;
+      return { [fieldKey]: { $in: ids } };
+    }
+
+    case 'not in': {
+      const ids = parseRelationIds(value);
+      if (!ids.length) return null;
+      return { [fieldKey]: { $nin: ids } };
+    }
 
     default:
       return null;

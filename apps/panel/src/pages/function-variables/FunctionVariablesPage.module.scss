@@ -1,23 +1,172 @@
-.container {
-  padding: var(--padding-md);
-  width: 100%;
+/* ── Page shell (mirrors secrets-and-variables layout) ── */
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-soft-light);
 }
 
-.resultCount {
-  color: var(--color-font-secondary);
+.pageHead {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-soft-light);
+  flex-shrink: 0;
+}
+
+.pageSectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-icon);
+  margin: 0 0 6px;
+}
+
+.pageDesc {
+  font-size: 12.5px;
+  color: var(--color-font-tertiary);
+  line-height: 1.6;
+  max-width: 680px;
+  margin: 0;
+}
+
+/* ── Tabs row ── */
+.tabsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-soft-light);
+  flex-shrink: 0;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
   font-size: var(--font-size-sm);
-  margin-right: var(--padding-sm);
+  font-weight: 500;
+  color: var(--color-font-tertiary);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.12s, border-color 0.12s;
+  font-family: var(--font-family-base);
+
+  &:hover {
+    color: var(--color-font-primary);
+  }
 }
 
+.tabActive {
+  composes: tab;
+  color: var(--color-primary);
+  font-weight: 600;
+  border-bottom-color: var(--color-primary);
+}
+
+.tabCount {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(var(--color-primary-rgb), 0.08);
+  color: var(--color-primary);
+}
+
+.tab:not(.tabActive) .tabCount {
+  background: var(--color-soft);
+  color: var(--color-font-tertiary);
+}
+
+.tabsActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+/* ── Content area ── */
+.tabContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+
+.graphPane {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-soft);
+  flex-shrink: 0;
+}
+
+.tableArea {
+  padding: var(--padding-md) 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Table cell styles ── */
 .keyCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: monospace;
   font-weight: 600;
+}
+
+.keyIcon {
+  color: var(--color-font-secondary);
+}
+
+.secretBadge {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--color-warning);
+  background-color: var(--color-warning-soft, var(--color-hover));
+  border-radius: var(--radius-sm, 4px);
+  padding: 1px 6px;
 }
 
 .valueCell {
   font-family: monospace;
   color: var(--color-font-primary);
   letter-spacing: 0.05em;
+}
+
+.valueMasked {
+  font-family: monospace;
+  color: var(--color-font-secondary);
+  letter-spacing: 0.1em;
+}
+
+.revealButton {
+  padding: 0;
+  width: unset !important;
+  color: var(--color-font-secondary);
 }
 
 .chipList {
@@ -40,11 +189,6 @@
 .actionButton {
   padding: 0;
   width: unset !important;
-}
-
-.emptyState {
-  padding: var(--padding-lg);
-  color: var(--color-font-secondary);
 }
 
 /* Drawer */

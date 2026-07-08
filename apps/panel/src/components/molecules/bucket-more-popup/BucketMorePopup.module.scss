@@ -26,7 +26,8 @@
 
 .configureRulesContainer {
   border-bottom: var(--border-default);
-  height: 40px !important;
+  min-height: 40px !important;
+  padding: var(--gap-sm) 0 !important;
   width: 100% !important;
   align-items: baseline;
   cursor: pointer;
@@ -36,7 +37,7 @@
     max-width: 100% !important;
     justify-content: start;
     padding-left: 0;
-    height: 20px;
+    height: 24px;
     > div > div {
       gap: var(--gap-md) !important;
     }

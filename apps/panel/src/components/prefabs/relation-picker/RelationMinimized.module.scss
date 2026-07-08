@@ -3,6 +3,11 @@
 
 }
 
+.popoverContent {
+  min-width: 360px;
+  max-width: 480px;
+}
+
 
 .clearButton {
    padding: 0 !important;
@@ -13,4 +18,35 @@
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.compactLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  min-width: 0;
+  max-width: 100%;
+
+  .compactId {
+    flex-shrink: 0;
+    max-width: 120px;
+    padding: 0 var(--spacing-3);
+    border-radius: var(--radius-sm);
+    background-color: var(--background-hover, rgba(0, 0, 0, 0.04));
+    font-family: monospace;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .compactPrimary {
+    min-width: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

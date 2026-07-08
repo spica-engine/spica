@@ -1,0 +1,17 @@
+.diagramRingLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: var(--padding-xs) var(--padding-md);
+  border-radius: var(--border-radius-round);
+  border: var(--border-width-default) dashed var(--color-border);
+  background: var(--color-soft-light);
+  color: var(--color-font-tertiary);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  pointer-events: none;
+
+  .text {
+    font-weight: 500;
+  }
+}

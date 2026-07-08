@@ -50,8 +50,18 @@
   }
 }
 
+/* The oziko Table wraps every renderCell output in an inner div carrying a
+   horizontal-only 12px gutter and no vertical padding. Neutralize it so the cell
+   content owns ONE standard gutter on both axes and the selection ring can sit
+   flush against the td borders. */
+.bucketCell {
+  > div {
+    padding: 0;
+  }
+}
+
 .readonlyCell {
-  padding: 0;
+  padding: 0 var(--spacing-7);
   height: 100%;
   display: flex;
   align-items: center;
@@ -61,6 +71,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tableStatusBar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-7);
+  padding: var(--spacing-6) var(--spacing-7);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  flex-shrink: 0;
+}
+
+.statusSeparator {
+  color: var(--color-text-muted);
+}
+
+.statusSelected {
+  color: var(--color-accent);
 }
 
 .checkboxCell {
@@ -146,5 +176,30 @@
   padding: 48px 24px;
   color: var(--color-text-muted);
   font-size: var(--font-size-md);
+}
+
+.loadingMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-8);
+  width: 100%;
+  min-height: 36px;
+  box-sizing: border-box;
+  padding: var(--spacing-6) var(--spacing-7);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+
+  .spinner {
+    animation: loadingMoreSpin 0.8s linear infinite;
+  }
+}
+
+@keyframes loadingMoreSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 

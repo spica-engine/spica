@@ -21,8 +21,8 @@ export const sideBarItems: SideBarItem[] = [
   { id: "observability",    name: "Observability",     icon: "security"   },
   { id: "storage",          name: "Storage",           icon: "storage"    },
   {
-    id: "versionControl", name: "Version Control", icon: "forkRight",
-    position: "bottom", route: "/version-control",
+    id: "home", name: "Home", icon: "home",
+    position: "bottom", route: "/dashboard",
   },
 ]
 

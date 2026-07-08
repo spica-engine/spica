@@ -1,0 +1,49 @@
+.gaugeCard {
+  padding: var(--padding-lg);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  height: 100%;
+
+  .title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: var(--gap-md);
+  }
+
+  .gaugeWrap {
+    position: relative;
+    width: 100%;
+    height: 180px;
+  }
+
+  .center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .centerValue {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1.1;
+  }
+
+  .centerPercent {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+
+  .caption {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    text-align: center;
+    margin-top: var(--gap-sm);
+  }
+}

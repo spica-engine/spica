@@ -53,6 +53,68 @@ const CodeEditor = ({value, language, onChange, onSave, readOnly, functionId, ex
   onSaveRef.current = onSave;
   const extraLibDisposablesRef = useRef<{dispose(): void}[]>([]);
 
+  // Each function keeps its own Monaco model so its undo/redo stack is isolated:
+  // switching functions must never let Cmd+Z resurrect another function's code.
+  const modelsRef = useRef<Map<string, editor.ITextModel>>(new Map());
+  const ownedModelsRef = useRef<Set<string>>(new Set());
+  const suppressChangeRef = useRef(false);
+  const functionIdRef = useRef(functionId);
+  functionIdRef.current = functionId;
+  const syncModelRef = useRef<() => void>(() => {});
+
+  const syncModel = useCallback(() => {
+    const editorInstance = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!editorInstance || !monaco) return;
+
+    const key = functionId || "default";
+
+    let model = modelsRef.current.get(key);
+    if (!model || model.isDisposed()) {
+      const uri = monaco.Uri.parse(`file:///spica-function/${key}/index.tsx`);
+      model = monaco.editor.getModel(uri) ?? monaco.editor.createModel(value, language, uri);
+      modelsRef.current.set(key, model);
+    }
+
+    if (editorInstance.getModel() !== model) {
+      editorInstance.setModel(model);
+    }
+
+    if (model.getValue() === value) return;
+
+    suppressChangeRef.current = true;
+    if (ownedModelsRef.current.has(key)) {
+      // The user has edited this function: preserve its undo history and record
+      // this external write (e.g. imports injected from the sidebar) as an
+      // undoable step within the model.
+      editorInstance.executeEdits("external", [
+        {range: model.getFullModelRange(), text: value, forceMoveMarkers: true},
+      ]);
+      editorInstance.pushUndoStop();
+    } else {
+      // Fresh model, or one seeded from stale props during a function switch:
+      // replace the content without adding an undo entry, so Cmd+Z on an
+      // unedited function is a no-op instead of loading the previous code.
+      model.setValue(value);
+    }
+    suppressChangeRef.current = false;
+  }, [functionId, value, language]);
+  syncModelRef.current = syncModel;
+
+  useEffect(() => {
+    syncModel();
+  }, [syncModel]);
+
+  useEffect(() => {
+    const models = modelsRef.current;
+    return () => {
+      models.forEach(model => {
+        if (!model.isDisposed()) model.dispose();
+      });
+      models.clear();
+    };
+  }, []);
+
   const handleBeforeMount = useCallback((monaco: Monaco) => {
     // Use hardcoded token values so both themes are always correctly defined,
     // regardless of which mode is active at editor mount time.
@@ -96,6 +158,14 @@ const CodeEditor = ({value, language, onChange, onSave, readOnly, functionId, ex
       keybindings: [2048 | 49], // Ctrl/Cmd + S
       run: () => onSaveRef.current?.(),
     });
+
+    // Swap the wrapper's throwaway default model for this function's dedicated
+    // model, then dispose the orphan so it does not leak.
+    const initialModel = editorInstance.getModel();
+    syncModelRef.current();
+    if (initialModel && initialModel !== editorInstance.getModel() && !initialModel.isDisposed()) {
+      initialModel.dispose();
+    }
   }, []);
 
   // Live theme switching: watch data-theme attribute on <html>
@@ -132,6 +202,10 @@ const CodeEditor = ({value, language, onChange, onSave, readOnly, functionId, ex
 
   const handleChange = useCallback(
     (newValue: string | undefined) => {
+      // Ignore programmatic writes (seeding / external syncs) so they neither
+      // notify the parent nor flag the model as user-owned.
+      if (suppressChangeRef.current) return;
+      ownedModelsRef.current.add(functionIdRef.current || "default");
       onChange(newValue ?? "");
     },
     [onChange]
@@ -141,8 +215,8 @@ const CodeEditor = ({value, language, onChange, onSave, readOnly, functionId, ex
     <Editor
       height="100%"
       language={language}
-      path={`file:///${functionId || "default"}/index.tsx`}
-      value={value}
+      defaultValue=""
+      keepCurrentModel
       onChange={handleChange}
       beforeMount={handleBeforeMount}
       onMount={handleMount}

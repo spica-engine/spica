@@ -3,7 +3,6 @@ import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import styles from "./BucketRules.module.scss";
 import Editor from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import useLocalStorage from "../../../hooks/useLocalStorage";
 import {jwtDecode} from "jwt-decode";
 import type {AuthTokenJWTPayload} from "src/types/auth";
 import type {BucketType} from "../../../store/api/bucketApi";
@@ -282,14 +281,23 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
 
   const [updateBucketRule, { isLoading: loading, error: apiError }] = useUpdateBucketRulesMutation();
 
-  const [token] = useLocalStorage("token", "");
-
   const disposableRef = useRef<monaco.IDisposable | null>(null);
   const initializedRef = useRef(false);
 
-  const suggestions = useMemo(() => {
-    const auth = jwtDecode<AuthTokenJWTPayload>(token);
+  // The auth token is persisted as a RAW JWT string (Authorization: IDENTITY <token>),
+  // not JSON — so it must be read directly, not through useLocalStorage (which JSON.parses).
+  // A missing/garbage token must degrade to {} so autocomplete stops suggesting auth.*
+  // instead of throwing InvalidTokenError and crashing the whole editor.
+  const auth = useMemo<Partial<AuthTokenJWTPayload>>(() => {
+    try {
+      const raw = typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+      return raw ? jwtDecode<AuthTokenJWTPayload>(raw) : {};
+    } catch {
+      return {};
+    }
+  }, []);
 
+  const suggestions = useMemo(() => {
     return {
       auth,
       document: {
@@ -297,7 +305,7 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
         _id: bucket._id
       }
     };
-  }, [bucket, token]);
+  }, [bucket, auth]);
 
   useEffect(() => {
     if (apiError) {

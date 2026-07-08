@@ -4,6 +4,7 @@ import {useEntrySelection} from "../../../hooks/useEntrySelection";
 import type { BucketSchema, BucketDataRow, BucketProperty } from "./types";
 import { cellRegistry } from "./cellRegistry";
 import styles from "./BucketTable.module.scss";
+import cellStyles from "./cells/Cells.module.scss";
 import type {FieldFormState} from "../../../domain/fields/types";
 import type {BucketType} from "../../../store/api/bucketApi";
 import { FieldKind } from "../../../domain/fields/types";
@@ -16,14 +17,17 @@ import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActions
 import Confirmation from "../../molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import type { TableRowClickParams } from "oziko-ui-kit";
+import { CellSelectionProvider } from "./useCellSelection";
 
 interface BucketTableNewProps {
   bucket: BucketSchema;
   data: BucketDataRow[];
   onDataChange?: (rowId: string, propertyKey: string, newValue: any) => void;
   onRowClick?: (params: TableRowClickParams<BucketDataRow>) => void;
+  onExpandRow?: (row: BucketDataRow) => void;
   onNewEntry?: () => void;
   loading?: boolean;
+  totalCount?: number;
   visibleColumns?: Record<string, boolean>;
   onSort?: (sort: Record<string, 1 | -1> | null) => void;
   onLoadMore?: () => void;
@@ -253,7 +257,9 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   data,
   onDataChange,
   onRowClick,
+  onExpandRow,
   loading = false,
+  totalCount,
   visibleColumns,
   onSort,
   onLoadMore,
@@ -266,48 +272,32 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   const [deleteBucketField] = useDeleteBucketFieldMutation();
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  // Infinite scroll: when the actual scroll element nears the bottom, ask the
-  // parent to load the next page. The oziko Table scrolls inside its own
-  // descendant (`.tableArea`, overflow:auto), so search descendants first, then
-  // fall back to the container itself and its ancestors.
+  // The oziko Table owns near-bottom detection on its internal `.tableArea`
+  // scroll container and calls this when the user nears the end; guard against
+  // re-firing while a page is already in flight or when the list is exhausted.
+  const handleReachBottom = useCallback(() => {
+    if (hasMore && !isLoadingMore) onLoadMore?.();
+  }, [hasMore, isLoadingMore, onLoadMore]);
+
+  // Switching buckets must start at the top: the oziko Table keeps its internal
+  // `.tableArea` scroll position across data swaps, so reset both the wrapper and
+  // its scrollable descendant on both axes after the new bucket renders.
   useEffect(() => {
-    const container = tableContainerRef.current;
-    if (!container || !onLoadMore) return;
-
-    const isScrollable = (el: HTMLElement): boolean => {
-      const {overflowY} = window.getComputedStyle(el);
-      return /(auto|scroll|overlay)/.test(overflowY) && el.scrollHeight > el.clientHeight + 1;
-    };
-
-    const findScrollable = (root: HTMLElement): HTMLElement | null => {
-      if (isScrollable(root)) return root;
-      for (const el of Array.from(root.querySelectorAll<HTMLElement>("*"))) {
-        if (isScrollable(el)) return el;
-      }
-      let anc = root.parentElement;
-      while (anc) {
-        if (isScrollable(anc)) return anc;
-        anc = anc.parentElement;
-      }
-      return null;
-    };
-
-    const scrollEl = findScrollable(container);
-    if (!scrollEl) return;
-
-    const onScroll = () => {
-      if (!hasMore || isLoadingMore) return;
-      const distanceToBottom = scrollEl.scrollHeight - (scrollEl.scrollTop + scrollEl.clientHeight);
-      if (distanceToBottom <= 300) {
-        onLoadMore();
+    const reset = () => {
+      const wrapper = tableContainerRef.current;
+      if (!wrapper) return;
+      wrapper.scrollTop = 0;
+      wrapper.scrollLeft = 0;
+      const scrollable = wrapper.querySelector<HTMLElement>('[class*="tableArea"]');
+      if (scrollable) {
+        scrollable.scrollTop = 0;
+        scrollable.scrollLeft = 0;
       }
     };
-
-    scrollEl.addEventListener("scroll", onScroll, {passive: true});
-    // Handle the case where the freshly loaded page already sits near the bottom.
-    onScroll();
-    return () => scrollEl.removeEventListener("scroll", onScroll);
-  }, [onLoadMore, hasMore, isLoadingMore, data.length]);
+    reset();
+    const id = requestAnimationFrame(reset);
+    return () => cancelAnimationFrame(id);
+  }, [bucket._id]);
 
   const [editingField, setEditingField] = useState<{
     key: string;
@@ -494,7 +484,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 
   useEffect(() => {
     if (!bucket?.properties) return;
-    
+
     const propertyKeys = Object.keys(bucket.properties);
     
     if (fieldsOrder.length === 0) {
@@ -538,7 +528,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     return (params: { row: BucketDataRow; isFocused: boolean }) => {
       const value = params.row[key];
 
-      const cell = (
+      return (
         <CellComponent
           value={structuredClone(value)}
           propertyKey={key}
@@ -547,16 +537,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           onChange={(newValue) => handleValueChange(key, params.row._id, newValue)}
         />
       );
-
-      if (!onDataChange) {
-        return (
-          <div style={{pointerEvents: "none", userSelect: "none"}}>
-            {cell}
-          </div>
-        );
-      }
-
-      return cell;
     };
   }, [handleValueChange]);
 
@@ -603,6 +583,23 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     handleOpenEditField
   ]);
 
+  const renderExpandCell = useCallback((params: {row: BucketDataRow; isFocused: boolean}) => {
+    return (
+      <div className={cellStyles.expandCell}>
+        <button
+          type="button"
+          className={cellStyles.expandButton}
+          onClick={e => {
+            e.stopPropagation();
+            onExpandRow?.(params.row);
+          }}
+        >
+          <Icon name="pencil" size={14} />
+        </button>
+      </div>
+    );
+  }, [onExpandRow]);
+
   const renderCheckboxCell = useCallback((params: {row: BucketDataRow; isFocused: boolean}) => {
     const isChecked = selectedEntries.has(params.row._id);
     return (
@@ -625,6 +622,23 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     );
   }, [selectedEntries, selectEntry, deselectEntry]);
 
+  // Hoisted so the CellSelectionProvider and the rendered columns share one
+  // ordered source; divergence would desync keyboard nav from the visible grid.
+  const visibleOrderedKeys = useMemo((): string[] => {
+    if (!bucket?.properties) return [];
+
+    const propertyKeys = Object.keys(bucket.properties);
+    const orderedKeys = fieldsOrder.filter(key => propertyKeys.includes(key));
+    const newKeys = propertyKeys.filter(key => !fieldsOrder.includes(key));
+    const finalOrderedKeys = [...orderedKeys, ...newKeys];
+
+    return visibleColumns
+      ? finalOrderedKeys.filter(key => visibleColumns[key] !== false)
+      : finalOrderedKeys;
+  }, [bucket?.properties, fieldsOrder, visibleColumns]);
+
+  const orderedRowIds = useMemo(() => data.map(r => r._id), [data]);
+
   const propertyColumns = useMemo((): TableColumn<BucketDataRow>[] => {
     if (!bucket?.properties) return [];
 
@@ -636,16 +650,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       renderCell: renderIdCell,
     };
 
-    const propertyKeys = Object.keys(bucket.properties);
-
-    const orderedKeys = fieldsOrder.filter(key => propertyKeys.includes(key));
-    const newKeys = propertyKeys.filter(key => !fieldsOrder.includes(key));
-    const finalOrderedKeys = [...orderedKeys, ...newKeys];
-
-    const visibleOrderedKeys = visibleColumns
-      ? finalOrderedKeys.filter(key => visibleColumns[key] !== false)
-      : finalOrderedKeys;
-
     const propCols = visibleOrderedKeys.map((key, index) => {
       const property: BucketProperty = bucket.properties[key];
       return createPropertyColumn(key, property, index, visibleOrderedKeys.length);
@@ -654,10 +658,9 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     return [idColumn, ...propCols];
   }, [
     bucket?.properties,
-    fieldsOrder,
+    visibleOrderedKeys,
     renderIdCell,
-    createPropertyColumn,
-    visibleColumns
+    createPropertyColumn
   ]);
 
   const columns = useMemo((): TableColumn<BucketDataRow>[] => {
@@ -690,8 +693,16 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       renderCell: renderCheckboxCell,
     };
 
-    return [checkboxColumn, ...propertyColumns];
-  }, [data, selectedEntries, selectEntries, resetSelection, propertyColumns, renderCheckboxCell]);
+    const expandColumn: TableColumn<BucketDataRow> = {
+      key: '__expand__',
+      header: '',
+      width: '40px',
+      minWidth: '40px',
+      renderCell: renderExpandCell,
+    };
+
+    return [checkboxColumn, expandColumn, ...propertyColumns];
+  }, [data, selectedEntries, selectEntries, resetSelection, propertyColumns, renderCheckboxCell, renderExpandCell]);
 
 
   if (!bucket?.properties) {
@@ -706,14 +717,32 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   return (
 <>
 <div ref={tableContainerRef} className={styles.tableContainer}>
+      <CellSelectionProvider
+        editable={!!onDataChange}
+        orderedColumnKeys={visibleOrderedKeys}
+        orderedRowIds={orderedRowIds}
+        containerRef={tableContainerRef}
+      >
       <Table
         columns={columns}
         data={data}
+        cellClassName={styles.bucketCell}
         saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}
-        fixedColumns={['checkbox', '_id']}
-        noResizeableColumns={['checkbox']}
+        fixedColumns={['checkbox', '__expand__', '_id']}
+        noResizeableColumns={['checkbox', '__expand__']}
         loading={loading}
         skeletonRowCount={10}
+        virtualizeRowHeight={36}
+        onReachBottom={handleReachBottom}
+        reachBottomOffset={300}
+        footer={
+          isLoadingMore ? (
+            <div className={styles.loadingMore}>
+              <Icon name="refresh" size={14} className={styles.spinner} />
+              <span>Loading more…</span>
+            </div>
+          ) : undefined
+        }
         onRowClick={onRowClick}
         emptyState={onNewEntry ? {
           title: "This bucket is empty",
@@ -726,6 +755,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           ),
         } : undefined}
       />
+      </CellSelectionProvider>
       <div className={`${styles.newFieldContainer} ${!loading && data.length === 0 && onNewEntry ? styles.newFieldContainerEmpty : ""}`}>
         <BucketFieldPopup
           onSaveAndClose={handleSaveAndClose}
@@ -740,6 +770,17 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
         </BucketFieldPopup>
       </div>
 
+    </div>
+    <div className={styles.tableStatusBar}>
+      <span className={styles.statusCount}>
+        Showing {data.length} of {totalCount ?? data.length}
+      </span>
+      {selectedEntries.size > 0 && (
+        <>
+          <span className={styles.statusSeparator} aria-hidden="true">·</span>
+          <span className={styles.statusSelected}>{selectedEntries.size} selected</span>
+        </>
+      )}
     </div>
     {editingField && (
       <AddFieldModal

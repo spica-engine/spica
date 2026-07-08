@@ -2,7 +2,7 @@ import type {FunctionLog} from "../store/api/functionApi";
 
 export type DateRange = {begin: Date; end: Date};
 export type BrushRange = {startRatio: number; endRatio: number};
-export type DragMode = "start" | "end" | "range" | null;
+export type DragMode = "start" | "end" | "range" | "create" | null;
 
 export type TimeBucket = {
   index: number;

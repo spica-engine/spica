@@ -93,8 +93,9 @@ export const {
   resetAllSelections
 } = entrySelectionSlice.actions;
 
+const EMPTY_ENTRY_IDS: readonly string[] = [];
 export const selectSelectedEntryIds = (state: RootState, bucketId: string): string[] =>
-  state.entrySelection[bucketId] || [];
+  state.entrySelection[bucketId] || (EMPTY_ENTRY_IDS as string[]);
 
 export default entrySelectionSlice.reducer;
 

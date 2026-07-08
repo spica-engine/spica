@@ -3,17 +3,26 @@ import type {BucketDataQueryType} from "../store/api/bucketApi";
 
 const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
-  ({
+const buildBucketQuery = (searchText: string, searchableColumns: string[]): BucketDataQueryType => {
+  const base: BucketDataQueryType = {
     paginate: true,
     relation: true,
-    limit: 25,
+    limit: 25
+  };
+
+  // MongoDB rejects an empty `$or: []` and returns nothing, so a bucket with no
+  // text-searchable columns must omit the filter entirely rather than emit one.
+  if (!searchableColumns.length) return base;
+
+  return {
+    ...base,
     filter: {
       $or: searchableColumns.map(col => ({
         [col]: {$regex: escapeForRegex(searchText), $options: "i"}
       }))
     }
-  }) as const;
+  };
+};
 
 interface UseBucketSearchResult {
   searchQuery: BucketDataQueryType | undefined;

@@ -1,0 +1,103 @@
+.dataStrategy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--padding-sm);
+  width: 100%;
+
+  .description {
+    color: var(--color-input-placeholder);
+    font-size: var(--font-size-sm);
+  }
+
+  .table {
+    width: 100%;
+    border: var(--border-default);
+    border-radius: var(--border-radius-md);
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+
+    th {
+      text-align: left;
+      padding: var(--padding-xs) var(--padding-md);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--color-font-secondary);
+      background-color: var(--color-soft-light);
+      border-bottom: var(--border-default);
+    }
+
+    td {
+      padding: var(--padding-xs) var(--padding-md);
+      font-size: var(--font-size-sm);
+      border-bottom: var(--border-default);
+    }
+  }
+}
+
+.row {
+  &:hover td {
+    background-color: var(--color-hover);
+  }
+
+  &:last-child td {
+    border-bottom: none;
+  }
+}
+
+.name {
+  color: var(--color-font-primary);
+  text-transform: capitalize;
+}
+
+.strategy {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.relationLabel {
+  white-space: nowrap;
+}
+
+.relationFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--padding-xs);
+}
+
+.relationField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--padding-md);
+
+  .fieldName {
+    color: var(--color-font-secondary);
+    text-transform: capitalize;
+  }
+}
+
+.segmented {
+  display: inline-flex;
+  border: var(--border-default);
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+
+  button {
+    padding: var(--padding-xs) var(--padding-md);
+    font-size: var(--font-size-sm);
+    border: none;
+    background-color: transparent;
+    color: var(--color-font-secondary);
+    cursor: pointer;
+  }
+
+  button + button {
+    border-left: var(--border-default);
+  }
+
+  .active {
+    background-color: var(--color-primary);
+    color: var(--color-menu-contrast);
+  }
+}

@@ -16,11 +16,6 @@ const ObservabilityNavigation = () => {
 
   const items: ObservabilityItem[] = [
     {
-      title: "User",
-      icon: "person",
-      path: "/passport/observability/user"
-    },
-    {
       title: "Bucket",
       icon: "bucket",
       path: "/passport/observability/bucket"

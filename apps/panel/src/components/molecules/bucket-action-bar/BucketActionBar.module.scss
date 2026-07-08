@@ -233,3 +233,58 @@
   justify-content: center;
   font-family: "JetBrains Mono", "Courier New", monospace;
 }
+
+.filterChipsBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-menu-background);
+  flex-shrink: 0;
+}
+
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(var(--color-primary-rgb), 0.07);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.13);
+  color: var(--color-primary);
+  border-radius: 5px;
+  padding: 3px 5px 3px 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.filterChipField {
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-size: 10.5px;
+}
+
+.filterChipOp {
+  color: var(--color-font-tertiary);
+  font-size: 10.5px;
+}
+
+.filterChipVal {
+  font-weight: 600;
+}
+
+.filterChipRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.1s;
+
+  &:hover {
+    opacity: 1;
+  }
+}

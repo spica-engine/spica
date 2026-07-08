@@ -1,0 +1,29 @@
+.doughnutCard {
+  padding: var(--padding-lg);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  height: 100%;
+
+  .title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: var(--gap-md);
+  }
+
+  .body {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stateText {
+    font-size: var(--font-size-md);
+    color: var(--color-text-muted);
+  }
+}

@@ -1,7 +1,7 @@
 import React, {type FC, useMemo, useState, useEffect} from "react";
 import {useNavigate, useLocation} from "react-router-dom";
 import styles from "./SideBar.module.scss";
-import {Button, Icon, type IconName, createTheme} from "oziko-ui-kit";
+import {Icon, type IconName, createTheme} from "oziko-ui-kit";
 import Logo from "../../atoms/logo/Logo";
 import {getNavigationComponent} from "../../../components/prefabs/navigations/navigation-registry";
 import {sideBarItems, type SideBarItem} from "../../../pages/home/sidebarItems";
@@ -15,7 +15,9 @@ const pathToSidebarId: Array<[RegExp, string]> = [
   [/^\/config/, "config"],
   [/^\/webhook/, "webhook"],
   [/^\/storage/, "storage"],
-  [/^\/version-control/, "versionControl"],
+  // `/dashboard` (with or without an :id) resolves to the dashboard section so the
+  // DashboardNavigation renders on the landing view. The bottom "Home" button still
+  // routes here; it simply is not the item that owns the active navigator.
   [/^\/dashboard/, "dashboard"],
 ];
 
@@ -77,10 +79,10 @@ const railSvgMap: Record<string, React.ReactElement> = {
       <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
     </svg>
   ),
-  versionControl: (
+  home: (
     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
-      <line x1="6" y1="9" x2="6" y2="15"/><path d="M18 15V9a3 3 0 0 0-3-3H9"/>
+      <path d="M3 9.5L12 3l9 6.5"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/>
+      <path d="M9 20v-6h6v6"/>
     </svg>
   ),
   themeSun: (
@@ -203,14 +205,14 @@ const SideBar: FC<TypeSideBar> = ({
         {bottomItems.map((item) => {
           const isActive = activeSideBarItem.id === item.id;
           return (
-            <Button
-              variant="icon"
+            <button
               key={item.id}
+              title={item.name}
               className={`${styles.menuItem} ${isActive ? styles.active : ""}`}
               onClick={() => handleItemClick(item)}
             >
               {railSvgMap[item.id] ?? <Icon name={item.icon} size="md" />}
-            </Button>
+            </button>
           );
         })}
       </div>
