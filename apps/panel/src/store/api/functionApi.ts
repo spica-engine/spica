@@ -18,6 +18,7 @@ export interface SpicaFunction {
   language: 'javascript' | 'typescript';
   runtime?: 'nodejs' | 'deno';
   timeout?: number;
+  warmWorkers?: number;
   memoryLimit?: number;
   env?: Record<string, string>;
   env_vars?: ResolvedEnvVar[];
@@ -109,6 +110,7 @@ export interface CreateFunctionRequest {
   language: 'javascript' | 'typescript';
   runtime?: 'nodejs' | 'deno';
   timeout?: number;
+  warmWorkers?: number;
   memoryLimit?: number;
   env?: Record<string, string>;
   dependencies?: Record<string, string>;
@@ -122,6 +124,7 @@ export interface UpdateFunctionRequest {
   language?: 'javascript' | 'typescript';
   runtime?: 'nodejs' | 'deno';
   timeout?: number;
+  warmWorkers?: number;
   memoryLimit?: number;
   triggers?: TriggerMap;
   category?: string;
