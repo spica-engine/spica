@@ -54,7 +54,7 @@ export class FunctionModule {
         WebhookModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),
         SchedulerModule.forRoot({
           maxConcurrency: options.maxConcurrency,
-          maxConcurrencyPerWorker: options.maxConcurrencyPerWorker,
+          eventConcurrency: options.eventConcurrency,
           maxWarmWorkers: options.maxWarmWorkers,
           databaseName: options.databaseName,
           databaseReplicaSet: options.databaseReplicaSet,

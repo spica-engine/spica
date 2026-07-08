@@ -303,7 +303,7 @@ const args = yargsInstance
         "Maximum number of worker than can run paralel for the same functions. Default value is two.",
       default: 2
     },
-    "function-worker-max-concurrency": {
+    "function-worker-event-concurrency": {
       number: true,
       description:
         "Maximum number of events a single worker process handles concurrently in-process. Default is 1 (one event per worker).",
@@ -695,8 +695,8 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       throw new TypeError("--function-worker-concurrency must be a positive number");
     }
 
-    if (args["function-worker-max-concurrency"] < 1) {
-      throw new TypeError("--function-worker-max-concurrency must be a positive number");
+    if (args["function-worker-event-concurrency"] < 1) {
+      throw new TypeError("--function-worker-event-concurrency must be a positive number");
     }
 
     if (args["function-warm-workers-max"] < 0) {
@@ -931,7 +931,7 @@ const modules = [
     },
     debug: args["function-debug"],
     maxConcurrency: args["function-worker-concurrency"],
-    maxConcurrencyPerWorker: args["function-worker-max-concurrency"],
+    eventConcurrency: args["function-worker-event-concurrency"],
     maxWarmWorkers: args["function-warm-workers-max"],
     realtimeLogs: true,
     logger: args["function-logger"],

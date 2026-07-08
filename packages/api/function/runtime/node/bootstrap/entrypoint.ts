@@ -39,7 +39,7 @@ if (process.env.LOGGER) {
   console = getLoggerConsole();
 }
 
-const LANE_COUNT = Math.max(1, Number(process.env.WORKER_MAX_CONCURRENCY) || 1);
+const LANE_COUNT = Math.max(1, Number(process.env.WORKER_EVENT_CONCURRENCY) || 1);
 
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
   exitAbnormally("Environment variable FUNCTION_GRPC_ADDRESS was not set.");

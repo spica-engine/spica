@@ -19,7 +19,7 @@ export interface SchedulingOptions {
   experimentalDevkitDatabaseCache?: boolean;
   corsOptions: CorsOptions;
   maxConcurrency: number;
-  maxConcurrencyPerWorker?: number;
+  eventConcurrency?: number;
   maxWarmWorkers: number;
   debug: boolean;
   logger: boolean;

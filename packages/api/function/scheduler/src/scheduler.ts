@@ -518,13 +518,13 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     if (this.options.functionGrpcMaxMessageSizeBytes) {
       env.FUNCTION_GRPC_MAX_MESSAGE_SIZE = String(this.options.functionGrpcMaxMessageSizeBytes);
     }
-    if (this.options.maxConcurrencyPerWorker) {
-      env.WORKER_MAX_CONCURRENCY = String(this.options.maxConcurrencyPerWorker);
+    if (this.options.eventConcurrency) {
+      env.WORKER_EVENT_CONCURRENCY = String(this.options.eventConcurrency);
     }
 
     const worker = node.spawn({
       id,
-      concurrency: this.options.maxConcurrencyPerWorker,
+      concurrency: this.options.eventConcurrency,
       env,
       entrypointPath: this.options.spawnEntrypointPath
     });
