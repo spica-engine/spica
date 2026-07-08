@@ -82,7 +82,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.pkgmanagers.set("node", new LocalPackageManager(new Npm()));
 
     this.queue = new EventQueue(
-      (id, schedule) => this.gotWorker(id, schedule),
+      (id, push) => this.workerSubscribed(id, push),
       event => this.enqueue(event),
       id => this.cancel(id),
       (id, succedded) => this.complete(id, succedded),
@@ -263,10 +263,19 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   // it (a busy worker's deadline is its most recently started event). Firing kills it.
   timeouts = new Map<string, NodeJS.Timeout>();
 
+  // event id -> worker id, so a completing event decrements the right worker's in-flight
+  // count (freeing a slot) and stops routing its logs.
+  eventToWorker = new Map<string, string>();
+
   // One demux per concurrent worker (capacity > 1), keyed by worker id.
   logRouters = new Map<string, {stdout: EventLogRouter; stderr: EventLogRouter}>();
 
   warmConfigs = new Map<string, {desired: number; target: event.Target}>();
+
+  // Per-function event concurrency (already clamped to the global max), keyed by function
+  // id, fed in-memory by the engine on function create/update. A worker pinned to a
+  // function gets this as its capacity. Absent -> 1.
+  concurrencyConfigs = new Map<string, number>();
 
   getStatus() {
     const workers = Array.from(this.workers.values());
@@ -321,6 +330,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       }
 
       const {id: workerId, worker} = workerMeta;
+
+      // Pin this worker to the function's concurrency the moment it's assigned. Set before
+      // the capacity>1 log-demux decision and before execute()'s Busy/Targeted transition.
+      worker.setCapacity(this.concurrencyConfigs.get(event.target.id) ?? 1);
 
       const streamOptions = {
         eventId: event.id,
@@ -383,6 +396,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.logInvocations(event);
       }
 
+      this.eventToWorker.set(event.id, workerId);
       worker.execute(event);
 
       this.eventQueue.delete(event.id);
@@ -410,32 +424,39 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   complete(id: string, succedded: boolean) {
-    // The worker's timeout is worker-keyed (extended per event, cleared on death), so a
-    // completing event only needs to stop routing its own logs on concurrent workers.
-    for (const routers of this.logRouters.values()) {
-      routers.stdout.unregister(id);
-      routers.stderr.unregister(id);
+    const workerId = this.eventToWorker.get(id);
+    this.eventToWorker.delete(id);
+
+    if (workerId) {
+      // Free the slot on this event's worker so the scheduler can push it the next queued
+      // event, and stop routing this event's logs on a concurrent worker.
+      this.workers.get(workerId)?.onComplete();
+
+      const routers = this.logRouters.get(workerId);
+      if (routers) {
+        routers.stdout.unregister(id);
+        routers.stderr.unregister(id);
+      }
     }
 
     this.print(`an event has been completed ${id} with status ${succedded ? "success" : "fail"}`);
+
+    this.process();
   }
 
-  gotWorker(id: string, schedule: (event: event.Event) => void) {
-    const relatedWorker = this.workers.get(id);
+  // Called once, when a worker opens its event stream. The stream is its readiness signal
+  // and its delivery channel; the scheduler pushes events down it up to the worker's
+  // capacity. There is no per-event handshake.
+  workerSubscribed(id: string, push: (event: event.Event) => void) {
+    const worker = this.workers.get(id);
 
-    if (!relatedWorker || relatedWorker.state == WorkerState.Outdated) {
+    if (!worker || worker.state == WorkerState.Outdated) {
       this.print(`the worker ${id} won't be scheduled anymore.`);
-    } else {
-      let message;
-      if (relatedWorker.state == WorkerState.Initial) {
-        message = `got a new worker ${id}`;
-      } else if (relatedWorker.state == WorkerState.Busy) {
-        message = `worker ${id} is waiting for new event`;
-      }
-      relatedWorker.markAsAvailable(schedule);
-
-      this.print(message);
+      return;
     }
+
+    worker.subscribed(push);
+    this.print(`worker ${id} subscribed`);
 
     this.process();
   }
@@ -457,6 +478,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     clearTimeout(this.timeouts.get(id));
     this.timeouts.delete(id);
+
+    // In-flight events on a dead worker won't complete; drop their mappings so they don't
+    // leak (they're already out of eventQueue, so they aren't reprocessed).
+    for (const [eventId, wId] of this.eventToWorker) {
+      if (wId == id) {
+        this.eventToWorker.delete(eventId);
+      }
+    }
 
     this.logRouters.delete(id);
 
@@ -518,13 +547,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     if (this.options.functionGrpcMaxMessageSizeBytes) {
       env.FUNCTION_GRPC_MAX_MESSAGE_SIZE = String(this.options.functionGrpcMaxMessageSizeBytes);
     }
-    if (this.options.eventConcurrency) {
-      env.WORKER_EVENT_CONCURRENCY = String(this.options.eventConcurrency);
-    }
-
     const worker = node.spawn({
       id,
-      concurrency: this.options.eventConcurrency,
       env,
       entrypointPath: this.options.spawnEntrypointPath
     });
@@ -552,6 +576,24 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     }
 
     this.scaleWarmWorkers(fnId);
+  }
+
+  /**
+   * Declare how many events a function runs in parallel per worker. Clamped to the global
+   * `eventConcurrency` max cap. A worker pinned to this function reads the value as its
+   * capacity on its next assignment, so a live edit takes effect without respawning:
+   * growing lets the worker take more events, shrinking simply stops new ones until it
+   * drains below the new limit.
+   */
+  reconcileConcurrency(target: event.Target, concurrency: number) {
+    const max = this.options.eventConcurrency || 1;
+    const clamped = Math.max(1, Math.min(concurrency || 1, max));
+
+    if (clamped == 1) {
+      this.concurrencyConfigs.delete(target.id);
+    } else {
+      this.concurrencyConfigs.set(target.id, clamped);
+    }
   }
 
   private scaleWarmWorkers(fnId: string) {

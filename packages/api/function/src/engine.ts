@@ -159,22 +159,23 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // Warm workers are a per-function reserve, so reconcile them once per affected
-    // function from the function's authoritative state — not per trigger. Driving it
-    // per trigger would let removing one trigger of a multi-trigger function drain the
-    // whole reserve, and a multi-trigger update thrash it (kill/respawn per trigger).
+    // Warm-worker reserve AND per-function event concurrency are per-function settings, so
+    // reconcile them once per affected function from the function's authoritative state —
+    // not per trigger. Driving it per trigger would let removing one trigger of a
+    // multi-trigger function drain the whole reserve, and a multi-trigger update thrash it.
     const affectedFunctionIds = new Set(changes.map(change => change.target.id));
     for (const functionId of affectedFunctionIds) {
-      this.reconcileWarmWorkersForFunction(functionId);
+      this.reconcileRuntimeForFunction(functionId);
     }
   }
 
-  private async reconcileWarmWorkersForFunction(functionId: string): Promise<void> {
+  private async reconcileRuntimeForFunction(functionId: string): Promise<void> {
     const fn = await this.findFunctionForRuntime(functionId);
 
     // the function no longer exists (deleted / invalid id) — drain whatever reserve it holds
     if (!fn) {
       this.scheduler.reconcileWarmWorkers(new event.Target({id: functionId}), 0);
+      this.scheduler.reconcileConcurrency(new event.Target({id: functionId}), 1);
       return;
     }
 
@@ -184,6 +185,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     const [change] = createTargetChanges(fn, ChangeKind.Added, this.secretDecryptor);
     const target = change ? this.buildTarget(change) : new event.Target({id: functionId});
     this.scheduler.reconcileWarmWorkers(target, desired);
+    this.scheduler.reconcileConcurrency(target, fn.concurrency ?? 1);
   }
 
   private async findFunctionForRuntime(functionId: string) {

@@ -65,12 +65,12 @@ describe("Scheduler", () => {
     );
   }
 
-  // A real warm worker signals readiness by calling gRPC `pop` after it finishes
-  // pre-loading; here we simulate that by promoting every Warming worker to Warm.
+  // A real warm worker signals readiness by opening its event stream (subscribe) after it
+  // finishes pre-loading; here we simulate that by promoting every Warming worker to Warm.
   function connectWarmingWorkers() {
     for (const [id, w] of Array.from(scheduler["workers"].entries())) {
       if (w.state == WorkerState.Warming) {
-        scheduler.gotWorker(id, () => {});
+        scheduler.workerSubscribed(id, () => {});
       }
     }
   }
@@ -101,17 +101,27 @@ describe("Scheduler", () => {
     );
   }
 
-  function completeEvent(evId: string) {
-    const [id, worker] = findWorkerFromEventId(evId);
-    triggerGotWorker(id);
+  // Completing an event on the worker serving `targetId`: find an in-flight event mapped to
+  // that worker and drive the real complete() path (frees the worker's slot, re-runs
+  // process() to hand it the next queued event).
+  function completeEvent(targetId: string) {
+    const found = findWorkerFromEventId(targetId);
+    if (!found) return;
+    const [workerId] = found;
+    const entry = Array.from(scheduler.eventToWorker.entries()).find(([, wId]) => wId == workerId);
+    if (entry) {
+      scheduler.complete(entry[0], true);
+    }
   }
 
+  // A real worker signals readiness by opening its event stream (subscribe); simulate that
+  // for a spawned Initial/Fresh worker.
   function triggerGotWorker(_id?: string) {
     const [workerId] = Array.from(scheduler.workers.entries()).find(([id, worker]) => {
       if (_id) return _id == id;
       return worker.state == WorkerState.Initial || worker.state == WorkerState.Fresh;
     });
-    scheduler.gotWorker(workerId, () => {});
+    scheduler.workerSubscribed(workerId, () => {});
   }
 
   function triggerLostWorker(evId: string) {
@@ -378,19 +388,22 @@ describe("Scheduler", () => {
   });
 
   it("should not exceed the concurreny level", () => {
-    const ev1 = new event.Event({
-      target: new event.Target({
-        id: "1",
-        cwd: compilation.cwd,
-        handler: "default",
-        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
-      }),
-      type: -1 as any
-    });
+    // distinct event ids: three concurrent invocations of the same function
+    const makeEv = (id: string) =>
+      new event.Event({
+        id,
+        target: new event.Target({
+          id: "1",
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+        }),
+        type: -1 as any
+      });
 
-    scheduler.enqueue(ev1);
-    scheduler.enqueue(ev1);
-    scheduler.enqueue(ev1);
+    scheduler.enqueue(makeEv("e1"));
+    scheduler.enqueue(makeEv("e2"));
+    scheduler.enqueue(makeEv("e3"));
 
     // waiting for an available worker
     expect(scheduler.eventQueue.size).toEqual(1);

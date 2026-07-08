@@ -306,8 +306,8 @@ const args = yargsInstance
     "function-worker-event-concurrency": {
       number: true,
       description:
-        "Maximum number of events a single worker process handles concurrently in-process. Default is 1 (one event per worker).",
-      default: 1
+        "Upper bound for a function's per-worker event concurrency. Each function sets its own `concurrency` (default 1) on its schema; this clamps it so no function can oversubscribe a worker's event loop. Default 100.",
+      default: 100
     },
     "function-warm-workers-max": {
       number: true,

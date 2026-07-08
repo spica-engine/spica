@@ -80,7 +80,8 @@ export function hasContextChange(
     diff(previousFn.env_vars, currentFn.env_vars).length > 0 ||
     diff(previousFn.secrets, currentFn.secrets).length > 0 ||
     previousFn.timeout != currentFn.timeout ||
-    previousFn.warmWorkers != currentFn.warmWorkers
+    previousFn.warmWorkers != currentFn.warmWorkers ||
+    previousFn.concurrency != currentFn.concurrency
   );
 }
 
