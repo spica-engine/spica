@@ -28,11 +28,11 @@ export class ScheduleWorker extends NodeWorker {
   private target!: event.Target;
 
   // capacity = number of events this worker can run in-process at once (one per lane).
-  // Each idle lane parks its pop callback in `pending`; `inFlight` counts busy lanes.
+  // A lane is either idle (its pop callback parked in `idleLanes`) or busy (counted in
+  // `inFlight`).
   public readonly capacity: number;
   private inFlight = 0;
-  private stuckLanes = 0;
-  private pending: Schedule[] = [];
+  private idleLanes: Schedule[] = [];
 
   constructor(options: SpawnOptions) {
     super(options);
@@ -70,7 +70,7 @@ export class ScheduleWorker extends NodeWorker {
     this.target = event.target;
     this.inFlight++;
     this.transitionTo(this.inFlight >= this.capacity ? WorkerState.Busy : WorkerState.Targeted);
-    const schedule = this.pending.shift();
+    const schedule = this.idleLanes.shift();
     schedule!(event);
   }
 
@@ -80,7 +80,7 @@ export class ScheduleWorker extends NodeWorker {
   }
 
   public markAsAvailable(schedule: Schedule) {
-    this.pending.push(schedule);
+    this.idleLanes.push(schedule);
 
     if (this.state == WorkerState.Initial) {
       this.transitionTo(WorkerState.Fresh);
@@ -107,24 +107,45 @@ export class ScheduleWorker extends NodeWorker {
     }
   }
 
-  public hasFreeSlot() {
+  // Private on purpose: a free lane is only meaningful together with the worker's
+  // state and target, so callers go through canServe*/isActiveFor and never risk
+  // picking a saturated worker. A parked idle lane already implies inFlight < capacity
+  // (inFlight + idleLanes.length <= capacity), so that need not be re-checked here.
+  private hasFreeSlot() {
     return (
-      this.pending.length > 0 &&
-      this.inFlight < this.capacity &&
+      this.idleLanes.length > 0 &&
       this.state != WorkerState.Timeouted &&
       this.state != WorkerState.Outdated
     );
   }
 
-  public isIdle() {
-    return this.inFlight == 0;
+  // Reuse an already-graduated same-target worker with a free lane (its module cache
+  // is warm and it already counts against this function's concurrency budget).
+  public canServe(targetId: string) {
+    return (
+      this.hasSameTarget(targetId) && this.state == WorkerState.Targeted && this.hasFreeSlot()
+    );
   }
 
-  // A timed-out lane keeps running the (uncancellable) handler; report when every
-  // lane is wedged so the scheduler can replace the worker.
-  public markLaneStuck() {
-    this.stuckLanes++;
-    return this.stuckLanes >= this.capacity;
+  // Same, but for a worker still sitting in the pre-warmed reserve.
+  public canServeWarm(targetId: string) {
+    return this.hasSameTarget(targetId) && this.state == WorkerState.Warm && this.hasFreeSlot();
+  }
+
+  // Already handed at least one event of this function, so it counts toward the limit.
+  public isActiveFor(targetId: string) {
+    return (
+      this.hasSameTarget(targetId) &&
+      (this.state == WorkerState.Targeted || this.state == WorkerState.Busy)
+    );
+  }
+
+  public isFresh() {
+    return this.state == WorkerState.Fresh;
+  }
+
+  public isIdle() {
+    return this.inFlight == 0;
   }
 
   public markAsTimeouted() {

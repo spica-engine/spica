@@ -420,13 +420,22 @@ describe("Scheduler", () => {
   describe("per-worker concurrency routing", () => {
     // Stub workers exercise takeAWorker's capacity logic without spawning processes.
     function stubWorker(target: string, inFlight: number, capacity: number, pending: number) {
+      const hasSameTarget = (id: string) => target == id;
+      const hasFreeSlot = () => pending > 0 && inFlight < capacity;
       return {
         state: WorkerState.Targeted,
-        hasSameTarget(id: string) {
-          return target == id;
+        hasSameTarget,
+        canServe(id: string) {
+          return hasSameTarget(id) && hasFreeSlot();
         },
-        hasFreeSlot() {
-          return pending > 0 && inFlight < capacity;
+        canServeWarm() {
+          return false;
+        },
+        isActiveFor(id: string) {
+          return hasSameTarget(id);
+        },
+        isFresh() {
+          return false;
         }
       } as any;
     }

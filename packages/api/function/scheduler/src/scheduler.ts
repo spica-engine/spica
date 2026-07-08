@@ -259,9 +259,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   eventQueue = new Map<string, event.Event>();
 
+  // Keyed by worker id: one timeout per worker, extended on each new event assigned to
+  // it (a busy worker's deadline is its most recently started event). Firing kills it.
   timeouts = new Map<string, NodeJS.Timeout>();
-
-  eventToWorker = new Map<string, string>();
 
   // One demux per concurrent worker (capacity > 1), keyed by worker id.
   logRouters = new Map<string, {stdout: EventLogRouter; stderr: EventLogRouter}>();
@@ -286,38 +286,29 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     };
   }
 
-  takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} {
+  takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} | undefined {
     const workers = Array.from(this.workers.entries()).map(([id, worker]) => {
       return {id, worker};
     });
 
-    const sameTargets = workers.filter(({worker}) => worker.hasSameTarget(target.id));
-
     // 1. Reuse an already-graduated same-target worker that still has a free lane
     // (its module is cache-warm).
-    const reusable = sameTargets.find(
-      ({worker}) => worker.state == WorkerState.Targeted && worker.hasFreeSlot()
-    );
+    const reusable = workers.find(({worker}) => worker.canServe(target.id));
     if (reusable) {
       return reusable;
     }
 
     // 2. Tap the pre-warmed reserve — the first-hit and concurrency-burst path.
-    const warm = sameTargets.find(
-      ({worker}) => worker.state == WorkerState.Warm && worker.hasFreeSlot()
-    );
+    const warm = workers.find(({worker}) => worker.canServeWarm(target.id));
     if (warm) {
       return warm;
     }
 
     // 3. Fall back to the shared cold worker. Warm/Warming workers are intentionally
     // excluded from the concurrency count so the reserve never blocks a cold spawn.
-    const activeTargetWorkers = sameTargets.filter(
-      ({worker}) => worker.state == WorkerState.Targeted || worker.state == WorkerState.Busy
-    );
-    const fresh = workers.find(({worker}) => worker.state == WorkerState.Fresh);
-    if (activeTargetWorkers.length < this.options.maxConcurrency) {
-      return fresh;
+    const activeCount = workers.filter(({worker}) => worker.isActiveFor(target.id)).length;
+    if (activeCount < this.options.maxConcurrency) {
+      return workers.find(({worker}) => worker.isFresh());
     }
     return;
   }
@@ -374,25 +365,19 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       const channels = pairs.map(([stdout, stderr]) => (this.options.logger ? stdout : stderr));
 
       const timeoutFn = () => {
-        this.timeouts.delete(event.id);
-        // The handler can't be cancelled; only kill the worker once every lane is
-        // wedged, otherwise a single timeout would take healthy siblings down with it.
-        const allLanesStuck = worker.markLaneStuck();
-        if (allLanesStuck) {
-          worker.markAsTimeouted();
-        }
+        worker.markAsTimeouted();
         for (const channel of channels) {
           if (channel.writable) {
             channel.write(timeoutMsg);
           }
         }
-        if (allLanesStuck) {
-          worker.kill();
-        }
+        worker.kill();
       };
 
-      this.eventToWorker.set(event.id, workerId);
-      this.timeouts.set(event.id, setTimeout(timeoutFn, timeoutInMs));
+      if (this.timeouts.has(workerId)) {
+        clearTimeout(this.timeouts.get(workerId));
+      }
+      this.timeouts.set(workerId, setTimeout(timeoutFn, timeoutInMs));
 
       if (this.options.invocationLogs) {
         this.logInvocations(event);
@@ -423,18 +408,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.print(`an event got cancelled ${id}`);
     this.eventQueue.delete(id);
   }
+
   complete(id: string, succedded: boolean) {
-    const timeout = this.timeouts.get(id);
-    if (timeout) {
-      clearTimeout(timeout);
-      this.timeouts.delete(id);
-    }
-
-    const workerId = this.eventToWorker.get(id);
-    this.eventToWorker.delete(id);
-
-    const routers = workerId && this.logRouters.get(workerId);
-    if (routers) {
+    // The worker's timeout is worker-keyed (extended per event, cleared on death), so a
+    // completing event only needs to stop routing its own logs on concurrent workers.
+    for (const routers of this.logRouters.values()) {
       routers.stdout.unregister(id);
       routers.stderr.unregister(id);
     }
@@ -477,13 +455,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.workers.delete(id);
 
-    for (const [eventId, workerId] of this.eventToWorker) {
-      if (workerId == id) {
-        clearTimeout(this.timeouts.get(eventId));
-        this.timeouts.delete(eventId);
-        this.eventToWorker.delete(eventId);
-      }
-    }
+    clearTimeout(this.timeouts.get(id));
+    this.timeouts.delete(id);
 
     this.logRouters.delete(id);
 
@@ -516,9 +489,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   private scaleWorkers() {
-    const hasFreshWorker = Array.from(this.workers.values()).find(
-      worker => worker.state == WorkerState.Fresh
-    );
+    const hasFreshWorker = Array.from(this.workers.values()).find(worker => worker.isFresh());
 
     if (hasFreshWorker) {
       return;
