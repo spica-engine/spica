@@ -1,0 +1,20 @@
+.objectFieldInput {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  width: 100%;
+
+  .header {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-5);
+    padding-left: var(--spacing-4);
+    border-left: var(--border-default);
+  }
+}

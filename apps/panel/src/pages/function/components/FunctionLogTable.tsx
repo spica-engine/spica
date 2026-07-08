@@ -5,6 +5,7 @@ import {
   SEVERITY_CHIPS,
   getSeverityBadge,
   getSeverityFilter,
+  type ActiveSeverity,
   type SeverityFilter,
 } from "../../../utils/functionLogLevels";
 import {formatRowTimestamp, getLogDate} from "../../../utils/functionLogUtils";
@@ -12,6 +13,7 @@ import styles from "./FunctionLogView.module.scss";
 
 const ROW_SEVERITY_CLASS: Record<SeverityFilter, string> = {
   all: styles.severityAll,
+  log: styles.severityLog,
   info: styles.severityInfo,
   warning: styles.severityWarning,
   error: styles.severityError,
@@ -24,11 +26,11 @@ type FunctionLogTableProps = {
   functionName: string;
   defaultHandlerName: string;
   searchQuery: string;
-  severityFilter: SeverityFilter;
+  severityFilters: ActiveSeverity[];
   sortDirection: "asc" | "desc";
   expandedLogIds: string[];
   onSearchChange: (value: string) => void;
-  onSeverityChange: (filter: SeverityFilter) => void;
+  onSeverityToggle: (filter: SeverityFilter) => void;
   onSortDirectionChange: (direction: "asc" | "desc") => void;
   onToggleRow: (id: string) => void;
 };
@@ -39,11 +41,11 @@ const FunctionLogTable = ({
   functionName,
   defaultHandlerName,
   searchQuery,
-  severityFilter,
+  severityFilters,
   sortDirection,
   expandedLogIds,
   onSearchChange,
-  onSeverityChange,
+  onSeverityToggle,
   onSortDirectionChange,
   onToggleRow,
 }: FunctionLogTableProps) => {
@@ -65,7 +67,8 @@ const FunctionLogTable = ({
 
         <div className={styles.severityChips}>
           {SEVERITY_CHIPS.map(chip => {
-            const selected = severityFilter === chip.key;
+            const selected =
+              chip.key === "all" ? severityFilters.length === 0 : severityFilters.includes(chip.key);
             const chipClassName = chip.key === "all" ? styles.severityAll : ROW_SEVERITY_CLASS[chip.key];
 
             return (
@@ -73,7 +76,7 @@ const FunctionLogTable = ({
                 key={chip.key}
                 type="button"
                 className={`${styles.severityChip} ${chipClassName} ${selected ? styles.severityChipSelected : ""}`}
-                onClick={() => onSeverityChange(chip.key)}
+                onClick={() => onSeverityToggle(chip.key)}
               >
                 {chip.dotLabel && <span className={styles.severityDot}>{chip.dotLabel}</span>}
                 {chip.label}

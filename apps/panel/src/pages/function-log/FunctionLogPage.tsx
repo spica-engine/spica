@@ -35,6 +35,7 @@ type FunctionDescriptor = {
 
 const SEVERITY_CLASS: Record<SeverityFilter, string> = {
   all: styles.severityAll,
+  log: styles.severityLog,
   info: styles.severityInfo,
   warning: styles.severityWarning,
   error: styles.severityError,
@@ -104,8 +105,8 @@ const FunctionLogPage = () => {
     setDraftEnd,
     searchQuery,
     setSearchQuery,
-    severityFilter,
-    setSeverityFilter,
+    severityFilters,
+    toggleSeverity,
     selectedLevels,
     isFilterOpen,
     setIsFilterOpen,
@@ -372,13 +373,14 @@ const FunctionLogPage = () => {
           </label>
           <div className={styles.severityChips}>
             {SEVERITY_CHIPS.map(chip => {
-              const selected = severityFilter === chip.key;
+              const selected =
+                chip.key === "all" ? severityFilters.length === 0 : severityFilters.includes(chip.key);
               return (
                 <button
                   key={chip.key}
                   type="button"
                   className={`${styles.severityChip} ${SEVERITY_CLASS[chip.key]} ${selected ? styles.severityChipSelected : ""}`}
-                  onClick={() => setSeverityFilter(chip.key)}
+                  onClick={() => toggleSeverity(chip.key)}
                 >
                   {chip.dotLabel && <span className={styles.severityDot}>{chip.dotLabel}</span>}
                   {chip.label}

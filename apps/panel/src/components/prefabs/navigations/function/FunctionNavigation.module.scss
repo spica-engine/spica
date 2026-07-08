@@ -1,0 +1,101 @@
+@use "../../../../styles/mixins";
+
+// ── Function nav category accordion ─────────────────────
+// Mirrors the bucket-navigation accordion visual language so both
+// sidebars read the same, without touching the shared Navigation styles.
+
+.functionNavigation {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: var(--spacing-5) var(--spacing-7) var(--spacing-10);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .categoryItem {
+    margin-bottom: var(--spacing-7);
+  }
+
+  .catGroupHead {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-5);
+    padding: var(--spacing-4) var(--spacing-5);
+    border-radius: var(--radius-md);
+    font-size: 11px;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-fast);
+
+    &:hover {
+      background: var(--color-surface-2);
+
+      .catGroupDrag {
+        opacity: 1;
+      }
+    }
+  }
+
+  .catGroupChevron {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+  }
+
+  .catGroupChevronCollapsed {
+    transform: rotate(-90deg);
+  }
+
+  .catGroupLabel {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .catGroupDrag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+    border-radius: var(--radius-xs);
+    color: var(--color-text-faint);
+    cursor: grab;
+    flex-shrink: 0;
+    opacity: 0;
+    margin-left: auto;
+    transition: opacity var(--transition-fast), color var(--transition-fast);
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &:hover {
+      color: var(--color-text-muted);
+    }
+  }
+
+  .catGroupItems {
+    padding-left: var(--spacing-7);
+  }
+
+  .uncategorizedLabel {
+    font-size: 9.5px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-faint);
+    padding: var(--spacing-7) var(--spacing-5) var(--spacing-2);
+  }
+}

@@ -1,10 +1,12 @@
-export type FilterFieldType = 'string' | 'number' | 'date' | 'boolean' | 'enum';
+export type FilterFieldType = 'string' | 'number' | 'date' | 'boolean' | 'enum' | 'id' | 'relation';
 
 export interface FilterField {
   key: string;
   label: string;
   type: FilterFieldType;
   enumOptions?: { label: string; value: string | number }[];
+  /** Related bucket id — required for `relation` fields to drive the picker. */
+  relationBucketId?: string;
 }
 
 export interface FilterConditionRow {

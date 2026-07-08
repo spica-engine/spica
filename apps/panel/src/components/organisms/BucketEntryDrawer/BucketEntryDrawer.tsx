@@ -13,6 +13,14 @@ import {BucketEntryForm} from "../../molecules/BucketEntryForm";
 import {BucketEntryActions} from "../../molecules/BucketEntryActions";
 import {useCreateBucketEntryMutation, useUpdateBucketEntryMutation} from "../../../store/api/bucketApi";
 import StorageFieldInput from "../../atoms/storage-field-input/StorageFieldInput";
+import JsonFieldInput from "../../molecules/json-field-input/JsonFieldInput";
+import RelationFieldInput from "../../atoms/relation-field-input/RelationFieldInput";
+import ArrayFieldInput from "../../atoms/array-field-input/ArrayFieldInput";
+import ObjectFieldInput from "../../atoms/object-field-input/ObjectFieldInput";
+import ErrorBoundary from "../../atoms/error-boundary/ErrorBoundary";
+
+// oziko <Drawer size> is a raw px number with no design token; 1.25× the previous 380px baseline.
+const DRAWER_WIDTH_PX = 475;
 
 export interface BucketEntryDrawerProps {
   bucket: BucketType;
@@ -123,9 +131,18 @@ const BucketEntryDrawer = ({
     const overrides: Record<string, any> = {};
     for (const [key, p] of relationEntries) {
       const formatted = (p as any).relationState?.initialFormattedValues;
-      if (formatted !== undefined) {
-        overrides[key] = formatted;
-      }
+      if (formatted === undefined) continue;
+
+      // onetomany feeds oziko a `.map`-ed value, so it must always be an array;
+      // onetoone stays a single { value, label } object.
+      const isOneToMany = (p as any)?.relationType === "onetomany";
+      overrides[key] = isOneToMany
+        ? Array.isArray(formatted)
+          ? formatted
+          : [formatted]
+        : Array.isArray(formatted)
+          ? formatted[0]
+          : formatted;
     }
 
     formActions.setValue({...values, ...overrides});
@@ -144,6 +161,17 @@ const BucketEntryDrawer = ({
     error: formState.errors as TypeInputRepresenterError,
     typeOverrides: {
       storage: (props) => <StorageFieldInput {...props} fieldKey={props.key} />,
+      json: (props) => <JsonFieldInput {...props} fieldKey={props.key} />,
+      // oziko's default relation/array renderers `.map` the raw value; our wrappers
+      // coerce it to an array first so the outside-click close on the first open,
+      // when the value is still a non-array, can't throw "map is not a function".
+      relation: (props) => <RelationFieldInput {...props} fieldKey={props.key} />,
+      array: (props) => <ArrayFieldInput {...props} fieldKey={props.key} />,
+      // oziko's built-in object renderer only descends one level and prints an object
+      // leaf as `String(value)` → the literal "[object Object]". ObjectFieldInput recurses
+      // through useInputRepresenter so every depth resolves to a real editor, and routes
+      // free-form (schema-less) objects to a JSON editor instead of a dead leaf.
+      object: (props) => <ObjectFieldInput {...props} fieldKey={props.key} />,
     },
   });
 
@@ -193,7 +221,7 @@ const BucketEntryDrawer = ({
       showCloseButton={false}
       isOpen={isOpen}
       onClose={onClose}
-      size={380}
+      size={DRAWER_WIDTH_PX}
       scrollableContentClassName={styles.scrollableWrapper}
     >
       <div className={styles.drawerContent}>
@@ -213,11 +241,13 @@ const BucketEntryDrawer = ({
         </div>
 
         <div className={styles.drawerBody} ref={formContainerRef}>
-          <BucketEntryForm
-            inputRepresentation={inputRepresentation}
-            errors={formState.errors}
-            className={styles.formContent}
-          />
+          <ErrorBoundary onError={onClose} resetKeys={[isOpen, entry?._id]}>
+            <BucketEntryForm
+              inputRepresentation={inputRepresentation}
+              errors={formState.errors}
+              className={styles.formContent}
+            />
+          </ErrorBoundary>
         </div>
 
         <BucketEntryActions

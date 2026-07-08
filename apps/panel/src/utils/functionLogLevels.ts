@@ -3,7 +3,9 @@
  * Single source of truth — import from here instead of defining locally.
  */
 
-export type SeverityFilter = "all" | "info" | "warning" | "error" | "debug";
+export type SeverityFilter = "all" | "log" | "info" | "warning" | "error" | "debug";
+
+export type ActiveSeverity = Exclude<SeverityFilter, "all">;
 
 export const LOG_LEVEL_LABELS: Record<number, string> = {
   0: "Debug",
@@ -23,20 +25,39 @@ export const LOG_LEVEL_OPTIONS = [
 
 export const SEVERITY_CHIPS: Array<{key: SeverityFilter; label: string; dotLabel?: string}> = [
   {key: "all", label: "All"},
+  {key: "log", label: "Log", dotLabel: "L"},
   {key: "info", label: "Info", dotLabel: "I"},
   {key: "warning", label: "Warning", dotLabel: "W"},
   {key: "error", label: "Error", dotLabel: "E"},
   {key: "debug", label: "Debug", dotLabel: "D"},
 ];
 
-export const SEVERITY_LEVEL_MAP: Record<Exclude<SeverityFilter, "all">, number[]> = {
-  info: [1, 2],
+// console.log (level 1) and console.info (level 2) are distinct severities so the
+// filter can target one without pulling in the other.
+export const SEVERITY_LEVEL_MAP: Record<ActiveSeverity, number[]> = {
+  log: [1],
+  info: [2],
   warning: [3],
   error: [4],
   debug: [0],
 };
 
-export function getSeverityFilter(level: number): SeverityFilter {
+// Union of the concrete numeric levels for the currently selected severities.
+// Empty selection means "all", so it returns undefined (no level filter applied).
+export function getLevelsForSeverities(severities: ActiveSeverity[]): number[] | undefined {
+  if (severities.length === 0) {
+    return undefined;
+  }
+
+  const levels = new Set<number>();
+  severities.forEach(severity => {
+    SEVERITY_LEVEL_MAP[severity].forEach(level => levels.add(level));
+  });
+
+  return Array.from(levels).sort((a, b) => a - b);
+}
+
+export function getSeverityFilter(level: number): ActiveSeverity {
   if (level === 4) {
     return "error";
   }
@@ -45,6 +66,9 @@ export function getSeverityFilter(level: number): SeverityFilter {
   }
   if (level === 0) {
     return "debug";
+  }
+  if (level === 1) {
+    return "log";
   }
   return "info";
 }
@@ -60,6 +84,9 @@ export function getSeverityBadge(level: number) {
   }
   if (severity === "debug") {
     return "D";
+  }
+  if (severity === "log") {
+    return "L";
   }
   return "I";
 }

@@ -7,7 +7,6 @@ import Layout from "./layout/Layout";
 import Bucket from "./pages/bucket/Bucket";
 import Identity from "./pages/identity/Identity";
 import User from "./pages/user/User";
-import UserProfiler from "./pages/observability/UserProfiler";
 import Diagram from "./pages/diagram/Diagram";
 import ProtectedRoute from "./components/guards/ProtectedRoute";
 import Storage from "./pages/storage/Storage";
@@ -21,6 +20,7 @@ import FunctionLogPage from "./pages/function-log/FunctionLogPage";
 import DashboardView from "./pages/dashboard/DashboardView";
 import Config from "./pages/config/Config";
 import ConfigModule from "./pages/config/ConfigModule";
+import DataStrategy from "./pages/config/DataStrategy";
 import RefreshToken from "./pages/refresh-token/RefreshToken";
 import SecretsAndVariables from "./pages/secrets-and-variables/SecretsAndVariables";
 import ApiKeyPage from "./pages/api-key/ApiKey";
@@ -70,7 +70,7 @@ const router = createBrowserRouter(
         },
         {
           path: "passport/user/profile",
-          element: <Navigate to="/passport/observability/user" replace />
+          element: <Navigate to="/passport/observability/bucket" replace />
         },
         {
           path: "passport/policy",
@@ -90,7 +90,16 @@ const router = createBrowserRouter(
         },
         {
           path: "passport/secrets-and-variables",
-          element: <SecretsAndVariables />
+          children: [
+            {
+              index: true,
+              element: <Navigate to="secrets" replace />
+            },
+            {
+              path: ":tab",
+              element: <SecretsAndVariables />
+            }
+          ]
         },
         {
           path: "activity",
@@ -114,7 +123,16 @@ const router = createBrowserRouter(
         },
         {
           path: "function-variables",
-          element: <FunctionVariablesPage />
+          children: [
+            {
+              index: true,
+              element: <Navigate to="variables" replace />
+            },
+            {
+              path: ":tab",
+              element: <FunctionVariablesPage />
+            }
+          ]
         },
         {
           path: "webhook/:webhookId",
@@ -123,6 +141,10 @@ const router = createBrowserRouter(
         {
           path: "config",
           element: <Config />
+        },
+        {
+          path: "config/data-strategy",
+          element: <DataStrategy />
         },
         {
           path: "config/:module",
@@ -134,7 +156,7 @@ const router = createBrowserRouter(
         },
         {
           path: "passport/observability/user",
-          element: <UserProfiler />
+          element: <Navigate to="/passport/observability/bucket" replace />
         }
       ]
     },

@@ -3,10 +3,13 @@
  * email: rio.kenan@gmail.com
  */
 
+import type {RelationColumn} from "./primaryFieldUtils";
+
 export type RelationSelected = {
   kind: "id";
   id: string;
   label?: string;
+  columns?: RelationColumn[];
 };
 
 export function isRelationSelected(value: any): value is RelationSelected {

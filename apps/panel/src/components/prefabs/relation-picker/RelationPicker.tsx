@@ -11,7 +11,7 @@ import type {Property} from "src/store/api/bucketApi";
 import {Button, FlexElement, FluidContainer, Text} from "oziko-ui-kit";
 import styles from "./RelationPicker.module.scss";
 import {useGetBucketDataQuery, useGetBucketQuery, useLazyGetBucketDataQuery} from "../../../store/api/bucketApi";
-import { extractPrimaryFieldValue } from "./primaryFieldUtils";
+import { extractPrimaryColumns, extractPrimaryFieldValue } from "./primaryFieldUtils";
 import { useBucketLookup } from "../../../contexts/BucketLookupContext";
 
 type RelationPickerProps = {
@@ -152,7 +152,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
   }, []);
 
   return (
-    <FlexElement direction="vertical" gap={10}>
+    <FlexElement direction="vertical" gap={10} className={styles.picker}>
       {!resolvedBucketId && (
         <FlexElement dimensionX="fill" dimensionY={100} alignment="center" className={styles.empty}>
           <Text size="medium">Relation bucket is not configured.</Text>
@@ -181,6 +181,11 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
       )}
       
       {resolvedBucketId && items.length > 0 && (
+        <div className={styles.list}>
+        <div className={styles.optionHeader}>
+          <span>ID</span>
+          <span>Primary</span>
+        </div>
         <div id="scrollableDiv" className={styles.scrollableContainer}>
           <InfiniteScroll
             dataLength={items.length}
@@ -201,17 +206,26 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
             >
               {items.map((item: any) => {
                 const properties = bucket?.properties || {};
-                const primaryFieldValue = extractPrimaryFieldValue(item, properties);
-                
+                const primaryFieldValue = extractPrimaryFieldValue(item, properties, bucket?.primary);
+                const primaryColumns = extractPrimaryColumns(item, properties, bucket?.primary);
+                // The primary column shows the resolved primary value(s); when a
+                // related bucket has no primary the column stays blank while the id
+                // column keeps every row aligned.
+                const hasPrimary = primaryColumns.length > 0;
+                const primaryText = hasPrimary
+                  ? primaryColumns.map(column => column.value).join(" · ")
+                  : "";
+
                 const handleItemSelect = () => {
                       bucketLookup.setRelationLabel(resolvedBucketId, item._id, primaryFieldValue);
-                  
+
                   onSelect?.({
                     id: item._id,
-                    label: primaryFieldValue
+                    label: primaryFieldValue,
+                    columns: primaryColumns
                   });
                 };
-                
+
                 return (
                   <FluidContainer
                     key={item._id}
@@ -219,14 +233,19 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
                     mode="fill"
                     dimensionX="fill"
                     gap={10}
-                    prefix={{
-                      children: <Text size="medium">{item._id}</Text>
-                    }}
                     root={{
                       children: (
-                        <Text size="medium" dimensionX="fill">
-                          {primaryFieldValue}
-                        </Text>
+                        <span className={styles.optionRow}>
+                          <span className={styles.optionId} title={item._id}>
+                            {item._id}
+                          </span>
+                          <span
+                            className={styles.optionPrimary}
+                            title={primaryText || undefined}
+                          >
+                            {primaryText}
+                          </span>
+                        </span>
                       )
                     }}
                     onClick={handleItemSelect}
@@ -243,6 +262,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
               })}
             </FlexElement>
           </InfiniteScroll>
+        </div>
         </div>
       )}
 

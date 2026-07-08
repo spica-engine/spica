@@ -221,10 +221,16 @@ const SortableCategoryItem: FC<SortableCategoryItemProps> = ({
   );
 };
 
+const EMPTY_BUCKETS: BucketType[] = [];
+
 const Bucket = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const {data: buckets = []} = useGetBucketsQuery();
+  // Stable empty-array fallback: an inline `= []` default produces a new array
+  // reference on every render while the query is loading, which makes the
+  // `sortedBuckets` memo (and its dependent effect that copies it into state)
+  // fire every render — an infinite render loop.
+  const {data: buckets = EMPTY_BUCKETS} = useGetBucketsQuery();
   const [orderedBuckets, setOrderedBuckets] = useState<BucketNavigationItemData[]>([]);
   const [openBucketId, setOpenBucketId] = useState<string | null>(null);
   const [updateBucketOrder] = useUpdateBucketOrderMutation();

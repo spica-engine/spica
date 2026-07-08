@@ -16,7 +16,9 @@ export type ProfilerQueryParams = {
 export function useProfilerInfiniteList(pageSize: number) {
   const [skip, setSkip] = useState(0);
   const [allEntries, setAllEntries] = useState<ProfilerEntry[]>([]);
-  const [hasMore, setHasMore] = useState(true);
+  // Starts false so the infinite-scroll loader never spins before a full first
+  // page has actually loaded (empty/no-selection states must not show a spinner).
+  const [hasMore, setHasMore] = useState(false);
   const [filter, setFilter] = useState<ProfilerFilterValues>(createProfilerFilterDefaultValues());
   const [sortOrder, setSortOrder] = useState<1 | -1>(-1);
 
@@ -53,12 +55,14 @@ export function useProfilerInfiniteList(pageSize: number) {
     setFilter(value);
     setSkip(0);
     setAllEntries([]);
+    setHasMore(false);
   }, []);
 
   const handleToggleSort = useCallback(() => {
     setSortOrder(prev => (prev === -1 ? 1 : -1));
     setSkip(0);
     setAllEntries([]);
+    setHasMore(false);
   }, []);
 
   const handleLoadMore = useCallback(() => {

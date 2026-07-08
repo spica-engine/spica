@@ -344,6 +344,20 @@
   }
 }
 
+.severityLog {
+  .severityDot {
+    background: var(--log-text-secondary);
+    color: #fff;
+  }
+
+  &.severityChipSelected,
+  &.severityBadge {
+    color: var(--log-text-secondary);
+    border-color: rgba(52, 64, 84, 0.24);
+    background: var(--log-surface-soft);
+  }
+}
+
 .severityInfo {
   .severityDot {
     background: var(--log-blue);

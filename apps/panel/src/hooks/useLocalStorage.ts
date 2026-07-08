@@ -1,4 +1,4 @@
-import {useState, useEffect} from "react";
+import {useState, useEffect, useCallback, useRef} from "react";
 
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void, () => void] {
   const readValue = (): T => {
@@ -14,22 +14,31 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
 
   const [storedValue, setStoredValue] = useState<T>(readValue);
 
+  const storedValueRef = useRef(storedValue);
+  useEffect(() => {
+    storedValueRef.current = storedValue;
+  }, [storedValue]);
+
   useEffect(() => {
     setStoredValue(readValue());
   }, [key]);
 
-  const setValue = (value: T) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
-        window.dispatchEvent(new CustomEvent("local-storage-update", {detail: {key}}));
+  const setValue = useCallback(
+    (value: T) => {
+      try {
+        const valueToStore =
+          value instanceof Function ? (value as (prev: T) => T)(storedValueRef.current) : value;
+        setStoredValue(valueToStore);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          window.dispatchEvent(new CustomEvent("local-storage-update", {detail: {key}}));
+        }
+      } catch (error) {
+        console.warn(`Error setting localStorage key "${key}":`, error);
       }
-    } catch (error) {
-      console.warn(`Error setting localStorage key "${key}":`, error);
-    }
-  };
+    },
+    [key]
+  );
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
@@ -51,10 +60,10 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
     };
   }, [key]);
 
-  const deleteValue = () => {
+  const deleteValue = useCallback(() => {
     window.localStorage.removeItem(key);
     window.dispatchEvent(new CustomEvent("local-storage-update", {detail: {key}}));
-  };
+  }, [key]);
 
   return [storedValue, setValue, deleteValue];
 }

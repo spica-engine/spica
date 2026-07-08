@@ -21,9 +21,10 @@ type TypeBucketMorePopup = {
   bucket: BucketType;
   onOpen?: () => void;
   onClose?: () => void;
+  onManageIndexes?: () => void;
 };
 
-const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
+const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket, onManageIndexes}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isBucketRulesOpen, setIsBucketRulesOpen] = useState(false);
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
@@ -124,6 +125,11 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
 
   const handleOpenBucketRules = () => setIsBucketRulesOpen(true);
 
+  const handleManageIndexes = () => {
+    handleClose();
+    onManageIndexes?.();
+  };
+
   const handleOpenDeleteHistoryConfirmation = () => setIsDeleteHistoryConfirmationOpen(true);
 
   const handleCloseHistoryConfirmation = () => {
@@ -145,13 +151,18 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
             alignment="leftTop"
             prefix={{
               className: styles.configureRulesContainer,
-              onClick: handleOpenBucketRules,
               children: (
                 <FlexElement alignment="leftCenter" direction="vertical" gap={0}>
-                  <Button variant="text">
+                  <Button variant="text" onClick={handleOpenBucketRules}>
                     <Icon name="security" />
                     <Text>Configure rules</Text>
                   </Button>
+                  {onManageIndexes && (
+                    <Button variant="text" onClick={handleManageIndexes}>
+                      <Icon name="viewList" />
+                      <Text>Manage indexes</Text>
+                    </Button>
+                  )}
                 </FlexElement>
               )
             }}

@@ -249,6 +249,80 @@
   gap: 0 !important;
 }
 
+/* Relation value input */
+.relValueWrap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 32px;
+}
+
+.relChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 120px;
+  padding: 3px 5px 3px 7px;
+  border-radius: 5px;
+  background: rgba(var(--color-primary-rgb), 0.07);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.13);
+  color: var(--color-primary);
+  font-size: 10.5px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+
+  .relChipId {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .relChipRm {
+    display: flex;
+    cursor: pointer;
+    opacity: 0.6;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.relAddBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  border: 1px dashed var(--color-border);
+  background: transparent;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--color-font-tertiary);
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.07);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.relPickerPopover {
+  padding: 10px;
+  min-width: 320px;
+  background: var(--color-menu-background);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
 /* Remove row button */
 .rowRmBtn {
   width: 28px;

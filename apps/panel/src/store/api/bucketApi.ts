@@ -85,7 +85,10 @@ interface LocationProperty extends IProperty {
 
 export type BucketDataQueryType = {
   paginate?: boolean;
-  relation?: boolean;
+  // `true` resolves every relation, a `string[]` resolves only the named relation
+  // fields, `false`/omitted resolves none — matches the API's
+  // OR(BooleanCheck, BOOLEAN, ARRAY(String)) pipe on `relation`.
+  relation?: boolean | string[];
   limit?: number;
   sort?: Record<string, number>;
   skip?: number;
@@ -177,7 +180,7 @@ export const bucketApi = baseApi.injectEndpoints({
     getBucketData: builder.query<BucketDataType, {
       bucketId: string;
       paginate?: boolean;
-      relation?: boolean;
+      relation?: boolean | string[];
       limit?: number;
       sort?: Record<string, number>;
       skip?: number;
@@ -187,7 +190,14 @@ export const bucketApi = baseApi.injectEndpoints({
         const queryParams = new URLSearchParams();
 
         if (params.paginate != null) queryParams.append('paginate', String(params.paginate));
-        if (params.relation != null) queryParams.append('relation', String(params.relation));
+        // An array resolves only the named relation fields — each is sent as its
+        // own repeated `relation=<field>` param to match ARRAY(String) on the API.
+        // `false` is omitted entirely so no relation is resolved.
+        if (Array.isArray(params.relation)) {
+          params.relation.forEach(field => queryParams.append('relation', field));
+        } else if (params.relation === true) {
+          queryParams.append('relation', 'true');
+        }
         if (params.limit != null) queryParams.append('limit', String(params.limit));
         if (params.skip != null) queryParams.append('skip', String(params.skip));
         if (params.sort) queryParams.append('sort', JSON.stringify(params.sort));

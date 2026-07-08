@@ -54,6 +54,9 @@ export type ProfilerTableProps = {
   scrollContainerId: string;
   sortOrder: 1 | -1;
   onToggleSort: () => void;
+  isError?: boolean;
+  emptyMessage?: string;
+  emptyHint?: string;
 };
 
 const ProfilerTable = ({
@@ -65,6 +68,9 @@ const ProfilerTable = ({
   scrollContainerId,
   sortOrder,
   onToggleSort,
+  isError = false,
+  emptyMessage = "No profiler entries found.",
+  emptyHint,
 }: ProfilerTableProps) => {
   const [selectedEntry, setSelectedEntry] = useState<ProfilerEntry | null>(null);
 
@@ -236,11 +242,31 @@ const ProfilerTable = ({
   ];
 
   return (
-    <FlexElement className={pageStyles.pageContainer} direction="vertical" gap={16} dimensionX="fill">
+    <FlexElement
+      className={`${pageStyles.pageContainer} ${styles.profilerTable}`}
+      direction="vertical"
+      gap={16}
+      dimensionX="fill"
+    >
       {isLoading ? (
         <FlexElement alignment="center" style={{padding: "60px 0"}}>
           <Spinner />
         </FlexElement>
+      ) : isError ? (
+        <div className={styles.stateMessage}>
+          <Icon name="alertCircleOutline" size={28} />
+          <span className={styles.stateTitle}>Failed to load profiler entries</span>
+          <span className={styles.stateHint}>
+            The profile request did not complete. The server may be unreachable or
+            database profiling may not be available for this instance.
+          </span>
+        </div>
+      ) : entries.length === 0 ? (
+        <div className={styles.stateMessage}>
+          <Icon name="filterCenterFocus" size={28} />
+          <span className={styles.stateTitle}>{emptyMessage}</span>
+          {emptyHint && <span className={styles.stateHint}>{emptyHint}</span>}
+        </div>
       ) : (
         <div
           id={scrollContainerId}
@@ -249,7 +275,7 @@ const ProfilerTable = ({
           <InfiniteScroll
             dataLength={entries.length}
             next={onLoadMore}
-            hasMore={hasMore}
+            hasMore={hasMore && entries.length > 0}
             loader={
               <FlexElement dimensionX="fill" alignment="center" style={{padding: "16px 0"}}>
                 <Spinner size="small" />

@@ -62,13 +62,6 @@ const User = () => {
     setSelectedUser(null);
   }, []);
 
-  const getStatusLabel = useCallback((bannedUntil?: string) => {
-    if (!bannedUntil) return "Active";
-    const bannedDate = new Date(bannedUntil);
-    if (bannedDate > new Date()) return `Banned until ${bannedDate.toLocaleDateString()}`;
-    return "Active";
-  }, []);
-
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return allItems;
     const q = searchQuery.toLowerCase();
@@ -110,13 +103,6 @@ const User = () => {
             </span>
           );
         },
-      },
-      {
-        header: <FlexElement>Status</FlexElement>,
-        key: "status",
-        width: "160px",
-        minWidth: "120px",
-        renderCell: ({ row }) => <span>{getStatusLabel(row.bannedUntil)}</span>,
       },
       {
         header: <FlexElement>Last Login</FlexElement>,
@@ -164,7 +150,7 @@ const User = () => {
         ),
       },
     ],
-    [handleOpenEditDrawer, policyNameMap, getStatusLabel, resetList]
+    [handleOpenEditDrawer, policyNameMap, resetList]
   );
 
   return (

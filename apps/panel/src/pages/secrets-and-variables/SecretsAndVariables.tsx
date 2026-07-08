@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button, Icon } from "oziko-ui-kit";
 import SecretsTab from "./components/SecretsTab";
 import VariablesTab from "./components/VariablesTab";
@@ -6,16 +7,30 @@ import styles from "./SecretsAndVariables.module.scss";
 
 type TabType = "secrets" | "variables";
 
+const TAB_ORDER: TabType[] = ["secrets", "variables"];
+const DEFAULT_TAB: TabType = "secrets";
+const BASE_PATH = "/passport/secrets-and-variables";
+
 const SecretsAndVariables = () => {
-  const [activeTab, setActiveTab] = useState<TabType>("secrets");
+  const navigate = useNavigate();
+  const { tab } = useParams<{ tab?: string }>();
+  const activeTab: TabType = TAB_ORDER.includes(tab as TabType) ? (tab as TabType) : DEFAULT_TAB;
+
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [secretsCount, setSecretsCount] = useState(0);
   const [variablesCount, setVariablesCount] = useState(0);
 
-  const handleTabChange = useCallback((tab: TabType) => {
-    setActiveTab(tab);
+  // Redirect unknown tab slugs to the default so deep links can't render a blank view.
+  useEffect(() => {
+    if (tab && !TAB_ORDER.includes(tab as TabType)) {
+      navigate(`${BASE_PATH}/${DEFAULT_TAB}`, { replace: true });
+    }
+  }, [tab, navigate]);
+
+  const handleTabChange = useCallback((next: TabType) => {
     setIsNewOpen(false);
-  }, []);
+    navigate(`${BASE_PATH}/${next}`);
+  }, [navigate]);
 
   const handleNew = useCallback(() => {
     setIsNewOpen(true);

@@ -1,0 +1,30 @@
+.relationColumns {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+  max-width: 100%;
+
+  .idColumn {
+    flex-shrink: 0;
+    max-width: 140px;
+    padding: 0 var(--spacing-2);
+    border-radius: var(--radius-sm);
+    background-color: var(--background-hover, rgba(0, 0, 0, 0.04));
+    font-family: monospace;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .primaryColumn {
+    min-width: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

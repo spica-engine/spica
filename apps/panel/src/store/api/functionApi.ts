@@ -113,6 +113,7 @@ export interface CreateFunctionRequest {
   env?: Record<string, string>;
   dependencies?: Record<string, string>;
   triggers?: TriggerMap;
+  category?: string;
 }
 
 export interface UpdateFunctionRequest {
@@ -123,6 +124,7 @@ export interface UpdateFunctionRequest {
   timeout?: number;
   memoryLimit?: number;
   triggers?: TriggerMap;
+  category?: string;
 }
 
 export interface ExecuteFunctionRequest {

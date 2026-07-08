@@ -67,7 +67,7 @@ export const STORAGE_CREATED_AT_PRESETS = [
 export type StorageFilterQuery = Record<string, unknown>;
 
 const STORAGE_FILTER_TEMPLATE: TypeFilterValue = {
-  type: STORAGE_TYPE_OPTIONS.slice(0, 2).map(option => option.value),
+  type: [],
   fileSize: {
     min: {
       value: null,

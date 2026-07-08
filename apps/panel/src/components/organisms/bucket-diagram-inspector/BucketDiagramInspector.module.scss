@@ -1,0 +1,116 @@
+.bucketDiagramInspector {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+  width: 360px;
+  max-width: 90vw;
+  height: 100%;
+  padding: var(--padding-lg);
+  box-sizing: border-box;
+  background: var(--color-soft-light);
+  border-left: var(--border-width-default) solid var(--color-border);
+  box-shadow: -6px 0 var(--padding-lg) rgba(var(--color-black-rgb), 0.15);
+  overflow-y: auto;
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-md);
+  }
+
+  .title {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--color-font-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+  }
+
+  .settingsButton,
+  .closeButton,
+  .editButton {
+    padding: 0;
+    color: var(--color-font-tertiary) !important;
+  }
+
+  .deleteButton {
+    padding: 0;
+    color: var(--color-danger) !important;
+  }
+
+  .bucketId {
+    font-size: var(--font-size-sm);
+    color: var(--color-font-tertiary);
+    word-break: break-all;
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-md);
+  }
+
+  .fields {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .fieldRow {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    padding: var(--padding-sm-plus) 0;
+    border-bottom: var(--border-width-default) solid var(--color-border);
+  }
+
+  .fieldGlyph {
+    display: flex;
+    color: var(--color-primary);
+  }
+
+  .fieldName {
+    flex: 1;
+    font-size: var(--font-size-md);
+    font-weight: 500;
+    color: var(--color-font-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fieldType {
+    font-size: var(--font-size-sm);
+    color: var(--color-font-tertiary);
+  }
+
+  .fieldControls {
+    display: flex;
+    gap: var(--gap-xs);
+  }
+
+  .newFieldButton {
+    width: 100% !important;
+    min-width: unset !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-sm);
+    border: var(--border-width-default) dashed var(--color-border) !important;
+    background-color: var(--color-layout-background) !important;
+  }
+}
