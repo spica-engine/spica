@@ -59,6 +59,7 @@ describe("function", () => {
         logExpireAfterSeconds: 60,
         entryLimit: 20,
         maxConcurrency: 1,
+        maxWarmWorkers: 0,
         debug: false,
         realtimeLogs: false,
         logger: false,

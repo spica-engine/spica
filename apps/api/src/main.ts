@@ -303,6 +303,12 @@ const args = yargsInstance
         "Maximum number of worker than can run paralel for the same functions. Default value is two.",
       default: 2
     },
+    "function-warm-workers-max": {
+      number: true,
+      description:
+        "Maximum number of pre-warmed workers a single function may keep on standby. Caps the per-function 'warmWorkers' schema value. Set 0 to disable warm workers. Default value is ten.",
+      default: 10
+    },
     "function-debug": {
       boolean: true,
       description: "Enable/disable function workers debugging mode. Default value is true",
@@ -683,6 +689,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       throw new TypeError("--function-worker-concurrency must be a positive number");
     }
 
+    if (args["function-warm-workers-max"] < 0) {
+      throw new TypeError("--function-warm-workers-max must not be a negative number");
+    }
+
     const validLogOutputs = ["database", "stdout"];
     const workerLogOutput = args["function-worker-log-output"] as string[];
     for (const output of workerLogOutput) {
@@ -911,6 +921,7 @@ const modules = [
     },
     debug: args["function-debug"],
     maxConcurrency: args["function-worker-concurrency"],
+    maxWarmWorkers: args["function-warm-workers-max"],
     realtimeLogs: true,
     logger: args["function-logger"],
     invocationLogs: args["function-invocation-logs"],

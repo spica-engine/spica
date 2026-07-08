@@ -19,6 +19,7 @@ export interface SchedulingOptions {
   experimentalDevkitDatabaseCache?: boolean;
   corsOptions: CorsOptions;
   maxConcurrency: number;
+  maxWarmWorkers: number;
   debug: boolean;
   logger: boolean;
   invocationLogs: boolean;
@@ -38,7 +39,9 @@ export enum WorkerState {
   "Targeted",
   "Busy",
   "Timeouted",
-  "Outdated"
+  "Outdated",
+  "Warming",
+  "Warm"
 }
 
 export const ENQUEUER = Symbol.for("SCHEDULER_ENQUEUER");
