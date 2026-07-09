@@ -44,7 +44,12 @@ import {Subject} from "rxjs";
 import {take} from "rxjs/operators";
 import {ScheduleWorker, Node} from "@spica-server/function-scheduler";
 import {LogLevels} from "@spica-server/interface-function-runtime";
-import {ENQUEUER, EnqueuerFactory, WorkerState} from "@spica-server/interface-function-scheduler";
+import {
+  ENQUEUER,
+  EnqueuerFactory,
+  WorkerState,
+  DEFAULT_EVENT_CONCURRENCY
+} from "@spica-server/interface-function-scheduler";
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {
@@ -333,7 +338,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       // Pin this worker to the function's concurrency the moment it's assigned. Set before
       // the capacity>1 log-demux decision and before execute()'s Busy/Targeted transition.
-      worker.setCapacity(this.concurrencyConfigs.get(event.target.id) ?? 1);
+      worker.setCapacity(this.concurrencyConfigs.get(event.target.id) ?? DEFAULT_EVENT_CONCURRENCY);
 
       const streamOptions = {
         eventId: event.id,
@@ -584,12 +589,19 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
    * capacity on its next assignment, so a live edit takes effect without respawning:
    * growing lets the worker take more events, shrinking simply stops new ones until it
    * drains below the new limit.
+   *
+   * `concurrencyConfigs` is a SPARSE map: only functions ABOVE the default are stored;
+   * passing the default (or a removed function) drops the entry, and consumers read back
+   * `?? DEFAULT_EVENT_CONCURRENCY`. So "reset to default" and "clear" are the same call.
    */
   reconcileConcurrency(target: event.Target, concurrency: number) {
-    const max = this.options.eventConcurrency || 1;
-    const clamped = Math.max(1, Math.min(concurrency || 1, max));
+    const max = this.options.eventConcurrency || DEFAULT_EVENT_CONCURRENCY;
+    const clamped = Math.max(
+      DEFAULT_EVENT_CONCURRENCY,
+      Math.min(concurrency || DEFAULT_EVENT_CONCURRENCY, max)
+    );
 
-    if (clamped == 1) {
+    if (clamped == DEFAULT_EVENT_CONCURRENCY) {
       this.concurrencyConfigs.delete(target.id);
     } else {
       this.concurrencyConfigs.set(target.id, clamped);

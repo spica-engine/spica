@@ -1,6 +1,7 @@
 import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function-scheduler";
+import {DEFAULT_EVENT_CONCURRENCY} from "@spica-server/interface-function-scheduler";
 import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
 import {event} from "@spica-server/function-queue-proto";
 import fs from "fs";
@@ -175,7 +176,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     // the function no longer exists (deleted / invalid id) — drain whatever reserve it holds
     if (!fn) {
       this.scheduler.reconcileWarmWorkers(new event.Target({id: functionId}), 0);
-      this.scheduler.reconcileConcurrency(new event.Target({id: functionId}), 1);
+      // reset to the default concurrency, which clears the function's sparse-map entry
+      this.scheduler.reconcileConcurrency(
+        new event.Target({id: functionId}),
+        DEFAULT_EVENT_CONCURRENCY
+      );
       return;
     }
 
@@ -185,7 +190,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     const [change] = createTargetChanges(fn, ChangeKind.Added, this.secretDecryptor);
     const target = change ? this.buildTarget(change) : new event.Target({id: functionId});
     this.scheduler.reconcileWarmWorkers(target, desired);
-    this.scheduler.reconcileConcurrency(target, fn.concurrency ?? 1);
+    this.scheduler.reconcileConcurrency(target, fn.concurrency ?? DEFAULT_EVENT_CONCURRENCY);
   }
 
   private async findFunctionForRuntime(functionId: string) {
