@@ -190,7 +190,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     const [change] = createTargetChanges(fn, ChangeKind.Added, this.secretDecryptor);
     const target = change ? this.buildTarget(change) : new event.Target({id: functionId});
     this.scheduler.reconcileWarmWorkers(target, desired);
-    this.scheduler.reconcileConcurrency(target, fn.concurrency ?? DEFAULT_EVENT_CONCURRENCY);
+    this.scheduler.reconcileConcurrency(target, fn.concurrencyPerWorker ?? DEFAULT_EVENT_CONCURRENCY);
   }
 
   private async findFunctionForRuntime(functionId: string) {

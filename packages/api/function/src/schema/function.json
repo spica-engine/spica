@@ -53,7 +53,7 @@
       "default": 0,
       "description": "Number of pre-warmed workers kept ready for this function so events skip the cold module load"
     },
-    "concurrency": {
+    "concurrencyPerWorker": {
       "type": "number",
       "minimum": 1,
       "default": 1,
