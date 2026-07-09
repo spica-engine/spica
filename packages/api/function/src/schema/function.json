@@ -53,6 +53,12 @@
       "default": 0,
       "description": "Number of pre-warmed workers kept ready for this function so events skip the cold module load"
     },
+    "concurrencyPerWorker": {
+      "type": "number",
+      "minimum": 1,
+      "default": 1,
+      "description": "Number of events this function runs in parallel per worker. Raise it only for I/O-bound handlers; clamped to the deployment's maximum."
+    },
     "category": {
       "type": "string",
       "description": "Category name of the function"

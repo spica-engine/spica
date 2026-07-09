@@ -345,6 +345,55 @@ describe("Engine", () => {
     expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(2);
   });
 
+  it("should reconcile per-function concurrency from the function", async () => {
+    await fs.insertOne({
+      _id: new ObjectId(hexString),
+      env_vars: [],
+      language: "js",
+      timeout: 10,
+      name: "conc_fn",
+      concurrencyPerWorker: 4,
+      triggers: {
+        a: {active: true, options: {}, type: "http"},
+        b: {active: true, options: {}, type: "http"}
+      }
+    });
+
+    const reconcileSpy = jest.spyOn(scheduler, "reconcileConcurrency");
+
+    engine["categorizeChanges"]([
+      {
+        kind: ChangeKind.Removed,
+        type: "http",
+        options: {},
+        target: {id: hexString, handler: "b", name: "conc_fn"}
+      }
+    ]);
+
+    await waitForCalls(reconcileSpy);
+
+    // read from the function's authoritative state (concurrencyPerWorker=4)
+    expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(4);
+  });
+
+  it("should reset concurrency to the default when the function no longer exists", async () => {
+    const reconcileSpy = jest.spyOn(scheduler, "reconcileConcurrency");
+
+    // no function stored for this id -> lookup fails -> concurrency reset to the default
+    engine["categorizeChanges"]([
+      {
+        kind: ChangeKind.Removed,
+        type: "http",
+        options: {},
+        target: {id: hexString, handler: "a", name: "gone"}
+      }
+    ]);
+
+    await waitForCalls(reconcileSpy);
+
+    expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(1);
+  });
+
   it("should reload function environments when environment variable changed", async () => {
     const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);

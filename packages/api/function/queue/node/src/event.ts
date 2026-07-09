@@ -16,16 +16,11 @@ export class EventQueue {
     );
   }
 
-  pop(pop: event.Pop): Promise<event.Event> {
-    return new Promise((resolve, reject) => {
-      this.client.pop(pop, (error, event) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(event);
-        }
-      });
-    });
+  // Opens one long-lived server-streaming call; the scheduler writes events down it as it
+  // assigns them. Replaces the per-event unary `pop` long-poll — the worker no longer
+  // signals capacity, the scheduler bounds how many events it pushes.
+  subscribe(pop: event.Pop): grpc.ClientReadableStream<event.Event> {
+    return this.client.subscribe(pop);
   }
 
   complete(complete: event.Complete): Promise<event.Complete.Result> {

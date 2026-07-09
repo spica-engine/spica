@@ -39,8 +39,6 @@ if (process.env.LOGGER) {
   console = getLoggerConsole();
 }
 
-const LANE_COUNT = Math.max(1, Number(process.env.WORKER_EVENT_CONCURRENCY) || 1);
-
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
   exitAbnormally("Environment variable FUNCTION_GRPC_ADDRESS was not set.");
 }
@@ -64,26 +62,30 @@ if (!process.env.WORKER_ID) {
     await preload();
   }
 
-  // Each lane keeps one pop outstanding, so the scheduler can hand this worker up
-  // to LANE_COUNT concurrent events. The lane count is the in-process concurrency cap.
-  await Promise.all(Array.from({length: LANE_COUNT}, () => runLane(queue, pop)));
+  await run(queue, pop);
 })();
 
-async function runLane(queue: EventQueue, pop: event.Pop) {
-  let ev: event.Event | void;
-  while (
-    (ev = await queue.pop(pop).catch((e: any) => {
-      if (typeof e == "object" && e.code == 5) {
-        return Promise.resolve();
+// One long-lived subscribe stream carries every event the scheduler assigns to this
+// worker. The scheduler bounds how many are in flight (per-function concurrency), so we
+// simply run each arriving event without a self-imposed limit — concurrently, since the
+// handler is fire-and-forget on this single event loop. Each runs inside a logContext
+// carrying its event id so concurrent events' logs stay demultiplexable.
+function run(queue: EventQueue, pop: event.Pop) {
+  return new Promise<void>((resolve, reject) => {
+    const stream = queue.subscribe(pop);
+    stream.on("data", (ev: event.Event) => {
+      logContext.run({eventId: ev.id}, () => _process(ev, queue)).catch(e => console.error(e));
+    });
+    stream.on("end", () => resolve());
+    stream.on("error", (e: any) => {
+      // A cancelled stream on shutdown (code 1) is the normal teardown path.
+      if (e && e.code == 1) {
+        resolve();
+      } else {
+        reject(e);
       }
-      return Promise.reject(e);
-    }))
-  ) {
-    // Tag logs with the event id only under concurrency; at LANE_COUNT == 1 the
-    // frame format stays byte-identical to the non-concurrent worker.
-    const store = LANE_COUNT > 1 ? {eventId: ev.id} : {};
-    await logContext.run(store, () => _process(ev as event.Event, queue));
-  }
+    });
+  });
 }
 
 async function initialize() {
