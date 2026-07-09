@@ -1120,13 +1120,34 @@ describe("E2E Tests", () => {
           const {answerUrl, challenge} = await startVerification(identity);
           const totp = generateTotp(challenge);
 
-          const thirtySecondsLater = new Date(Date.now() + TOTP_TIMEOUT);
+          // Verification tolerates ±1 step (window:1), so expire the code beyond that.
+          const wellPastWindow = new Date(Date.now() + TOTP_TIMEOUT * 2);
           jest.useFakeTimers({doNotFake: ["nextTick"]}); // passport.authenticate() depends on it
-          jest.setSystemTime(thirtySecondsLater);
+          jest.setSystemTime(wellPastWindow);
 
           const res = await completeVerification(totp, answerUrl);
           expect(res.statusCode).toEqual(401);
           expect(res.body.message).toEqual("Verification has been failed.");
+        });
+
+        it("should accept a totp from the adjacent step (±1 window tolerance)", async () => {
+          const challenge = await activate2fa(identity);
+
+          let res = await req.post("/passport/identify", {
+            identifier: "identityWith2fa",
+            password: "password"
+          });
+
+          const totp = generateTotp(challenge);
+
+          // One step of read/submit delay or clock skew must still be accepted (window:1).
+          const oneStepLater = new Date(Date.now() + TOTP_TIMEOUT);
+          jest.useFakeTimers();
+          jest.setSystemTime(oneStepLater);
+
+          res = await req.post(res.body.answerUrl, {answer: totp});
+          expect(res.statusCode).toEqual(200);
+          expect(res.body.token).toBeDefined();
         });
 
         it("should throw error if factor authentication completed totp is expired", async () => {
@@ -1139,7 +1160,8 @@ describe("E2E Tests", () => {
 
           const totp = generateTotp(challenge);
 
-          const afterServerTimeouted = new Date(Date.now() + TOTP_TIMEOUT + 1);
+          // Authentication tolerates ±1 step (window:1), so expire the code beyond that.
+          const afterServerTimeouted = new Date(Date.now() + TOTP_TIMEOUT * 2 + 1);
           jest.useFakeTimers();
           jest.setSystemTime(afterServerTimeouted);
 
