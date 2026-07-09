@@ -49,7 +49,8 @@ export class Totp implements Factor {
     const isAuthenticated = speakeasy.totp.verify({
       secret: this.meta.secret,
       encoding: "base32",
-      token: payload
+      token: payload,
+      window: 1
     });
 
     return Promise.resolve(isAuthenticated);
