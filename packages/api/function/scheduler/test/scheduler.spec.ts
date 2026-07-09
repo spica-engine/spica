@@ -431,6 +431,48 @@ describe("Scheduler", () => {
     expect(freeWorkers().length).toEqual(1);
   });
 
+  describe("per-worker state cleanup (leak guards)", () => {
+    function enqueueOne(eventId: string) {
+      scheduler.enqueue(
+        new event.Event({
+          id: eventId,
+          target: new event.Target({
+            id: "1",
+            cwd: compilation.cwd,
+            handler: "default",
+            context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+          }),
+          type: -1 as any
+        })
+      );
+    }
+
+    it("complete() drops the event's worker mapping so it does not accumulate", () => {
+      enqueueOne("ev1");
+      expect(scheduler.eventToWorker.has("ev1")).toBe(true);
+
+      scheduler.complete("ev1", true);
+
+      expect(scheduler.eventToWorker.has("ev1")).toBe(false);
+    });
+
+    it("lostWorker() clears the worker's timeout, event mappings and log routers", () => {
+      enqueueOne("ev1");
+      const [workerId] = findWorkerFromEventId("1");
+
+      expect(scheduler.timeouts.has(workerId)).toBe(true);
+      expect([...scheduler.eventToWorker.values()]).toContain(workerId);
+
+      scheduler.lostWorker(workerId);
+
+      // no dangling per-worker state left behind for a dead worker
+      expect(scheduler.workers.has(workerId)).toBe(false);
+      expect(scheduler.timeouts.has(workerId)).toBe(false);
+      expect([...scheduler.eventToWorker.values()]).not.toContain(workerId);
+      expect(scheduler.logRouters.has(workerId)).toBe(false);
+    });
+  });
+
   describe("per-worker concurrency routing", () => {
     // Stub workers exercise takeAWorker's capacity logic without spawning processes.
     function stubWorker(target: string, inFlight: number, capacity: number, pending: number) {
