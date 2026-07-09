@@ -30,6 +30,8 @@ export interface BucketEntryDrawerProps {
   onEntryCreated?: (entry: any) => void;
   /** When provided, the drawer opens in edit mode with these values pre-filled */
   entry?: Record<string, any> | null;
+  /** Present when the user arrived here by following a relation from another document. */
+  onBack?: () => void;
 }
 
 const BucketEntryDrawer = ({
@@ -39,6 +41,7 @@ const BucketEntryDrawer = ({
   service: injectedService,
   onEntryCreated,
   entry,
+  onBack,
 }: BucketEntryDrawerProps) => {
   const isEditMode = entry != null;
 
@@ -94,7 +97,9 @@ const BucketEntryDrawer = ({
     return (apiError as any).message || 'Failed to save entry';
   }, [apiError]);
 
-  // Pre-fill form when opening in edit mode
+  // Pre-fill form when opening in edit mode. Keyed on the document id as well as
+  // isOpen so following a relation to another document (the drawer stays mounted
+  // and open) re-fills the form with the new document's values instead of the old.
   useEffect(() => {
     if (isOpen && isEditMode && entry) {
       labelReadyReappliedRef.current = false; // reset guard for new edit session
@@ -105,7 +110,7 @@ const BucketEntryDrawer = ({
       submitActions.clearError();
       if (!isEditMode) formActions.reset();
     }
-  }, [isOpen]);
+  }, [isOpen, entry?._id]);
 
   // useInputRepresenter only re-calls getDisplayValue when `value` changes, not when
   // `properties` change.  Once all relation states have finished loading their labels
@@ -165,7 +170,16 @@ const BucketEntryDrawer = ({
       // oziko's default relation/array renderers `.map` the raw value; our wrappers
       // coerce it to an array first so the outside-click close on the first open,
       // when the value is still a non-array, can't throw "map is not a function".
-      relation: (props) => <RelationFieldInput {...props} fieldKey={props.key} />,
+      // useInputRepresenter forwards only a fixed prop whitelist (no bucketId), so
+      // the related bucket is passed in explicitly from the formatted property to
+      // let RelationFieldInput link each selected value to its target document.
+      relation: (props) => (
+        <RelationFieldInput
+          {...props}
+          fieldKey={props.key}
+          bucketId={(formattedProperties as any)[props.key]?.bucketId}
+        />
+      ),
       array: (props) => <ArrayFieldInput {...props} fieldKey={props.key} />,
       // oziko's built-in object renderer only descends one level and prints an object
       // leaf as `String(value)` → the literal "[object Object]". ObjectFieldInput recurses
@@ -226,6 +240,13 @@ const BucketEntryDrawer = ({
     >
       <div className={styles.drawerContent}>
         <div className={styles.drawerHeader}>
+          {onBack && (
+            <button className={styles.drawerBack} onClick={onBack} title="Back to previous document">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+          )}
           <div className={styles.drawerHeaderInfo}>
             <div className={styles.drawerTitle}>{isEditMode ? "Edit Entry" : "New Entry"}</div>
             <div className={styles.drawerSubtitle}>

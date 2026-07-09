@@ -4,7 +4,7 @@
  */
 
 import React, {memo, useCallback, useEffect, useState} from "react";
-import {Button, Drawer, FlexElement, Icon, Select, StringInput, Text} from "oziko-ui-kit";
+import {Button, Drawer, FlexElement, Icon, NumberInput, Select, StringInput, Text} from "oziko-ui-kit";
 import {
   useCreateFunctionMutation,
   useUpdateFunctionMutation,
@@ -39,6 +39,7 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
   const [language, setLanguage] = useState<string>("javascript");
   const [timeout, setTimeout] = useState(10);
   const [warmWorkers, setWarmWorkers] = useState(0);
+  const [concurrencyPerWorker, setConcurrencyPerWorker] = useState(1);
   const [error, setError] = useState("");
 
   const {data: information} = useGetFunctionInformationQuery();
@@ -56,6 +57,7 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
     setLanguage("javascript");
     setTimeout(10);
     setWarmWorkers(0);
+    setConcurrencyPerWorker(1);
     setError("");
   }, []);
 
@@ -67,6 +69,7 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
       setLanguage(functionToEdit.language ?? "javascript");
       setTimeout(functionToEdit.timeout ?? 10);
       setWarmWorkers(functionToEdit.warmWorkers ?? 0);
+      setConcurrencyPerWorker(functionToEdit.concurrencyPerWorker ?? 1);
     } else {
       resetForm();
     }
@@ -106,7 +109,8 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
             language: language as "javascript" | "typescript",
             timeout,
             category: trimmedCategory || undefined,
-            warmWorkers
+            warmWorkers,
+            concurrencyPerWorker
           }
         }).unwrap();
         onSaved(result);
@@ -118,6 +122,7 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
           timeout,
           category: trimmedCategory || undefined,
           warmWorkers,
+          concurrencyPerWorker,
           triggers: {
             default: {type: "http", active: true, options: {method: "All"}}
           }
@@ -141,6 +146,7 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
     language,
     timeout,
     warmWorkers,
+    concurrencyPerWorker,
     isEditMode,
     functionToEdit,
     createFunction,
@@ -249,6 +255,21 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
               Pre-loaded workers kept ready so events skip the cold start. 0 disables warm workers.
             </Text>
           </div>
+
+          <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
+            <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
+              Concurrency per worker
+            </Text>
+            <NumberInput
+              value={concurrencyPerWorker}
+              onChange={v => setConcurrencyPerWorker(v && v >= 1 ? Math.floor(v) : 1)}
+              inputProps={{min: 1, step: 1}}
+              dimensionX="fill"
+            />
+            <Text size="small" className={styles.warmPoolHint}>
+              Events this function runs in parallel per worker. Raise it only for I/O-bound handlers.
+            </Text>
+          </FlexElement>
 
           {error && (
             <Text variant="danger" className={styles.errorText}>

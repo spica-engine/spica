@@ -19,6 +19,7 @@ export interface SpicaFunction {
   runtime?: 'nodejs' | 'deno';
   timeout?: number;
   warmWorkers?: number;
+  concurrencyPerWorker?: number;
   memoryLimit?: number;
   env?: Record<string, string>;
   env_vars?: ResolvedEnvVar[];
@@ -111,6 +112,7 @@ export interface CreateFunctionRequest {
   runtime?: 'nodejs' | 'deno';
   timeout?: number;
   warmWorkers?: number;
+  concurrencyPerWorker?: number;
   memoryLimit?: number;
   env?: Record<string, string>;
   dependencies?: Record<string, string>;
@@ -125,6 +127,7 @@ export interface UpdateFunctionRequest {
   runtime?: 'nodejs' | 'deno';
   timeout?: number;
   warmWorkers?: number;
+  concurrencyPerWorker?: number;
   memoryLimit?: number;
   triggers?: TriggerMap;
   category?: string;

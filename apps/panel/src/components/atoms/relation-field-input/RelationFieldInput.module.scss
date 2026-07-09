@@ -1,0 +1,37 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-5);
+    width: 100%;
+}
+
+.links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-5);
+}
+
+.linkChip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-5);
+    max-width: 100%;
+    padding: var(--spacing-5) var(--spacing-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-2);
+    color: var(--color-accent);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: background 0.12s ease-in-out;
+
+    &:hover {
+        background: var(--color-surface);
+    }
+}
+
+.linkLabel {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

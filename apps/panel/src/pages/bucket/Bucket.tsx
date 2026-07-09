@@ -1,7 +1,8 @@
 import styles from "./Bucket.module.scss";
-import {bucketApi, useGetBucketsQuery, useDeleteBucketEntryMutation, useUpdateBucketEntryMutation} from "../../store/api/bucketApi";
-import {useParams} from "react-router-dom";
+import {bucketApi, useGetBucketsQuery, useGetBucketEntryQuery, useDeleteBucketEntryMutation, useUpdateBucketEntryMutation} from "../../store/api/bucketApi";
+import {useLocation, useNavigate, useParams, useSearchParams} from "react-router-dom";
 import {useCallback, useEffect, useMemo, useState} from "react";
+import type {RelationStackEntry} from "../../components/organisms/BucketEntryDrawer/relationNavigation";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 import type {BucketType} from "src/store/api/bucketApi";
 import Loader from "../../components/atoms/loader/Loader";
@@ -13,19 +14,44 @@ import {resetBucketSelection} from "../../store";
 import BucketTableNew from "../../components/organisms/bucket-table/BucketTable";
 import {BucketLookupContext, type BucketLookup} from "../../contexts/BucketLookupContext";
 import BucketEntryDrawer from "../../components/organisms/BucketEntryDrawer/BucketEntryDrawer";
-import type {FilterField} from "../../components/prefabs/filter-panel/types";
+import type {FilterField, FilterConditionRow} from "../../components/prefabs/filter-panel/types";
+import {
+  conditionsToMongoFilter,
+  decodeFilterConditions,
+  encodeFilterConditions,
+  isConditionActive
+} from "../../components/prefabs/filter-panel/filterPanelUtils";
 
 
 export default function Bucket() {
-  const {bucketId = ""} = useParams<{bucketId: string}>();
-  const [editingEntry, setEditingEntry] = useState<Record<string, any> | null>(null);
+  const {bucketId = "", entryId = ""} = useParams<{bucketId: string; entryId: string}>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filterParam = searchParams.get("filter");
   const [isNewEntryDrawerOpen, setIsNewEntryDrawerOpen] = useState(false);
   const {data: buckets = []} = useGetBucketsQuery();
   const [deleteBucketEntry] = useDeleteBucketEntryMutation();
   const [updateBucketEntry] = useUpdateBucketEntryMutation();
   const dispatch = useAppDispatch();
-  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
   const [appliedSort, setAppliedSort] = useState<Record<string, 1 | -1> | null>(null);
+
+  // Filter state is owned by the URL (`?filter=`), so it is shareable and the
+  // relation-click that lands on `/bucket/:id?filter=...` seeds the same panel.
+  const appliedConditions = useMemo(() => decodeFilterConditions(filterParam), [filterParam]);
+  const setFilterConditions = useCallback(
+    (conditions: FilterConditionRow[]) => {
+      const next = new URLSearchParams(searchParams);
+      const active = conditions.filter(isConditionActive);
+      if (active.length) {
+        next.set("filter", encodeFilterConditions(active));
+      } else {
+        next.delete("filter");
+      }
+      setSearchParams(next, {replace: true});
+    },
+    [searchParams, setSearchParams]
+  );
 
   const bucket = useMemo(
     () => buckets?.find((i: BucketType) => i._id === bucketId),
@@ -73,6 +99,13 @@ export default function Bucket() {
     return [idField, ...derived];
   }, [bucket]);
 
+  // The MongoDB filter is derived from the URL-owned conditions against this
+  // bucket's fields (a relation click lands as an `_id equals` condition here).
+  const appliedFilter = useMemo(
+    () => (appliedConditions.length ? conditionsToMongoFilter(appliedConditions, filterFields) : null),
+    [appliedConditions, filterFields]
+  );
+
   // Merge filter/sort into searchQuery for useBucketData
   const mergedSearchQuery = useMemo(() => {
     if (!appliedFilter && !appliedSort) return searchQuery;
@@ -80,17 +113,41 @@ export default function Bucket() {
     if (appliedSort) {
       merged.sort = appliedSort as any;
     }
-    if (appliedFilter) {
-      const existing = (searchQuery as any)?.filter;
-      merged.filter = existing
-        ? {$and: [existing, appliedFilter]}
-        : appliedFilter;
+    const combinedFilter = [(searchQuery as any)?.filter, appliedFilter].filter(Boolean);
+    if (combinedFilter.length === 1) {
+      merged.filter = combinedFilter[0];
+    } else if (combinedFilter.length > 1) {
+      merged.filter = {$and: combinedFilter};
     }
     return merged;
   }, [searchQuery, appliedFilter, appliedSort]);
 
   const {bucketData, bucketDataLoading, refreshLoading, handleRefresh, loadMore, hasMore, isFetchingMore} =
     useBucketDataStrategy(bucketId, mergedSearchQuery);
+
+  // The open document is driven entirely by the `:entryId` route segment so the URL
+  // is shareable. Prefer the already-loaded row (its relations are resolved); fall
+  // back to fetching by id for deep links and for docs outside the current page.
+  const loadedEntry = useMemo(
+    () => (entryId ? (bucketData?.data ?? []).find((row: any) => row._id === entryId) ?? null : null),
+    [entryId, bucketData]
+  );
+  const {data: fetchedEntry} = useGetBucketEntryQuery(
+    {bucketId, entryId},
+    {skip: !entryId || !!loadedEntry}
+  );
+  const editingEntry = entryId ? loadedEntry ?? fetchedEntry ?? null : null;
+
+  // Trail of previously-viewed documents, carried in history state, powering the
+  // drawer's Back button when the user followed a relation to get here.
+  const relationStack = (location.state as {relationStack?: RelationStackEntry[]})?.relationStack ?? [];
+  const handleBack = useCallback(() => {
+    const previous = relationStack[relationStack.length - 1];
+    if (!previous) return;
+    navigate(`/bucket/${previous.bucketId}/${previous.entryId}`, {
+      state: {relationStack: relationStack.slice(0, -1)}
+    });
+  }, [relationStack, navigate]);
 
   const isTableLoading = useMemo(() => formattedColumns.length <= 1, [formattedColumns]);
 
@@ -193,8 +250,9 @@ export default function Bucket() {
   );
 
   const handleExpandRow = useCallback((row: Record<string, any>) => {
-    setEditingEntry(row);
-  }, []);
+    if (!bucketId || !row?._id) return;
+    navigate(`/bucket/${bucketId}/${row._id}`);
+  }, [bucketId, navigate]);
 
   const handleDataChange = useCallback(
     (rowId: string, propertyKey: string, newValue: any) => {
@@ -204,7 +262,12 @@ export default function Bucket() {
     [bucketId, updateBucketEntry]
   );
 
-  const handleEditDrawerClose = useCallback(() => setEditingEntry(null), []);
+  // Closing returns to the list route, keeping the active filter query string but
+  // dropping the navigation trail so a fresh open doesn't inherit a stale Back stack.
+  const handleEditDrawerClose = useCallback(() => {
+    const search = searchParams.toString();
+    navigate(`/bucket/${bucketId}${search ? `?${search}` : ""}`, {state: null});
+  }, [navigate, bucketId, searchParams]);
   const handleNewEntryDrawerClose = useCallback(() => setIsNewEntryDrawerOpen(false), []);
   const handleOpenNewEntry = useCallback(() => setIsNewEntryDrawerOpen(true), []);
 
@@ -217,7 +280,8 @@ export default function Bucket() {
       <div className={styles.container}>
         <BucketActionBar
           onSearch={handleSearch}
-          onFilter={setAppliedFilter}
+          appliedConditions={appliedConditions}
+          onFilterChange={setFilterConditions}
           onSort={setAppliedSort}
           filterFields={filterFields}
           bucket={bucket as BucketType}
@@ -252,6 +316,7 @@ export default function Bucket() {
         isOpen={editingEntry !== null}
         onClose={handleEditDrawerClose}
         onEntryCreated={handleRefresh}
+        onBack={relationStack.length > 0 ? handleBack : undefined}
       />
       <BucketEntryDrawer
         bucket={bucket as BucketType}

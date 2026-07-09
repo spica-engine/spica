@@ -257,3 +257,45 @@ export function conditionsToMongoFilter(
 
   return parts.length === 1 ? parts[0] : { $and: parts };
 }
+
+// ── URL serialization ──────────────────────────────────────────────────────
+// Filter state lives in the `?filter=` query param so it is shareable and
+// deep-linkable. Only the semantic fields are serialized (not the transient row
+// `id`, which is regenerated on parse purely as a React key).
+
+type SerializedCondition = Pick<FilterConditionRow, 'field' | 'operator' | 'value' | 'logicalOp'>;
+
+export function encodeFilterConditions(conditions: FilterConditionRow[]): string {
+  const minimal: SerializedCondition[] = conditions
+    .filter(isConditionActive)
+    .map(({field, operator, value, logicalOp}) => ({field, operator, value, logicalOp}));
+  return JSON.stringify(minimal);
+}
+
+export function decodeFilterConditions(param: string | null): FilterConditionRow[] {
+  if (!param) return [];
+  try {
+    const parsed = JSON.parse(param);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(c => c && typeof c.field === 'string' && c.field)
+      .map(c => ({
+        id: crypto.randomUUID(),
+        logicalOp: c.logicalOp === 'OR' ? 'OR' : 'AND',
+        field: String(c.field),
+        operator: typeof c.operator === 'string' ? c.operator : 'contains',
+        value: typeof c.value === 'string' ? c.value : ''
+      })) as FilterConditionRow[];
+  } catch {
+    return [];
+  }
+}
+
+// The param value that pins a bucket's list to a single document by id — the
+// target of a relation click, expressed as an ordinary `_id equals` condition so
+// it renders as a removable filter chip like any other.
+export function encodeIdFilterConditions(documentId: string): string {
+  return JSON.stringify([
+    {field: '_id', operator: 'equals', value: documentId, logicalOp: 'AND'} as SerializedCondition
+  ]);
+}
