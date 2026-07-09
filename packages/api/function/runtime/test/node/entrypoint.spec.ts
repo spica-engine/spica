@@ -89,19 +89,21 @@ describe("Entrypoint", () => {
   }
 
   beforeEach(async () => {
-    let schedule;
+    // Push model: the worker opens one subscribe stream, so the first callback hands us a
+    // persistent `push` fn (kept across events, unlike the old one-shot pop `schedule`).
+    let push;
     let event;
 
     function process() {
-      if (schedule && event) {
+      if (push && event) {
         queueSize--;
-        schedule(event);
-        schedule = event = undefined;
+        push(event);
+        event = undefined;
       }
     }
 
-    popSpy = jest.fn((_, sc) => {
-      schedule = sc;
+    popSpy = jest.fn((_, p) => {
+      push = p;
       process();
     });
 

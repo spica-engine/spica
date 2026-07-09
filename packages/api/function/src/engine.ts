@@ -1,6 +1,7 @@
 import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function-scheduler";
+import {DEFAULT_EVENT_CONCURRENCY} from "@spica-server/interface-function-scheduler";
 import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
 import {event} from "@spica-server/function-queue-proto";
 import fs from "fs";
@@ -159,22 +160,27 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // Warm workers are a per-function reserve, so reconcile them once per affected
-    // function from the function's authoritative state — not per trigger. Driving it
-    // per trigger would let removing one trigger of a multi-trigger function drain the
-    // whole reserve, and a multi-trigger update thrash it (kill/respawn per trigger).
+    // Warm-worker reserve AND per-function event concurrency are per-function settings, so
+    // reconcile them once per affected function from the function's authoritative state —
+    // not per trigger. Driving it per trigger would let removing one trigger of a
+    // multi-trigger function drain the whole reserve, and a multi-trigger update thrash it.
     const affectedFunctionIds = new Set(changes.map(change => change.target.id));
     for (const functionId of affectedFunctionIds) {
-      this.reconcileWarmWorkersForFunction(functionId);
+      this.reconcileRuntimeForFunction(functionId);
     }
   }
 
-  private async reconcileWarmWorkersForFunction(functionId: string): Promise<void> {
+  private async reconcileRuntimeForFunction(functionId: string): Promise<void> {
     const fn = await this.findFunctionForRuntime(functionId);
 
     // the function no longer exists (deleted / invalid id) — drain whatever reserve it holds
     if (!fn) {
       this.scheduler.reconcileWarmWorkers(new event.Target({id: functionId}), 0);
+      // reset to the default concurrency, which clears the function's sparse-map entry
+      this.scheduler.reconcileConcurrency(
+        new event.Target({id: functionId}),
+        DEFAULT_EVENT_CONCURRENCY
+      );
       return;
     }
 
@@ -184,6 +190,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     const [change] = createTargetChanges(fn, ChangeKind.Added, this.secretDecryptor);
     const target = change ? this.buildTarget(change) : new event.Target({id: functionId});
     this.scheduler.reconcileWarmWorkers(target, desired);
+    this.scheduler.reconcileConcurrency(target, fn.concurrencyPerWorker ?? DEFAULT_EVENT_CONCURRENCY);
   }
 
   private async findFunctionForRuntime(functionId: string) {

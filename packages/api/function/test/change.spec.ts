@@ -311,4 +311,13 @@ describe("Change", () => {
     const hasContextChanges = hasContextChange(previousFn, currentFn);
     expect(hasContextChanges).toBe(true);
   });
+
+  it("should detect concurrencyPerWorker changes", () => {
+    const previousFn: Function<EnvRelation.NotResolved> = deepCopy(fn);
+    const currentFn: Function<EnvRelation.NotResolved> = deepCopy(previousFn);
+    currentFn.concurrencyPerWorker = (previousFn.concurrencyPerWorker ?? 1) + 1;
+
+    const hasContextChanges = hasContextChange(previousFn, currentFn);
+    expect(hasContextChanges).toBe(true);
+  });
 });

@@ -29,6 +29,7 @@ describe("Scheduler", () => {
     },
     maxConcurrency: 2,
     maxWarmWorkers: 10,
+    eventConcurrency: 8,
     debug: false,
     logger: false,
     workerLogOutput: ["database"] as ("database" | "stdout")[],
@@ -65,12 +66,12 @@ describe("Scheduler", () => {
     );
   }
 
-  // A real warm worker signals readiness by calling gRPC `pop` after it finishes
-  // pre-loading; here we simulate that by promoting every Warming worker to Warm.
+  // A real warm worker signals readiness by opening its event stream (subscribe) after it
+  // finishes pre-loading; here we simulate that by promoting every Warming worker to Warm.
   function connectWarmingWorkers() {
     for (const [id, w] of Array.from(scheduler["workers"].entries())) {
       if (w.state == WorkerState.Warming) {
-        scheduler.gotWorker(id, () => {});
+        scheduler.workerSubscribed(id, () => {});
       }
     }
   }
@@ -101,17 +102,27 @@ describe("Scheduler", () => {
     );
   }
 
-  function completeEvent(evId: string) {
-    const [id, worker] = findWorkerFromEventId(evId);
-    triggerGotWorker(id);
+  // Completing an event on the worker serving `targetId`: find an in-flight event mapped to
+  // that worker and drive the real complete() path (frees the worker's slot, re-runs
+  // process() to hand it the next queued event).
+  function completeEvent(targetId: string) {
+    const found = findWorkerFromEventId(targetId);
+    if (!found) return;
+    const [workerId] = found;
+    const entry = Array.from(scheduler.eventToWorker.entries()).find(([, wId]) => wId == workerId);
+    if (entry) {
+      scheduler.complete(entry[0], true);
+    }
   }
 
+  // A real worker signals readiness by opening its event stream (subscribe); simulate that
+  // for a spawned Initial/Fresh worker.
   function triggerGotWorker(_id?: string) {
     const [workerId] = Array.from(scheduler.workers.entries()).find(([id, worker]) => {
       if (_id) return _id == id;
       return worker.state == WorkerState.Initial || worker.state == WorkerState.Fresh;
     });
-    scheduler.gotWorker(workerId, () => {});
+    scheduler.workerSubscribed(workerId, () => {});
   }
 
   function triggerLostWorker(evId: string) {
@@ -378,19 +389,22 @@ describe("Scheduler", () => {
   });
 
   it("should not exceed the concurreny level", () => {
-    const ev1 = new event.Event({
-      target: new event.Target({
-        id: "1",
-        cwd: compilation.cwd,
-        handler: "default",
-        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
-      }),
-      type: -1 as any
-    });
+    // distinct event ids: three concurrent invocations of the same function
+    const makeEv = (id: string) =>
+      new event.Event({
+        id,
+        target: new event.Target({
+          id: "1",
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+        }),
+        type: -1 as any
+      });
 
-    scheduler.enqueue(ev1);
-    scheduler.enqueue(ev1);
-    scheduler.enqueue(ev1);
+    scheduler.enqueue(makeEv("e1"));
+    scheduler.enqueue(makeEv("e2"));
+    scheduler.enqueue(makeEv("e3"));
 
     // waiting for an available worker
     expect(scheduler.eventQueue.size).toEqual(1);
@@ -415,6 +429,130 @@ describe("Scheduler", () => {
     expect(activateds.every(([_, worker]) => worker.hasSameTarget("1"))).toBe(true);
 
     expect(freeWorkers().length).toEqual(1);
+  });
+
+  describe("per-worker state cleanup (leak guards)", () => {
+    function enqueueOne(eventId: string) {
+      scheduler.enqueue(
+        new event.Event({
+          id: eventId,
+          target: new event.Target({
+            id: "1",
+            cwd: compilation.cwd,
+            handler: "default",
+            context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+          }),
+          type: -1 as any
+        })
+      );
+    }
+
+    it("complete() drops the event's worker mapping so it does not accumulate", () => {
+      enqueueOne("ev1");
+      expect(scheduler.eventToWorker.has("ev1")).toBe(true);
+
+      scheduler.complete("ev1", true);
+
+      expect(scheduler.eventToWorker.has("ev1")).toBe(false);
+    });
+
+    it("lostWorker() clears the worker's timeout, event mappings and log routers", () => {
+      enqueueOne("ev1");
+      const [workerId] = findWorkerFromEventId("1");
+
+      expect(scheduler.timeouts.has(workerId)).toBe(true);
+      expect([...scheduler.eventToWorker.values()]).toContain(workerId);
+
+      scheduler.lostWorker(workerId);
+
+      // no dangling per-worker state left behind for a dead worker
+      expect(scheduler.workers.has(workerId)).toBe(false);
+      expect(scheduler.timeouts.has(workerId)).toBe(false);
+      expect([...scheduler.eventToWorker.values()]).not.toContain(workerId);
+      expect(scheduler.logRouters.has(workerId)).toBe(false);
+    });
+  });
+
+  describe("per-worker concurrency routing", () => {
+    // Stub workers exercise takeAWorker's capacity logic without spawning processes.
+    function stubWorker(target: string, inFlight: number, capacity: number, pending: number) {
+      const hasSameTarget = (id: string) => target == id;
+      const hasFreeSlot = () => pending > 0 && inFlight < capacity;
+      return {
+        state: WorkerState.Targeted,
+        hasSameTarget,
+        canServe(id: string) {
+          return hasSameTarget(id) && hasFreeSlot();
+        },
+        canServeWarm() {
+          return false;
+        },
+        isActiveFor(id: string) {
+          return hasSameTarget(id);
+        },
+        isFresh() {
+          return false;
+        }
+      } as any;
+    }
+
+    function target(id: string) {
+      return new event.Target({
+        id,
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+      });
+    }
+
+    it("should reuse a same-target worker that still has a free lane", () => {
+      scheduler.workers.clear();
+      const worker = stubWorker("1", 1, 3, 2);
+      scheduler.workers.set("w1", worker);
+
+      const picked = scheduler.takeAWorker(target("1"));
+
+      expect(picked).toBeDefined();
+      expect(picked.id).toEqual("w1");
+      expect(picked.worker).toBe(worker);
+    });
+
+    it("should not reuse a same-target worker whose lanes are all busy", () => {
+      scheduler.workers.clear();
+      const saturated = stubWorker("1", 3, 3, 0);
+      scheduler.workers.set("w1", saturated);
+
+      // No fresh worker to fall back to and concurrency is exhausted for this target.
+      const picked = scheduler.takeAWorker(target("1"));
+
+      expect(picked).toBeUndefined();
+    });
+  });
+
+  describe("per-function concurrency", () => {
+    it("stores a concurrency above the default in the sparse map", () => {
+      scheduler.reconcileConcurrency(makeTarget("1"), 3);
+      expect(scheduler.concurrencyConfigs.get("1")).toEqual(3);
+    });
+
+    it("clamps concurrency to the global eventConcurrency max cap", () => {
+      // schedulerOptions.eventConcurrency is 8
+      scheduler.reconcileConcurrency(makeTarget("1"), 999);
+      expect(scheduler.concurrencyConfigs.get("1")).toEqual(8);
+    });
+
+    it("drops the entry at the default concurrency (sparse map)", () => {
+      scheduler.reconcileConcurrency(makeTarget("1"), 5);
+      expect(scheduler.concurrencyConfigs.has("1")).toBe(true);
+
+      scheduler.reconcileConcurrency(makeTarget("1"), 1);
+      expect(scheduler.concurrencyConfigs.has("1")).toBe(false);
+    });
+
+    it("floors sub-default concurrency to the default (dropped)", () => {
+      scheduler.reconcileConcurrency(makeTarget("1"), 0 as any);
+      expect(scheduler.concurrencyConfigs.has("1")).toBe(false);
+    });
   });
 
   describe("warm workers", () => {

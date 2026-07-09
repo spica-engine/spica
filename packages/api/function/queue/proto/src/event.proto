@@ -48,6 +48,6 @@ message Complete {
 
 
 service Queue {
-   rpc pop(Pop) returns (Event);
+   rpc subscribe(Pop) returns (stream Event);
    rpc complete(Complete) returns (Complete.Result);
 }

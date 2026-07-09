@@ -8,6 +8,8 @@ import {FunctionModule} from "@spica-server/function";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import os from "os";
+import fs from "fs";
+import path from "path";
 import {PreferenceModule} from "@spica-server/preference";
 import {SecretModule} from "@spica-server/secret";
 
@@ -32,6 +34,8 @@ describe("function", () => {
 
   let req: Request;
   let app: INestApplication;
+
+  const assetsPath = fs.mkdtempSync(path.join(os.tmpdir(), "spica-fn-assets-"));
 
   const moduleMeta: ModuleMetadata = {
     imports: [
@@ -66,7 +70,7 @@ describe("function", () => {
         spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
         tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH,
         realtime: false,
-        assetStorage: {strategy: "default", defaultPath: "./function-assets"}
+        assetStorage: {strategy: "default", defaultPath: assetsPath}
       })
     ]
   };
@@ -83,6 +87,8 @@ describe("function", () => {
   });
 
   afterEach(() => app.close());
+
+  afterAll(() => fs.rmSync(assetsPath, {recursive: true, force: true}));
 
   function getFns() {
     return req.get("function").then(r => r.body);

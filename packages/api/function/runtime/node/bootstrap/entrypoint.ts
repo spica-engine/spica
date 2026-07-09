@@ -33,7 +33,7 @@ import {
 import {createRequire} from "module";
 import * as path from "path";
 
-import {getLoggerConsole} from "@spica-server/function-runtime-logger";
+import {getLoggerConsole, logContext} from "@spica-server/function-runtime-logger";
 
 if (process.env.LOGGER) {
   console = getLoggerConsole();
@@ -57,21 +57,36 @@ if (!process.env.WORKER_ID) {
     id: process.env.WORKER_ID
   });
   await initialize();
+
   if (process.env.WARM) {
     await preload();
   }
-  let ev: event.Event | void;
-  while (
-    (ev = await queue.pop(pop).catch((e: any) => {
-      if (typeof e == "object" && e.code == 5) {
-        return Promise.resolve();
-      }
-      return Promise.reject(e);
-    }))
-  ) {
-    await _process(ev, queue);
-  }
+
+  await run(queue, pop);
 })();
+
+// One long-lived subscribe stream carries every event the scheduler assigns to this
+// worker. The scheduler bounds how many are in flight (per-function concurrency), so we
+// simply run each arriving event without a self-imposed limit — concurrently, since the
+// handler is fire-and-forget on this single event loop. Each runs inside a logContext
+// carrying its event id so concurrent events' logs stay demultiplexable.
+function run(queue: EventQueue, pop: event.Pop) {
+  return new Promise<void>((resolve, reject) => {
+    const stream = queue.subscribe(pop);
+    stream.on("data", (ev: event.Event) => {
+      logContext.run({eventId: ev.id}, () => _process(ev, queue)).catch(e => console.error(e));
+    });
+    stream.on("end", () => resolve());
+    stream.on("error", (e: any) => {
+      // A cancelled stream on shutdown (code 1) is the normal teardown path.
+      if (e && e.code == 1) {
+        resolve();
+      } else {
+        reject(e);
+      }
+    });
+  });
+}
 
 async function initialize() {
   if (process.env.__EXPERIMENTAL_DEVKIT_DATABASE_CACHE) {
@@ -108,14 +123,27 @@ async function preload() {
   }
 }
 
-async function _process(ev: event.Event, queue: EventQueue) {
+let workerContextInitialized = false;
+
+function initializeWorkerContext(ev: event.Event) {
+  if (workerContextInitialized) {
+    return;
+  }
+  // A worker is pinned to a single function for its lifetime (the scheduler only
+  // routes same-target events to it, and env/secret changes outdate it), so cwd
+  // and env are constant. Set them once instead of on every event — mutating
+  // these process globals per event would race across concurrent lanes.
   process.chdir(ev.target.cwd);
-
   process.env.TIMEOUT = String(ev.target.context.timeout);
-
   for (const env of ev.target.context.env) {
     process.env[env.key] = env.value;
   }
+  globalThis.require = createRequire(path.join(ev.target.cwd, "node_modules"));
+  workerContextInitialized = true;
+}
+
+async function _process(ev: event.Event, queue: EventQueue) {
+  initializeWorkerContext(ev);
 
   const callArguments: any[] = [];
 
@@ -311,9 +339,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
       break;
   }
 
-  globalThis.require = createRequire(path.join(process.cwd(), "node_modules"));
-
-  let module = await import(path.join(process.cwd(), ".build", process.env.ENTRYPOINT!));
+  let module = await import(path.join(ev.target.cwd, ".build", process.env.ENTRYPOINT!));
 
   if ("default" in module && module.default.__esModule) {
     module = module.default; // Do not ask me why
