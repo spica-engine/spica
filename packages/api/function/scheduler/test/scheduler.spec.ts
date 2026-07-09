@@ -29,6 +29,7 @@ describe("Scheduler", () => {
     },
     maxConcurrency: 2,
     maxWarmWorkers: 10,
+    eventConcurrency: 8,
     debug: false,
     logger: false,
     workerLogOutput: ["database"] as ("database" | "stdout")[],
@@ -483,6 +484,32 @@ describe("Scheduler", () => {
       const picked = scheduler.takeAWorker(target("1"));
 
       expect(picked).toBeUndefined();
+    });
+  });
+
+  describe("per-function concurrency", () => {
+    it("stores a concurrency above the default in the sparse map", () => {
+      scheduler.reconcileConcurrency(makeTarget("1"), 3);
+      expect(scheduler.concurrencyConfigs.get("1")).toEqual(3);
+    });
+
+    it("clamps concurrency to the global eventConcurrency max cap", () => {
+      // schedulerOptions.eventConcurrency is 8
+      scheduler.reconcileConcurrency(makeTarget("1"), 999);
+      expect(scheduler.concurrencyConfigs.get("1")).toEqual(8);
+    });
+
+    it("drops the entry at the default concurrency (sparse map)", () => {
+      scheduler.reconcileConcurrency(makeTarget("1"), 5);
+      expect(scheduler.concurrencyConfigs.has("1")).toBe(true);
+
+      scheduler.reconcileConcurrency(makeTarget("1"), 1);
+      expect(scheduler.concurrencyConfigs.has("1")).toBe(false);
+    });
+
+    it("floors sub-default concurrency to the default (dropped)", () => {
+      scheduler.reconcileConcurrency(makeTarget("1"), 0 as any);
+      expect(scheduler.concurrencyConfigs.has("1")).toBe(false);
     });
   });
 
