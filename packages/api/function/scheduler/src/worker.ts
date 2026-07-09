@@ -27,16 +27,17 @@ export class ScheduleWorker extends NodeWorker {
 
   private target!: event.Target;
 
-  // capacity = number of events this worker can run in-process at once (one per lane).
-  // A lane is either idle (its pop callback parked in `idleLanes`) or busy (counted in
-  // `inFlight`).
-  public readonly capacity: number;
+  // capacity = max events the scheduler keeps in flight on this worker at once. It's the
+  // function's per-function concurrency, set when the worker is pinned to a function — NOT
+  // at spawn — so a generic worker can serve any function. `inFlight` counts events the
+  // scheduler has pushed but not yet seen completed. The worker itself imposes no limit.
+  public capacity = 1;
   private inFlight = 0;
-  private idleLanes: Schedule[] = [];
+  // Set once when the worker opens its event stream; pushes an event down that stream.
+  private push!: Schedule;
 
   constructor(options: SpawnOptions) {
     super(options);
-    this.capacity = Math.max(1, options.concurrency || 1);
   }
 
   private transitionMap = {
@@ -66,12 +67,17 @@ export class ScheduleWorker extends NodeWorker {
     [WorkerState.Outdated]: [WorkerState.Timeouted]
   };
 
+  // Per-function concurrency, applied when the worker is pinned to a function. Idempotent
+  // for a live worker (a concurrency edit retires + respawns rather than resizing).
+  public setCapacity(capacity: number) {
+    this.capacity = Math.max(1, capacity || 1);
+  }
+
   public execute(event: event.Event) {
     this.target = event.target;
     this.inFlight++;
     this.transitionTo(this.inFlight >= this.capacity ? WorkerState.Busy : WorkerState.Targeted);
-    const schedule = this.idleLanes.shift();
-    schedule!(event);
+    this.push(event);
   }
 
   public markAsWarming(target: event.Target) {
@@ -79,26 +85,20 @@ export class ScheduleWorker extends NodeWorker {
     this.transitionTo(WorkerState.Warming);
   }
 
-  public markAsAvailable(schedule: Schedule) {
-    this.idleLanes.push(schedule);
+  // Called once when the worker opens its event stream (its readiness signal). Registers
+  // the push channel and graduates the worker to a servable state.
+  public subscribed(push: Schedule) {
+    this.push = push;
 
     if (this.state == WorkerState.Initial) {
       this.transitionTo(WorkerState.Fresh);
-      return;
-    }
-
-    // First lane of a pre-warmed worker graduates it to Warm (servable reserve).
-    if (this.state == WorkerState.Warming) {
+    } else if (this.state == WorkerState.Warming) {
       this.transitionTo(WorkerState.Warm);
-      return;
     }
+  }
 
-    // Further lanes of an untargeted/warm worker just park their pop.
-    if (this.state == WorkerState.Fresh || this.state == WorkerState.Warm) {
-      return;
-    }
-
-    // A lane finished its event and is asking for the next one.
+  // A finished event frees a slot, so the worker can be handed the next one.
+  public onComplete() {
     if (this.inFlight > 0) {
       this.inFlight--;
     }
@@ -107,13 +107,12 @@ export class ScheduleWorker extends NodeWorker {
     }
   }
 
-  // Private on purpose: a free lane is only meaningful together with the worker's
-  // state and target, so callers go through canServe*/isActiveFor and never risk
-  // picking a saturated worker. A parked idle lane already implies inFlight < capacity
-  // (inFlight + idleLanes.length <= capacity), so that need not be re-checked here.
+  // Private on purpose: a free slot is only meaningful together with the worker's state
+  // and target, so callers go through canServe*/isActiveFor and never risk pushing to a
+  // worker that's already at its concurrency.
   private hasFreeSlot() {
     return (
-      this.idleLanes.length > 0 &&
+      this.inFlight < this.capacity &&
       this.state != WorkerState.Timeouted &&
       this.state != WorkerState.Outdated
     );

@@ -9,7 +9,7 @@ export class EventQueue {
   private maxMessageSize: number;
 
   constructor(
-    private _ready: (id: string, schedule: (event: event.Event | undefined) => void) => void,
+    private _subscribe: (id: string, push: (event: event.Event) => void) => void,
     private _enqueue: (event: event.Event) => void,
     private _cancel: (id: string) => void,
     private _complete: (id: string, succedded: boolean) => void,
@@ -25,17 +25,22 @@ export class EventQueue {
       "grpc.max_send_message_length": this.maxMessageSize
     });
     this.server.addService(event.Queue, {
-      pop: async (
-        call: grpc.ServerUnaryCall<event.Pop, event.Event>,
-        callback: grpc.sendUnaryData<event.Event>
-      ) => {
-        this._ready(call.request.id, event => {
-          if (!event) {
-            callback({code: 5, details: "there is no next event."}, undefined);
-          } else {
-            callback(undefined, event);
+      subscribe: (call: grpc.ServerWritableStream<event.Pop, event.Event>) => {
+        // One long-lived stream per worker. Register a push fn the scheduler calls to
+        // hand this worker an event; guard against writing after the worker's stream is
+        // gone (the process's `exit` still drives the scheduler's worker cleanup).
+        let closed = false;
+        const close = () => {
+          closed = true;
+        };
+        this._subscribe(call.request.id, event => {
+          if (!closed && call.writable) {
+            call.write(event);
           }
         });
+        call.on("cancel", close);
+        call.on("error", close);
+        call.on("close", close);
       },
       complete: async (
         call: grpc.ServerUnaryCall<event.Complete, event.Event>,

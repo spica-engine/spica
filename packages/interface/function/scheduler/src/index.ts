@@ -34,6 +34,11 @@ export interface SchedulingOptions {
 
 export type Schedule = (event: event.Event) => void;
 
+// A function runs one event per worker at a time unless it opts into more. This is the
+// baseline used everywhere concurrency is defaulted: the scheduler stores only functions
+// ABOVE this value (a sparse map) and reads back `?? DEFAULT_EVENT_CONCURRENCY`.
+export const DEFAULT_EVENT_CONCURRENCY = 1;
+
 export enum WorkerState {
   "Initial",
   "Fresh",

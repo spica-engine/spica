@@ -464,10 +464,10 @@ export namespace event {
     }
   }
   export var Queue = {
-    pop: {
-      path: "/event.Queue/pop",
+    subscribe: {
+      path: "/event.Queue/subscribe",
       requestStream: false,
-      responseStream: false,
+      responseStream: true,
       requestType: event.Pop,
       responseType: event.Event,
       requestSerialize: (message: Pop) => Buffer.from(message.serialize()),

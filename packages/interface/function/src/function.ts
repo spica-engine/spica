@@ -27,6 +27,7 @@ export interface Function<
   timeout: number;
   language: string;
   warmWorkers?: number;
+  concurrencyPerWorker?: number;
 }
 
 export interface Triggers {
