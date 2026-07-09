@@ -27,8 +27,7 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
   constructor(
     private queue: EventQueue,
     private firehoseQueue: FirehoseQueue,
-    server: express.Application,
-    private schedulerUnsubscription: (targetId: string) => void
+    server: express.Application
   ) {
     super();
 
@@ -152,8 +151,6 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
   // but they can still send message from server until worker be lost.
   // we may decide to block this behaviour
   unsubscribe(target: event.Target): void {
-    this.schedulerUnsubscription(target.id);
-
     for (const pair of this.eventTargetPairs) {
       if (
         (!target.handler && pair.target.cwd == target.cwd) ||

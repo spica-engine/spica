@@ -28,6 +28,10 @@
       "types": "./src/engine.ts",
       "default": "./dist/src/engine.js"
     },
+    "./src/plan-executor": {
+      "types": "./src/plan-executor.ts",
+      "default": "./dist/src/plan-executor.js"
+    },
     "./src/synchronizer/dependency": {
       "types": "./src/synchronizer/dependency/index.ts",
       "default": "./dist/src/synchronizer/dependency/index.js"

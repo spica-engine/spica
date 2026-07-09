@@ -25,7 +25,6 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   constructor(
     private queue: EventQueue,
     private rabbitmqQueue: RabbitMQQueue,
-    private schedulerUnsubscription: (targetId: string) => void,
     private jobReducer?: JobReducer,
     private commander?: ClassCommander
   ) {
@@ -144,8 +143,6 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   }
 
   unsubscribe(target: event.Target): void {
-    this.schedulerUnsubscription(target.id);
-
     const indexesToRemove = [];
 
     this.subscriptions.forEach((subscription, index) => {

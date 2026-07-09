@@ -29,7 +29,6 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     private http: HttpQueue,
     httpServer: express.Application,
     private corsOptions: CorsOptions,
-    private schedulerUnsubscription: (targetId: string) => void,
     private guardService: IGuardService,
     private attachStatusTracker?: AttachStatusTracker,
     private payloadSizeLimit?: number
@@ -233,8 +232,6 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   }
 
   unsubscribe(target: event.Target): void {
-    this.schedulerUnsubscription(target.id);
-
     const groupKey = `${target.cwd}:${target.handler}`;
     this.rateLimitService.removeLimit(groupKey);
 

@@ -13,7 +13,6 @@ describe("FirehoseEnqueuer", () => {
   let app: INestApplication;
   let wsc: Websocket;
 
-  let schedulerUnsubscriptionSpy: jest.Mock;
 
   beforeEach(async () => {
     eventQueue = {
@@ -36,12 +35,10 @@ describe("FirehoseEnqueuer", () => {
     wsc = module.get(Websocket);
     await app.listen(wsc.socket);
 
-    schedulerUnsubscriptionSpy = jest.fn();
     firehoseEnqueuer = new FirehoseEnqueuer(
       eventQueue as any,
       firehoseQueue as any,
-      app.getHttpAdapter().getHttpServer(),
-      schedulerUnsubscriptionSpy
+      app.getHttpAdapter().getHttpServer()
     );
   });
 
@@ -75,8 +72,6 @@ describe("FirehoseEnqueuer", () => {
         target: target2
       }
     ]);
-
-    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target2.id);
   });
 
   it("should send client description", async () => {

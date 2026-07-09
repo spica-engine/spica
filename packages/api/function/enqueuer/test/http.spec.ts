@@ -39,7 +39,6 @@ describe("http enqueuer", () => {
   let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
   let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
 
-  let schedulerUnsubscriptionSpy: jest.Mock;
 
   let corsOptions = {
     allowCredentials: true,
@@ -68,13 +67,11 @@ describe("http enqueuer", () => {
 
     await app.listen(req.socket);
 
-    schedulerUnsubscriptionSpy = jest.fn();
     httpEnqueuer = new HttpEnqueuer(
       eventQueue as any,
       httpQueue as any,
       app.getHttpAdapter().getInstance(),
       corsOptions,
-      schedulerUnsubscriptionSpy,
       createNoopGuardService()
     );
   });
@@ -144,8 +141,6 @@ describe("http enqueuer", () => {
     expect(routes.map(r => r.stack[0].method).includes("post")).toEqual(false);
     expect(routes.map(r => r.stack[0].method).includes("put")).toEqual(true);
     expect(routes.map(r => r.stack[0].method).includes("delete")).toEqual(true);
-
-    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target1.id);
   });
 
   it("should not handle preflight requests on indistinct paths", async () => {
@@ -364,7 +359,6 @@ describe("http enqueuer", () => {
       httpQueue as any,
       customApp.getHttpAdapter().getInstance(),
       corsOptions,
-      jest.fn(),
       createNoopGuardService(),
       undefined,
       1 // 1 MiB custom limit
@@ -421,7 +415,6 @@ describe("http enqueuer with authentication and authorization", () => {
   let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
   let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
 
-  let schedulerUnsubscriptionSpy: jest.Mock;
 
   let guardService: {
     checkAuthentication: jest.Mock;
@@ -468,13 +461,11 @@ describe("http enqueuer with authentication and authorization", () => {
 
     await app.listen(req.socket);
 
-    schedulerUnsubscriptionSpy = jest.fn();
     httpEnqueuer = new HttpEnqueuer(
       eventQueue as any,
       httpQueue as any,
       app.getHttpAdapter().getInstance(),
       corsOptions,
-      schedulerUnsubscriptionSpy,
       guardService as any
     );
   });
@@ -753,7 +744,6 @@ describe("http enqueuer with rate limiting", () => {
   let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
   let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
 
-  let schedulerUnsubscriptionSpy: jest.Mock;
 
   let guardService: {
     checkAuthentication: jest.Mock;
@@ -801,13 +791,11 @@ describe("http enqueuer with rate limiting", () => {
 
     await app.listen(req.socket);
 
-    schedulerUnsubscriptionSpy = jest.fn();
     httpEnqueuer = new HttpEnqueuer(
       eventQueue as any,
       httpQueue as any,
       app.getHttpAdapter().getInstance(),
       corsOptions,
-      schedulerUnsubscriptionSpy,
       guardService as any
     );
   });

@@ -1,9 +1,14 @@
-import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  Logger,
+  Optional,
+  OnModuleDestroy,
+  OnModuleInit
+} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function-scheduler";
-import {DEFAULT_EVENT_CONCURRENCY} from "@spica-server/interface-function-scheduler";
 import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
-import {event} from "@spica-server/function-queue-proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
@@ -14,14 +19,13 @@ import {
   FUNCTION_OPTIONS,
   COLL_SLUG,
   Function,
-  ChangeKind,
-  TargetChange,
+  FunctionChangePlan,
   SCHEMA,
   SchemaWithName
 } from "@spica-server/interface-function";
-import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
 
-import {createTargetChanges} from "./change.js";
+import {createPlan, mergePlans} from "./change.js";
+import {PlanExecutor} from "./plan-executor.js";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
@@ -64,7 +68,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug,
-    @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor,
+    private executor: PlanExecutor,
     private reconciler: FunctionAssetReconciler,
     private assetService: FunctionAssetService,
     private tracker: SelfWriteTracker,
@@ -81,7 +85,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         fns.map(fn =>
           operationType == "delete"
             ? CRUD.environment.eject(this.fs, fn._id, this, envVarId)
-            : CRUD.environment.reload(this.fs, fn._id, this)
+            : CRUD.environment.reload(fn._id, this)
         ),
       error: err =>
         this.logger.error(
@@ -94,7 +98,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         fns.map(fn =>
           operationType == "delete"
             ? CRUD.secret.eject(this.fs, fn._id, this, secretId)
-            : CRUD.secret.reload(this.fs, fn._id, this)
+            : CRUD.secret.reload(fn._id, this)
         ),
       error: err =>
         this.logger.error(
@@ -110,27 +114,29 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       await this.registerTriggers();
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration
-        this.cmdSubs = this.commander.register(this, [this.categorizeChanges], CommandType.SYNC);
+        this.cmdSubs = this.commander.register(this, [this.applyChangePlan], CommandType.SYNC);
       }
     };
     return startupSequence();
   }
 
   registerTriggers() {
-    return this.updateTriggers(ChangeKind.Added);
+    return this.updateTriggers(true);
   }
 
   unregisterTriggers() {
-    return this.updateTriggers(ChangeKind.Removed);
+    return this.updateTriggers(false);
   }
 
-  private updateTriggers(kind: ChangeKind) {
-    return CRUD.findForRuntime(this.fs).then(fns => {
-      const targetChanges: TargetChange[] = [];
-      for (const fn of fns) {
-        targetChanges.push(...createTargetChanges(fn, kind, this.secretDecryptor));
-      }
-      this.categorizeChanges(targetChanges);
+  private updateTriggers(register: boolean) {
+    return this.fs.find().then(fns => {
+      // Registering treats each function as a create (subscribe + reconcile); unregistering as
+      // a delete (unsubscribe + outdate + reconcile). createPlan derives the right shape from
+      // the null side, so startup and shutdown fall out of the same call.
+      const plan = mergePlans(
+        fns.map(fn => (register ? createPlan(null, fn) : createPlan(fn, null)))
+      );
+      this.applyChangePlan(plan);
     });
   }
 
@@ -145,60 +151,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return this.unregisterTriggers();
   }
 
-  categorizeChanges(changes: TargetChange[]) {
-    for (const change of changes) {
-      switch (change.kind) {
-        case ChangeKind.Added:
-          this.subscribe(change);
-          break;
-        case ChangeKind.Updated:
-          this.updateSubscription(change);
-          break;
-        case ChangeKind.Removed:
-          this.unsubscribe(change);
-          break;
-      }
-    }
-
-    // Warm-worker reserve AND per-function event concurrency are per-function settings, so
-    // reconcile them once per affected function from the function's authoritative state —
-    // not per trigger. Driving it per trigger would let removing one trigger of a
-    // multi-trigger function drain the whole reserve, and a multi-trigger update thrash it.
-    const affectedFunctionIds = new Set(changes.map(change => change.target.id));
-    for (const functionId of affectedFunctionIds) {
-      this.reconcileRuntimeForFunction(functionId);
-    }
-  }
-
-  private async reconcileRuntimeForFunction(functionId: string): Promise<void> {
-    const fn = await this.findFunctionForRuntime(functionId);
-
-    // the function no longer exists (deleted / invalid id) — drain whatever reserve it holds
-    if (!fn) {
-      this.scheduler.reconcileWarmWorkers(new event.Target({id: functionId}), 0);
-      // reset to the default concurrency, which clears the function's sparse-map entry
-      this.scheduler.reconcileConcurrency(
-        new event.Target({id: functionId}),
-        DEFAULT_EVENT_CONCURRENCY
-      );
-      return;
-    }
-
-    const triggers = fn.triggers || {};
-    const hasActiveTrigger = Object.keys(triggers).some(handler => triggers[handler]?.active);
-    const desired = hasActiveTrigger ? fn.warmWorkers ?? 0 : 0;
-    const [change] = createTargetChanges(fn, ChangeKind.Added, this.secretDecryptor);
-    const target = change ? this.buildTarget(change) : new event.Target({id: functionId});
-    this.scheduler.reconcileWarmWorkers(target, desired);
-    this.scheduler.reconcileConcurrency(target, fn.concurrencyPerWorker ?? DEFAULT_EVENT_CONCURRENCY);
-  }
-
-  private async findFunctionForRuntime(functionId: string) {
-    try {
-      return await CRUD.findOneForRuntime(this.fs, new ObjectId(functionId));
-    } catch {
-      return null;
-    }
+  // Replication seam: the ClassCommander SYNC command, so every plan applied on one replica is
+  // re-applied on the others. The mechanics live in PlanExecutor; this only forwards.
+  applyChangePlan(plan: FunctionChangePlan) {
+    return this.executor.apply(plan);
   }
 
   private getDefaultPackageManager(): DelegatePkgManager {
@@ -329,57 +285,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       }
     }
     return Promise.resolve(null);
-  }
-
-  getEnqueuer(name: string) {
-    const enq = Array.from(this.scheduler.enqueuers);
-    return enq.find(e => e.description.name == name);
-  }
-
-  private buildTarget(change: TargetChange): event.Target {
-    return new event.Target({
-      id: change.target.id,
-      cwd: path.join(this.options.root, change.target.name),
-      handler: change.target.handler,
-      context: new event.SchedulingContext({
-        env: Object.keys(change.target.context?.env || {}).reduce((envs, key) => {
-          envs.push(
-            new event.SchedulingContext.Env({
-              key,
-              value: change.target.context.env[key]
-            })
-          );
-          return envs;
-        }, []),
-        timeout: change.target.context?.timeout
-      })
-    });
-  }
-
-  private subscribe(change: TargetChange) {
-    const enqueuer = this.getEnqueuer(change.type);
-    if (enqueuer) {
-      enqueuer.subscribe(this.buildTarget(change), change.options);
-    } else {
-      this.logger.warn(`Couldn't find enqueuer ${change.type}.`);
-    }
-  }
-
-  private updateSubscription(change: TargetChange) {
-    this.unsubscribe(change);
-    this.subscribe(change);
-  }
-
-  private unsubscribe(change: TargetChange) {
-    const target = new event.Target({
-      id: change.target.id,
-      cwd: path.join(this.options.root, change.target.name),
-      handler: change.target.handler
-    });
-
-    for (const enqueuer of this.scheduler.enqueuers) {
-      enqueuer.unsubscribe(target);
-    }
   }
 
   private getFunctionLanguage(fn: Function) {

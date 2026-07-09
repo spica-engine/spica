@@ -67,8 +67,8 @@ export class ScheduleWorker extends NodeWorker {
     [WorkerState.Outdated]: [WorkerState.Timeouted]
   };
 
-  // Per-function concurrency, applied when the worker is pinned to a function. Idempotent
-  // for a live worker (a concurrency edit retires + respawns rather than resizing).
+  // Per-function concurrency, read from the scheduler on each assignment, so a live edit
+  // resizes the worker on its next event without a respawn.
   public setCapacity(capacity: number) {
     this.capacity = Math.max(1, capacity || 1);
   }

@@ -5,6 +5,7 @@ import {SchedulingOptions} from "@spica-server/interface-function-scheduler";
 import {WebhookModule} from "@spica-server/function-webhook";
 import path from "path";
 import {FunctionEngine} from "./engine.js";
+import {PlanExecutor} from "./plan-executor.js";
 import {FunctionController} from "./function.controller.js";
 import {LogModule, LogService} from "@spica-server/function-log";
 import {FunctionService, ServicesModule} from "@spica-server/function-services";
@@ -85,6 +86,7 @@ export class FunctionModule {
       controllers: [FunctionController],
       providers: [
         FunctionEngine,
+        PlanExecutor,
         {
           provide: FUNCTION_OPTIONS,
           useValue: {

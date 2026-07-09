@@ -111,17 +111,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
-    const schedulerUnsubscription = (targetId: string) => {
-      this.outdateWorkers(targetId);
-    };
-
     this.enqueuers.add(
       new HttpEnqueuer(
         this.queue,
         this.httpQueue,
         this.http.httpAdapter.getInstance(),
         this.options.corsOptions,
-        schedulerUnsubscription,
         this.guardService,
         this.attachStatusTracker,
         this.options.payloadSizeLimit
@@ -129,12 +124,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     );
 
     this.enqueuers.add(
-      new FirehoseEnqueuer(
-        this.queue,
-        this.firehoseQueue,
-        this.http.httpAdapter.getHttpServer(),
-        schedulerUnsubscription
-      )
+      new FirehoseEnqueuer(this.queue, this.firehoseQueue, this.http.httpAdapter.getHttpServer())
     );
 
     this.enqueuers.add(
@@ -142,26 +132,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.queue,
         this.databaseQueue,
         this.database,
-        schedulerUnsubscription,
         this.jobReducer,
         this.commander
       )
     );
 
-    this.enqueuers.add(
-      new ScheduleEnqueuer(this.queue, schedulerUnsubscription, this.jobReducer, this.commander)
-    );
+    this.enqueuers.add(new ScheduleEnqueuer(this.queue, this.jobReducer, this.commander));
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
     this.enqueuers.add(
-      new RabbitMQEnqueuer(
-        this.queue,
-        this.rabbitmqQueue,
-        schedulerUnsubscription,
-        this.jobReducer,
-        this.commander
-      )
+      new RabbitMQEnqueuer(this.queue, this.rabbitmqQueue, this.jobReducer, this.commander)
     );
 
     this.enqueuers.add(
@@ -169,7 +150,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.queue,
         this.grpcQueue,
         this.options.functionGrpcMaxMessageSizeBytes,
-        schedulerUnsubscription,
         this.options.grpcPort
       )
     );
@@ -281,6 +261,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   // id, fed in-memory by the engine on function create/update. A worker pinned to a
   // function gets this as its capacity. Absent -> 1.
   concurrencyConfigs = new Map<string, number>();
+
+  // Per-function execution context (env + timeout), keyed by function id, fed by the engine
+  // whenever env/secret/timeout change. Stamped onto every event at enqueue time so a cold
+  // worker gets the current values without the trigger subscription carrying them — which is
+  // what lets an env change refresh workers without tearing down and rebuilding the route.
+  contextConfigs = new Map<string, event.SchedulingContext>();
 
   getStatus() {
     const workers = Array.from(this.workers.values());
@@ -418,8 +404,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     console.log(log);
   }
 
-  enqueue(event: event.Event) {
-    this.eventQueue.set(event.id, event);
+  enqueue(ev: event.Event) {
+    ev.target.context =
+      this.contextConfigs.get(ev.target.id) ??
+      ev.target.context ??
+      new event.SchedulingContext({env: [], timeout: this.options.timeout});
+    this.eventQueue.set(ev.id, ev);
     this.process();
   }
 
@@ -605,6 +595,18 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       this.concurrencyConfigs.delete(target.id);
     } else {
       this.concurrencyConfigs.set(target.id, clamped);
+    }
+  }
+
+  /**
+   * Declare the execution context (env + timeout) events of a function carry. A null context
+   * clears the entry (function removed), after which events fall back to the global default.
+   */
+  reconcileContext(target: event.Target, context: event.SchedulingContext | null) {
+    if (context) {
+      this.contextConfigs.set(target.id, context);
+    } else {
+      this.contextConfigs.delete(target.id);
     }
   }
 

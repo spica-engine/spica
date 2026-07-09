@@ -23,7 +23,6 @@ describe("DatabaseEnqueuer", () => {
   let databaseEnqueuer: DatabaseEnqueuer;
   let database: DatabaseService;
 
-  let schedulerUnsubscriptionSpy: jest.Mock;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -41,12 +40,10 @@ describe("DatabaseEnqueuer", () => {
       enqueue: jest.fn()
     };
 
-    schedulerUnsubscriptionSpy = jest.fn();
     databaseEnqueuer = new DatabaseEnqueuer(
       eventQueue as any,
       databaseQueue as any,
-      database,
-      schedulerUnsubscriptionSpy
+      database
     );
   });
 
@@ -91,8 +88,6 @@ describe("DatabaseEnqueuer", () => {
     ]);
 
     expect(target1Stream.closed).toEqual(true);
-
-    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target1.id);
   });
 
   it("should enqueue INSERT events", async () => {

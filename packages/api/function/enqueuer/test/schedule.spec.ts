@@ -15,16 +15,13 @@ describe("ScheduleEnqueuer", () => {
   let enqueuer: ScheduleEnqueuer;
   let noopTarget: event.Target;
 
-  let schedulerUnsubscriptionSpy: jest.Mock;
 
   beforeEach(async () => {
     eventQueue = {
       enqueue: jest.fn()
     };
 
-    schedulerUnsubscriptionSpy = jest.fn();
-
-    enqueuer = new ScheduleEnqueuer(eventQueue as any, schedulerUnsubscriptionSpy);
+    enqueuer = new ScheduleEnqueuer(eventQueue as any);
 
     noopTarget = createTarget();
 
@@ -83,8 +80,6 @@ describe("ScheduleEnqueuer", () => {
       ["/tmp/fn1", "handler2"],
       ["/tmp/fn2", "handler1"]
     ]);
-
-    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target1.id);
   });
 
   it("should schedule the job", () => {
