@@ -30,7 +30,7 @@ const DB_OPERATIONS = ["INSERT", "UPDATE", "REPLACE", "DELETE"];
 const BUCKET_OPERATIONS = ["ALL", "INSERT", "UPDATE", "DELETE"];
 const SYSTEM_EVENTS = ["READY"];
 
-const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || "";
+const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || `${window.location.origin}/api`;
 
 const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelProps) => {
   const handleAddTrigger = useCallback(() => {

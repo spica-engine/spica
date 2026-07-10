@@ -352,7 +352,7 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
     );
   };
 
-  const baseUrl = (import.meta.env.VITE_BASE_URL as string) || "";
+  const baseUrl = (import.meta.env.VITE_BASE_URL as string) || `${window.location.origin}/api`;
 
   return (
     <Drawer
