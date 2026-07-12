@@ -249,10 +249,13 @@ export default function Bucket() {
     [deleteBucketEntry, dispatch]
   );
 
+  // Preserve the active `?filter=` (and any other search params) when opening the
+  // drawer — the filter is the URL-owned source of truth, so dropping it here would
+  // wipe it from the list, and handleEditDrawerClose would then re-append nothing.
   const handleExpandRow = useCallback((row: Record<string, any>) => {
     if (!bucketId || !row?._id) return;
-    navigate(`/bucket/${bucketId}/${row._id}`);
-  }, [bucketId, navigate]);
+    navigate(`/bucket/${bucketId}/${row._id}${location.search}`);
+  }, [bucketId, navigate, location.search]);
 
   const handleDataChange = useCallback(
     (rowId: string, propertyKey: string, newValue: any) => {
