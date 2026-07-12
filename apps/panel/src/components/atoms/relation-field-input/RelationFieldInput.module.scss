@@ -35,3 +35,24 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+// Small inline spinner shown next to a relation id while its human label resolves.
+.spinner {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    border: 1.5px solid currentColor;
+    border-bottom-color: transparent;
+    border-radius: var(--border-radius-round);
+    animation: relationChipSpin 0.8s linear infinite;
+}
+
+@keyframes relationChipSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}

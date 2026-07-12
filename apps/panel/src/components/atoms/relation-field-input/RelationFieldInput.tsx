@@ -94,18 +94,28 @@ const RelationFieldInput: React.FC<RelationFieldInputProps> = ({
       />
       {onNavigate && linkedDocuments.length > 0 && (
         <div className={styles.links}>
-          {linkedDocuments.map(doc => (
-            <button
-              key={doc.id}
-              type="button"
-              className={styles.linkChip}
-              title={`Go to ${doc.label}`}
-              onClick={() => onNavigate(doc.id)}
-            >
-              <span className={styles.linkLabel}>{doc.label}</span>
-              <Icon name="external" size={12} />
-            </button>
-          ))}
+          {linkedDocuments.map(doc => {
+            // The label falls back to the id until the async relation resolution
+            // lands; while it still reads as the bare id, show a spinner so a cold
+            // deep link doesn't look like a broken hash.
+            const resolving = doc.label === doc.id;
+            return (
+              <button
+                key={doc.id}
+                type="button"
+                className={styles.linkChip}
+                title={resolving ? `Loading ${doc.id}…` : `Go to ${doc.label}`}
+                onClick={() => onNavigate(doc.id)}
+              >
+                <span className={styles.linkLabel}>{doc.label}</span>
+                {resolving ? (
+                  <span className={styles.spinner} aria-label="Resolving relation" />
+                ) : (
+                  <Icon name="external" size={12} />
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
