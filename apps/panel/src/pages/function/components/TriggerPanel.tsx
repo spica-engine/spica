@@ -10,7 +10,8 @@ import {
   FlexElement,
   Icon,
   Input,
-  Select
+  Select,
+  Switch
 } from "oziko-ui-kit";
 import PanelAccordion, {PanelAccordionItem} from "../../../components/molecules/panel-accordion/PanelAccordion";
 import type {FunctionTrigger, Enqueuer} from "../../../store/api/functionApi";
@@ -26,6 +27,7 @@ type TriggerPanelProps = {
 const TRIGGER_TYPES: FunctionTrigger["type"][] = ["http", "firehose", "database", "schedule", "system", "bucket"];
 
 const HTTP_METHODS = ["All", "Get", "Post", "Put", "Delete", "Patch", "Head"];
+const AUTH_STRATEGIES = ["IDENTITY", "APIKEY", "USER"];
 const DB_OPERATIONS = ["INSERT", "UPDATE", "REPLACE", "DELETE"];
 const BUCKET_OPERATIONS = ["ALL", "INSERT", "UPDATE", "DELETE"];
 const SYSTEM_EVENTS = ["READY"];
@@ -73,9 +75,56 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
   );
 
   const handleOptionChange = useCallback(
-    (index: number, key: string, value: string) => {
+    (index: number, key: string, value: any) => {
       onChange(
         triggers.map((t, i) => (i === index ? {...t, options: {...t.options, [key]: value}} : t))
+      );
+    },
+    [triggers, onChange]
+  );
+
+  const handleToggleStrategy = useCallback(
+    (index: number, strategy: string) => {
+      onChange(
+        triggers.map((t, i) => {
+          if (i !== index) return t;
+          const current: string[] = t.options.authenticate ?? [];
+          const next = current.includes(strategy)
+            ? current.filter(s => s !== strategy)
+            : [...current, strategy];
+          return {...t, options: {...t.options, authenticate: next}};
+        })
+      );
+    },
+    [triggers, onChange]
+  );
+
+  const handleToggleRateLimit = useCallback(
+    (index: number, enabled: boolean) => {
+      onChange(
+        triggers.map((t, i) => {
+          if (i !== index) return t;
+          if (enabled) {
+            return {...t, options: {...t.options, rateLimit: {limit: 100, ttl: 60000}}};
+          }
+          const {rateLimit, ...rest} = t.options;
+          return {...t, options: rest};
+        })
+      );
+    },
+    [triggers, onChange]
+  );
+
+  const handleRateLimitField = useCallback(
+    (index: number, field: "limit" | "ttl", raw: string) => {
+      const parsed = Number(raw);
+      onChange(
+        triggers.map((t, i) => {
+          if (i !== index) return t;
+          const current = t.options.rateLimit ?? {limit: 100, ttl: 60000};
+          const value = Number.isNaN(parsed) ? current[field] : parsed;
+          return {...t, options: {...t.options, rateLimit: {...current, [field]: value}}};
+        })
       );
     },
     [triggers, onChange]
@@ -212,6 +261,94 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
                   <Icon name={urlCopied ? "check" : "contentCopy"} size="sm" />
                 </Button>
               </div>
+              {(() => {
+                const preflight = trigger.options.preflight !== false;
+                const authenticate: string[] = trigger.options.authenticate ?? [];
+                const authorize = trigger.options.authorize ?? false;
+                const rateLimit = trigger.options.rateLimit;
+                return (
+                  <>
+                    <div className={styles.fieldGroup}>
+                      <div className={styles.optionRow}>
+                        <span className={styles.fieldLabel}>Preflight (CORS)</span>
+                        <Switch
+                          checked={preflight}
+                          size="small"
+                          onChange={checked => handleOptionChange(index, "preflight", checked)}
+                        />
+                      </div>
+                    </div>
+                    <div className={styles.fieldGroup}>
+                      <span className={styles.fieldLabel}>Authentication Strategies</span>
+                      <div className={styles.chipRow}>
+                        {AUTH_STRATEGIES.map(strategy => {
+                          const selected = authenticate.includes(strategy);
+                          return (
+                            <button
+                              type="button"
+                              key={strategy}
+                              className={`${styles.optionChip} ${selected ? styles.optionChipOn : ""}`}
+                              aria-pressed={selected}
+                              onClick={() => handleToggleStrategy(index, strategy)}
+                            >
+                              {strategy}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className={styles.fieldGroup}>
+                      <div className={styles.optionRow}>
+                        <span className={styles.fieldLabel}>Authorization</span>
+                        <Switch
+                          checked={authorize}
+                          size="small"
+                          onChange={checked => handleOptionChange(index, "authorize", checked)}
+                        />
+                      </div>
+                      {authorize && authenticate.length === 0 && (
+                        <span className={styles.fieldWarning}>
+                          Select at least one authentication strategy when authorization is enabled.
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.fieldGroup}>
+                      <div className={styles.optionRow}>
+                        <span className={styles.fieldLabel}>Rate Limit</span>
+                        <Switch
+                          checked={!!rateLimit}
+                          size="small"
+                          onChange={checked => handleToggleRateLimit(index, checked)}
+                        />
+                      </div>
+                      {rateLimit && (
+                        <div className={styles.rateLimitFields}>
+                          <div className={styles.fieldGroup}>
+                            <span className={styles.fieldLabel}>Limit</span>
+                            <input
+                              className={styles.numberInput}
+                              type="number"
+                              min={1}
+                              value={rateLimit.limit}
+                              onChange={e => handleRateLimitField(index, "limit", e.target.value)}
+                            />
+                          </div>
+                          <div className={styles.fieldGroup}>
+                            <span className={styles.fieldLabel}>TTL (ms)</span>
+                            <input
+                              className={styles.numberInput}
+                              type="number"
+                              min={1}
+                              value={rateLimit.ttl}
+                              onChange={e => handleRateLimitField(index, "ttl", e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
             </>
           )}
           {trigger.type === "firehose" && (
