@@ -1,8 +1,6 @@
 import React, {useCallback, useMemo} from "react";
 import {Icon, RelationInput} from "oziko-ui-kit";
-import {useLocation, useNavigate, useParams} from "react-router-dom";
 import type {TypeChangeEvent} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import type {RelationStackEntry} from "../../organisms/BucketEntryDrawer/relationNavigation";
 import styles from "./RelationFieldInput.module.scss";
 
 type RelationValue = {value: string; label?: string};
@@ -14,14 +12,18 @@ interface RelationFieldInputProps {
   className?: string;
   popupClassName?: string;
   relationType?: "onetoone" | "onetomany" | string;
-  /** Target bucket the relation points at — used to build the navigation link. */
-  bucketId?: string;
   value?: RelationValue | RelationValue[] | string | null;
   getOptions: () => Promise<any[]>;
   loadMoreOptions: () => Promise<any[]>;
   searchOptions: (search: string) => Promise<any[]>;
   totalOptionsLength: number;
   onChange?: (event: TypeChangeEvent<any>) => void;
+  /**
+   * Navigate to a selected related document. Routing is the caller's concern —
+   * this atom stays router-free (see .claude/instructions/atomic-design.md); when
+   * omitted, the "open" chips are not rendered.
+   */
+  onNavigate?: (documentId: string) => void;
 }
 
 /**
@@ -39,21 +41,14 @@ const RelationFieldInput: React.FC<RelationFieldInputProps> = ({
   className,
   popupClassName,
   relationType,
-  bucketId,
   value,
   getOptions,
   loadMoreOptions,
   searchOptions,
   totalOptionsLength,
-  onChange
+  onChange,
+  onNavigate
 }) => {
-  const navigate = useNavigate();
-  const {bucketId: currentBucketId = "", entryId: currentEntryId = ""} = useParams<{
-    bucketId: string;
-    entryId: string;
-  }>();
-  const location = useLocation();
-
   const safeValue = useMemo(() => {
     if (Array.isArray(value)) return value;
     if (value == null || value === "") return [];
@@ -82,21 +77,6 @@ const RelationFieldInput: React.FC<RelationFieldInputProps> = ({
     [onChange, fieldKey]
   );
 
-  const navigateToDocument = useCallback(
-    (documentId: string) => {
-      if (!bucketId || !documentId) return;
-      // Push the document we're leaving onto the stack so the drawer can offer a
-      // Back button. The whole trail lives in history state, so it survives
-      // browser back/forward and is reconstructed on a shared deep link.
-      const previousStack = (location.state as {relationStack?: RelationStackEntry[]})?.relationStack ?? [];
-      const nextStack: RelationStackEntry[] = currentEntryId
-        ? [...previousStack, {bucketId: currentBucketId, entryId: currentEntryId}]
-        : previousStack;
-      navigate(`/bucket/${bucketId}/${documentId}`, {state: {relationStack: nextStack}});
-    },
-    [navigate, bucketId, currentBucketId, currentEntryId, location.state]
-  );
-
   return (
     <div className={styles.wrapper}>
       <RelationInput
@@ -112,7 +92,7 @@ const RelationFieldInput: React.FC<RelationFieldInputProps> = ({
         selectProps={{popupClassName: popupClassName || ""}}
         className={className}
       />
-      {bucketId && linkedDocuments.length > 0 && (
+      {onNavigate && linkedDocuments.length > 0 && (
         <div className={styles.links}>
           {linkedDocuments.map(doc => (
             <button
@@ -120,7 +100,7 @@ const RelationFieldInput: React.FC<RelationFieldInputProps> = ({
               type="button"
               className={styles.linkChip}
               title={`Go to ${doc.label}`}
-              onClick={() => navigateToDocument(doc.id)}
+              onClick={() => onNavigate(doc.id)}
             >
               <span className={styles.linkLabel}>{doc.label}</span>
               <Icon name="external" size={12} />

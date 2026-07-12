@@ -3,9 +3,11 @@ import {
   Drawer
 } from "oziko-ui-kit";
 import {useCallback, useEffect, useMemo, useRef} from "react";
+import {useLocation, useNavigate, useParams} from "react-router-dom";
 import styles from "./BucketEntryDrawer.module.scss";
 import type {BucketType} from "src/store/api/bucketApi";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import type {RelationStackEntry} from "./relationNavigation";
 import {FIELD_REGISTRY} from "../../../domain/fields";
 import {BucketEntryService, type IBucketApiClient} from "./services";
 import {useBucketEntryForm, useBucketEntrySubmit, useValueProperties} from "./hooks";
@@ -44,6 +46,29 @@ const BucketEntryDrawer = ({
   onBack,
 }: BucketEntryDrawerProps) => {
   const isEditMode = entry != null;
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const {bucketId: currentBucketId = "", entryId: currentEntryId = ""} = useParams<{
+    bucketId: string;
+    entryId: string;
+  }>();
+
+  // Following a relation swaps the drawer to the target document. The document we
+  // leave is pushed onto a history-state stack so the drawer can offer a Back
+  // button; the trail survives browser back/forward and shared deep links.
+  const navigateToRelatedDocument = useCallback(
+    (targetBucketId: string, documentId: string) => {
+      if (!targetBucketId || !documentId) return;
+      const previousStack =
+        (location.state as {relationStack?: RelationStackEntry[]})?.relationStack ?? [];
+      const nextStack: RelationStackEntry[] = currentEntryId
+        ? [...previousStack, {bucketId: currentBucketId, entryId: currentEntryId}]
+        : previousStack;
+      navigate(`/bucket/${targetBucketId}/${documentId}`, {state: {relationStack: nextStack}});
+    },
+    [navigate, currentBucketId, currentEntryId, location.state]
+  );
 
   const [createBucketEntry, {isLoading: isCreating, error: createError}] = useCreateBucketEntryMutation();
   const [updateBucketEntry, {isLoading: isUpdating, error: updateError}] = useUpdateBucketEntryMutation();
@@ -171,15 +196,22 @@ const BucketEntryDrawer = ({
       // coerce it to an array first so the outside-click close on the first open,
       // when the value is still a non-array, can't throw "map is not a function".
       // useInputRepresenter forwards only a fixed prop whitelist (no bucketId), so
-      // the related bucket is passed in explicitly from the formatted property to
-      // let RelationFieldInput link each selected value to its target document.
-      relation: (props) => (
-        <RelationFieldInput
-          {...props}
-          fieldKey={props.key}
-          bucketId={(formattedProperties as any)[props.key]?.bucketId}
-        />
-      ),
+      // the related bucket is read here from the formatted property and used to build
+      // the navigation callback — keeping routing out of the atom.
+      relation: (props) => {
+        const relatedBucketId = (formattedProperties as any)[props.key]?.bucketId;
+        return (
+          <RelationFieldInput
+            {...props}
+            fieldKey={props.key}
+            onNavigate={
+              relatedBucketId
+                ? (documentId: string) => navigateToRelatedDocument(relatedBucketId, documentId)
+                : undefined
+            }
+          />
+        );
+      },
       array: (props) => <ArrayFieldInput {...props} fieldKey={props.key} />,
       // oziko's built-in object renderer only descends one level and prints an object
       // leaf as `String(value)` → the literal "[object Object]". ObjectFieldInput recurses
