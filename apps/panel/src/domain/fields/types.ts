@@ -44,6 +44,11 @@ export interface FieldCreationForm {
   presetValues: Record<string, any>;
   defaultValue?: any;
   multipleSelectionTab?: Record<string, any>;
+  securityValues?: {
+    mode: "everyone" | "authenticated" | "owner" | "custom";
+    expression: string;
+    ownerField?: string;
+  };
   type: FieldKind;
 }
 

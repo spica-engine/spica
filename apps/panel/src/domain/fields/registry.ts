@@ -7,6 +7,7 @@
 
 import type {BucketType, Property} from "src/store/api/bucketApi";
 import {BASE_FORM_DEFAULTS, DEFAULT_COORDINATES, freezeFormDefaults} from "./defaults";
+import {buildAclExpression} from "./field-acl";
 import {applyPresetLogic} from "./presets";
 import {
   type FieldDefinition,
@@ -67,11 +68,12 @@ export function isFieldKind(value: string): value is FieldKind {
 }
 
 function buildBaseProperty(values: FieldFormState): Property {
-  const {fieldValues, configurationValues, type, innerFields} = values;
+  const {fieldValues, configurationValues, securityValues, type, innerFields} = values;
   return {
     type,
     title: fieldValues.title,
     description: fieldValues.description || undefined,
+    acl: buildAclExpression(securityValues),
     options: {
       translate: configurationValues.translate || undefined
     },

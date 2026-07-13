@@ -8,9 +8,10 @@ import {
   useCallback,
 } from "react";
 import styles from "./BucketMorePopup.module.scss";
-import {useUpdateBucketMutation, useDeleteBucketHistoryMutation, type BucketType} from "../../../store/api/bucketApi";
+import {useUpdateBucketMutation, useDeleteBucketHistoryMutation, useCreateBucketFieldMutation, type BucketType} from "../../../store/api/bucketApi";
 import Confirmation from "../confirmation/Confirmation";
 import BucketRules from "../bucket-rules/BucketRules";
+import FieldSecurityOverview from "../field-security-overview/FieldSecurityOverview";
 import BucketLimitationsForm, {
   LIMIT_EXCEED_BEHAVIOUR_OPTIONS,
   type TypeLimitExceedBehaviour
@@ -27,6 +28,7 @@ type TypeBucketMorePopup = {
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket, onManageIndexes}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isBucketRulesOpen, setIsBucketRulesOpen] = useState(false);
+  const [isFieldSecurityOpen, setIsFieldSecurityOpen] = useState(false);
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
 
@@ -50,6 +52,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket, onManageIn
   }, [bucket]);
 
   const [updateBucket] = useUpdateBucketMutation();
+  const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketHistory, { isLoading: deleteBucketHistoryLoading, error: deleteBucketHistoryError }] = useDeleteBucketHistoryMutation();
   
   const isLimitationChecked = useMemo(() => Boolean(bucket?.documentSettings), [bucket]);
@@ -125,6 +128,34 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket, onManageIn
 
   const handleOpenBucketRules = () => setIsBucketRulesOpen(true);
 
+  const handleCloseFieldSecurity = () => {
+    setIsFieldSecurityOpen(false);
+    handleClose();
+  };
+
+  const handleOpenFieldSecurity = () => setIsFieldSecurityOpen(true);
+
+  // Persist a single field's read ACL by PUTting the whole bucket with the one
+  // property mutated — the same field-save path field edits already use.
+  const handleSaveFieldSecurity = useCallback(
+    async (fieldKey: string, acl: string | undefined) => {
+      const property = bucket.properties?.[fieldKey];
+      if (!property) return;
+
+      const nextProperty = {...property};
+      if (acl) nextProperty.acl = acl;
+      else delete nextProperty.acl;
+
+      const modifiedBucket: BucketType = {
+        ...bucket,
+        properties: {...bucket.properties, [fieldKey]: nextProperty}
+      };
+
+      await createBucketField(modifiedBucket).unwrap();
+    },
+    [bucket, createBucketField]
+  );
+
   const handleManageIndexes = () => {
     handleClose();
     onManageIndexes?.();
@@ -156,6 +187,10 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket, onManageIn
                   <Button variant="text" onClick={handleOpenBucketRules}>
                     <Icon name="security" />
                     <Text>Configure rules</Text>
+                  </Button>
+                  <Button variant="text" onClick={handleOpenFieldSecurity}>
+                    <Icon name="eye" />
+                    <Text>Field Security</Text>
                   </Button>
                   {onManageIndexes && (
                     <Button variant="text" onClick={handleManageIndexes}>
@@ -250,6 +285,13 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket, onManageIn
         />
       )}
       {isBucketRulesOpen && <BucketRules bucket={bucket} onClose={handleCloseBucketRules} />}
+      {isFieldSecurityOpen && (
+        <FieldSecurityOverview
+          bucket={bucket}
+          onSaveField={handleSaveFieldSecurity}
+          onClose={handleCloseFieldSecurity}
+        />
+      )}
     </div>
   );
 };

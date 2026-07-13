@@ -49,6 +49,9 @@ export type Property =
 interface IProperty {
   type: string;
   enum?: any[];
+  // Field-level read ACL expression (references auth.* / document.*); when it
+  // evaluates false the field is stripped from the response by the API.
+  acl?: string;
   [key: string]: any;
 }
 
