@@ -11,6 +11,7 @@
  */
 
 import {initForm} from ".";
+import {inferSecurityFromAcl} from "./field-acl";
 import {FieldKind, type FieldFormState, type InnerFieldFormState} from "./types";
 import type {BucketSchema, BucketProperty} from "../../components/organisms/bucket-table/types";
 
@@ -33,7 +34,13 @@ function innerPropertyToFormState(
   const kind = apiTypeToFieldKind(property.type);
   const partial = buildPartialFormState(fieldKey, property, kind, undefined, undefined);
   const merged = initForm(kind, partial as FieldFormState);
-  return {...merged, id: crypto.randomUUID()} as InnerFieldFormState;
+  // initForm only carries keys present in the field-kind defaults; securityValues
+  // is not seeded there, so re-apply it after the merge (mirrors innerFields).
+  return {
+    ...merged,
+    securityValues: partial.securityValues,
+    id: crypto.randomUUID()
+  } as InnerFieldFormState;
 }
 
 /**
@@ -185,7 +192,9 @@ function buildPartialFormState(
     fieldValues: {...baseFieldValues, ...specificFieldValues},
     configurationValues: {...baseConfigValues, ...specificConfigValues},
     presetValues,
-    defaultValue
+    defaultValue,
+    // No acl yields {mode: "everyone", expression: ""} so the security form is stable.
+    securityValues: inferSecurityFromAcl(property.acl)
   };
 
   if (multipleSelectionTab !== undefined) {
@@ -239,6 +248,9 @@ export function propertyToFieldFormState(
   if (partial.innerFields !== undefined) {
     merged.innerFields = partial.innerFields;
   }
+  // securityValues is not part of the field-kind defaults initForm merges over,
+  // so re-apply it here to keep the parsed acl on the edit form.
+  merged.securityValues = partial.securityValues;
   return merged;
 }
 

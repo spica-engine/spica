@@ -7,7 +7,7 @@ import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import BucketAddField from "../bucket-add-field/BucketAddField";
 import {FieldKind} from "../../../domain/fields/types";
 import type {FieldFormState} from "../../../domain/fields/types";
-import type {BucketType} from "src/store/api/bucketApi";
+import type {BucketType, Properties} from "src/store/api/bucketApi";
 
 type AddFieldModalProps = {
   /** Render-prop trigger — used in "add" mode. Optional when `isOpen` is provided. */
@@ -23,6 +23,8 @@ type AddFieldModalProps = {
   initialFieldKind?: FieldKind;
   /** Pre-fill the config form with these values (edit mode). */
   initialValues?: FieldFormState;
+  /** Sibling bucket properties powering the Security tab's owner picker and completions. */
+  bucketProperties?: Properties;
 };
 
 const AddFieldModal = ({
@@ -33,7 +35,8 @@ const AddFieldModal = ({
   isOpen: controlledIsOpen,
   onClose: controlledOnClose,
   initialFieldKind,
-  initialValues
+  initialValues,
+  bucketProperties
 }: AddFieldModalProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<FieldKind | null>(null);
@@ -129,6 +132,7 @@ const AddFieldModal = ({
                       fieldType={selectedType}
                       forbiddenFieldNames={forbiddenFieldNames}
                       popupType="add-field"
+                      bucketProperties={bucketProperties}
                       initialValues={selectedType === initialFieldKind ? initialValues : undefined}
                     />
                   </div>

@@ -13,6 +13,7 @@ import {
 } from "../../../store/api/bucketApi";
 import type {FieldFormState, FieldKind} from "../../../domain/fields/types";
 import {FIELD_REGISTRY, isFieldKind} from "../../../domain/fields/registry";
+import {inferSecurityFromAcl} from "../../../domain/fields/field-acl";
 import type {Field} from "../../../pages/diagram/hooks/useBucketConverter";
 
 export type BucketDiagramInspectorProps = {
@@ -146,6 +147,10 @@ const EditFieldButton: React.FC<EditFieldButtonProps> = memo(
 
     const forbiddenFieldNames = getSiblingFieldNames();
 
+    // This button edits both top-level and nested fields through the same
+    // inner-field popupType; only top-level properties carry a field-level ACL.
+    const isTopLevelField = getFieldNestingLevel(fieldPath) === 0;
+
     const handleOpen = (e: React.MouseEvent) => {
       e.stopPropagation();
       setIsOpen(true);
@@ -169,6 +174,8 @@ const EditFieldButton: React.FC<EditFieldButtonProps> = memo(
         popupType="add-inner-field"
         forbiddenFieldNames={forbiddenFieldNames}
         initialValues={initialValues}
+        isTopLevelField={isTopLevelField}
+        bucketProperties={isTopLevelField ? bucket.properties : undefined}
       >
         <Button variant="icon" className={styles.editButton} onClick={handleOpen}>
           <Icon name="pencil" />
@@ -317,7 +324,9 @@ const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, 
           translate: property.options?.translate || false
         },
         presetValues: buildPresetValues(property),
-        defaultValue: property.default
+        defaultValue: property.default,
+        // Rehydrate the field-level ACL so the Security tab reflects the saved rule.
+        securityValues: inferSecurityFromAcl(property.acl)
       };
 
       if (property.type === "multiselect") {
@@ -602,6 +611,7 @@ const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, 
           onSaveAndClose={handleSaveAndClose}
           forbiddenFieldNames={forbiddenFieldNames}
           containerClassName={styles.newFieldButtonContainer}
+          bucketProperties={bucket.properties}
         >
           {({onOpen}) => (
             <Button variant="icon" onClick={onOpen} className={styles.newFieldButton}>

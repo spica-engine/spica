@@ -18,7 +18,9 @@ export function useFormState(
 
     const base = initForm(type, initialValues);
 
-    const newFormValues = {...base, type};
+    // securityValues is not part of the field-kind defaults initForm merges over,
+    // so re-apply it here to keep an edited field's saved ACL on the form.
+    const newFormValues = {...base, type, securityValues: initialValues?.securityValues};
     setFormValues(newFormValues);
     setFormErrors({});
     setIsInitialized(true);

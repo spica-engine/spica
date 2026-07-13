@@ -15,7 +15,7 @@ import {
   updateInnerField
 } from "../../../domain/fields/inner-fields";
 import {useFormState} from "./BucketAddFieldHooks";
-import type {BucketType} from "src/store/api/bucketApi";
+import type {BucketType, Properties} from "src/store/api/bucketApi";
 
 function isObjectEffectivelyEmpty(obj: Object): boolean {
   if (obj === null || obj === undefined) return true;
@@ -60,6 +60,10 @@ export type BucketAddFieldBusinessProps = {
   fieldType?: FieldKind;
   popupType?: PopupType;
   initialValues?: FieldFormState;
+  /** Sibling bucket properties powering the Security tab's owner picker and completions. */
+  bucketProperties?: Properties;
+  /** Force Security-tab visibility when a top-level field is edited via an inner-field popupType. */
+  isTopLevelField?: boolean;
 };
 
 export type FormErrors = {
@@ -79,7 +83,9 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   forbiddenFieldNames,
   fieldType,
   popupType = "add-field",
-  initialValues
+  initialValues,
+  bucketProperties,
+  isTopLevelField
 }) => {
   const {data: buckets = []} = useGetBucketsQuery();
   const [, { error: createBucketFieldError }] = useCreateBucketFieldMutation({
@@ -239,6 +245,8 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       defaultInputProperty={defaultValueProperties}
       presetInputProperties={presetProperties}
       multipleSelectionTabProperties={multipleSelectionTabProperties}
+      bucketProperties={bucketProperties}
+      isTopLevelField={isTopLevelField}
       isLoading={isLoading}
       handleFormValueChange={handleFormValueChange}
       handleSaveAndClose={handleSaveAndClose}
