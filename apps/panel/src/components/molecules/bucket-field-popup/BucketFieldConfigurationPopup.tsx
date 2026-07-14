@@ -12,6 +12,7 @@ import {FieldKind} from "../../../domain/fields";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
 import type {FieldFormState} from "../../../domain/fields/types";
+import type {Properties} from "../../../store/api/bucketApi";
 import {usePopoverStack, type InsetValue} from "../../../hooks/usePopoverStack";
 
 export type PopupType = "add-field" | "edit-inner-field" | "add-inner-field";
@@ -28,6 +29,8 @@ type BucketFieldConfigurationPopupProps = {
   forbiddenFieldNames?: string[];
   popoverClassName?: string;
   parentInset?: InsetValue | null;
+  bucketProperties?: Properties;
+  isTopLevelField?: boolean;
 };
 
 const BucketFieldConfigurationPopup = ({
@@ -41,7 +44,9 @@ const BucketFieldConfigurationPopup = ({
   popupType,
   forbiddenFieldNames,
   popoverClassName,
-  parentInset
+  parentInset,
+  bucketProperties,
+  isTopLevelField
 }: BucketFieldConfigurationPopupProps) => {
   const innerContainerRef = useRef<HTMLDivElement>(null);
   const bucketAddFieldRef = useRef<HTMLDivElement>(null);
@@ -146,6 +151,8 @@ const BucketFieldConfigurationPopup = ({
             fieldType={selectedType}
             popupType={popupType}
             initialValues={initialValues}
+            bucketProperties={bucketProperties}
+            isTopLevelField={isTopLevelField}
           />
         )
       }

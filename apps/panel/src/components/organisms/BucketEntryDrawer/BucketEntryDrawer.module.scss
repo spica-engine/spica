@@ -31,6 +31,27 @@
   flex-shrink: 0;
 }
 
+.drawerBack {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md-sm);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border: none;
+  background: none;
+  padding: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+  }
+}
+
 .drawerHeaderInfo {
   flex: 1;
   min-width: 0;

@@ -49,6 +49,9 @@ export type Property =
 interface IProperty {
   type: string;
   enum?: any[];
+  // Field-level read ACL expression (references auth.* / document.*); when it
+  // evaluates false the field is stripped from the response by the API.
+  acl?: string;
   [key: string]: any;
 }
 
@@ -624,19 +627,36 @@ export const bucketApi = baseApi.injectEndpoints({
         { type: 'BucketData', id: bucketId },
         'BucketData',
       ],
-      // Optimistic update
-      onQueryStarted: async ({ bucketId, data }, { dispatch, queryFulfilled }) => {
+      // Insert the created entry into every cached getBucketData variation for this
+      // bucket (each keyed by its full query args) so it appears immediately instead
+      // of only after the invalidation refetch. Patched after queryFulfilled because
+      // the server assigns the _id; the refetch reconciles ordering/filter edge cases.
+      onQueryStarted: async ({ bucketId }, { dispatch, queryFulfilled, getState }) => {
         try {
           const { data: newEntry } = await queryFulfilled;
-          // Update the bucket data cache
-          dispatch(
-            bucketApi.util.updateQueryData('getBucketData', { bucketId } as any, (draft) => {
-              draft.data.push(newEntry);
-              draft.meta.total += 1;
-            })
-          );
+          const queries = (getState() as any)[bucketApi.reducerPath]?.queries ?? {};
+
+          for (const cacheKey in queries) {
+            const cached = queries[cacheKey];
+            if (cached?.endpointName !== 'getBucketData') continue;
+            if ((cached.originalArgs as any)?.bucketId !== bucketId) continue;
+
+            dispatch(
+              bucketApi.util.updateQueryData('getBucketData', cached.originalArgs, (draft) => {
+                if (draft.data.some((entry) => entry._id === newEntry._id)) return;
+                // Newest-first is the default sort, so prepend; only an explicit
+                // ascending _id sort appends. Any other sort the refetch corrects.
+                const ascById = (cached.originalArgs as any)?.sort?._id === 1;
+                if (ascById) draft.data.push(newEntry);
+                else draft.data.unshift(newEntry);
+                if (draft.meta && typeof draft.meta.total === 'number') {
+                  draft.meta.total += 1;
+                }
+              })
+            );
+          }
         } catch {
-          // If the mutation fails, the cache will be invalidated automatically
+          // On failure the cache is left untouched; the invalidation refetch keeps it correct.
         }
       },
     }),
@@ -652,21 +672,37 @@ export const bucketApi = baseApi.injectEndpoints({
         { type: 'BucketData', id: bucketId },
         'BucketData',
       ],
-      // Optimistic update
-      onQueryStarted: async ({ bucketId, entryId, data }, { dispatch, queryFulfilled }) => {
-        const patchResult = dispatch(
-          bucketApi.util.updateQueryData('getBucketData', { bucketId } as any, (draft) => {
-            const entryIndex = draft.data.findIndex((entry) => entry._id === entryId);
-            if (entryIndex !== -1) {
-              draft.data[entryIndex] = { ...draft.data[entryIndex], ...data };
-            }
-          })
-        );
+      // Optimistic update. getBucketData is cached per full query args
+      // (paginate/relation/limit/sort/filter), so a single fixed-key patch keyed on
+      // just { bucketId } never matches the live subscription and silently no-ops.
+      // Patch every cached variation for this bucket instead, so an inline edit —
+      // including a fully-controlled boolean toggle that would otherwise snap back to
+      // its stale prop — reflects immediately rather than waiting on the refetch.
+      onQueryStarted: async ({ bucketId, entryId, data }, { dispatch, queryFulfilled, getState }) => {
+        const patchResults: { undo: () => void }[] = [];
+        const queries = (getState() as any)[bucketApi.reducerPath]?.queries ?? {};
+
+        for (const cacheKey in queries) {
+          const cached = queries[cacheKey];
+          if (cached?.endpointName !== 'getBucketData') continue;
+          if ((cached.originalArgs as any)?.bucketId !== bucketId) continue;
+
+          patchResults.push(
+            dispatch(
+              bucketApi.util.updateQueryData('getBucketData', cached.originalArgs, (draft) => {
+                const entryIndex = draft.data.findIndex((entry) => entry._id === entryId);
+                if (entryIndex !== -1) {
+                  draft.data[entryIndex] = { ...draft.data[entryIndex], ...data };
+                }
+              })
+            )
+          );
+        }
 
         try {
           await queryFulfilled;
         } catch {
-          patchResult.undo();
+          patchResults.forEach((patch) => patch.undo());
         }
       },
     }),
@@ -681,6 +717,34 @@ export const bucketApi = baseApi.injectEndpoints({
         { type: 'BucketData', id: bucketId },
         'BucketData',
       ],
+      // Optimistically remove the entry from every cached getBucketData variation for
+      // this bucket (each keyed by its full query args) so the row disappears
+      // immediately instead of lingering until the invalidation refetch. No rollback:
+      // the delete flow always follows up with an explicit refresh (and invalidatesTags
+      // refetches) as the source of truth, so a genuine failure — or a 500 the API can
+      // return after the doc was already removed — reconciles without wrongly
+      // resurrecting the row.
+      onQueryStarted: async ({ entryId, bucketId }, { dispatch, getState }) => {
+        const queries = (getState() as any)[bucketApi.reducerPath]?.queries ?? {};
+
+        for (const cacheKey in queries) {
+          const cached = queries[cacheKey];
+          if (cached?.endpointName !== 'getBucketData') continue;
+          if ((cached.originalArgs as any)?.bucketId !== bucketId) continue;
+
+          dispatch(
+            bucketApi.util.updateQueryData('getBucketData', cached.originalArgs, (draft) => {
+              const entryIndex = draft.data.findIndex((entry) => entry._id === entryId);
+              if (entryIndex !== -1) {
+                draft.data.splice(entryIndex, 1);
+                if (draft.meta && typeof draft.meta.total === 'number') {
+                  draft.meta.total = Math.max(0, draft.meta.total - 1);
+                }
+              }
+            })
+          );
+        }
+      },
     }),
 
     // Get bucket data profiler entries

@@ -1,0 +1,72 @@
+@use "../../../styles/mixins";
+
+.fieldSecurityEditor {
+  width: 100%;
+
+  .options {
+    width: 100%;
+  }
+
+  .option {
+    width: 100% !important;
+    cursor: pointer;
+
+    .optionDescription {
+      color: var(--color-font-secondary);
+      font-size: var(--font-size-xs);
+      text-align: right;
+    }
+  }
+
+  .body {
+    width: 100%;
+
+    .label {
+      color: var(--color-font-primary);
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+    }
+  }
+
+  .editorContainer {
+    position: relative;
+    width: 100%;
+    height: 128px;
+    padding: var(--padding-md);
+    background-color: var(--color-menu-contrast);
+    border-radius: var(--border-radius-md);
+
+    .editor {
+      width: 100%;
+      height: 108px;
+    }
+
+    .editorPlaceholder {
+      position: absolute;
+      top: var(--padding-md);
+      left: var(--padding-md);
+      right: var(--padding-md);
+      // Ghost text only — clicks fall through to the editor and it is never
+      // part of the model, so it can neither be selected nor submitted.
+      pointer-events: none;
+      user-select: none;
+      color: var(--color-font-secondary);
+      font-family: var(--font-family-base);
+      font-size: var(--font-size-xs);
+      line-height: 1.7;
+    }
+
+    .editorLoadingSkeleton {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: var(--border-radius-md);
+      background-color: var(--color-menu-contrast);
+    }
+  }
+
+  .note {
+    color: var(--color-font-secondary);
+    font-size: var(--font-size-xs);
+  }
+}

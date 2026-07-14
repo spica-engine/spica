@@ -13,12 +13,14 @@ import {useEntrySelection} from "../../../hooks/useEntrySelection";
 import FilterPanel from "../../prefabs/filter-panel/FilterPanel";
 import SortPanel from "../../prefabs/sort-panel/SortPanel";
 import type {FilterField, FilterConditionRow, SortField} from "../../prefabs/filter-panel/types";
-import {conditionsToMongoFilter, isConditionActive, formatConditionValue} from "../../prefabs/filter-panel/filterPanelUtils";
+import {isConditionActive, formatConditionValue} from "../../prefabs/filter-panel/filterPanelUtils";
 
 type BucketActionBarProps = {
   onRefresh: () => Promise<BucketDataType | void>;
   onSearch: (search: string) => void;
-  onFilter: (filter: Record<string, any> | null) => void;
+  /** Active filter conditions, owned by the URL in the parent. */
+  appliedConditions: FilterConditionRow[];
+  onFilterChange: (conditions: FilterConditionRow[]) => void;
   onSort: (sort: Record<string, 1 | -1> | null) => void;
   filterFields: FilterField[];
   bucket: BucketType;
@@ -106,7 +108,8 @@ const DeleteWarningParagraph = ({
 const BucketActionBar = ({
   onRefresh,
   onSearch,
-  onFilter,
+  appliedConditions,
+  onFilterChange,
   onSort,
   filterFields,
   bucket,
@@ -129,10 +132,6 @@ const BucketActionBar = ({
   const [isIndexManagerOpen, setIsIndexManagerOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
-  // The human-readable conditions currently applied — persisted here so the
-  // popover can re-hydrate its rows and the chips row can render/remove them
-  // even after the FilterPanel unmounts on close.
-  const [appliedConditions, setAppliedConditions] = useState<FilterConditionRow[]>([]);
   // Bumped on each Filter popover open so FilterPanel remounts and re-seeds its
   // rows from `appliedConditions` regardless of whether the popover keeps its
   // content mounted while closed.
@@ -152,25 +151,21 @@ const BucketActionBar = ({
   );
 
   const handleFilterApply = useCallback(
-    (filter: Record<string, any> | null, conditions: FilterConditionRow[]) => {
-      setAppliedConditions(conditions.filter(isConditionActive));
-      onFilter(filter);
+    (_filter: Record<string, any> | null, conditions: FilterConditionRow[]) => {
+      onFilterChange(conditions.filter(isConditionActive));
     },
-    [onFilter]
+    [onFilterChange]
   );
 
   const handleFilterClear = useCallback(() => {
-    setAppliedConditions([]);
-    onFilter(null);
-  }, [onFilter]);
+    onFilterChange([]);
+  }, [onFilterChange]);
 
   const handleRemoveFilterChip = useCallback(
     (id: string) => {
-      const next = appliedConditions.filter(c => c.id !== id);
-      setAppliedConditions(next);
-      onFilter(next.length ? conditionsToMongoFilter(next, filterFields) : null);
+      onFilterChange(appliedConditions.filter(c => c.id !== id));
     },
-    [appliedConditions, filterFields, onFilter]
+    [appliedConditions, onFilterChange]
   );
 
   const handleFilterToggle = useCallback(() => {
@@ -191,13 +186,11 @@ const BucketActionBar = ({
     onSort(null);
   }, [onSort]);
 
-  // Switching buckets must not carry a previous bucket's search or filter over:
-  // the applied conditions reference fields that may not exist on the new schema.
+  // Switching buckets must not carry the previous bucket's search box over. The
+  // filter lives in the URL now, so it clears naturally when the route changes.
   useEffect(() => {
     setSearchValue("");
-    setAppliedConditions([]);
-    onFilter(null);
-  }, [bucket?._id, onFilter]);
+  }, [bucket?._id]);
 
   const debouncedSearch = useMemo(
     () =>

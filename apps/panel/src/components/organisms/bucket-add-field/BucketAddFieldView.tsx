@@ -29,6 +29,9 @@ import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import type {FieldFormState} from "../../../domain/fields/types";
 import {FieldKind, type InnerFieldFormState} from "../../../domain/fields/types";
+import FieldSecurityEditor from "../../molecules/field-security-editor/FieldSecurityEditor";
+import type {FieldSecurity} from "../../../domain/fields/field-acl";
+import type {Properties} from "../../../store/api/bucketApi";
 
 type InnerFieldProps = {
   field: InnerFieldFormState;
@@ -109,6 +112,11 @@ type BucketAddFieldViewProps = {
   defaultInputProperty?: TypeProperties[keyof TypeProperties];
   presetInputProperties?: TypeProperties;
   multipleSelectionTabProperties?: TypeProperties;
+  bucketProperties?: Properties;
+  // Field-level ACL only applies to top-level bucket properties. Editors that reuse
+  // an inner-field `popupType` to configure a top-level field (e.g. the diagram
+  // inspector) set this explicitly; otherwise it is derived from `popupType`.
+  isTopLevelField?: boolean;
   isLoading: boolean;
   handleFormValueChange: (
     values: FieldFormState,
@@ -133,6 +141,8 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   defaultInputProperty,
   presetInputProperties,
   multipleSelectionTabProperties,
+  bucketProperties = {},
+  isTopLevelField,
   isLoading,
   handleFormValueChange,
   handleSaveAndClose,
@@ -198,6 +208,17 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     [formValues.innerFields]
   );
 
+  // Field-level ACL projects on top-level bucket properties only, so it is not
+  // offered while configuring an inner (object/array) field. Callers that reuse an
+  // inner-field popupType for a top-level field override this via isTopLevelField.
+  const showSecurityTab = isTopLevelField ?? popupType === "add-field";
+
+  const handleSecurityChange = useCallback(
+    (next: FieldSecurity) =>
+      handleFormValueChange(next as unknown as FieldFormState, "securityValues"),
+    [handleFormValueChange]
+  );
+
   const tabs = useMemo(() => {
     const items: TypeFluidContainer[] = [];
     let currentIndex = 0;
@@ -251,8 +272,32 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       "Configuration",
       <div className={styles.configurationOptionsContainer}>{configurationInputs}</div>
     );
+
+    if (showSecurityTab) {
+      createConfig(
+        "Security",
+        <div className={styles.securityContainer}>
+          <FieldSecurityEditor
+            value={formValues.securityValues}
+            bucketProperties={bucketProperties}
+            onChange={handleSecurityChange}
+          />
+        </div>
+      );
+    }
+
     return items;
-  }, [type, innerFieldExists, configurationInputs, formValues.innerFields, defaultInput]);
+  }, [
+    type,
+    innerFieldExists,
+    configurationInputs,
+    formValues.innerFields,
+    formValues.securityValues,
+    defaultInput,
+    showSecurityTab,
+    bucketProperties,
+    handleSecurityChange
+  ]);
 
   const tabItems: {prefix?: TypeFlexElement}[] = useMemo(
     () => tabs.map(i => ({prefix: i.prefix})),

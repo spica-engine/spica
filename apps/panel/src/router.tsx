@@ -61,6 +61,10 @@ const router = createBrowserRouter(
           element: <Bucket />
         },
         {
+          path: "bucket/:bucketId/:entryId",
+          element: <Bucket />
+        },
+        {
           path: "passport/identity",
           element: <Identity />
         },
