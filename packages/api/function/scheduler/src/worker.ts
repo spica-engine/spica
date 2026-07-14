@@ -36,6 +36,16 @@ export class ScheduleWorker extends NodeWorker {
   // Set once when the worker opens its event stream; pushes an event down that stream.
   private push!: Schedule;
 
+  // Set when the function was updated but this worker still holds the old baked state. It keeps
+  // serving (old code) so there's no cold-start gap, but is deprioritized behind fresh warm
+  // replacements and retired the moment one takes over. See Scheduler.supersedeWorkers.
+  private superseded = false;
+
+  // Set on a worker spawned as a transient new-code replacement during a rolling cutover. Lets
+  // the scheduler tell these apart from the steady-state warm reserve so the per-function
+  // warmWorkers reconcile doesn't trim/kill them.
+  private replacement = false;
+
   constructor(options: SpawnOptions) {
     super(options);
   }
@@ -75,6 +85,7 @@ export class ScheduleWorker extends NodeWorker {
 
   public execute(event: event.Event) {
     this.target = event.target;
+    this.replacement = false;
     this.inFlight++;
     this.transitionTo(this.inFlight >= this.capacity ? WorkerState.Busy : WorkerState.Targeted);
     this.push(event);
@@ -119,16 +130,26 @@ export class ScheduleWorker extends NodeWorker {
   }
 
   // Reuse an already-graduated same-target worker with a free lane (its module cache
-  // is warm and it already counts against this function's concurrency budget).
+  // is warm and it already counts against this function's concurrency budget). Superseded
+  // workers are excluded so a fresh warm replacement always wins over stale-but-hot code.
   public canServe(targetId: string) {
     return (
-      this.hasSameTarget(targetId) && this.state == WorkerState.Targeted && this.hasFreeSlot()
+      this.hasSameTarget(targetId) &&
+      this.state == WorkerState.Targeted &&
+      !this.superseded &&
+      this.hasFreeSlot()
     );
   }
 
   // Same, but for a worker still sitting in the pre-warmed reserve.
   public canServeWarm(targetId: string) {
     return this.hasSameTarget(targetId) && this.state == WorkerState.Warm && this.hasFreeSlot();
+  }
+
+  // A superseded (old-code) worker with a free lane. Used only after fresh warm replacements
+  // are exhausted, to avoid a cold spawn while the rolling cutover is still in progress.
+  public canServeSuperseded(targetId: string) {
+    return this.hasSameTarget(targetId) && this.superseded && this.hasFreeSlot();
   }
 
   // Already handed at least one event of this function, so it counts toward the limit.
@@ -153,6 +174,26 @@ export class ScheduleWorker extends NodeWorker {
 
   public markAsOutdated() {
     this.transitionTo(WorkerState.Outdated);
+  }
+
+  // Keep serving old code until a fresh replacement is ready. Only meaningful for a worker that
+  // is actively pinned to a function; the warm reserve is killed and rebuilt separately.
+  public markAsSuperseded() {
+    if (this.state == WorkerState.Targeted || this.state == WorkerState.Busy) {
+      this.superseded = true;
+    }
+  }
+
+  public get isSuperseded() {
+    return this.superseded;
+  }
+
+  public markAsReplacement() {
+    this.replacement = true;
+  }
+
+  public get isReplacement() {
+    return this.replacement;
   }
 
   private transitionTo(state: WorkerState) {

@@ -21,6 +21,7 @@ export interface SchedulingOptions {
   maxConcurrency: number;
   eventConcurrency?: number;
   maxWarmWorkers: number;
+  functionWorkerCutoverGraceMs?: number;
   debug: boolean;
   logger: boolean;
   invocationLogs: boolean;
@@ -38,6 +39,11 @@ export type Schedule = (event: event.Event) => void;
 // baseline used everywhere concurrency is defaulted: the scheduler stores only functions
 // ABOVE this value (a sparse map) and reads back `?? DEFAULT_EVENT_CONCURRENCY`.
 export const DEFAULT_EVENT_CONCURRENCY = 1;
+
+// How long a rolling cutover keeps serving old code while waiting for fresh replacements to become
+// ready. If they never do (e.g. the new version crashes on preload), the surviving superseded
+// workers are force-outdated so the new code runs and its failure surfaces.
+export const DEFAULT_CUTOVER_GRACE_MS = 30_000;
 
 export enum WorkerState {
   "Initial",

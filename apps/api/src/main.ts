@@ -315,6 +315,12 @@ const args = yargsInstance
         "Maximum number of pre-warmed workers a single function may keep on standby. Caps the per-function 'warmWorkers' schema value. Set 0 to disable warm workers. Default value is ten.",
       default: 10
     },
+    "function-worker-cutover-grace-ms": {
+      number: true,
+      description:
+        "When a function is updated under traffic, its live workers keep serving the old code while fresh replacements are pre-warmed. If the replacements never become ready within this many milliseconds (e.g. the new version crashes on load), the old workers are force-retired so the new code runs and its failure surfaces. Default is 30000.",
+      default: 30000
+    },
     "function-debug": {
       boolean: true,
       description: "Enable/disable function workers debugging mode. Default value is true",
@@ -933,6 +939,7 @@ const modules = [
     maxConcurrency: args["function-worker-concurrency"],
     eventConcurrency: args["function-worker-event-concurrency"],
     maxWarmWorkers: args["function-warm-workers-max"],
+    functionWorkerCutoverGraceMs: args["function-worker-cutover-grace-ms"],
     realtimeLogs: true,
     logger: args["function-logger"],
     invocationLogs: args["function-invocation-logs"],

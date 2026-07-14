@@ -126,7 +126,9 @@ describe("Engine", () => {
 
   it("should refresh workers and context without re-routing when an env var value changes", async () => {
     const contextSpy = jest.spyOn(scheduler, "reconcileContext");
-    const outdateSpy = jest.spyOn(scheduler, "outdateWorkers");
+    // an active-trigger function rolls over via supersedeWorkers (keep serving old code while
+    // fresh replacements warm), not a hard outdateWorkers.
+    const supersedeSpy = jest.spyOn(scheduler, "supersedeWorkers");
 
     const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);
@@ -146,7 +148,7 @@ describe("Engine", () => {
     expect(subscribeSpy).not.toHaveBeenCalled();
     expect(unsubscribeSpy).not.toHaveBeenCalled();
 
-    expect(outdateSpy).toHaveBeenCalledWith(hexString);
+    expect(supersedeSpy.mock.calls.at(-1)[0].toObject().id).toBe(hexString);
     expect(envMap(contextSpy.mock.calls.at(-1)[1])).toEqual({IGNORE_ME: "YES"});
   });
 

@@ -156,3 +156,72 @@ describe("ScheduleWorker in-process concurrency", () => {
     expect(worker.state).toEqual(WorkerState.Timeouted);
   });
 });
+
+describe("ScheduleWorker rolling cutover", () => {
+  let spawnSpy: jest.SpyInstance;
+
+  beforeEach(() => (spawnSpy = mockSpawn()));
+  afterEach(() => spawnSpy.mockRestore());
+
+  function activeWorker(capacity: number, busy: number): ScheduleWorker {
+    const worker = new ScheduleWorker({id: "worker-id", env: {}, entrypointPath: "fake-path"});
+    worker.subscribed(() => {});
+    worker.setCapacity(capacity);
+    for (let i = 0; i < busy; i++) {
+      worker.execute(new event.Event({target: target("1"), type: -1 as any}));
+    }
+    return worker;
+  }
+
+  it("marks an active worker superseded without leaving its servable state", () => {
+    const worker = activeWorker(2, 1);
+    expect(worker.state).toEqual(WorkerState.Targeted);
+
+    worker.markAsSuperseded();
+
+    expect(worker.isSuperseded).toBe(true);
+    expect(worker.state).toEqual(WorkerState.Targeted);
+  });
+
+  it("does not supersede a worker that is not actively pinned to a function", () => {
+    const worker = new ScheduleWorker({id: "worker-id", env: {}, entrypointPath: "fake-path"});
+    worker.subscribed(() => {}); // Fresh, no target
+
+    worker.markAsSuperseded();
+
+    expect(worker.isSuperseded).toBe(false);
+  });
+
+  it("excludes a superseded worker from canServe but exposes it via canServeSuperseded", () => {
+    const worker = activeWorker(2, 1);
+
+    expect(worker.canServe("1")).toBe(true);
+    expect(worker.canServeSuperseded("1")).toBe(false);
+
+    worker.markAsSuperseded();
+
+    // a fresh warm replacement must win over stale-but-hot code
+    expect(worker.canServe("1")).toBe(false);
+    // ...but the old worker is still usable when no replacement is ready
+    expect(worker.canServeSuperseded("1")).toBe(true);
+  });
+
+  it("stops offering a retired superseded worker once it is outdated", () => {
+    const worker = activeWorker(2, 1);
+    worker.markAsSuperseded();
+    worker.markAsOutdated();
+
+    expect(worker.canServeSuperseded("1")).toBe(false);
+  });
+
+  it("flags a replacement worker and clears the flag once it graduates to serving", () => {
+    const worker = new ScheduleWorker({id: "worker-id", env: {}, entrypointPath: "fake-path"});
+    worker.markAsReplacement();
+    worker.markAsWarming(target("1"));
+    worker.subscribed(() => {});
+    expect(worker.isReplacement).toBe(true);
+
+    worker.execute(new event.Event({target: target("1"), type: -1 as any}));
+    expect(worker.isReplacement).toBe(false);
+  });
+});
