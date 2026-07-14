@@ -913,6 +913,24 @@ describe("Scheduler", () => {
       expect(active.state).toEqual(WorkerState.Outdated);
     });
 
+    it("retires a superseded worker without killing it, so its last response can still land", () => {
+      // Regression: killing a retired worker on isIdle() races the delivery of its just-completed
+      // event's response and strands that request (observed end-to-end as one hung request per
+      // update). Retirement must only mark it Outdated; the execution timeout reaps it.
+      const [, active] = activeWorkerFor("1");
+      completeEvent("1"); // handler finished — response may still be in flight
+      expect(active.isIdle()).toBe(true);
+
+      const killSpy = jest.spyOn(active, "kill");
+      scheduler.supersedeWorkers(makeTarget("1"));
+      connectWarmingWorkers();
+
+      scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
+
+      expect(active.state).toEqual(WorkerState.Outdated);
+      expect(killSpy).not.toHaveBeenCalled();
+    });
+
     it("keeps serving from the superseded worker when no replacement is ready yet", () => {
       const [, active] = activeWorkerFor("1");
       scheduler.supersedeWorkers(makeTarget("1"));
