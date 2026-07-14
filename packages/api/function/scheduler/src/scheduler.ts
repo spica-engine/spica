@@ -574,19 +574,22 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
    * Roll a function's workers over to fresh state without a cold-start gap. Instead of outdating
    * live workers immediately (which forces the next event to cold-spawn), it keeps them serving the
    * old code as "superseded" and pre-warms one fresh replacement per serving worker. `takeAWorker`
-   * then prefers the replacements; as each is consumed, one superseded worker is retired. The old
-   * warm reserve is killed here (it can't drain by serving) and refilled from fresh state by
-   * reconcileWarmWorkers afterwards.
+   * then prefers the replacements; as each is consumed, one superseded worker is retired. Every
+   * pre-warmed worker (the steady-state reserve and any in-flight replacements from an earlier
+   * update) is killed here since it holds now-stale code; the reserve is refilled by
+   * reconcileWarmWorkers afterwards and replacements are respawned from this newest target.
    */
   supersedeWorkers(target: event.Target) {
     const fnId = target.id;
     const workers = Array.from(this.workers.values()).filter(worker => worker.hasSameTarget(fnId));
 
+    // Kill every pre-warmed worker of this function — the steady-state reserve AND any in-flight
+    // replacements from an earlier cutover. All of them preloaded now-stale code (a second update
+    // landing mid-warming makes the first update's replacements stale), so none can be reused:
+    // reconcileWarmWorkers refills the reserve and scaleReplacementWorkers respawns replacements,
+    // both from the newest target.
     for (const worker of workers) {
-      if (
-        !worker.isReplacement &&
-        (worker.state == WorkerState.Warm || worker.state == WorkerState.Warming)
-      ) {
+      if (worker.state == WorkerState.Warm || worker.state == WorkerState.Warming) {
         worker.markAsOutdated();
         worker.kill();
       }

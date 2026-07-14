@@ -852,6 +852,23 @@ describe("Scheduler", () => {
       return allWorkers().filter(([, w]) => w.hasSameTarget(id) && w.isReplacement);
     }
 
+    function warmingReplacements(id: string) {
+      return replacementWorkers(id).filter(([, w]) => w.state == WorkerState.Warming);
+    }
+
+    // a target distinguishable by the code version it carries (baked into WARM_ENV at spawn)
+    function versionedTarget(id: string, version: string) {
+      return new event.Target({
+        id,
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new event.SchedulingContext({
+          env: [new event.SchedulingContext.Env({key: "VERSION", value: version})],
+          timeout: schedulerOptions.timeout
+        })
+      });
+    }
+
     it("pre-warms one replacement per active worker even when warmWorkers is 0", () => {
       const [, active] = activeWorkerFor("1");
       expect(scheduler.warmConfigs.has("1")).toBe(false);
@@ -957,6 +974,30 @@ describe("Scheduler", () => {
 
       // a fresh steady-state warm worker taking the event retires the stale worker too
       expect(active.state).toEqual(WorkerState.Outdated);
+    });
+
+    it("discards stale in-flight replacements and rebuilds from the newest code on a second update", () => {
+      activeWorkerFor("1");
+
+      scheduler.supersedeWorkers(versionedTarget("1", "v2"));
+      const [[, staleReplacement]] = warmingReplacements("1");
+      expect(staleReplacement.state).toEqual(WorkerState.Warming);
+
+      // a second update lands while the v2 replacement is still preloading
+      spawnSpy.mockClear();
+      scheduler.supersedeWorkers(versionedTarget("1", "v3"));
+
+      // the v2 replacement — which preloaded now-stale code — is discarded
+      expect(staleReplacement.state).toEqual(WorkerState.Outdated);
+
+      // and a brand-new replacement is spawned carrying the newest (v3) code
+      expect(spawnSpy).toHaveBeenCalledTimes(1);
+      expect(scheduler.replacementConfigs.get("1").target.context.toObject().env).toEqual([
+        {key: "VERSION", value: "v3"}
+      ]);
+      const fresh = warmingReplacements("1");
+      expect(fresh.length).toBe(1);
+      expect(fresh[0][1]).not.toBe(staleReplacement);
     });
 
     it("hard-outdates workers (no cutover) when the function has no active workers", () => {
