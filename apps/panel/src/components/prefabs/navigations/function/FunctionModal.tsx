@@ -11,7 +11,7 @@ import {
   useUpdateFunctionIndexMutation,
   useGetFunctionInformationQuery
 } from "../../../../store/api/functionApi";
-import type {SpicaFunction} from "../../../../store/api/functionApi";
+import type {SpicaFunction, TriggerMap} from "../../../../store/api/functionApi";
 import styles from "./FunctionModal.module.scss";
 
 type FunctionModalProps = {
@@ -110,7 +110,11 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
             timeout,
             category: trimmedCategory || undefined,
             warmWorkers,
-            concurrencyPerWorker
+            concurrencyPerWorker,
+            // PUT /function/:id validates against the full function schema, which
+            // requires `triggers`. It merges via $set, so echoing the existing
+            // triggers back keeps them unchanged while satisfying validation.
+            triggers: functionToEdit.triggers as TriggerMap
           }
         }).unwrap();
         onSaved(result);
