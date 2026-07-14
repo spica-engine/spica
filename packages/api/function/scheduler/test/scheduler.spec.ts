@@ -1000,6 +1000,22 @@ describe("Scheduler", () => {
       expect(fresh[0][1]).not.toBe(staleReplacement);
     });
 
+    it("clears transient cutover state when the function is hard-outdated mid-cutover", () => {
+      const [, active] = activeWorkerFor("1");
+      scheduler.supersedeWorkers(makeTarget("1"));
+      expect(scheduler.replacementConfigs.has("1")).toBe(true);
+      expect(scheduler.supersedeTimers.has("1")).toBe(true);
+
+      // the function is deleted/deactivated while its cutover is still in flight
+      scheduler.outdateWorkers("1");
+
+      // no lingering config or timer left behind for a function that's no longer cutting over
+      expect(scheduler.replacementConfigs.has("1")).toBe(false);
+      expect(scheduler.supersedeTimers.has("1")).toBe(false);
+      expect(active.state).toEqual(WorkerState.Outdated);
+      expect(warmingReplacements("1").length).toBe(0);
+    });
+
     it("hard-outdates workers (no cutover) when the function has no active workers", () => {
       // no traffic yet — nothing to roll over
       spawnSpy.mockClear();

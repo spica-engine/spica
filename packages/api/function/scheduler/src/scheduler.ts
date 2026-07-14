@@ -568,6 +568,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           }
         }
       });
+
+    // A hard outdate ends any rolling cutover in progress for this function (it's being deleted or
+    // deactivated), so drop its transient cutover state now instead of leaving it for the grace
+    // timer to reap.
+    this.clearReplacementState(targetId);
   }
 
   /**
