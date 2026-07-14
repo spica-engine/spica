@@ -35,7 +35,10 @@ export class PlanExecutor {
     @Inject(FUNCTION_OPTIONS) private options: Options
   ) {}
 
-  apply(plan: FunctionChangePlan) {
+  // Awaits reconcile so callers can gate on it: at startup this keeps the app from listening
+  // before every function's execution context (env/secrets/timeout) is loaded into the
+  // scheduler, otherwise a freshly-subscribed route could serve events with empty context.
+  async apply(plan: FunctionChangePlan): Promise<void> {
     for (const change of plan.routing) {
       switch (change.kind) {
         case ChangeKind.Added:
@@ -55,13 +58,12 @@ export class PlanExecutor {
     // the warm reserve is refilled by reconcile below (reconcileWarmWorkers), and cold workers
     // are spawned on demand when the next event arrives. Outdating first ensures the refilled
     // reserve is built from the fresh state, not killed right after being spawned.
+    // outdateWorkers is synchronous, so there is nothing to await here.
     for (const functionId of new Set(plan.outdate)) {
       this.scheduler.outdateWorkers(functionId);
     }
 
-    for (const functionId of new Set(plan.reconcile)) {
-      this.reconcile(functionId);
-    }
+    await Promise.all([...new Set(plan.reconcile)].map(functionId => this.reconcile(functionId)));
   }
 
   private getEnqueuer(name: string) {

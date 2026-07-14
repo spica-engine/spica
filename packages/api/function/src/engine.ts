@@ -136,7 +136,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       const plan = mergePlans(
         fns.map(fn => (register ? createPlan(null, fn) : createPlan(fn, null)))
       );
-      this.applyChangePlan(plan);
+      return this.applyChangePlan(plan);
     });
   }
 
@@ -152,8 +152,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   // Replication seam: the ClassCommander SYNC command, so every plan applied on one replica is
-  // re-applied on the others. The mechanics live in PlanExecutor; this only forwards.
-  applyChangePlan(plan: FunctionChangePlan) {
+  // re-applied on the others. The mechanics live in PlanExecutor; this only forwards. Returns
+  // the executor's promise so callers can await context resolution before proceeding.
+  applyChangePlan(plan: FunctionChangePlan): Promise<void> {
     return this.executor.apply(plan);
   }
 

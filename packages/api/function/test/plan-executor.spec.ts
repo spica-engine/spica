@@ -272,4 +272,24 @@ describe("PlanExecutor", () => {
     await waitForCalls(contextSpy);
     expect(contextSpy.mock.calls.at(-1)[1].toObject().timeout).toBe(10);
   });
+
+  it("should not resolve apply() until the execution context is reconciled", async () => {
+    await fs.insertOne({
+      _id: new ObjectId(hexString),
+      env_vars: [],
+      language: "js",
+      timeout: 10,
+      name: "await_fn",
+      triggers: {a: {active: true, options: {}, type: "http"}}
+    });
+
+    const contextSpy = jest.spyOn(scheduler, "reconcileContext");
+
+    // awaiting apply must be enough — no polling — for the context to be in the scheduler,
+    // otherwise a freshly-subscribed route could serve events before its context is loaded.
+    await apply({routing: [], outdate: [], reconcile: [hexString]});
+
+    expect(contextSpy).toHaveBeenCalled();
+    expect(contextSpy.mock.calls.at(-1)[1].toObject().timeout).toBe(10);
+  });
 });

@@ -33,7 +33,7 @@ async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn
     throw new InternalServerErrorException(error?.message || error);
   }
 
-  engine.applyChangePlan(createPlan(null, fn));
+  await engine.applyChangePlan(createPlan(null, fn));
 }
 
 export async function find<
@@ -142,7 +142,7 @@ export async function replace(fs: FunctionService, engine: FunctionEngine, fn: F
 
   fn._id = _id;
 
-  engine.applyChangePlan(createPlan(preFn, fn));
+  await engine.applyChangePlan(createPlan(preFn, fn));
 
   return fn;
 }
@@ -161,7 +161,7 @@ export async function remove(
 
   logs.deleteMany({function: fn._id.toString()});
 
-  engine.applyChangePlan(createPlan(fn, null));
+  await engine.applyChangePlan(createPlan(fn, null));
 
   await engine.deleteFunction(fn);
   await engine.removeAssets(fn as Function & {_id: any});
@@ -202,7 +202,7 @@ export namespace index {
       return Buffer.from(index, "utf-8");
     });
 
-    engine.applyChangePlan(refreshPlan(id.toString()));
+    await engine.applyChangePlan(refreshPlan(id.toString()));
   }
 
   export async function filter(
@@ -279,7 +279,7 @@ export namespace dependencies {
         const pkgContent = await engine.read(fn, "dependency");
         return Buffer.from(pkgContent, "utf-8");
       });
-      engine.applyChangePlan(refreshPlan(fn._id.toString()));
+      await engine.applyChangePlan(refreshPlan(fn._id.toString()));
     }
   }
 
@@ -325,7 +325,7 @@ export namespace dependencies {
       return Buffer.from(pkgContent, "utf-8");
     });
 
-    engine.applyChangePlan(refreshPlan(fn._id.toString()));
+    await engine.applyChangePlan(refreshPlan(fn._id.toString()));
   }
 }
 
