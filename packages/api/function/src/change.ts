@@ -1,105 +1,118 @@
 import {diff} from "@spica-server/core-differ";
-import {EnvVar} from "@spica-server/interface-env_var";
-import {Secret, SecretDecryptor} from "@spica-server/interface-secret";
 import {
   Triggers,
   Function,
   ChangeKind,
   TargetChange,
+  FunctionChangePlan,
   EnvRelation,
   SecretRelation
 } from "@spica-server/interface-function";
 
-export function changesFromTriggers(
-  previousFn: Function<
-    EnvRelation.Resolved | EnvRelation.NotResolved,
-    SecretRelation.Resolved | SecretRelation.NotResolved
-  >,
-  currentFn: Function<EnvRelation.Resolved, SecretRelation.Resolved>,
-  secretDecryptor: SecretDecryptor
-) {
-  const targetChanges: TargetChange[] = [];
+type FunctionDocument = Function<EnvRelation.NotResolved, SecretRelation.NotResolved>;
 
+/**
+ * Translate a function document transition into the runtime change plan it requires:
+ * `previous == null` is a create, `current == null` is a delete, both present is an update.
+ * The caller only supplies the before/after documents; deciding what the running system must
+ * do about it lives here.
+ */
+export function createPlan(
+  previous: FunctionDocument | null,
+  current: FunctionDocument | null
+): FunctionChangePlan {
+  if (previous && current) {
+    const id = current._id.toString();
+    return {
+      routing: changesFromTriggers(previous, current),
+      outdate: needsContextRefresh(previous, current) ? [id] : [],
+      reconcile: [id]
+    };
+  }
+
+  if (current) {
+    return {
+      routing: createTargetChanges(current, ChangeKind.Added),
+      outdate: [],
+      reconcile: [current._id.toString()]
+    };
+  }
+
+  if (previous) {
+    const id = previous._id.toString();
+    return {
+      routing: createTargetChanges(previous, ChangeKind.Removed),
+      outdate: [id],
+      reconcile: [id]
+    };
+  }
+
+  return {routing: [], outdate: [], reconcile: []};
+}
+
+/**
+ * A function's baked runtime inputs — code, dependencies, or the resolved *values* of its
+ * linked env vars/secrets — changed out of band. The document itself is unchanged, so there
+ * is nothing to diff: just retire the workers and re-sync the function's scheduler config.
+ */
+export function refreshPlan(id: string): FunctionChangePlan {
+  return {routing: [], outdate: [id], reconcile: [id]};
+}
+
+export function mergePlans(plans: FunctionChangePlan[]): FunctionChangePlan {
+  return {
+    routing: plans.flatMap(plan => plan.routing),
+    outdate: [...new Set(plans.flatMap(plan => plan.outdate))],
+    reconcile: [...new Set(plans.flatMap(plan => plan.reconcile))]
+  };
+}
+
+function changesFromTriggers(previous: FunctionDocument, current: FunctionDocument): TargetChange[] {
   const insertedTriggers: Triggers = {};
   const updatedTriggers: Triggers = {};
   const removedTriggers: Triggers = {};
 
-  for (const [handler, trigger] of Object.entries(currentFn.triggers)) {
-    if (!Object.keys(previousFn.triggers).includes(handler) && trigger.active) {
+  for (const [handler, trigger] of Object.entries(current.triggers)) {
+    if (!Object.keys(previous.triggers).includes(handler) && trigger.active) {
       insertedTriggers[handler] = trigger;
-    } else if (Object.keys(previousFn.triggers).includes(handler)) {
+    } else if (Object.keys(previous.triggers).includes(handler)) {
       //soft delete
       if (!trigger.active) {
         removedTriggers[handler] = trigger;
-      } else if (diff(previousFn.triggers[handler], trigger).length) {
+      } else if (diff(previous.triggers[handler], trigger).length) {
         updatedTriggers[handler] = trigger;
       }
     }
   }
 
-  for (const [handler, trigger] of Object.entries(previousFn.triggers)) {
-    if (!Object.keys(currentFn.triggers).includes(handler)) {
+  for (const [handler, trigger] of Object.entries(previous.triggers)) {
+    if (!Object.keys(current.triggers).includes(handler)) {
       removedTriggers[handler] = trigger;
     }
   }
 
-  const insertChanges = createTargetChanges(
-    {...currentFn, triggers: insertedTriggers},
-    ChangeKind.Added,
-    secretDecryptor
-  );
-  const updateChanges = createTargetChanges(
-    {
-      ...currentFn,
-      triggers: updatedTriggers
-    },
-    ChangeKind.Updated,
-    secretDecryptor
-  );
-  const removeChanges = createTargetChanges(
-    {
-      ...currentFn,
-      triggers: removedTriggers
-    },
-    ChangeKind.Removed,
-    secretDecryptor
-  );
-
-  targetChanges.push(...insertChanges);
-  targetChanges.push(...updateChanges);
-  targetChanges.push(...removeChanges);
-
-  return targetChanges;
+  return [
+    ...createTargetChanges({...current, triggers: insertedTriggers}, ChangeKind.Added),
+    ...createTargetChanges({...current, triggers: updatedTriggers}, ChangeKind.Updated),
+    ...createTargetChanges({...current, triggers: removedTriggers}, ChangeKind.Removed)
+  ];
 }
 
-export function hasContextChange(
-  previousFn: Function<EnvRelation.NotResolved, SecretRelation.NotResolved>,
-  currentFn: Function<EnvRelation.NotResolved, SecretRelation.NotResolved>
-) {
+// env/secret/timeout are baked into each worker at spawn and carried on every event, so a
+// change to any of them must reach the runtime — unlike warmWorkers/concurrencyPerWorker,
+// which are reconciled from the function's authoritative state without touching workers.
+function needsContextRefresh(previous: FunctionDocument, current: FunctionDocument): boolean {
   return (
-    diff(previousFn.env_vars, currentFn.env_vars).length > 0 ||
-    diff(previousFn.secrets, currentFn.secrets).length > 0 ||
-    previousFn.timeout != currentFn.timeout ||
-    previousFn.warmWorkers != currentFn.warmWorkers ||
-    previousFn.concurrencyPerWorker != currentFn.concurrencyPerWorker
+    diff(previous.env_vars, current.env_vars).length > 0 ||
+    diff(previous.secrets, current.secrets).length > 0 ||
+    previous.timeout != current.timeout
   );
 }
 
-export function createTargetChanges<CK extends ChangeKind>(
-  fn: Function<
-    CK extends ChangeKind.Removed
-      ? EnvRelation.Resolved | EnvRelation.NotResolved
-      : EnvRelation.Resolved,
-    CK extends ChangeKind.Removed
-      ? SecretRelation.Resolved | SecretRelation.NotResolved
-      : SecretRelation.Resolved
-  >,
-  changeKind: CK,
-  secretDecryptor: SecretDecryptor
-): TargetChange[] {
+function createTargetChanges(fn: FunctionDocument, changeKind: ChangeKind): TargetChange[] {
   const changes: TargetChange[] = [];
   for (const [handler, trigger] of Object.entries(fn.triggers)) {
-    const change: TargetChange = {
+    changes.push({
       kind: trigger.active ? changeKind : ChangeKind.Removed,
       options: trigger.options,
       type: trigger.type,
@@ -108,34 +121,7 @@ export function createTargetChanges<CK extends ChangeKind>(
         handler,
         name: fn.name
       }
-    };
-
-    if (changeKind != ChangeKind.Removed) {
-      change.target.context = {
-        env: {
-          ...normalizeEnvVars(fn.env_vars as EnvVar[]),
-          ...normalizeSecrets(fn.secrets as Secret[], secretDecryptor)
-        },
-        timeout: fn.timeout
-      };
-    }
-
-    changes.push(change);
+    });
   }
   return changes;
-}
-
-function normalizeEnvVars(envVars: EnvVar[]) {
-  return (envVars || []).reduce((acc, curr) => {
-    acc[curr.key] = curr.value;
-    return acc;
-  }, {});
-}
-
-function normalizeSecrets(secrets: Secret[], decryptor: SecretDecryptor) {
-  return (secrets || []).reduce((acc, curr) => {
-    const decrypted = decryptor(curr);
-    acc[decrypted.key] = decrypted.value;
-    return acc;
-  }, {});
 }

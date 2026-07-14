@@ -23,7 +23,6 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
 
   constructor(
     private queue: EventQueue,
-    private schedulerUnsubscription: (targetId: string) => void,
     private jobReducer?: JobReducer,
     private commander?: ClassCommander
   ) {
@@ -46,8 +45,6 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   }
 
   unsubscribe(target: event.Target): void {
-    this.schedulerUnsubscription(target.id);
-
     for (const job of this.jobs) {
       if (
         (!target.handler && job["target"].cwd == target.cwd) ||

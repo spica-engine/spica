@@ -94,6 +94,17 @@ export interface TargetChange {
   };
 }
 
+export interface FunctionChangePlan {
+  // enqueuer subscriptions to add / update / remove
+  routing: TargetChange[];
+  // function ids whose live workers hold stale baked state (code/deps/env/secret/timeout) and
+  // must be outdated so they stop taking events; fresh ones replace them on demand / warm refill
+  outdate: string[];
+  // function ids whose per-function scheduler config (context, warm reserve, concurrency) is
+  // re-synced from the function's authoritative state
+  reconcile: string[];
+}
+
 export type FunctionWithContent = Function & {content?: string; type?: string};
 
 export const SCHEMA = Symbol.for("FUNCTION_ENQUEUER_SCHEMA");

@@ -1,18 +1,28 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, ObjectId} from "@spica-server/database";
-import {DatabaseTestingModule, stream} from "@spica-server/database-testing";
+import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
+import {PlanExecutor} from "@spica-server/function/src/plan-executor";
 import {FunctionService} from "@spica-server/function-services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService, EnvVarChangeDispatcher} from "@spica-server/env_var-services";
-import {TargetChange, ChangeKind} from "@spica-server/interface-function";
+import {ChangeKind} from "@spica-server/interface-function";
 import {SecretService, SecretChangeDispatcher} from "@spica-server/secret-services";
 import {encrypt} from "@spica-server/core-encryption";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
+function envMap(context: any): {[key: string]: unknown} {
+  const obj = context ? context.toObject() : {env: []};
+  return (obj.env || []).reduce((acc, e) => {
+    acc[e.key] = e.value;
+    return acc;
+  }, {});
+}
+
 describe("Engine", () => {
   let engine: FunctionEngine;
+  let executor: PlanExecutor;
   let subscribeSpy: jest.SpyInstance;
   let unsubscribeSpy: jest.SpyInstance;
 
@@ -63,25 +73,24 @@ describe("Engine", () => {
     ss = new SecretService(database, "test-encryption-secret", new SecretChangeDispatcher());
 
     fs = new FunctionService(database, evs, ss, {} as any);
+
+    const options = {root: "test_root", timeout: 1, outDir: ".build"} as any;
+    executor = new PlanExecutor(fs, scheduler, (val => val) as any, options);
     engine = new FunctionEngine(
       fs,
       database,
       scheduler,
       undefined,
-      {
-        root: "test_root",
-        timeout: 1,
-        outDir: ".build"
-      },
+      options,
       undefined,
       undefined,
-      val => val as any
+      executor
     );
 
     await app.init();
 
-    subscribeSpy = jest.spyOn(engine, "subscribe" as any).mockReturnValue(undefined);
-    unsubscribeSpy = jest.spyOn(engine, "unsubscribe" as any).mockReturnValue(undefined);
+    subscribeSpy = jest.spyOn(executor as any, "subscribe").mockReturnValue(undefined);
+    unsubscribeSpy = jest.spyOn(executor as any, "unsubscribe").mockReturnValue(undefined);
   });
 
   afterEach(async () => {
@@ -94,123 +103,6 @@ describe("Engine", () => {
     }
   });
 
-  it("should subscribe to new trigger if ChangeKind is Added", () => {
-    let changes: TargetChange = {
-      kind: ChangeKind.Added,
-      target: {
-        id: "test_id",
-        handler: "test_handler",
-        name: "test_function"
-      }
-    };
-
-    engine["categorizeChanges"]([changes]);
-
-    expect(subscribeSpy).toHaveBeenCalledTimes(1);
-    expect(subscribeSpy).toHaveBeenCalledWith(changes);
-    expect(unsubscribeSpy).not.toHaveBeenCalled();
-  });
-
-  it("should unsubscribe from removed trigger if ChangeKind is Removed", () => {
-    let changes: TargetChange = {
-      kind: ChangeKind.Removed,
-      target: {
-        id: "test_id",
-        handler: "test_handler",
-        name: "test_function"
-      }
-    };
-
-    engine["categorizeChanges"]([changes]);
-
-    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith(changes);
-
-    expect(subscribeSpy).toHaveBeenCalledTimes(0);
-  });
-
-  it("should call unsubscribe for once then call subscribe if ChangeKind is Updated", () => {
-    let changes: TargetChange[] = [
-      {
-        kind: ChangeKind.Updated,
-        target: {
-          id: "test_id",
-          handler: "test_handler",
-          name: "test_function"
-        }
-      }
-    ];
-
-    engine["categorizeChanges"](changes);
-
-    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith(changes[0]);
-
-    expect(subscribeSpy).toHaveBeenCalledTimes(1);
-    expect(subscribeSpy).toHaveBeenCalledWith(changes[0]);
-  });
-
-  it("should set the handler when a handler is disabled", () => {
-    let changes: TargetChange[] = [
-      {
-        kind: ChangeKind.Updated,
-        target: {
-          id: "test_id",
-          handler: "test_handler",
-          name: "test_function"
-        }
-      },
-      {
-        kind: ChangeKind.Removed,
-        target: {
-          id: "test_id",
-          handler: "test_handler2",
-          name: "test_function"
-        }
-      }
-    ];
-    engine["categorizeChanges"](changes);
-    expect(unsubscribeSpy).toHaveBeenCalledWith(changes[1]);
-  });
-
-  it("should create the scheduling context when subscribing", () => {
-    const changes: TargetChange = {
-      kind: ChangeKind.Added,
-      target: {
-        id: "test_id",
-        handler: "test_handler",
-        name: "test_function",
-        context: {
-          env: {
-            TEST: "true"
-          },
-          timeout: 60
-        }
-      },
-      type: "http",
-      options: {
-        method: "POST",
-        path: "/test"
-      }
-    };
-
-    const httpEnqueuer = Array.from(scheduler.enqueuers).find(
-      enqueuer => enqueuer.description.name == "http"
-    );
-    const httpSubscribe = jest.spyOn(httpEnqueuer, "subscribe");
-    subscribeSpy.mockRestore();
-    engine["categorizeChanges"]([changes]);
-    expect(httpSubscribe.mock.calls[httpSubscribe.mock.calls.length - 1][0].toObject()).toEqual({
-      id: "test_id",
-      cwd: "test_root/test_function",
-      handler: "test_handler",
-      context: {
-        env: [{key: "TEST", value: "true"}],
-        timeout: 60
-      }
-    });
-  });
-
   it("should unregister triggers on module destroy", async () => {
     await fs.insertOne({
       _id: new ObjectId(hexString),
@@ -221,180 +113,21 @@ describe("Engine", () => {
       triggers: {test_handler: {active: true, options: {}, type: "http"}}
     });
 
-    let changes: TargetChange[] = [
-      {
-        kind: ChangeKind.Added,
-        target: {
-          id: hexString,
-          handler: "test_handler",
-          name: "my_fn",
-          context: {
-            env: {},
-            timeout: 10
-          }
-        },
-        options: {},
-        type: "http"
-      }
-    ];
-
-    engine["categorizeChanges"](changes);
-
-    delete changes[0].target.context;
-
     await engine.onModuleDestroy();
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith({...changes[0], kind: ChangeKind.Removed});
-  });
-
-  async function waitForCalls(spy: jest.SpyInstance, min = 1, timeout = 3000) {
-    const start = Date.now();
-    while (spy.mock.calls.length < min && Date.now() - start < timeout) {
-      await new Promise(r => setTimeout(r, 20));
-    }
-  }
-
-  it("should reconcile warm workers per function, surviving a single-trigger removal", async () => {
-    await fs.insertOne({
-      _id: new ObjectId(hexString),
-      env_vars: [],
-      language: "js",
-      timeout: 10,
-      name: "multi_fn",
-      warmWorkers: 2,
-      triggers: {
-        a: {active: true, options: {}, type: "http"},
-        b: {active: true, options: {}, type: "http"}
-      }
+    expect(unsubscribeSpy).toHaveBeenCalledWith({
+      kind: ChangeKind.Removed,
+      options: {},
+      type: "http",
+      target: {id: hexString, handler: "test_handler", name: "my_fn"}
     });
-
-    const reconcileSpy = jest.spyOn(scheduler, "reconcileWarmWorkers");
-
-    // remove only trigger 'b'; the function still has active trigger 'a' in the DB
-    engine["categorizeChanges"]([
-      {
-        kind: ChangeKind.Removed,
-        type: "http",
-        options: {},
-        target: {id: hexString, handler: "b", name: "multi_fn"}
-      }
-    ]);
-
-    await waitForCalls(reconcileSpy);
-
-    // desired is derived from the function (warmWorkers=2, still has an active trigger),
-    // NOT drained to 0 by the single-trigger removal
-    expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(2);
   });
 
-  it("should drain the warm reserve when the function no longer exists", async () => {
-    const reconcileSpy = jest.spyOn(scheduler, "reconcileWarmWorkers");
-
-    // no function stored for this id -> lookup fails -> reserve drained to 0
-    engine["categorizeChanges"]([
-      {
-        kind: ChangeKind.Removed,
-        type: "http",
-        options: {},
-        target: {id: hexString, handler: "a", name: "gone"}
-      }
-    ]);
-
-    await waitForCalls(reconcileSpy);
-
-    expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(0);
-  });
-
-  it("should outdate then refresh the warm reserve when the function is updated", async () => {
-    await fs.insertOne({
-      _id: new ObjectId(hexString),
-      env_vars: [],
-      language: "js",
-      timeout: 10,
-      name: "warm_fn",
-      warmWorkers: 2,
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
-
-    // use the real unsubscribe so the update actually reaches scheduler.outdateWorkers
-    unsubscribeSpy.mockRestore();
+  it("should refresh workers and context without re-routing when an env var value changes", async () => {
+    const contextSpy = jest.spyOn(scheduler, "reconcileContext");
     const outdateSpy = jest.spyOn(scheduler, "outdateWorkers");
-    const reconcileSpy = jest.spyOn(scheduler, "reconcileWarmWorkers");
 
-    engine["categorizeChanges"]([
-      {
-        kind: ChangeKind.Updated,
-        type: "http",
-        options: {},
-        target: {
-          id: hexString,
-          handler: "test_handler",
-          name: "warm_fn",
-          context: {env: {}, timeout: 10}
-        }
-      }
-    ]);
-
-    // update -> updateSubscription -> unsubscribe -> schedulerUnsubscription -> outdateWorkers
-    // (stale warm/warming workers are killed)
-    expect(outdateSpy).toHaveBeenCalledWith(hexString);
-
-    // ...then the reserve is respawned from the function's current state (warmWorkers=2)
-    await waitForCalls(reconcileSpy);
-    expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(2);
-  });
-
-  it("should reconcile per-function concurrency from the function", async () => {
-    await fs.insertOne({
-      _id: new ObjectId(hexString),
-      env_vars: [],
-      language: "js",
-      timeout: 10,
-      name: "conc_fn",
-      concurrencyPerWorker: 4,
-      triggers: {
-        a: {active: true, options: {}, type: "http"},
-        b: {active: true, options: {}, type: "http"}
-      }
-    });
-
-    const reconcileSpy = jest.spyOn(scheduler, "reconcileConcurrency");
-
-    engine["categorizeChanges"]([
-      {
-        kind: ChangeKind.Removed,
-        type: "http",
-        options: {},
-        target: {id: hexString, handler: "b", name: "conc_fn"}
-      }
-    ]);
-
-    await waitForCalls(reconcileSpy);
-
-    // read from the function's authoritative state (concurrencyPerWorker=4)
-    expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(4);
-  });
-
-  it("should reset concurrency to the default when the function no longer exists", async () => {
-    const reconcileSpy = jest.spyOn(scheduler, "reconcileConcurrency");
-
-    // no function stored for this id -> lookup fails -> concurrency reset to the default
-    engine["categorizeChanges"]([
-      {
-        kind: ChangeKind.Removed,
-        type: "http",
-        options: {},
-        target: {id: hexString, handler: "a", name: "gone"}
-      }
-    ]);
-
-    await waitForCalls(reconcileSpy);
-
-    expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(1);
-  });
-
-  it("should reload function environments when environment variable changed", async () => {
     const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);
     await fs.insertOne({
@@ -408,31 +141,18 @@ describe("Engine", () => {
 
     await evs.findOneAndUpdate({_id: env._id}, {$set: {value: "YES"}});
 
-    let change: any = {
-      kind: ChangeKind.Updated,
-      target: {
-        id: hexString,
-        handler: "test_handler",
-        name: "my_fn",
-        context: {
-          env: {IGNORE_ME: "YES"},
-          timeout: 10
-        }
-      },
-      options: {},
-      type: "http"
-    };
-
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith(change);
+    expect(subscribeSpy).not.toHaveBeenCalled();
+    expect(unsubscribeSpy).not.toHaveBeenCalled();
 
-    expect(subscribeSpy).toHaveBeenCalledTimes(1);
-    expect(subscribeSpy).toHaveBeenCalledWith(change);
+    expect(outdateSpy).toHaveBeenCalledWith(hexString);
+    expect(envMap(contextSpy.mock.calls.at(-1)[1])).toEqual({IGNORE_ME: "YES"});
   });
 
-  it("should reload function environments and clear relation when environment variable removed", async () => {
+  it("should clear the env relation and context when an env var is removed", async () => {
+    const contextSpy = jest.spyOn(scheduler, "reconcileContext");
+
     const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);
     await fs.insertOne({
@@ -448,31 +168,17 @@ describe("Engine", () => {
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    const change = {
-      kind: ChangeKind.Updated,
-      target: {
-        id: hexString,
-        handler: "test_handler",
-        name: "my_fn",
-        context: {
-          env: {},
-          timeout: 10
-        }
-      },
-      options: {},
-      type: "http"
-    };
-    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith(change);
-
-    expect(subscribeSpy).toHaveBeenCalledTimes(1);
-    expect(subscribeSpy).toHaveBeenCalledWith(change);
+    expect(subscribeSpy).not.toHaveBeenCalled();
+    expect(unsubscribeSpy).not.toHaveBeenCalled();
+    expect(envMap(contextSpy.mock.calls.at(-1)[1])).toEqual({});
 
     const fn = await fs.findOne({_id: fnId});
     expect(fn.env_vars).toEqual([]);
   });
 
-  it("should reload function secrets when secret changed", async () => {
+  it("should refresh context without re-routing when a secret value changes", async () => {
+    const contextSpy = jest.spyOn(scheduler, "reconcileContext");
+
     const encryptionSecret = "test-encryption-secret";
     const encryptedValue = encrypt("secret_value", encryptionSecret);
     const secret = await ss.insertOne({
@@ -496,17 +202,14 @@ describe("Engine", () => {
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(subscribeSpy).toHaveBeenCalledTimes(1);
-
-    const subscribedChange = subscribeSpy.mock.calls[0][0];
-    expect(subscribedChange.kind).toBe(ChangeKind.Updated);
-    expect(subscribedChange.target.id).toBe(hexString);
-    expect(subscribedChange.target.handler).toBe("test_handler");
-    expect(subscribedChange.target.context.env).toHaveProperty("DB_PASSWORD");
+    expect(subscribeSpy).not.toHaveBeenCalled();
+    expect(unsubscribeSpy).not.toHaveBeenCalled();
+    expect(envMap(contextSpy.mock.calls.at(-1)[1])).toHaveProperty("DB_PASSWORD");
   });
 
-  it("should reload function secrets and clear relation when secret removed", async () => {
+  it("should clear the secret relation and context when a secret is removed", async () => {
+    const contextSpy = jest.spyOn(scheduler, "reconcileContext");
+
     const encryptionSecret = "test-encryption-secret";
     const encryptedValue = encrypt("secret_value", encryptionSecret);
     const secret = await ss.insertOne({
@@ -529,25 +232,9 @@ describe("Engine", () => {
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    const change = {
-      kind: ChangeKind.Updated,
-      target: {
-        id: hexString,
-        handler: "test_handler",
-        name: "my_fn",
-        context: {
-          env: {},
-          timeout: 10
-        }
-      },
-      options: {},
-      type: "http"
-    };
-    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith(change);
-
-    expect(subscribeSpy).toHaveBeenCalledTimes(1);
-    expect(subscribeSpy).toHaveBeenCalledWith(change);
+    expect(subscribeSpy).not.toHaveBeenCalled();
+    expect(unsubscribeSpy).not.toHaveBeenCalled();
+    expect(envMap(contextSpy.mock.calls.at(-1)[1])).not.toHaveProperty("REMOVED_SECRET");
 
     const fn = await fs.findOne({_id: fnId});
     expect(fn.secrets).toEqual([]);

@@ -1,323 +1,175 @@
 import {EnvRelation, Function, ChangeKind, SecretRelation} from "@spica-server/interface-function";
 import {ObjectId} from "@spica-devkit/database";
-import {EnvVar} from "@spica-server/interface-env_var";
 import {deepCopy} from "@spica-server/core-patch";
-import {
-  createTargetChanges,
-  changesFromTriggers,
-  hasContextChange
-} from "@spica-server/function/src/change";
-import {Secret} from "@spica-server/interface-secret";
+import {createPlan, refreshPlan, mergePlans} from "@spica-server/function/src/change";
+
+type Fn = Function<EnvRelation.NotResolved, SecretRelation.NotResolved>;
 
 describe("Change", () => {
-  let fn: Function<EnvRelation.Resolved, SecretRelation.Resolved>;
   const envVarIds = [new ObjectId(), new ObjectId()];
   const secretIds = [new ObjectId(), new ObjectId()];
 
-  let envVars: EnvVar[] = [
-    {
-      _id: envVarIds[0],
-      key: "IGNORE_ERRORS",
-      value: "true"
-    },
-    {
-      _id: envVarIds[1],
-      key: "SOMETHING_SECRET",
-      value: "91kd209k1"
-    }
-  ];
-
-  let secrets: Secret[] = [
-    {
-      _id: secretIds[0],
-      key: "DB_PASSWORD",
-      value: {encrypted: "enc1", iv: "iv1", authTag: "tag1"}
-    },
-    {
-      _id: secretIds[1],
-      key: "API_TOKEN",
-      value: {encrypted: "enc2", iv: "iv2", authTag: "tag2"}
-    }
-  ];
-
-  const secretDecryptor = (secret: Secret) => ({
-    _id: secret._id,
-    key: secret.key,
-    value: `decrypted_${secret.key}`
-  });
+  let fn: Fn;
 
   beforeEach(() => {
     fn = {
       _id: "fn_id",
       name: "my_fn",
-      env_vars: envVars,
-      secrets: secrets,
+      env_vars: [],
+      secrets: [],
       language: "javascript",
       timeout: 50,
       triggers: {}
     };
   });
 
-  it("should create target changes from given parameters", () => {
-    fn.triggers = {
-      default: {
-        active: true,
-        options: {
-          path: "/test"
-        },
-        type: "http"
-      },
-      another: {
-        active: true,
-        options: {
-          collection: "bucket"
-        },
-        type: "database"
-      }
-    };
+  describe("createPlan", () => {
+    it("should return an empty plan when neither side is present", () => {
+      expect(createPlan(null, null)).toEqual({routing: [], outdate: [], reconcile: []});
+    });
 
-    const changes = createTargetChanges(fn, ChangeKind.Added, secretDecryptor);
-    expect(changes).toEqual([
-      {
-        kind: ChangeKind.Added,
-        options: {
-          path: "/test"
-        },
-        type: "http",
-        target: {
-          id: "fn_id",
-          handler: "default",
-          name: "my_fn",
-          context: {
-            env: {
-              IGNORE_ERRORS: "true",
-              SOMETHING_SECRET: "91kd209k1",
-              DB_PASSWORD: "decrypted_DB_PASSWORD",
-              API_TOKEN: "decrypted_API_TOKEN"
-            },
-            timeout: 50
+    it("should subscribe every active trigger and reconcile on create", () => {
+      fn.triggers = {
+        default: {active: true, options: {path: "/test"}, type: "http"},
+        another: {active: true, options: {collection: "bucket"}, type: "database"}
+      };
+
+      expect(createPlan(null, fn)).toEqual({
+        routing: [
+          {
+            kind: ChangeKind.Added,
+            options: {path: "/test"},
+            type: "http",
+            target: {id: "fn_id", handler: "default", name: "my_fn"}
+          },
+          {
+            kind: ChangeKind.Added,
+            options: {collection: "bucket"},
+            type: "database",
+            target: {id: "fn_id", handler: "another", name: "my_fn"}
           }
-        }
-      },
-      {
-        kind: ChangeKind.Added,
-        options: {
-          collection: "bucket"
-        },
-        type: "database",
-        target: {
-          id: "fn_id",
-          handler: "another",
-          name: "my_fn",
-          context: {
-            env: {
-              IGNORE_ERRORS: "true",
-              SOMETHING_SECRET: "91kd209k1",
-              DB_PASSWORD: "decrypted_DB_PASSWORD",
-              API_TOKEN: "decrypted_API_TOKEN"
-            },
-            timeout: 50
+        ],
+        outdate: [],
+        reconcile: ["fn_id"]
+      });
+    });
+
+    it("should unsubscribe, outdate and reconcile on delete", () => {
+      fn.triggers = {default: {active: true, options: {path: "/test"}, type: "http"}};
+
+      expect(createPlan(fn, null)).toEqual({
+        routing: [
+          {
+            kind: ChangeKind.Removed,
+            options: {path: "/test"},
+            type: "http",
+            target: {id: "fn_id", handler: "default", name: "my_fn"}
           }
-        }
-      }
-    ]);
+        ],
+        outdate: ["fn_id"],
+        reconcile: ["fn_id"]
+      });
+    });
+
+    it("should route only the changed trigger, without outdating, on a trigger edit", () => {
+      const previous: Fn = deepCopy(fn);
+      previous.triggers = {default: {active: true, options: {path: "/a"}, type: "http"}};
+      const current: Fn = deepCopy(previous);
+      current.triggers.default.options.path = "/b";
+
+      const plan = createPlan(previous, current);
+      expect(plan.outdate).toEqual([]);
+      expect(plan.reconcile).toEqual(["fn_id"]);
+      expect(plan.routing.map(c => [c.kind, c.target.handler])).toEqual([
+        [ChangeKind.Updated, "default"]
+      ]);
+    });
+
+    it("should split inserted / updated / removed triggers on update", () => {
+      const previous: Fn = deepCopy(fn);
+      previous.triggers = {
+        removed: {active: true, options: {collection: "test"}, type: "database"},
+        updated: {active: true, options: {}, type: "http"},
+        deactivated: {active: true, options: {name: "READY"}, type: "system"}
+      };
+      const current: Fn = deepCopy(previous);
+      current.triggers = {
+        inserted: {active: true, options: {path: "test"}, type: "http"},
+        updated: {active: true, options: {preflight: true}, type: "http"},
+        deactivated: {active: false, options: {name: "READY"}, type: "system"}
+      };
+
+      const byKind = (kind: ChangeKind) =>
+        createPlan(previous, current)
+          .routing.filter(c => c.kind == kind)
+          .map(c => c.target.handler);
+
+      expect(byKind(ChangeKind.Added)).toEqual(["inserted"]);
+      expect(byKind(ChangeKind.Updated)).toEqual(["updated"]);
+      expect(byKind(ChangeKind.Removed)).toEqual(["deactivated", "removed"]);
+    });
+
+    describe("context refresh (outdate) detection", () => {
+      let previous: Fn;
+      beforeEach(() => {
+        previous = deepCopy(fn);
+        previous.env_vars = deepCopy(envVarIds);
+        previous.secrets = deepCopy(secretIds);
+      });
+
+      const outdatesFor = (mutate: (curr: Fn) => void) => {
+        const current: Fn = deepCopy(previous);
+        mutate(current);
+        return createPlan(previous, current).outdate;
+      };
+
+      it("should outdate when an env var is injected/ejected", () => {
+        expect(outdatesFor(c => (c.env_vars = [envVarIds[0]]))).toEqual(["fn_id"]);
+      });
+
+      it("should outdate when a secret is injected/ejected", () => {
+        expect(outdatesFor(c => (c.secrets = [secretIds[0]]))).toEqual(["fn_id"]);
+      });
+
+      it("should outdate when the timeout changes", () => {
+        expect(outdatesFor(c => (c.timeout = previous.timeout + 10))).toEqual(["fn_id"]);
+      });
+
+      it("should NOT outdate for warmWorkers (reconcile-only)", () => {
+        expect(outdatesFor(c => (c.warmWorkers = 3))).toEqual([]);
+      });
+
+      it("should NOT outdate for concurrencyPerWorker (reconcile-only)", () => {
+        expect(outdatesFor(c => (c.concurrencyPerWorker = 4))).toEqual([]);
+      });
+
+      it("should NOT outdate when nothing context-relevant changed", () => {
+        expect(outdatesFor(() => {})).toEqual([]);
+      });
+    });
   });
 
-  it("should create trigger changes", () => {
-    const insertedTrigger = {
-      inserted: {
-        type: "http",
-        active: true,
-        options: {
-          path: "test"
-        }
-      }
-    };
-
-    //it should not be a part of inserted handlers
-    const deactiveInsertedTrigger = {
-      deactive_inserted: {
-        type: "http",
-        active: false,
-        options: {
-          path: "path"
-        }
-      }
-    };
-
-    const removedTrigger = {
-      removed: {
-        type: "database",
-        active: true,
-        options: {
-          collection: "test"
-        }
-      }
-    };
-
-    //trigger configuration will be updated. It should be a part of updated handlers
-    let updatedTrigger = {
-      updated: {
-        type: "http",
-        active: true,
-        options: {}
-      }
-    };
-
-    //active status will be updated. It should be a part of removed handlers
-    let deactivatedTrigger = {
-      deactivated: {
-        type: "system",
-        active: true,
-        options: {
-          name: "READY"
-        }
-      }
-    };
-
-    const unchangedTrigger = {
-      unchanged: {
-        options: {
-          frequency: "* * * * *"
-        },
-        type: "schedule",
-        active: true
-      }
-    };
-
-    const previousFn = JSON.parse(
-      JSON.stringify({
-        ...fn,
-        triggers: {
-          ...removedTrigger,
-          ...updatedTrigger,
-          ...deactivatedTrigger,
-          ...unchangedTrigger
-        }
-      })
-    );
-
-    let currentFn = {
-      ...fn,
-      triggers: {
-        ...insertedTrigger,
-        ...deactiveInsertedTrigger,
-        ...updatedTrigger,
-        ...deactivatedTrigger,
-        ...unchangedTrigger
-      }
-    };
-
-    currentFn.triggers.updated.options["preflight"] = true;
-    currentFn.triggers.deactivated.active = false;
-
-    const changes = changesFromTriggers(previousFn, currentFn, secretDecryptor);
-
-    const insertedHandlers = changes
-      .filter(change => change.kind == ChangeKind.Added)
-      .map(change => change.target.handler);
-
-    const updatedHandlers = changes
-      .filter(change => change.kind == ChangeKind.Updated)
-      .map(change => change.target.handler);
-
-    const removedHandlers = changes
-      .filter(change => change.kind == ChangeKind.Removed)
-      .map(change => change.target.handler);
-
-    expect(insertedHandlers).toEqual(["inserted"]);
-    expect(updatedHandlers).toEqual(["updated"]);
-    expect(removedHandlers).toEqual(["deactivated", "removed"]);
+  describe("refreshPlan", () => {
+    it("should outdate and reconcile a single function without routing", () => {
+      expect(refreshPlan("fn_id")).toEqual({
+        routing: [],
+        outdate: ["fn_id"],
+        reconcile: ["fn_id"]
+      });
+    });
   });
 
-  it("should detect environment variable on ejected", () => {
-    const previousFn: Function<EnvRelation.NotResolved> = deepCopy(fn);
-    previousFn.env_vars = envVarIds;
+  describe("mergePlans", () => {
+    it("should concat routing and union outdate/reconcile", () => {
+      const a = refreshPlan("a");
+      const b = createPlan(null, {...fn, _id: "b", triggers: {h: {active: true, options: {}, type: "http"}}});
+      const c = refreshPlan("a"); // duplicate id
 
-    const currentFn: Function<EnvRelation.NotResolved> = deepCopy(previousFn);
-    currentFn.env_vars = [envVarIds[0]];
-
-    const hasContextChanges = hasContextChange(previousFn, currentFn);
-    expect(hasContextChanges).toBe(true);
-  });
-
-  it("should detect environment variable on injected", () => {
-    const previousFn: Function<EnvRelation.NotResolved> = deepCopy(fn);
-    previousFn.env_vars = [envVarIds[0]];
-
-    const currentFn: Function<EnvRelation.NotResolved> = deepCopy(previousFn);
-    currentFn.env_vars = envVarIds;
-
-    const hasContextChanges = hasContextChange(previousFn, currentFn);
-    expect(hasContextChanges).toBe(true);
-  });
-
-  it("should not detect anything if environment variables are same", () => {
-    const previousFn: Function<EnvRelation.NotResolved> = deepCopy(fn);
-    const currentFn: Function<EnvRelation.NotResolved> = deepCopy(previousFn);
-
-    const hasContextChanges = hasContextChange(previousFn, currentFn);
-    expect(hasContextChanges).toBe(false);
-  });
-
-  it("should detect secret on ejected", () => {
-    const previousFn: Function<EnvRelation.NotResolved, SecretRelation.NotResolved> = deepCopy(fn);
-    previousFn.secrets = deepCopy(secretIds);
-
-    const currentFn: Function<EnvRelation.NotResolved, SecretRelation.NotResolved> =
-      deepCopy(previousFn);
-    currentFn.secrets = [deepCopy(secretIds[0])];
-
-    const hasContextChanges = hasContextChange(previousFn, currentFn);
-    expect(hasContextChanges).toBe(true);
-  });
-
-  it("should detect secret on injected", () => {
-    const previousFn: Function<EnvRelation.NotResolved, SecretRelation.NotResolved> = deepCopy(fn);
-    previousFn.secrets = [deepCopy(secretIds[0])];
-
-    const currentFn: Function<EnvRelation.NotResolved, SecretRelation.NotResolved> =
-      deepCopy(previousFn);
-    currentFn.secrets = deepCopy(secretIds);
-
-    const hasContextChanges = hasContextChange(previousFn, currentFn);
-    expect(hasContextChanges).toBe(true);
-  });
-
-  it("should not detect anything if secrets are same", () => {
-    const previousFn: Function<EnvRelation.NotResolved, SecretRelation.NotResolved> = deepCopy(fn);
-    previousFn.secrets = deepCopy(secretIds);
-    const currentFn: Function<EnvRelation.NotResolved, SecretRelation.NotResolved> =
-      deepCopy(previousFn);
-
-    const hasContextChanges = hasContextChange(previousFn, currentFn);
-    expect(hasContextChanges).toBe(false);
-  });
-
-  it("should detect timeout changes", () => {
-    const previousFn: Function<EnvRelation.NotResolved> = deepCopy(fn);
-    const currentFn: Function<EnvRelation.NotResolved> = deepCopy(previousFn);
-    currentFn.timeout = previousFn.timeout + 10;
-
-    const hasContextChanges = hasContextChange(previousFn, currentFn);
-    expect(hasContextChanges).toBe(true);
-  });
-
-  it("should detect warmWorkers changes", () => {
-    const previousFn: Function<EnvRelation.NotResolved> = deepCopy(fn);
-    const currentFn: Function<EnvRelation.NotResolved> = deepCopy(previousFn);
-    currentFn.warmWorkers = (previousFn.warmWorkers ?? 0) + 1;
-
-    const hasContextChanges = hasContextChange(previousFn, currentFn);
-    expect(hasContextChanges).toBe(true);
-  });
-
-  it("should detect concurrencyPerWorker changes", () => {
-    const previousFn: Function<EnvRelation.NotResolved> = deepCopy(fn);
-    const currentFn: Function<EnvRelation.NotResolved> = deepCopy(previousFn);
-    currentFn.concurrencyPerWorker = (previousFn.concurrencyPerWorker ?? 1) + 1;
-
-    const hasContextChanges = hasContextChange(previousFn, currentFn);
-    expect(hasContextChanges).toBe(true);
+      expect(mergePlans([a, b, c])).toEqual({
+        routing: b.routing,
+        outdate: ["a"],
+        reconcile: ["a", "b"]
+      });
+    });
   });
 });

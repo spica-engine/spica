@@ -33,7 +33,6 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
     private queue: EventQueue,
     private grpcQueue: GrpcQueue,
     private functionGrpcMaxMessageSizeBytes: number,
-    private schedulerUnsubscription: (targetId: string) => void,
     private port: number = 50051
   ) {
     super();
@@ -46,8 +45,6 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
   }
 
   unsubscribe(target: event.Target): void {
-    this.schedulerUnsubscription(target.id);
-
     const keysToRemove: string[] = [];
     for (const [key, reg] of this.registrations) {
       const isCwdEqual = reg.target.cwd === target.cwd;

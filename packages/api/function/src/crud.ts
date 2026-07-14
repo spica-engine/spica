@@ -4,10 +4,9 @@ import {
   EnvRelation,
   Function,
   FunctionWithDependencies,
-  ChangeKind,
   SecretRelation
 } from "@spica-server/interface-function";
-import {changesFromTriggers, createTargetChanges, hasContextChange} from "./change.js";
+import {createPlan, refreshPlan} from "./change.js";
 import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "./engine.js";
 import {LogService} from "@spica-server/function-log";
@@ -21,11 +20,9 @@ async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn
     fn._id = new ObjectId(fn._id);
   }
 
-  let insertedFn;
   try {
     const r = await fs.insertOne(fn);
     fn._id = r._id;
-    insertedFn = await findOneForRuntime(fs, r._id);
   } catch (error: any) {
     if (error && error.code === 11000) {
       throw new BadRequestException(
@@ -36,8 +33,7 @@ async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn
     throw new InternalServerErrorException(error?.message || error);
   }
 
-  const changes = createTargetChanges(insertedFn, ChangeKind.Added, engine.secretDecryptor);
-  engine.categorizeChanges(changes);
+  await engine.applyChangePlan(createPlan(null, fn));
 }
 
 export async function find<
@@ -145,18 +141,8 @@ export async function replace(fs: FunctionService, engine: FunctionEngine, fn: F
   }
 
   fn._id = _id;
-  const currFnEnvResolved = await findOneForRuntime(fs, _id);
 
-  let changes;
-
-  if (hasContextChange(preFn, fn)) {
-    // mark all triggers updated
-    changes = createTargetChanges(currFnEnvResolved, ChangeKind.Updated, engine.secretDecryptor);
-  } else {
-    changes = changesFromTriggers(preFn, currFnEnvResolved, engine.secretDecryptor);
-  }
-
-  engine.categorizeChanges(changes);
+  await engine.applyChangePlan(createPlan(preFn, fn));
 
   return fn;
 }
@@ -175,8 +161,7 @@ export async function remove(
 
   logs.deleteMany({function: fn._id.toString()});
 
-  const changes = createTargetChanges(fn, ChangeKind.Removed, engine.secretDecryptor);
-  engine.categorizeChanges(changes);
+  await engine.applyChangePlan(createPlan(fn, null));
 
   await engine.deleteFunction(fn);
   await engine.removeAssets(fn as Function & {_id: any});
@@ -217,10 +202,7 @@ export namespace index {
       return Buffer.from(index, "utf-8");
     });
 
-    const envResolvedFn = await findOneForRuntime(fs, id);
-
-    const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated, engine.secretDecryptor);
-    engine.categorizeChanges(changes);
+    await engine.applyChangePlan(refreshPlan(id.toString()));
   }
 
   export async function filter(
@@ -297,6 +279,7 @@ export namespace dependencies {
         const pkgContent = await engine.read(fn, "dependency");
         return Buffer.from(pkgContent, "utf-8");
       });
+      await engine.applyChangePlan(refreshPlan(fn._id.toString()));
     }
   }
 
@@ -341,6 +324,8 @@ export namespace dependencies {
       const pkgContent = await engine.read(fn, "dependency");
       return Buffer.from(pkgContent, "utf-8");
     });
+
+    await engine.applyChangePlan(refreshPlan(fn._id.toString()));
   }
 }
 
@@ -363,7 +348,7 @@ export namespace environment {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
 
-    return reload(fs, fnId, engine);
+    return reload(fnId, engine);
   }
 
   export async function eject(
@@ -384,13 +369,11 @@ export namespace environment {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
 
-    return reload(fs, fnId, engine);
+    return reload(fnId, engine);
   }
 
-  export async function reload(fs: FunctionService, fnId: ObjectId, engine: FunctionEngine) {
-    const envResolvedFn = await findOneForRuntime(fs, fnId);
-    const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated, engine.secretDecryptor);
-    return engine.categorizeChanges(changes);
+  export async function reload(fnId: ObjectId, engine: FunctionEngine) {
+    return engine.applyChangePlan(refreshPlan(fnId.toString()));
   }
 }
 
@@ -413,7 +396,7 @@ export namespace secret {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
 
-    return reload(fs, fnId, engine);
+    return reload(fnId, engine);
   }
 
   export async function eject(
@@ -434,13 +417,11 @@ export namespace secret {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
 
-    return reload(fs, fnId, engine);
+    return reload(fnId, engine);
   }
 
-  export async function reload(fs: FunctionService, fnId: ObjectId, engine: FunctionEngine) {
-    const fn = await findOneForRuntime(fs, fnId);
-    const changes = createTargetChanges(fn, ChangeKind.Updated, engine.secretDecryptor);
-    return engine.categorizeChanges(changes);
+  export async function reload(fnId: ObjectId, engine: FunctionEngine) {
+    return engine.applyChangePlan(refreshPlan(fnId.toString()));
   }
 }
 
@@ -462,15 +443,4 @@ export async function findOneForRuntime(
   }
 
   return res;
-}
-
-export async function findForRuntime(
-  fs: FunctionService
-): Promise<Function<EnvRelation.Resolved, SecretRelation.Resolved>[]> {
-  const pipeline = new FunctionPipelineBuilder()
-    .resolveEnvRelation(EnvRelation.Resolved)
-    .resolveSecretRelation(SecretRelation.Resolved)
-    .result();
-
-  return fs.aggregate<Function<EnvRelation.Resolved, SecretRelation.Resolved>>(pipeline).toArray();
 }

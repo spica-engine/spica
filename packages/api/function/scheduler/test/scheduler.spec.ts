@@ -195,6 +195,53 @@ describe("Scheduler", () => {
     expect(attachSpy).toHaveBeenCalledTimes(1);
   });
 
+  describe("execution context", () => {
+    function enqueueContextless(id: string, worker) {
+      const executeSpy = jest.spyOn(worker, "execute");
+      scheduler.enqueue(
+        new event.Event({
+          target: new event.Target({id, cwd: compilation.cwd, handler: "default"}),
+          type: -1 as any
+        })
+      );
+      return executeSpy.mock.calls.at(-1)[0];
+    }
+
+    it("should stamp the reconciled context onto an enqueued event", () => {
+      const [[, worker]] = freeWorkers();
+
+      scheduler.reconcileContext(
+        new event.Target({id: "ctx_fn"}),
+        new event.SchedulingContext({
+          env: [new event.SchedulingContext.Env({key: "FOO", value: "bar"})],
+          timeout: 7
+        })
+      );
+
+      const executed = enqueueContextless("ctx_fn", worker);
+      expect(executed.target.context.toObject()).toEqual({
+        env: [{key: "FOO", value: "bar"}],
+        timeout: 7
+      });
+    });
+
+    it("should fall back to the global default timeout when no context is reconciled", () => {
+      const [[, worker]] = freeWorkers();
+
+      const executed = enqueueContextless("no_ctx_fn", worker);
+      expect(executed.target.context.toObject().timeout).toEqual(schedulerOptions.timeout);
+    });
+
+    it("should clear the stored context when reconciled with null", () => {
+      const target = new event.Target({id: "clear_fn"});
+      scheduler.reconcileContext(target, new event.SchedulingContext({env: [], timeout: 5}));
+      expect(scheduler.contextConfigs.has("clear_fn")).toBe(true);
+
+      scheduler.reconcileContext(target, null);
+      expect(scheduler.contextConfigs.has("clear_fn")).toBe(false);
+    });
+  });
+
   it("should not accumulate attached output streams across executions on the same worker", () => {
     // Reproduces the duplicate-logs bug: a worker is reused for sequential
     // executions of the same function. Every execution attaches a fresh set of

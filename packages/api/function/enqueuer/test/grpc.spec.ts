@@ -21,7 +21,6 @@ describe("grpc enqueuer", () => {
     let noopTarget: event.Target;
 
     let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
-    let schedulerUnsubscriptionSpy: jest.Mock;
 
     // Use port 0 to avoid actually binding in unit tests
     // rebuildServer will fail to bind but registrations are still tracked
@@ -36,15 +35,7 @@ describe("grpc enqueuer", () => {
       };
 
       grpcQueue = new GrpcQueue();
-      schedulerUnsubscriptionSpy = jest.fn();
-
-      grpcEnqueuer = new GrpcEnqueuer(
-        eventQueue as any,
-        grpcQueue,
-        25 * 1024 * 1024,
-        schedulerUnsubscriptionSpy,
-        testPort
-      );
+      grpcEnqueuer = new GrpcEnqueuer(eventQueue as any, grpcQueue, 25 * 1024 * 1024, testPort);
     });
 
     afterEach(() => {
@@ -92,7 +83,6 @@ describe("grpc enqueuer", () => {
 
       expect(grpcEnqueuer["registrations"].size).toEqual(1);
       expect(grpcEnqueuer["registrations"].has("/tmp/fn1:handler2")).toBe(true);
-      expect(schedulerUnsubscriptionSpy).toHaveBeenCalled();
     });
 
     it("should unsubscribe all handlers for a function when handler is not specified", () => {
@@ -270,7 +260,7 @@ describe("grpc enqueuer", () => {
         dequeue: jest.fn()
       };
       grpcQueue = new GrpcQueue();
-      grpcEnqueuer = new GrpcEnqueuer(eventQueue as any, grpcQueue, 25 * 1024 * 1024, jest.fn(), integrationPort);
+      grpcEnqueuer = new GrpcEnqueuer(eventQueue as any, grpcQueue, 25 * 1024 * 1024, integrationPort);
     });
 
     afterEach(async () => {

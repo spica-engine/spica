@@ -20,7 +20,6 @@ describe("rabbitmq enqueuer", () => {
   let noopTarget: event.Target;
   let rabbitmqEnqueuer: RabbitMQEnqueuer;
 
-  let schedulerUnsubscriptionSpy: jest.Mock;
 
   let url: string;
 
@@ -50,13 +49,7 @@ describe("rabbitmq enqueuer", () => {
       enqueue: jest.fn()
     };
 
-    schedulerUnsubscriptionSpy = jest.fn();
-
-    rabbitmqEnqueuer = new RabbitMQEnqueuer(
-      eventQueue as any,
-      rabbitmqQueue as any,
-      schedulerUnsubscriptionSpy
-    );
+    rabbitmqEnqueuer = new RabbitMQEnqueuer(eventQueue as any, rabbitmqQueue as any);
   });
 
   it("should subscribe", async () => {
@@ -117,8 +110,6 @@ describe("rabbitmq enqueuer", () => {
       ])
     );
     expect(remainedItems.length).toBe(2);
-
-    expect(schedulerUnsubscriptionSpy).toHaveBeenCalledWith(target1.id);
   });
 
   describe("enqueue events", () => {
