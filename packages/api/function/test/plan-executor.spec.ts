@@ -204,7 +204,7 @@ describe("PlanExecutor", () => {
     expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(0);
   });
 
-  it("should outdate stale workers and refill the reserve from current state", async () => {
+  it("should roll active-trigger workers over via supersede and refill the reserve", async () => {
     await fs.insertOne({
       _id: new ObjectId(hexString),
       env_vars: [],
@@ -216,15 +216,29 @@ describe("PlanExecutor", () => {
     });
 
     const outdateSpy = jest.spyOn(scheduler, "outdateWorkers");
+    const supersedeSpy = jest.spyOn(scheduler, "supersedeWorkers");
     const reconcileSpy = jest.spyOn(scheduler, "reconcileWarmWorkers");
 
-    apply({routing: [], outdate: [hexString], reconcile: [hexString]});
+    await apply({routing: [], outdate: [hexString], reconcile: [hexString]});
 
-    expect(outdateSpy).toHaveBeenCalledWith(hexString);
+    // an existing function with an active trigger rolls over (supersede + pre-warm), not a hard
+    // outdate — that path is reserved for deleted / inactive functions.
+    expect(supersedeSpy.mock.calls.at(-1)[0].toObject().id).toBe(hexString);
+    expect(outdateSpy).not.toHaveBeenCalled();
     expect(unsubscribeSpy).not.toHaveBeenCalled();
 
     await waitForCalls(reconcileSpy);
     expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(2);
+  });
+
+  it("should hard-outdate when an outdated function is gone", async () => {
+    const outdateSpy = jest.spyOn(scheduler, "outdateWorkers");
+    const supersedeSpy = jest.spyOn(scheduler, "supersedeWorkers");
+
+    await apply({routing: [], outdate: [hexString], reconcile: [hexString]});
+
+    expect(outdateSpy).toHaveBeenCalledWith(hexString);
+    expect(supersedeSpy).not.toHaveBeenCalled();
   });
 
   it("should reconcile per-function concurrency from the function", async () => {

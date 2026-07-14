@@ -57,6 +57,7 @@ export class FunctionModule {
           maxConcurrency: options.maxConcurrency,
           eventConcurrency: options.eventConcurrency,
           maxWarmWorkers: options.maxWarmWorkers,
+          functionWorkerCutoverGraceMs: options.functionWorkerCutoverGraceMs,
           databaseName: options.databaseName,
           databaseReplicaSet: options.databaseReplicaSet,
           databaseUri: options.databaseUri,

@@ -534,6 +534,9 @@ describe("Scheduler", () => {
         canServeWarm() {
           return false;
         },
+        canServeSuperseded() {
+          return false;
+        },
         isActiveFor(id: string) {
           return hasSameTarget(id);
         },
@@ -827,6 +830,142 @@ describe("Scheduler", () => {
       expect(worker.state).toEqual(WorkerState.Outdated);
       expect(kill).toHaveBeenCalledTimes(1);
       expect(warmWorkers().length).toEqual(0);
+    });
+  });
+
+  describe("rolling cutover", () => {
+    // Pin a Targeted (free-slot) worker to `id`: capacity 2 keeps it Targeted after one event, so
+    // it can still serve — the shape a superseded worker needs to keep taking events.
+    function activeWorkerFor(id: string) {
+      scheduler.reconcileConcurrency(makeTarget(id), 2);
+      scheduler.enqueue(
+        new event.Event({target: makeTarget(id), type: -1 as any})
+      );
+      return allWorkers().find(
+        ([, w]) =>
+          w.hasSameTarget(id) &&
+          (w.state == WorkerState.Targeted || w.state == WorkerState.Busy)
+      );
+    }
+
+    function replacementWorkers(id: string) {
+      return allWorkers().filter(([, w]) => w.hasSameTarget(id) && w.isReplacement);
+    }
+
+    it("pre-warms one replacement per active worker even when warmWorkers is 0", () => {
+      const [, active] = activeWorkerFor("1");
+      expect(scheduler.warmConfigs.has("1")).toBe(false);
+
+      spawnSpy.mockClear();
+      scheduler.supersedeWorkers(makeTarget("1"));
+
+      expect(active.isSuperseded).toBe(true);
+      expect(active.state).toEqual(WorkerState.Targeted);
+      expect(scheduler.replacementConfigs.get("1").desired).toBe(1);
+      expect(replacementWorkers("1").length).toBe(1);
+      expect(spawnSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps replacements alive when the steady-state warm reconcile runs with 0", () => {
+      activeWorkerFor("1");
+      scheduler.supersedeWorkers(makeTarget("1"));
+      expect(replacementWorkers("1").length).toBe(1);
+
+      // mirrors the plan-executor: reconcileWarmWorkers(target, 0) for a warmWorkers:0 function
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 0);
+
+      expect(replacementWorkers("1").length).toBe(1);
+    });
+
+    it("serves a fresh replacement over the superseded worker and retires the old one", () => {
+      const [, active] = activeWorkerFor("1");
+      scheduler.supersedeWorkers(makeTarget("1"));
+
+      // the replacement finishes preloading and becomes ready
+      connectWarmingWorkers();
+      const [[, replacement]] = replacementWorkers("1");
+      expect(replacement.state).toEqual(WorkerState.Warm);
+
+      scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
+
+      // the warm replacement took the event...
+      expect(replacement.state == WorkerState.Targeted || replacement.state == WorkerState.Busy).toBe(
+        true
+      );
+      // ...and the superseded worker was retired
+      expect(active.state).toEqual(WorkerState.Outdated);
+    });
+
+    it("keeps serving from the superseded worker when no replacement is ready yet", () => {
+      const [, active] = activeWorkerFor("1");
+      scheduler.supersedeWorkers(makeTarget("1"));
+      // replacement stays Warming (not connected)
+
+      const executeSpy = jest.spyOn(active, "execute");
+      spawnSpy.mockClear();
+
+      scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
+
+      // the still-hot old worker served it rather than cold-spawning a fresh one
+      expect(executeSpy).toHaveBeenCalledTimes(1);
+      expect(active.isSuperseded).toBe(true);
+    });
+
+    it("force-retires surviving superseded workers when the grace period elapses", () => {
+      const [, active] = activeWorkerFor("1");
+      scheduler.supersedeWorkers(makeTarget("1"));
+      // replacements never become ready (simulating a version that crashes on preload)
+
+      expect(active.isSuperseded).toBe(true);
+      expect(active.state).toEqual(WorkerState.Targeted);
+
+      jest.advanceTimersByTime(30_000);
+
+      expect(active.state).toEqual(WorkerState.Outdated);
+      expect(scheduler.replacementConfigs.has("1")).toBe(false);
+    });
+
+    it("retires the old warm reserve so only fresh warm workers stay servable (warmWorkers > 0)", () => {
+      const [, active] = activeWorkerFor("1");
+
+      // an existing warm reserve holding the OLD code
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+      connectWarmingWorkers();
+      const oldReserve = warmWorkers().filter(([, w]) => w.hasSameTarget("1"));
+      expect(oldReserve.length).toBe(2);
+      expect(oldReserve.every(([, w]) => w.canServeWarm("1"))).toBe(true);
+
+      scheduler.supersedeWorkers(makeTarget("1"));
+
+      // every old warm worker is retired the instant supersede runs — none can be picked
+      expect(oldReserve.every(([, w]) => w.state == WorkerState.Outdated)).toBe(true);
+      expect(oldReserve.some(([, w]) => w.canServeWarm("1"))).toBe(false);
+      // the active worker is superseded (still serving) and fresh replacements were pre-warmed
+      expect(active.isSuperseded).toBe(true);
+      expect(replacementWorkers("1").length).toBe(1);
+    });
+
+    it("lets the refreshed steady-state reserve also retire a superseded worker", () => {
+      const [, active] = activeWorkerFor("1");
+      scheduler.supersedeWorkers(makeTarget("1"));
+
+      // the refreshed steady-state reserve comes up (new code), independent of the replacements
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+      connectWarmingWorkers();
+
+      scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
+
+      // a fresh steady-state warm worker taking the event retires the stale worker too
+      expect(active.state).toEqual(WorkerState.Outdated);
+    });
+
+    it("hard-outdates workers (no cutover) when the function has no active workers", () => {
+      // no traffic yet — nothing to roll over
+      spawnSpy.mockClear();
+      scheduler.supersedeWorkers(makeTarget("1"));
+
+      expect(replacementWorkers("1").length).toBe(0);
+      expect(scheduler.replacementConfigs.has("1")).toBe(false);
     });
   });
 

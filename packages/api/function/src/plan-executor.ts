@@ -53,17 +53,21 @@ export class PlanExecutor {
       }
     }
 
-    // Retire stale workers, then reconcile. This only *outdates* — the scheduler stops routing
-    // events to these workers; it does not spawn. Replacements come afterwards, on their own:
-    // the warm reserve is refilled by reconcile below (reconcileWarmWorkers), and cold workers
-    // are spawned on demand when the next event arrives. Outdating first ensures the refilled
-    // reserve is built from the fresh state, not killed right after being spawned.
-    // outdateWorkers is synchronous, so there is nothing to await here.
-    for (const functionId of new Set(plan.outdate)) {
-      this.scheduler.outdateWorkers(functionId);
-    }
+    // Retire stale workers as part of reconcile: it holds the fresh target the scheduler needs to
+    // pre-warm new-code replacements for a rolling cutover (supersedeWorkers), rather than a blind
+    // outdate that would force the next event to cold-spawn. In every plan `outdate ⊆ reconcile`,
+    // so iterating reconcile covers them; a stray outdate id (function truly gone) is hard-outdated
+    // defensively below.
+    const toSupersede = new Set(plan.outdate);
+    const reconcileIds = new Set(plan.reconcile);
 
-    await Promise.all([...new Set(plan.reconcile)].map(functionId => this.reconcile(functionId)));
+    await Promise.all([...reconcileIds].map(functionId => this.reconcile(functionId, toSupersede)));
+
+    for (const functionId of toSupersede) {
+      if (!reconcileIds.has(functionId)) {
+        this.scheduler.outdateWorkers(functionId);
+      }
+    }
   }
 
   private getEnqueuer(name: string) {
@@ -103,13 +107,17 @@ export class PlanExecutor {
   // concurrency) from its authoritative state. Per function, never per trigger: driving it per
   // trigger would let removing one trigger of a multi-trigger function drain the whole reserve,
   // and a multi-trigger update thrash it.
-  private async reconcile(functionId: string): Promise<void> {
+  private async reconcile(functionId: string, toSupersede: Set<string>): Promise<void> {
     const fn = await this.findFunctionForRuntime(functionId);
 
     // the function no longer exists (deleted / invalid id) — drop whatever it holds. Resetting
     // concurrency/context to their defaults clears the function's sparse-map entries.
     if (!fn) {
       const target = new event.Target({id: functionId});
+      // function is gone, so there's no fresh code to roll over to — hard-outdate its workers.
+      if (toSupersede.has(functionId)) {
+        this.scheduler.outdateWorkers(functionId);
+      }
       this.scheduler.reconcileContext(target, null);
       this.scheduler.reconcileWarmWorkers(target, 0);
       this.scheduler.reconcileConcurrency(target, DEFAULT_EVENT_CONCURRENCY);
@@ -123,8 +131,20 @@ export class PlanExecutor {
     const hasActiveTrigger = Object.keys(triggers).some(handler => triggers[handler]?.active);
 
     this.scheduler.reconcileContext(target, context);
-    this.scheduler.reconcileWarmWorkers(target, hasActiveTrigger ? fn.warmWorkers ?? 0 : 0);
     this.scheduler.reconcileConcurrency(target, fn.concurrencyPerWorker ?? DEFAULT_EVENT_CONCURRENCY);
+
+    // supersede before refilling the warm reserve: supersedeWorkers kills the stale reserve, then
+    // reconcileWarmWorkers rebuilds it from fresh state. A function with no active trigger has
+    // nothing serving, so fall back to a plain outdate.
+    if (toSupersede.has(functionId)) {
+      if (hasActiveTrigger) {
+        this.scheduler.supersedeWorkers(target);
+      } else {
+        this.scheduler.outdateWorkers(functionId);
+      }
+    }
+
+    this.scheduler.reconcileWarmWorkers(target, hasActiveTrigger ? fn.warmWorkers ?? 0 : 0);
   }
 
   private buildSchedulingContext(
