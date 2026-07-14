@@ -760,6 +760,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
         <BucketFieldPopup
           onSaveAndClose={handleSaveAndClose}
           forbiddenFieldNames={forbiddenFieldNames}
+          bucketProperties={bucket.properties as unknown as BucketType["properties"]}
         >
           {({onOpen}) => (
             <FlexElement className={styles.newFieldHeader} dimensionY={34} dimensionX="fill" onClick={onOpen}>
@@ -790,6 +791,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
         initialValues={editingField.formState}
         onSaveAndClose={handleEditSaveAndClose}
         forbiddenFieldNames={editForbiddenFieldNames}
+        bucketProperties={bucket.properties as unknown as BucketType["properties"]}
       />
     )}
 </>

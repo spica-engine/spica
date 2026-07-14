@@ -244,6 +244,43 @@
     white-space: nowrap;
 }
 
+// The value doubles as a link to the related document; underline on hover to
+// signal it is navigable and distinguish it from the inline edit affordance.
+.relationLink {
+    cursor: pointer;
+    color: var(--color-accent);
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+// Hover-revealed pencil that opens the inline relation editor, so a single click
+// on the value can be reserved for navigation.
+.relationEditButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    padding: 0;
+    margin-left: auto;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    opacity: 0;
+    flex-shrink: 0;
+    transition: opacity 0.12s ease-in-out;
+}
+
+:global(tr):hover .relationEditButton {
+    opacity: 0.6;
+}
+
+.relationEditButton:hover,
+.relationEditButton:focus-visible {
+    opacity: 1;
+}
+
 // Compact read-only badges shown at rest by the array cell.
 .arrayReadDisplay {
     gap: var(--spacing-5);

@@ -5,12 +5,13 @@
  */
 
 import React, { useCallback, useMemo } from 'react'
-import { useParams } from 'react-router-dom';
-import { Popover } from 'oziko-ui-kit';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Icon, Popover } from 'oziko-ui-kit';
 import type { CellRendererProps } from '../types';
 import RelationPicker from '../../../prefabs/relation-picker/RelationPicker';
 import type { RelationSelected } from '../../../prefabs/relation-picker/types';
 import { useBucketLookup } from '../../../../contexts/BucketLookupContext';
+import { encodeIdFilterConditions } from '../../../prefabs/filter-panel/filterPanelUtils';
 import { extractPrimaryColumns, extractPrimaryFieldValue, readLegacyRelationLabelMode, relationLabelModeMapKey, resolveRelationFieldMode } from '../../../prefabs/relation-picker/primaryFieldUtils';
 import type { RelationLabelModeMap } from '../../../prefabs/relation-picker/primaryFieldUtils';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
@@ -28,6 +29,7 @@ export const RelationCell: React.FC<CellRendererProps> = ({
 }) => {
   const { isSelected, isEditing, select, requestEdit, exitEdit } = useCellState(rowId, propertyKey);
   const bucketLookup = useBucketLookup();
+  const navigate = useNavigate();
   const relatedBucketId = property.bucketId;
 
   // The list view honors the per-field setting of the bucket currently being
@@ -95,6 +97,16 @@ export const RelationCell: React.FC<CellRendererProps> = ({
     return bucketLookup.getRelationLabel(relatedBucketId, id);
   }, [bucketLookup, relatedBucketId]);
 
+  // From the list, a relation value links to the related bucket filtered down to
+  // the referenced document, expressed through the shared `?filter=` param so it
+  // shows up as an ordinary (removable) filter chip rather than a bespoke mode.
+  const navigateToRelated = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!relatedBucketId || !normalizedValue?.id) return;
+    const filter = encodeURIComponent(encodeIdFilterConditions(normalizedValue.id));
+    navigate(`/bucket/${relatedBucketId}?filter=${filter}`);
+  }, [navigate, relatedBucketId, normalizedValue?.id]);
+
   if (!relatedBucketId) {
     return <span>No bucket ID</span>;
   }
@@ -133,7 +145,7 @@ export const RelationCell: React.FC<CellRendererProps> = ({
         className={cx(styles.readDisplay, isSelected && styles.cellSelected)}
         onClick={e => {
           e.stopPropagation();
-          isSelected ? requestEdit() : select();
+          select();
         }}
         onDoubleClick={e => {
           e.stopPropagation();
@@ -141,10 +153,25 @@ export const RelationCell: React.FC<CellRendererProps> = ({
         }}
       >
         {displayValue ? (
-          <span className={styles.relationValue} title={displayValue}>
+          <span
+            className={cx(styles.relationValue, styles.relationLink)}
+            title={`Go to ${displayValue}`}
+            onClick={navigateToRelated}
+          >
             {displayValue}
           </span>
         ) : null}
+        <button
+          type="button"
+          className={styles.relationEditButton}
+          title="Edit relation"
+          onClick={e => {
+            e.stopPropagation();
+            requestEdit();
+          }}
+        >
+          <Icon name="pencil" size={12} />
+        </button>
       </span>
     </Popover>
   );
