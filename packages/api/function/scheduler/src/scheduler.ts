@@ -465,12 +465,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       const worker = this.workers.get(workerId);
       worker?.onComplete();
 
-      // A retired (superseded → outdated) worker that just drained its last in-flight event is
-      // done and would otherwise linger; reap it now. Guarded to Outdated so live workers, which
-      // go Busy→Targeted here and get reused, are never killed.
-      if (worker && worker.state == WorkerState.Outdated && worker.isIdle()) {
-        worker.kill();
-      }
+      // A drained retired worker is deliberately NOT killed here. `complete` only tells us the
+      // handler finished — the event's response travels to the client over a separate channel and
+      // may still be in flight, so killing the worker now races that delivery and strands the
+      // request. Retired workers are reaped by their execution timeout instead.
 
       const routers = this.logRouters.get(workerId);
       if (routers) {
@@ -627,8 +625,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   // Retire one superseded (old-code) worker now that a fresh replacement has taken over. Idle
-  // workers are reaped immediately; busy ones finish their in-flight events and are reaped by
-  // complete(). When the last superseded worker of the function is retired, the cutover is done.
+  // Marking it Outdated is enough to stop it taking new events; it is never killed here. A worker
+  // that has served events may still be delivering a completed event's response, and `isIdle()`
+  // only tracks handler completion — killing on it races that delivery and strands the request.
+  // Its execution timeout reaps it, exactly as a plain outdate does.
   private retireOneSuperseded(fnId: string) {
     const stale = Array.from(this.workers.values()).find(
       worker =>
@@ -640,9 +640,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     if (stale) {
       stale.markAsOutdated();
-      if (stale.isIdle()) {
-        stale.kill();
-      }
     }
 
     const remaining = Array.from(this.workers.values()).some(
@@ -664,12 +661,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         worker =>
           worker.hasSameTarget(fnId) && worker.isSuperseded && worker.state != WorkerState.Outdated
       )
-      .forEach(worker => {
-        worker.markAsOutdated();
-        if (worker.isIdle()) {
-          worker.kill();
-        }
-      });
+      .forEach(worker => worker.markAsOutdated());
 
     this.clearReplacementState(fnId);
   }
