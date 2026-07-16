@@ -87,22 +87,26 @@ The API uses `yargs` for CLI arg parsing with `.env()` support. Secrets can come
 Use `/release <version>` (`.claude/commands/release.md`) to execute a full release. The command walks through every step with a user-approval gate before publishing. Summary of the flow for plain-English requests like "release a new version as x.x.x":
 
 ### How versioning works
+
 - Version comes entirely from **git tags** — no package.json files need editing.
 - All packages use `0.0.0-PLACEHOLDER` in source; the CI `set-version` target replaces it with `$VERSION` (the tag) in the `dist/` output before publishing.
 - Helm chart `charts/spica/Chart.yaml` also uses `0.0.0-PLACEHOLDER`; `scripts/sync_charts.sh` substitutes it at release time.
 
 ### What gets published on each release
-| Artifact | Where | Tag format |
-|---|---|---|
-| Docker images | Docker Hub `spicaengine/{api,panel,migrate,mongoreplicationcontroller}` | `<version>` |
-| npm packages | npmjs.com `@spica/cli` + `@spica-devkit/{auth,bucket,database,identity,storage,testing}` | `<version>` |
-| Helm chart | GCS bucket `gs://spica-charts` / `https://spica-charts.storage.googleapis.com` | `<version>` |
+
+| Artifact      | Where                                                                                    | Tag format  |
+| ------------- | ---------------------------------------------------------------------------------------- | ----------- |
+| Docker images | Docker Hub `spicaengine/{api,panel,migrate,mongoreplicationcontroller}`                  | `<version>` |
+| npm packages  | npmjs.com `@spica/cli` + `@spica-devkit/{auth,bucket,database,identity,storage,testing}` | `<version>` |
+| Helm chart    | GCS bucket `gs://spica-charts` / `https://spica-charts.storage.googleapis.com`           | `<version>` |
 
 ### GitHub Actions workflows involved
+
 - **`.github/workflows/gh_release.yml`** — triggers on `push: tags: ["*"]`. Creates a **draft** GitHub Release with auto-generated notes (diff from previous tag).
 - **`.github/workflows/release.yml`** — triggers on `release: types: [published]`. Builds and pushes Docker images, publishes npm packages, syncs Helm chart. Uses `VERSION=$(git describe --tags --abbrev=0)` to resolve the version.
 
 ### Release steps (manual summary)
+
 1. `git pull && git fetch --tags` — ensure local is up to date
 2. `git tag <version> && git push origin <version>` — triggers `gh_release.yml` (draft release created)
 3. Review commits and release notes, then confirm with the user before publishing
@@ -112,17 +116,33 @@ Use `/release <version>` (`.claude/commands/release.md`) to execute a full relea
 7. If any job fails, inspect with `gh run view <run_id> --repo spica-engine/spica --log-failed`
 
 ### GitHub secrets required
+
 - `NPM_TOKEN` — publish token for npmjs.com with `package:write` on all `@spica/*` packages
 - `DOCKERHUB_TOKEN` + `DOCKERHUB_USERNAME` (var) — Docker Hub credentials for `spicaengine` org
 - `GCP_CREDENTIALS` — GCP service account JSON for Helm chart sync to GCS
 
 ## Comments
 
-- Code must be self-explanatory; do not add comments that restate WHAT the code does.
-- Only comment to explain WHY — non-obvious rationale, tradeoffs, workarounds, or surprising constraints.
-- Prefer clear names and structure over explanatory comments.
-- This applies strictly to source code. Test files may use comments more liberally.
-- Misleading comments are worse than none: if code changes, a stale WHAT-comment lies to the reader.
+**Default: no comments.**
+
+Do not add comments to TypeScript source files unless the code would be genuinely dangerous or impossible to understand without one — not just "less obvious." If you're considering a comment, omit it.
+
+The only acceptable reasons to comment:
+
+- A deliberate workaround for an external bug or constraint (with a reference, e.g. ticket/URL)
+- A non-obvious invariant that, if violated, would cause silent data corruption or a security issue
+- Something that looks wrong but is intentionally that way, where a future reader would "fix" it and break things
+
+Never comment:
+
+- What a function, variable, or block does (the name and types say this)
+- Why a standard pattern was chosen
+- Summaries of what the next few lines accomplish
+- Anything a competent TypeScript developer would understand in under 5 seconds
+
+Misleading or stale comments are worse than none. When in doubt, delete the comment and improve the name instead.
+
+Test files (.spec.ts, .test.ts) are exempt from these rules.
 
 ## Additional Instructions
 
