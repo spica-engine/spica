@@ -2,6 +2,10 @@ import {EventQueue} from "@spica-server/function-queue";
 import {event} from "@spica-server/function-queue-proto";
 import {ChangeEnqueuer} from "@spica-server/bucket-hooks/src/enqueuer";
 import {ChangeEmitter} from "@spica-server/bucket-hooks/src/emitter";
+import {ChangeQueue} from "@spica-server/bucket-hooks/src/queue";
+
+const targetKey = (target: event.Target) =>
+  JSON.stringify({id: target.id, cwd: target.cwd, handler: target.handler});
 
 describe("ChangeEnqueuer", () => {
   let changeEnqeuer: ChangeEnqueuer;
@@ -38,9 +42,7 @@ describe("ChangeEnqueuer", () => {
       type: "INSERT"
     });
 
-    expect(
-      changeEnqeuer["changeTargets"].get(JSON.stringify(noopTarget.toObject())).options
-    ).toEqual({
+    expect(changeEnqeuer["changeTargets"].get(targetKey(noopTarget)).options).toEqual({
       bucket: "test_collection",
       type: "INSERT"
     });
@@ -63,12 +65,8 @@ describe("ChangeEnqueuer", () => {
 
     changeEnqeuer.unsubscribe(noopTarget);
 
-    expect(changeEnqeuer["changeTargets"].get(JSON.stringify(noopTarget.toObject()))).toEqual(
-      undefined
-    );
-    expect(
-      changeEnqeuer["changeTargets"].get(JSON.stringify(noopTarget2.toObject())).options
-    ).toEqual({
+    expect(changeEnqeuer["changeTargets"].get(targetKey(noopTarget))).toEqual(undefined);
+    expect(changeEnqeuer["changeTargets"].get(targetKey(noopTarget2)).options).toEqual({
       bucket: "test_collection",
       type: "GET"
     });
@@ -76,5 +74,46 @@ describe("ChangeEnqueuer", () => {
     expect(changeEmitter.off).toHaveBeenCalledTimes(1);
 
     expect(changeEmitter.off.mock.calls[0][0]).toEqual("test_collection_insert");
+  });
+
+  describe("onChangeHandler", () => {
+    let changeQueue: jest.Mocked<ChangeQueue>;
+
+    beforeEach(() => {
+      changeQueue = {
+        enqueue: jest.fn()
+      } as unknown as jest.Mocked<ChangeQueue>;
+
+      changeEnqeuer = new ChangeEnqueuer(eventQueue, changeQueue, changeEmitter);
+    });
+
+    const rawChange = {type: "insert", documentKey: "doc1", previous: undefined, current: {a: 1}};
+
+    it("should keep enqueueing after the scheduler attaches a context to the target", () => {
+      changeEnqeuer.subscribe(noopTarget, {bucket: "test_collection", type: "INSERT"});
+
+      changeEnqeuer.onChangeHandler(rawChange, noopTarget);
+
+      noopTarget.context = new event.SchedulingContext({env: [], timeout: 60});
+
+      expect(() => changeEnqeuer.onChangeHandler(rawChange, noopTarget)).not.toThrow();
+      expect(eventQueue.enqueue).toHaveBeenCalledTimes(2);
+      expect(changeQueue.enqueue.mock.calls[1][1].bucket).toEqual("test_collection");
+    });
+
+    it("should resolve a target rebuilt from a drained event", () => {
+      changeEnqeuer.subscribe(noopTarget, {bucket: "test_collection", type: "INSERT"});
+
+      const rebuilt = new event.Target({
+        id: noopTarget.id,
+        cwd: noopTarget.cwd,
+        handler: noopTarget.handler,
+        context: new event.SchedulingContext({env: [], timeout: 60})
+      });
+
+      changeEnqeuer.onChangeHandler(rawChange, rebuilt);
+
+      expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+    });
   });
 });
