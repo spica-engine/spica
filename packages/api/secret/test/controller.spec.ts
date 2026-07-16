@@ -159,6 +159,50 @@ describe("Secret", () => {
     });
   });
 
+  describe("updated_at", () => {
+    it("should set updated_at on insert and return it while value stays hidden", async () => {
+      const {body} = await req.post("/secret", {key: "TS_KEY", value: "val"});
+
+      expect(body.updated_at).not.toBeFalsy();
+      expect(body.value).toBeUndefined();
+
+      const res = await req.get(`/secret/${body._id}`);
+      expect(res.body.updated_at).not.toBeFalsy();
+      expect(res.body.value).toBeUndefined();
+    });
+
+    it("should advance updated_at on update", async () => {
+      const {body: inserted} = await req.post("/secret", {key: "TS_KEY", value: "val"});
+
+      const {body: updated} = await req.put(`/secret/${inserted._id}`, {
+        key: "TS_KEY",
+        value: "val2"
+      });
+
+      expect(new Date(updated.updated_at).getTime()).toBeGreaterThanOrEqual(
+        new Date(inserted.updated_at).getTime()
+      );
+    });
+
+    it("should ignore client-sent updated_at and unknown fields", async () => {
+      const clientTimestamp = new Date("2000-01-01T00:00:00.000Z").toISOString();
+      const {body, statusCode} = await req.post("/secret", {
+        key: "TS_KEY",
+        value: "val",
+        updated_at: clientTimestamp,
+        injected: "should-be-dropped"
+      });
+
+      expect(statusCode).toBe(201);
+      expect(body.updated_at).not.toBe(clientTimestamp);
+      expect(body.injected).toBeUndefined();
+
+      const res = await req.get(`/secret/${body._id}`);
+      expect(res.body.injected).toBeUndefined();
+      expect(Object.keys(res.body).sort()).toEqual(["_id", "key", "updated_at"]);
+    });
+  });
+
   describe("delete", () => {
     it("should delete secret", async () => {
       const {body} = await req.post("/secret", {key: "TO_DELETE", value: "val"});

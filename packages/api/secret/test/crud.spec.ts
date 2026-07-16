@@ -60,6 +60,28 @@ describe("Secret CRUD", () => {
       expect(result.key).toBe("CUSTOM_ID_KEY");
       expect((result as any).value).toBeUndefined();
     });
+
+    it("should set updated_at as a Date on insert", async () => {
+      const result = await CRUD.insert(ss, {key: "TS_KEY", value: "val"});
+
+      const raw = await ss.findOne({_id: result._id});
+      expect(raw.updated_at).toBeInstanceOf(Date);
+    });
+
+    it("should ignore client-sent updated_at and extra fields", async () => {
+      const clientTimestamp = new Date("2000-01-01T00:00:00.000Z");
+      const result = await CRUD.insert(ss, {
+        key: "TS_KEY",
+        value: "val",
+        updated_at: clientTimestamp,
+        injected: "nope"
+      } as any);
+
+      const raw = await ss.findOne({_id: result._id});
+      expect(raw.updated_at).not.toEqual(clientTimestamp);
+      expect((raw as any).injected).toBeUndefined();
+      expect(Object.keys(raw).sort()).toEqual(["_id", "key", "updated_at", "value"]);
+    });
   });
 
   describe("findOne", () => {
@@ -174,6 +196,17 @@ describe("Secret CRUD", () => {
       await expect(CRUD.replace(ss, nonExistentId, {key: "KEY", value: "val"})).rejects.toThrow(
         NotFoundException
       );
+    });
+
+    it("should refresh updated_at on replace", async () => {
+      const inserted = await CRUD.insert(ss, {key: "TS_KEY", value: "old"});
+      const before = await ss.findOne({_id: inserted._id});
+
+      await CRUD.replace(ss, inserted._id, {key: "TS_KEY", value: "new"});
+      const after = await ss.findOne({_id: inserted._id});
+
+      expect(after.updated_at).toBeInstanceOf(Date);
+      expect(after.updated_at.getTime()).toBeGreaterThanOrEqual(before.updated_at.getTime());
     });
   });
 

@@ -46,17 +46,29 @@ export function findOne(evs: EnvVarService, id: ObjectId): Promise<EnvVar> {
   return evs.findOne({_id: id});
 }
 
-export async function insert(evs: EnvVarService, envVar: EnvVar) {
-  if (envVar._id) {
-    envVar._id = new ObjectId(envVar._id);
+export async function insert(evs: EnvVarService, body: EnvVar) {
+  const envVar: EnvVar = {
+    key: body.key,
+    value: body.value,
+    updated_at: new Date()
+  };
+
+  if (body._id) {
+    envVar._id = new ObjectId(body._id);
   }
+
   await evs.insertOne(envVar);
   return envVar;
 }
 
-export async function replace(evs: EnvVarService, envVar: EnvVar) {
-  const _id = new ObjectId(envVar._id);
-  delete envVar._id;
+export async function replace(evs: EnvVarService, body: EnvVar) {
+  const _id = new ObjectId(body._id);
+
+  const envVar = {
+    key: body.key,
+    value: body.value,
+    updated_at: new Date()
+  };
 
   const currentSchema = await evs.findOneAndReplace({_id}, envVar, {
     returnDocument: ReturnDocument.AFTER

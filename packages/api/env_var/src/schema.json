@@ -20,6 +20,5 @@
       "type": "string",
       "examples": ["123abc", "true"]
     }
-  },
-  "additionalProperties": false
+  }
 }

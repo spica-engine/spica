@@ -5,6 +5,7 @@ export interface Secret {
   _id?: ObjectId;
   key: string;
   value: EncryptedData<false>;
+  updated_at?: Date;
 }
 
 export type DecryptedSecret = Omit<Secret, "value"> & {value: string};

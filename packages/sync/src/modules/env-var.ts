@@ -1,5 +1,11 @@
 import {diffSchemaFields, renderSchemaDetail} from "../planner";
-import {deleteLocalSchema, readLocalSchemas, sanitizeSlug, unwrapList, writeLocalSchema} from "../fs-utils";
+import {
+  deleteLocalSchema,
+  readLocalSchemas,
+  sanitizeSlug,
+  unwrapList,
+  writeLocalSchema
+} from "../fs-utils";
 import {ResourceModule} from "../types";
 
 interface EnvVar {
@@ -9,7 +15,8 @@ interface EnvVar {
   [key: string]: unknown;
 }
 
-const IGNORED_FIELDS = ["_id"];
+// "updated_at" is server-managed; ignoring it avoids permanent false-positive diffs.
+const IGNORED_FIELDS = ["_id", "updated_at"];
 
 export const envVarModule: ResourceModule<EnvVar> = {
   name: "env-var",
