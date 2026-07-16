@@ -295,7 +295,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       w => w.state == WorkerState.Warm || w.state == WorkerState.Warming
     ).length;
     const activated = workers.length - initial - fresh - warm;
-    const superseded = workers.filter(w => w.isSuperseded && w.state != WorkerState.Outdated).length;
+    const superseded = workers.filter(
+      w => w.isSuperseded && w.state != WorkerState.Outdated
+    ).length;
 
     return {
       activated: activated,
@@ -742,7 +744,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   private scaleWorkers() {
-    const hasFreshWorker = Array.from(this.workers.values()).find(worker => worker.isFresh());
+    // Count Initial workers as pending-fresh: spawnWorker() returns a worker that stays in Initial
+    // for the whole async boot+subscribe window before it graduates to Fresh. Ignoring them here
+    // makes every scaleWorkers() call during that window spawn another standby, and since nothing
+    // trims Fresh workers at runtime the surplus lingers for the process lifetime. Warm/replacement
+    // spawns leave Initial synchronously (markAsWarming), so Initial only ever means a booting
+    // generic worker.
+    const hasFreshWorker = Array.from(this.workers.values()).find(
+      worker => worker.isFresh() || worker.state == WorkerState.Initial
+    );
 
     if (hasFreshWorker) {
       return;

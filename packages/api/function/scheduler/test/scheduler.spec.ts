@@ -177,6 +177,28 @@ describe("Scheduler", () => {
     expect(spawnSpy).toHaveBeenCalledTimes(0);
   });
 
+  it("should not spawn a second fresh worker while a spawned one is still Initial", () => {
+    // A spawned worker sits in Initial for its whole async boot+subscribe window before it
+    // graduates to Fresh. scaleWorkers must treat that pending worker as the standby, otherwise
+    // every call during the window spawns another. Since nothing trims Fresh workers at runtime,
+    // that surplus lingers for the process lifetime (observed as a fresh count stuck at ~6).
+    scheduler.workers.clear();
+
+    scheduler["scaleWorkers"]();
+    expect(allWorkers().length).toEqual(1);
+    const [[, pending]] = allWorkers();
+    expect(pending.state).toEqual(WorkerState.Initial);
+
+    // Simulate scaleWorkers firing repeatedly during a burst before the pending worker subscribes.
+    spawnSpy.mockReset();
+    scheduler["scaleWorkers"]();
+    scheduler["scaleWorkers"]();
+    scheduler["scaleWorkers"]();
+
+    expect(spawnSpy).not.toHaveBeenCalled();
+    expect(allWorkers().length).toEqual(1);
+  });
+
   it("should attach outputs when the event is enqueued", () => {
     const [[id, worker]] = freeWorkers();
     const attachSpy = jest.spyOn(worker, "attach");
