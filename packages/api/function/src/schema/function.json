@@ -3,7 +3,7 @@
   "$id": "http://spica.internal/function/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["name", "triggers", "timeout", "language"],
+  "required": ["name", "timeout", "language"],
   "properties": {
     "_id": {
       "type": "string",

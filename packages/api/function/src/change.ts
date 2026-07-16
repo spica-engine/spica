@@ -72,21 +72,24 @@ function changesFromTriggers(previous: FunctionDocument, current: FunctionDocume
   const updatedTriggers: Triggers = {};
   const removedTriggers: Triggers = {};
 
-  for (const [handler, trigger] of Object.entries(current.triggers)) {
-    if (!Object.keys(previous.triggers).includes(handler) && trigger.active) {
+  const previousTriggers = previous.triggers || {};
+  const currentTriggers = current.triggers || {};
+
+  for (const [handler, trigger] of Object.entries(currentTriggers)) {
+    if (!Object.keys(previousTriggers).includes(handler) && trigger.active) {
       insertedTriggers[handler] = trigger;
-    } else if (Object.keys(previous.triggers).includes(handler)) {
+    } else if (Object.keys(previousTriggers).includes(handler)) {
       //soft delete
       if (!trigger.active) {
         removedTriggers[handler] = trigger;
-      } else if (diff(previous.triggers[handler], trigger).length) {
+      } else if (diff(previousTriggers[handler], trigger).length) {
         updatedTriggers[handler] = trigger;
       }
     }
   }
 
-  for (const [handler, trigger] of Object.entries(previous.triggers)) {
-    if (!Object.keys(current.triggers).includes(handler)) {
+  for (const [handler, trigger] of Object.entries(previousTriggers)) {
+    if (!Object.keys(currentTriggers).includes(handler)) {
       removedTriggers[handler] = trigger;
     }
   }
@@ -111,7 +114,7 @@ function needsContextRefresh(previous: FunctionDocument, current: FunctionDocume
 
 function createTargetChanges(fn: FunctionDocument, changeKind: ChangeKind): TargetChange[] {
   const changes: TargetChange[] = [];
-  for (const [handler, trigger] of Object.entries(fn.triggers)) {
+  for (const [handler, trigger] of Object.entries(fn.triggers || {})) {
     changes.push({
       kind: trigger.active ? changeKind : ChangeKind.Removed,
       options: trigger.options,

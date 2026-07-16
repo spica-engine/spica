@@ -23,7 +23,7 @@ export interface Function<
   description?: string;
   env_vars?: ER extends EnvRelation.Resolved ? EnvVar[] : ObjectId[];
   secrets?: SR extends SecretRelation.Resolved ? Secret[] : ObjectId[];
-  triggers: Triggers;
+  triggers?: Triggers;
   timeout: number;
   language: string;
   warmWorkers?: number;
