@@ -4,7 +4,11 @@ export default {
   projects: [
     {
       preset: "../../../../jest.preset.js",
-      testMatch: ["<rootDir>/test/authorization.spec.ts","<rootDir>/test/service.spec.ts"],
+      testMatch: [
+        "<rootDir>/test/authorization.spec.ts",
+        "<rootDir>/test/service.spec.ts",
+        "<rootDir>/test/log.controller.spec.ts"
+      ],
     },
     {
       preset: "../../../../jest.preset.js",

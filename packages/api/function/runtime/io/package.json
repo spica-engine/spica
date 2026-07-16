@@ -10,6 +10,7 @@
     }
   },
   "dependencies": {
+    "@nestjs/common": "^10.4.22",
     "@spica-server/database": "workspace:*",
     "@spica-server/function-runtime-logger": "workspace:*",
     "@spica-server/interface-function-runtime": "workspace:*"

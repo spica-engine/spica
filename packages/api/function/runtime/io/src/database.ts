@@ -3,9 +3,12 @@ import {PassThrough, Transform, Writable} from "stream";
 import {StandartStream} from "./standart_stream.js";
 import {getLogs} from "@spica-server/function-runtime-logger";
 import {StreamOptions, LogChannels} from "@spica-server/interface-function-runtime";
+import {Logger} from "@nestjs/common";
 
 export class DatabaseOutput extends StandartStream {
   private collection: Collection;
+  private readonly logger = new Logger(DatabaseOutput.name);
+
   constructor(private db: DatabaseService) {
     super();
     this.collection = this.db.collection("function_logs");
@@ -15,26 +18,28 @@ export class DatabaseOutput extends StandartStream {
     const createTransform = (channel: LogChannels) => {
       return new Transform({
         transform: (data, _, callback) => {
-          let message: any = Buffer.from(data).toString();
+          const message: any = Buffer.from(data).toString();
 
           const logs = getLogs(message, channel);
 
-          // don't use promise.all because order of logs is important
-          try {
-            logs.forEach(log => {
-              this.collection.insertOne({
+          for (const log of logs) {
+            this.collection
+              .insertOne({
                 function: options.functionId,
                 event_id: options.eventId,
                 channel,
                 level: log.level,
                 content: log.message,
                 created_at: new Date()
-              });
-            });
-            callback(undefined, data);
-          } catch (error) {
-            callback(error);
+              })
+              .catch(error =>
+                this.logger.error(
+                  `Failed to persist ${channel} log of function ${options.functionId}: ${error.message}`
+                )
+              );
           }
+
+          callback(undefined, data);
         }
       });
     };

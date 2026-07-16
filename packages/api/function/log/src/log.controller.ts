@@ -57,24 +57,7 @@ export class LogController {
       match.content = {$regex: content, $options: "i"};
     }
 
-    const pipeline: any[] = [
-      {
-        $match: match
-      },
-      {
-        $lookup: {
-          from: "function",
-          let: {fn: {$toObjectId: "$function"}},
-          pipeline: [{$match: {$expr: {$eq: ["$_id", "$$fn"]}}}],
-          as: "fn"
-        }
-      },
-      {$unwind: "$fn"},
-      {$set: {function: "$fn.name"}},
-      {$unset: ["fn"]}
-    ];
-
-    pipeline.push({$sort: {_id: -1}});
+    const pipeline: any[] = [{$match: match}, {$sort: {_id: -1}}];
 
     if (skip > 0) {
       pipeline.push({$skip: skip});
@@ -83,6 +66,21 @@ export class LogController {
     if (limit > 0) {
       pipeline.push({$limit: limit});
     }
+
+    pipeline.push(
+      {$set: {fn_id: {$toObjectId: "$function"}}},
+      {
+        $lookup: {
+          from: "function",
+          localField: "fn_id",
+          foreignField: "_id",
+          as: "fn"
+        }
+      },
+      {$unwind: {path: "$fn", preserveNullAndEmptyArrays: true}},
+      {$set: {function: {$ifNull: ["$fn.name", "$function"]}}},
+      {$unset: ["fn", "fn_id"]}
+    );
 
     return this.logService.aggregate(pipeline).toArray();
   }
