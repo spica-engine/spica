@@ -109,6 +109,74 @@ describe("Change", () => {
       expect(byKind(ChangeKind.Removed)).toEqual(["deactivated", "removed"]);
     });
 
+    describe("without triggers", () => {
+      const withoutTriggers = (): Fn => {
+        const helper: Fn = deepCopy(fn);
+        delete helper.triggers;
+        return helper;
+      };
+
+      it("should reconcile without routing when a helper function is created", () => {
+        expect(createPlan(null, withoutTriggers())).toEqual({
+          routing: [],
+          outdate: [],
+          reconcile: ["fn_id"]
+        });
+      });
+
+      it("should outdate and reconcile without routing when a helper function is deleted", () => {
+        expect(createPlan(withoutTriggers(), null)).toEqual({
+          routing: [],
+          outdate: ["fn_id"],
+          reconcile: ["fn_id"]
+        });
+      });
+
+      it("should not route anything when both sides have no triggers", () => {
+        const previous = withoutTriggers();
+        const current = withoutTriggers();
+        current.timeout = previous.timeout + 10;
+
+        expect(createPlan(previous, current)).toEqual({
+          routing: [],
+          outdate: ["fn_id"],
+          reconcile: ["fn_id"]
+        });
+      });
+
+      it("should remove existing triggers when a function loses all of them", () => {
+        const previous: Fn = deepCopy(fn);
+        previous.triggers = {default: {active: true, options: {path: "/a"}, type: "http"}};
+        const current = withoutTriggers();
+
+        const plan = createPlan(previous, current);
+        expect(plan.routing).toEqual([
+          {
+            kind: ChangeKind.Removed,
+            options: {path: "/a"},
+            type: "http",
+            target: {id: "fn_id", handler: "default", name: "my_fn"}
+          }
+        ]);
+      });
+
+      it("should subscribe triggers added to a previously helper-only function", () => {
+        const previous = withoutTriggers();
+        const current: Fn = deepCopy(fn);
+        current.triggers = {default: {active: true, options: {path: "/a"}, type: "http"}};
+
+        const plan = createPlan(previous, current);
+        expect(plan.routing).toEqual([
+          {
+            kind: ChangeKind.Added,
+            options: {path: "/a"},
+            type: "http",
+            target: {id: "fn_id", handler: "default", name: "my_fn"}
+          }
+        ]);
+      });
+    });
+
     describe("context refresh (outdate) detection", () => {
       let previous: Fn;
       beforeEach(() => {

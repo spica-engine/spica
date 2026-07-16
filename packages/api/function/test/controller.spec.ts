@@ -163,6 +163,25 @@ describe("Function Controller", () => {
       expect(found).toEqual({...inserted, env_vars: [], secrets: []});
     });
 
+    it("should insert a helper function that has no triggers", async () => {
+      const {triggers, ...helper} = fnSchema;
+      const res = await request.post("/function", {...helper, name: "helper"});
+
+      expect(res.statusCode).toEqual(201);
+      expect(res.body._id).toBeDefined();
+
+      const found = await request.get(`/function/${res.body._id}`).then(r => r.body);
+      expect(found.name).toEqual("helper");
+      expect(found.triggers).toBeUndefined();
+    });
+
+    it("should insert a helper function with an empty triggers object", async () => {
+      const res = await request.post("/function", {...fnSchema, name: "helper", triggers: {}});
+
+      expect(res.statusCode).toEqual(201);
+      expect(res.body.triggers).toEqual({});
+    });
+
     it("should delete a function and return 204", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
       const del = await request.delete(`/function/${inserted._id}`);

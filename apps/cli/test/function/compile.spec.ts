@@ -165,4 +165,25 @@ export type RequestConfig = {
       {extension: "d.ts", content: print(expectedDTs)}
     ]);
   });
+
+  it("should compile a helper function that has no triggers", () => {
+    const {triggers, ...helper} = fn;
+
+    expect(
+      () =>
+        new FunctionCompiler({...helper, index} as any, ["http"], "http://test.com", {
+          http: {selectedService: "axios"}
+        })
+    ).not.toThrow();
+
+    const helperCompiler = new FunctionCompiler(
+      {...helper, index} as any,
+      ["http"],
+      "http://test.com",
+      {http: {selectedService: "axios"}}
+    );
+
+    expect(helperCompiler.getHandlerNames()).toEqual([]);
+    expect(() => helperCompiler.compile()).not.toThrow();
+  });
 });
