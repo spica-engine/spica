@@ -9602,6 +9602,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/function-runtime-io@workspace:packages/api/function/runtime/io"
   dependencies:
+    "@nestjs/common": "npm:^10.4.22"
     "@spica-server/database": "workspace:*"
     "@spica-server/function-runtime-logger": "workspace:*"
     "@spica-server/interface-function-runtime": "workspace:*"
