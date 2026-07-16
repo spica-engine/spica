@@ -170,6 +170,6 @@ export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
   }
 
   getTargetKey(target: event.Target) {
-    return JSON.stringify(target.toObject());
+    return JSON.stringify({id: target.id, cwd: target.cwd, handler: target.handler});
   }
 }
