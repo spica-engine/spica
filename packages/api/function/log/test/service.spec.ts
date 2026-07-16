@@ -29,17 +29,24 @@ describe("Function Log Service", () => {
 
   it("should create ttl index", async () => {
     let indexes = await logService._coll.listIndexes().toArray();
-    expect(indexes.length).toEqual(2);
+    expect(indexes.length).toEqual(3);
 
     let ttlIndex = indexes.find(index => index.name == "created_at_1");
     expect(ttlIndex.expireAfterSeconds).toEqual(5);
+  });
+
+  it("should create an index that serves per-function listing sorted by _id", async () => {
+    const indexes = await logService._coll.listIndexes().toArray();
+
+    const listingIndex = indexes.find(index => index.name == "function_1__id_-1");
+    expect(listingIndex.key).toEqual({function: 1, _id: -1});
   });
 
   it("should update existing ttl index expireAfterSeconds value", async () => {
     await logService.upsertTTLIndex(10);
 
     let indexes = await logService._coll.listIndexes().toArray();
-    expect(indexes.length).toEqual(2);
+    expect(indexes.length).toEqual(3);
 
     let ttlIndex = indexes.find(index => index.name == "created_at_1");
     expect(ttlIndex.expireAfterSeconds).toEqual(10);

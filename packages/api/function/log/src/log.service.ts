@@ -5,6 +5,12 @@ import {FUNCTION_LOG_OPTIONS, Log, LogOptions} from "@spica-server/interface-fun
 @Injectable()
 export class LogService extends BaseCollection<Log>("function_logs") {
   constructor(db: DatabaseService, @Inject(FUNCTION_LOG_OPTIONS) options: LogOptions) {
-    super(db, {afterInit: () => this.upsertTTLIndex(options.expireAfterSeconds)});
+    super(db, {
+      afterInit: () =>
+        Promise.all([
+          this.upsertTTLIndex(options.expireAfterSeconds),
+          this._coll.createIndex({function: 1, _id: -1})
+        ])
+    });
   }
 }
