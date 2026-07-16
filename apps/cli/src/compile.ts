@@ -85,14 +85,14 @@ export class FunctionCompiler {
   }
 
   getHandlerNames() {
-    return Object.keys(this.fn.triggers);
+    return Object.keys(this.fn.triggers || {});
   }
 
   filterTriggers(
     triggers: Triggers,
     filter: ([handler, trigger]: [string, Trigger]) => boolean
   ): Triggers {
-    return Object.entries(triggers)
+    return Object.entries(triggers || {})
       .filter(filter)
       .reduce((acc, [handler, trigger]) => {
         acc[handler] = trigger;
