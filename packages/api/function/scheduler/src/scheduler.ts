@@ -295,7 +295,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       w => w.state == WorkerState.Warm || w.state == WorkerState.Warming
     ).length;
     const activated = workers.length - initial - fresh - warm;
-    const superseded = workers.filter(w => w.isSuperseded && w.state != WorkerState.Outdated).length;
+    const superseded = workers.filter(
+      w => w.isSuperseded && w.state != WorkerState.Outdated
+    ).length;
 
     return {
       activated: activated,
@@ -742,7 +744,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   private scaleWorkers() {
-    const hasFreshWorker = Array.from(this.workers.values()).find(worker => worker.isFresh());
+    const hasFreshWorker = Array.from(this.workers.values()).find(
+      worker => worker.isFresh() || worker.state == WorkerState.Initial
+    );
 
     if (hasFreshWorker) {
       return;
