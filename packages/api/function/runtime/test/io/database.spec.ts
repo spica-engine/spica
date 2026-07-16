@@ -1,4 +1,5 @@
 import {Test} from "@nestjs/testing";
+import {Logger} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database-testing";
 import {DatabaseOutput} from "@spica-server/function-runtime-io";
@@ -23,6 +24,66 @@ describe("IO Database", () => {
 
   afterEach(async () => {
     await db.collection("function_logs").drop();
+  });
+
+  describe("when the log cannot be persisted", () => {
+    // The insert is fire-and-forget, so a rejection has no caller to surface it. Before this was
+    // caught it became an unhandled rejection, which terminates the process under Node >= 15.
+    let insertOne: jest.Mock;
+    let loggedErrors: string[];
+
+    beforeEach(async () => {
+      // the outer afterEach drops this collection, and these tests never actually insert into it
+      await db.createCollection("function_logs");
+
+      loggedErrors = [];
+      insertOne = jest
+        .fn()
+        .mockRejectedValue(new Error("Client must be connected before running operations"));
+      // db.collection() hands back a new instance per call, so the failure has to be injected at
+      // the seam DatabaseOutput reads from in its constructor.
+      jest.spyOn(db, "collection").mockReturnValue({insertOne} as any);
+      jest
+        .spyOn(Logger.prototype, "error")
+        .mockImplementation((message: string) => loggedErrors.push(message));
+      dbOutput = new DatabaseOutput(db);
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it("should not emit an unhandled rejection", async () => {
+      const unhandled: unknown[] = [];
+      const onUnhandled = (reason: unknown) => unhandled.push(reason);
+      process.on("unhandledRejection", onUnhandled);
+
+      const [stdout] = dbOutput.create({eventId: "event", functionId: "1"});
+      stdout.write(Buffer.from("this is my message"));
+      await sleep(1000);
+
+      process.off("unhandledRejection", onUnhandled);
+
+      expect(insertOne).toHaveBeenCalled();
+      expect(unhandled).toEqual([]);
+    });
+
+    it("should report the failure instead of swallowing it", async () => {
+      const [stdout] = dbOutput.create({eventId: "event", functionId: "1"});
+      stdout.write(Buffer.from("this is my message"));
+      await sleep(1000);
+
+      expect(loggedErrors).toEqual([
+        "Failed to persist stdout log of function 1: Client must be connected before running operations"
+      ]);
+    });
+
+    it("should keep the stream flowing so the function is not blocked", async () => {
+      const [stdout] = dbOutput.create({eventId: "event", functionId: "1"});
+      const written = await new Promise<Error>(resolve =>
+        stdout.write(Buffer.from("this is my message"), err => resolve(err))
+      );
+
+      expect(written).toEqual(null);
+    });
   });
 
   it("should write stdout to collection", done => {
