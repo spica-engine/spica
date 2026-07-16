@@ -38,7 +38,7 @@ describe("Environment Variable", () => {
       await req.post("/env-var", envVar);
 
       const res = await req.get("/env-var");
-      const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
+      const bodyWithoutIds = res.body.map(({_id, updated_at, ...rest}) => rest);
       expect(bodyWithoutIds).toEqual([envVar]);
     });
 
@@ -56,7 +56,7 @@ describe("Environment Variable", () => {
         limit: 1,
         sort: JSON.stringify({value: -1})
       });
-      const bodySkip = resSkip.body.map(({_id, ...rest}) => rest);
+      const bodySkip = resSkip.body.map(({_id, updated_at, ...rest}) => rest);
       expect(bodySkip).toEqual([envVar1]);
     });
 
@@ -72,7 +72,10 @@ describe("Environment Variable", () => {
       ]);
 
       const res = await req.get(`/env-var`, {paginate: true, sort: JSON.stringify({_id: -1})});
-      const bodyWithoutIds = {...res.body, data: res.body.data.map(({_id, ...rest}) => rest)};
+      const bodyWithoutIds = {
+        ...res.body,
+        data: res.body.data.map(({_id, updated_at, ...rest}) => rest)
+      };
       expect(bodyWithoutIds).toEqual({
         meta: {total: 3},
         data: [envVar3, envVar2, envVar1]
@@ -91,12 +94,12 @@ describe("Environment Variable", () => {
       ]);
 
       const res = await req.get(`/env-var`, {filter: JSON.stringify({key: "ENV_KEY_3"})});
-      const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
+      const bodyWithoutIds = res.body.map(({_id, updated_at, ...rest}) => rest);
       expect(bodyWithoutIds.length).toBe(1);
       expect(bodyWithoutIds).toEqual([envVar3]);
 
       const res2 = await req.get(`/env-var`, {filter: JSON.stringify({value: "val_2"})});
-      const bodyWithoutIds2 = res2.body.map(({_id, ...rest}) => rest);
+      const bodyWithoutIds2 = res2.body.map(({_id, updated_at, ...rest}) => rest);
       expect(bodyWithoutIds2).toEqual([envVar2]);
     });
   });
@@ -109,6 +112,7 @@ describe("Environment Variable", () => {
 
       const res = await req.get(`/env-var/${body._id}`);
       delete res.body._id;
+      delete res.body.updated_at;
       expect(res.body).toEqual(envVar);
     });
   });
@@ -125,7 +129,32 @@ describe("Environment Variable", () => {
 
       const res = await req.get(`/env-var/${body._id}`);
       delete res.body._id;
+      delete res.body.updated_at;
       expect(res.body).toEqual(envVar);
+    });
+
+    it("should set updated_at on insert", async () => {
+      const {body} = await req.post("/env-var", envVar);
+      expect(body.updated_at).not.toBeFalsy();
+      expect(new Date(body.updated_at).toString()).not.toBe("Invalid Date");
+    });
+
+    it("should ignore client-sent updated_at and unknown fields", async () => {
+      const clientTimestamp = new Date("2000-01-01T00:00:00.000Z").toISOString();
+      const {body, statusCode} = await req.post("/env-var", {
+        key: "ENV_KEY",
+        value: "123",
+        updated_at: clientTimestamp,
+        injected: "should-be-dropped"
+      });
+
+      expect(statusCode).toBe(201);
+      expect(body.updated_at).not.toBe(clientTimestamp);
+      expect(body.injected).toBeUndefined();
+
+      const res = await req.get(`/env-var/${body._id}`);
+      expect(res.body.injected).toBeUndefined();
+      expect(Object.keys(res.body).sort()).toEqual(["_id", "key", "updated_at", "value"]);
     });
 
     it("should return validation errors", async () => {
@@ -155,6 +184,19 @@ describe("Environment Variable", () => {
       expect(res.body._id).not.toBeFalsy();
       expect(res.body.key).toBe("ENV_KEY");
       expect(res.body.value).toBe("456");
+    });
+
+    it("should advance updated_at on update", async () => {
+      const {body} = await req.post("/env-var", {key: "ENV_KEY", value: "123"});
+
+      const {body: updated} = await req.put(`/env-var/${body._id}`, {
+        key: "ENV_KEY",
+        value: "456"
+      });
+
+      expect(new Date(updated.updated_at).getTime()).toBeGreaterThanOrEqual(
+        new Date(body.updated_at).getTime()
+      );
     });
 
     it("should not update and return 404", async () => {

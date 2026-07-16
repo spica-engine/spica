@@ -51,12 +51,16 @@ describe("EnvVar", () => {
 
   afterEach(() => app.close());
 
+  function stripTimestamps({updated_at, ...rest}) {
+    return rest;
+  }
+
   function getEnvVars() {
-    return req.get("env-var").then(r => r.body);
+    return req.get("env-var").then(r => r.body.map(stripTimestamps));
   }
 
   function getEnvVar(id) {
-    return req.get(`env-var/${id}`).then(r => r.body);
+    return req.get(`env-var/${id}`).then(r => stripTimestamps(r.body));
   }
 
   let envVarv1Resource;

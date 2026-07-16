@@ -101,6 +101,15 @@ describe("envVarModule", () => {
     expect(changed).toContain("value");
     expect(changed).not.toContain("_id");
   });
+
+  it("ignores server-managed updated_at in diffFields", () => {
+    const changed = envVarModule.diffFields(
+      {key: "K", value: "v"},
+      {key: "K", value: "v", updated_at: "2020-01-01T00:00:00.000Z"}
+    );
+    expect(changed).not.toContain("updated_at");
+    expect(changed).toHaveLength(0);
+  });
 });
 
 // ─── Secret ───────────────────────────────────────────────────────────────────
@@ -149,6 +158,14 @@ describe("secretModule", () => {
     const detail = secretModule.renderDetail(local, remote);
     const diffText = Object.values(detail).join("");
     expect(diffText).not.toContain("s3cr3t");
+  });
+
+  it("ignores server-managed updated_at in diffFields", () => {
+    const local = {key: "API_KEY", value: "s3cr3t"};
+    const remote = {key: "API_KEY", updated_at: "2020-01-01T00:00:00.000Z"};
+    const changed = secretModule.diffFields(local, remote);
+    expect(changed).not.toContain("updated_at");
+    expect(changed).toHaveLength(0);
   });
 });
 

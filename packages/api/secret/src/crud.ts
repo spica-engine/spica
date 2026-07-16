@@ -61,7 +61,8 @@ export async function findOne(ss: SecretService, id: ObjectId): Promise<HiddenSe
 export async function insert(ss: SecretService, body: DecryptedSecret): Promise<HiddenSecret> {
   const secret: Secret = {
     key: body.key,
-    value: encrypt(body.value, ss.encryptionSecret)
+    value: encrypt(body.value, ss.encryptionSecret),
+    updated_at: new Date()
   };
 
   if (body._id) {
@@ -82,7 +83,7 @@ export async function replace(
 
   const result = await ss.findOneAndReplace(
     {_id: id},
-    {_id: id, key: body.key, value: encrypted},
+    {_id: id, key: body.key, value: encrypted, updated_at: new Date()},
     {returnDocument: ReturnDocument.AFTER}
   );
 

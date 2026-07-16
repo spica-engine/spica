@@ -275,7 +275,8 @@ describe("Function Controller", () => {
       await request.put(`/function/${inserted._id}/secret/${secret._id}`);
 
       const found = await request.get(`/function/${inserted._id}`).then(r => r.body);
-      expect(found.secrets).toEqual([{_id: secret._id, key: "MY_SECRET"}]);
+      const secrets = found.secrets.map(({updated_at, ...rest}) => rest);
+      expect(secrets).toEqual([{_id: secret._id, key: "MY_SECRET"}]);
       expect(found.secrets[0].value).toBeUndefined();
     });
   });
