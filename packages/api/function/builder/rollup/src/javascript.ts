@@ -1,4 +1,4 @@
-import {linkNodeModules, prepareOutDir} from "@spica-server/function-builder";
+import {prepareOutDir} from "@spica-server/function-builder";
 import {BuildMeta, BuildStrategy, Description} from "@spica-server/interface-function-builder";
 import {RollupWorkerHost} from "./worker-host.js";
 
@@ -16,7 +16,6 @@ export class JavascriptBundle implements BuildStrategy {
 
   async build(meta: BuildMeta): Promise<void> {
     await prepareOutDir(meta);
-    await linkNodeModules(meta);
     return this.host.run(this.description.name, meta);
   }
 

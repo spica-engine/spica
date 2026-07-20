@@ -43,10 +43,12 @@ describe("RollupBuilder", () => {
 
     afterEach(() => builder.kill());
 
-    it("should symlink node_modules to .build path", async () => {
+    it("should write nothing but the build output", async () => {
       await builder.build(meta);
-      const stat = await fs.promises.lstat(path.join(meta.cwd, meta.outDir, "node_modules"));
-      expect(stat.isSymbolicLink()).toBe(true);
+      expect(fs.readdirSync(path.join(meta.cwd, meta.outDir)).sort()).toEqual([
+        "index.mjs",
+        "index.mjs.map"
+      ]);
     });
 
     it("should bundle local imports into a single file", async () => {

@@ -434,17 +434,30 @@ describe("Entrypoint", () => {
 
     afterEach(() => builder.kill());
 
-    it("should run a function bundled together with its local imports", async () => {
+    // "mongodb" is one of the packages the bundler always leaves external, so it also proves
+    // such an import still resolves from the function's own node_modules at runtime.
+    it("should run a function bundled with its local imports and an external dependency", async () => {
       meta.entrypoints = builder.description.entrypoints;
       meta.cwd = FunctionTestBed.initialize(
-        `import {exitCode} from "./codes.js";
+        `import {offset} from "./codes.js";
+        import {base} from "mongodb";
         declare var process;
         export function test() {
-          process.exit(exitCode);
+          process.exit(base + offset);
         }`,
         meta
       );
-      fs.writeFileSync(path.join(meta.cwd, "codes.ts"), `export const exitCode = 4;`);
+      fs.writeFileSync(path.join(meta.cwd, "codes.ts"), `export const offset = 1;`);
+
+      const external = path.join(meta.cwd, "node_modules", "mongodb");
+      fs.mkdirSync(external, {recursive: true});
+      fs.writeFileSync(
+        path.join(external, "package.json"),
+        `{"name": "mongodb", "version": "1.0.0", "type": "module", "main": "index.js", "types": "index.d.ts"}`
+      );
+      fs.writeFileSync(path.join(external, "index.js"), `export const base = 3;`);
+      fs.writeFileSync(path.join(external, "index.d.ts"), `export declare const base: number;`);
+
       await builder.build(meta);
 
       queue.enqueue(

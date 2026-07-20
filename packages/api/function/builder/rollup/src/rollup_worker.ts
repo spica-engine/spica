@@ -11,10 +11,10 @@ import {BuildDiagnostic, BuildMeta} from "@spica-server/interface-function-build
 
 /*
   Packages that must stay outside the bundle: they either ship native addons or resolve
-  their internals through dynamic require, neither of which survives inlining. The runtime
-  resolves them through the `.build/node_modules` symlink, exactly as before bundling.
-  `@spica-devkit/database` additionally relies on module side effects that the worker
-  bootstrap swaps out at runtime (see runtime/node/bootstrap/entrypoint.ts).
+  their internals through dynamic require, neither of which survives inlining. They keep
+  resolving at runtime from the function's own node_modules, which node reaches by walking
+  up from the bundle in `.build`. `@spica-devkit/database` additionally relies on module
+  side effects that the worker bootstrap swaps out (see runtime/node/bootstrap/entrypoint.ts).
 */
 const NEVER_BUNDLE = ["mongodb", "@grpc/grpc-js", "@spica-devkit/database"];
 
