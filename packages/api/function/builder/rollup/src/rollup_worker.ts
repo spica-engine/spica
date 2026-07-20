@@ -10,11 +10,17 @@ import {parentPort} from "worker_threads";
 import {BuildDiagnostic, BuildMeta} from "@spica-server/interface-function-builder";
 
 /*
-  Packages that must stay outside the bundle: they either ship native addons or resolve
-  their internals through dynamic require, neither of which survives inlining. They keep
-  resolving at runtime from the function's own node_modules, which node reaches by walking
-  up from the bundle in `.build`. `@spica-devkit/database` additionally relies on module
-  side effects that the worker bootstrap swaps out (see runtime/node/bootstrap/entrypoint.ts).
+  Packages kept out of the bundle. They still resolve at runtime from the function's own
+  node_modules, which node reaches by walking up from the bundle in `.build`.
+
+  `@spica-devkit/database` must be the very module the runtime prepared: it installs a
+  SIGTERM handler and the experimental devkit cache preloads it through a swapped
+  createRequire (see runtime/node/bootstrap/entrypoint.ts), which a private copy sidesteps.
+  `mongodb` and `@grpc/grpc-js` are already loaded by the worker bootstrap, so inlining them
+  would give every function a second multi-megabyte copy and its own driver instance.
+
+  Note this list does not cover packages with native addons (sharp, bcrypt, canvas): their
+  `.node` binaries cannot be inlined and the build fails on them.
 */
 const NEVER_BUNDLE = ["mongodb", "@grpc/grpc-js", "@spica-devkit/database"];
 
