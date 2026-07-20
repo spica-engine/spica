@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, stream} from "@spica-server/database-testing";
-import {WebhookService} from "@spica-server/function-webhook";
+import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {WebhookService, WebhookChangeDispatcher} from "@spica-server/function-webhook";
 import {Webhook, ChangeKind} from "@spica-server/interface-function-webhook";
 import {bufferCount, bufferTime, take} from "rxjs/operators";
 
@@ -12,7 +12,7 @@ describe("Webhook Service", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()],
-      providers: [WebhookService]
+      providers: [WebhookService, WebhookChangeDispatcher]
     }).compile();
     service = module.get(WebhookService);
 
@@ -85,7 +85,7 @@ describe("Webhook Service", () => {
         });
         done();
       });
-    stream.wait().then(() => service.insertOne(webhook).then(_hook => (hook = _hook)));
+    service.insertOne(webhook).then(_hook => (hook = _hook));
   });
 
   it("should report removed hook", done => {
@@ -113,7 +113,7 @@ describe("Webhook Service", () => {
           done();
         });
 
-      stream.wait().then(() => service.deleteOne({_id: hook._id}));
+      service.findOneAndDelete({_id: hook._id});
     });
   });
 
@@ -141,9 +141,10 @@ describe("Webhook Service", () => {
           ]);
           done();
         });
-      stream
-        .wait()
-        .then(() => service.updateOne({_id: hook._id}, {$set: {"trigger.active": false}}));
+      service.findOneAndReplace(
+        {_id: hook._id},
+        {...webhook, trigger: {...webhook.trigger, active: false}}
+      );
     });
   });
 });

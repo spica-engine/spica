@@ -4,6 +4,7 @@ import {WebhookInvoker} from "./invoker.js";
 import {SchemaResolver} from "./schema.js";
 import {WebhookController} from "./webhook.controller.js";
 import {WebhookService} from "./webhook.service.js";
+import {WebhookChangeDispatcher} from "./change-dispatcher.js";
 import {WebhookLogService} from "./log.service.js";
 import {WebhookLogController} from "./log.controller.js";
 import {WebhookOptions, WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
@@ -20,6 +21,7 @@ export class WebhookModule {
         SchemaResolver,
         WebhookLogService,
         WebhookService,
+        WebhookChangeDispatcher,
         {
           provide: WEBHOOK_OPTIONS,
           useValue: options
