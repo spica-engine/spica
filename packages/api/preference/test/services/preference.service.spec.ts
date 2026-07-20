@@ -32,6 +32,8 @@ describe("Preference Service", () => {
     await addPref(prefs);
   });
 
+  afterEach(() => jest.restoreAllMocks());
+
   afterAll(async () => {
     await module.close();
   });
@@ -109,6 +111,36 @@ describe("Preference Service", () => {
 
       preferenceService
         .replace({scope: "bucket"}, {scope: "bucket", property: "updated bucket property"})
+        .catch();
+    });
+
+    it("should keep propagating after a reload fails", done => {
+      const coll = (preferenceService as any)._coll;
+      const findOne = coll.findOne.bind(coll);
+      let alreadyFailed = false;
+
+      jest.spyOn((preferenceService as any).logger, "error").mockImplementation(() => {});
+      jest.spyOn(coll, "findOne").mockImplementation((...args) => {
+        if (!alreadyFailed) {
+          alreadyFailed = true;
+          return Promise.reject(new Error("transient failure"));
+        }
+        return findOne(...args);
+      });
+
+      preferenceService
+        .watchPreference("bucket")
+        .pipe(take(1))
+        .subscribe(next => {
+          expect(next.property).toBe("second update");
+          done();
+        });
+
+      preferenceService
+        .replace({scope: "bucket"}, {scope: "bucket", property: "first update"})
+        .then(() =>
+          preferenceService.replace({scope: "bucket"}, {scope: "bucket", property: "second update"})
+        )
         .catch();
     });
   });
