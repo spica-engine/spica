@@ -15,6 +15,7 @@ describe("Webhook Service", () => {
       providers: [WebhookService, WebhookChangeDispatcher]
     }).compile();
     service = module.get(WebhookService);
+    jest.restoreAllMocks();
 
     webhook = {
       title: "wh1",
@@ -146,5 +147,37 @@ describe("Webhook Service", () => {
         {...webhook, trigger: {...webhook.trigger, active: false}}
       );
     });
+  });
+
+  it("should keep reporting after a reload fails", done => {
+    const coll = (service as any)._coll;
+    const findOne = coll.findOne.bind(coll);
+    let alreadyFailed = false;
+
+    jest.spyOn((service as any).logger, "error").mockImplementation(() => {});
+    jest.spyOn(coll, "findOne").mockImplementation((...args) => {
+      if (!alreadyFailed) {
+        alreadyFailed = true;
+        return Promise.reject(new Error("transient failure"));
+      }
+      return findOne(...args);
+    });
+
+    service
+      .targets()
+      .pipe(take(1))
+      .subscribe(target => {
+        expect(target.kind).toEqual(ChangeKind.Added);
+        expect(target.webhook.title).toBe("wh2");
+        done();
+      });
+
+    // insertOne stamps _id onto the given document, so build the second one up front
+    const second = {...webhook, title: "wh2"};
+
+    service
+      .insertOne(webhook)
+      .then(() => service.insertOne(second))
+      .catch();
   });
 });

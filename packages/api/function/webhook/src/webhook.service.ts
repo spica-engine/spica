@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, Logger} from "@nestjs/common";
 import {
   BaseCollection,
   DatabaseService,
@@ -14,6 +14,8 @@ import {WebhookChangeDispatcher} from "./change-dispatcher.js";
 
 @Injectable()
 export class WebhookService extends BaseCollection<Webhook>("webhook") {
+  private readonly logger = new Logger(WebhookService.name);
+
   constructor(
     database: DatabaseService,
     private readonly changeDispatcher: WebhookChangeDispatcher
@@ -67,31 +69,48 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
         }
         observer.next(change);
       };
-      let chain = super.find().then(hooks => {
-        for (const hook of hooks) {
-          if (!hook.trigger.active) {
-            continue;
+      const onFailure = (error: unknown) =>
+        this.logger.error(
+          `webhook target watch failed: ${error instanceof Error ? error.message : error}`
+        );
+
+      let chain: Promise<unknown> = super
+        .find()
+        .then(hooks => {
+          for (const hook of hooks) {
+            if (!hook.trigger.active) {
+              continue;
+            }
+            emitHook(hook, ChangeKind.Added);
           }
-          emitHook(hook, ChangeKind.Added);
-        }
-      });
+        })
+        .catch(onFailure);
 
       // Serialize processing onto a single promise chain: each event reloads the document
       // asynchronously, so without this an insert's Added could be emitted after a later
       // delete's Removed, leaving the invoker with a dangling target stream.
+      // Every link absorbs its own failure: a rejected chain would skip each later link, silently
+      // stopping target registration for good since the invoker subscribes once per process.
       const sub = this.changeDispatcher.watch().subscribe(change => {
         chain = chain.then(async () => {
-          const _id = change.documentKey._id;
-          if (change.operationType === "delete") {
-            observer.next({kind: ChangeKind.Removed, target: _id.toHexString()});
-            return;
+          try {
+            const _id = change.documentKey._id;
+            if (change.operationType === "delete") {
+              observer.next({kind: ChangeKind.Removed, target: _id.toHexString()});
+              return;
+            }
+            const hook = await super.findOne({_id});
+            if (!hook) {
+              observer.next({kind: ChangeKind.Removed, target: _id.toHexString()});
+              return;
+            }
+            emitHook(
+              hook,
+              change.operationType === "insert" ? ChangeKind.Added : ChangeKind.Updated
+            );
+          } catch (error) {
+            onFailure(error);
           }
-          const hook = await super.findOne({_id});
-          if (!hook) {
-            observer.next({kind: ChangeKind.Removed, target: _id.toHexString()});
-            return;
-          }
-          emitHook(hook, change.operationType === "insert" ? ChangeKind.Added : ChangeKind.Updated);
         });
       });
       return () => sub.unsubscribe();
