@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
-import {PreferenceService} from "@spica-server/preference-services";
+import {PreferenceService, PreferenceChangeDispatcher} from "@spica-server/preference-services";
 import {Preference} from "@spica-server/interface-preference";
 import {Observable} from "rxjs";
 import {take} from "rxjs/operators";
@@ -15,7 +15,7 @@ describe("Preference Service", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()],
-      providers: [PreferenceService]
+      providers: [PreferenceService, PreferenceChangeDispatcher]
     }).compile();
     preferenceService = module.get(PreferenceService);
   }, 120000);
@@ -107,11 +107,9 @@ describe("Preference Service", () => {
           done();
         });
 
-      setTimeout(() => {
-        preferenceService
-          .updateOne({scope: "bucket"}, {$set: {property: "updated bucket property"}})
-          .catch();
-      }, 100);
+      preferenceService
+        .replace({scope: "bucket"}, {scope: "bucket", property: "updated bucket property"})
+        .catch();
     });
   });
 });

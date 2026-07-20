@@ -82,4 +82,36 @@ describe("Preference Integration", () => {
       }
     });
   });
+
+  it("should recompile bucket schema when a language is added", async () => {
+    const bucket = {
+      title: "bucket",
+      description: "bucket",
+      properties: {
+        title: {
+          type: "string",
+          options: {
+            translate: true
+          }
+        }
+      }
+    };
+    const bucketId = await req.post("/bucket", bucket).then(res => res.body._id);
+
+    const document = {title: {en_US: "new title", fr_FR: "nouveau titre"}};
+
+    const rejected = await req.post(`/bucket/${bucketId}/data`, document).catch(e => e);
+    expect(rejected.statusCode).toBe(400);
+
+    await req.put("/preference/bucket", {
+      scope: "bucket",
+      language: {
+        available: {en_US: "English", fr_FR: "French"},
+        default: "en_US"
+      }
+    });
+
+    const accepted = await req.post(`/bucket/${bucketId}/data`, document).catch(e => e);
+    expect(accepted.statusCode).toBe(201);
+  });
 });
