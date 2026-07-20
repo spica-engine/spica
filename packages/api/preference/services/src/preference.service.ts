@@ -1,22 +1,29 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, Logger} from "@nestjs/common";
 import {
   BaseCollection,
   Collection,
   DatabaseService,
   Filter,
   FindOneAndReplaceOptions,
+  ObjectId,
   OptionalId,
+  ReturnDocument,
   WithId
 } from "@spica-server/database";
 import {Preference} from "@spica-server/interface-preference";
 import {Observable} from "rxjs";
 import {deepCopy} from "@spica-server/core-patch";
+import {PreferenceChangeDispatcher} from "./change-dispatcher.js";
 
 @Injectable()
 export class PreferenceService extends BaseCollection("preferences") {
+  private readonly logger = new Logger(PreferenceService.name);
   private _defaults = new Map<string, Preference>();
 
-  constructor(db: DatabaseService) {
+  constructor(
+    db: DatabaseService,
+    private readonly changeDispatcher: PreferenceChangeDispatcher
+  ) {
     super(db, {afterInit: () => {}});
   }
 
@@ -25,17 +32,33 @@ export class PreferenceService extends BaseCollection("preferences") {
     {propagateOnStart}: {propagateOnStart: boolean} = {propagateOnStart: false}
   ): Observable<T> {
     return new Observable(observer => {
-      if (propagateOnStart) {
-        this.get<T>(scope).then(pref => observer.next(pref));
-      }
+      const onFailure = (error: unknown) =>
+        this.logger.error(
+          `preference watch (${scope}) failed: ${error instanceof Error ? error.message : error}`
+        );
 
-      const sub = this.watch(
-        [{$match: {"fullDocument.scope": {$eq: scope}}}],
-        {fullDocument: "updateLookup"}
-      ).subscribe(change => {
-        if ("fullDocument" in change) {
-          observer.next(change.fullDocument as T);
-        }
+      // Serialize onto a single promise chain: each event reloads the document asynchronously,
+      // so without this the initial value could arrive after a change, and two rapid updates
+      // could emit out of order — leaving consumers compiling against a stale preference.
+      // Every link absorbs its own failure: a rejected chain would skip each later link, silently
+      // stopping propagation for good since subscribers live as long as the process.
+      let chain: Promise<unknown> = propagateOnStart
+        ? this.get<T>(scope)
+            .then(pref => observer.next(pref))
+            .catch(onFailure)
+        : Promise.resolve();
+
+      const sub = this.changeDispatcher.watch().subscribe(change => {
+        chain = chain.then(async () => {
+          try {
+            const preference = await this._coll.findOne<T>({_id: change.documentKey._id});
+            if (preference && preference.scope === scope) {
+              observer.next(preference);
+            }
+          } catch (error) {
+            onFailure(error);
+          }
+        });
       });
       return () => sub.unsubscribe();
     });
@@ -47,18 +70,31 @@ export class PreferenceService extends BaseCollection("preferences") {
       .then(preference => preference || deepCopy((this._defaults.get(scope) as T) || {}));
   }
 
-  replace<T extends Preference>(
+  async replace<T extends Preference>(
     filter: Filter<Preference>,
     preference: T,
     options?: FindOneAndReplaceOptions
   ) {
-    return this._coll.findOneAndReplace(filter, preference, options);
+    const result = await this._coll.findOneAndReplace(filter, preference, {
+      returnDocument: ReturnDocument.AFTER,
+      ...options
+    });
+    if (result) {
+      this.changeDispatcher.dispatch({
+        operationType: "replace",
+        documentKey: {_id: result._id as ObjectId}
+      });
+    }
+    return result;
   }
 
-  insertOne<T extends OptionalId<Preference>>(preference: T): Promise<WithId<Preference>> {
-    return this._coll
-      .insertOne(preference)
-      .then(result => ({_id: result.insertedId, ...preference}));
+  async insertOne<T extends OptionalId<Preference>>(preference: T): Promise<WithId<Preference>> {
+    const result = await this._coll.insertOne(preference);
+    this.changeDispatcher.dispatch({
+      operationType: "insert",
+      documentKey: {_id: result.insertedId as ObjectId}
+    });
+    return {_id: result.insertedId, ...preference};
   }
 
   default<T extends Preference>(preference: T) {
