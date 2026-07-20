@@ -4,16 +4,16 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
       "path": "../../../api/function/queue/proto"
     },
     {
       "path": "../../core"
+    },
+    {
+      "path": "../builder"
     },
     {
       "path": "../../../api/replication"

@@ -1,0 +1,5 @@
+{
+  "name": "api/function/builder",
+  "sourceRoot": "packages/api/function/builder",
+  "projectType": "library"
+}

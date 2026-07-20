@@ -1,0 +1,23 @@
+{
+  "name": "@spica-server/function-builder-rollup",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.22",
+    "@rollup/plugin-commonjs": "^29.0.3",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@spica-server/function-builder": "workspace:*",
+    "@spica-server/interface-function-builder": "workspace:*",
+    "rollup": "^4.60.4",
+    "typescript": "^5.7.3"
+  }
+}

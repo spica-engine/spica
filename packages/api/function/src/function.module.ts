@@ -70,7 +70,9 @@ export class FunctionModule {
           invocationLogs: options.invocationLogs,
           workerLogOutput: options.workerLogOutput,
           spawnEntrypointPath: options.spawnEntrypointPath,
+          builder: options.builder,
           tsCompilerPath: options.tsCompilerPath,
+          rollupWorkerPath: options.rollupWorkerPath,
           grpcPort: options.grpcPort,
           functionGrpcMaxMessageSizeBytes: options.functionGrpcMaxMessageSizeBytes,
           payloadSizeLimit: options.payloadSizeLimit

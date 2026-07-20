@@ -1,12 +1,14 @@
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function-queue";
 import {Database, event, Firehose, Http} from "@spica-server/function-queue-proto";
-import {Language} from "@spica-server/function-compiler";
-import {Compilation} from "@spica-server/interface-function-compiler";
-import {Javascript} from "@spica-server/function-compiler-javascript";
-import {Typescript} from "@spica-server/function-compiler-typescript";
+import {Builder} from "@spica-server/function-builder";
+import {BuildMeta} from "@spica-server/interface-function-builder";
+import {LegacyBuilder} from "@spica-server/function-builder-legacy";
+import {RollupBuilder} from "@spica-server/function-builder-rollup";
 import {Node} from "@spica-server/function-scheduler";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
+import fs from "fs";
 import os from "os";
+import path from "path";
 import {PassThrough, Writable} from "stream";
 import WebSocket from "ws";
 
@@ -17,10 +19,10 @@ describe("Entrypoint", () => {
   let queue: EventQueue;
 
   let runtime: Node;
-  let language: Language;
+  let builder: Builder;
   let enqueueSpy: jest.Mock;
   let popSpy: jest.Mock;
-  let compilation: Compilation = {
+  let meta: BuildMeta = {
     cwd: undefined,
     entrypoints: {build: undefined, runtime: undefined},
     outDir: ".build"
@@ -34,9 +36,9 @@ describe("Entrypoint", () => {
   let stream: PassThrough;
 
   function initializeFn(index: string) {
-    compilation.entrypoints = language.description.entrypoints;
-    compilation.cwd = FunctionTestBed.initialize(index, compilation);
-    return language.compile(compilation);
+    meta.entrypoints = builder.description.entrypoints;
+    meta.cwd = FunctionTestBed.initialize(index, meta);
+    return builder.build(meta);
   }
 
   function spawn(stdout?: Writable, idOverride?: string): any {
@@ -77,7 +79,7 @@ describe("Entrypoint", () => {
         __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
         __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET,
         WARM: "true",
-        WARM_CWD: compilation.cwd,
+        WARM_CWD: meta.cwd,
         WARM_ENV: JSON.stringify(warmEnv)
       },
       entrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH
@@ -121,7 +123,7 @@ describe("Entrypoint", () => {
     );
     await queue.listen();
     runtime = new Node();
-    language = new Javascript();
+    builder = new LegacyBuilder("javascript");
 
     stream = new PassThrough();
     writeSpy = jest.spyOn(stream, "write");
@@ -147,7 +149,7 @@ describe("Entrypoint", () => {
           type: -1 as any,
           target: new event.Target({
             handler: "default",
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             context: new event.SchedulingContext({
               env: [],
               timeout: 60
@@ -191,7 +193,7 @@ describe("Entrypoint", () => {
         type: -1 as any,
         target: new event.Target({
           handler: "default",
-          cwd: compilation.cwd,
+          cwd: meta.cwd,
           context: new event.SchedulingContext({env: [], timeout: 60})
         })
       })
@@ -226,7 +228,7 @@ describe("Entrypoint", () => {
     const ev = new event.Event({
       type: -1 as any,
       target: new event.Target({
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "shouldhaveexisted",
         context: new event.SchedulingContext({
           env: [],
@@ -248,7 +250,7 @@ describe("Entrypoint", () => {
     const ev = new event.Event({
       type: -1 as any,
       target: new event.Target({
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "notafunction",
         context: new event.SchedulingContext({
           env: [],
@@ -284,7 +286,7 @@ describe("Entrypoint", () => {
         new event.Event({
           type: -1 as any,
           target: new event.Target({
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             handler: "default",
             context: new event.SchedulingContext({
               env: [],
@@ -325,7 +327,7 @@ describe("Entrypoint", () => {
       const ev = new event.Event({
         type: -1 as any,
         target: new event.Target({
-          cwd: compilation.cwd,
+          cwd: meta.cwd,
           handler: "default",
           context: new event.SchedulingContext({
             env: [],
@@ -354,7 +356,7 @@ describe("Entrypoint", () => {
     const ev = new event.Event({
       type: -1 as any,
       target: new event.Target({
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "env",
         context: new event.SchedulingContext({
           env: [new event.SchedulingContext.Env({key: "SET_FROM_CTX", value: "true"})],
@@ -371,7 +373,9 @@ describe("Entrypoint", () => {
 
   describe("cjs interop", () => {
     beforeEach(() => {
-      language = new Typescript(process.env.FUNCTION_TS_COMPILER_PATH);
+      builder = new LegacyBuilder("typescript", {
+        tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
+      });
     });
 
     it("should work with default handler", async () => {
@@ -385,7 +389,7 @@ describe("Entrypoint", () => {
           type: -1 as any,
           target: new event.Target({
             handler: "default",
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             context: new event.SchedulingContext({
               env: [],
               timeout: 60
@@ -408,7 +412,7 @@ describe("Entrypoint", () => {
           type: -1 as any,
           target: new event.Target({
             handler: "test",
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             context: new event.SchedulingContext({
               env: [],
               timeout: 60
@@ -416,6 +420,47 @@ describe("Entrypoint", () => {
           })
         })
       );
+      const exitCode = await spawn().catch(e => e);
+      expect(exitCode).toBe(4);
+    });
+  });
+
+  describe("rollup bundle", () => {
+    beforeEach(() => {
+      builder = new RollupBuilder("typescript", {
+        workerPath: process.env.FUNCTION_ROLLUP_WORKER_PATH
+      });
+    });
+
+    afterEach(() => builder.kill());
+
+    it("should run a function bundled together with its local imports", async () => {
+      meta.entrypoints = builder.description.entrypoints;
+      meta.cwd = FunctionTestBed.initialize(
+        `import {exitCode} from "./codes.js";
+        declare var process;
+        export function test() {
+          process.exit(exitCode);
+        }`,
+        meta
+      );
+      fs.writeFileSync(path.join(meta.cwd, "codes.ts"), `export const exitCode = 4;`);
+      await builder.build(meta);
+
+      queue.enqueue(
+        new event.Event({
+          type: -1 as any,
+          target: new event.Target({
+            handler: "test",
+            cwd: meta.cwd,
+            context: new event.SchedulingContext({
+              env: [],
+              timeout: 60
+            })
+          })
+        })
+      );
+
       const exitCode = await spawn().catch(e => e);
       expect(exitCode).toBe(4);
     });
@@ -436,7 +481,7 @@ describe("Entrypoint", () => {
         const ev = new event.Event({
           type: event.Type.HTTP,
           target: new event.Target({
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             handler: "default",
             context: new event.SchedulingContext({
               env: [],
@@ -474,7 +519,7 @@ describe("Entrypoint", () => {
       const ev = new event.Event({
         type: event.Type.HTTP,
         target: new event.Target({
-          cwd: compilation.cwd,
+          cwd: meta.cwd,
           handler: "default",
           context: new event.SchedulingContext({
             env: [],
@@ -505,7 +550,7 @@ describe("Entrypoint", () => {
       const ev = new event.Event({
         type: event.Type.HTTP,
         target: new event.Target({
-          cwd: compilation.cwd,
+          cwd: meta.cwd,
           handler: "default",
           context: new event.SchedulingContext({
             env: [],
@@ -530,7 +575,7 @@ describe("Entrypoint", () => {
         const ev = new event.Event({
           type: event.Type.HTTP,
           target: new event.Target({
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             handler: "default",
             context: new event.SchedulingContext({
               env: [],
@@ -562,7 +607,7 @@ describe("Entrypoint", () => {
         const ev = new event.Event({
           type: event.Type.HTTP,
           target: new event.Target({
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             handler: "default",
             context: new event.SchedulingContext({
               env: [],
@@ -594,7 +639,7 @@ describe("Entrypoint", () => {
         const ev = new event.Event({
           type: event.Type.HTTP,
           target: new event.Target({
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             handler: "default",
             context: new event.SchedulingContext({
               env: [],
@@ -630,7 +675,7 @@ describe("Entrypoint", () => {
         const ev = new event.Event({
           type: event.Type.HTTP,
           target: new event.Target({
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             handler: "default",
             context: new event.SchedulingContext({
               env: [],
@@ -673,7 +718,7 @@ describe("Entrypoint", () => {
         const ev = new event.Event({
           type: event.Type.DATABASE,
           target: new event.Target({
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             handler: "default",
             context: new event.SchedulingContext({
               env: [],
@@ -708,7 +753,7 @@ describe("Entrypoint", () => {
       const ev = new event.Event({
         type: event.Type.DATABASE,
         target: new event.Target({
-          cwd: compilation.cwd,
+          cwd: meta.cwd,
           handler: "default",
           context: new event.SchedulingContext({
             env: [],
@@ -757,7 +802,7 @@ describe("Entrypoint", () => {
       const ev = new event.Event({
         type: event.Type.FIREHOSE,
         target: new event.Target({
-          cwd: compilation.cwd,
+          cwd: meta.cwd,
           handler: "default",
           context: new event.SchedulingContext({
             env: [],
@@ -790,7 +835,7 @@ describe("Entrypoint", () => {
         const ev = new event.Event({
           type: event.Type.FIREHOSE,
           target: new event.Target({
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             handler: "default",
             context: new event.SchedulingContext({
               env: [],
@@ -835,7 +880,7 @@ describe("Entrypoint", () => {
         const ev = new event.Event({
           type: event.Type.FIREHOSE,
           target: new event.Target({
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             handler: "default",
             context: new event.SchedulingContext({
               env: [],
@@ -878,7 +923,7 @@ describe("Entrypoint", () => {
         const ev = new event.Event({
           type: event.Type.FIREHOSE,
           target: new event.Target({
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             handler: "default",
             context: new event.SchedulingContext({
               env: [],

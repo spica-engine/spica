@@ -1,0 +1,17 @@
+{
+  "name": "api/function/builder/rollup",
+  "sourceRoot": "packages/api/function/builder/rollup",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "projects": [
+            "api/function/builder/rollup"
+          ],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

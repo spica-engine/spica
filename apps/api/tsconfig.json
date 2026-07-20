@@ -76,6 +76,9 @@
       "path": "../../packages/api/function"
     },
     {
+      "path": "../../packages/interface/function/builder"
+    },
+    {
       "path": "../../packages/api/bucket"
     }
   ]

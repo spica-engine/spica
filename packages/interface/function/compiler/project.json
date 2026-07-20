@@ -1,5 +1,0 @@
-{
-  "name": "interface/function/compiler",
-  "sourceRoot": "packages/interface/function/compiler/src",
-  "projectType": "library"
-}

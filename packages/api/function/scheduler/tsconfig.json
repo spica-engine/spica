@@ -18,6 +18,9 @@
       "path": "../../../interface/function/scheduler"
     },
     {
+      "path": "../../../interface/function/builder"
+    },
+    {
       "path": "../../../interface/function/runtime"
     },
     {
@@ -51,13 +54,13 @@
       "path": "../enqueuer"
     },
     {
-      "path": "../compiler/typescript"
+      "path": "../builder/legacy"
     },
     {
-      "path": "../compiler/javascript"
+      "path": "../builder/rollup"
     },
     {
-      "path": "../compiler"
+      "path": "../builder"
     },
     {
       "path": "../../../database"

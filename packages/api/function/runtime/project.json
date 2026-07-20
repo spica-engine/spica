@@ -14,7 +14,11 @@
           "target": "bundle"
         },
         {
-          "projects": ["api/function/compiler/typescript"],
+          "projects": ["api/function/builder/legacy"],
+          "target": "build"
+        },
+        {
+          "projects": ["api/function/builder/rollup"],
           "target": "build"
         }
       ]

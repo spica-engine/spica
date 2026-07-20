@@ -1,0 +1,15 @@
+{
+  "name": "api/function/builder/legacy",
+  "sourceRoot": "packages/api/function/builder/legacy",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "projects": ["api/function/builder/legacy"],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

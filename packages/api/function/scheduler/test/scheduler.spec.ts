@@ -79,7 +79,7 @@ describe("Scheduler", () => {
   function makeTarget(id: string) {
     return new event.Target({
       id,
-      cwd: compilation.cwd,
+      cwd: meta.cwd,
       handler: "default",
       context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
     });
@@ -87,7 +87,7 @@ describe("Scheduler", () => {
 
   const now = new Date(2015, 1, 1, 1, 1, 31, 0);
 
-  const compilation = {
+  const meta = {
     cwd: undefined,
     entrypoints: {
       build: "index.mjs",
@@ -155,8 +155,8 @@ describe("Scheduler", () => {
 
     await app.init();
 
-    compilation.cwd = FunctionTestBed.initialize(`export default function() {}`, compilation);
-    await scheduler.languages.get("javascript").compile(compilation);
+    meta.cwd = FunctionTestBed.initialize(`export default function() {}`, meta);
+    await scheduler.builders.get("javascript").build(meta);
 
     triggerGotWorker();
   });
@@ -205,7 +205,7 @@ describe("Scheduler", () => {
 
     const ev = new event.Event({
       target: new event.Target({
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
@@ -222,7 +222,7 @@ describe("Scheduler", () => {
       const executeSpy = jest.spyOn(worker, "execute");
       scheduler.enqueue(
         new event.Event({
-          target: new event.Target({id, cwd: compilation.cwd, handler: "default"}),
+          target: new event.Target({id, cwd: meta.cwd, handler: "default"}),
           type: -1 as any
         })
       );
@@ -276,7 +276,7 @@ describe("Scheduler", () => {
       new event.Event({
         target: new event.Target({
           id: "1",
-          cwd: compilation.cwd,
+          cwd: meta.cwd,
           handler: "default",
           context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
         }),
@@ -300,7 +300,7 @@ describe("Scheduler", () => {
   it("should spawn a worker after event scheduled", () => {
     const ev = new event.Event({
       target: new event.Target({
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
@@ -325,7 +325,7 @@ describe("Scheduler", () => {
 
     const ev = new event.Event({
       target: new event.Target({
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
@@ -354,7 +354,7 @@ describe("Scheduler", () => {
 
     const ev = new event.Event({
       target: new event.Target({
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: 10})
       }),
@@ -377,7 +377,7 @@ describe("Scheduler", () => {
     const ev1 = new event.Event({
       target: new event.Target({
         id: "1",
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
@@ -400,7 +400,7 @@ describe("Scheduler", () => {
     const ev1 = new event.Event({
       target: new event.Target({
         id: "1",
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
@@ -410,7 +410,7 @@ describe("Scheduler", () => {
     const ev2 = new event.Event({
       target: new event.Target({
         id: "2",
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
@@ -436,7 +436,7 @@ describe("Scheduler", () => {
     const ev1 = new event.Event({
       target: new event.Target({
         id: "1",
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
@@ -464,7 +464,7 @@ describe("Scheduler", () => {
         id,
         target: new event.Target({
           id: "1",
-          cwd: compilation.cwd,
+          cwd: meta.cwd,
           handler: "default",
           context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
         }),
@@ -507,7 +507,7 @@ describe("Scheduler", () => {
           id: eventId,
           target: new event.Target({
             id: "1",
-            cwd: compilation.cwd,
+            cwd: meta.cwd,
             handler: "default",
             context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
           }),
@@ -571,7 +571,7 @@ describe("Scheduler", () => {
     function target(id: string) {
       return new event.Target({
         id,
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "default",
         context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       });
@@ -635,7 +635,7 @@ describe("Scheduler", () => {
 
       expect(spawnSpy).toHaveBeenCalledTimes(2);
       expect(spawnSpy.mock.calls[0][0].env).toEqual(
-        expect.objectContaining({WARM: "true", WARM_CWD: compilation.cwd})
+        expect.objectContaining({WARM: "true", WARM_CWD: meta.cwd})
       );
       expect(warmingWorkers().length).toEqual(2);
       expect(warmingWorkers().every(([_, w]) => w.hasSameTarget("1"))).toBe(true);
@@ -860,13 +860,10 @@ describe("Scheduler", () => {
     // it can still serve — the shape a superseded worker needs to keep taking events.
     function activeWorkerFor(id: string) {
       scheduler.reconcileConcurrency(makeTarget(id), 2);
-      scheduler.enqueue(
-        new event.Event({target: makeTarget(id), type: -1 as any})
-      );
+      scheduler.enqueue(new event.Event({target: makeTarget(id), type: -1 as any}));
       return allWorkers().find(
         ([, w]) =>
-          w.hasSameTarget(id) &&
-          (w.state == WorkerState.Targeted || w.state == WorkerState.Busy)
+          w.hasSameTarget(id) && (w.state == WorkerState.Targeted || w.state == WorkerState.Busy)
       );
     }
 
@@ -882,7 +879,7 @@ describe("Scheduler", () => {
     function versionedTarget(id: string, version: string) {
       return new event.Target({
         id,
-        cwd: compilation.cwd,
+        cwd: meta.cwd,
         handler: "default",
         context: new event.SchedulingContext({
           env: [new event.SchedulingContext.Env({key: "VERSION", value: version})],
@@ -928,9 +925,9 @@ describe("Scheduler", () => {
       scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
 
       // the warm replacement took the event...
-      expect(replacement.state == WorkerState.Targeted || replacement.state == WorkerState.Busy).toBe(
-        true
-      );
+      expect(
+        replacement.state == WorkerState.Targeted || replacement.state == WorkerState.Busy
+      ).toBe(true);
       // ...and the superseded worker was retired
       expect(active.state).toEqual(WorkerState.Outdated);
     });
@@ -1071,7 +1068,7 @@ describe("Scheduler", () => {
       return new event.Event({
         target: new event.Target({
           id,
-          cwd: compilation.cwd,
+          cwd: meta.cwd,
           handler: "default",
           context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
         }),
