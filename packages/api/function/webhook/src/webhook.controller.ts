@@ -126,9 +126,9 @@ export class WebhookController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const deletedCount = await this.webhookService.deleteOne({_id: id});
-    if (!deletedCount) {
-      throw new NotFoundException(`Activity with ID ${id} not found`);
+    const res = await this.webhookService.findOneAndDelete({_id: id});
+    if (!res) {
+      throw new NotFoundException(`Webhook with ID ${id} not found`);
     }
   }
 }

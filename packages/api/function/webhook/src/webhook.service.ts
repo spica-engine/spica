@@ -1,12 +1,53 @@
 import {Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {
+  BaseCollection,
+  DatabaseService,
+  Filter,
+  FindOneAndDeleteOptions,
+  FindOneAndReplaceOptions,
+  OptionalUnlessRequiredId,
+  WithId
+} from "@spica-server/database";
 import {Observable} from "rxjs";
 import {Webhook, TargetChange, ChangeKind} from "@spica-server/interface-function-webhook";
+import {WebhookChangeDispatcher} from "./change-dispatcher.js";
 
 @Injectable()
 export class WebhookService extends BaseCollection<Webhook>("webhook") {
-  constructor(database: DatabaseService) {
+  constructor(
+    database: DatabaseService,
+    private readonly changeDispatcher: WebhookChangeDispatcher
+  ) {
     super(database);
+  }
+
+  async insertOne(doc: OptionalUnlessRequiredId<Webhook>): Promise<WithId<Webhook>> {
+    const result = await super.insertOne(doc);
+    this.changeDispatcher.dispatch({operationType: "insert", documentKey: {_id: result._id}});
+    return result;
+  }
+
+  async findOneAndReplace(
+    filter: Filter<Webhook>,
+    doc: Webhook,
+    options?: FindOneAndReplaceOptions
+  ): Promise<WithId<Webhook>> {
+    const result = await super.findOneAndReplace(filter, doc, options);
+    if (result) {
+      this.changeDispatcher.dispatch({operationType: "replace", documentKey: {_id: result._id}});
+    }
+    return result;
+  }
+
+  async findOneAndDelete(
+    filter: Filter<Webhook>,
+    options?: FindOneAndDeleteOptions
+  ): Promise<WithId<Webhook>> {
+    const result = await super.findOneAndDelete(filter, options);
+    if (result) {
+      this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: result._id}});
+    }
+    return result;
   }
 
   targets(): Observable<TargetChange> {
@@ -26,7 +67,7 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
         }
         observer.next(change);
       };
-      super.find().then(hooks => {
+      let chain = super.find().then(hooks => {
         for (const hook of hooks) {
           if (!hook.trigger.active) {
             continue;
@@ -35,22 +76,23 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
         }
       });
 
-      const sub = this.watch([], {fullDocument: "updateLookup"}).subscribe(change => {
-        switch (change.operationType) {
-          case "replace":
-          case "update":
-            emitHook(change.fullDocument as Webhook, ChangeKind.Updated);
-            break;
-          case "insert":
-            emitHook(change.fullDocument as Webhook, ChangeKind.Added);
-            break;
-          case "delete":
-            observer.next({
-              kind: ChangeKind.Removed,
-              target: change.documentKey._id.toHexString()
-            });
-            break;
-        }
+      // Serialize processing onto a single promise chain: each event reloads the document
+      // asynchronously, so without this an insert's Added could be emitted after a later
+      // delete's Removed, leaving the invoker with a dangling target stream.
+      const sub = this.changeDispatcher.watch().subscribe(change => {
+        chain = chain.then(async () => {
+          const _id = change.documentKey._id;
+          if (change.operationType === "delete") {
+            observer.next({kind: ChangeKind.Removed, target: _id.toHexString()});
+            return;
+          }
+          const hook = await super.findOne({_id});
+          if (!hook) {
+            observer.next({kind: ChangeKind.Removed, target: _id.toHexString()});
+            return;
+          }
+          emitHook(hook, change.operationType === "insert" ? ChangeKind.Added : ChangeKind.Updated);
+        });
       });
       return () => sub.unsubscribe();
     });
