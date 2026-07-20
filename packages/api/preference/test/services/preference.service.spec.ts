@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
-import {PreferenceService} from "@spica-server/preference-services";
+import {PreferenceService, PreferenceChangeDispatcher} from "@spica-server/preference-services";
 import {Preference} from "@spica-server/interface-preference";
 import {Observable} from "rxjs";
 import {take} from "rxjs/operators";
@@ -15,7 +15,7 @@ describe("Preference Service", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()],
-      providers: [PreferenceService]
+      providers: [PreferenceService, PreferenceChangeDispatcher]
     }).compile();
     preferenceService = module.get(PreferenceService);
   }, 120000);
@@ -31,6 +31,8 @@ describe("Preference Service", () => {
     ];
     await addPref(prefs);
   });
+
+  afterEach(() => jest.restoreAllMocks());
 
   afterAll(async () => {
     await module.close();
@@ -107,11 +109,39 @@ describe("Preference Service", () => {
           done();
         });
 
-      setTimeout(() => {
-        preferenceService
-          .updateOne({scope: "bucket"}, {$set: {property: "updated bucket property"}})
-          .catch();
-      }, 100);
+      preferenceService
+        .replace({scope: "bucket"}, {scope: "bucket", property: "updated bucket property"})
+        .catch();
+    });
+
+    it("should keep propagating after a reload fails", done => {
+      const coll = (preferenceService as any)._coll;
+      const findOne = coll.findOne.bind(coll);
+      let alreadyFailed = false;
+
+      jest.spyOn((preferenceService as any).logger, "error").mockImplementation(() => {});
+      jest.spyOn(coll, "findOne").mockImplementation((...args) => {
+        if (!alreadyFailed) {
+          alreadyFailed = true;
+          return Promise.reject(new Error("transient failure"));
+        }
+        return findOne(...args);
+      });
+
+      preferenceService
+        .watchPreference("bucket")
+        .pipe(take(1))
+        .subscribe(next => {
+          expect(next.property).toBe("second update");
+          done();
+        });
+
+      preferenceService
+        .replace({scope: "bucket"}, {scope: "bucket", property: "first update"})
+        .then(() =>
+          preferenceService.replace({scope: "bucket"}, {scope: "bucket", property: "second update"})
+        )
+        .catch();
     });
   });
 });
