@@ -82,6 +82,28 @@ describe("RollupBuilder", () => {
       expect(bundle).not.toContain(`from "some-package"`);
     });
 
+    it("should inline the esm build of a dual package that lists require first", async () => {
+      installPackage(meta, "dual-package", {
+        "package.json": `{
+          "name": "dual-package",
+          "version": "1.0.0",
+          "exports": {".": {"require": "./cjs.js", "import": "./esm.mjs"}}
+        }`,
+        "cjs.js": `exports.greet = () => "from the commonjs build";`,
+        "esm.mjs": `export const greet = () => "from the esm build";`
+      });
+      await writeFile(
+        meta,
+        "index.mjs",
+        `import {greet} from "dual-package";
+         export default function() { return greet(); }`
+      );
+
+      await builder.build(meta);
+
+      expect(await readBundle(meta)).toContain("from the esm build");
+    });
+
     it("should keep never bundled packages external", async () => {
       await writeFile(
         meta,

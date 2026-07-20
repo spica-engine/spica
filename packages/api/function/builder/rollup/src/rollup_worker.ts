@@ -68,15 +68,26 @@ function writeTsconfig(meta: BuildMeta) {
 }
 
 function createOptions(language: string, meta: BuildMeta, diagnostics: BuildDiagnostic[]) {
-  const plugins: RollupOptions["plugins"] = [
+  /*
+    Two resolvers, tried in order, instead of one with every condition active. A dual package
+    that lists "require" before "import" in its exports map would otherwise resolve to its
+    commonjs build, which barely tree-shakes: date-fns costs 689KB that way and 89KB as esm.
+    The second resolver only sees packages the first one could not resolve, i.e. commonjs-only
+    ones, which keep being bundled as before.
+  */
+  const resolvers = [
+    ["node", "import", "default"],
+    ["node", "require", "default"]
+  ].map(exportConditions =>
     nodeResolve({
       preferBuiltins: true,
       rootDir: meta.cwd,
-      exportConditions: ["node", "import", "require", "default"],
+      exportConditions,
       extensions: [".mjs", ".js", ".json", ".ts"]
-    }),
-    json()
-  ];
+    })
+  );
+
+  const plugins: RollupOptions["plugins"] = [...resolvers, json()];
 
   if (language == "typescript") {
     plugins.push(
