@@ -125,13 +125,22 @@ function writeTsconfig(meta: BuildMeta) {
 
 function createOptions(language: string, meta: BuildMeta, diagnostics: BuildDiagnostic[]) {
   /*
-    Two resolvers, tried in order, instead of one with every condition active. A dual package
-    that lists "require" before "import" in its exports map would otherwise resolve to its
-    commonjs build, which barely tree-shakes: date-fns costs 689KB that way and 89KB as esm.
-    The second resolver only sees packages the first one could not resolve, i.e. commonjs-only
-    ones, which keep being bundled as before.
+    Resolvers tried in order, instead of one with every condition active, so a package's esm
+    build wins over its commonjs one — commonjs goes through plugin-commonjs as an opaque
+    namespace and barely tree-shakes (date-fns costs 689KB that way and 89KB as esm).
+
+    The first pass deliberately omits "node": a condition matches by the *package's* key order,
+    and packages like rxjs list "node" -> ./dist/cjs before their esm entry, so keeping "node"
+    active pulls in the commonjs build and every unused operator with it. Without it rxjs
+    resolves to ./dist/esm and drops from 314KB to tree-shaken.
+
+    The short condition list is an optimisation, not a correctness mechanism: "default" always
+    matches regardless of what is listed here, so a package using some alias we do not name
+    still resolves through it (typically to the same esm build, occasionally an older target).
+    Missing an alias costs bundle size, never correctness — which is why this list stays small.
   */
   const resolvers = [
+    ["import", "module", "es2015"],
     ["node", "import", "default"],
     ["node", "require", "default"]
   ].map(exportConditions =>

@@ -104,6 +104,43 @@ describe("RollupBuilder", () => {
       expect(await readBundle(meta)).toContain("from the esm build");
     });
 
+    // Shaped like rxjs: "node" points at the commonjs build and is listed *before* the esm
+    // entry, so keeping "node" active in the resolver pulls in commonjs — which plugin-commonjs
+    // wraps whole, defeating tree shaking and dragging every unused export along.
+    it("should inline the esm build of a package whose node condition points at commonjs", async () => {
+      installPackage(meta, "node-cjs-package", {
+        "package.json": `{
+          "name": "node-cjs-package",
+          "version": "1.0.0",
+          "exports": {".": {
+            "node": "./cjs.js",
+            "require": "./cjs.js",
+            "es2015": "./esm.mjs",
+            "default": "./esm.mjs"
+          }}
+        }`,
+        "cjs.js": `exports.used = () => "from the commonjs build";
+                   exports.unused = () => "UNUSED_COMMONJS_EXPORT";`,
+        "esm.mjs": `export const used = () => "from the esm build";
+                    export const unused = () => "UNUSED_ESM_EXPORT";`
+      });
+      await writeFile(
+        meta,
+        "index.mjs",
+        `import {used} from "node-cjs-package";
+         export default function() { return used(); }`
+      );
+
+      await builder.build(meta);
+
+      const bundle = await readBundle(meta);
+      expect(bundle).toContain("from the esm build");
+      expect(bundle).not.toContain("from the commonjs build");
+      // the esm build is tree-shakeable, so the export the entrypoint never uses is dropped
+      expect(bundle).not.toContain("UNUSED_ESM_EXPORT");
+      expect(bundle).not.toContain("UNUSED_COMMONJS_EXPORT");
+    });
+
     it("should keep never bundled packages external", async () => {
       await writeFile(
         meta,
