@@ -167,17 +167,8 @@ export class BucketPipelineBuilder extends PipelineBuilder {
     return this;
   }
 
-  async paginate(
-    paginate: boolean,
-    seekingPipeline: object[],
-    totalDocumentCount: Promise<number>
-  ): Promise<this> {
-    return super.paginate(
-      paginate,
-      seekingPipeline,
-      totalDocumentCount,
-      () => this.isFilterApplied || this.isRuleFilteringDocuments
-    );
+  protected isTotalDocumentCountAffected(): boolean {
+    return this.isFilterApplied || this.isRuleFilteringDocuments;
   }
 
   result(): object[] {

@@ -263,6 +263,37 @@ describe("BucketDataController", () => {
           {_id: response.data[2]._id, name: "Toby", age: 30}
         ]);
       });
+
+      it("should report the real total when the skip goes past the end", async () => {
+        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+          skip: "100",
+          paginate: "true"
+        });
+
+        expect(response.meta.total).toBe(5);
+        expect(response.data).toEqual([]);
+      });
+
+      it("should report the real total when a filtered page goes past the end", async () => {
+        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: JSON.stringify({age: {$gt: 21}}),
+          skip: "100",
+          paginate: "true"
+        });
+
+        expect(response.meta.total).toBe(4);
+        expect(response.data).toEqual([]);
+      });
+
+      it("should report a zero total when nothing matches the filter", async () => {
+        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: JSON.stringify({name: "Nobody"}),
+          paginate: "true"
+        });
+
+        expect(response.meta.total).toBe(0);
+        expect(response.data).toEqual([]);
+      });
     });
 
     describe("filter", () => {

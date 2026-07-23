@@ -18,7 +18,7 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";
 import {RefreshToken, PaginationResponse} from "@spica-server/interface-passport-refresh_token";
-import {PipelineBuilder} from "@spica-server/database-pipeline";
+import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options.js";
 import {RefreshTokenPipelineBuilder} from "./pipeline.builder.js";
 
@@ -54,27 +54,17 @@ export class RefreshTokenController {
       .setVisibilityOfFields({...this.HIDDEN_FIELDS})
       .result();
 
-    const pipeline = (
-      await pipelineBuilder.paginate(
-        paginate,
-        seekingPipeline,
-        this.service.estimatedDocumentCount()
-      )
-    ).result();
+    const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
+      this.service.estimatedDocumentCount()
+    );
 
     if (paginate) {
-      return this.service
-        .aggregate<PaginationResponse<RefreshToken>>(pipeline)
-        .next()
-        .then(r => {
-          if (!r.data.length) {
-            r.meta = {total: 0};
-          }
-          return r;
-        });
+      return executePaginationPlan<RefreshToken>(this.service, plan) as Promise<
+        PaginationResponse<RefreshToken>
+      >;
     }
 
-    return this.service.aggregate<RefreshToken[]>([...pipeline, ...seekingPipeline]).toArray();
+    return this.service.aggregate<RefreshToken[]>(plan.dataPipeline).toArray();
   }
 
   @Get(":id")

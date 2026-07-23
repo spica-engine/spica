@@ -43,7 +43,7 @@ import {
 import {registerPolicyAttacher} from "./utility.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
-import {PipelineBuilder} from "@spica-server/database-pipeline";
+import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 import {VerificationService} from "./verification.service.js";
 import {ProviderVerificationService} from "./services/provider.verification.service.js";
 import {PasswordlessLoginService} from "./services/passwordless-login.service.js";
@@ -175,27 +175,19 @@ export class UserController {
       .setVisibilityOfFields(this.hideSecretsExpression())
       .result();
 
-    const pipeline = (
-      await pipelineBuilder.paginate(
-        paginate,
-        seekingPipeline,
-        this.userService.estimatedDocumentCount()
-      )
-    ).result();
+    const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
+      this.userService.estimatedDocumentCount()
+    );
 
     if (paginate) {
-      const paginatedResult = await this.userService
-        .aggregate<PaginationResponse<User>>(pipeline)
-        .next();
+      const paginatedResult = await executePaginationPlan<User>(this.userService, plan);
       return {
-        meta: paginatedResult.data.length ? paginatedResult.meta : {total: 0},
+        meta: paginatedResult.meta,
         data: paginatedResult.data.map(user => this.userService.decryptProviderFields(user))
       };
     }
 
-    const users = await this.userService
-      .aggregate<User>([...pipeline, ...seekingPipeline])
-      .toArray();
+    const users = await this.userService.aggregate<User>(plan.dataPipeline).toArray();
 
     return users.map(user => {
       return this.userService.decryptProviderFields(user);

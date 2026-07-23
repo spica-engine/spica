@@ -3,6 +3,7 @@ import {SecretService} from "@spica-server/secret-services";
 import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface-secret";
 import {encrypt} from "@spica-server/core-encryption";
 import {SecretPipelineBuilder} from "./pipeline.builder.js";
+import {executePaginationPlan} from "@spica-server/database-pipeline";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
 
@@ -29,23 +30,17 @@ export async function find(
     .hideSecrets()
     .result();
 
-  const pipeline = (
-    await pipelineBuilder.paginate(paginate, seekingPipeline, ss.estimatedDocumentCount())
-  ).result();
+  const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
+    ss.estimatedDocumentCount()
+  );
 
   if (paginate) {
-    return ss
-      .aggregate<PaginationResponse<HiddenSecret>>(pipeline)
-      .next()
-      .then(r => {
-        if (!r.data.length) {
-          r.meta = {total: 0};
-        }
-        return r;
-      });
+    return executePaginationPlan<HiddenSecret>(ss, plan) as Promise<
+      PaginationResponse<HiddenSecret>
+    >;
   }
 
-  return ss.aggregate<HiddenSecret>([...pipeline, ...seekingPipeline]).toArray();
+  return ss.aggregate<HiddenSecret>(plan.dataPipeline).toArray();
 }
 
 export async function findOne(ss: SecretService, id: ObjectId): Promise<HiddenSecret> {
