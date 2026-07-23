@@ -43,6 +43,9 @@ export class RollupWorkerHost {
     }
     const worker = this.worker;
     this.worker = undefined;
+    // The guarded exit handler below no longer rejects once this.worker is cleared, so fail any
+    // in-flight build here — a deliberately terminated worker will never answer it.
+    this.rejectAllPending("Bundler worker was terminated.");
     return worker.terminate().then(() => {});
   }
 
@@ -57,26 +60,39 @@ export class RollupWorkerHost {
     // resourceLimits (worker execArgv rejects V8 flags like --max-old-space-size). Note a
     // --max-old-space-size on the api process itself is a hard ceiling this cannot exceed.
     // Unset -> node's default applies.
-    this.worker = new worker_threads.Worker(
+    const worker = new worker_threads.Worker(
       this.workerPath || path.join(__dirname, "rollup_worker.js"),
       this.maxOldSpaceMb
         ? {resourceLimits: {maxOldGenerationSizeMb: this.maxOldSpaceMb}}
         : undefined
     );
+    this.worker = worker;
 
-    this.worker.on("message", (response: BundleResponse) => this.settle(response));
+    worker.on("message", (response: BundleResponse) => this.settle(response));
+
+    // Both handlers guard on `this.worker !== worker`: a dead worker's queued error/exit must not
+    // clear a *newer* live worker or reject builds dispatched to it. Once a crashed worker has
+    // been replaced (or killed), its late events are inert. Without this, worker A's error clears
+    // the reference, a concurrent build spawns worker B, then A's trailing exit drops B and fails
+    // B's build — RollupWorkerHost is shared per-language across concurrent builds.
 
     // A Worker is an EventEmitter: an 'error' event with no listener is rethrown by node and
     // takes the whole api process down. A heavy bundle exhausting the worker's heap
     // (ERR_WORKER_OUT_OF_MEMORY) surfaces here, so listen and fail the in-flight builds
     // instead of crashing. Dropping the reference lets the next build spawn a fresh worker.
-    this.worker.on("error", error => {
+    worker.on("error", error => {
+      if (this.worker !== worker) {
+        return;
+      }
       this.logger.error(`Bundler worker crashed: ${error.message}`);
       this.worker = undefined;
       this.rejectAllPending(`Bundler worker crashed: ${error.message}`, "BUNDLER_WORKER_CRASH");
     });
 
-    this.worker.once("exit", exitCode => {
+    worker.once("exit", exitCode => {
+      if (this.worker !== worker) {
+        return;
+      }
       this.worker = undefined;
       if (exitCode != 0) {
         this.logger.log("Bundler worker has quit with non-zero exit code.");
@@ -86,7 +102,7 @@ export class RollupWorkerHost {
       this.rejectAllPending(`Bundler worker has quit with exit code ${exitCode}.`);
     });
 
-    return this.worker;
+    return worker;
   }
 
   private settle({id, diagnostics}: BundleResponse) {
