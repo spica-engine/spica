@@ -22,7 +22,10 @@ export class RollupWorkerHost {
   private lastId = 0;
   private pending = new Map<number, {resolve: () => void; reject: (e: unknown) => void}>();
 
-  constructor(private workerPath?: string) {}
+  constructor(
+    private workerPath?: string,
+    private maxOldSpaceMb?: number
+  ) {}
 
   run(language: string, meta: BuildMeta): Promise<void> {
     const worker = this.ensureWorker();
@@ -49,8 +52,16 @@ export class RollupWorkerHost {
     }
 
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    // A worker thread has its own heap. Bundling a large dependency graph can exhaust the
+    // default (container-sized) heap and kill the worker, so let an operator raise it via
+    // resourceLimits (worker execArgv rejects V8 flags like --max-old-space-size). Note a
+    // --max-old-space-size on the api process itself is a hard ceiling this cannot exceed.
+    // Unset -> node's default applies.
     this.worker = new worker_threads.Worker(
-      this.workerPath || path.join(__dirname, "rollup_worker.js")
+      this.workerPath || path.join(__dirname, "rollup_worker.js"),
+      this.maxOldSpaceMb
+        ? {resourceLimits: {maxOldGenerationSizeMb: this.maxOldSpaceMb}}
+        : undefined
     );
 
     this.worker.on("message", (response: BundleResponse) => this.settle(response));

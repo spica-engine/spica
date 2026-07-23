@@ -9,9 +9,9 @@ export class RollupBuilder extends Builder {
 
   private host: RollupWorkerHost;
 
-  constructor(language: string, options: {workerPath?: string} = {}) {
+  constructor(language: string, options: {workerPath?: string; maxOldSpaceMb?: number} = {}) {
     super(language);
-    this.host = new RollupWorkerHost(options.workerPath);
+    this.host = new RollupWorkerHost(options.workerPath, options.maxOldSpaceMb);
     this.strategies = new Map<string, BuildStrategy>([
       ["javascript", new JavascriptBundle(this.host)],
       ["typescript", new TypescriptBundle(this.host)]

@@ -29,6 +29,7 @@ export interface SchedulingOptions {
   workerLogOutput?: ("database" | "stdout")[];
   spawnEntrypointPath?: string;
   builder?: BuilderType;
+  builderMaxMemoryMb?: number;
   tsCompilerPath?: string;
   rollupWorkerPath?: string;
   grpcPort?: number;

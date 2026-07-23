@@ -329,6 +329,11 @@ const args = yargsInstance
         "How function sources are turned into runnable code. 'legacy' compiles the entrypoint only, 'rollup' bundles it together with its local imports and dependencies. Default value is legacy.",
       default: "legacy"
     },
+    "function-builder-max-memory": {
+      number: true,
+      description:
+        "Max heap in MB for the rollup bundler worker thread. Bundling a large dependency graph can exhaust the default (container-sized) heap and fail the build; raise this to give heavy functions more headroom. Keep it below the container's memory limit so the kernel does not OOM-kill the api. Unset uses node's default."
+    },
     "function-debug": {
       boolean: true,
       description: "Enable/disable function workers debugging mode. Default value is true",
@@ -952,6 +957,7 @@ const modules = [
     },
     debug: args["function-debug"],
     builder: args["function-builder"] as BuilderType,
+    builderMaxMemoryMb: args["function-builder-max-memory"],
     maxConcurrency: args["function-worker-concurrency"],
     eventConcurrency: args["function-worker-event-concurrency"],
     maxWarmWorkers: args["function-warm-workers-max"],

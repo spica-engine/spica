@@ -214,7 +214,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   private createBuilder(language: string): Builder {
     return this.options.builder == BuilderType.Rollup
-      ? new RollupBuilder(language, {workerPath: this.options.rollupWorkerPath})
+      ? new RollupBuilder(language, {
+          workerPath: this.options.rollupWorkerPath,
+          maxOldSpaceMb: this.options.builderMaxMemoryMb
+        })
       : new LegacyBuilder(language, {tsCompilerPath: this.options.tsCompilerPath});
   }
 
