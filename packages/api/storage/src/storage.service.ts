@@ -13,7 +13,7 @@ import {
   ReturnDocument,
   WithId
 } from "@spica-server/database";
-import {PipelineBuilder} from "@spica-server/database-pipeline";
+import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 import {StoragePipelineBuilder} from "./storage-pipeline.builder.js";
 import {
   StorageOptions,
@@ -150,25 +150,17 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
 
-    const pipeline = (
-      await pipelineBuilder.paginate(paginate, seeking, this.estimatedDocumentCount())
-    ).result();
+    const plan = pipelineBuilder.buildPaginationPlan(seeking, () => this.estimatedDocumentCount());
 
     if (paginate) {
-      return this._coll
-        .aggregate<PaginatedStorageResponse>(pipeline)
-        .next()
-        .then(async r => {
-          if (!r.data.length) {
-            r.meta = {total: 0};
-          }
-          r.data = await this.putUrls(r.data);
-          return r;
-        });
+      return executePaginationPlan<StorageResponse>(this._coll, plan).then(async r => {
+        r.data = await this.putUrls(r.data);
+        return r as PaginatedStorageResponse;
+      });
     }
 
     return this._coll
-      .aggregate<StorageResponse>([...pipeline, ...seeking])
+      .aggregate<StorageResponse>(plan.dataPipeline)
       .toArray()
       .then(r => this.putUrls(r));
   }

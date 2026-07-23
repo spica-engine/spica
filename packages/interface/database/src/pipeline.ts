@@ -1,5 +1,23 @@
 import {ObjectId} from "mongodb";
 
+export interface PaginationPlan {
+  dataPipeline: object[];
+  countPipeline: object[] | null;
+  estimateTotalDocumentCount: () => Promise<number>;
+}
+
+export interface PaginationResult<T> {
+  meta: {total: number};
+  data: T[];
+}
+
+export interface AggregatableCollection {
+  aggregate<T>(pipeline: object[]): {
+    toArray(): Promise<T[]>;
+    next(): Promise<T | null>;
+  };
+}
+
 export interface IPipelineBuilder {
   attachToPipeline(condition: any, ...attachedObject: object[]): this;
   findOneIfRequested(entryId: ObjectId): this;
@@ -8,11 +26,9 @@ export interface IPipelineBuilder {
   sort(sort: Object): this;
   limit(limit: number): this;
   skip(skip: number): this;
-  paginate(
-    paginate: boolean,
+  buildPaginationPlan(
     seekingPipeline: object[],
-    totalDocumentCount: Promise<number>,
-    isTotalDocumentCountAffected?: () => boolean
-  ): Promise<this>;
+    estimateTotalDocumentCount: () => Promise<number>
+  ): PaginationPlan;
   result(): object[];
 }
