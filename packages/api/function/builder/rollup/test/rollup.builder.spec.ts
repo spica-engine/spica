@@ -263,4 +263,65 @@ describe("RollupBuilder", () => {
       expect(await readBundle(second)).toContain("second");
     });
   });
+
+  // Regression: a worker that dies (e.g. a heavy bundle exhausting its heap ->
+  // ERR_WORKER_OUT_OF_MEMORY) emits an 'error' event. Without a listener node rethrows it and
+  // the whole api process crashes. A crashing worker here must fail the build instead — if the
+  // handler regressed, the unhandled 'error' would take down this test process.
+  describe("worker crash", () => {
+    let crashingWorkerPath: string;
+
+    beforeAll(() => {
+      crashingWorkerPath = path.join(process.env.TEST_TMPDIR, "crashing-worker.cjs");
+      fs.writeFileSync(
+        crashingWorkerPath,
+        `const {parentPort} = require("worker_threads");
+         parentPort.on("message", () => { throw new Error("simulated worker crash"); });`
+      );
+    });
+
+    const meta: BuildMeta = {
+      cwd: undefined,
+      entrypoints: {build: "index.mjs", runtime: "index.mjs"},
+      outDir: ".build"
+    };
+
+    beforeEach(() => {
+      meta.cwd = FunctionTestBed.initialize(`export default function() {}`, meta);
+      return fs.promises.mkdir(path.join(meta.cwd, "node_modules"), {recursive: true});
+    });
+
+    // A dying worker emits 'error' and 'exit'; whichever settles the pending build first
+    // decides the diagnostic code (CRASH vs EXIT). Both mean "worker died, build fails as a
+    // 422", so assert the shape, not the racy code. The test merely completing proves the fix:
+    // before it, the unhandled 'error' would crash this jest process.
+    it("should reject the build with a diagnostic instead of crashing the process", async () => {
+      const builder = new RollupBuilder("javascript", {workerPath: crashingWorkerPath});
+
+      const diagnostics = await builder.build(meta).catch(e => e);
+
+      expect(Array.isArray(diagnostics)).toBe(true);
+      expect(diagnostics[0]).toEqual(
+        expect.objectContaining({category: 1, text: expect.stringMatching(/worker/i)})
+      );
+
+      await builder.kill();
+    });
+
+    it("should respawn a fresh worker for the next build after a crash", async () => {
+      const builder = new RollupBuilder("javascript", {workerPath: crashingWorkerPath});
+
+      await builder.build(meta).catch(() => {});
+      // second attempt spawns a new worker (the crashed one was dropped); it fails the same
+      // way, proving a usable worker was created rather than the host being left wedged.
+      const second = await builder.build(meta).catch(e => e);
+
+      expect(Array.isArray(second)).toBe(true);
+      expect(second[0]).toEqual(
+        expect.objectContaining({category: 1, text: expect.stringMatching(/worker/i)})
+      );
+
+      await builder.kill();
+    });
+  });
 });
