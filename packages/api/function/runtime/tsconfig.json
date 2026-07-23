@@ -6,7 +6,7 @@
       "path": "../../../interface/function/runtime"
     },
     {
-      "path": "../../../interface/function/compiler"
+      "path": "../../../interface/function/builder"
     },
     {
       "path": "../../../database/testing"

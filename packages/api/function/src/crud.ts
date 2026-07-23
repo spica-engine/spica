@@ -198,7 +198,7 @@ export namespace index {
 
     await engine.storeAssets(fn as Function & {_id: any}, engine.getIndexFilename(fn), async () => {
       await engine.update(fn, index);
-      await engine.compile(fn);
+      await engine.build(fn);
       return Buffer.from(index, "utf-8");
     });
 

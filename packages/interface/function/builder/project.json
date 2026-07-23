@@ -1,0 +1,5 @@
+{
+  "name": "interface/function/builder",
+  "sourceRoot": "packages/interface/function/builder/src",
+  "projectType": "library"
+}

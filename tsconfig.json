@@ -2,10 +2,10 @@
   "files": [],
   "references": [
     {
-      "path": "./packages/api/function/compiler/javascript"
+      "path": "./packages/api/function/builder/legacy"
     },
     {
-      "path": "./packages/api/function/compiler/typescript"
+      "path": "./packages/api/function/builder/rollup"
     },
     {
       "path": "./packages/interface/passport/refresh_token"
@@ -38,7 +38,7 @@
       "path": "./packages/interface/bucket/expression"
     },
     {
-      "path": "./packages/interface/function/compiler"
+      "path": "./packages/interface/function/builder"
     },
     {
       "path": "./packages/interface/function/enqueuer"
@@ -128,7 +128,7 @@
       "path": "./packages/api/bucket/expression"
     },
     {
-      "path": "./packages/api/function/compiler"
+      "path": "./packages/api/function/builder"
     },
     {
       "path": "./packages/api/function/enqueuer"

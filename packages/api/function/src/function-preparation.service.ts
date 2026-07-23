@@ -6,7 +6,7 @@ import {Scheduler} from "@spica-server/function-scheduler";
 import {Function, Options, FUNCTION_OPTIONS} from "@spica-server/interface-function";
 
 /**
- * Owns the install-packages + compile steps for a function.
+ * Owns the install-packages + build steps for a function.
  * Injected by FunctionEngine, FunctionAssetWatcher, and FunctionAssetReconciler
  * to avoid the circular dependency that previously required registerPrepareCallback.
  */
@@ -25,27 +25,27 @@ export class FunctionPreparationService {
     return this.scheduler.pkgmanagers.get("node").install(this.getFunctionRoot(fn), qualifiedNames);
   }
 
-  compile(fn: Function): Promise<void> {
-    const language = this.scheduler.languages.get(fn.language);
+  build(fn: Function): Promise<void> {
+    const builder = this.scheduler.builders.get(fn.language);
     const outDirRelative = path.join(".", this.options.outDir);
-    return language.compile({
+    return builder.build({
       cwd: this.getFunctionRoot(fn),
       outDir: outDirRelative,
-      entrypoints: language.description.entrypoints
+      entrypoints: builder.description.entrypoints
     });
   }
 
   async prepare(fn: Function): Promise<void> {
     await this.installPackages(fn, []);
-    await this.compile(fn);
+    await this.build(fn);
   }
 
-  /** Re-prepare only the index file: recompile without reinstalling packages. */
+  /** Re-prepare only the index file: rebuild without reinstalling packages. */
   prepareIndex(fn: Function): Promise<void> {
-    return this.compile(fn);
+    return this.build(fn);
   }
 
-  /** Re-prepare only package.json: reinstall packages without recompiling. */
+  /** Re-prepare only package.json: reinstall packages without rebuilding. */
   preparePackageJson(fn: Function): Promise<void> {
     return this.installPackages(fn, []);
   }

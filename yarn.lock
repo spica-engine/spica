@@ -9444,32 +9444,39 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@spica-server/function-compiler-javascript@workspace:*, @spica-server/function-compiler-javascript@workspace:packages/api/function/compiler/javascript":
+"@spica-server/function-builder-legacy@workspace:*, @spica-server/function-builder-legacy@workspace:packages/api/function/builder/legacy":
   version: 0.0.0-use.local
-  resolution: "@spica-server/function-compiler-javascript@workspace:packages/api/function/compiler/javascript"
-  dependencies:
-    "@spica-server/function-compiler": "workspace:*"
-    "@spica-server/interface-function-compiler": "workspace:*"
-  languageName: unknown
-  linkType: soft
-
-"@spica-server/function-compiler-typescript@workspace:*, @spica-server/function-compiler-typescript@workspace:packages/api/function/compiler/typescript":
-  version: 0.0.0-use.local
-  resolution: "@spica-server/function-compiler-typescript@workspace:packages/api/function/compiler/typescript"
+  resolution: "@spica-server/function-builder-legacy@workspace:packages/api/function/builder/legacy"
   dependencies:
     "@nestjs/common": "npm:^10.4.22"
-    "@spica-server/function-compiler": "workspace:*"
-    "@spica-server/interface-function-compiler": "workspace:*"
+    "@spica-server/function-builder": "workspace:*"
+    "@spica-server/interface-function-builder": "workspace:*"
     rxjs: "npm:^7.8.2"
     typescript: "npm:^5.7.3"
   languageName: unknown
   linkType: soft
 
-"@spica-server/function-compiler@workspace:*, @spica-server/function-compiler@workspace:packages/api/function/compiler":
+"@spica-server/function-builder-rollup@workspace:*, @spica-server/function-builder-rollup@workspace:packages/api/function/builder/rollup":
   version: 0.0.0-use.local
-  resolution: "@spica-server/function-compiler@workspace:packages/api/function/compiler"
+  resolution: "@spica-server/function-builder-rollup@workspace:packages/api/function/builder/rollup"
   dependencies:
-    "@spica-server/interface-function-compiler": "workspace:*"
+    "@nestjs/common": "npm:^10.4.22"
+    "@rollup/plugin-commonjs": "npm:^29.0.3"
+    "@rollup/plugin-json": "npm:^6.1.0"
+    "@rollup/plugin-node-resolve": "npm:^16.0.3"
+    "@rollup/plugin-typescript": "npm:^12.3.0"
+    "@spica-server/function-builder": "workspace:*"
+    "@spica-server/interface-function-builder": "workspace:*"
+    rollup: "npm:^4.60.4"
+    typescript: "npm:^5.7.3"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-builder@workspace:*, @spica-server/function-builder@workspace:packages/api/function/builder":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-builder@workspace:packages/api/function/builder"
+  dependencies:
+    "@spica-server/interface-function-builder": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -9644,7 +9651,7 @@ __metadata:
   resolution: "@spica-server/function-runtime@workspace:packages/api/function/runtime"
   dependencies:
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface-function-compiler": "workspace:*"
+    "@spica-server/interface-function-builder": "workspace:*"
     "@spica-server/interface-function-runtime": "workspace:*"
   languageName: unknown
   linkType: soft
@@ -9657,9 +9664,9 @@ __metadata:
     "@nestjs/core": "npm:^10.4.22"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/function-compiler": "workspace:*"
-    "@spica-server/function-compiler-javascript": "workspace:*"
-    "@spica-server/function-compiler-typescript": "workspace:*"
+    "@spica-server/function-builder": "workspace:*"
+    "@spica-server/function-builder-legacy": "workspace:*"
+    "@spica-server/function-builder-rollup": "workspace:*"
     "@spica-server/function-enqueuer": "workspace:*"
     "@spica-server/function-pkgmanager-local": "workspace:*"
     "@spica-server/function-pkgmanager-node": "workspace:*"
@@ -9669,6 +9676,7 @@ __metadata:
     "@spica-server/function-runtime-io": "workspace:*"
     "@spica-server/function-runtime-logger": "workspace:*"
     "@spica-server/function-runtime-node": "workspace:*"
+    "@spica-server/interface-function-builder": "workspace:*"
     "@spica-server/interface-function-pkgmanager": "workspace:*"
     "@spica-server/interface-function-runtime": "workspace:*"
     "@spica-server/interface-function-scheduler": "workspace:*"
@@ -9911,9 +9919,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@spica-server/interface-function-compiler@workspace:*, @spica-server/interface-function-compiler@workspace:packages/interface/function/compiler":
+"@spica-server/interface-function-builder@workspace:*, @spica-server/interface-function-builder@workspace:packages/interface/function/builder":
   version: 0.0.0-use.local
-  resolution: "@spica-server/interface-function-compiler@workspace:packages/interface/function/compiler"
+  resolution: "@spica-server/interface-function-builder@workspace:packages/interface/function/builder"
   languageName: unknown
   linkType: soft
 
@@ -9962,6 +9970,7 @@ __metadata:
     "@spica-server/function-queue": "workspace:*"
     "@spica-server/function-queue-proto": "workspace:*"
     "@spica-server/interface-core": "workspace:*"
+    "@spica-server/interface-function-builder": "workspace:*"
     "@spica-server/replication": "workspace:*"
   languageName: unknown
   linkType: soft
@@ -10842,6 +10851,7 @@ __metadata:
     "@spica-server/env_var": "workspace:*"
     "@spica-server/filter": "workspace:*"
     "@spica-server/function": "workspace:*"
+    "@spica-server/interface-function-builder": "workspace:*"
     "@spica-server/mailer": "workspace:*"
     "@spica-server/passport": "workspace:*"
     "@spica-server/preference": "workspace:*"

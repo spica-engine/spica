@@ -10,6 +10,7 @@ import {WsAdapter} from "@spica-server/core-websocket";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
+import {BuilderType} from "@spica-server/interface-function-builder";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 import {StatusModule} from "@spica-server/status";
@@ -321,6 +322,13 @@ const args = yargsInstance
         "When a function is updated under traffic, its live workers keep serving the old code while fresh replacements are pre-warmed. If the replacements never become ready within this many milliseconds (e.g. the new version crashes on load), the old workers are force-retired so the new code runs and its failure surfaces. Default is 30000.",
       default: 30000
     },
+    "function-builder": {
+      string: true,
+      choices: ["legacy", "rollup"],
+      description:
+        "How function sources are turned into runnable code. 'legacy' compiles the entrypoint only, 'rollup' bundles it together with its local imports and dependencies. Default value is legacy.",
+      default: "legacy"
+    },
     "function-debug": {
       boolean: true,
       description: "Enable/disable function workers debugging mode. Default value is true",
@@ -353,7 +361,11 @@ const args = yargsInstance
       default: ["database"],
       coerce: (value: string | string[]) => {
         const values = Array.isArray(value)
-          ? value.flatMap(v => String(v).split(",").map(token => token.trim()))
+          ? value.flatMap(v =>
+              String(v)
+                .split(",")
+                .map(token => token.trim())
+            )
           : String(value)
               .split(",")
               .map(token => token.trim());
@@ -668,7 +680,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       throw new TypeError("--bucket-cache-ttl must be a positive number");
     }
 
-    if (!Number.isInteger(args["database-change-stream-await-time"]) || args["database-change-stream-await-time"] < 1) {
+    if (
+      !Number.isInteger(args["database-change-stream-await-time"]) ||
+      args["database-change-stream-await-time"] < 1
+    ) {
       throw new TypeError("--database-change-stream-await-time must be a positive integer");
     }
 
@@ -936,6 +951,7 @@ const modules = [
       allowCredentials: args["cors-allow-credentials"]
     },
     debug: args["function-debug"],
+    builder: args["function-builder"] as BuilderType,
     maxConcurrency: args["function-worker-concurrency"],
     eventConcurrency: args["function-worker-event-concurrency"],
     maxWarmWorkers: args["function-warm-workers-max"],

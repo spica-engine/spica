@@ -36,11 +36,24 @@ process.env.FUNCTION_TS_COMPILER_PATH = path.join(
   "packages",
   "api",
   "function",
-  "compiler",
-  "typescript",
+  "builder",
+  "legacy",
   "dist",
   "src",
   "typescript_worker.js"
+);
+
+// directory for function rollup bundler worker path
+process.env.FUNCTION_ROLLUP_WORKER_PATH = path.join(
+  workspaceRoot,
+  "packages",
+  "api",
+  "function",
+  "builder",
+  "rollup",
+  "dist",
+  "src",
+  "rollup_worker.js"
 );
 
 afterAll(async () => {

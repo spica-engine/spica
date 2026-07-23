@@ -29,7 +29,7 @@ FUNCTION_ASSET_PATH="${FUNCTION_ASSET_PATH:-$PERSISTENT_PATH/function-assets}"
 mkdir -p "$PERSISTENT_PATH"
 
 FUNCTION_SPAWN_ENTRYPOINT_PATH="${FUNCTION_SPAWN_ENTRYPOINT_PATH:-packages/api/function/runtime/node/dist/bootstrap/entrypoint.js}"
-FUNCTION_TS_COMPILER_PATH="${FUNCTION_TS_COMPILER_PATH:-packages/api/function/compiler/typescript/dist/src/typescript_worker.js}"
+FUNCTION_TS_COMPILER_PATH="${FUNCTION_TS_COMPILER_PATH:-packages/api/function/builder/legacy/dist/src/typescript_worker.js}"
 FUNCTION_GRPC_ADDRESS="${FUNCTION_GRPC_ADDRESS:-0.0.0.0:5688}"
 
 echo "Starting API — function asset storage: default (local filesystem)"

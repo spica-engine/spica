@@ -3,6 +3,7 @@ import {EventQueue, Queue} from "@spica-server/function-queue";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CorsOptions} from "@spica-server/interface-core";
 import {event} from "@spica-server/function-queue-proto";
+import {BuilderType} from "@spica-server/interface-function-builder";
 
 export type EnqueuerFactory<QueueType, OptionsT> = (
   queue: EventQueue,
@@ -27,7 +28,9 @@ export interface SchedulingOptions {
   invocationLogs: boolean;
   workerLogOutput?: ("database" | "stdout")[];
   spawnEntrypointPath?: string;
+  builder?: BuilderType;
   tsCompilerPath?: string;
+  rollupWorkerPath?: string;
   grpcPort?: number;
   functionGrpcMaxMessageSizeBytes?: number;
   payloadSizeLimit?: number;

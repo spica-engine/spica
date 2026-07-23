@@ -1,5 +1,0 @@
-{
-  "name": "api/function/compiler",
-  "sourceRoot": "packages/api/function/compiler",
-  "projectType": "library"
-}

@@ -2,9 +2,10 @@ import path from "path";
 import {Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
-import {Language} from "@spica-server/function-compiler";
-import {Javascript} from "@spica-server/function-compiler-javascript";
-import {Typescript} from "@spica-server/function-compiler-typescript";
+import {Builder} from "@spica-server/function-builder";
+import {LegacyBuilder} from "@spica-server/function-builder-legacy";
+import {RollupBuilder} from "@spica-server/function-builder-rollup";
+import {BuilderType, SUPPORTED_LANGUAGES} from "@spica-server/interface-function-builder";
 import {
   DatabaseEnqueuer,
   Enqueuer,
@@ -66,7 +67,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   readonly runtimes = new Map<string, Runtime>();
   readonly pkgmanagers = new Map<string, DelegatePkgManager>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
-  readonly languages = new Map<string, Language>();
+  readonly builders = new Map<string, Builder>();
 
   private outputs: StandartStream[];
 
@@ -82,8 +83,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   ) {
     this.outputs = this.createOutputs(database);
 
-    this.languages.set("typescript", new Typescript(options.tsCompilerPath));
-    this.languages.set("javascript", new Javascript());
+    for (const language of SUPPORTED_LANGUAGES) {
+      this.builders.set(language, this.createBuilder(language));
+    }
+
     this.runtimes.set("node", new Node());
     this.pkgmanagers.set("node", new LocalPackageManager(new Npm()));
 
@@ -205,8 +208,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       : this.onLastWorkerLost.asObservable().pipe(take(1)).toPromise();
   }
 
-  killLanguages() {
-    return Promise.all(Array.from(this.languages.values()).map(l => l.kill()));
+  killBuilders() {
+    return Promise.all(Array.from(this.builders.values()).map(b => b.kill()));
+  }
+
+  private createBuilder(language: string): Builder {
+    return this.options.builder == BuilderType.Rollup
+      ? new RollupBuilder(language, {workerPath: this.options.rollupWorkerPath})
+      : new LegacyBuilder(language, {tsCompilerPath: this.options.tsCompilerPath});
   }
 
   private disabled = false;
@@ -227,7 +236,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     await this.killFreeWorkers();
     await this.waitLastWorkerLost();
 
-    await this.killLanguages();
+    await this.killBuilders();
 
     return this.queue.kill();
   }

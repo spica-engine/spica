@@ -1,11 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  Optional,
-  OnModuleDestroy,
-  OnModuleInit
-} from "@nestjs/common";
+import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
@@ -167,7 +160,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Run npm install + compile for a function. Used by reconciler after restoring
+   * Run npm install + build for a function. Used by reconciler after restoring
    * assets from storage, and by CRUD pipeline after writing new files.
    */
   async prepareFunction(fn: Function): Promise<void> {
@@ -179,7 +172,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
    *
    * @param fn        The function whose asset is being changed.
    * @param filename  The asset filename (e.g. "index.ts" or "package.json").
-   * @param op        Callback that performs all disk writes / installs / compiles
+   * @param op        Callback that performs all disk writes / installs / builds
    *                  and returns the new file buffer to upload.
    */
   async storeAssets(
@@ -195,7 +188,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
    * the function's build entrypoint, based on its language configuration.
    */
   getIndexFilename(fn: Function): FunctionAssetFilename {
-    return this.getFunctionLanguage(fn).description.entrypoints.build as FunctionAssetFilename;
+    return this.getFunctionBuilder(fn).description.entrypoints.build as FunctionAssetFilename;
   }
 
   /**
@@ -220,7 +213,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   async createFunction(fn: Function) {
     const functionRoot = this.getFunctionRoot(fn);
-    const functionLanguage = this.getFunctionLanguage(fn);
+    const functionBuilder = this.getFunctionBuilder(fn);
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
@@ -230,7 +223,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       private: true,
       keywords: ["spica", "function", "node.js"],
       license: "UNLICENSED",
-      main: path.join(".", this.options.outDir, functionLanguage.description.entrypoints.runtime)
+      main: path.join(".", this.options.outDir, functionBuilder.description.entrypoints.runtime)
     };
 
     return fs.promises.writeFile(
@@ -243,8 +236,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return this.preparationService.deleteFunctionDirectory(fn.name);
   }
 
-  compile(fn: Function) {
-    return this.preparationService.compile(fn);
+  build(fn: Function) {
+    return this.preparationService.build(fn);
   }
 
   async update(fn: Function, index: string): Promise<void> {
@@ -288,13 +281,13 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return Promise.resolve(null);
   }
 
-  private getFunctionLanguage(fn: Function) {
-    return this.scheduler.languages.get(fn.language);
+  private getFunctionBuilder(fn: Function) {
+    return this.scheduler.builders.get(fn.language);
   }
 
   getFunctionBuildEntrypoint(fn: Function) {
-    const language = this.getFunctionLanguage(fn);
-    return path.join(this.options.root, fn.name, language.description.entrypoints.build);
+    const builder = this.getFunctionBuilder(fn);
+    return path.join(this.options.root, fn.name, builder.description.entrypoints.build);
   }
 }
 
