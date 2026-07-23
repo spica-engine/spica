@@ -41,7 +41,7 @@ import {
 import {registerPolicyAttacher} from "./utility.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
-import {PipelineBuilder} from "@spica-server/database-pipeline";
+import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 
 @Controller("passport/identity")
 export class IdentityController {
@@ -184,27 +184,17 @@ export class IdentityController {
       .setVisibilityOfFields(this.hideSecretsExpression())
       .result();
 
-    const pipeline = (
-      await pipelineBuilder.paginate(
-        paginate,
-        seekingPipeline,
-        this.identityService.estimatedDocumentCount()
-      )
-    ).result();
+    const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
+      this.identityService.estimatedDocumentCount()
+    );
 
     if (paginate) {
-      return this.identityService
-        .aggregate<PaginationResponse<Identity>>(pipeline)
-        .next()
-        .then(r => {
-          if (!r.data.length) {
-            r.meta = {total: 0};
-          }
-          return r;
-        });
+      return executePaginationPlan<Identity>(this.identityService, plan) as Promise<
+        PaginationResponse<Identity>
+      >;
     }
 
-    return this.identityService.aggregate<Identity[]>([...pipeline, ...seekingPipeline]).toArray();
+    return this.identityService.aggregate<Identity[]>(plan.dataPipeline).toArray();
   }
   @Get("predefs")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))

@@ -14,7 +14,7 @@ import {
 } from "./exception.js";
 import {categorizePropertyMap} from "./helpers.js";
 import {BucketPipelineBuilder} from "./pipeline.builder.js";
-import {PipelineBuilder} from "@spica-server/database-pipeline";
+import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 import {
   CrudOptions,
   CrudParams,
@@ -129,24 +129,14 @@ export async function findDocuments<T>(
 
   const seeking = seekingPipeline.result();
 
-  const pipeline = (
-    await relationPathResolvedPipeline.paginate(
-      options.paginate,
-      seeking,
-      collection.estimatedDocumentCount()
-    )
-  ).result();
+  const plan = relationPathResolvedPipeline.buildPaginationPlan(seeking, () =>
+    collection.estimatedDocumentCount()
+  );
 
   if (options.paginate) {
-    const result = await collection
-      .aggregate<CrudPagination<T>>(pipeline)
-      .next()
-      .catch(error => {
-        throw new DatabaseException(error.message);
-      });
-    if (!result.data.length) {
-      return {meta: {total: 0}, data: []};
-    }
+    const result = await executePaginationPlan<T>(collection, plan).catch(error => {
+      throw new DatabaseException(error.message);
+    });
     if (encryptionSecret) {
       result.data = result.data.map(doc =>
         decryptDocumentFields(doc as any, schema, encryptionSecret, factories.schema)
@@ -156,7 +146,7 @@ export async function findDocuments<T>(
   }
 
   const documents = await collection
-    .aggregate<T>([...pipeline, ...seeking])
+    .aggregate<T>(plan.dataPipeline)
     .toArray()
     .catch(error => {
       throw new DatabaseException(error.message);

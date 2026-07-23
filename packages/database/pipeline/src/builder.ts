@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica-server/database";
-import {IPipelineBuilder} from "@spica-server/interface-database";
+import {IPipelineBuilder, PaginationPlan} from "@spica-server/interface-database";
 import {
   FilterReplaceManager,
   FilterReplacer,
@@ -71,45 +71,21 @@ export class PipelineBuilder implements IPipelineBuilder {
     return this;
   }
 
-  async paginate(
-    paginate: boolean,
+  protected isTotalDocumentCountAffected(): boolean {
+    return this.isFilterApplied;
+  }
+
+  buildPaginationPlan(
     seekingPipeline: object[],
-    totalDocumentCount: Promise<number>,
-    isTotalDocumentCountAffected: () => boolean = () => this.isFilterApplied
-  ): Promise<this> {
-    let meta;
-
-    if (paginate) {
-      const filteredsLength = () => [{$count: "total"}];
-
-      const totalLength = async () => [
-        {$limit: 1},
-        {
-          $addFields: {
-            total: await totalDocumentCount
-          }
-        },
-        {
-          $project: {
-            total: 1,
-            _id: 0
-          }
-        }
-      ];
-
-      meta = await (isTotalDocumentCountAffected() ? filteredsLength() : totalLength());
-
-      this.pipeline.push(
-        {
-          $facet: {
-            meta,
-            data: seekingPipeline.length ? seekingPipeline : [{$unwind: "$_id"}]
-          }
-        },
-        {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
-      );
-    }
-    return this;
+    estimateTotalDocumentCount: () => Promise<number>
+  ): PaginationPlan {
+    return {
+      dataPipeline: [...this.pipeline, ...seekingPipeline],
+      countPipeline: this.isTotalDocumentCountAffected()
+        ? [...this.pipeline, {$count: "total"}]
+        : null,
+      estimateTotalDocumentCount
+    };
   }
 
   result() {
