@@ -71,6 +71,7 @@ export class FunctionModule {
           workerLogOutput: options.workerLogOutput,
           spawnEntrypointPath: options.spawnEntrypointPath,
           builder: options.builder,
+          builderMaxMemoryMb: options.builderMaxMemoryMb,
           tsCompilerPath: options.tsCompilerPath,
           rollupWorkerPath: options.rollupWorkerPath,
           grpcPort: options.grpcPort,
