@@ -154,11 +154,15 @@ function createOptions(language: string, meta: BuildMeta, diagnostics: BuildDiag
     );
   }
 
-  plugins.push(commonjs({transformMixedEsModules: true, ignore: NEVER_BUNDLE}));
+  // The same predicate gates ESM imports (rollup's `external`) and CJS require() calls
+  // (commonjs `ignore`), so a native addon or never-bundle package reached through either
+  // syntax is left out of the bundle consistently.
+  const isExternal = createExternalPredicate(meta.cwd);
+  plugins.push(commonjs({transformMixedEsModules: true, ignore: isExternal}));
 
   return {
     input: path.join(meta.cwd, meta.entrypoints.build),
-    external: createExternalPredicate(meta.cwd),
+    external: isExternal,
     plugins,
     onwarn: (warning: RollupLog) => {
       // Typescript reports its diagnostics as plugin warnings, but a type error has always
@@ -182,19 +186,23 @@ async function build(language: string, requested: BuildMeta): Promise<BuildDiagn
     const meta: BuildMeta = {...requested, cwd: fs.realpathSync(requested.cwd)};
     const bundle = await rollup(createOptions(language, meta, diagnostics));
 
-    if (diagnostics.length) {
-      await bundle.close();
-      return diagnostics;
-    }
+    // close() must run even if write() throws (disk full, bad path); otherwise the bundle's
+    // caches and handles leak in this long-lived worker thread.
+    try {
+      if (diagnostics.length) {
+        return diagnostics;
+      }
 
-    await bundle.write({
-      file: path.join(meta.cwd, meta.outDir, meta.entrypoints.runtime),
-      format: "esm",
-      sourcemap: true,
-      inlineDynamicImports: true
-    });
-    await bundle.close();
-    return [];
+      await bundle.write({
+        file: path.join(meta.cwd, meta.outDir, meta.entrypoints.runtime),
+        format: "esm",
+        sourcemap: true,
+        inlineDynamicImports: true
+      });
+      return [];
+    } finally {
+      await bundle.close();
+    }
   } catch (e) {
     return [...diagnostics, toDiagnostic(e as RollupLog, ERROR)];
   }
