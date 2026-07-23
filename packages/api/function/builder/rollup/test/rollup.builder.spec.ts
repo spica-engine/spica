@@ -117,6 +117,54 @@ describe("RollupBuilder", () => {
       const bundle = await readBundle(meta);
       expect(bundle).toContain(`from '@spica-devkit/database'`);
     });
+
+    // A native addon references its `.node` binary from its own code, which rollup cannot
+    // resolve; inlining it aborts the build. Detecting the addon and leaving it external
+    // keeps the build alive, exactly as it would resolve at runtime.
+    it("should externalize a package that ships a native addon", async () => {
+      installPackage(meta, "gyp-package", {
+        "package.json": `{"name": "gyp-package", "version": "1.0.0", "main": "index.js"}`,
+        "binding.gyp": `{"targets": [{"target_name": "addon"}]}`,
+        "index.js": `module.exports = require("./build/Release/addon.node");`
+      });
+      installPackage(meta, "prebuilt-package", {
+        "package.json": `{"name": "prebuilt-package", "version": "1.0.0", "main": "index.js"}`,
+        "addon.node": "",
+        "index.js": `module.exports = require("./addon.node");`
+      });
+      await writeFile(
+        meta,
+        "index.mjs",
+        `import gyp from "gyp-package";
+         import prebuilt from "prebuilt-package";
+         export default function() { return [gyp, prebuilt]; }`
+      );
+
+      await builder.build(meta);
+
+      const bundle = await readBundle(meta);
+      expect(bundle).toContain(`from 'gyp-package'`);
+      expect(bundle).toContain(`from 'prebuilt-package'`);
+    });
+
+    it("should still inline a normal dependency that has no native addon", async () => {
+      installPackage(meta, "pure-package", {
+        "package.json": `{"name": "pure-package", "version": "1.0.0", "main": "index.js", "type": "module"}`,
+        "index.js": `export const value = "pure inlined value";`
+      });
+      await writeFile(
+        meta,
+        "index.mjs",
+        `import {value} from "pure-package";
+         export default function() { return value; }`
+      );
+
+      await builder.build(meta);
+
+      const bundle = await readBundle(meta);
+      expect(bundle).toContain("pure inlined value");
+      expect(bundle).not.toContain(`from 'pure-package'`);
+    });
   });
 
   describe("typescript", () => {

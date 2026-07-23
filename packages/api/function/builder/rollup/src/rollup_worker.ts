@@ -19,15 +19,71 @@ import {BuildDiagnostic, BuildMeta} from "@spica-server/interface-function-build
   `mongodb` and `@grpc/grpc-js` are already loaded by the worker bootstrap, so inlining them
   would give every function a second multi-megabyte copy and its own driver instance.
 
-  Note this list does not cover packages with native addons (sharp, bcrypt, canvas): their
-  `.node` binaries cannot be inlined and the build fails on them.
+  Packages with native addons (sharp, bcrypt, canvas) are additionally externalized on the
+  fly by detectsNativeAddon: their `.node` binaries cannot be inlined, so bundling them
+  aborts the build. They too resolve from node_modules at runtime.
 */
 const NEVER_BUNDLE = ["mongodb", "@grpc/grpc-js", "@spica-devkit/database"];
 
 const ERROR = 1;
 
-function isExternal(id: string) {
-  return isBuiltin(id) || NEVER_BUNDLE.some(pkg => id == pkg || id.startsWith(`${pkg}/`));
+// Bound the per-package scan so a pathological tree cannot stall a build.
+const MAX_SCANNED_DIRS = 5000;
+
+function packageNameOf(id: string): string {
+  const segments = id.split("/");
+  return id.startsWith("@") ? segments.slice(0, 2).join("/") : segments[0];
+}
+
+// A native addon ships either a compiled `.node` binary (prebuilt-binary packages like
+// @img/sharp-*) or a `binding.gyp` it builds from source (canvas, bcrypt). Either marker
+// anywhere in the package directory means rollup cannot inline it.
+function containsNativeAddon(dir: string): boolean {
+  const stack = [dir];
+  let scanned = 0;
+  while (stack.length) {
+    const current = stack.pop();
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(current, {withFileTypes: true});
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (entry.isFile() && (entry.name.endsWith(".node") || entry.name == "binding.gyp")) {
+        return true;
+      }
+      // Skip nested node_modules: a dependency's binary does not force its dependent external,
+      // and descending into them is what would blow past the scan bound.
+      if (entry.isDirectory() && entry.name != "node_modules" && ++scanned < MAX_SCANNED_DIRS) {
+        stack.push(path.join(current, entry.name));
+      }
+    }
+  }
+  return false;
+}
+
+function createExternalPredicate(cwd: string): (id: string) => boolean {
+  const nativeByPackage = new Map<string, boolean>();
+
+  return (id: string) => {
+    if (isBuiltin(id)) {
+      return true;
+    }
+    if (NEVER_BUNDLE.some(pkg => id == pkg || id.startsWith(`${pkg}/`))) {
+      return true;
+    }
+    // Relative and absolute ids are the user's own files — always bundled.
+    if (id.startsWith(".") || path.isAbsolute(id)) {
+      return false;
+    }
+
+    const name = packageNameOf(id);
+    if (!nativeByPackage.has(name)) {
+      nativeByPackage.set(name, containsNativeAddon(path.join(cwd, "node_modules", name)));
+    }
+    return nativeByPackage.get(name);
+  };
 }
 
 function toDiagnostic(log: RollupLog, category: number): BuildDiagnostic {
@@ -102,7 +158,7 @@ function createOptions(language: string, meta: BuildMeta, diagnostics: BuildDiag
 
   return {
     input: path.join(meta.cwd, meta.entrypoints.build),
-    external: isExternal,
+    external: createExternalPredicate(meta.cwd),
     plugins,
     onwarn: (warning: RollupLog) => {
       // Typescript reports its diagnostics as plugin warnings, but a type error has always
