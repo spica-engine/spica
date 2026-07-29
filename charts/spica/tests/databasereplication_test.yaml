@@ -99,10 +99,10 @@ tests:
     asserts:
       - contains:
           path: spec.template.spec.containers[0].args
-          content: "--username"
+          content: "--username=$(ROOT_USERNAME)"
       - contains:
           path: spec.template.spec.containers[0].args
-          content: "--password"
+          content: "--password=$(ROOT_PASSWORD)"
 
   - it: should read ROOT_USERNAME from database root credentials secret
     asserts:

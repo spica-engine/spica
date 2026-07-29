@@ -22,6 +22,12 @@
 {{- end -}}
 
 
+{{- define "database.primaryNode" -}}
+{{- $name := printf "%s-database" .Release.Name -}}
+{{- printf "%s-0.%s.%s.svc.cluster.local" $name $name .Release.Namespace -}}
+{{- end -}}
+
+
 {{- define "generateReplicaSetMembers" -}}
 {{- $replicaCount := (.Values.database.replicas | int) -}}
 {{- $uri := "" -}}
@@ -38,14 +44,16 @@
 
 
 {{- define "generatePassword" -}}
-  {{- $specialChars := list "!" "@" "#" "$" "%" "^" "&" "*" "-" "_" -}} 
-  {{- $password := list 
+  {{- $specialChars := list "!" "@" "#" "$" "%" "^" "&" "*" "-" "_" -}}
+  {{- $body := list
         (randAlpha 2)
         (randNumeric 2)
         (index $specialChars (randInt 0 (len $specialChars)))
         (index $specialChars (randInt 0 (len $specialChars)))
         (randAlphaNum 6)
-      | join "" | shuffle 
+      | join "" | shuffle
   -}}
-  {{- $password -}}
+  {{- /* Leading char is kept alphabetic: a password starting with "-" is parsed as a flag by
+         mongosh and yargs, which silently breaks every --password consumer in this chart. */ -}}
+  {{- printf "%s%s" (randAlpha 1) $body -}}
 {{- end -}}

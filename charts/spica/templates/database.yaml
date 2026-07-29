@@ -78,6 +78,8 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-database-root-credentials
                   key: rootPassword
+            - name: RS_PRIMARY_HOST
+              value: {{ template "database.primaryNode" . }}
       containers:
         - name: mongo
           image: mongo:{{ .Values.database.version }}
@@ -94,12 +96,9 @@ spec:
             exec:
               command:
                 - mongosh
-                - --username
-                - $(ROOT_USERNAME)
-                - --password
-                - $(ROOT_PASSWORD)
-                - --authenticationDatabase
-                - admin
+                - --username=$(ROOT_USERNAME)
+                - --password=$(ROOT_PASSWORD)
+                - --authenticationDatabase=admin
                 - --eval
                 - "db.adminCommand('ping')"
             initialDelaySeconds: {{ .Values.database.startupProbeInitialDelaySeconds }}

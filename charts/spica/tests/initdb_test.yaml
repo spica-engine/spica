@@ -46,6 +46,15 @@ tests:
           path: data["init-users.sh"]
           pattern: rs\.initiate
 
+  - it: init-users.sh should initiate with the pod FQDN, never the bare hostname
+    asserts:
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: "rs\\.initiate\\(\\{_id: 'rs0', members: \\[\\{_id: 0, host: '\\$RS_PRIMARY_HOST'\\}\\]\\}\\)"
+      - notMatchRegex:
+          path: data["init-users.sh"]
+          pattern: "rs\\.initiate\\(\\)"
+
   - it: set-profiling-level.sh should reference setProfilingLevel
     asserts:
       - matchRegex:

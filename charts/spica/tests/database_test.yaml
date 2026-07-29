@@ -132,6 +132,19 @@ tests:
           path: spec.template.spec.containers[0].args[0]
           pattern: "--auth"
 
+  - it: should pass the resolvable primary node FQDN to the init container
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: RS_PRIMARY_HOST
+            value: release-name-database-0.release-name-database.default.svc.cluster.local
+          any: true
+
   - it: should include RS_MEMBERS env var when replicas equals 1
     template: templates/database.yaml
     documentSelector:

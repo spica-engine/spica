@@ -84,15 +84,17 @@ function authenticateForMongo(username, password, authenticationDatabase) {
   debug(
     "Assuming mongodb started with --auth flag and credentals will be provided for each connection."
   );
-  mongoCommand = `${mongoCommand} --username '${username}' --password '${password}' --authenticationDatabase '${authenticationDatabase}'`;
+  mongoCommand = `${mongoCommand} --username='${username}' --password='${password}' --authenticationDatabase='${authenticationDatabase}'`;
+}
+
+function mongoAddress(host: string) {
+  return `"mongodb://${host}/admin?directConnection=true"`;
 }
 
 async function findPrimaryNode(nodes: string[]) {
   for (const node of nodes) {
     try {
-      const {stdout} = await execMongo(
-        `admin --host "${node}" --eval "JSON.stringify(db.hello())"`
-      );
+      const {stdout} = await execMongo(`${mongoAddress(node)} --eval "JSON.stringify(db.hello())"`);
       debug(stdout);
       const result = JSON.parse(stdout);
       if (result.isWritablePrimary === true) {
@@ -113,7 +115,9 @@ async function findPrimaryNode(nodes: string[]) {
 async function initiateReplication(nodes: string[], reinitiate = false) {
   let statusResult;
   try {
-    const {stdout} = await execMongo(`--host "${nodes[0]}" --eval 'JSON.stringify(rs.status())'`);
+    const {stdout} = await execMongo(
+      `${mongoAddress(nodes[0])} --eval 'JSON.stringify(rs.status())'`
+    );
     statusResult = JSON.parse(stdout);
   } catch (error) {
     debug(error);
@@ -121,7 +125,7 @@ async function initiateReplication(nodes: string[], reinitiate = false) {
 
   if (!statusResult || (statusResult.ok !== 1 && statusResult.codeName === "NotYetInitialized")) {
     const {stdout} = await execMongo(
-      `--host ${nodes[0]} --eval 'JSON.stringify(rs.initiate({"_id": "${
+      `${mongoAddress(nodes[0])} --eval 'JSON.stringify(rs.initiate({"_id": "${
         options["replica-set"]
       }", "members": ${JSON.stringify(nodes.map((host, _id) => ({_id, host})))}}))'`
     );
@@ -147,7 +151,7 @@ async function initiateReplication(nodes: string[], reinitiate = false) {
       "return { ok: 1 }"
     ];
     const {stdout} = await execMongo(
-      `admin --host "${primary}" --eval 'JSON.stringify((function() { ${script.join(";")} })())'`
+      `${mongoAddress(primary)} --eval 'JSON.stringify((function() { ${script.join(";")} })())'`
     );
     debug(stdout);
     const result = JSON.parse(stdout);
@@ -159,7 +163,7 @@ async function initiateReplication(nodes: string[], reinitiate = false) {
 
 async function addAsSecondary(primaryHost: string, secondaryHost: string, index: number) {
   const {stdout} = await execMongo(
-    `admin --host "${primaryHost}" --eval 'JSON.stringify(rs.config())'`
+    `${mongoAddress(primaryHost)} --eval 'JSON.stringify(rs.config())'`
   );
   debug(stdout);
   const config = JSON.parse(stdout);
@@ -172,7 +176,7 @@ async function addAsSecondary(primaryHost: string, secondaryHost: string, index:
       "return { ok: 1 }"
     ];
     const {stdout} = await execMongo(
-      `admin --host "${primaryHost}" --eval 'JSON.stringify((function() { ${conf.join(";")} })())'`
+      `${mongoAddress(primaryHost)} --eval 'JSON.stringify((function() { ${conf.join(";")} })())'`
     );
     debug(stdout);
     const result = JSON.parse(stdout);
