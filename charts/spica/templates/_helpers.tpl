@@ -37,15 +37,26 @@
 {{- end -}}
 
 
+{{- /*
+Generated passwords reach mongosh and yargs as CLI flag values, and are embedded into
+single-quoted shell strings and JS string literals. Two invariants keep that safe:
+
+  - the first character stays alphanumeric, because a value opening with "-" is parsed as
+    the start of another flag rather than as the value of the preceding one
+  - $specialChars must never contain "'" or "\", which terminate the surrounding string
+    literal or introduce an escape sequence
+
+Every other punctuation character here survives all of those contexts unaltered.
+*/ -}}
 {{- define "generatePassword" -}}
-  {{- $specialChars := list "!" "@" "#" "$" "%" "^" "&" "*" "-" "_" -}} 
-  {{- $password := list 
-        (randAlpha 2)
+  {{- $specialChars := list "!" "@" "#" "$" "%" "^" "&" "*" "-" "_" -}}
+  {{- $body := list
+        (randAlpha 1)
         (randNumeric 2)
         (index $specialChars (randInt 0 (len $specialChars)))
         (index $specialChars (randInt 0 (len $specialChars)))
         (randAlphaNum 6)
-      | join "" | shuffle 
+      | join "" | shuffle
   -}}
-  {{- $password -}}
+  {{- printf "%s%s" (randAlphaNum 1) $body -}}
 {{- end -}}
