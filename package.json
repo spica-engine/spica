@@ -257,7 +257,7 @@
     "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
-    "vite": "^5.0.13"
+    "vite": "^6.4.3"
   },
   "type": "module",
   "packageManager": "yarn@4.13.0"
