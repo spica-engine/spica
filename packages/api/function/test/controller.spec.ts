@@ -6,6 +6,7 @@ import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {DatabaseService} from "@spica-server/database";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
@@ -15,6 +16,7 @@ import {SecretModule} from "@spica-server/secret";
 describe("Function Controller", () => {
   let app: INestApplication;
   let request: Request;
+  let database: DatabaseService;
 
   const assetsPath = fs.mkdtempSync(path.join(os.tmpdir(), "spica-fn-assets-"));
   const fnSchema = {
@@ -78,6 +80,7 @@ describe("Function Controller", () => {
     }).compile();
 
     request = module.get(Request);
+    database = module.get(DatabaseService);
     app = module.createNestApplication();
     await app.listen(request.socket);
   });
@@ -278,6 +281,130 @@ describe("Function Controller", () => {
       const secrets = found.secrets.map(({updated_at, ...rest}) => rest);
       expect(secrets).toEqual([{_id: secret._id, key: "MY_SECRET"}]);
       expect(found.secrets[0].value).toBeUndefined();
+    });
+  });
+
+  describe("body-supplied relations", () => {
+    async function rawFunction(id: string) {
+      return database.collection("function").findOne({_id: new ObjectId(id)});
+    }
+
+    it("should persist body-supplied secret ids as ObjectId", async () => {
+      const secret = await request
+        .post("/secret", {key: "MY_SECRET", value: "super-secret-value"})
+        .then(r => r.body);
+
+      const fn = await request
+        .post("/function", {...fnSchema, secrets: [secret._id]})
+        .then(r => r.body);
+
+      const raw = await rawFunction(fn._id);
+
+      expect(raw.secrets).toHaveLength(1);
+      expect(raw.secrets[0]).toBeInstanceOf(ObjectId);
+      expect(raw.secrets[0].toHexString()).toEqual(secret._id);
+    });
+
+    it("should resolve body-supplied secrets on read", async () => {
+      const secret = await request
+        .post("/secret", {key: "MY_SECRET", value: "super-secret-value"})
+        .then(r => r.body);
+
+      const fn = await request
+        .post("/function", {...fnSchema, secrets: [secret._id]})
+        .then(r => r.body);
+
+      const found = await request.get(`/function/${fn._id}`).then(r => r.body);
+
+      expect(found.secrets).toHaveLength(1);
+      expect(found.secrets[0]._id).toEqual(secret._id);
+      expect(found.secrets[0].key).toEqual("MY_SECRET");
+      expect(found.secrets[0].value).toBeUndefined();
+    });
+
+    it("should persist body-supplied env var ids as ObjectId", async () => {
+      const envVarId = new ObjectId().toHexString();
+
+      const fn = await request
+        .post("/function", {...fnSchema, env_vars: [envVarId]})
+        .then(r => r.body);
+
+      const raw = await rawFunction(fn._id);
+
+      expect(raw.env_vars).toHaveLength(1);
+      expect(raw.env_vars[0]).toBeInstanceOf(ObjectId);
+      expect(raw.env_vars[0].toHexString()).toEqual(envVarId);
+    });
+
+    it("should persist body-supplied relation ids as ObjectId on PUT", async () => {
+      const secretId = new ObjectId().toHexString();
+      const envVarId = new ObjectId().toHexString();
+
+      const fn = await request.post("/function", fnSchema).then(r => r.body);
+
+      const res = await request.put(`/function/${fn._id}`, {
+        ...fnSchema,
+        secrets: [secretId],
+        env_vars: [envVarId]
+      });
+      expect(res.statusCode).toEqual(200);
+
+      const raw = await rawFunction(fn._id);
+
+      expect(raw.secrets[0]).toBeInstanceOf(ObjectId);
+      expect(raw.env_vars[0]).toBeInstanceOf(ObjectId);
+    });
+
+    it("should not corrupt an injected secret on a subsequent PUT", async () => {
+      const secret = await request
+        .post("/secret", {key: "MY_SECRET", value: "super-secret-value"})
+        .then(r => r.body);
+
+      const fn = await request.post("/function", fnSchema).then(r => r.body);
+      await request.put(`/function/${fn._id}/secret/${secret._id}`);
+
+      await request.put(`/function/${fn._id}`, {
+        ...fnSchema,
+        name: "renamed",
+        secrets: [secret._id]
+      });
+
+      const raw = await rawFunction(fn._id);
+
+      expect(raw.secrets).toHaveLength(1);
+      expect(raw.secrets[0]).toBeInstanceOf(ObjectId);
+
+      const found = await request.get(`/function/${fn._id}`).then(r => r.body);
+      expect(found.secrets).toHaveLength(1);
+    });
+
+    it("should not duplicate a secret when body and inject paths are mixed", async () => {
+      const secret = await request
+        .post("/secret", {key: "MY_SECRET", value: "super-secret-value"})
+        .then(r => r.body);
+
+      const fn = await request
+        .post("/function", {...fnSchema, secrets: [secret._id]})
+        .then(r => r.body);
+
+      await request.put(`/function/${fn._id}/secret/${secret._id}`);
+
+      const raw = await rawFunction(fn._id);
+      expect(raw.secrets).toHaveLength(1);
+    });
+
+    it("should reject a malformed secret id with 400", async () => {
+      const res = await request.post("/function", {...fnSchema, secrets: ["not-an-object-id"]});
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.message).toContain("secrets");
+    });
+
+    it("should reject a malformed env var id with 400", async () => {
+      const res = await request.post("/function", {...fnSchema, env_vars: ["not-an-object-id"]});
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.message).toContain("env_vars");
     });
   });
 
