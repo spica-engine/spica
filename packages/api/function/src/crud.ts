@@ -15,10 +15,46 @@ import {FunctionPipelineBuilder} from "./pipeline.builder.js";
 import fs from "fs";
 import * as readline from "readline";
 
+const RELATION_FIELDS = ["env_vars", "secrets"] as const;
+
+function toRelationId(value: unknown) {
+  if (value instanceof ObjectId) {
+    return value;
+  }
+
+  if (!ObjectId.isValid(value as string)) {
+    throw new BadRequestException(`${value} is not a valid id.`);
+  }
+
+  return new ObjectId(value as string);
+}
+
+function normalizeRelations(fn: Function) {
+  for (const field of RELATION_FIELDS) {
+    const values = fn[field];
+
+    if (!Array.isArray(values)) {
+      continue;
+    }
+
+    const unique = new Map<string, ObjectId>();
+    for (const value of values) {
+      const id = toRelationId(value);
+      unique.set(id.toHexString(), id);
+    }
+
+    fn[field] = Array.from(unique.values());
+  }
+
+  return fn;
+}
+
 async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   if (fn._id) {
     fn._id = new ObjectId(fn._id);
   }
+
+  normalizeRelations(fn);
 
   try {
     const r = await fs.insertOne(fn);
@@ -134,6 +170,8 @@ export async function replace(fs: FunctionService, engine: FunctionEngine, fn: F
   // not sure that is necessary
   delete fn._id;
   delete fn.language;
+
+  normalizeRelations(fn);
 
   const preFn = await fs.findOneAndUpdate({_id}, {$set: fn});
   if (!preFn) {

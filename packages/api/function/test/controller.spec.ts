@@ -393,6 +393,24 @@ describe("Function Controller", () => {
       expect(raw.secrets).toHaveLength(1);
     });
 
+    it("should deduplicate repeated relation ids", async () => {
+      const secretId = new ObjectId().toHexString();
+      const envVarId = new ObjectId().toHexString();
+
+      const fn = await request
+        .post("/function", {
+          ...fnSchema,
+          secrets: [secretId, secretId],
+          env_vars: [envVarId, envVarId, envVarId]
+        })
+        .then(r => r.body);
+
+      const raw = await rawFunction(fn._id);
+
+      expect(raw.secrets).toHaveLength(1);
+      expect(raw.env_vars).toHaveLength(1);
+    });
+
     it("should reject a malformed secret id with 400", async () => {
       const res = await request.post("/function", {...fnSchema, secrets: ["not-an-object-id"]});
 
