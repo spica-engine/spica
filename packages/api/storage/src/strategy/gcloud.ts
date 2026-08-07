@@ -11,11 +11,13 @@ export class GCloud extends BaseStrategy {
   private readonly logger = new Logger(GCloud.name);
   private storage: Storage;
   private bucket: Bucket;
+  private bucketName: string;
 
   constructor(serviceAccountPath: string, bucketName: string, resumableUploadExpiresIn: number) {
     super(resumableUploadExpiresIn);
     process.env.GOOGLE_APPLICATION_CREDENTIALS = serviceAccountPath;
     this.storage = new Storage();
+    this.bucketName = bucketName;
     this.bucket = this.storage.bucket(bucketName);
 
     this.initializeTusServer();
@@ -73,11 +75,10 @@ export class GCloud extends BaseStrategy {
   }
 
   url(id: string) {
-    return this.getMetadata(id).then(res => {
-      const url = new URL(res.mediaLink);
-      url.searchParams.delete("generation");
-      return url.toString();
-    });
+    const name = encodeURIComponent(id);
+    return Promise.resolve(
+      `https://storage.googleapis.com/download/storage/v1/b/${this.bucketName}/o/${name}?alt=media`
+    );
   }
 
   async proxyRead(
