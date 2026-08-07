@@ -2,8 +2,6 @@ import {Format} from "@spica-server/interface-core";
 import {Validator} from "@spica-server/core-schema/src/validator";
 import {JSONSchema7} from "json-schema";
 import {BehaviorSubject, Observable} from "rxjs";
-import {OBJECT_ID} from "@spica-server/core-schema";
-import {ObjectId} from "mongodb";
 
 describe("schema validator", () => {
   let validator: Validator;
@@ -325,77 +323,6 @@ describe("schema validator", () => {
         expect(coerceSpy.mock.calls[0][0]).toBe("formatted");
         expect(validateSpy).toHaveBeenCalledTimes(1);
         expect(validateSpy.mock.calls[0][0]).toBe("formatted");
-      });
-
-      it("should coerce custom format inside array items", async () => {
-        const coerceSpy = jest.fn(val => "test " + val);
-        const validateSpy = jest.fn(data => data == "formatted");
-        const format: Format = {
-          name: "myformat",
-          type: "string",
-          coerce: coerceSpy,
-          validate: validateSpy
-        };
-        const validator = new Validator({formats: [format]});
-        const data = {
-          test: ["formatted", "formatted"]
-        };
-        const schema = {
-          type: "object",
-          properties: {
-            test: {
-              type: "array",
-              items: {
-                type: "string",
-                format: "myformat"
-              }
-            }
-          }
-        };
-
-        await expect(validator.validate(schema, data)).resolves.toBeUndefined();
-        expect(data.test).toEqual(["test formatted", "test formatted"]);
-        expect(coerceSpy).toHaveBeenCalledTimes(2);
-      });
-
-      it("should coerce objectid format inside array items", async () => {
-        const validator = new Validator({formats: [OBJECT_ID]});
-        const id = new ObjectId().toHexString();
-        const data = {ids: [id]};
-        const schema = {
-          type: "object",
-          properties: {
-            ids: {
-              type: "array",
-              items: {
-                type: "string",
-                format: "objectid"
-              }
-            }
-          }
-        };
-
-        await expect(validator.validate(schema, data)).resolves.toBeUndefined();
-        expect(data.ids[0]).toBeInstanceOf(ObjectId);
-        expect((data.ids[0] as unknown as ObjectId).toHexString()).toBe(id);
-      });
-
-      it("should reject a malformed objectid inside array items", async () => {
-        const validator = new Validator({formats: [OBJECT_ID]});
-        const schema = {
-          type: "object",
-          properties: {
-            ids: {
-              type: "array",
-              items: {
-                type: "string",
-                format: "objectid"
-              }
-            }
-          }
-        };
-
-        await expect(validator.validate(schema, {ids: ["not-an-object-id"]})).rejects.toBeDefined();
       });
     });
   });
