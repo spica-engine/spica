@@ -22,12 +22,12 @@
     "env_vars": {
       "type": "array",
       "description": "Environment variables that will be accesible globally in the function",
-      "items": {"type": "string"}
+      "items": {"type": "string", "format": "objectid"}
     },
     "secrets": {
       "type": "array",
       "description": "Secrets that will be accessible in the function",
-      "items": {"type": "string"}
+      "items": {"type": "string", "format": "objectid"}
     },
     "memoryLimit": {
       "type": "number",
