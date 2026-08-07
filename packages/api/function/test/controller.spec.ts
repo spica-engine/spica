@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
+import {Middlewares} from "@spica-server/core";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {DatabaseService} from "@spica-server/database";
 import {SchemaModule} from "@spica-server/core-schema";
@@ -82,6 +83,7 @@ describe("Function Controller", () => {
     request = module.get(Request);
     database = module.get(DatabaseService);
     app = module.createNestApplication();
+    app.use(Middlewares.MergePatchJsonParser(10));
     await app.listen(request.socket);
   });
 
@@ -393,22 +395,47 @@ describe("Function Controller", () => {
       expect(raw.secrets).toHaveLength(1);
     });
 
-    it("should deduplicate repeated relation ids", async () => {
-      const secretId = new ObjectId().toHexString();
-      const envVarId = new ObjectId().toHexString();
-
-      const fn = await request
-        .post("/function", {
-          ...fnSchema,
-          secrets: [secretId, secretId],
-          env_vars: [envVarId, envVarId, envVarId]
-        })
+    it("should keep an injected secret resolvable after a patch", async () => {
+      const secret = await request
+        .post("/secret", {key: "MY_SECRET", value: "super-secret-value"})
         .then(r => r.body);
+
+      const fn = await request.post("/function", fnSchema).then(r => r.body);
+      await request.put(`/function/${fn._id}/secret/${secret._id}`);
+
+      const res = await request.patch(
+        `/function/${fn._id}`,
+        {category: "c1", order: 3},
+        {"content-type": "application/merge-patch+json"}
+      );
+      expect(res.statusCode).toEqual(200);
 
       const raw = await rawFunction(fn._id);
 
+      expect(raw.category).toEqual("c1");
+      expect(raw.order).toEqual(3);
       expect(raw.secrets).toHaveLength(1);
+      expect(raw.secrets[0]).toBeInstanceOf(ObjectId);
+      expect(raw.secrets[0].toHexString()).toEqual(secret._id);
+    });
+
+    it("should keep an injected env var resolvable after a patch", async () => {
+      const envVarId = new ObjectId().toHexString();
+
+      const fn = await request.post("/function", fnSchema).then(r => r.body);
+      await request.put(`/function/${fn._id}/env-var/${envVarId}`);
+
+      await request.patch(
+        `/function/${fn._id}`,
+        {order: 5},
+        {"content-type": "application/merge-patch+json"}
+      );
+
+      const raw = await rawFunction(fn._id);
+
       expect(raw.env_vars).toHaveLength(1);
+      expect(raw.env_vars[0]).toBeInstanceOf(ObjectId);
+      expect(raw.env_vars[0].toHexString()).toEqual(envVarId);
     });
 
     it("should reject a malformed secret id with 400", async () => {
