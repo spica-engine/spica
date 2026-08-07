@@ -44,6 +44,7 @@ describe("GCloud", () => {
 
   beforeEach(() => {
     mediaLink = "http://insteadof?generation=123123";
+    File.getMetadata.mockImplementation(() => Promise.resolve([{mediaLink}]));
 
     service = new GCloud("test_path", "test_bucket", 0);
 
@@ -91,23 +92,39 @@ describe("GCloud", () => {
     expect(Bucket.deleteFiles).toHaveBeenCalledWith({prefix: "test_file"});
   });
 
-  it("should get url without generation param", async () => {
-    const url = await service.url("test_file");
+  describe("url", () => {
+    it("should build the media link of a simple object name", async () => {
+      const url = await service.url("test_file");
 
-    expect(Bucket.file).toHaveBeenCalledTimes(1);
-    expect(Bucket.file).toHaveBeenCalledWith("test_file");
+      expect(url).toEqual(
+        "https://storage.googleapis.com/download/storage/v1/b/test_bucket/o/test_file?alt=media"
+      );
+    });
 
-    expect(File.getMetadata).toHaveBeenCalledTimes(1);
+    it("should percent encode the slashes of a nested object name", async () => {
+      const url = await service.url("a/b/c.png");
 
-    expect(url).toEqual("http://insteadof/");
-  });
+      expect(url).toEqual(
+        "https://storage.googleapis.com/download/storage/v1/b/test_bucket/o/a%2Fb%2Fc.png?alt=media"
+      );
+    });
 
-  it("should get url even if it has no generation param", async () => {
-    mediaLink = "http://insteadof";
+    it("should not perform any network call", async () => {
+      await service.url("test_file");
 
-    const url = await service.url("test_file");
+      expect(Bucket.file).not.toHaveBeenCalled();
+      expect(File.getMetadata).not.toHaveBeenCalled();
+    });
 
-    expect(url).toEqual("http://insteadof/");
+    it("should resolve for a name that does not exist in the bucket", async () => {
+      File.getMetadata.mockImplementation(() =>
+        Promise.reject(new Error("No such object: missing_file"))
+      );
+
+      await expect(service.url("missing_file")).resolves.toEqual(
+        "https://storage.googleapis.com/download/storage/v1/b/test_bucket/o/missing_file?alt=media"
+      );
+    });
   });
 
   describe("writeStream", () => {
