@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
+import {Middlewares} from "@spica-server/core";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
@@ -79,6 +80,7 @@ describe("Function Controller", () => {
 
     request = module.get(Request);
     app = module.createNestApplication();
+    app.use(Middlewares.MergePatchJsonParser(10));
     await app.listen(request.socket);
   });
 
@@ -225,6 +227,28 @@ describe("Function Controller", () => {
         {"content-type": "application/merge-patch+json"}
       );
       expect(success.statusCode).toEqual(200);
+    });
+
+    it("should apply the patch without dropping injected relations", async () => {
+      const secret = await request
+        .post("/secret", {key: "MY_SECRET", value: "super-secret-value"})
+        .then(r => r.body);
+
+      const inserted = await request.post("/function", fnSchema).then(r => r.body);
+      await request.put(`/function/${inserted._id}/secret/${secret._id}`);
+
+      const res = await request.patch(
+        `/function/${inserted._id}`,
+        {category: "c1", order: 3},
+        {"content-type": "application/merge-patch+json"}
+      );
+      expect(res.statusCode).toEqual(200);
+
+      const found = await request.get(`/function/${inserted._id}`).then(r => r.body);
+
+      expect(found.category).toEqual("c1");
+      expect(found.order).toEqual(3);
+      expect(found.secrets.map(s => s._id)).toEqual([secret._id]);
     });
 
     it("should write and read function index (POST index -> 204, GET index -> index)", async () => {

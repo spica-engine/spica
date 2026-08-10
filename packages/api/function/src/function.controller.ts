@@ -48,7 +48,7 @@ import {
 } from "@spica-server/interface-function";
 import {LogService} from "@spica-server/function-log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver.js";
-import {applyPatch} from "@spica-server/core-patch";
+import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core-patch";
 import * as CRUD from "./crud.js";
 
 /**
@@ -200,7 +200,15 @@ export class FunctionController {
     const patchedFn = applyPatch(previousFn, patch);
     delete patchedFn._id;
 
-    return this.fs.findOneAndReplace({_id: id}, patchedFn, {returnDocument: ReturnDocument.AFTER});
+    const updateQuery = getUpdateQueryForPatch(patch, patchedFn);
+
+    if (!updateQuery) {
+      return previousFn;
+    }
+
+    return this.fs.findOneAndUpdate({_id: id}, updateQuery, {
+      returnDocument: ReturnDocument.AFTER
+    });
   }
 
   /**

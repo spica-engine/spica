@@ -17,5 +17,6 @@
     "0.16.0/migrate_identity_attributes_to_bucket.js"
   ],
   "0.17.0": ["0.17.0/set_mongodb_fcv_7.js"],
-  "0.18.0": ["0.18.0/remove_position_from_bucket_properties.js"]
+  "0.18.0": ["0.18.0/remove_position_from_bucket_properties.js"],
+  "0.19.4": ["0.19.4/convert_function_relation_ids_to_objectid.js"]
 }
