@@ -89,6 +89,7 @@ export class Request {
   params: Record<string, string> = {};
   cookies = new Map<string, string>();
   body: Array<unknown> | object | Uint8Array | undefined;
+  ip: string | undefined;
 
   constructor(req: Http.Request) {
     this.statusCode = req.statusCode;
@@ -96,6 +97,7 @@ export class Request {
     this.method = req.method;
     this.url = req.url;
     this.path = req.path;
+    this.ip = req.ip;
 
     if (req.headers) {
       req.headers.forEach(h => this.headers.set(h.key, h.value));

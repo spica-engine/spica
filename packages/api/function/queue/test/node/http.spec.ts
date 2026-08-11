@@ -103,6 +103,33 @@ describe("Http", () => {
       const request = new Request(req);
       expect(request.params.id).toBe("42");
     });
+
+    it("should map the ip resolved by the api", () => {
+      const req = new Http.Request();
+      req.ip = "1.2.3.4";
+      // We test integrity of the data here. leave it as is.
+      const request = new Request(Http.Request.deserialize(req.serialize()));
+      expect(request.ip).toBe("1.2.3.4");
+    });
+
+    it("should leave ip undefined when the api did not resolve one", () => {
+      const request = new Request(Http.Request.deserialize(new Http.Request().serialize()));
+      expect(request.ip).toBeUndefined();
+    });
+
+    it("should not derive the ip from the x-forwarded-for header", () => {
+      const forwarded = new Http.Header();
+      forwarded.key = "x-forwarded-for";
+      forwarded.value = "6.6.6.6";
+
+      const req = new Http.Request();
+      req.headers = [forwarded];
+      req.ip = "1.2.3.4";
+
+      const request = new Request(Http.Request.deserialize(req.serialize()));
+      expect(request.ip).toBe("1.2.3.4");
+      expect(request.headers.get("x-forwarded-for")).toBe("6.6.6.6");
+    });
   });
 
   describe("Response", () => {

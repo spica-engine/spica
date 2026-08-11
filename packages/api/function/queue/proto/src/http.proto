@@ -43,6 +43,10 @@ message Request {
 
     bytes body = 9;
 
+    // Client ip resolved by the api from the connection and its "trust-proxy" setting.
+    // Functions must read this instead of the client-controlled x-forwarded-for header.
+    string ip = 10;
+
     // cookies?
 
     message Pop {

@@ -1,11 +1,12 @@
 import express from "express";
+import http from "http";
 import {INestApplication} from "@nestjs/common";
 import {NestExpressApplication} from "@nestjs/platform-express";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {HttpEnqueuer} from "@spica-server/function-enqueuer";
 import {EventQueue, HttpQueue} from "@spica-server/function-queue";
-import {event} from "@spica-server/function-queue-proto";
+import {event, Http} from "@spica-server/function-queue-proto";
 import {HttpMethod} from "@spica-server/interface-function-enqueuer";
 import {IGuardService} from "@spica-server/interface-passport-guard";
 
@@ -951,4 +952,191 @@ describe("http enqueuer with rate limiting", () => {
 
     httpEnqueuer.unsubscribe(noopTarget);
   });
+});
+describe("http enqueuer client ip", () => {
+  let apps: INestApplication[] = [];
+
+  const corsOptions = {
+    allowCredentials: true,
+    allowedHeaders: ["*"],
+    allowedMethods: ["*"],
+    allowedOrigins: ["*"]
+  };
+
+  interface Fixture {
+    port: number;
+    enqueuer: HttpEnqueuer;
+    httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
+  }
+
+  /**
+   * Listens over TCP instead of a unix socket so that express can resolve a real
+   * `req.socket.remoteAddress` (127.0.0.1) and apply the "trust proxy" setting on top of it.
+   */
+  async function createFixture(trustProxy: any): Promise<Fixture> {
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule]
+    }).compile();
+
+    const app = module.createNestApplication<NestExpressApplication>();
+    const instance = app.getHttpAdapter().getInstance();
+    instance.set("trust proxy", trustProxy);
+
+    // Mirrors how the api itself derives the client ip, so both sides can be compared.
+    instance.get("/api-ip", (req, res) => res.json({ip: req.ip}));
+
+    await app.listen(0, "127.0.0.1");
+    apps.push(app);
+
+    const httpQueue = {enqueue: jest.fn(), dequeue: jest.fn()};
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    const enqueuer = new HttpEnqueuer(
+      {enqueue: jest.fn(), dequeue: jest.fn()} as any,
+      httpQueue as any,
+      instance,
+      corsOptions,
+      createNoopGuardService()
+    );
+
+    enqueuer.subscribe(createTarget(), {
+      method: HttpMethod.Get,
+      path: "/ip",
+      preflight: false
+    });
+
+    return {port: (app.getHttpServer().address() as any).port, enqueuer, httpQueue};
+  }
+
+  /**
+   * Listens over a unix socket, where there is no `req.socket.remoteAddress` at all, so the api
+   * cannot resolve a client ip even though a proxy header is present.
+   */
+  async function createUnixFixture() {
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule]
+    }).compile();
+
+    const app = module.createNestApplication<NestExpressApplication>();
+    const instance = app.getHttpAdapter().getInstance();
+    instance.set("trust proxy", false);
+
+    const req = module.get(Request);
+    await app.listen(req.socket);
+    apps.push(app);
+
+    const httpQueue = {enqueue: jest.fn(), dequeue: jest.fn()};
+    httpQueue.enqueue.mockImplementation((id, request, res) => res.end());
+
+    const enqueuer = new HttpEnqueuer(
+      {enqueue: jest.fn(), dequeue: jest.fn()} as any,
+      httpQueue as any,
+      instance,
+      corsOptions,
+      createNoopGuardService()
+    );
+
+    enqueuer.subscribe(createTarget(), {
+      method: HttpMethod.Get,
+      path: "/ip",
+      preflight: false
+    });
+
+    return {req, httpQueue};
+  }
+
+  function send(port: number, path: string, headers: Record<string, string> = {}) {
+    return new Promise<{statusCode: number; body: string}>((resolve, reject) => {
+      const request = http.request({host: "127.0.0.1", port, path, method: "GET", headers}, res => {
+        let body = "";
+        res.on("data", chunk => (body += chunk));
+        res.on("end", () => resolve({statusCode: res.statusCode, body}));
+      });
+      request.on("error", reject);
+      request.end();
+    });
+  }
+
+  async function enqueuedIp(fixture: Fixture, headers?: Record<string, string>) {
+    await send(fixture.port, "/fn-execute/ip", headers);
+    const calls = fixture.httpQueue.enqueue.mock.calls;
+    return calls[calls.length - 1][1].ip;
+  }
+
+  async function apiIp(fixture: Fixture, headers?: Record<string, string>) {
+    const response = await send(fixture.port, "/api-ip", headers);
+    return JSON.parse(response.body).ip;
+  }
+
+  afterEach(async () => {
+    await Promise.all(apps.map(app => app.close()));
+    apps = [];
+  });
+
+  it("should forward the socket address when there is no proxy header", async () => {
+    const fixture = await createFixture(true);
+    expect(await enqueuedIp(fixture)).toBe("127.0.0.1");
+  });
+
+  it("should ignore a forged x-forwarded-for when trust proxy is disabled", async () => {
+    const fixture = await createFixture(false);
+    const headers = {"x-forwarded-for": "1.2.3.4"};
+
+    expect(await enqueuedIp(fixture, headers)).toBe("127.0.0.1");
+    expect(await apiIp(fixture, headers)).toBe("127.0.0.1");
+  });
+
+  it("should keep the forged header intact while ignoring it for the ip", async () => {
+    const fixture = await createFixture(false);
+
+    await send(fixture.port, "/fn-execute/ip", {"x-forwarded-for": "1.2.3.4"});
+
+    const request = fixture.httpQueue.enqueue.mock.calls[0][1];
+    const forwardedHeader = request.headers.find(h => h.key == "x-forwarded-for");
+
+    expect(forwardedHeader.value).toBe("1.2.3.4");
+    expect(request.ip).toBe("127.0.0.1");
+  });
+
+  it("should not let an arbitrary header override the resolved ip", async () => {
+    const fixture = await createFixture(true);
+    expect(await enqueuedIp(fixture, {ip: "6.6.6.6"})).toBe("127.0.0.1");
+  });
+
+  it("should leave the ip unset when the api cannot resolve one", async () => {
+    const fixture = await createUnixFixture();
+
+    await fixture.req.get("/fn-execute/ip", undefined, {"X-Forwarded-For": "1.2.3.4"});
+
+    const request = fixture.httpQueue.enqueue.mock.calls[0][1];
+
+    expect(request.ip).toBeUndefined();
+    expect(request.headers.find(h => h.key == "x-forwarded-for").value).toBe("1.2.3.4");
+    // An unset field must not reach the wire at all.
+    expect(Http.Request.deserialize(request.serialize()).ip).toBeUndefined();
+  });
+
+  it("should resolve the leftmost address when every hop is trusted", async () => {
+    const fixture = await createFixture(true);
+    expect(await enqueuedIp(fixture, {"x-forwarded-for": "9.9.9.9, 8.8.8.8"})).toBe("9.9.9.9");
+  });
+
+  it.each([
+    ["true", true, "9.9.9.9, 8.8.8.8", "9.9.9.9"],
+    ["false", false, "9.9.9.9, 8.8.8.8", "127.0.0.1"],
+    ["a single hop", 1, "9.9.9.9, 8.8.8.8", "8.8.8.8"],
+    ["two hops", 2, "9.9.9.9, 8.8.8.8", "9.9.9.9"],
+    ["a list of trusted ips", ["127.0.0.1"], "9.9.9.9, 8.8.8.8", "8.8.8.8"],
+    ["a list covering the whole chain", ["127.0.0.1", "8.8.8.8"], "9.9.9.9, 8.8.8.8", "9.9.9.9"],
+    ["a predefined subnet name", "loopback", "9.9.9.9, 8.8.8.8", "8.8.8.8"]
+  ])(
+    "should resolve the same ip as the api when trust proxy is %s",
+    async (_, trustProxy, forwardedFor, expected) => {
+      const fixture = await createFixture(trustProxy);
+      const headers = {"x-forwarded-for": forwardedFor as string};
+
+      expect(await enqueuedIp(fixture, headers)).toBe(expected);
+      expect(await apiIp(fixture, headers)).toBe(expected);
+    }
+  );
 });

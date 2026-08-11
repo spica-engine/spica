@@ -351,6 +351,7 @@ export namespace Http {
             headers?: Header[];
             params?: Param[];
             body?: Uint8Array;
+            ip?: string;
           }
     ) {
       super();
@@ -365,6 +366,7 @@ export namespace Http {
         this.headers = data.headers;
         this.params = data.params;
         this.body = data.body;
+        this.ip = data.ip;
       }
     }
     get statusCode(): number | undefined {
@@ -421,6 +423,12 @@ export namespace Http {
     set body(value: Uint8Array) {
       pb_1.Message.setField(this, 9, value);
     }
+    get ip(): string | undefined {
+      return pb_1.Message.getFieldWithDefault(this, 10, undefined) as string | undefined;
+    }
+    set ip(value: string) {
+      pb_1.Message.setField(this, 10, value);
+    }
     toObject() {
       return {
         statusCode: this.statusCode,
@@ -431,7 +439,8 @@ export namespace Http {
         query: this.query,
         headers: this.headers.map((item: Header) => item.toObject()),
         params: this.params.map((item: Param) => item.toObject()),
-        body: this.body
+        body: this.body,
+        ip: this.ip
       };
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
@@ -447,6 +456,7 @@ export namespace Http {
       if (this.params !== undefined)
         writer.writeRepeatedMessage(8, this.params, (item: Param) => item.serialize(writer));
       if (this.body !== undefined) writer.writeBytes(9, this.body);
+      if (this.ip !== undefined) writer.writeString(10, this.ip);
       if (!w) return writer.getResultBuffer();
     }
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Request {
@@ -485,6 +495,9 @@ export namespace Http {
             break;
           case 9:
             message.body = reader.readBytes();
+            break;
+          case 10:
+            message.ip = reader.readString();
             break;
           default:
             reader.skipField();
