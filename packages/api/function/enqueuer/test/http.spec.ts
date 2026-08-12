@@ -1006,17 +1006,23 @@ describe("http enqueuer client ip", () => {
 
   it("should hand the function the ip the api resolved", async () => {
     const fixture = await createFixture(true);
-    const headers = {"X-Forwarded-For": "1.2.3.4"};
+    // A chain, so the resolved ip is only the leftmost hop and the raw header differs from it.
+    const forwardedFor = "1.2.3.4, 5.6.7.8";
+    const headers = {"X-Forwarded-For": forwardedFor};
 
     await fixture.request.get("/fn-execute/ip", undefined, headers);
     const apiIp = await fixture.request
       .get<{ip: string}>("/api-ip", undefined, headers)
       .then(response => response.body.ip);
 
-    const enqueuedIp = fixture.httpQueue.enqueue.mock.calls[0][1].ip;
+    const request = fixture.httpQueue.enqueue.mock.calls[0][1];
+    const forwardedHeader = request.headers.find(h => h.key == "x-forwarded-for");
 
-    expect(enqueuedIp).toBeDefined();
-    expect(enqueuedIp).toBe(apiIp);
+    expect(request.ip).toBeDefined();
+    expect(request.ip).toBe(apiIp);
+    // The header keeps travelling on its own channel, untouched by the ip we now carry.
+    expect(forwardedHeader.value).toBe(forwardedFor);
+    expect(forwardedHeader.value).not.toBe(request.ip);
   });
 
   it("should leave the ip unset when the api cannot resolve one", async () => {
