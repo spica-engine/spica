@@ -552,6 +552,38 @@ describe("Entrypoint", () => {
       expect(exitCode).toBe(4);
     });
 
+    it("should pass the ip resolved by the api to fn", async () => {
+      await initializeFn(`
+      export default function(req) {
+        if ( req.ip == '1.2.3.4' && req.headers.get('x-forwarded-for') == '6.6.6.6' ) {
+          process.exit(4);
+        }
+      }`);
+
+      const ev = new event.Event({
+        type: event.Type.HTTP,
+        target: new event.Target({
+          cwd: meta.cwd,
+          handler: "default",
+          context: new event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
+
+      queue.enqueue(ev);
+
+      const request = new Http.Request({
+        ip: "1.2.3.4",
+        headers: [new Http.Header({key: "x-forwarded-for", value: "6.6.6.6"})]
+      });
+      httpQueue.enqueue(ev.id, request, undefined);
+
+      const exitCode = await spawn().catch(e => e);
+      expect(exitCode).toBe(4);
+    });
+
     it("should pass response to fn", async () => {
       await initializeFn(`
       export default function(req, res) {

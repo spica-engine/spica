@@ -103,6 +103,19 @@ describe("Http", () => {
       const request = new Request(req);
       expect(request.params.id).toBe("42");
     });
+
+    it("should map the ip resolved by the api", () => {
+      const req = new Http.Request();
+      req.ip = "1.2.3.4";
+      // We test integrity of the data here. leave it as is.
+      const request = new Request(Http.Request.deserialize(req.serialize()));
+      expect(request.ip).toBe("1.2.3.4");
+    });
+
+    it("should leave ip undefined when the api did not resolve one", () => {
+      const request = new Request(Http.Request.deserialize(new Http.Request().serialize()));
+      expect(request.ip).toBeUndefined();
+    });
   });
 
   describe("Response", () => {

@@ -137,16 +137,16 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         }
       }
 
-      if (options.rateLimit) {
-        const ip = req.ip;
+      const clientIp = req.ip;
 
-        if (!ip) {
+      if (options.rateLimit) {
+        if (!clientIp) {
           console.warn(
             "Could not determine client IP address for rate limiting. Allowing request by default."
           );
         } else {
           const groupKey = `${target.cwd}:${target.handler}`;
-          const rateLimitResult = this.rateLimitService.checkLimit(groupKey, ip);
+          const rateLimitResult = this.rateLimitService.checkLimit(groupKey, clientIp);
 
           if (rateLimitResult.limit > 0) {
             res.setHeader("X-RateLimit-Limit", rateLimitResult.limit);
@@ -179,7 +179,8 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         statusCode: req.statusCode,
         statusMessage: req.statusMessage,
         query: JSON.stringify(req.query),
-        body: new Uint8Array(req.body)
+        body: new Uint8Array(req.body),
+        ip: clientIp
       });
       request.params = Object.keys(req.params).reduce((acc, key) => {
         const param = new Http.Param();

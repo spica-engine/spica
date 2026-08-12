@@ -5,7 +5,7 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {HttpEnqueuer} from "@spica-server/function-enqueuer";
 import {EventQueue, HttpQueue} from "@spica-server/function-queue";
-import {event} from "@spica-server/function-queue-proto";
+import {event, Http} from "@spica-server/function-queue-proto";
 import {HttpMethod} from "@spica-server/interface-function-enqueuer";
 import {IGuardService} from "@spica-server/interface-passport-guard";
 
@@ -950,5 +950,90 @@ describe("http enqueuer with rate limiting", () => {
     expect(response.headers["x-ratelimit-remaining"]).toBe("4");
 
     httpEnqueuer.unsubscribe(noopTarget);
+  });
+});
+
+describe("http enqueuer client ip", () => {
+  let apps: INestApplication[] = [];
+
+  const corsOptions = {
+    allowCredentials: true,
+    allowedHeaders: ["*"],
+    allowedMethods: ["*"],
+    allowedOrigins: ["*"]
+  };
+
+  async function createFixture(trustProxy: any) {
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule]
+    }).compile();
+
+    const app = module.createNestApplication<NestExpressApplication>();
+    const instance = app.getHttpAdapter().getInstance();
+    instance.set("trust proxy", trustProxy);
+
+    // Mirrors how the api itself derives the client ip, so both sides can be compared.
+    instance.get("/api-ip", (req, res) => res.json({ip: req.ip}));
+
+    const request = module.get(Request);
+    await app.listen(request.socket);
+    apps.push(app);
+
+    const httpQueue = {enqueue: jest.fn(), dequeue: jest.fn()};
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    const enqueuer = new HttpEnqueuer(
+      {enqueue: jest.fn(), dequeue: jest.fn()} as any,
+      httpQueue as any,
+      instance,
+      corsOptions,
+      createNoopGuardService()
+    );
+
+    enqueuer.subscribe(createTarget(), {
+      method: HttpMethod.Get,
+      path: "/ip",
+      preflight: false
+    });
+
+    return {request, httpQueue};
+  }
+
+  afterEach(async () => {
+    await Promise.all(apps.map(app => app.close()));
+    apps = [];
+  });
+
+  it("should hand the function the ip the api resolved", async () => {
+    const fixture = await createFixture(true);
+    // A chain, so the resolved ip is only the leftmost hop and the raw header differs from it.
+    const forwardedFor = "1.2.3.4, 5.6.7.8";
+    const headers = {"X-Forwarded-For": forwardedFor};
+
+    await fixture.request.get("/fn-execute/ip", undefined, headers);
+    const apiIp = await fixture.request
+      .get<{ip: string}>("/api-ip", undefined, headers)
+      .then(response => response.body.ip);
+
+    const request = fixture.httpQueue.enqueue.mock.calls[0][1];
+    const forwardedHeader = request.headers.find(h => h.key == "x-forwarded-for");
+
+    expect(request.ip).toBeDefined();
+    expect(request.ip).toBe(apiIp);
+    // The header keeps travelling on its own channel, untouched by the ip we now carry.
+    expect(forwardedHeader.value).toBe(forwardedFor);
+    expect(forwardedHeader.value).not.toBe(request.ip);
+  });
+
+  it("should leave the ip unset when the api cannot resolve one", async () => {
+    const fixture = await createFixture(false);
+
+    await fixture.request.get("/fn-execute/ip");
+
+    const request = fixture.httpQueue.enqueue.mock.calls[0][1];
+
+    expect(request.ip).toBeUndefined();
+    // An unset field must not reach the wire at all.
+    expect(Http.Request.deserialize(request.serialize()).ip).toBeUndefined();
   });
 });
