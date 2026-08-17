@@ -1,4 +1,9 @@
-import {generateLog, getLogs, logContext} from "@spica-server/function-runtime-logger";
+import {
+  generateLog,
+  getLoggerConsole,
+  getLogs,
+  logContext
+} from "@spica-server/function-runtime-logger";
 import {LogChannels, LogLevels} from "@spica-server/interface-function-runtime";
 
 // generateLog runs reserveLog, which reads the async context — so framing can be
@@ -55,6 +60,90 @@ describe("logger event correlation", () => {
     expect(framed).not.toContain("SPICA_LOG_EVENT");
     expect(getLogs(framed, LogChannels.OUT)).toEqual([
       {level: LogLevels.LOG, eventId: undefined, message: "no context"}
+    ]);
+  });
+});
+
+describe("logger console", () => {
+  let stdout: jest.SpyInstance;
+  let stderr: jest.SpyInstance;
+  let loggerConsole: Console;
+
+  const framesOf = (spy: jest.SpyInstance, channel: LogChannels) =>
+    spy.mock.calls.flatMap(call => getLogs(call.join(" "), channel));
+
+  beforeEach(() => {
+    stdout = jest.spyOn(console, "log").mockImplementation(() => {});
+    stderr = jest.spyOn(console, "error").mockImplementation(() => {});
+    loggerConsole = getLoggerConsole();
+  });
+
+  afterEach(() => {
+    stdout.mockRestore();
+    stderr.mockRestore();
+  });
+
+  it("frames console.log as before", () => {
+    loggerConsole.log("hello");
+
+    expect(framesOf(stdout, LogChannels.OUT)).toEqual([
+      {level: LogLevels.LOG, eventId: undefined, message: "hello"}
+    ]);
+  });
+
+  it("frames console.dir", () => {
+    loggerConsole.dir({a: 1});
+
+    expect(framesOf(stdout, LogChannels.OUT)).toEqual([
+      {level: LogLevels.LOG, eventId: undefined, message: "{ a: 1 }"}
+    ]);
+  });
+
+  it("frames console.timeEnd and keeps the timer state on one console", () => {
+    loggerConsole.time("work");
+    loggerConsole.timeEnd("work");
+
+    const logs = framesOf(stdout, LogChannels.OUT);
+    expect(logs.length).toEqual(1);
+    expect(logs[0].level).toEqual(LogLevels.LOG);
+    expect(logs[0].message).toMatch(/^work: /);
+    expect(stderr).not.toHaveBeenCalled();
+  });
+
+  it("frames multi line output of console.table as a single log", () => {
+    loggerConsole.table([{a: 1}]);
+
+    const logs = framesOf(stdout, LogChannels.OUT);
+    expect(logs.length).toEqual(1);
+    expect(logs[0].message).toContain("(index)");
+    expect(logs[0].message.split("\n").length).toBeGreaterThan(1);
+  });
+
+  it("frames console.trace on the error channel", () => {
+    logContext.run({eventId: "evt-9"}, () => loggerConsole.trace("boom"));
+
+    const logs = framesOf(stderr, LogChannels.ERROR);
+    expect(logs.length).toEqual(1);
+    expect(logs[0].level).toEqual(LogLevels.ERROR);
+    expect(logs[0].eventId).toEqual("evt-9");
+    expect(logs[0].message).toMatch(/^Trace: boom/);
+  });
+
+  it("does not leak an event id between concurrent contexts", async () => {
+    await Promise.all([
+      logContext.run({eventId: "A"}, async () => {
+        await Promise.resolve();
+        loggerConsole.dir("from a");
+      }),
+      logContext.run({eventId: "B"}, async () => {
+        await Promise.resolve();
+        loggerConsole.dir("from b");
+      })
+    ]);
+
+    expect(framesOf(stdout, LogChannels.OUT)).toEqual([
+      {level: LogLevels.LOG, eventId: "A", message: "'from a'"},
+      {level: LogLevels.LOG, eventId: "B", message: "'from b'"}
     ]);
   });
 });
