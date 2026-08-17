@@ -119,6 +119,19 @@ describe("logger console", () => {
     expect(logs[0].message.split("\n").length).toBeGreaterThan(1);
   });
 
+  it("frames the console.group label and leaves later frames parseable", () => {
+    loggerConsole.group("validation");
+    loggerConsole.log("inside");
+    loggerConsole.groupEnd();
+    loggerConsole.log("after");
+
+    expect(framesOf(stdout, LogChannels.OUT)).toEqual([
+      {level: LogLevels.LOG, eventId: undefined, message: "validation"},
+      {level: LogLevels.LOG, eventId: undefined, message: "inside"},
+      {level: LogLevels.LOG, eventId: undefined, message: "after"}
+    ]);
+  });
+
   it("frames console.trace on the error channel", () => {
     logContext.run({eventId: "evt-9"}, () => loggerConsole.trace("boom"));
 
