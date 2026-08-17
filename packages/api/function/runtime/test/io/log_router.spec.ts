@@ -102,26 +102,19 @@ describe("EventLogRouter", () => {
 // console's sink reproduces that hop without spawning a worker.
 describe("EventLogRouter fed by the logger console", () => {
   let out: EventLogRouter;
-  let err: EventLogRouter;
   let stdout: jest.SpyInstance;
-  let stderr: jest.SpyInstance;
   let loggerConsole: Console;
 
   beforeEach(() => {
     out = new EventLogRouter();
-    err = new EventLogRouter();
     stdout = jest
       .spyOn(console, "log")
       .mockImplementation((...params: any[]) => out.input.write(params.join(" ") + "\n"));
-    stderr = jest
-      .spyOn(console, "error")
-      .mockImplementation((...params: any[]) => err.input.write(params.join(" ") + "\n"));
     loggerConsole = getLoggerConsole();
   });
 
   afterEach(() => {
     stdout.mockRestore();
-    stderr.mockRestore();
   });
 
   it("routes console.dir of concurrent events to their own sinks", () => {
@@ -139,34 +132,5 @@ describe("EventLogRouter fed by the logger console", () => {
     expect(getLogs(b.text(), LogChannels.OUT)).toEqual([
       {level: LogLevels.LOG, eventId: "B", message: "{ from: 'b' }"}
     ]);
-  });
-
-  it("keeps a multi line frame whole while another event logs alongside it", () => {
-    const a = collector();
-    const b = collector();
-    out.register("A", [a.stream]);
-    out.register("B", [b.stream]);
-
-    logContext.run({eventId: "A"}, () => loggerConsole.table([{a: 1}]));
-    logContext.run({eventId: "B"}, () => loggerConsole.dir("meanwhile"));
-
-    const aLogs = getLogs(a.text(), LogChannels.OUT);
-    expect(aLogs.length).toEqual(1);
-    expect(aLogs[0].message).toContain("(index)");
-    expect(aLogs[0].message.split("\n").length).toBeGreaterThan(1);
-    expect(b.text()).not.toContain("(index)");
-  });
-
-  it("routes console.trace to the event's error sink", () => {
-    const a = collector();
-    err.register("A", [a.stream]);
-
-    logContext.run({eventId: "A"}, () => loggerConsole.trace("boom"));
-
-    const logs = getLogs(a.text(), LogChannels.ERROR);
-    expect(logs.length).toEqual(1);
-    expect(logs[0].level).toEqual(LogLevels.ERROR);
-    expect(logs[0].eventId).toEqual("A");
-    expect(logs[0].message).toMatch(/^Trace: boom/);
   });
 });

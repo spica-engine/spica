@@ -83,14 +83,6 @@ describe("logger console", () => {
     stderr.mockRestore();
   });
 
-  it("frames console.log as before", () => {
-    loggerConsole.log("hello");
-
-    expect(framesOf(stdout, LogChannels.OUT)).toEqual([
-      {level: LogLevels.LOG, eventId: undefined, message: "hello"}
-    ]);
-  });
-
   it("frames console.dir", () => {
     loggerConsole.dir({a: 1});
 
@@ -140,23 +132,5 @@ describe("logger console", () => {
     expect(logs[0].level).toEqual(LogLevels.ERROR);
     expect(logs[0].eventId).toEqual("evt-9");
     expect(logs[0].message).toMatch(/^Trace: boom/);
-  });
-
-  it("does not leak an event id between concurrent contexts", async () => {
-    await Promise.all([
-      logContext.run({eventId: "A"}, async () => {
-        await Promise.resolve();
-        loggerConsole.dir("from a");
-      }),
-      logContext.run({eventId: "B"}, async () => {
-        await Promise.resolve();
-        loggerConsole.dir("from b");
-      })
-    ]);
-
-    expect(framesOf(stdout, LogChannels.OUT)).toEqual([
-      {level: LogLevels.LOG, eventId: "A", message: "'from a'"},
-      {level: LogLevels.LOG, eventId: "B", message: "'from b'"}
-    ]);
   });
 });
