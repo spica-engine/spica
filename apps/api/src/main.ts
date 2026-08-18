@@ -37,6 +37,7 @@ const HEADER_NAME = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
 
 function parseResponseHeaders(values: string[]) {
   const headers: Record<string, string> = {};
+  const names = new Map<string, string>();
 
   for (const pair of values) {
     const separator = pair.indexOf(":");
@@ -52,6 +53,12 @@ function parseResponseHeaders(values: string[]) {
       throw new Error(`Response header '${name}' has an illegal name or value.`);
     }
 
+    const previous = names.get(name.toLowerCase());
+    if (previous != undefined) {
+      delete headers[previous];
+    }
+
+    names.set(name.toLowerCase(), name);
     headers[name] = value;
   }
 
@@ -1052,11 +1059,19 @@ if (args["cert-file"] && args["key-file"]) {
   };
 }
 
-const responseHeaders = {
-  "Cache-Control": args["cache-control-header"],
-  "X-Frame-Options": args["x-frame-options-header"],
-  ...args["response-header"]
-};
+const responseHeaders: Record<string, string> = {...args["response-header"]};
+const configuredNames = new Set(Object.keys(responseHeaders).map(name => name.toLowerCase()));
+
+const deprecatedHeaders: [string, string][] = [
+  ["Cache-Control", args["cache-control-header"]],
+  ["X-Frame-Options", args["x-frame-options-header"]]
+];
+
+for (const [name, value] of deprecatedHeaders) {
+  if (value && !configuredNames.has(name.toLowerCase())) {
+    responseHeaders[name] = value;
+  }
+}
 
 NestFactory.create(RootModule, {
   httpsOptions,
