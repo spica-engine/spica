@@ -20,7 +20,6 @@ export interface SpicaFunction {
   timeout?: number;
   warmWorkers?: number;
   concurrencyPerWorker?: number;
-  memoryLimit?: number;
   env?: Record<string, string>;
   env_vars?: ResolvedEnvVar[];
   secrets?: ResolvedSecret[];
@@ -113,7 +112,6 @@ export interface CreateFunctionRequest {
   timeout?: number;
   warmWorkers?: number;
   concurrencyPerWorker?: number;
-  memoryLimit?: number;
   env?: Record<string, string>;
   dependencies?: Record<string, string>;
   triggers?: TriggerMap;
@@ -128,7 +126,6 @@ export interface UpdateFunctionRequest {
   timeout?: number;
   warmWorkers?: number;
   concurrencyPerWorker?: number;
-  memoryLimit?: number;
   triggers?: TriggerMap;
   category?: string;
 }

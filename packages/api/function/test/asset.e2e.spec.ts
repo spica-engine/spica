@@ -126,8 +126,7 @@ describe("function", () => {
             preflight: true
           }
         }
-      },
-      memoryLimit: 100
+      }
     };
     fnv1Created = {...fnv1, env_vars: [], secrets: []};
 
