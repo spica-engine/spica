@@ -141,6 +141,38 @@ describe("MiddleWare", () => {
     });
   });
 
+  describe("Headers", () => {
+    let res;
+    let next: jest.Mock;
+
+    beforeEach(() => {
+      const headers = {};
+      res = {
+        getHeader: (key: string) => headers[key.toLowerCase()],
+        set: jest.fn((key: string, value: string) => (headers[key.toLowerCase()] = value))
+      };
+      next = jest.fn();
+    });
+
+    it("should set every given header", () => {
+      Middlewares.Headers({"Cache-Control": "no-store", "X-Frame-Options": "DENY"})({}, res, next);
+      expect(res.getHeader("cache-control")).toEqual("no-store");
+      expect(res.getHeader("x-frame-options")).toEqual("DENY");
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not override an already set header", () => {
+      res.set("Cache-Control", "no-cache");
+      res.set.mockClear();
+
+      Middlewares.Headers({"Cache-Control": "no-store"})({}, res, next);
+
+      expect(res.set).not.toHaveBeenCalled();
+      expect(res.getHeader("cache-control")).toEqual("no-cache");
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("getMatchedValue", () => {
     it("should return matched value when pattern matched", () => {
       expect(getMatchedValue("test123", ["test*"])).toEqual("test123");

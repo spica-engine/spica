@@ -335,6 +335,27 @@ tests:
           path: spec.template.spec.containers[1].args[1]
           value: "custom-value"
 
+  - it: should pass every application.responseHeaders entry to a single --response-header arg
+    set:
+      application.responseHeaders:
+        Cache-Control: "public, max-age=60"
+        X-Frame-Options: "DENY"
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--response-header"
+          count: 1
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "Cache-Control: public, max-age=60"
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "X-Frame-Options: DENY"
+
   - it: should include checksum annotation on Pod template
     template: templates/application.yaml
     documentSelector:
