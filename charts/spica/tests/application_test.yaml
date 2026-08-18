@@ -190,19 +190,19 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[1].livenessProbe.periodSeconds
-          value: 15
+          value: 30
       - equal:
           path: spec.template.spec.containers[1].livenessProbe.timeoutSeconds
-          value: 5
+          value: 10
       - equal:
           path: spec.template.spec.containers[1].livenessProbe.failureThreshold
-          value: 3
+          value: 6
 
   - it: should reflect custom liveness probe values from values.yaml
     set:
-      application.apiLivenessProbePeriodSeconds: 30
-      application.apiLivenessProbeTimeoutSeconds: 10
-      application.apiLivenessProbeFailureThreshold: 5
+      application.apiLivenessProbePeriodSeconds: 60
+      application.apiLivenessProbeTimeoutSeconds: 20
+      application.apiLivenessProbeFailureThreshold: 10
     template: templates/application.yaml
     documentSelector:
       path: kind
@@ -210,13 +210,13 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[1].livenessProbe.periodSeconds
-          value: 30
+          value: 60
       - equal:
           path: spec.template.spec.containers[1].livenessProbe.timeoutSeconds
-          value: 10
+          value: 20
       - equal:
           path: spec.template.spec.containers[1].livenessProbe.failureThreshold
-          value: 5
+          value: 10
 
   - it: should configure readiness probe on the api container
     template: templates/application.yaml
@@ -239,10 +239,10 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[1].readinessProbe.periodSeconds
-          value: 5
+          value: 10
       - equal:
           path: spec.template.spec.containers[1].readinessProbe.timeoutSeconds
-          value: 5
+          value: 10
       - equal:
           path: spec.template.spec.containers[1].readinessProbe.failureThreshold
           value: 6
