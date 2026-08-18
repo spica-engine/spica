@@ -1,4 +1,9 @@
-import {generateLog, getLogs, logContext} from "@spica-server/function-runtime-logger";
+import {
+  generateLog,
+  getLoggerConsole,
+  getLogs,
+  logContext
+} from "@spica-server/function-runtime-logger";
 import {LogChannels, LogLevels} from "@spica-server/interface-function-runtime";
 
 // generateLog runs reserveLog, which reads the async context — so framing can be
@@ -56,5 +61,60 @@ describe("logger event correlation", () => {
     expect(getLogs(framed, LogChannels.OUT)).toEqual([
       {level: LogLevels.LOG, eventId: undefined, message: "no context"}
     ]);
+  });
+});
+
+describe("logger console", () => {
+  let stdout: jest.SpyInstance;
+  let stderr: jest.SpyInstance;
+  let loggerConsole: Console;
+
+  const framesOf = (spy: jest.SpyInstance, channel: LogChannels) =>
+    spy.mock.calls.flatMap(call => getLogs(call.join(" "), channel));
+
+  beforeEach(() => {
+    stdout = jest.spyOn(console, "log").mockImplementation(() => {});
+    stderr = jest.spyOn(console, "error").mockImplementation(() => {});
+    loggerConsole = getLoggerConsole();
+  });
+
+  afterEach(() => {
+    stdout.mockRestore();
+    stderr.mockRestore();
+  });
+
+  it("frames console.timeEnd and keeps the timer state on one console", () => {
+    loggerConsole.time("work");
+    loggerConsole.timeEnd("work");
+
+    const logs = framesOf(stdout, LogChannels.OUT);
+    expect(logs.length).toEqual(1);
+    expect(logs[0].level).toEqual(LogLevels.LOG);
+    expect(logs[0].message).toMatch(/^work: /);
+    expect(stderr).not.toHaveBeenCalled();
+  });
+
+  it("frames the console.group label and leaves later frames parseable", () => {
+    loggerConsole.group("validation");
+    loggerConsole.log("inside");
+    loggerConsole.groupEnd();
+    loggerConsole.log("after");
+
+    expect(framesOf(stdout, LogChannels.OUT)).toEqual([
+      {level: LogLevels.LOG, eventId: undefined, message: "validation"},
+      {level: LogLevels.LOG, eventId: undefined, message: "inside"},
+      {level: LogLevels.LOG, eventId: undefined, message: "after"}
+    ]);
+  });
+
+  it("frames the multi line output of console.trace as one log on the error channel", () => {
+    logContext.run({eventId: "evt-9"}, () => loggerConsole.trace("boom"));
+
+    const logs = framesOf(stderr, LogChannels.ERROR);
+    expect(logs.length).toEqual(1);
+    expect(logs[0].level).toEqual(LogLevels.ERROR);
+    expect(logs[0].eventId).toEqual("evt-9");
+    expect(logs[0].message).toMatch(/^Trace: boom/);
+    expect(logs[0].message.split("\n").length).toBeGreaterThan(1);
   });
 });
