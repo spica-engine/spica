@@ -33,6 +33,31 @@ import cookieParser from "cookie-parser";
 import {ConfigModule} from "@spica-server/config";
 import {deriveKey} from "@spica-server/core-encryption";
 
+const HEADER_NAME = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+
+function parseResponseHeaders(values: string[]) {
+  const headers: Record<string, string> = {};
+
+  for (const pair of values) {
+    const separator = pair.indexOf(":");
+
+    if (separator < 1) {
+      throw new Error(`Response header '${pair}' is malformed, expected 'Name: value'.`);
+    }
+
+    const name = pair.slice(0, separator).trim();
+    const value = pair.slice(separator + 1).trim();
+
+    if (!HEADER_NAME.test(name) || /[\r\n]/.test(value)) {
+      throw new Error(`Response header '${name}' has an illegal name or value.`);
+    }
+
+    headers[name] = value;
+  }
+
+  return headers;
+}
+
 const yargsInstance = yargs(process.argv.slice(2)) as any;
 
 const args = yargsInstance
@@ -554,14 +579,33 @@ const args = yargsInstance
   })
   /* Additional Header Options */
   .option({
+    "response-header": {
+      array: true,
+      description: 'Headers to attach to every response, as "Name: value" pairs.',
+      default: [],
+      coerce: parseResponseHeaders
+    },
     "cache-control-header": {
       string: true,
-      description: "Cache-Control"
+      description: "Cache-Control. Deprecated, use --response-header instead."
     },
     "x-frame-options-header": {
       string: true,
-      description: "X-Frame-Option"
+      description: "X-Frame-Options. Deprecated, use --response-header instead."
     }
+  })
+  .check(() => {
+    const occurrences = process.argv.filter(
+      arg => arg == "--response-header" || arg.startsWith("--response-header=")
+    ).length;
+
+    if (occurrences > 1) {
+      throw new Error(
+        "--response-header can not be repeated, pass every header to a single --response-header."
+      );
+    }
+
+    return true;
   })
   /* Common Options */
   .option("payload-size-limit", {
@@ -1008,6 +1052,12 @@ if (args["cert-file"] && args["key-file"]) {
   };
 }
 
+const responseHeaders = {
+  "Cache-Control": args["cache-control-header"],
+  "X-Frame-Options": args["x-frame-options-header"],
+  ...args["response-header"]
+};
+
 NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false
@@ -1016,10 +1066,7 @@ NestFactory.create(RootModule, {
   console.log("PROXY at main.ts", app.getHttpAdapter().getInstance().get("trust proxy"));
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
-    Middlewares.Headers({
-      "Cache-Control": args["cache-control-header"],
-      "X-Frame-Options": args["x-frame-options-header"]
-    }),
+    Middlewares.Headers(responseHeaders),
     Middlewares.Preflight({
       allowedOrigins: args["cors-allowed-origins"],
       allowedMethods: args["cors-allowed-methods"],

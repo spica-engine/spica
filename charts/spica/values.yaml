@@ -72,6 +72,11 @@ application:
   apiResources: {}
   webResources: {}
   args: []
+  # extra headers attached to every api response, eg:
+  # responseHeaders:
+  #   Cache-Control: "no-store"
+  #   X-Frame-Options: "DENY"
+  responseHeaders: {}
   diskAccessMode: ReadWriteOnce
   serviceAccountName: default
   podAnnotations: {}
