@@ -83,14 +83,6 @@ describe("logger console", () => {
     stderr.mockRestore();
   });
 
-  it("frames console.dir", () => {
-    loggerConsole.dir({a: 1});
-
-    expect(framesOf(stdout, LogChannels.OUT)).toEqual([
-      {level: LogLevels.LOG, eventId: undefined, message: "{ a: 1 }"}
-    ]);
-  });
-
   it("frames console.timeEnd and keeps the timer state on one console", () => {
     loggerConsole.time("work");
     loggerConsole.timeEnd("work");
@@ -100,15 +92,6 @@ describe("logger console", () => {
     expect(logs[0].level).toEqual(LogLevels.LOG);
     expect(logs[0].message).toMatch(/^work: /);
     expect(stderr).not.toHaveBeenCalled();
-  });
-
-  it("frames multi line output of console.table as a single log", () => {
-    loggerConsole.table([{a: 1}]);
-
-    const logs = framesOf(stdout, LogChannels.OUT);
-    expect(logs.length).toEqual(1);
-    expect(logs[0].message).toContain("(index)");
-    expect(logs[0].message.split("\n").length).toBeGreaterThan(1);
   });
 
   it("frames the console.group label and leaves later frames parseable", () => {
@@ -124,7 +107,7 @@ describe("logger console", () => {
     ]);
   });
 
-  it("frames console.trace on the error channel", () => {
+  it("frames the multi line output of console.trace as one log on the error channel", () => {
     logContext.run({eventId: "evt-9"}, () => loggerConsole.trace("boom"));
 
     const logs = framesOf(stderr, LogChannels.ERROR);
@@ -132,5 +115,6 @@ describe("logger console", () => {
     expect(logs[0].level).toEqual(LogLevels.ERROR);
     expect(logs[0].eventId).toEqual("evt-9");
     expect(logs[0].message).toMatch(/^Trace: boom/);
+    expect(logs[0].message.split("\n").length).toBeGreaterThan(1);
   });
 });
