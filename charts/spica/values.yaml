@@ -82,12 +82,12 @@ application:
   apiStartupProbeTimeoutSeconds: 3
   apiStartupProbeFailureThreshold: 24
   # liveness
-  apiLivenessProbePeriodSeconds: 15
-  apiLivenessProbeTimeoutSeconds: 5
-  apiLivenessProbeFailureThreshold: 3
+  apiLivenessProbePeriodSeconds: 30
+  apiLivenessProbeTimeoutSeconds: 10
+  apiLivenessProbeFailureThreshold: 6
   # readiness
-  apiReadinessProbePeriodSeconds: 5
-  apiReadinessProbeTimeoutSeconds: 5
+  apiReadinessProbePeriodSeconds: 10
+  apiReadinessProbeTimeoutSeconds: 10
   apiReadinessProbeFailureThreshold: 6
 ingress:
   hosts: []
