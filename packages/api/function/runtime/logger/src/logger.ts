@@ -1,4 +1,6 @@
 import {AsyncLocalStorage} from "async_hooks";
+import {Console} from "console";
+import {Writable} from "stream";
 import {
   RESERVED_ENDING_INDICATOR,
   RESERVED_EVENT_INDICATOR,
@@ -13,6 +15,27 @@ import {LogChannels, LogLevels} from "@spica-server/interface-function-runtime";
 // parent. Empty store (single-concurrency) → frames omit the event id.
 export const logContext = new AsyncLocalStorage<{eventId?: string}>();
 
+// Everything console can print that is not a log level of its own. Node binds the
+// global console's methods to its internal console instance, so these never reach a
+// wrapper assigned onto a copy — console.timeEnd's internal `this.log` is the original
+// one, and its output would leave the worker unframed (and get dropped by the
+// concurrent worker's log demultiplexer).
+const CAPTURED_CONSOLE_METHODS = [
+  "assert",
+  "count",
+  "countReset",
+  "dir",
+  "dirxml",
+  "group",
+  "groupCollapsed",
+  "groupEnd",
+  "table",
+  "time",
+  "timeEnd",
+  "timeLog",
+  "trace"
+];
+
 export function getLoggerConsole() {
   const copiedConsole = Object.assign({}, console);
   for (const logLevelName of Object.keys(LogLevels)) {
@@ -25,7 +48,36 @@ export function getLoggerConsole() {
       return callback.bind(copiedConsole)(...params);
     };
   }
+
+  // A private console whose streams feed back into the framed log/error above, so the
+  // methods below keep their own state (timers, counters, group indent) while their
+  // output is framed and correlated exactly like a console.log call.
+  const capturingConsole = new Console({
+    stdout: captureInto(message => copiedConsole.log(message)),
+    stderr: captureInto(message => copiedConsole.error(message)),
+    colorMode: false
+  });
+
+  for (const method of CAPTURED_CONSOLE_METHODS) {
+    if (typeof capturingConsole[method] != "function") {
+      continue;
+    }
+    copiedConsole[method] = (...params) => capturingConsole[method](...params);
+  }
+
   return copiedConsole;
+}
+
+function captureInto(emit: (message: string) => void) {
+  return new Writable({
+    write(chunk, _encoding, callback) {
+      const message = chunk.toString().replace(/\n$/, "");
+      if (message) {
+        emit(message);
+      }
+      callback();
+    }
+  });
 }
 
 export function getOriginalConsole() {
