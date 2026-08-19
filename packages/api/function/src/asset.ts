@@ -16,6 +16,18 @@ import {IRepresentativeManager} from "@spica-server/interface-representative";
 
 const _module = "function";
 
+const REMOVED_FIELDS = ["memoryLimit"];
+
+function omitRemovedFields<T extends object>(schema: T): T {
+  const copy: any = {...schema};
+
+  for (const field of REMOVED_FIELDS) {
+    delete copy[field];
+  }
+
+  return copy;
+}
+
 export function registerAssetHandlers(
   fs: FunctionService,
   engine: FunctionEngine,
@@ -24,7 +36,7 @@ export function registerAssetHandlers(
   manager: IRepresentativeManager
 ) {
   const validator = async (resource: Resource<FunctionContents>) => {
-    const fn = resource.contents.schema;
+    const fn = omitRemovedFields(resource.contents.schema);
 
     const schemaValidation = () => Promise.resolve(validateSchema(fn, schemaValidator));
 
@@ -37,7 +49,7 @@ export function registerAssetHandlers(
 
   const operator = {
     insert: async (resource: Resource<FunctionContents>) => {
-      const schema = resource.contents.schema;
+      const schema = omitRemovedFields(resource.contents.schema);
       const fn: any = await CRUD.insert(fs, engine, schema);
 
       await CRUD.index.write(fs, engine, fn._id, resource.contents.index);
@@ -46,7 +58,7 @@ export function registerAssetHandlers(
     },
 
     update: async (resource: Resource<FunctionContents>) => {
-      const schema = resource.contents.schema;
+      const schema = omitRemovedFields(resource.contents.schema);
       const fn: any = await CRUD.replace(fs, engine, schema);
 
       await CRUD.index.write(fs, engine, fn._id, resource.contents.index);
@@ -76,7 +88,7 @@ export function registerAssetHandlers(
     const promises = [];
 
     // schema
-    promises.push(manager.write(_module, _id, "schema", fn, "yaml"));
+    promises.push(manager.write(_module, _id, "schema", omitRemovedFields(fn), "yaml"));
 
     // dependencies
     const dependencies = await engine.getPackages(fn).then(deps => {
