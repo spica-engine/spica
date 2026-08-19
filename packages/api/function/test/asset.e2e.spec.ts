@@ -127,9 +127,11 @@ describe("function", () => {
           }
         }
       },
+      // exported by an older version, before memoryLimit was dropped from the schema
       memoryLimit: 100
     };
     fnv1Created = {...fnv1, env_vars: [], secrets: []};
+    delete fnv1Created.memoryLimit;
 
     fnv1Resource = {
       _id: fnId,
@@ -145,6 +147,7 @@ describe("function", () => {
 
     fnv2 = {...fnv1, timeout: 60};
     fnv2Created = {...fnv2, env_vars: [], secrets: []};
+    delete fnv2Created.memoryLimit;
 
     fnv2Resource = {
       ...fnv1Resource,

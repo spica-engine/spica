@@ -29,11 +29,6 @@
       "description": "Secrets that will be accessible in the function",
       "items": {"type": "string"}
     },
-    "memoryLimit": {
-      "type": "number",
-      "default": 100,
-      "description": "Memory value that function can use maximum"
-    },
     "timeout": {
       "type": "number",
       "description": "Value in seconds that function should be completed"
