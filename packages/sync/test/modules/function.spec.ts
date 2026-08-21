@@ -152,11 +152,151 @@ describe("functionModule.readRemote", () => {
   // instead of silently treating it as an empty remote.
   it("throws a helpful error when the endpoint returns a non-list body (e.g. panel HTML)", async () => {
     mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve("<!doctype html><html><body>Panel</body></html>");
+      if (url === "function")
+        return Promise.resolve("<!doctype html><html><body>Panel</body></html>");
       return Promise.resolve([]);
     });
 
     await expect(functionModule.readRemote(mockHttp)).rejects.toThrow(/context URL/);
+  });
+
+  // Regression: the per-function index/dependencies requests used to be fired all
+  // at once and swallowed on failure (`.catch(() => ({index: ""}))`), so a
+  // throttled or dropped request looked like an empty remote and `spica plan`
+  // reported an [index, dependencies] change that did not exist.
+  describe("failed detail requests", () => {
+    const envKeys = ["SPICA_SYNC_CONCURRENCY", "SPICA_SYNC_RETRIES"];
+    const originalEnv: Record<string, string | undefined> = {};
+
+    beforeEach(() => {
+      for (const key of envKeys) originalEnv[key] = process.env[key];
+    });
+
+    afterEach(() => {
+      for (const key of envKeys) {
+        if (originalEnv[key] === undefined) delete process.env[key];
+        else process.env[key] = originalEnv[key];
+      }
+    });
+
+    function httpError(status: number): Error & {status: number} {
+      return Object.assign(new Error(`request failed with ${status}`), {status});
+    }
+
+    it("aborts instead of reporting an empty index when the request keeps failing", async () => {
+      process.env.SPICA_SYNC_RETRIES = "0";
+      mockHttp.get.mockImplementation((url: string) => {
+        if (url === "function")
+          return Promise.resolve([{_id: "fn1", name: "MyFn", language: "javascript"}]);
+        if (url === "function/fn1/index") return Promise.reject(httpError(429));
+        if (url === "function/fn1/dependencies") return Promise.resolve([]);
+        return Promise.resolve([]);
+      });
+
+      await expect(functionModule.readRemote(mockHttp)).rejects.toThrow(/MyFn: index/);
+    });
+
+    it("names every function whose details could not be read", async () => {
+      process.env.SPICA_SYNC_RETRIES = "0";
+      mockHttp.get.mockImplementation((url: string) => {
+        if (url === "function")
+          return Promise.resolve([
+            {_id: "fn1", name: "First", language: "javascript"},
+            {_id: "fn2", name: "Second", language: "javascript"}
+          ]);
+        if (url === "function/fn1/index") return Promise.resolve({index: "ok"});
+        if (url === "function/fn1/dependencies") return Promise.reject(httpError(500));
+        if (url === "function/fn2/index") return Promise.reject(httpError(503));
+        if (url === "function/fn2/dependencies") return Promise.resolve([]);
+        return Promise.resolve([]);
+      });
+
+      const error = await functionModule.readRemote(mockHttp).catch(e => e as Error);
+      expect(error.message).toMatch(/First: dependencies/);
+      expect(error.message).toMatch(/Second: index/);
+    });
+
+    it("retries a temporary failure and returns the real index", async () => {
+      process.env.SPICA_SYNC_RETRIES = "2";
+      let indexAttempts = 0;
+      mockHttp.get.mockImplementation((url: string) => {
+        if (url === "function")
+          return Promise.resolve([{_id: "fn1", name: "MyFn", language: "javascript"}]);
+        if (url === "function/fn1/index") {
+          indexAttempts++;
+          return indexAttempts < 3
+            ? Promise.reject(httpError(429))
+            : Promise.resolve({index: "export default () => {};"});
+        }
+        if (url === "function/fn1/dependencies") return Promise.resolve([]);
+        return Promise.resolve([]);
+      });
+
+      const result = await functionModule.readRemote(mockHttp);
+      expect(indexAttempts).toBe(3);
+      expect(result[0].data.index).toBe("export default () => {};");
+    });
+
+    it("does not retry a client error that a retry cannot fix", async () => {
+      process.env.SPICA_SYNC_RETRIES = "3";
+      let indexAttempts = 0;
+      mockHttp.get.mockImplementation((url: string) => {
+        if (url === "function")
+          return Promise.resolve([{_id: "fn1", name: "MyFn", language: "javascript"}]);
+        if (url === "function/fn1/index") {
+          indexAttempts++;
+          return Promise.reject(httpError(403));
+        }
+        if (url === "function/fn1/dependencies") return Promise.resolve([]);
+        return Promise.resolve([]);
+      });
+
+      await expect(functionModule.readRemote(mockHttp)).rejects.toThrow(/MyFn: index/);
+      expect(indexAttempts).toBe(1);
+    });
+
+    it("treats a 404 as a function that has no index or dependencies yet", async () => {
+      mockHttp.get.mockImplementation((url: string) => {
+        if (url === "function")
+          return Promise.resolve([{_id: "fn1", name: "MyFn", language: "javascript"}]);
+        if (url === "function/fn1/index") return Promise.reject(httpError(404));
+        if (url === "function/fn1/dependencies") return Promise.reject(httpError(404));
+        return Promise.resolve([]);
+      });
+
+      const result = await functionModule.readRemote(mockHttp);
+      expect(result).toHaveLength(1);
+      expect(result[0].data.index).toBe("");
+      expect(result[0].data.dependencies).toEqual({});
+    });
+
+    it("keeps the number of in-flight detail requests within the configured limit", async () => {
+      process.env.SPICA_SYNC_CONCURRENCY = "2";
+      const fns = Array.from({length: 6}, (_, i) => ({
+        _id: `fn${i}`,
+        name: `Fn${i}`,
+        language: "javascript"
+      }));
+
+      let inFlight = 0;
+      let peak = 0;
+      mockHttp.get.mockImplementation((url: string) => {
+        if (url === "function") return Promise.resolve(fns);
+        inFlight++;
+        peak = Math.max(peak, inFlight);
+        return new Promise(resolve =>
+          setImmediate(() => {
+            inFlight--;
+            resolve(url.endsWith("/index") ? {index: ""} : []);
+          })
+        );
+      });
+
+      const result = await functionModule.readRemote(mockHttp);
+      expect(result).toHaveLength(6);
+      // 2 functions in flight, each with its index + dependencies request
+      expect(peak).toBeLessThanOrEqual(4);
+    });
   });
 });
 

@@ -27,15 +27,23 @@ export namespace httpService {
         if (!error.response) {
           return Promise.reject(error);
         }
+        const status = error.response.status;
         const data = error.response.data || error.response;
+        // Keep the HTTP status (and the axios error code) on the rejected error so
+        // callers can tell a 404 apart from a throttled or failed request.
         if (data instanceof Error) {
-          return Promise.reject(data);
+          const known = data as Error & {status?: number};
+          if (known.status === undefined) {
+            known.status = status;
+          }
+          return Promise.reject(known);
         }
         const message =
-          typeof data === "string"
-            ? data
-            : data?.message || data?.error || JSON.stringify(data);
-        return Promise.reject(new Error(message));
+          typeof data === "string" ? data : data?.message || data?.error || JSON.stringify(data);
+        const rejection = new Error(message) as Error & {status?: number; code?: string};
+        rejection.status = status;
+        rejection.code = error.code;
+        return Promise.reject(rejection);
       }
     );
     instance.defaults.headers.common["Authorization"] = authorization;
