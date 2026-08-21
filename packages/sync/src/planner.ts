@@ -519,7 +519,7 @@ async function runConcurrently(
   }
 }
 
-function formatError(e: unknown): string {
+export function formatError(e: unknown): string {
   if (e && typeof e === "object") {
     const err = e as any;
     return err.message ?? err.data?.message ?? JSON.stringify(e);

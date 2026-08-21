@@ -4,7 +4,7 @@ import yaml from "yaml";
 import isEqual from "lodash/isEqual.js";
 import {bold, cyan, green, red, yellow} from "colorette";
 import {SyncHttpClient} from "../http";
-import {buildUnifiedDiff, diffObjectFields} from "../planner";
+import {buildUnifiedDiff, diffObjectFields, formatError} from "../planner";
 import {
   ensureDir,
   listFolders,
@@ -68,19 +68,81 @@ function normalizeSchema(schema: FunctionSchema): FunctionSchema {
   return normalized;
 }
 
-function isNotFoundError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
+function errorStatus(error: unknown): number | undefined {
+  if (!error || typeof error !== "object") return undefined;
   const c = error as {
     status?: number;
     statusCode?: number;
     response?: {status?: number; statusCode?: number};
   };
-  return (
-    c.status === 404 ||
-    c.statusCode === 404 ||
-    c.response?.status === 404 ||
-    c.response?.statusCode === 404
-  );
+  const status = c.status ?? c.statusCode ?? c.response?.status ?? c.response?.statusCode;
+  return typeof status === "number" ? status : undefined;
+}
+
+function isNotFoundError(error: unknown): boolean {
+  return errorStatus(error) === 404;
+}
+
+// ─── Remote detail fetching ──────────────────────────────────────────────────
+// `readRemote` needs two extra requests per function (index + dependencies). On
+// an instance with many functions, firing them all at once gets requests
+// throttled or dropped, and a dropped request used to be read as "remote is
+// empty" — which surfaced as a change that does not exist. So: bound the
+// concurrency, retry what is worth retrying, and refuse to guess otherwise.
+
+const DEFAULT_FETCH_CONCURRENCY = 5;
+const DEFAULT_FETCH_RETRIES = 3;
+const RETRY_BASE_DELAY_MS = 300;
+
+function positiveEnvNumber(name: string, fallback: number): number {
+  const raw = Number(process.env[name]);
+  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : fallback;
+}
+
+/** Transport errors (no status), throttling and server errors are worth a retry. */
+function isRetryableError(error: unknown): boolean {
+  const status = errorStatus(error);
+  if (status === undefined) return true;
+  return status === 408 || status === 425 || status === 429 || status >= 500;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function retryRequest<T>(op: () => Promise<T>, retries: number): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await op();
+    } catch (error) {
+      lastError = error;
+      if (!isRetryableError(error) || attempt === retries) throw error;
+      await delay(RETRY_BASE_DELAY_MS * 2 ** attempt);
+    }
+  }
+  throw lastError;
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+
+  const runner = async () => {
+    while (true) {
+      const index = cursor++;
+      if (index >= items.length) return;
+      results[index] = await worker(items[index], index);
+    }
+  };
+
+  const runners = Math.max(1, Math.min(limit, items.length));
+  await Promise.all(Array.from({length: runners}, runner));
+  return results;
 }
 
 // ─── Extended interface with granular read/write operations ──────────────────
@@ -145,36 +207,69 @@ export const functionModule: FunctionModule = {
   },
 
   async readRemote(http) {
-    const res = await http.get<FunctionSchema[] | {data: FunctionSchema[]}>("function");
+    const concurrency = positiveEnvNumber("SPICA_SYNC_CONCURRENCY", DEFAULT_FETCH_CONCURRENCY);
+    const retries = positiveEnvNumber("SPICA_SYNC_RETRIES", DEFAULT_FETCH_RETRIES);
+
+    const res = await retryRequest(
+      () => http.get<FunctionSchema[] | {data: FunctionSchema[]}>("function"),
+      retries
+    );
     const fns = unwrapList(res);
 
-    return Promise.all(
-      fns.map(async fn => {
-        const id = fn._id!;
+    const failures: string[] = [];
 
-        const [indexRes, depsRes] = await Promise.all([
-          http.get<{index: string}>(`function/${id}/index`).catch(() => ({index: ""})),
-          http
-            .get<RemoteDependency[]>(`function/${id}/dependencies`)
-            .catch(() => [] as RemoteDependency[])
-        ]);
+    const resources = await mapWithConcurrency(fns, concurrency, async fn => {
+      const id = fn._id!;
 
-        const dependencies: Record<string, string> = {};
-        for (const dep of depsRes) {
-          dependencies[dep.name] = dep.version;
-        }
-
-        return {
-          slug: sanitizeSlug(fn.name),
-          id,
-          data: {
-            schema: normalizeSchema(fn),
-            index: indexRes.index ?? "",
-            dependencies
+      const [indexRes, depsRes] = await Promise.all([
+        retryRequest(() => http.get<{index: string}>(`function/${id}/index`), retries).catch(
+          error => {
+            // A function that has no source yet really is empty; anything else
+            // is a failed read we must not mistake for one.
+            if (isNotFoundError(error)) return {index: ""};
+            failures.push(`${fn.name}: index (${formatError(error)})`);
+            return undefined;
           }
-        };
-      })
-    );
+        ),
+        retryRequest(
+          () => http.get<RemoteDependency[]>(`function/${id}/dependencies`),
+          retries
+        ).catch(error => {
+          if (isNotFoundError(error)) return [] as RemoteDependency[];
+          failures.push(`${fn.name}: dependencies (${formatError(error)})`);
+          return undefined;
+        })
+      ]);
+
+      if (indexRes === undefined || depsRes === undefined) return undefined;
+
+      const dependencies: Record<string, string> = {};
+      for (const dep of depsRes) {
+        dependencies[dep.name] = dep.version;
+      }
+
+      return {
+        slug: sanitizeSlug(fn.name),
+        id,
+        data: {
+          schema: normalizeSchema(fn),
+          index: indexRes.index ?? "",
+          dependencies
+        }
+      };
+    });
+
+    if (failures.length) {
+      throw new Error(
+        `Could not read ${failures.length} remote function detail(s) after ${retries} retries, ` +
+          `aborting instead of reporting changes that may not exist:\n  - ` +
+          `${failures.join("\n  - ")}\n` +
+          `Retry, or lower the request concurrency with SPICA_SYNC_CONCURRENCY ` +
+          `(current: ${concurrency}).`
+      );
+    }
+
+    return resources.filter((r): r is RemoteResource<FunctionData> => r !== undefined);
   },
 
   async create(http, local) {

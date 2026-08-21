@@ -26,6 +26,10 @@
     "./src/function/triggers": {
       "types": "./src/function/triggers/index.ts",
       "default": "./dist/src/function/triggers/index.js"
+    },
+    "./src/http": {
+      "types": "./src/http.ts",
+      "default": "./dist/src/http.js"
     }
   },
   "publishConfig": {
