@@ -28,14 +28,12 @@ export namespace httpService {
           return Promise.reject(error);
         }
         const data = error.response.data || error.response;
-        if (data instanceof Error) {
-          return Promise.reject(data);
-        }
         const message =
           typeof data === "string"
             ? data
             : data?.message || data?.error || JSON.stringify(data);
-        return Promise.reject(new Error(message));
+        const rejection = data instanceof Error ? data : new Error(message);
+        return Promise.reject(Object.assign(rejection, {status: error.response.status}));
       }
     );
     instance.defaults.headers.common["Authorization"] = authorization;

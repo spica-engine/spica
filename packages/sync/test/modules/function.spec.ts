@@ -158,6 +158,54 @@ describe("functionModule.readRemote", () => {
 
     await expect(functionModule.readRemote(mockHttp)).rejects.toThrow(/context URL/);
   });
+
+  // Regression: a throttled/dropped detail request used to be swallowed into an
+  // empty index, so `plan` reported changes for functions nobody had touched.
+  it("fails naming the function when a detail request fails for any reason but 404", async () => {
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function") return Promise.resolve([{_id: "fn1", name: "MyFn"}]);
+      if (url === "function/fn1/index")
+        return Promise.reject(Object.assign(new Error("Too Many Requests"), {status: 429}));
+      return Promise.resolve([]);
+    });
+
+    await expect(functionModule.readRemote(mockHttp)).rejects.toThrow(
+      /Could not read function "MyFn".*Too Many Requests/
+    );
+  });
+
+  it("treats a 404 as a function that has no index or dependencies yet", async () => {
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function") return Promise.resolve([{_id: "fn1", name: "MyFn"}]);
+      return Promise.reject(Object.assign(new Error("Index does not exist."), {status: 404}));
+    });
+
+    const result = await functionModule.readRemote(mockHttp);
+    expect(result[0].data.index).toBe("");
+    expect(result[0].data.dependencies).toEqual({});
+  });
+
+  it("keeps the per-function detail requests within a concurrency limit", async () => {
+    const fns = Array.from({length: 50}, (_, i) => ({_id: `fn${i}`, name: `Fn${i}`}));
+    let inFlight = 0;
+    let peak = 0;
+
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function") return Promise.resolve(fns);
+      inFlight++;
+      peak = Math.max(peak, inFlight);
+      return new Promise(resolve =>
+        setImmediate(() => {
+          inFlight--;
+          resolve(url.endsWith("/index") ? {index: ""} : []);
+        })
+      );
+    });
+
+    const result = await functionModule.readRemote(mockHttp);
+    expect(result).toHaveLength(50);
+    expect(peak).toBeLessThanOrEqual(20);
+  });
 });
 
 describe("functionModule.create", () => {
