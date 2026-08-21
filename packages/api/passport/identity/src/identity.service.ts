@@ -1,4 +1,4 @@
-import {Injectable, Inject, UnauthorizedException} from "@nestjs/common";
+import {Injectable, Inject, HttpException, HttpStatus} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {
   Identity,
@@ -280,10 +280,15 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   checkIdentityIsBlocked(identity: Identity) {
     if (this.isIdentityBlocked(identity)) {
       const remainingBlockedSeconds = this.getRemainingBlockedSeconds(identity);
-      throw new UnauthorizedException(
-        `Too many failed login attempts. Try again after ${this.formatRemainingDuration(
-          remainingBlockedSeconds
-        )}.`
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+          message: `Too many failed login attempts. Try again after ${this.formatRemainingDuration(
+            remainingBlockedSeconds
+          )}.`,
+          error: "Too Many Requests"
+        },
+        HttpStatus.TOO_MANY_REQUESTS
       );
     }
   }

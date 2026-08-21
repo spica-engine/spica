@@ -1201,8 +1201,8 @@ describe("E2E Tests", () => {
 
       const responseWithBlockedError = responses[responses.length - 1];
 
-      expect(responseWithBlockedError.statusCode).toEqual(401);
-      expect(responseWithBlockedError.statusText).toEqual("Unauthorized");
+      expect(responseWithBlockedError.statusCode).toEqual(429);
+      expect(responseWithBlockedError.statusText).toEqual("Too Many Requests");
       expect(responseWithBlockedError.body.message).toEqual(
         "Too many failed login attempts. Try again after 10 minutes."
       );
