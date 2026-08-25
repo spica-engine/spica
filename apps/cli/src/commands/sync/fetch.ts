@@ -4,14 +4,21 @@ import caporalCore from "@caporal/core";
 const {CaporalValidator} = caporalCore;
 import {bold, green, red, yellow} from "colorette";
 import {httpService} from "../../http";
-import {buildPlan, fetchToDisk, renderPlan, resolveModules, MODULE_NAMES} from "@spica-server/sync";
+import {
+  buildPlan,
+  fetchToDisk,
+  renderPlan,
+  resolveModules,
+  DEFAULT_CONCURRENCY,
+  MODULE_NAMES
+} from "@spica-server/sync";
 import {confirm} from "./prompt";
 import {cliReporter} from "./reporter";
 
 async function fetch_({args, options}: ActionParameters) {
   const rootDir = path.resolve((args.dir as string | undefined) ?? process.cwd());
   const autoApprove = !!options.autoApprove;
-  const concurrency = (options.concurrency as number) ?? 10;
+  const concurrency = options.concurrency as number;
   const abortOnError = !!options.abortOnError;
   const detailed = !!options.detailed;
   const clean = !!options.clean;
@@ -23,7 +30,12 @@ async function fetch_({args, options}: ActionParameters) {
   const http = await httpService.createFromCurrentCtx();
 
   console.log(bold("\nBuilding plan…"));
-  const p = await buildPlan(modules, http, rootDir, detailed, false, cliReporter);
+  const p = await buildPlan(modules, http, rootDir, {
+    detailed,
+    detectRenames: false,
+    reporter: cliReporter,
+    concurrency
+  });
 
   // Fetch perspective: deletes = new remote files to write, updates = changed to overwrite,
   // creates = local-only stale files (removed only with --clean)
@@ -82,8 +94,8 @@ export default function (program: Program): Command {
     .option("--auto-approve, -y", "Skip confirmation prompt and write immediately.", {
       default: false
     })
-    .option("--concurrency <n>", "Maximum parallel file writes.", {
-      default: 10 as number,
+    .option("--concurrency <n>", "Maximum parallel API requests and file writes.", {
+      default: DEFAULT_CONCURRENCY as number,
       validator: CaporalValidator.NUMBER
     })
     .option("--abort-on-error", "Stop immediately if any operation fails.", {default: false})

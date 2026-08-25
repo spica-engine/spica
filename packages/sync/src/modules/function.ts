@@ -17,7 +17,13 @@ import {
   writeText,
   writeYaml
 } from "../fs-utils";
-import {DevEventContext, LocalResource, RemoteResource, ResourceModule} from "../types";
+import {
+  DEFAULT_CONCURRENCY,
+  DevEventContext,
+  LocalResource,
+  RemoteResource,
+  ResourceModule
+} from "../types";
 
 interface FunctionSchema {
   _id?: string;
@@ -68,16 +74,16 @@ function normalizeSchema(schema: FunctionSchema): FunctionSchema {
   return normalized;
 }
 
-const DETAIL_CONCURRENCY = 10;
-
 async function mapInBatches<T, R>(
   items: T[],
   size: number,
   fn: (item: T) => Promise<R>
 ): Promise<R[]> {
+  // A non-positive size would never advance `i` — an unresponsive infinite loop.
+  const limit = Math.max(1, size);
   const results: R[] = [];
-  for (let i = 0; i < items.length; i += size) {
-    results.push(...(await Promise.all(items.slice(i, i + size).map(fn))));
+  for (let i = 0; i < items.length; i += limit) {
+    results.push(...(await Promise.all(items.slice(i, i + limit).map(fn))));
   }
   return results;
 }
@@ -97,12 +103,12 @@ function isNotFoundError(error: unknown): boolean {
   );
 }
 
-function getOrEmptyOnNotFound<T>(http: SyncHttpClient, url: string, empty: T): Promise<T> {
-  return http.get<T>(url).catch(error => {
+const emptyIfMissing =
+  <T>(empty: T) =>
+  (error: unknown): T => {
     if (isNotFoundError(error)) return empty;
     throw error;
-  });
-}
+  };
 
 // ─── Extended interface with granular read/write operations ──────────────────
 
@@ -165,16 +171,18 @@ export const functionModule: FunctionModule = {
     return results;
   },
 
-  async readRemote(http) {
+  async readRemote(http, options = {}) {
     const res = await http.get<FunctionSchema[] | {data: FunctionSchema[]}>("function");
     const fns = unwrapList(res);
 
-    return mapInBatches(fns, DETAIL_CONCURRENCY, async fn => {
+    return mapInBatches(fns, options.concurrency ?? DEFAULT_CONCURRENCY, async fn => {
       const id = fn._id!;
 
       const [indexRes, depsRes] = await Promise.all([
-        getOrEmptyOnNotFound(http, `function/${id}/index`, {index: ""}),
-        getOrEmptyOnNotFound<RemoteDependency[]>(http, `function/${id}/dependencies`, [])
+        http.get<{index: string}>(`function/${id}/index`).catch(emptyIfMissing({index: ""})),
+        http
+          .get<RemoteDependency[]>(`function/${id}/dependencies`)
+          .catch(emptyIfMissing<RemoteDependency[]>([]))
       ]).catch(error => {
         throw new Error(`Could not read function "${fn.name}": ${error?.message ?? error}`);
       });
