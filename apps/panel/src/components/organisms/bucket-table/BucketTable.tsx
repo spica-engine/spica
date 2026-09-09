@@ -287,7 +287,18 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   // Table's internal `.tableArea` is the `overflow: auto` scroll container.
   useEffect(() => {
     const area = tableContainerRef.current?.querySelector<HTMLElement>('[class*="tableArea"]');
-    if (!area) return;
+    if (!area) {
+      // Matching the ui-kit's internal class is the only handle it offers. If a
+      // version bump renames it, pagination goes inert with no type or runtime
+      // error — the exact failure this hook was written to fix — so say so.
+      if (import.meta.env.DEV) {
+        console.warn(
+          "[BucketTable] oziko Table scroll container not found; infinite scroll is inert. " +
+            "The ui-kit likely renamed its internal `tableArea` class."
+        );
+      }
+      return;
+    }
 
     const check = () => {
       // Also true when the rows don't overflow at all: nothing can be scrolled,
@@ -308,7 +319,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       area.removeEventListener("scroll", check);
       observer.disconnect();
     };
-  }, [handleReachBottom, data.length, loading]);
+  }, [handleReachBottom]);
 
   // Switching buckets must start at the top: the oziko Table keeps its internal
   // `.tableArea` scroll position across data swaps, so reset both the wrapper and
