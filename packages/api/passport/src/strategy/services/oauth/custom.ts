@@ -86,7 +86,7 @@ export class CustomOAuthService implements OAuthStrategyService {
   }
 
   afterInsert(strategy: OAuthStrategy): Promise<Strategy> {
-    const redirectUri = `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`;
+    const redirectUri = `${this.options.publicUrl}/passport/user/strategy/${strategy._id}/complete`;
     return this.strategyService.findOneAndUpdate(
       {
         _id: new ObjectId(strategy._id)
