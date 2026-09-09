@@ -68,8 +68,8 @@ export class SamlService implements StrategyTypeService {
     const sp = new saml2.ServiceProvider({
       entity_id: `${this.options.publicUrl}/passport/strategy/${strategy._id}`,
       assert_endpoint: state
-        ? `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete?state=${state}`
-        : `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`,
+        ? `${this.options.publicUrl}/passport/identity/strategy/${strategy._id}/complete?state=${state}`
+        : `${this.options.publicUrl}/passport/identity/strategy/${strategy._id}/complete`,
       certificate: strategy.options.sp.certificate,
       private_key: strategy.options.sp.private_key,
       force_authn: true,

@@ -729,9 +729,8 @@ describe("E2E Tests", () => {
                   // this last request because of we use test environment,
                   // actual SSO implementation handles this last step automatically on browser environment and redirects user to the panel as logged in
                   const request = parseUrl(completeUrl, publicUrl);
-                  const completeEndpoint = `/passport/identity/strategy/${strategies[0]._id}/complete`;
                   req
-                    .post(completeEndpoint, {SAMLResponse: SAMLResponse}, {}, request.params)
+                    .post(request.url, {SAMLResponse: SAMLResponse}, {}, request.params)
                     .then(res => {
                       expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
                       expect(res.body).toBeUndefined();
@@ -835,7 +834,7 @@ describe("E2E Tests", () => {
         expect(strategy.state).toBeDefined();
         expect(
           strategy.url.startsWith(
-            `${publicUrl}/oauth/code?client_id=client_id&redirect_uri=${publicUrl}/passport/strategy/${strategies[0]._id}/complete&state=`
+            `${publicUrl}/oauth/code?client_id=client_id&redirect_uri=${publicUrl}/passport/user/strategy/${strategies[0]._id}/complete&state=`
           )
         ).toBe(true);
       });
@@ -866,9 +865,11 @@ describe("E2E Tests", () => {
                 authorization: "testuser"
               })
               .then(({body: code}) => {
-                // send code to the strategy complete endpoint
-                const {params: completeParams} = parseUrl(strategyParams.redirect_uri, publicUrl);
-                const completeEndpoint = `/passport/user/strategy/${strategies[0]._id}/complete`;
+                // send code to the strategy complete endpoint the strategy itself advertises
+                const {url: completeEndpoint, params: completeParams} = parseUrl(
+                  strategyParams.redirect_uri,
+                  publicUrl
+                );
                 req
                   .get(completeEndpoint, {
                     ...completeParams,
