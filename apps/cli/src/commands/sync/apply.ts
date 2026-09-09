@@ -11,7 +11,7 @@ import {cliReporter} from "./reporter";
 async function apply({args, options}: ActionParameters) {
   const rootDir = path.resolve((args.dir as string | undefined) ?? process.cwd());
   const autoApprove = !!options.autoApprove;
-  const concurrency = (options.concurrency as number) ?? 10;
+  const concurrency = options.concurrency as number;
   const abortOnError = !!options.abortOnError;
   const detailed = !!options.detailed;
   const moduleFilter = options.module
@@ -22,7 +22,11 @@ async function apply({args, options}: ActionParameters) {
   const http = await httpService.createFromCurrentCtx();
 
   console.log(bold("\nBuilding plan…"));
-  const p = await buildPlan(modules, http, rootDir, detailed, true, cliReporter);
+  const p = await buildPlan(modules, http, rootDir, {
+    detailed,
+    reporter: cliReporter,
+    concurrency
+  });
 
   const totalChanges = p.modules.reduce(
     (n, m) => n + m.creates.length + m.updates.length + m.deletes.length,

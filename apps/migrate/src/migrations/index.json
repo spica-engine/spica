@@ -19,5 +19,6 @@
   "0.17.0": ["0.17.0/set_mongodb_fcv_7.js"],
   "0.18.0": ["0.18.0/remove_position_from_bucket_properties.js"],
   "0.19.4": ["0.19.4/convert_function_relation_ids_to_objectid.js"],
-  "0.19.6": ["0.19.6/remove_memory_limit_from_functions.js"]
+  "0.19.6": ["0.19.6/remove_memory_limit_from_functions.js"],
+  "0.19.7": ["0.19.7/add_user_scope_to_oauth_redirect_uri.js"]
 }

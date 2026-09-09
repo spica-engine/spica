@@ -38,8 +38,9 @@ export class StrategyController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.strategy.findOne({_id: id}).then(strategy => {
+      const scope = strategy.type === "oauth" ? "user" : "identity";
       strategy["callbackUrl"] =
-        `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`;
+        `${this.options.publicUrl}/passport/${scope}/strategy/${strategy._id}/complete`;
       return strategy;
     });
   }

@@ -1,7 +1,15 @@
 import path from "path";
 import {ActionParameters, Command, Program} from "@caporal/core";
+import caporalCore from "@caporal/core";
+const {CaporalValidator} = caporalCore;
 import {httpService} from "../../http";
-import {buildPlan, renderPlan, resolveModules, MODULE_NAMES} from "@spica-server/sync";
+import {
+  buildPlan,
+  renderPlan,
+  resolveModules,
+  DEFAULT_CONCURRENCY,
+  MODULE_NAMES
+} from "@spica-server/sync";
 import {cliReporter} from "./reporter";
 
 async function plan({args, options}: ActionParameters) {
@@ -9,6 +17,7 @@ async function plan({args, options}: ActionParameters) {
     const rootDir = path.resolve((args.dir as string | undefined) ?? process.cwd());
     const detailed = !!options.detailed;
     const json = !!options.json;
+    const concurrency = options.concurrency as number;
     const moduleFilter = options.module
       ? (Array.isArray(options.module) ? options.module : [options.module]).map(String)
       : undefined;
@@ -16,7 +25,11 @@ async function plan({args, options}: ActionParameters) {
     const modules = resolveModules(moduleFilter);
     const http = await httpService.createFromCurrentCtx();
 
-    const p = await buildPlan(modules, http, rootDir, detailed, true, cliReporter);
+    const p = await buildPlan(modules, http, rootDir, {
+      detailed,
+      reporter: cliReporter,
+      concurrency
+    });
     renderPlan(p, {detailed, json});
 
     process.exitCode = 0;
@@ -40,6 +53,10 @@ export default function (program: Program): Command {
       {default: false}
     )
     .option("--json", "Output the plan as JSON (machine-readable).", {default: false})
+    .option("--concurrency <n>", "Maximum parallel API requests.", {
+      default: DEFAULT_CONCURRENCY as number,
+      validator: CaporalValidator.NUMBER
+    })
     .option(
       "--module <name>",
       `Filter to specific module(s). Available: ${MODULE_NAMES.join(", ")}.`,

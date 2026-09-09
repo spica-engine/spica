@@ -169,8 +169,15 @@ describe("buildPlan", () => {
     const mod = makeMockModule("test", [local], [remote]);
     const renderDetailSpy = jest.spyOn(mod, "renderDetail");
 
-    await buildPlan([mod], mockHttp, "/tmp", true);
+    await buildPlan([mod], mockHttp, "/tmp", {detailed: true});
     expect(renderDetailSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("forwards the requested concurrency to every module's readRemote", async () => {
+    const mod = makeMockModule("test", [], []);
+
+    await buildPlan([mod], mockHttp, "/tmp", {concurrency: 3});
+    expect(mod.readRemote).toHaveBeenCalledWith(mockHttp, {concurrency: 3});
   });
 });
 
@@ -236,7 +243,7 @@ describe("buildPlan — rename detection", () => {
 
     const mod = makeMockModuleWithId([local], [remote], d => d._id);
     // detectRenames=false simulates fetch path
-    const plan = await buildPlan([mod], mockHttp, "/tmp", false, false);
+    const plan = await buildPlan([mod], mockHttp, "/tmp", {detectRenames: false});
     const mp = plan.modules[0];
 
     expect(mp.creates).toHaveLength(1);
