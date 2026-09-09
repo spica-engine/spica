@@ -277,11 +277,21 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   const [deleteBucketField] = useDeleteBucketFieldMutation();
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  // Guard against re-firing while a page is already in flight or when the list
-  // is exhausted.
+  // A scroll event and a ResizeObserver callback can both land before React has
+  // committed `isLoadingMore`, so that flag alone lets the same page be requested
+  // twice. The row count a request was issued at rejects the second caller
+  // synchronously, and resets once the request settles so a failed page can still
+  // be retried at the same offset.
+  const requestedAtRef = useRef(-1);
+  useEffect(() => {
+    if (!isLoadingMore) requestedAtRef.current = -1;
+  }, [isLoadingMore]);
+
   const handleReachBottom = useCallback(() => {
-    if (hasMore && !isLoadingMore) onLoadMore?.();
-  }, [hasMore, isLoadingMore, onLoadMore]);
+    if (!hasMore || isLoadingMore || requestedAtRef.current === data.length) return;
+    requestedAtRef.current = data.length;
+    onLoadMore?.();
+  }, [hasMore, isLoadingMore, onLoadMore, data.length]);
 
   // The oziko Table exposes no bottom-detection API, so the panel owns it: the
   // Table's internal `.tableArea` is the `overflow: auto` scroll container.
