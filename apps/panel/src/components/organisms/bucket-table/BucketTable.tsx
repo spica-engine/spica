@@ -251,6 +251,11 @@ const ColumnHeader = ({
 };
 
 
+// Only fire once the scroller is actually at the end. The tolerance absorbs the
+// fractional scrollTop browsers report under page zoom / HiDPI, which otherwise
+// never settles at exactly zero.
+const REACH_BOTTOM_TOLERANCE = 2;
+
 const BucketTable: React.FC<BucketTableNewProps> = ({
   onNewEntry,
   bucket, 
@@ -272,12 +277,59 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   const [deleteBucketField] = useDeleteBucketFieldMutation();
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  // The oziko Table owns near-bottom detection on its internal `.tableArea`
-  // scroll container and calls this when the user nears the end; guard against
-  // re-firing while a page is already in flight or when the list is exhausted.
+  // A scroll event and a ResizeObserver callback can both land before React has
+  // committed `isLoadingMore`, so that flag alone lets the same page be requested
+  // twice. The row count a request was issued at rejects the second caller
+  // synchronously, and resets once the request settles so a failed page can still
+  // be retried at the same offset.
+  const requestedAtRef = useRef(-1);
+  useEffect(() => {
+    if (!isLoadingMore) requestedAtRef.current = -1;
+  }, [isLoadingMore]);
+
   const handleReachBottom = useCallback(() => {
-    if (hasMore && !isLoadingMore) onLoadMore?.();
-  }, [hasMore, isLoadingMore, onLoadMore]);
+    if (!hasMore || isLoadingMore || requestedAtRef.current === data.length) return;
+    requestedAtRef.current = data.length;
+    onLoadMore?.();
+  }, [hasMore, isLoadingMore, onLoadMore, data.length]);
+
+  // The oziko Table exposes no bottom-detection API, so the panel owns it: the
+  // Table's internal `.tableArea` is the `overflow: auto` scroll container.
+  useEffect(() => {
+    const area = tableContainerRef.current?.querySelector<HTMLElement>('[class*="tableArea"]');
+    if (!area) {
+      // Matching the ui-kit's internal class is the only handle it offers. If a
+      // version bump renames it, pagination goes inert with no type or runtime
+      // error — the exact failure this hook was written to fix — so say so.
+      if (import.meta.env.DEV) {
+        console.warn(
+          "[BucketTable] oziko Table scroll container not found; infinite scroll is inert. " +
+            "The ui-kit likely renamed its internal `tableArea` class."
+        );
+      }
+      return;
+    }
+
+    const check = () => {
+      // Also true when the rows don't overflow at all: nothing can be scrolled,
+      // so the next page has to be pulled in without waiting for a scroll event.
+      if (area.scrollHeight - area.scrollTop - area.clientHeight <= REACH_BOTTOM_TOLERANCE) {
+        handleReachBottom();
+      }
+    };
+
+    area.addEventListener("scroll", check, {passive: true});
+    // Re-probe as rows arrive and as the viewport resizes, so a list that ends up
+    // too short to scroll still advances. ResizeObserver also fires once on observe.
+    const observer = new ResizeObserver(check);
+    observer.observe(area);
+    if (area.firstElementChild) observer.observe(area.firstElementChild);
+
+    return () => {
+      area.removeEventListener("scroll", check);
+      observer.disconnect();
+    };
+  }, [handleReachBottom]);
 
   // Switching buckets must start at the top: the oziko Table keeps its internal
   // `.tableArea` scroll position across data swaps, so reset both the wrapper and
@@ -732,17 +784,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
         noResizeableColumns={['checkbox', '__expand__']}
         loading={loading}
         skeletonRowCount={10}
-        virtualizeRowHeight={36}
-        onReachBottom={handleReachBottom}
-        reachBottomOffset={300}
-        footer={
-          isLoadingMore ? (
-            <div className={styles.loadingMore}>
-              <Icon name="refresh" size={14} className={styles.spinner} />
-              <span>Loading more…</span>
-            </div>
-          ) : undefined
-        }
         onRowClick={onRowClick}
         emptyState={onNewEntry ? {
           title: "This bucket is empty",
@@ -772,6 +813,12 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       </div>
 
     </div>
+    {isLoadingMore && (
+      <div className={styles.loadingMore}>
+        <Icon name="refresh" size={14} className={styles.spinner} />
+        <span>Loading more…</span>
+      </div>
+    )}
     <div className={styles.tableStatusBar}>
       <span className={styles.statusCount}>
         Showing {data.length} of {totalCount ?? data.length}
