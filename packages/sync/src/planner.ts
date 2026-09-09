@@ -7,24 +7,36 @@ import {SyncReporter, silentReporter} from "./reporter";
 import {omit} from "./fs-utils";
 import {
   ChangeKind,
+  DEFAULT_CONCURRENCY,
   LocalResource,
   ModulePlan,
   Plan,
   PlanEntry,
+  ReadRemoteOptions,
   RemoteResource,
   ResourceModule
 } from "./types";
 
 // ─── Build ────────────────────────────────────────────────────────────────────
 
+export interface BuildPlanOptions extends ReadRemoteOptions {
+  detailed?: boolean;
+  detectRenames?: boolean;
+  reporter?: SyncReporter;
+}
+
 export async function buildPlan(
   modules: ResourceModule[],
   http: SyncHttpClient,
   rootDir: string,
-  detailed = false,
-  detectRenames = true,
-  reporter: SyncReporter = silentReporter
+  options: BuildPlanOptions = {}
 ): Promise<Plan> {
+  const {
+    detailed = false,
+    detectRenames = true,
+    reporter = silentReporter,
+    concurrency = DEFAULT_CONCURRENCY
+  } = options;
   const modulePlans: ModulePlan[] = [];
 
   for (const mod of modules) {
@@ -33,7 +45,7 @@ export async function buildPlan(
         mod.readLocal(rootDir)
       ),
       reporter.task<RemoteResource[]>(`Fetching remote ${mod.displayName}`, () =>
-        mod.readRemote(http)
+        mod.readRemote(http, {concurrency})
       )
     ]);
 
@@ -296,7 +308,7 @@ export async function applyPlan(
   http: SyncHttpClient,
   opts: ApplyOptions = {}
 ): Promise<{errors: string[]}> {
-  const concurrency = opts.concurrency ?? 10;
+  const concurrency = opts.concurrency ?? DEFAULT_CONCURRENCY;
   const reporter = opts.reporter ?? silentReporter;
   const errors: string[] = [];
 
@@ -360,7 +372,7 @@ export async function fetchToDisk(
   rootDir: string,
   opts: FetchOptions = {}
 ): Promise<{written: number; deleted: number; errors: string[]}> {
-  const concurrency = opts.concurrency ?? 10;
+  const concurrency = opts.concurrency ?? DEFAULT_CONCURRENCY;
   const reporter = opts.reporter ?? silentReporter;
   const errors: string[] = [];
   let written = 0;

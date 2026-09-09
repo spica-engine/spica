@@ -399,7 +399,7 @@ async function dev({args, options}: ActionParameters) {
   console.log(bold("\nBuilding plan…"));
   let plan: Awaited<ReturnType<typeof buildPlan>>;
   try {
-    plan = await buildPlan(modules, http, rootDir, false, true, cliReporter);
+    plan = await buildPlan(modules, http, rootDir, {reporter: cliReporter});
   } catch (err) {
     console.log(`\n${bold(red(`✗ Failed to build plan: ${formatError(err)}`))}`);
     process.exitCode = 1;

@@ -89,6 +89,20 @@ export interface Plan {
 }
 
 /**
+ * Parallel API requests / file writes the sync engine issues. Every sync command
+ * surfaces it as `--concurrency <n>`; lower it when the instance answers 429.
+ */
+export const DEFAULT_CONCURRENCY = 10;
+
+export interface ReadRemoteOptions {
+  /**
+   * Maximum resources fetched in parallel; defaults to `DEFAULT_CONCURRENCY`.
+   * Modules whose remote read is a single request ignore it.
+   */
+  concurrency?: number;
+}
+
+/**
  * Strategy interface — one implementation per resource type.
  * Adding a new module = one new file implementing this interface.
  */
@@ -117,7 +131,7 @@ export interface ResourceModule<T = any> {
   /** Read all local resources from the project directory */
   readLocal(rootDir: string): Promise<LocalResource<T>[]>;
   /** Fetch all remote resources from the Spica API */
-  readRemote(http: SyncHttpClient): Promise<RemoteResource<T>[]>;
+  readRemote(http: SyncHttpClient, options?: ReadRemoteOptions): Promise<RemoteResource<T>[]>;
 
   /** Apply a create to the remote API */
   create(http: SyncHttpClient, local: LocalResource<T>): Promise<void>;

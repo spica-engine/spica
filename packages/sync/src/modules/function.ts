@@ -17,7 +17,13 @@ import {
   writeText,
   writeYaml
 } from "../fs-utils";
-import {DevEventContext, LocalResource, RemoteResource, ResourceModule} from "../types";
+import {
+  DEFAULT_CONCURRENCY,
+  DevEventContext,
+  LocalResource,
+  RemoteResource,
+  ResourceModule
+} from "../types";
 
 interface FunctionSchema {
   _id?: string;
@@ -68,6 +74,20 @@ function normalizeSchema(schema: FunctionSchema): FunctionSchema {
   return normalized;
 }
 
+async function mapInBatches<T, R>(
+  items: T[],
+  size: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  // A non-positive size would never advance `i` — an unresponsive infinite loop.
+  const limit = Math.max(1, size);
+  const results: R[] = [];
+  for (let i = 0; i < items.length; i += limit) {
+    results.push(...(await Promise.all(items.slice(i, i + limit).map(fn))));
+  }
+  return results;
+}
+
 function isNotFoundError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const c = error as {
@@ -82,6 +102,13 @@ function isNotFoundError(error: unknown): boolean {
     c.response?.statusCode === 404
   );
 }
+
+const emptyIfMissing =
+  <T>(empty: T) =>
+  (error: unknown): T => {
+    if (isNotFoundError(error)) return empty;
+    throw error;
+  };
 
 // ─── Extended interface with granular read/write operations ──────────────────
 
@@ -144,37 +171,37 @@ export const functionModule: FunctionModule = {
     return results;
   },
 
-  async readRemote(http) {
+  async readRemote(http, options = {}) {
     const res = await http.get<FunctionSchema[] | {data: FunctionSchema[]}>("function");
     const fns = unwrapList(res);
 
-    return Promise.all(
-      fns.map(async fn => {
-        const id = fn._id!;
+    return mapInBatches(fns, options.concurrency ?? DEFAULT_CONCURRENCY, async fn => {
+      const id = fn._id!;
 
-        const [indexRes, depsRes] = await Promise.all([
-          http.get<{index: string}>(`function/${id}/index`).catch(() => ({index: ""})),
-          http
-            .get<RemoteDependency[]>(`function/${id}/dependencies`)
-            .catch(() => [] as RemoteDependency[])
-        ]);
+      const [indexRes, depsRes] = await Promise.all([
+        http.get<{index: string}>(`function/${id}/index`).catch(emptyIfMissing({index: ""})),
+        http
+          .get<RemoteDependency[]>(`function/${id}/dependencies`)
+          .catch(emptyIfMissing<RemoteDependency[]>([]))
+      ]).catch(error => {
+        throw new Error(`Could not read function "${fn.name}": ${error?.message ?? error}`);
+      });
 
-        const dependencies: Record<string, string> = {};
-        for (const dep of depsRes) {
-          dependencies[dep.name] = dep.version;
+      const dependencies: Record<string, string> = {};
+      for (const dep of depsRes) {
+        dependencies[dep.name] = dep.version;
+      }
+
+      return {
+        slug: sanitizeSlug(fn.name),
+        id,
+        data: {
+          schema: normalizeSchema(fn),
+          index: indexRes.index ?? "",
+          dependencies
         }
-
-        return {
-          slug: sanitizeSlug(fn.name),
-          id,
-          data: {
-            schema: normalizeSchema(fn),
-            index: indexRes.index ?? "",
-            dependencies
-          }
-        };
-      })
-    );
+      };
+    });
   },
 
   async create(http, local) {
