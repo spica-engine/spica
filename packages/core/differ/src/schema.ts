@@ -58,15 +58,13 @@ export function getLastNonSchemaPaths(paths: ChangePaths, schema: JSONSchema7) {
 
 export function schemaDiff(prev: JSONSchema7, current: JSONSchema7): SchemaChange[] {
   return diff(prev, current).map((change: SchemaChange) => {
-    change.lastPath = getLastNonSchemaPaths(
-      change.path,
-      change.kind == ChangeKind.Delete ? prev : current
-    );
-    change.path = clearSchemaPaths(
+    const {schemaPaths, keywordPaths} = walkSchemaPaths(
       change.path,
       change.kind == ChangeKind.Delete ? prev : current,
       true /* array.items to regex */
     );
+    change.path = schemaPaths;
+    change.lastPath = keywordPaths;
     return change as SchemaChange;
   });
 }
