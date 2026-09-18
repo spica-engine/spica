@@ -522,10 +522,16 @@ describe("BucketController", () => {
   describe("clear removed and updated fields", () => {
     let bucketId;
     let bucketDataId;
+    // The properties named "type" collide with the JSON schema keyword of the same name and must
+    // stay in the fixture: they are what makes the document paths ambiguous at every nesting level.
     let previousSchema = {
       title: "test_title",
       description: "test_desc",
       properties: {
+        type: {
+          type: "string",
+          options: {}
+        },
         nested_object: {
           type: "object",
           options: {},
@@ -533,6 +539,7 @@ describe("BucketController", () => {
             nested_object_child: {
               type: "object",
               properties: {
+                type: {type: "string"},
                 removed: {type: "string"},
                 updated: {type: "string"},
                 not_removed_or_updated: {type: "string"}
@@ -548,6 +555,7 @@ describe("BucketController", () => {
             items: {
               type: "object",
               properties: {
+                type: {type: "string"},
                 removed: {type: "string"},
                 updated: {type: "string"},
                 not_removed_or_updated: {type: "string"}
@@ -590,6 +598,10 @@ describe("BucketController", () => {
       title: "test_title",
       description: "test_desc",
       properties: {
+        type: {
+          type: "string",
+          options: {}
+        },
         nested_object: {
           type: "object",
           options: {},
@@ -597,6 +609,7 @@ describe("BucketController", () => {
             nested_object_child: {
               type: "object",
               properties: {
+                type: {type: "string"},
                 updated: {type: "boolean"},
                 not_removed_or_updated: {type: "string"}
               }
@@ -611,6 +624,7 @@ describe("BucketController", () => {
             items: {
               type: "object",
               properties: {
+                type: {type: "string"},
                 updated: {type: "date"},
                 not_removed_or_updated: {type: "string"}
               }
@@ -632,8 +646,10 @@ describe("BucketController", () => {
     };
 
     let bucketData = {
+      type: "type",
       nested_object: {
         nested_object_child: {
+          type: "type",
           removed: "removed",
           updated: "updated",
           not_removed_or_updated: "not_removed_or_updated"
@@ -642,11 +658,13 @@ describe("BucketController", () => {
       nested_array_object: [
         [
           {
+            type: "type",
             removed: "removed",
             updated: "updated",
             not_removed_or_updated: "not_removed_or_updated"
           },
           {
+            type: "type",
             removed: "removed",
             updated: "updated",
             not_removed_or_updated: "not_removed_or_updated"
@@ -670,23 +688,32 @@ describe("BucketController", () => {
       );
       expect(updatedBucketDocument).toEqual({
         _id: bucketDataId,
+        type: "type",
         nested_object: {
           nested_object_child: {
+            type: "type",
             not_removed_or_updated: "not_removed_or_updated"
           }
         },
         nested_array_object: [
           [
             {
+              type: "type",
               not_removed_or_updated: "not_removed_or_updated"
             },
             {
+              type: "type",
               not_removed_or_updated: "not_removed_or_updated"
             }
           ]
         ],
         root_not_removed_or_updated: "root_not_removed_or_updated"
       });
+
+      const {statusCode} = await req.patch(`/bucket/${bucketId}/data/${bucketDataId}`, {
+        root_not_removed_or_updated: "patched"
+      });
+      expect(statusCode).toBe(200);
     });
   });
 

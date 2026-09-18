@@ -209,4 +209,48 @@ describe("schema", () => {
     expect(changes[0].path).toEqual(["relation"]);
     expect(changes[0].lastPath).toEqual(["bucket"]);
   });
+
+  describe("bucket owning a property named type", () => {
+    const withTypeField = (properties: object): JSONSchema7 =>
+      ({
+        properties: {
+          name: {type: "string"},
+          type: {type: "string"},
+          ...properties
+        }
+      }) as JSONSchema7;
+
+    it("differ should return the deleted property path", () => {
+      const changes = schemaDiff(withTypeField({price: {type: "number"}}), withTypeField({}));
+      expect(changes.length).toBe(1);
+      expect(changes[0].path).toEqual(["price"]);
+      expect(changes[0].lastPath).toEqual([]);
+    });
+
+    it("differ should return the path of a property whose type changed", () => {
+      const changes = schemaDiff(
+        withTypeField({price: {type: "number"}}),
+        withTypeField({price: {type: "string"}})
+      );
+      expect(changes.length).toBe(1);
+      expect(changes[0].path).toEqual(["price"]);
+      expect(changes[0].lastPath).toEqual(["type"]);
+    });
+
+    it("differ should return the path of a deleted property inside an array of objects", () => {
+      const rows = (properties: object) => ({
+        rows: {
+          type: "array",
+          items: {type: "object", properties: {type: {type: "string"}, ...properties}}
+        }
+      });
+      const changes = schemaDiff(
+        withTypeField(rows({amount: {type: "number"}})),
+        withTypeField(rows({}))
+      );
+      expect(changes.length).toBe(1);
+      expect(changes[0].path).toEqual(["rows", /[0-9]*/, "amount"]);
+      expect(changes[0].lastPath).toEqual([]);
+    });
+  });
 });
