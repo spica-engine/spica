@@ -206,7 +206,6 @@ metadata:
   namespace: infrastructure-master-spicaengine-com
 spec:
   backoffLimit: 6
-  # Job templates are immutable, so a finished Job must go away before the next deploy re-applies it.
   ttlSecondsAfterFinished: 600
   template:
     spec:
