@@ -108,8 +108,8 @@ jobs:
       - name: Get GKE Credentials
         uses: google-github-actions/get-gke-credentials@v2
         with:
-          cluster_name: godfather
-          location: us-central1-a
+          cluster_name: cluster-1
+          location: us-central1-c
           project_id: spica-239113
 
       - name: Kubectl tool installer
@@ -119,9 +119,18 @@ jobs:
         env:
           PANEL_DIGEST: ${{ needs.build_and_push.outputs.panel }}
           API_DIGEST: ${{ needs.build_and_push.outputs.api }}
+          MASTER_KEY: ${{ secrets.SPICA_MASTER_KEY }}
         run: |
-          kubectl apply -f ./deployment.yaml
           NS=infrastructure-master-spicaengine-com
+          if [ -z "$MASTER_KEY" ]; then
+            echo "::error::SPICA_MASTER_KEY secret is not set"
+            exit 1
+          fi
+          kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret generic spica-master-key -n $NS \
+            --from-literal=master-key="$MASTER_KEY" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply -f ./deployment.yaml
           if [ -n "$PANEL_DIGEST" ]; then
             kubectl set image statefulset/spica spica=spicaengine/panel@$PANEL_DIGEST -n $NS
           fi
