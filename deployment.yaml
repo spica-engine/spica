@@ -14,6 +14,8 @@ spec:
       labels:
         app: database
     spec:
+      nodeSelector:
+        headquarters.spica.io/node-name: basic-node
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
@@ -75,6 +77,8 @@ spec:
       labels:
         app: spica
     spec:
+      nodeSelector:
+        headquarters.spica.io/node-name: basic-node
       containers:
         - name: spica
           image: spicaengine/panel:master
@@ -94,6 +98,12 @@ spec:
         - name: api
           image: spicaengine/api:master
           imagePullPolicy: Always
+          env:
+            - name: MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: spica-master-key
+                  key: master-key
           resources:
             requests:
               memory: "10Mi"
@@ -115,8 +125,6 @@ spec:
             - "200"
             - --database-replica-set
             - rs0
-            - --master-key
-            - $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
             - --passport-password
             - spica
             - --persistent-path
