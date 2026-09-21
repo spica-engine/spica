@@ -205,7 +205,8 @@ metadata:
   name: replication-controller
   namespace: infrastructure-master-spicaengine-com
 spec:
-  backoffLimit: 3
+  backoffLimit: 6
+  ttlSecondsAfterFinished: 600
   template:
     spec:
       restartPolicy: OnFailure
@@ -215,11 +216,11 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              memory: "10Mi"
+              memory: "64Mi"
               cpu: "10m"
             limits:
-              memory: "50Mi"
-              cpu: "50m"
+              memory: "256Mi"
+              cpu: "500m"
           args:
             [
               "--from-srv",
