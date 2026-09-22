@@ -94,28 +94,29 @@ jobs:
         id: digest
 
   deploy:
-    name: Deploy to GKE
+    name: Deploy to EKS
     runs-on: ubuntu-latest
     needs: build_and_push
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: "google-github-actions/auth@v2"
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+          role-to-assume: arn:aws:iam::979211735897:role/spica-master-deployer
+          aws-region: eu-central-1
 
-      - name: Get GKE Credentials
-        uses: google-github-actions/get-gke-credentials@v2
-        with:
-          cluster_name: cluster-1
-          location: us-central1-c
-          project_id: spica-239113
+      - name: Get EKS Credentials
+        run: aws eks update-kubeconfig --name startups --region eu-central-1
 
       - name: Kubectl tool installer
         uses: Azure/setup-kubectl@v4.0.0
 
-      - name: Deploy to GKE
+      - name: Deploy to EKS
         env:
           PANEL_DIGEST: ${{ needs.build_and_push.outputs.panel }}
           API_DIGEST: ${{ needs.build_and_push.outputs.api }}
@@ -126,7 +127,6 @@ jobs:
             echo "::error::SPICA_MASTER_KEY secret is not set"
             exit 1
           fi
-          kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
           kubectl create secret generic spica-master-key -n $NS \
             --from-literal=master-key="$MASTER_KEY" \
             --dry-run=client -o yaml | kubectl apply -f -
