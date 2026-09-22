@@ -15,7 +15,7 @@ spec:
         app: database
     spec:
       nodeSelector:
-        headquarters.spica.io/node-name: basic-node
+        headquarters.spica.io/node-name: message-broker
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
@@ -29,10 +29,10 @@ spec:
             - containerPort: 27017
           resources:
             requests:
-              memory: "10Mi"
+              memory: "256Mi"
               cpu: "10m"
             limits:
-              memory: "2000Mi"
+              memory: "512Mi"
               cpu: "1000m"
           volumeMounts:
             - name: master-data
@@ -78,7 +78,7 @@ spec:
         app: spica
     spec:
       nodeSelector:
-        headquarters.spica.io/node-name: basic-node
+        headquarters.spica.io/node-name: message-broker
       containers:
         - name: spica
           image: spicaengine/panel:master
@@ -106,10 +106,10 @@ spec:
                   key: master-key
           resources:
             requests:
-              memory: "10Mi"
+              memory: "256Mi"
               cpu: "10m"
             limits:
-              memory: "2000Mi"
+              memory: "1Gi"
               cpu: "1000m"
           ports:
             - containerPort: 4300
@@ -138,7 +138,7 @@ spec:
     - metadata:
         name: master-data
       spec:
-        storageClassName: pd-ssd
+        storageClassName: gp3
         accessModes:
           - ReadWriteOnce
         resources:
