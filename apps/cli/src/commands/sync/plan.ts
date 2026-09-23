@@ -11,10 +11,12 @@ import {
   MODULE_NAMES
 } from "@spica-server/sync";
 import {cliReporter} from "./reporter";
+import {guard} from "../../guard";
 
 async function plan({args, options}: ActionParameters) {
   try {
     const rootDir = path.resolve((args.dir as string | undefined) ?? process.cwd());
+    guard.assert(rootDir);
     const detailed = !!options.detailed;
     const json = !!options.json;
     const concurrency = options.concurrency as number;
