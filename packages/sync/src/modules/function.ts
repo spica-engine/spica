@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import yaml from "yaml";
 import isEqual from "lodash/isEqual.js";
+import semver from "semver";
 import {bold, cyan, green, red, yellow} from "colorette";
 import {SyncHttpClient} from "../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
@@ -103,6 +104,26 @@ function isNotFoundError(error: unknown): boolean {
     c.response?.status === 404 ||
     c.response?.statusCode === 404
   );
+}
+
+/**
+ * Whether the dependency the instance reports satisfies the one in the project files.
+ *
+ * The instance installs `name@<spec>` with npm, which records the version it actually
+ * installed with a caret (`1.16.0` → `^1.16.0`, `^1.11.13` → `^1.11.23`). Comparing the
+ * text would report a change, and reinstall, on every sync.
+ */
+function dependencySatisfied(localSpec: string, remoteSpec: string | undefined): boolean {
+  if (remoteSpec === undefined) return false;
+  if (localSpec === remoteSpec) return true;
+  const installed = semver.valid(remoteSpec.replace(/^[\^~]/, ""));
+  if (!installed || !semver.validRange(localSpec)) return false;
+  return semver.satisfies(installed, localSpec);
+}
+
+function dependenciesMatch(local: Record<string, string>, remote: Record<string, string>): boolean {
+  const names = new Set([...Object.keys(local), ...Object.keys(remote)]);
+  return [...names].every(name => name in local && dependencySatisfied(local[name], remote[name]));
 }
 
 const emptyIfMissing =
@@ -288,10 +309,7 @@ export const functionModule: FunctionModule = {
     );
 
     const toAdd = Object.entries(localDeps)
-      .filter(([n, v]) => {
-        const cur = currentByName.get(n);
-        return !cur || cur !== v;
-      })
+      .filter(([n, v]) => !dependencySatisfied(v, currentByName.get(n)))
       .map(([n, v]) => `${n}@${v}`);
 
     if (toAdd.length) {
@@ -336,7 +354,7 @@ export const functionModule: FunctionModule = {
 
     if (local.index !== remote.index) changed.push("index");
 
-    if (!isEqual(local.dependencies, remote.dependencies)) changed.push("dependencies");
+    if (!dependenciesMatch(local.dependencies, remote.dependencies)) changed.push("dependencies");
 
     const localEnvVars: string[] = (local.schema.env_vars as string[] | undefined) ?? [];
     const remoteEnvVars: string[] = (remote.schema.env_vars as string[] | undefined) ?? [];
@@ -368,9 +386,9 @@ export const functionModule: FunctionModule = {
 
     const sortKeys = (obj: Record<string, string>) =>
       Object.fromEntries(Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)));
-    const localDepsYaml = yaml.stringify(sortKeys(local.data.dependencies));
-    const remoteDepsYaml = yaml.stringify(sortKeys(remote.data.dependencies));
-    if (localDepsYaml !== remoteDepsYaml) {
+    if (!dependenciesMatch(local.data.dependencies, remote.data.dependencies)) {
+      const localDepsYaml = yaml.stringify(sortKeys(local.data.dependencies));
+      const remoteDepsYaml = yaml.stringify(sortKeys(remote.data.dependencies));
       result["dependencies"] = buildUnifiedDiff(remoteDepsYaml, localDepsYaml, "package.json");
     }
 
