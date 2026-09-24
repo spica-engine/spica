@@ -1,0 +1,27 @@
+{
+  "name": "@spica-devkit/sync",
+  "license": "AGPLv3",
+  "version": "0.0.0-PLACEHOLDER",
+  "description": "Plan and apply Spica resource files against a Spica instance from code.",
+  "author": "spica",
+  "keywords": [
+    "spica",
+    "devkit",
+    "sync",
+    "gitops"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "axios": "^1.8.4"
+  },
+  "devDependencies": {
+    "@spica-server/sync": "workspace:*"
+  }
+}

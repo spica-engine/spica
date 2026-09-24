@@ -24,8 +24,8 @@ export const envVarModule: ResourceModule<EnvVar> = {
   identityField: "key",
   ignoredFields: IGNORED_FIELDS,
 
-  readLocal(rootDir) {
-    return readLocalSchemas<EnvVar>(rootDir, "env-var");
+  readLocal(rootDir, source) {
+    return readLocalSchemas<EnvVar>(rootDir, "env-var", source);
   },
 
   async readRemote(http) {

@@ -101,6 +101,7 @@ jobs:
           - devkit:identity
           - devkit:storage
           - devkit:testing
+          - devkit:sync
           - cli
 
     steps:

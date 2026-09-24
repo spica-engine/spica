@@ -7,16 +7,15 @@ import {SyncHttpClient} from "../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
 import {
   ensureDir,
-  listFolders,
   omit,
-  readText,
-  readYaml,
+  readSourceYaml,
   removeDir,
   sanitizeSlug,
   unwrapList,
   writeText,
   writeYaml
 } from "../fs-utils";
+import {diskSource, ResourceSource} from "../source";
 import {
   DEFAULT_CONCURRENCY,
   DevEventContext,
@@ -114,9 +113,9 @@ const emptyIfMissing =
 
 export interface FunctionModule extends ResourceModule<FunctionData> {
   // ── Granular reads (sync) ──────────────────────────────────────────────────
-  readSchema(rootDir: string, slug: string): FunctionSchema | null;
-  readIndex(rootDir: string, slug: string, language?: string): string;
-  readDependencies(rootDir: string, slug: string): Record<string, string>;
+  readSchema(rootDir: string, slug: string, source?: ResourceSource): FunctionSchema | null;
+  readIndex(rootDir: string, slug: string, language?: string, source?: ResourceSource): string;
+  readDependencies(rootDir: string, slug: string, source?: ResourceSource): Record<string, string>;
   // ── Granular writes (async) ────────────────────────────────────────────────
   /** POST schema → returns the new remote _id, or undefined on failure. */
   createSchema(http: SyncHttpClient, schema: FunctionSchema): Promise<string | undefined>;
@@ -138,16 +137,19 @@ export const functionModule: FunctionModule = {
   identityField: "name",
   ignoredFields: SCHEMA_IGNORED,
 
-  readSchema(rootDir, slug) {
-    return readYaml<FunctionSchema>(path.join(rootDir, "function", slug, "schema.yaml"));
+  readSchema(rootDir, slug, source = diskSource) {
+    return readSourceYaml<FunctionSchema>(
+      source,
+      path.join(rootDir, "function", slug, "schema.yaml")
+    );
   },
 
-  readIndex(rootDir, slug, language) {
-    return readText(path.join(rootDir, "function", slug, indexFilename(language))) ?? "";
+  readIndex(rootDir, slug, language, source = diskSource) {
+    return source.readText(path.join(rootDir, "function", slug, indexFilename(language))) ?? "";
   },
 
-  readDependencies(rootDir, slug) {
-    const pkgText = readText(path.join(rootDir, "function", slug, "package.json"));
+  readDependencies(rootDir, slug, source = diskSource) {
+    const pkgText = source.readText(path.join(rootDir, "function", slug, "package.json"));
     if (!pkgText) return {};
     try {
       return JSON.parse(pkgText).dependencies ?? {};
@@ -156,16 +158,16 @@ export const functionModule: FunctionModule = {
     }
   },
 
-  async readLocal(rootDir) {
+  async readLocal(rootDir, source = diskSource) {
     const dir = path.join(rootDir, "function");
-    const slugs = listFolders(dir);
+    const slugs = source.listFolders(dir);
     const results: LocalResource<FunctionData>[] = [];
 
     for (const slug of slugs) {
-      const schema = this.readSchema(rootDir, slug);
+      const schema = this.readSchema(rootDir, slug, source);
       if (!schema) continue;
-      const index = this.readIndex(rootDir, slug, schema.language);
-      const dependencies = this.readDependencies(rootDir, slug);
+      const index = this.readIndex(rootDir, slug, schema.language, source);
+      const dependencies = this.readDependencies(rootDir, slug, source);
       results.push({slug, data: {schema, index, dependencies}});
     }
     return results;

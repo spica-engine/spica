@@ -8818,6 +8818,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-devkit/sync@workspace:packages/devkit/sync":
+  version: 0.0.0-use.local
+  resolution: "@spica-devkit/sync@workspace:packages/devkit/sync"
+  dependencies:
+    "@spica-server/sync": "workspace:*"
+    axios: "npm:^1.8.4"
+  languageName: unknown
+  linkType: soft
+
 "@spica-devkit/testing@workspace:packages/devkit/testing":
   version: 0.0.0-use.local
   resolution: "@spica-devkit/testing@workspace:packages/devkit/testing"
