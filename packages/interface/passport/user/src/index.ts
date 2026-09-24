@@ -17,6 +17,7 @@ export interface User {
   email_verified_at?: Date;
   phone?: EncryptedData<true>;
   phone_verified_at?: Date;
+  attributes?: Record<string, unknown>;
 }
 
 export interface LoginCredentials {

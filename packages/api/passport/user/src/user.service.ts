@@ -23,9 +23,12 @@ import {
   encrypt,
   decrypt,
   hash as hashValue,
-  hash as hashToken
+  hash as hashToken,
+  isEncryptedData
 } from "@spica-server/core-encryption";
 import {AuthFactor} from "@spica-server/passport-authfactor";
+
+const ENCRYPTED_ATTRIBUTES = ["email"];
 
 @Injectable()
 export class UserService extends BaseCollection<User>("user") {
@@ -71,7 +74,13 @@ export class UserService extends BaseCollection<User>("user") {
       : undefined;
 
     const token = this.jwt.sign(
-      {...user, password: undefined, lastPasswords: undefined, authFactor: sanitizedAuthFactor},
+      {
+        ...user,
+        password: undefined,
+        lastPasswords: undefined,
+        authFactor: sanitizedAuthFactor,
+        attributes: this.decryptAttributes(user.attributes)
+      },
       {
         header: {
           username: user.username,
@@ -367,7 +376,35 @@ export class UserService extends BaseCollection<User>("user") {
       decryptedUser.phone = decrypt(user.phone, this.getProviderEncryptionSecret());
     }
 
+    if (user.attributes) {
+      decryptedUser.attributes = this.decryptAttributes(user.attributes);
+    }
+
     return decryptedUser;
+  }
+
+  encryptAttributes(attributes: Record<string, unknown>): Record<string, unknown> {
+    return Object.fromEntries(
+      Object.entries(attributes).map(([key, value]) =>
+        ENCRYPTED_ATTRIBUTES.includes(key) && typeof value == "string"
+          ? [key, encrypt(value, this.getProviderEncryptionSecret())]
+          : [key, value]
+      )
+    );
+  }
+
+  decryptAttributes(attributes?: Record<string, unknown>): Record<string, unknown> | undefined {
+    if (!attributes) {
+      return attributes;
+    }
+
+    return Object.fromEntries(
+      Object.entries(attributes).map(([key, value]) =>
+        ENCRYPTED_ATTRIBUTES.includes(key) && isEncryptedData(value)
+          ? [key, decrypt(value, this.getProviderEncryptionSecret())]
+          : [key, value]
+      )
+    );
   }
 
   hashProviderValue(value: string): string {

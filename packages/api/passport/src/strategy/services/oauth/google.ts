@@ -6,6 +6,14 @@ import {CustomOAuthService} from "./custom.js";
 export class GoogleOAuthService extends CustomOAuthService {
   _idp = "google";
 
+  async getIdentifier(strategy: OAuthStrategy, tokenResponse) {
+    const {user} = await super.getIdentifier(strategy, tokenResponse);
+    const attributes = Object.fromEntries(
+      ["name", "email"].filter(key => user?.[key] !== undefined).map(key => [key, user[key]])
+    );
+    return {user, attributes};
+  }
+
   prepareToInsert(strategy: IncomingOAuthPreset) {
     return {
       type: "oauth",
@@ -19,7 +27,7 @@ export class GoogleOAuthService extends CustomOAuthService {
           params: {
             client_id: strategy.options.client_id,
             response_type: "code",
-            scope: "email"
+            scope: "email profile"
           },
           headers: {},
           method: "get"
