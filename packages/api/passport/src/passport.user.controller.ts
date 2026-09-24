@@ -173,6 +173,10 @@ export class PassportUserController {
         },
         {returnDocument: ReturnDocument.AFTER}
       );
+
+      if (!user) {
+        throw new UnauthorizedException("User does not exist.");
+      }
     }
 
     this.completeLoginWithState(state, user, expires);
