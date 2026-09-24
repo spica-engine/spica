@@ -1,4 +1,4 @@
-import {Controller, Get, INestApplication, ModuleMetadata, Req, Res} from "@nestjs/common";
+import {All, Controller, Get, INestApplication, ModuleMetadata, Req, Res} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {SchemaModule, hash, OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
@@ -160,7 +160,7 @@ export class OAuthController {
     return "super_secret_code";
   }
 
-  @Get("token")
+  @All("token")
   token() {
     return {access_token: "super_secret_token"};
   }
@@ -172,14 +172,26 @@ export class OAuthController {
       picture: "url"
     };
   }
+
+  @Get("google-info")
+  googleInfo() {
+    return googleProfile;
+  }
 }
+
+let googleProfile: Record<string, unknown> = {};
+
+const GOOGLE_ENDPOINTS = {
+  "https://oauth2.googleapis.com/token": "/oauth/token",
+  "https://www.googleapis.com/oauth2/v2/userinfo": "/oauth/google-info"
+};
 
 export class RequestService {
   public service: Request;
   public publicUrl: string;
 
   request(options: any) {
-    options.url = options.url.replace(this.publicUrl, "");
+    options.url = GOOGLE_ENDPOINTS[options.url] ?? options.url.replace(this.publicUrl, "");
     return this.service.request({path: options.url, ...options}).then(res => res.body);
   }
 }
@@ -242,7 +254,8 @@ describe("E2E Tests", () => {
             blockDurationMinutes: 10
           },
           passwordHistoryLimit: 2,
-          userRealtime: false
+          userRealtime: false,
+          providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11"
         },
         identityOptions: {
           expiresIn: EXPIRES_IN,
@@ -892,6 +905,95 @@ describe("E2E Tests", () => {
         );
         expect(statusCode).toEqual(400);
         expect(body.message).toBe("Strategy type is not supported for identities.");
+      });
+
+      describe("Google", () => {
+        let strategyId: string;
+
+        beforeEach(async () => {
+          googleProfile = {
+            id: "108234567890",
+            email: "jane@gmail.com",
+            verified_email: true,
+            name: "Jane Doe",
+            picture: "url"
+          };
+
+          const {body} = await req.post(
+            "/passport/strategy",
+            {
+              type: "oauth",
+              name: "Google oauth",
+              title: "Google oauth",
+              icon: "login",
+              options: {idp: "google", client_id: "client_id", client_secret: "client_secret"}
+            },
+            {Authorization: `IDENTITY ${token}`}
+          );
+          strategyId = body._id;
+        });
+
+        async function loginWithGoogle() {
+          const {body: strategy} = await req.get(`/passport/user/strategy/${strategyId}/url`);
+          const loginResponse = req.get("/passport/login", {state: strategy.state});
+
+          const {params} = parseUrl(strategy.url);
+          const {url: completeEndpoint, params: completeParams} = parseUrl(
+            params.redirect_uri,
+            publicUrl
+          );
+          await req.get(completeEndpoint, {...completeParams, code: "code", state: params.state});
+
+          const res = await loginResponse;
+          expect(res.statusCode).toEqual(200);
+          return res.body.token as string;
+        }
+
+        async function getUser(username: string) {
+          const {body: users} = await req.get(
+            "/passport/user",
+            {filter: JSON.stringify({username})},
+            {Authorization: `IDENTITY ${token}`}
+          );
+          expect(users.length).toEqual(1);
+          return users[0];
+        }
+
+        async function getTokenPayload(userToken: string) {
+          const {body} = await req.get("/passport/user/verify", {}, {authorization: userToken});
+          return body;
+        }
+
+        it("should request profile scope", async () => {
+          const {body: strategy} = await req.get(`/passport/user/strategy/${strategyId}/url`);
+          expect(parseUrl(strategy.url).params.scope).toEqual("email profile");
+        });
+
+        it("should store profile as attributes and keep the id as username", async () => {
+          const userToken = await loginWithGoogle();
+
+          const user = await getUser("108234567890");
+          expect(user.attributes).toEqual({name: "Jane Doe", email: "jane@gmail.com"});
+          expect(user.email).toBeUndefined();
+
+          const payload = await getTokenPayload(userToken);
+          expect(payload.username).toEqual("108234567890");
+          expect(payload.attributes).toEqual({name: "Jane Doe", email: "jane@gmail.com"});
+        });
+
+        it("should update attributes on next login while preserving the ones not received", async () => {
+          await loginWithGoogle();
+
+          googleProfile = {...googleProfile, name: "Jane Smith"};
+          delete googleProfile.email;
+
+          const userToken = await loginWithGoogle();
+
+          const expected = {name: "Jane Smith", email: "jane@gmail.com"};
+          const user = await getUser("108234567890");
+          expect(user.attributes).toEqual(expected);
+          expect((await getTokenPayload(userToken)).attributes).toEqual(expected);
+        });
       });
     });
   });
