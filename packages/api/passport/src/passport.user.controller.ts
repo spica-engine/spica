@@ -30,7 +30,7 @@ import {UrlEncodedBodyParser} from "./body.js";
 import {StrategyService} from "./strategy/services/strategy.service.js";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface-passport";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {ClassCommander} from "@spica-server/replication";
@@ -121,7 +121,7 @@ export class PassportUserController {
     }
     const observer = this.assertObservers.get(state);
 
-    const {user: userData} = await observer
+    const {user: userData, attributes = {}} = await observer
       .pipe(
         timeout(this.SESSION_TIMEOUT_MS),
         take(1),
@@ -149,6 +149,8 @@ export class PassportUserController {
       );
     }
 
+    const attributeEntries = Object.entries(attributes).filter(([, value]) => value !== undefined);
+
     user = await this.userService.findOne({username: username});
 
     if (!user) {
@@ -158,8 +160,19 @@ export class PassportUserController {
         policies: [],
         lastPasswords: [],
         failedAttempts: [],
-        lastLogin: undefined
+        lastLogin: undefined,
+        ...(attributeEntries.length ? {attributes: Object.fromEntries(attributeEntries)} : {})
       });
+    } else if (attributeEntries.length) {
+      user = await this.userService.findOneAndUpdate(
+        {_id: user._id},
+        {
+          $set: Object.fromEntries(
+            attributeEntries.map(([key, value]) => [`attributes.${key}`, value])
+          )
+        },
+        {returnDocument: ReturnDocument.AFTER}
+      );
     }
 
     this.completeLoginWithState(state, user, expires);

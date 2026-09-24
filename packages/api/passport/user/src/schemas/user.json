@@ -26,6 +26,10 @@
       "type": "string",
       "format": "date-time",
       "title": "User ban expiration date. User cannot log in until this date passes"
+    },
+    "attributes": {
+      "type": "object",
+      "title": "Profile attributes received from the identity provider"
     }
   },
   "additionalProperties": false
