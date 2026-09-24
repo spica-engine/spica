@@ -149,7 +149,7 @@ export class PassportUserController {
       );
     }
 
-    const attributeEntries = Object.entries(attributes).filter(([, value]) => value !== undefined);
+    const attributeEntries = Object.entries(this.userService.encryptAttributes(attributes));
 
     user = await this.userService.findOne({username: username});
 

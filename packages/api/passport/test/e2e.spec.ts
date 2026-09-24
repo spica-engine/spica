@@ -254,7 +254,8 @@ describe("E2E Tests", () => {
             blockDurationMinutes: 10
           },
           passwordHistoryLimit: 2,
-          userRealtime: false
+          userRealtime: false,
+          providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11"
         },
         identityOptions: {
           expiresIn: EXPIRES_IN,
@@ -905,6 +906,7 @@ describe("E2E Tests", () => {
         expect(statusCode).toEqual(400);
         expect(body.message).toBe("Strategy type is not supported for identities.");
       });
+
       describe("Google", () => {
         let strategyId: string;
 
