@@ -61,14 +61,17 @@ function extractId(v: unknown): string {
   return String(v);
 }
 
-/** Normalize env_vars / secrets fields to arrays of plain ID strings. */
+/**
+ * Normalize env_vars / secrets fields to sorted arrays of plain ID strings. The API
+ * returns them in no stable order, and the order carries no meaning.
+ */
 function normalizeSchema(schema: FunctionSchema): FunctionSchema {
   const normalized: FunctionSchema = {...schema};
   if (Array.isArray(schema.env_vars)) {
-    normalized.env_vars = (schema.env_vars as unknown[]).map(extractId);
+    normalized.env_vars = (schema.env_vars as unknown[]).map(extractId).sort();
   }
   if (Array.isArray(schema.secrets)) {
-    normalized.secrets = (schema.secrets as unknown[]).map(extractId);
+    normalized.secrets = (schema.secrets as unknown[]).map(extractId).sort();
   }
   return normalized;
 }

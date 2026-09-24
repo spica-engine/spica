@@ -133,6 +133,26 @@ describe("functionModule.readRemote", () => {
     expect(result[0].data.schema.secrets).toEqual(["sec-id-1"]);
   });
 
+  it("sorts env_vars and secrets so the order the API returns them in does not matter", async () => {
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function")
+        return Promise.resolve([
+          {
+            _id: "fn1",
+            name: "MyFn",
+            env_vars: ["ev-c", {_id: "ev-a"}, "ev-b"],
+            secrets: ["sec-b", "sec-a"]
+          }
+        ]);
+      if (url === "function/fn1/index") return Promise.resolve({index: ""});
+      return Promise.resolve([]);
+    });
+
+    const result = await functionModule.readRemote(mockHttp);
+    expect(result[0].data.schema.env_vars).toEqual(["ev-a", "ev-b", "ev-c"]);
+    expect(result[0].data.schema.secrets).toEqual(["sec-a", "sec-b"]);
+  });
+
   it("unwraps a paginated {data: [...]} response from the function endpoint", async () => {
     mockHttp.get.mockImplementation((url: string) => {
       if (url === "function")
