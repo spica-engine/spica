@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "node:fs";
 
 /**
  * Where `readLocal` reads project files from. The CLI reads the working tree on

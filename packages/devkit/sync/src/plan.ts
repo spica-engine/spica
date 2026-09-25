@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import {
   applyPlan,
   buildPlan,
@@ -88,8 +88,7 @@ export async function apply(options: ApplyOptions): Promise<ApplyResult> {
     abortOnError: options.abortOnError
   });
 
-  const status = errors.length === 0 ? "succeeded" : errors.length < total ? "partial" : "failed";
-  return {status, plan, errors};
+  return {status: applyStatus(errors.length, total), plan, errors};
 }
 
 async function build(options: PlanOptions, http: SyncHttpClient) {
@@ -147,12 +146,23 @@ function fingerprint(raw: Plan): string {
       digest(entry.remote?.data)
     ])
   );
-  entries.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+  entries.sort((a, b) => byCodeUnit(JSON.stringify(a), JSON.stringify(b)));
   return digest(entries);
 }
 
 function digest(value: unknown): string {
   return crypto.createHash("sha256").update(stableStringify(value)).digest("hex");
+}
+
+function applyStatus(failed: number, total: number): "succeeded" | "partial" | "failed" {
+  if (failed === 0) return "succeeded";
+  return failed < total ? "partial" : "failed";
+}
+
+// Code-unit order keeps fingerprints independent of the runtime's locale data.
+function byCodeUnit(a: string, b: string): number {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
 }
 
 function stableStringify(value: unknown): string {
@@ -161,7 +171,7 @@ function stableStringify(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
   const keys = Object.keys(value as object)
     .filter(key => (value as Record<string, unknown>)[key] !== undefined)
-    .sort();
+    .sort(byCodeUnit);
   return `{${keys
     .map(
       key => `${JSON.stringify(key)}:${stableStringify((value as Record<string, unknown>)[key])}`

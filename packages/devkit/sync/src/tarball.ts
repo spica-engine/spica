@@ -1,5 +1,5 @@
-import {Readable, pipeline} from "stream";
-import zlib from "zlib";
+import {Readable, pipeline} from "node:stream";
+import zlib from "node:zlib";
 import {ALL_MODULES} from "@spica-server/sync";
 
 export interface ReadTarballOptions {
@@ -152,7 +152,7 @@ class TarParser {
     }
 
     const size = readOctal(header, 124, 12);
-    const typeflag = String.fromCharCode(header[156]);
+    const typeflag = String.fromCodePoint(header[156]);
     const name = readString(header, 0, 100);
     const prefix =
       header.toString("latin1", 257, 262) === "ustar" ? readString(header, 345, 155) : "";
@@ -239,7 +239,7 @@ function readOctal(buffer: Buffer, offset: number, length: number): number {
     throw new Error("The archive has an entry too large to be a resource file.");
   }
   const text = readString(buffer, offset, length).trim();
-  return text ? parseInt(text, 8) : 0;
+  return text ? Number.parseInt(text, 8) : 0;
 }
 
 // PAX records are "<length> <key>=<value>\n", where <length> counts bytes of the whole record.
@@ -249,7 +249,7 @@ function readPaxPath(body: Buffer): string | undefined {
   while (offset < body.length) {
     const space = body.indexOf(0x20, offset);
     if (space === -1) break;
-    const length = parseInt(body.toString("latin1", offset, space), 10);
+    const length = Number.parseInt(body.toString("latin1", offset, space), 10);
     if (!length || length < 0) break;
     const record = body.toString("utf-8", space + 1, offset + length - 1);
     const eq = record.indexOf("=");
