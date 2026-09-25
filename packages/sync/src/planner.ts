@@ -5,6 +5,7 @@ import yaml from "yaml";
 import {SyncHttpClient} from "./http";
 import {SyncReporter, silentReporter} from "./reporter";
 import {omit} from "./fs-utils";
+import {ResourceSource} from "./source";
 import {
   ChangeKind,
   DEFAULT_CONCURRENCY,
@@ -23,6 +24,8 @@ export interface BuildPlanOptions extends ReadRemoteOptions {
   detailed?: boolean;
   detectRenames?: boolean;
   reporter?: SyncReporter;
+  /** Where local files are read from; defaults to the disk under `rootDir`. */
+  source?: ResourceSource;
 }
 
 export async function buildPlan(
@@ -35,14 +38,15 @@ export async function buildPlan(
     detailed = false,
     detectRenames = true,
     reporter = silentReporter,
-    concurrency = DEFAULT_CONCURRENCY
+    concurrency = DEFAULT_CONCURRENCY,
+    source
   } = options;
   const modulePlans: ModulePlan[] = [];
 
   for (const mod of modules) {
     const [locals, remotes] = await Promise.all([
       reporter.task<LocalResource[]>(`Reading local ${mod.displayName} files`, () =>
-        mod.readLocal(rootDir)
+        mod.readLocal(rootDir, source)
       ),
       reporter.task<RemoteResource[]>(`Fetching remote ${mod.displayName}`, () =>
         mod.readRemote(http, {concurrency})

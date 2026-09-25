@@ -1,7 +1,9 @@
 import fs from "fs";
 import path from "path";
 import yaml from "yaml";
+import cloneDeep from "lodash/cloneDeep.js";
 import {LocalResource} from "./types";
+import {diskSource, ResourceSource} from "./source";
 
 /** Ensure a directory exists, creating it recursively if needed. */
 export function ensureDir(dir: string): void {
@@ -10,17 +12,12 @@ export function ensureDir(dir: string): void {
 
 /** List immediate child folder names inside a directory. Returns [] if dir doesn't exist. */
 export function listFolders(dir: string): string[] {
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir, {withFileTypes: true})
-    .filter(d => d.isDirectory())
-    .map(d => d.name);
+  return diskSource.listFolders(dir);
 }
 
 /** Read and parse a YAML file. Returns null if not found. */
 export function readYaml<T>(filePath: string): T | null {
-  if (!fs.existsSync(filePath)) return null;
-  return yaml.parse(fs.readFileSync(filePath, "utf-8")) as T;
+  return readSourceYaml<T>(diskSource, filePath);
 }
 
 /** Write an object as YAML to filePath, creating parent dirs as needed. */
@@ -31,8 +28,7 @@ export function writeYaml(filePath: string, data: unknown): void {
 
 /** Read a text file, returning null if not found. */
 export function readText(filePath: string): string | null {
-  if (!fs.existsSync(filePath)) return null;
-  return fs.readFileSync(filePath, "utf-8");
+  return diskSource.readText(filePath);
 }
 
 /** Write text content to filePath, creating parent dirs as needed. */
@@ -50,7 +46,7 @@ export function removeDir(dir: string): void {
 
 /** Deep-clone an object and delete the given field names. */
 export function omit<T extends object>(obj: T, fields: string[]): Omit<T, string> {
-  const clone = structuredClone(obj) as any;
+  const clone = cloneDeep(obj) as any;
   for (const f of fields) delete clone[f];
   return clone;
 }
@@ -78,8 +74,7 @@ export function unwrapList<T>(res: T[] | {data: T[]}): T[] {
     return (res as {data: T[]}).data;
   }
   const body = res as unknown;
-  const got =
-    typeof body === "string" ? `${body.slice(0, 80).replace(/\s+/g, " ")}…` : typeof body;
+  const got = typeof body === "string" ? `${body.slice(0, 80).replace(/\s+/g, " ")}…` : typeof body;
   throw new Error(
     `Expected a list response but got: ${got}. ` +
       `Check that your context URL points at the Spica API (e.g. ".../api"), not the panel.`
@@ -93,16 +88,23 @@ export function unwrapList<T>(res: T[] | {data: T[]}): T[] {
  */
 export async function readLocalSchemas<T>(
   rootDir: string,
-  moduleName: string
+  moduleName: string,
+  source: ResourceSource = diskSource
 ): Promise<LocalResource<T>[]> {
   const dir = path.join(rootDir, moduleName);
-  const slugs = listFolders(dir);
+  const slugs = source.listFolders(dir);
   const results: LocalResource<T>[] = [];
   for (const slug of slugs) {
-    const data = readYaml<T>(path.join(dir, slug, "schema.yaml"));
+    const data = readSourceYaml<T>(source, path.join(dir, slug, "schema.yaml"));
     if (data) results.push({slug, data});
   }
   return results;
+}
+
+/** Read and parse a YAML file from a source. Returns null if not found. */
+export function readSourceYaml<T>(source: ResourceSource, filePath: string): T | null {
+  const text = source.readText(filePath);
+  return text === null ? null : (yaml.parse(text) as T);
 }
 
 /**

@@ -1,5 +1,11 @@
 import {diffSchemaFields, renderSchemaDetail} from "../planner";
-import {deleteLocalSchema, readLocalSchemas, sanitizeSlug, unwrapList, writeLocalSchema} from "../fs-utils";
+import {
+  deleteLocalSchema,
+  readLocalSchemas,
+  sanitizeSlug,
+  unwrapList,
+  writeLocalSchema
+} from "../fs-utils";
 import {ResourceModule} from "../types";
 
 interface Secret {
@@ -20,8 +26,8 @@ export const secretModule: ResourceModule<Secret> = {
   identityField: "key",
   ignoredFields: IGNORED_FIELDS,
 
-  readLocal(rootDir) {
-    return readLocalSchemas<Secret>(rootDir, "secret");
+  readLocal(rootDir, source) {
+    return readLocalSchemas<Secret>(rootDir, "secret", source);
   },
 
   async readRemote(http) {

@@ -27,8 +27,8 @@ export const policyModule: ResourceModule<Policy> = {
   identityField: "name",
   ignoredFields: IGNORED_FIELDS,
 
-  readLocal(rootDir) {
-    return readLocalSchemas<Policy>(rootDir, "policy");
+  readLocal(rootDir, source) {
+    return readLocalSchemas<Policy>(rootDir, "policy", source);
   },
 
   async readRemote(http) {

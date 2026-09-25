@@ -13,6 +13,10 @@
     "colorette": "^2.0.20",
     "diff": "^4.0.4",
     "lodash": "^4.17.23",
+    "semver": "^7.7.4",
     "yaml": "^2.7.1"
+  },
+  "devDependencies": {
+    "@types/semver": "^7.5.8"
   }
 }

@@ -1,5 +1,11 @@
 import {diffSchemaFields, renderSchemaDetail} from "../planner";
-import {deleteLocalSchema, readLocalSchemas, sanitizeSlug, unwrapList, writeLocalSchema} from "../fs-utils";
+import {
+  deleteLocalSchema,
+  readLocalSchemas,
+  sanitizeSlug,
+  unwrapList,
+  writeLocalSchema
+} from "../fs-utils";
 import {ResourceModule} from "../types";
 
 interface Bucket {
@@ -19,8 +25,8 @@ export const bucketModule: ResourceModule<Bucket> = {
   identityField: "title",
   ignoredFields: IGNORED_FIELDS,
 
-  readLocal(rootDir) {
-    return readLocalSchemas<Bucket>(rootDir, "bucket");
+  readLocal(rootDir, source) {
+    return readLocalSchemas<Bucket>(rootDir, "bucket", source);
   },
 
   async readRemote(http) {

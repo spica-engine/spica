@@ -133,6 +133,26 @@ describe("functionModule.readRemote", () => {
     expect(result[0].data.schema.secrets).toEqual(["sec-id-1"]);
   });
 
+  it("sorts env_vars and secrets so the order the API returns them in does not matter", async () => {
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function")
+        return Promise.resolve([
+          {
+            _id: "fn1",
+            name: "MyFn",
+            env_vars: ["ev-c", {_id: "ev-a"}, "ev-b"],
+            secrets: ["sec-b", "sec-a"]
+          }
+        ]);
+      if (url === "function/fn1/index") return Promise.resolve({index: ""});
+      return Promise.resolve([]);
+    });
+
+    const result = await functionModule.readRemote(mockHttp);
+    expect(result[0].data.schema.env_vars).toEqual(["ev-a", "ev-b", "ev-c"]);
+    expect(result[0].data.schema.secrets).toEqual(["sec-a", "sec-b"]);
+  });
+
   it("unwraps a paginated {data: [...]} response from the function endpoint", async () => {
     mockHttp.get.mockImplementation((url: string) => {
       if (url === "function")
@@ -152,7 +172,8 @@ describe("functionModule.readRemote", () => {
   // instead of silently treating it as an empty remote.
   it("throws a helpful error when the endpoint returns a non-list body (e.g. panel HTML)", async () => {
     mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve("<!doctype html><html><body>Panel</body></html>");
+      if (url === "function")
+        return Promise.resolve("<!doctype html><html><body>Panel</body></html>");
       return Promise.resolve([]);
     });
 
@@ -642,5 +663,125 @@ describe("functionModule.renderDetail", () => {
     };
     const detail = functionModule.renderDetail(local, remote);
     expect(detail).toHaveProperty("dependencies");
+  });
+});
+
+describe("function dependency versions reported by the instance", () => {
+  const fn = (dependencies: Record<string, string>) => ({
+    schema: {name: "f"},
+    index: "",
+    dependencies
+  });
+  const changed = (local: Record<string, string>, remote: Record<string, string>) =>
+    functionModule.diffFields(fn(local), fn(remote)).includes("dependencies");
+
+  it("treats the caret npm records for an exact version as unchanged", () => {
+    expect(changed({axios: "1.16.0"}, {axios: "^1.16.0"})).toBe(false);
+  });
+
+  it("treats a newer install that still satisfies the range as unchanged", () => {
+    expect(changed({dayjs: "^1.11.13"}, {dayjs: "^1.11.23"})).toBe(false);
+  });
+
+  it("reports a change when the installed version no longer satisfies the files", () => {
+    expect(changed({dayjs: "^1.12.0"}, {dayjs: "^1.11.23"})).toBe(true);
+    expect(changed({axios: "1.16.1"}, {axios: "^1.16.0"})).toBe(true);
+  });
+
+  it("reports added and removed dependencies", () => {
+    expect(changed({axios: "1.16.0", uuid: "11.1.0"}, {axios: "^1.16.0"})).toBe(true);
+    expect(changed({axios: "1.16.0"}, {axios: "^1.16.0", uuid: "^11.1.0"})).toBe(true);
+  });
+
+  it("reinstalls when a tilde spec on the instance is raised to get a newer patch", () => {
+    expect(changed({axios: "~1.16.5"}, {axios: "~1.16.0"})).toBe(true);
+    expect(changed({axios: "1.16.5"}, {axios: "~1.16.0"})).toBe(true);
+  });
+
+  it("reinstalls when a tilde spec on the instance is replaced by another kind of spec", () => {
+    // npm records ~1.16.0 as written, so the instance may run 1.16.9; a pin must reinstall.
+    expect(changed({axios: "1.16.0"}, {axios: "~1.16.0"})).toBe(true);
+    expect(changed({axios: "^1.16.0"}, {axios: "~1.16.0"})).toBe(true);
+  });
+
+  it("treats specs npm records as written as unchanged only when the text matches", () => {
+    expect(changed({axios: "~1.16.0"}, {axios: "~1.16.0"})).toBe(false);
+    expect(changed({axios: "1.16.x"}, {axios: "1.16.x"})).toBe(false);
+    expect(changed({axios: ">=1.16.2 <1.17.0"}, {axios: ">=1.16.2 <1.17.0"})).toBe(false);
+    expect(changed({axios: "~1.16.0"}, {axios: "~1.16.3"})).toBe(true);
+  });
+
+  it("downgrades with a pinned or tilde spec and settles after the reinstall", () => {
+    // npm recorded ^1.20.0 after installing 1.20.0; the files now ask for an older version.
+    expect(changed({axios: "1.16.5"}, {axios: "^1.20.0"})).toBe(true);
+    expect(changed({axios: "1.16.5"}, {axios: "^1.16.5"})).toBe(false);
+
+    expect(changed({axios: "~1.16.5"}, {axios: "^1.20.0"})).toBe(true);
+    expect(changed({axios: "~1.16.5"}, {axios: "~1.16.5"})).toBe(false);
+
+    // A caret range the installed version still satisfies cannot downgrade.
+    expect(changed({axios: "^1.16.0"}, {axios: "^1.20.0"})).toBe(false);
+  });
+
+  it("is stable after reinstalling the raised spec", () => {
+    expect(changed({axios: "1.16.5"}, {axios: "^1.16.5"})).toBe(false);
+    expect(changed({axios: "~1.16.5"}, {axios: "~1.16.5"})).toBe(false);
+  });
+
+  it("reinstalls once when an exact or caret install is changed to a tilde spec", () => {
+    // npm then records ~1.16.0 as written, so the next plan matches by text.
+    expect(changed({axios: "~1.16.0"}, {axios: "^1.16.2"})).toBe(true);
+  });
+
+  it("compares non-semver specs as text", () => {
+    expect(changed({api: "file:../Api"}, {api: "file:../Api"})).toBe(false);
+    expect(changed({api: "file:../Api"}, {api: "file:../Other"})).toBe(true);
+    expect(changed({lib: "latest"}, {lib: "^2.0.0"})).toBe(true);
+  });
+
+  it("renders no dependency diff when the versions are satisfied", () => {
+    const detail = functionModule.renderDetail(
+      {slug: "f", data: fn({axios: "1.16.0"})},
+      {slug: "f", id: "1", data: fn({axios: "^1.16.0"})}
+    );
+    expect(detail.dependencies).toBeUndefined();
+  });
+
+  it("reinstalls a dependency whose tilde spec was raised", async () => {
+    const http = {
+      get: jest.fn().mockResolvedValue([{name: "axios", version: "~1.16.0"}]),
+      post: jest.fn().mockResolvedValue({}),
+      delete: jest.fn().mockResolvedValue({})
+    } as any;
+
+    await functionModule.uploadDependencies(http, "fn1", {axios: "~1.16.5"});
+
+    expect(http.post).toHaveBeenCalledWith("function/fn1/dependencies", {
+      name: ["axios@~1.16.5"]
+    });
+    expect(http.delete).not.toHaveBeenCalled();
+  });
+
+  it("installs only the dependencies the instance does not satisfy", async () => {
+    const http = {
+      get: jest.fn().mockResolvedValue([
+        {name: "axios", version: "^1.16.0"},
+        {name: "dayjs", version: "^1.11.23"},
+        {name: "old", version: "^1.0.0"}
+      ]),
+      post: jest.fn().mockResolvedValue({}),
+      delete: jest.fn().mockResolvedValue({})
+    } as any;
+
+    await functionModule.uploadDependencies(http, "fn1", {
+      axios: "1.16.0",
+      dayjs: "^1.12.0",
+      uuid: "11.1.0"
+    });
+
+    expect(http.post).toHaveBeenCalledWith("function/fn1/dependencies", {
+      name: ["dayjs@^1.12.0", "uuid@11.1.0"]
+    });
+    expect(http.delete).toHaveBeenCalledWith("function/fn1/dependencies/old");
   });
 });

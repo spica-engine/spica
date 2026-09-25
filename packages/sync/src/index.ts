@@ -9,6 +9,7 @@ export * from "./types";
 export * from "./http";
 export * from "./reporter";
 export * from "./fs-utils";
+export * from "./source";
 export * from "./planner";
 export * from "./modules/index";
 

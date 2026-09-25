@@ -1,4 +1,5 @@
 import {SyncHttpClient} from "./http";
+import {ResourceSource} from "./source";
 
 // ─── Dev-watcher extension types ─────────────────────────────────────────────
 
@@ -128,8 +129,8 @@ export interface ResourceModule<T = any> {
    */
   extractLocalId?(data: T): string | undefined;
 
-  /** Read all local resources from the project directory */
-  readLocal(rootDir: string): Promise<LocalResource<T>[]>;
+  /** Read all local resources from the project directory (on disk unless a source is given) */
+  readLocal(rootDir: string, source?: ResourceSource): Promise<LocalResource<T>[]>;
   /** Fetch all remote resources from the Spica API */
   readRemote(http: SyncHttpClient, options?: ReadRemoteOptions): Promise<RemoteResource<T>[]>;
 

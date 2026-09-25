@@ -2,21 +2,21 @@ import path from "path";
 import fs from "fs";
 import yaml from "yaml";
 import isEqual from "lodash/isEqual.js";
+import semver from "semver";
 import {bold, cyan, green, red, yellow} from "colorette";
 import {SyncHttpClient} from "../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
 import {
   ensureDir,
-  listFolders,
   omit,
-  readText,
-  readYaml,
+  readSourceYaml,
   removeDir,
   sanitizeSlug,
   unwrapList,
   writeText,
   writeYaml
 } from "../fs-utils";
+import {diskSource, ResourceSource} from "../source";
 import {
   DEFAULT_CONCURRENCY,
   DevEventContext,
@@ -62,14 +62,22 @@ function extractId(v: unknown): string {
   return String(v);
 }
 
-/** Normalize env_vars / secrets fields to arrays of plain ID strings. */
+function byCodeUnit(a: string, b: string): number {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
+
+/**
+ * Normalize env_vars / secrets fields to sorted arrays of plain ID strings. The API
+ * returns them in no stable order, and the order carries no meaning.
+ */
 function normalizeSchema(schema: FunctionSchema): FunctionSchema {
   const normalized: FunctionSchema = {...schema};
   if (Array.isArray(schema.env_vars)) {
-    normalized.env_vars = (schema.env_vars as unknown[]).map(extractId);
+    normalized.env_vars = (schema.env_vars as unknown[]).map(extractId).sort(byCodeUnit);
   }
   if (Array.isArray(schema.secrets)) {
-    normalized.secrets = (schema.secrets as unknown[]).map(extractId);
+    normalized.secrets = (schema.secrets as unknown[]).map(extractId).sort(byCodeUnit);
   }
   return normalized;
 }
@@ -103,6 +111,29 @@ function isNotFoundError(error: unknown): boolean {
   );
 }
 
+/**
+ * Whether the dependency the instance reports matches the one in the project files.
+ *
+ * npm rewrites an exact or caret spec to a caret on the version it installed (`1.16.0` →
+ * `^1.16.0`, `^1.11.13` → `^1.11.23`), so only then does the reported spec reveal the installed
+ * version, and it matches while that version satisfies the files. Any other spec (`~1.16.0`,
+ * `1.16.x`, ranges) is recorded as written and says nothing about the installed version, so it
+ * compares as text and any change to it reinstalls.
+ */
+function dependencySatisfied(localSpec: string, remoteSpec: string | undefined): boolean {
+  if (remoteSpec === undefined) return false;
+  if (localSpec === remoteSpec) return true;
+  const installed = remoteSpec.startsWith("^") ? semver.valid(remoteSpec.slice(1)) : null;
+  const rewrittenByNpm =
+    !!semver.valid(localSpec) || (localSpec.startsWith("^") && !!semver.validRange(localSpec));
+  return !!installed && rewrittenByNpm && semver.satisfies(installed, localSpec);
+}
+
+function dependenciesMatch(local: Record<string, string>, remote: Record<string, string>): boolean {
+  const names = new Set([...Object.keys(local), ...Object.keys(remote)]);
+  return [...names].every(name => name in local && dependencySatisfied(local[name], remote[name]));
+}
+
 const emptyIfMissing =
   <T>(empty: T) =>
   (error: unknown): T => {
@@ -114,9 +145,9 @@ const emptyIfMissing =
 
 export interface FunctionModule extends ResourceModule<FunctionData> {
   // ── Granular reads (sync) ──────────────────────────────────────────────────
-  readSchema(rootDir: string, slug: string): FunctionSchema | null;
-  readIndex(rootDir: string, slug: string, language?: string): string;
-  readDependencies(rootDir: string, slug: string): Record<string, string>;
+  readSchema(rootDir: string, slug: string, source?: ResourceSource): FunctionSchema | null;
+  readIndex(rootDir: string, slug: string, language?: string, source?: ResourceSource): string;
+  readDependencies(rootDir: string, slug: string, source?: ResourceSource): Record<string, string>;
   // ── Granular writes (async) ────────────────────────────────────────────────
   /** POST schema → returns the new remote _id, or undefined on failure. */
   createSchema(http: SyncHttpClient, schema: FunctionSchema): Promise<string | undefined>;
@@ -138,16 +169,19 @@ export const functionModule: FunctionModule = {
   identityField: "name",
   ignoredFields: SCHEMA_IGNORED,
 
-  readSchema(rootDir, slug) {
-    return readYaml<FunctionSchema>(path.join(rootDir, "function", slug, "schema.yaml"));
+  readSchema(rootDir, slug, source = diskSource) {
+    return readSourceYaml<FunctionSchema>(
+      source,
+      path.join(rootDir, "function", slug, "schema.yaml")
+    );
   },
 
-  readIndex(rootDir, slug, language) {
-    return readText(path.join(rootDir, "function", slug, indexFilename(language))) ?? "";
+  readIndex(rootDir, slug, language, source = diskSource) {
+    return source.readText(path.join(rootDir, "function", slug, indexFilename(language))) ?? "";
   },
 
-  readDependencies(rootDir, slug) {
-    const pkgText = readText(path.join(rootDir, "function", slug, "package.json"));
+  readDependencies(rootDir, slug, source = diskSource) {
+    const pkgText = source.readText(path.join(rootDir, "function", slug, "package.json"));
     if (!pkgText) return {};
     try {
       return JSON.parse(pkgText).dependencies ?? {};
@@ -156,16 +190,16 @@ export const functionModule: FunctionModule = {
     }
   },
 
-  async readLocal(rootDir) {
+  async readLocal(rootDir, source = diskSource) {
     const dir = path.join(rootDir, "function");
-    const slugs = listFolders(dir);
+    const slugs = source.listFolders(dir);
     const results: LocalResource<FunctionData>[] = [];
 
     for (const slug of slugs) {
-      const schema = this.readSchema(rootDir, slug);
+      const schema = this.readSchema(rootDir, slug, source);
       if (!schema) continue;
-      const index = this.readIndex(rootDir, slug, schema.language);
-      const dependencies = this.readDependencies(rootDir, slug);
+      const index = this.readIndex(rootDir, slug, schema.language, source);
+      const dependencies = this.readDependencies(rootDir, slug, source);
       results.push({slug, data: {schema, index, dependencies}});
     }
     return results;
@@ -283,10 +317,7 @@ export const functionModule: FunctionModule = {
     );
 
     const toAdd = Object.entries(localDeps)
-      .filter(([n, v]) => {
-        const cur = currentByName.get(n);
-        return !cur || cur !== v;
-      })
+      .filter(([n, v]) => !dependencySatisfied(v, currentByName.get(n)))
       .map(([n, v]) => `${n}@${v}`);
 
     if (toAdd.length) {
@@ -331,7 +362,7 @@ export const functionModule: FunctionModule = {
 
     if (local.index !== remote.index) changed.push("index");
 
-    if (!isEqual(local.dependencies, remote.dependencies)) changed.push("dependencies");
+    if (!dependenciesMatch(local.dependencies, remote.dependencies)) changed.push("dependencies");
 
     const localEnvVars: string[] = (local.schema.env_vars as string[] | undefined) ?? [];
     const remoteEnvVars: string[] = (remote.schema.env_vars as string[] | undefined) ?? [];
@@ -363,9 +394,9 @@ export const functionModule: FunctionModule = {
 
     const sortKeys = (obj: Record<string, string>) =>
       Object.fromEntries(Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)));
-    const localDepsYaml = yaml.stringify(sortKeys(local.data.dependencies));
-    const remoteDepsYaml = yaml.stringify(sortKeys(remote.data.dependencies));
-    if (localDepsYaml !== remoteDepsYaml) {
+    if (!dependenciesMatch(local.data.dependencies, remote.data.dependencies)) {
+      const localDepsYaml = yaml.stringify(sortKeys(local.data.dependencies));
+      const remoteDepsYaml = yaml.stringify(sortKeys(remote.data.dependencies));
       result["dependencies"] = buildUnifiedDiff(remoteDepsYaml, localDepsYaml, "package.json");
     }
 
