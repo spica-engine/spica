@@ -711,6 +711,18 @@ describe("function dependency versions reported by the instance", () => {
     expect(changed({axios: "~1.16.0"}, {axios: "~1.16.3"})).toBe(true);
   });
 
+  it("downgrades with a pinned or tilde spec and settles after the reinstall", () => {
+    // npm recorded ^1.20.0 after installing 1.20.0; the files now ask for an older version.
+    expect(changed({axios: "1.16.5"}, {axios: "^1.20.0"})).toBe(true);
+    expect(changed({axios: "1.16.5"}, {axios: "^1.16.5"})).toBe(false);
+
+    expect(changed({axios: "~1.16.5"}, {axios: "^1.20.0"})).toBe(true);
+    expect(changed({axios: "~1.16.5"}, {axios: "~1.16.5"})).toBe(false);
+
+    // A caret range the installed version still satisfies cannot downgrade.
+    expect(changed({axios: "^1.16.0"}, {axios: "^1.20.0"})).toBe(false);
+  });
+
   it("is stable after reinstalling the raised spec", () => {
     expect(changed({axios: "1.16.5"}, {axios: "^1.16.5"})).toBe(false);
     expect(changed({axios: "~1.16.5"}, {axios: "~1.16.5"})).toBe(false);
