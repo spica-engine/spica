@@ -107,18 +107,21 @@ function isNotFoundError(error: unknown): boolean {
 }
 
 /**
- * Whether the dependency the instance reports satisfies the one in the project files.
+ * Whether the dependency the instance reports matches the one in the project files.
  *
- * The instance installs `name@<spec>` with npm, which records the version it actually
- * installed with a caret (`1.16.0` → `^1.16.0`, `^1.11.13` → `^1.11.23`). Comparing the
- * text would report a change, and reinstall, on every sync.
+ * npm rewrites an exact or caret spec to a caret on the version it installed (`1.16.0` →
+ * `^1.16.0`, `^1.11.13` → `^1.11.23`), so only then does the reported spec reveal the installed
+ * version, and it matches while that version satisfies the files. Any other spec (`~1.16.0`,
+ * `1.16.x`, ranges) is recorded as written and says nothing about the installed version, so it
+ * compares as text and any change to it reinstalls.
  */
 function dependencySatisfied(localSpec: string, remoteSpec: string | undefined): boolean {
   if (remoteSpec === undefined) return false;
   if (localSpec === remoteSpec) return true;
-  const installed = semver.valid(remoteSpec.replace(/^[\^~]/, ""));
-  if (!installed || !semver.validRange(localSpec)) return false;
-  return semver.satisfies(installed, localSpec);
+  const installed = remoteSpec.startsWith("^") ? semver.valid(remoteSpec.slice(1)) : null;
+  const rewrittenByNpm =
+    !!semver.valid(localSpec) || (localSpec.startsWith("^") && !!semver.validRange(localSpec));
+  return !!installed && rewrittenByNpm && semver.satisfies(installed, localSpec);
 }
 
 function dependenciesMatch(local: Record<string, string>, remote: Record<string, string>): boolean {

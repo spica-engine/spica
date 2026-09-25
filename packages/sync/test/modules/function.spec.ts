@@ -172,7 +172,8 @@ describe("functionModule.readRemote", () => {
   // instead of silently treating it as an empty remote.
   it("throws a helpful error when the endpoint returns a non-list body (e.g. panel HTML)", async () => {
     mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve("<!doctype html><html><body>Panel</body></html>");
+      if (url === "function")
+        return Promise.resolve("<!doctype html><html><body>Panel</body></html>");
       return Promise.resolve([]);
     });
 
@@ -666,7 +667,11 @@ describe("functionModule.renderDetail", () => {
 });
 
 describe("function dependency versions reported by the instance", () => {
-  const fn = (dependencies: Record<string, string>) => ({schema: {name: "f"}, index: "", dependencies});
+  const fn = (dependencies: Record<string, string>) => ({
+    schema: {name: "f"},
+    index: "",
+    dependencies
+  });
   const changed = (local: Record<string, string>, remote: Record<string, string>) =>
     functionModule.diffFields(fn(local), fn(remote)).includes("dependencies");
 
@@ -688,6 +693,34 @@ describe("function dependency versions reported by the instance", () => {
     expect(changed({axios: "1.16.0"}, {axios: "^1.16.0", uuid: "^11.1.0"})).toBe(true);
   });
 
+  it("reinstalls when a tilde spec on the instance is raised to get a newer patch", () => {
+    expect(changed({axios: "~1.16.5"}, {axios: "~1.16.0"})).toBe(true);
+    expect(changed({axios: "1.16.5"}, {axios: "~1.16.0"})).toBe(true);
+  });
+
+  it("reinstalls when a tilde spec on the instance is replaced by another kind of spec", () => {
+    // npm records ~1.16.0 as written, so the instance may run 1.16.9; a pin must reinstall.
+    expect(changed({axios: "1.16.0"}, {axios: "~1.16.0"})).toBe(true);
+    expect(changed({axios: "^1.16.0"}, {axios: "~1.16.0"})).toBe(true);
+  });
+
+  it("treats specs npm records as written as unchanged only when the text matches", () => {
+    expect(changed({axios: "~1.16.0"}, {axios: "~1.16.0"})).toBe(false);
+    expect(changed({axios: "1.16.x"}, {axios: "1.16.x"})).toBe(false);
+    expect(changed({axios: ">=1.16.2 <1.17.0"}, {axios: ">=1.16.2 <1.17.0"})).toBe(false);
+    expect(changed({axios: "~1.16.0"}, {axios: "~1.16.3"})).toBe(true);
+  });
+
+  it("is stable after reinstalling the raised spec", () => {
+    expect(changed({axios: "1.16.5"}, {axios: "^1.16.5"})).toBe(false);
+    expect(changed({axios: "~1.16.5"}, {axios: "~1.16.5"})).toBe(false);
+  });
+
+  it("reinstalls once when an exact or caret install is changed to a tilde spec", () => {
+    // npm then records ~1.16.0 as written, so the next plan matches by text.
+    expect(changed({axios: "~1.16.0"}, {axios: "^1.16.2"})).toBe(true);
+  });
+
   it("compares non-semver specs as text", () => {
     expect(changed({api: "file:../Api"}, {api: "file:../Api"})).toBe(false);
     expect(changed({api: "file:../Api"}, {api: "file:../Other"})).toBe(true);
@@ -700,6 +733,21 @@ describe("function dependency versions reported by the instance", () => {
       {slug: "f", id: "1", data: fn({axios: "^1.16.0"})}
     );
     expect(detail.dependencies).toBeUndefined();
+  });
+
+  it("reinstalls a dependency whose tilde spec was raised", async () => {
+    const http = {
+      get: jest.fn().mockResolvedValue([{name: "axios", version: "~1.16.0"}]),
+      post: jest.fn().mockResolvedValue({}),
+      delete: jest.fn().mockResolvedValue({})
+    } as any;
+
+    await functionModule.uploadDependencies(http, "fn1", {axios: "~1.16.5"});
+
+    expect(http.post).toHaveBeenCalledWith("function/fn1/dependencies", {
+      name: ["axios@~1.16.5"]
+    });
+    expect(http.delete).not.toHaveBeenCalled();
   });
 
   it("installs only the dependencies the instance does not satisfy", async () => {
