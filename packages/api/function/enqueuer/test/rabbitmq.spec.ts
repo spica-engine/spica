@@ -16,10 +16,9 @@ function createTarget(cwd?: string, handler?: string) {
 
 describe("rabbitmq enqueuer", () => {
   let eventQueue: {enqueue: jest.Mock};
-  let rabbitmqQueue: {enqueue: jest.Mock};
+  let rabbitmqQueue: {enqueue: jest.Mock; purge: jest.Mock};
   let noopTarget: event.Target;
   let rabbitmqEnqueuer: RabbitMQEnqueuer;
-
 
   let url: string;
 
@@ -46,10 +45,15 @@ describe("rabbitmq enqueuer", () => {
       enqueue: jest.fn()
     };
     rabbitmqQueue = {
-      enqueue: jest.fn()
+      enqueue: jest.fn(),
+      purge: jest.fn()
     };
 
     rabbitmqEnqueuer = new RabbitMQEnqueuer(eventQueue as any, rabbitmqQueue as any);
+  });
+
+  afterEach(async () => {
+    await rabbitmqEnqueuer.onEventsAreDrained([]);
   });
 
   it("should subscribe", async () => {
@@ -149,7 +153,7 @@ describe("rabbitmq enqueuer", () => {
 
       const message1 =
         rabbitmqQueue.enqueue.mock.calls[rabbitmqQueue.enqueue.mock.calls.length - 2][1];
-      const messageChannel =
+      const delivery1 =
         rabbitmqQueue.enqueue.mock.calls[rabbitmqQueue.enqueue.mock.calls.length - 2][2];
 
       const message2 =
@@ -157,9 +161,49 @@ describe("rabbitmq enqueuer", () => {
 
       expect(message1.content.toString()).toBe("Hello World!");
       expect(message2.content.toString()).toBe("Message");
-      expect(messageChannel.connection).toBeDefined();
-      expect(messageChannel.ack).toBeDefined();
-      expect(messageChannel.nack).toBeDefined();
+      expect(delivery1).toBeUndefined();
+    });
+
+    it("should hand the channel and delivery tag over when acknowledgement is required", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "queue-manual-ack", durable: true},
+        noAck: false
+      });
+
+      connection = await amqp.connect(url);
+      channel = await connection.createChannel();
+      await channel.assertQueue("queue-manual-ack", {durable: true});
+      channel.sendToQueue("queue-manual-ack", Buffer.from("Hello World!"));
+
+      await delay(1000);
+
+      expect(rabbitmqQueue.enqueue).toHaveBeenCalledTimes(1);
+      const [, message, delivery] = rabbitmqQueue.enqueue.mock.calls[0];
+      expect(message.content.toString()).toBe("Hello World!");
+      expect(delivery.channel.connection).toBeDefined();
+      expect(delivery.deliveryTag).toBe(JSON.parse(message.fields).deliveryTag);
+    });
+
+    it("should purge the deliveries of a channel when it is unsubscribed", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "queue-purge", durable: true},
+        noAck: false
+      });
+
+      connection = await amqp.connect(url);
+      channel = await connection.createChannel();
+      await channel.assertQueue("queue-purge", {durable: true});
+      channel.sendToQueue("queue-purge", Buffer.from("Hello World!"));
+      await delay(500);
+
+      const {channel: consumerChannel} = rabbitmqQueue.enqueue.mock.calls[0][2];
+
+      rabbitmqEnqueuer.unsubscribe(noopTarget);
+      await delay(200);
+
+      expect(rabbitmqQueue.purge).toHaveBeenCalledWith(consumerChannel);
     });
 
     it("should enqueue for fanout type exchange", async () => {
@@ -348,6 +392,139 @@ describe("rabbitmq enqueuer", () => {
 
       expect(pdfMessage.content.toString()).toBe("Messsage with pdf format");
       expect(jpgMessageCall).toBeUndefined();
+    });
+  });
+
+  describe("resilience", () => {
+    let connection: amqp.ChannelModel;
+    let channel: amqp.Channel;
+
+    beforeEach(async () => {
+      rabbitmqEnqueuer = new RabbitMQEnqueuer(eventQueue as any, rabbitmqQueue as any, {
+        initialDelayMs: 50,
+        maxDelayMs: 200
+      });
+      connection = await amqp.connect(url);
+      channel = await connection.createChannel();
+    });
+
+    afterEach(async () => {
+      jest.restoreAllMocks();
+      await connection.close();
+    });
+
+    function reportedErrors() {
+      return rabbitmqQueue.enqueue.mock.calls
+        .map(([, message]) => message)
+        .filter(message => message.errorMessage?.length)
+        .map(message => Buffer.from(message.errorMessage).toString());
+    }
+
+    async function consumerCount(queue: string) {
+      return (await channel.checkQueue(queue)).consumerCount;
+    }
+
+    it("should keep retrying an unreachable broker but report the failure only once", async () => {
+      const unreachable = "amqp://127.0.0.1:1";
+      const connect = jest.spyOn(amqp, "connect");
+
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url: unreachable,
+        queue: {name: "unreachable", durable: true},
+        noAck: true
+      });
+      await delay(1000);
+
+      const attempts = connect.mock.calls.filter(([target]) => target === unreachable);
+      expect(attempts.length).toBeGreaterThan(3);
+      expect(reportedErrors()).toHaveLength(1);
+      expect(reportedErrors()[0]).toMatch(/^Connection failed\./);
+    });
+
+    it("should report a failed step once and not continue with a dead channel", async () => {
+      await channel.assertExchange("conflicting-exchange", "direct", {durable: false});
+
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        exchange: {name: "conflicting-exchange", type: "fanout", durable: false, pattern: ""},
+        queue: {name: "", durable: false},
+        noAck: true
+      });
+      await delay(800);
+
+      expect(reportedErrors()).toHaveLength(1);
+      expect(reportedErrors()[0]).toContain("inequivalent arg 'type'");
+    });
+
+    it("should consume again when the broker cancels the consumer", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "cancelled-queue", durable: false},
+        noAck: true
+      });
+      expect(await consumerCount("cancelled-queue")).toBe(1);
+
+      await channel.deleteQueue("cancelled-queue");
+      await delay(600);
+
+      expect(reportedErrors()).toEqual(["The consumer was cancelled by the broker."]);
+      expect(await consumerCount("cancelled-queue")).toBe(1);
+
+      channel.sendToQueue("cancelled-queue", Buffer.from("after recovery"));
+      await delay(300);
+
+      const {calls} = rabbitmqQueue.enqueue.mock;
+      expect(calls[calls.length - 1][1].content.toString()).toBe("after recovery");
+    });
+
+    it("should survive a connection error and reconnect", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "connection-error-queue", durable: false},
+        noAck: true
+      });
+
+      const [subscription] = rabbitmqEnqueuer["subscriptions"];
+      subscription.connection.emit("error", new Error("boom"));
+      await delay(600);
+
+      expect(reportedErrors()).toEqual(["Connection error. boom"]);
+      expect(await consumerCount("connection-error-queue")).toBe(1);
+    });
+
+    it("should close a connection that was established after unsubscribing", async () => {
+      const connect = amqp.connect.bind(amqp);
+      jest.spyOn(amqp, "connect").mockImplementation(async (target: any, options?: any) => {
+        await delay(300);
+        return connect(target, options);
+      });
+
+      const subscribing = rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "late-connection-queue", durable: true},
+        noAck: true
+      });
+      rabbitmqEnqueuer.unsubscribe(noopTarget);
+      await subscribing;
+      await delay(300);
+
+      await channel.assertQueue("late-connection-queue", {durable: true});
+      expect(await consumerCount("late-connection-queue")).toBe(0);
+    });
+
+    it("should close every subscription when the events are drained", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "drained-queue", durable: false},
+        noAck: true
+      });
+      expect(await consumerCount("drained-queue")).toBe(1);
+
+      await rabbitmqEnqueuer.onEventsAreDrained([]);
+      await delay(300);
+
+      expect(rabbitmqEnqueuer["subscriptions"]).toHaveLength(0);
+      expect(await consumerCount("drained-queue")).toBe(0);
     });
   });
 });

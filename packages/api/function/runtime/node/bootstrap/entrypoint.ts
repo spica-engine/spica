@@ -18,6 +18,7 @@ import {
   RabbitMQQueue,
   RabbitMQMessage,
   RabbitMQChannel,
+  reviveBuffers,
   GrpcQueue as GrpcQueueNode
 } from "@spica-server/function-queue-node";
 
@@ -285,21 +286,11 @@ async function _process(ev: event.Event, queue: EventQueue) {
 
       callArguments[0] = {
         content: Buffer.from(rabbitmqMessageInstance.content),
-        fields: JSON.parse(rabbitmqMessageInstance.fields),
-        properties: JSON.parse(rabbitmqMessageInstance.properties)
+        fields: JSON.parse(rabbitmqMessageInstance.fields, reviveBuffers),
+        properties: JSON.parse(rabbitmqMessageInstance.properties, reviveBuffers)
       };
 
-      const channel = new RabbitMQChannel(
-        (e: any) => {
-          e.id = ev.id;
-          return rabbitmq.ack(e) as unknown as Promise<void>;
-        },
-        (e: any) => {
-          e.id = ev.id;
-          return rabbitmq.nack(e) as unknown as Promise<void>;
-        }
-      );
-      callArguments[1] = channel;
+      callArguments[1] = new RabbitMQChannel(ev.id, rabbitmq);
       break;
     case event.Type.GRPC:
       const grpcQueue = new GrpcQueueNode();

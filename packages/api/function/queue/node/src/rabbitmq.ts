@@ -1,5 +1,10 @@
 import {RabbitMQ} from "@spica-server/function-queue-proto";
 import grpc from "@grpc/grpc-js";
+import type {ConsumeMessage} from "amqplib";
+
+export type RabbitMQConsumeMessage = ConsumeMessage;
+
+type SettleMethod = "ack" | "nack" | "reject" | "ackAll" | "nackAll";
 
 export class RabbitMQQueue {
   private client: RabbitMQ.QueueClient;
@@ -28,25 +33,36 @@ export class RabbitMQQueue {
     });
   }
 
-  ack(e: RabbitMQ.Message): Promise<RabbitMQ.Message.Result> {
-    return new Promise((resolve, reject) => {
-      this.client.ack(e, (error, event) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(event);
-        }
-      });
-    });
+  ack(e: RabbitMQ.Message.Settle) {
+    return this.settle("ack", e);
   }
 
-  nack(e: RabbitMQ.Message): Promise<RabbitMQ.Message.Result> {
+  nack(e: RabbitMQ.Message.Settle) {
+    return this.settle("nack", e);
+  }
+
+  reject(e: RabbitMQ.Message.Settle) {
+    return this.settle("reject", e);
+  }
+
+  ackAll(e: RabbitMQ.Message.Settle) {
+    return this.settle("ackAll", e);
+  }
+
+  nackAll(e: RabbitMQ.Message.Settle) {
+    return this.settle("nackAll", e);
+  }
+
+  private settle(
+    method: SettleMethod,
+    e: RabbitMQ.Message.Settle
+  ): Promise<RabbitMQ.Message.Result> {
     return new Promise((resolve, reject) => {
-      this.client.nack(e, (error, event) => {
+      this.client[method](e, (error, result) => {
         if (error) {
-          reject(error);
+          reject(new Error(error.details));
         } else {
-          resolve(event);
+          resolve(result);
         }
       });
     });
@@ -67,27 +83,43 @@ export class RabbitMQMessage {
   }
 }
 
+// Mirrors amqplib's Channel settle methods, including their defaults. Each delivery is bound to
+// its own event, so the message argument is only there for signature parity and is not read.
 export class RabbitMQChannel {
   constructor(
-    private _ack: (e: RabbitMQ.Message) => Promise<void>,
-    private _nack: (e: RabbitMQ.Message) => Promise<void>
+    private eventId: string,
+    private queue: RabbitMQQueue
   ) {}
 
-  ack(msg: RabbitMQ.Message) {
-    const message = new RabbitMQ.Message({
-      content: new Uint8Array(msg.content),
-      fields: JSON.stringify(msg.fields),
-      properties: JSON.stringify(msg.properties)
-    });
-    return this._ack(message);
+  async ack(message: RabbitMQConsumeMessage, allUpTo = false): Promise<void> {
+    await this.queue.ack(this.settle({allUpTo}));
   }
 
-  nack(msg: RabbitMQ.Message) {
-    const message = new RabbitMQ.Message({
-      content: new Uint8Array(msg.content),
-      fields: JSON.stringify(msg.fields),
-      properties: JSON.stringify(msg.properties)
-    });
-    return this._nack(message);
+  async nack(message: RabbitMQConsumeMessage, allUpTo = false, requeue = true): Promise<void> {
+    await this.queue.nack(this.settle({allUpTo, requeue}));
   }
+
+  async reject(message: RabbitMQConsumeMessage, requeue = true): Promise<void> {
+    await this.queue.reject(this.settle({requeue}));
+  }
+
+  async ackAll(): Promise<void> {
+    await this.queue.ackAll(this.settle({}));
+  }
+
+  async nackAll(requeue = true): Promise<void> {
+    await this.queue.nackAll(this.settle({requeue}));
+  }
+
+  private settle(options: {allUpTo?: boolean; requeue?: boolean}) {
+    return new RabbitMQ.Message.Settle({id: this.eventId, ...options});
+  }
+}
+
+// JSON turns the Buffers amqplib puts in fields and properties (e.g. binary headers) into
+// {type: "Buffer", data: [...]}.
+export function reviveBuffers(_key: string, value: any) {
+  const isSerializedBuffer =
+    value?.type === "Buffer" && Array.isArray(value.data) && Object.keys(value).length === 2;
+  return isSerializedBuffer ? Buffer.from(value.data) : value;
 }

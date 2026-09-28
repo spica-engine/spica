@@ -13,11 +13,20 @@ message Message {
         string id = 1;
     }
 
+    message Settle {
+        string id = 1;
+        bool allUpTo = 2;
+        bool requeue = 3;
+    }
+
     message Result {}
 }
 
 service Queue {
     rpc pop(Message.Pop) returns (Message);
-    rpc ack(Message) returns (Message.Result);
-    rpc nack(Message) returns (Message.Result);
+    rpc ack(Message.Settle) returns (Message.Result);
+    rpc nack(Message.Settle) returns (Message.Result);
+    rpc reject(Message.Settle) returns (Message.Result);
+    rpc ackAll(Message.Settle) returns (Message.Result);
+    rpc nackAll(Message.Settle) returns (Message.Result);
 }
