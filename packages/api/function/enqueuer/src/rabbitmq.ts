@@ -69,7 +69,9 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     const {options} = subscription;
 
     try {
-      const connection = await this.attempt("Connection failed.", () => amqp.connect(options.url));
+      const connection = await this.attempt("Connection failed.", () =>
+        amqp.connect(options.url, options.socketOptions)
+      );
       if (isStale()) {
         return this.close(connection);
       }
@@ -98,41 +100,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
         this.fail(subscription, run, "The channel was closed unexpectedly.")
       );
 
-      if (options.exchange) {
-        await this.attempt("Exchange assertion failed.", () =>
-          channel.assertExchange(options.exchange.name, options.exchange.type, {
-            durable: options.exchange.durable
-          })
-        );
-      }
-
-      const q = await this.attempt("Queue assertion failed.", () =>
-        channel.assertQueue(options.queue.name, {
-          durable: options.queue.durable,
-          exclusive: options.queue.exclusive
-        })
-      );
-
-      if (options.exchange) {
-        await this.attempt("Queue binding failed.", () =>
-          channel.bindQueue(
-            q.queue,
-            options.exchange.name,
-            options.exchange.pattern,
-            options.exchange.headers
-          )
-        );
-      }
-
-      if (options.prefetch) {
-        await this.attempt("Prefetch failed.", () => channel.prefetch(options.prefetch));
-      }
-
-      await this.attempt("Queue consumption failed.", () =>
-        channel.consume(q.queue, msg => this.onMessage(subscription, run, channel, msg), {
-          noAck: options.noAck
-        })
-      );
+      await this.setUp(subscription, run, channel);
 
       if (isStale()) {
         return;
@@ -142,6 +110,58 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     } catch (error) {
       this.fail(subscription, run, error.message);
     }
+  }
+
+  private async setUp(subscription: Subscription, run: number, channel: amqp.Channel) {
+    const {options} = subscription;
+    const {exchange, queue} = options;
+
+    if (exchange) {
+      await this.attempt("Exchange assertion failed.", () =>
+        exchange.passive
+          ? channel.checkExchange(exchange.name)
+          : channel.assertExchange(exchange.name, exchange.type, exchange)
+      );
+    }
+
+    const q = await this.attempt("Queue assertion failed.", () =>
+      queue.passive ? channel.checkQueue(queue.name) : channel.assertQueue(queue.name, queue)
+    );
+
+    const queueBindings = [
+      ...(exchange
+        ? [{exchange: exchange.name, pattern: exchange.pattern, arguments: exchange.headers}]
+        : []),
+      ...(options.bindings ?? [])
+    ];
+    for (const binding of queueBindings) {
+      for (const pattern of patternsOf(binding.pattern)) {
+        await this.attempt("Queue binding failed.", () =>
+          channel.bindQueue(q.queue, binding.exchange, pattern, binding.arguments)
+        );
+      }
+    }
+
+    for (const binding of options.exchangeBindings ?? []) {
+      for (const pattern of patternsOf(binding.pattern)) {
+        await this.attempt("Exchange binding failed.", () =>
+          channel.bindExchange(binding.destination, binding.source, pattern, binding.arguments)
+        );
+      }
+    }
+
+    if (options.prefetch) {
+      await this.attempt("Prefetch failed.", () =>
+        channel.prefetch(options.prefetch, options.prefetchGlobal)
+      );
+    }
+
+    await this.attempt("Queue consumption failed.", () =>
+      channel.consume(q.queue, msg => this.onMessage(subscription, run, channel, msg), {
+        ...options.consume,
+        noAck: options.noAck
+      })
+    );
   }
 
   private async attempt<T>(failureMessage: string, action: () => Promise<T>): Promise<T> {
@@ -254,6 +274,10 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   private closeErrorMessage(subscription: Subscription, error: Error) {
     return `Error on closing the channel of ${this.describe(subscription)}, reason: ${error.message}`;
   }
+}
+
+function patternsOf(pattern: string | string[] | undefined) {
+  return Array.isArray(pattern) ? pattern : [pattern ?? ""];
 }
 
 type Subscription = {

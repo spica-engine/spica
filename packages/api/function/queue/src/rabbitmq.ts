@@ -3,22 +3,60 @@ import grpc from "@grpc/grpc-js";
 import {Queue} from "./queue.js";
 import amqp from "amqplib";
 
+type Arguments = Record<string, any>;
+
+// Field names follow the options of the matching amqplib calls (connect, assertExchange,
+// assertQueue, bindQueue, bindExchange, prefetch and consume) so its documentation applies as is.
 export interface RabbitMQOptions {
   url: string;
+  socketOptions?: Record<string, any>;
   exchange?: {
     name: string;
-    type: "direct" | "topic" | "fanout" | "headers";
-    pattern: string;
-    durable: boolean;
-    headers?: Record<string, any>;
+    type: string;
+    durable?: boolean;
+    internal?: boolean;
+    autoDelete?: boolean;
+    alternateExchange?: string;
+    arguments?: Arguments;
+    passive?: boolean;
+    pattern?: string | string[];
+    headers?: Arguments;
   };
+  bindings?: {
+    exchange: string;
+    pattern?: string | string[];
+    arguments?: Arguments;
+  }[];
+  exchangeBindings?: {
+    source: string;
+    destination: string;
+    pattern?: string | string[];
+    arguments?: Arguments;
+  }[];
   queue: {
     name: string;
-    durable: boolean;
+    durable?: boolean;
     exclusive?: boolean;
+    autoDelete?: boolean;
+    messageTtl?: number;
+    expires?: number;
+    deadLetterExchange?: string;
+    deadLetterRoutingKey?: string;
+    maxLength?: number;
+    maxPriority?: number;
+    arguments?: Arguments;
+    passive?: boolean;
   };
   prefetch?: number;
-  noAck: boolean;
+  prefetchGlobal?: boolean;
+  consume?: {
+    consumerTag?: string;
+    exclusive?: boolean;
+    priority?: number;
+    noLocal?: boolean;
+    arguments?: Arguments;
+  };
+  noAck?: boolean;
 }
 
 export interface RabbitMQDelivery {

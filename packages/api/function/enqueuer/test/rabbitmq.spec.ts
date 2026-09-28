@@ -527,4 +527,274 @@ describe("rabbitmq enqueuer", () => {
       expect(await consumerCount("drained-queue")).toBe(0);
     });
   });
+
+  describe("options", () => {
+    let connection: amqp.ChannelModel;
+    let channel: amqp.Channel;
+
+    beforeEach(async () => {
+      rabbitmqEnqueuer = new RabbitMQEnqueuer(eventQueue as any, rabbitmqQueue as any, {
+        initialDelayMs: 50,
+        maxDelayMs: 200
+      });
+      connection = await amqp.connect(url);
+      channel = await connection.createChannel();
+    });
+
+    afterEach(async () => {
+      jest.restoreAllMocks();
+      await connection.close();
+    });
+
+    function received() {
+      return rabbitmqQueue.enqueue.mock.calls
+        .map(([, message]) => message)
+        .filter(message => !message.errorMessage?.length)
+        .map(message => message.content.toString());
+    }
+
+    function reportedErrors() {
+      return rabbitmqQueue.enqueue.mock.calls
+        .map(([, message]) => message)
+        .filter(message => message.errorMessage?.length)
+        .map(message => Buffer.from(message.errorMessage).toString());
+    }
+
+    async function consumerCount(queue: string) {
+      return (await channel.checkQueue(queue)).consumerCount;
+    }
+
+    it("should declare the queue with its options and arguments", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {
+          name: "declared-queue",
+          durable: false,
+          messageTtl: 60_000,
+          maxLength: 5,
+          deadLetterExchange: "declared-dlx",
+          deadLetterRoutingKey: "dead",
+          arguments: {"x-overflow": "reject-publish"}
+        },
+        noAck: true
+      });
+
+      // Redeclaring with the same settings only succeeds when they were applied.
+      await expect(
+        channel.assertQueue("declared-queue", {
+          durable: false,
+          messageTtl: 60_000,
+          maxLength: 5,
+          deadLetterExchange: "declared-dlx",
+          deadLetterRoutingKey: "dead",
+          arguments: {"x-overflow": "reject-publish"}
+        })
+      ).resolves.toBeDefined();
+    });
+
+    it("should declare a quorum queue through the arguments", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "quorum-queue", durable: true, arguments: {"x-queue-type": "quorum"}},
+        noAck: false
+      });
+
+      expect(reportedErrors()).toEqual([]);
+      await expect(
+        channel.assertQueue("quorum-queue", {
+          durable: true,
+          arguments: {"x-queue-type": "quorum"}
+        })
+      ).resolves.toBeDefined();
+    });
+
+    it("should declare the exchange with its options", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        exchange: {
+          name: "declared-exchange",
+          type: "topic",
+          durable: false,
+          alternateExchange: "declared-alternate",
+          pattern: "#"
+        },
+        queue: {name: "", durable: false},
+        noAck: true
+      });
+
+      await expect(
+        channel.assertExchange("declared-exchange", "topic", {
+          durable: false,
+          alternateExchange: "declared-alternate"
+        })
+      ).resolves.toBeDefined();
+    });
+
+    it("should bind with every routing key of a pattern list", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        exchange: {
+          name: "multi-key-exchange",
+          type: "direct",
+          durable: false,
+          pattern: ["info", "error"]
+        },
+        queue: {name: "", durable: false},
+        noAck: true
+      });
+
+      channel.publish("multi-key-exchange", "info", Buffer.from("info"));
+      channel.publish("multi-key-exchange", "error", Buffer.from("error"));
+      channel.publish("multi-key-exchange", "debug", Buffer.from("debug"));
+      await delay(500);
+
+      expect(received().sort()).toEqual(["error", "info"]);
+    });
+
+    it("should bind the queue to additional exchanges", async () => {
+      await channel.assertExchange("extra-exchange", "direct", {durable: false});
+
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        exchange: {name: "main-exchange", type: "direct", durable: false, pattern: "main"},
+        bindings: [{exchange: "extra-exchange", pattern: "extra"}],
+        queue: {name: "", durable: false},
+        noAck: true
+      });
+
+      channel.publish("main-exchange", "main", Buffer.from("from main"));
+      channel.publish("extra-exchange", "extra", Buffer.from("from extra"));
+      channel.publish("extra-exchange", "other", Buffer.from("dropped"));
+      await delay(500);
+
+      expect(received().sort()).toEqual(["from extra", "from main"]);
+    });
+
+    it("should bind exchanges to each other", async () => {
+      await channel.assertExchange("source-exchange", "fanout", {durable: false});
+
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        exchange: {name: "destination-exchange", type: "fanout", durable: false, pattern: ""},
+        exchangeBindings: [{source: "source-exchange", destination: "destination-exchange"}],
+        queue: {name: "", durable: false},
+        noAck: true
+      });
+
+      channel.publish("source-exchange", "", Buffer.from("through the source"));
+      await delay(500);
+
+      expect(received()).toEqual(["through the source"]);
+    });
+
+    it("should only check a passive queue and attach once it exists", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "passive-queue", durable: true, passive: true},
+        noAck: true
+      });
+      await delay(200);
+      expect(reportedErrors()).toHaveLength(1);
+
+      // A queue with settings the trigger knows nothing about, declared by someone else.
+      const declaring = await connection.createChannel();
+      await declaring.assertQueue("passive-queue", {
+        durable: true,
+        arguments: {"x-max-length-bytes": 1_000_000}
+      });
+      await delay(600);
+
+      expect(await consumerCount("passive-queue")).toBe(1);
+      expect(reportedErrors()).toHaveLength(1);
+
+      declaring.sendToQueue("passive-queue", Buffer.from("hello"));
+      await delay(300);
+      expect(received()).toEqual(["hello"]);
+    });
+
+    it("should only check a passive exchange", async () => {
+      await channel.assertExchange("existing-exchange", "topic", {
+        durable: false,
+        arguments: {"x-custom": "kept"}
+      });
+
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        exchange: {name: "existing-exchange", type: "topic", passive: true, pattern: "#"},
+        queue: {name: "", durable: false},
+        noAck: true
+      });
+
+      channel.publish("existing-exchange", "key", Buffer.from("hello"));
+      await delay(300);
+
+      expect(reportedErrors()).toEqual([]);
+      expect(received()).toEqual(["hello"]);
+    });
+
+    it("should pass the consume options", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "tagged-queue", durable: false},
+        consume: {consumerTag: "spica-consumer"},
+        noAck: true
+      });
+
+      channel.sendToQueue("tagged-queue", Buffer.from("hello"));
+      await delay(300);
+
+      const {calls} = rabbitmqQueue.enqueue.mock;
+      expect(JSON.parse(calls[0][1].fields).consumerTag).toBe("spica-consumer");
+    });
+
+    it("should let an exclusive consumer keep others away", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "exclusive-consumer-queue", durable: false},
+        consume: {exclusive: true},
+        noAck: true
+      });
+
+      const other = await connection.createChannel();
+      other.on("error", () => {});
+      await other.assertQueue("exclusive-consumer-queue", {durable: false});
+      await expect(other.consume("exclusive-consumer-queue", () => {})).rejects.toThrow();
+    });
+
+    it("should limit the unacknowledged messages with prefetch", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "prefetched-queue", durable: false},
+        prefetch: 1,
+        noAck: false
+      });
+
+      for (const body of ["1", "2", "3"]) {
+        channel.sendToQueue("prefetched-queue", Buffer.from(body));
+      }
+      await delay(400);
+      expect(received()).toEqual(["1"]);
+
+      const {channel: consumerChannel, deliveryTag} = rabbitmqQueue.enqueue.mock.calls[0][2];
+      consumerChannel.ack({fields: {deliveryTag}} as any);
+      await delay(400);
+
+      expect(received()).toEqual(["1", "2"]);
+    });
+
+    it("should pass the socket options to the connection", async () => {
+      const connect = jest.spyOn(amqp, "connect");
+      const socketOptions = {clientProperties: {connection_name: "spica-test"}};
+
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        socketOptions,
+        queue: {name: "named-connection-queue", durable: false},
+        noAck: true
+      });
+
+      expect(connect).toHaveBeenCalledWith(url, socketOptions);
+      expect(reportedErrors()).toEqual([]);
+    });
+  });
 });
