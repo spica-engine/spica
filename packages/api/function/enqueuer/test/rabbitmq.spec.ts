@@ -782,6 +782,61 @@ describe("rabbitmq enqueuer", () => {
       expect(received()).toEqual(["1", "2"]);
     });
 
+    describe("dead lettering", () => {
+      async function declareDeadLetterQueue(name: string) {
+        await channel.assertExchange(`${name}-dlx`, "fanout", {durable: false});
+        await channel.assertQueue(`${name}-dlq`, {durable: true});
+        await channel.bindQueue(`${name}-dlq`, `${name}-dlx`, "");
+      }
+
+      function settleWith(settle: (channel: amqp.Channel, message: amqp.Message) => void) {
+        rabbitmqQueue.enqueue.mockImplementation((_id, _message, delivery) => {
+          if (delivery) {
+            settle(delivery.channel, {fields: {deliveryTag: delivery.deliveryTag}} as any);
+          }
+        });
+      }
+
+      it("should dead letter a message that is nacked without requeue", async () => {
+        await declareDeadLetterQueue("nacked");
+        settleWith((consumerChannel, message) => consumerChannel.nack(message, false, false));
+
+        await rabbitmqEnqueuer.subscribe(noopTarget, {
+          url,
+          queue: {name: "nacked-queue", durable: true, deadLetterExchange: "nacked-dlx"},
+          noAck: false
+        });
+        channel.sendToQueue("nacked-queue", Buffer.from("poison"));
+        await delay(600);
+
+        expect(received()).toEqual(["poison"]);
+        const dead = await channel.get("nacked-dlq", {noAck: true});
+        expect(dead && dead.content.toString()).toBe("poison");
+      });
+
+      it("should stop redelivering a requeued message once the delivery limit is reached", async () => {
+        await declareDeadLetterQueue("limited");
+        settleWith((consumerChannel, message) => consumerChannel.nack(message, false, true));
+
+        await rabbitmqEnqueuer.subscribe(noopTarget, {
+          url,
+          queue: {
+            name: "limited-queue",
+            durable: true,
+            deadLetterExchange: "limited-dlx",
+            arguments: {"x-queue-type": "quorum", "x-delivery-limit": 2}
+          },
+          noAck: false
+        });
+        channel.sendToQueue("limited-queue", Buffer.from("poison"));
+        await delay(1500);
+
+        expect(received()).toHaveLength(3);
+        const dead = await channel.get("limited-dlq", {noAck: true});
+        expect(dead && dead.content.toString()).toBe("poison");
+      });
+    });
+
     it("should pass the socket options to the connection", async () => {
       const connect = jest.spyOn(amqp, "connect");
       const socketOptions = {clientProperties: {connection_name: "spica-test"}};

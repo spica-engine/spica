@@ -9568,6 +9568,7 @@ __metadata:
   dependencies:
     "@grpc/grpc-js": "npm:^1.12.7"
     "@spica-server/function-queue-proto": "workspace:*"
+    "@types/amqplib": "npm:^0.10.8"
     qs: "npm:^6.14.2"
   languageName: unknown
   linkType: soft
