@@ -240,6 +240,123 @@ export namespace RabbitMQ {
         return Pop.deserialize(bytes);
       }
     }
+    export class Settle extends pb_1.Message {
+      #one_of_decls: number[][] = [];
+      constructor(
+        data?:
+          | any[]
+          | {
+              id?: string;
+              allUpTo?: boolean;
+              requeue?: boolean;
+            }
+      ) {
+        super();
+        pb_1.Message.initialize(
+          this,
+          Array.isArray(data) ? data : [],
+          0,
+          -1,
+          [],
+          this.#one_of_decls
+        );
+        if (!Array.isArray(data) && typeof data == "object") {
+          if ("id" in data && data.id != undefined) {
+            this.id = data.id;
+          }
+          if ("allUpTo" in data && data.allUpTo != undefined) {
+            this.allUpTo = data.allUpTo;
+          }
+          if ("requeue" in data && data.requeue != undefined) {
+            this.requeue = data.requeue;
+          }
+        }
+      }
+      get id() {
+        return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
+      }
+      set id(value: string) {
+        pb_1.Message.setField(this, 1, value);
+      }
+      get allUpTo() {
+        return pb_1.Message.getFieldWithDefault(this, 2, false) as boolean;
+      }
+      set allUpTo(value: boolean) {
+        pb_1.Message.setField(this, 2, value);
+      }
+      get requeue() {
+        return pb_1.Message.getFieldWithDefault(this, 3, false) as boolean;
+      }
+      set requeue(value: boolean) {
+        pb_1.Message.setField(this, 3, value);
+      }
+      static fromObject(data: {id?: string; allUpTo?: boolean; requeue?: boolean}): Settle {
+        const message = new Settle({});
+        if (data.id != null) {
+          message.id = data.id;
+        }
+        if (data.allUpTo != null) {
+          message.allUpTo = data.allUpTo;
+        }
+        if (data.requeue != null) {
+          message.requeue = data.requeue;
+        }
+        return message;
+      }
+      toObject() {
+        const data: {
+          id?: string;
+          allUpTo?: boolean;
+          requeue?: boolean;
+        } = {};
+        if (this.id != null) {
+          data.id = this.id;
+        }
+        if (this.allUpTo != null) {
+          data.allUpTo = this.allUpTo;
+        }
+        if (this.requeue != null) {
+          data.requeue = this.requeue;
+        }
+        return data;
+      }
+      serialize(): Uint8Array;
+      serialize(w: pb_1.BinaryWriter): void;
+      serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+        const writer = w || new pb_1.BinaryWriter();
+        if (this.id.length) writer.writeString(1, this.id);
+        if (this.allUpTo != false) writer.writeBool(2, this.allUpTo);
+        if (this.requeue != false) writer.writeBool(3, this.requeue);
+        if (!w) return writer.getResultBuffer();
+      }
+      static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Settle {
+        const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes),
+          message = new Settle();
+        while (reader.nextField()) {
+          if (reader.isEndGroup()) break;
+          switch (reader.getFieldNumber()) {
+            case 1:
+              message.id = reader.readString();
+              break;
+            case 2:
+              message.allUpTo = reader.readBool();
+              break;
+            case 3:
+              message.requeue = reader.readBool();
+              break;
+            default:
+              reader.skipField();
+          }
+        }
+        return message;
+      }
+      serializeBinary(): Uint8Array {
+        return this.serialize();
+      }
+      static deserializeBinary(bytes: Uint8Array): Settle {
+        return Settle.deserialize(bytes);
+      }
+    }
     export class Result extends pb_1.Message {
       #one_of_decls: number[][] = [];
       constructor(data?: any[] | {}) {
@@ -355,8 +472,8 @@ export namespace RabbitMQ {
         path: "/RabbitMQ.Queue/ack",
         requestStream: false,
         responseStream: false,
-        requestSerialize: (message: Message) => Buffer.from(message.serialize()),
-        requestDeserialize: (bytes: Buffer) => Message.deserialize(new Uint8Array(bytes)),
+        requestSerialize: (message: Message.Settle) => Buffer.from(message.serialize()),
+        requestDeserialize: (bytes: Buffer) => Message.Settle.deserialize(new Uint8Array(bytes)),
         responseSerialize: (message: Message.Result) => Buffer.from(message.serialize()),
         responseDeserialize: (bytes: Buffer) => Message.Result.deserialize(new Uint8Array(bytes))
       },
@@ -364,8 +481,35 @@ export namespace RabbitMQ {
         path: "/RabbitMQ.Queue/nack",
         requestStream: false,
         responseStream: false,
-        requestSerialize: (message: Message) => Buffer.from(message.serialize()),
-        requestDeserialize: (bytes: Buffer) => Message.deserialize(new Uint8Array(bytes)),
+        requestSerialize: (message: Message.Settle) => Buffer.from(message.serialize()),
+        requestDeserialize: (bytes: Buffer) => Message.Settle.deserialize(new Uint8Array(bytes)),
+        responseSerialize: (message: Message.Result) => Buffer.from(message.serialize()),
+        responseDeserialize: (bytes: Buffer) => Message.Result.deserialize(new Uint8Array(bytes))
+      },
+      reject: {
+        path: "/RabbitMQ.Queue/reject",
+        requestStream: false,
+        responseStream: false,
+        requestSerialize: (message: Message.Settle) => Buffer.from(message.serialize()),
+        requestDeserialize: (bytes: Buffer) => Message.Settle.deserialize(new Uint8Array(bytes)),
+        responseSerialize: (message: Message.Result) => Buffer.from(message.serialize()),
+        responseDeserialize: (bytes: Buffer) => Message.Result.deserialize(new Uint8Array(bytes))
+      },
+      ackAll: {
+        path: "/RabbitMQ.Queue/ackAll",
+        requestStream: false,
+        responseStream: false,
+        requestSerialize: (message: Message.Settle) => Buffer.from(message.serialize()),
+        requestDeserialize: (bytes: Buffer) => Message.Settle.deserialize(new Uint8Array(bytes)),
+        responseSerialize: (message: Message.Result) => Buffer.from(message.serialize()),
+        responseDeserialize: (bytes: Buffer) => Message.Result.deserialize(new Uint8Array(bytes))
+      },
+      nackAll: {
+        path: "/RabbitMQ.Queue/nackAll",
+        requestStream: false,
+        responseStream: false,
+        requestSerialize: (message: Message.Settle) => Buffer.from(message.serialize()),
+        requestDeserialize: (bytes: Buffer) => Message.Settle.deserialize(new Uint8Array(bytes)),
         responseSerialize: (message: Message.Result) => Buffer.from(message.serialize()),
         responseDeserialize: (bytes: Buffer) => Message.Result.deserialize(new Uint8Array(bytes))
       }
@@ -376,11 +520,23 @@ export namespace RabbitMQ {
       callback: grpc_1.sendUnaryData<Message>
     ): void;
     abstract ack(
-      call: grpc_1.ServerUnaryCall<Message, Message.Result>,
+      call: grpc_1.ServerUnaryCall<Message.Settle, Message.Result>,
       callback: grpc_1.sendUnaryData<Message.Result>
     ): void;
     abstract nack(
-      call: grpc_1.ServerUnaryCall<Message, Message.Result>,
+      call: grpc_1.ServerUnaryCall<Message.Settle, Message.Result>,
+      callback: grpc_1.sendUnaryData<Message.Result>
+    ): void;
+    abstract reject(
+      call: grpc_1.ServerUnaryCall<Message.Settle, Message.Result>,
+      callback: grpc_1.sendUnaryData<Message.Result>
+    ): void;
+    abstract ackAll(
+      call: grpc_1.ServerUnaryCall<Message.Settle, Message.Result>,
+      callback: grpc_1.sendUnaryData<Message.Result>
+    ): void;
+    abstract nackAll(
+      call: grpc_1.ServerUnaryCall<Message.Settle, Message.Result>,
       callback: grpc_1.sendUnaryData<Message.Result>
     ): void;
   }
@@ -404,21 +560,45 @@ export namespace RabbitMQ {
     ): grpc_1.ClientUnaryCall => {
       return super.pop(message, metadata, options, callback);
     };
-    ack: GrpcUnaryServiceInterface<Message, Message.Result> = (
-      message: Message,
+    ack: GrpcUnaryServiceInterface<Message.Settle, Message.Result> = (
+      message: Message.Settle,
       metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
       options?: grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
       callback?: grpc_1.requestCallback<Message.Result>
     ): grpc_1.ClientUnaryCall => {
       return super.ack(message, metadata, options, callback);
     };
-    nack: GrpcUnaryServiceInterface<Message, Message.Result> = (
-      message: Message,
+    nack: GrpcUnaryServiceInterface<Message.Settle, Message.Result> = (
+      message: Message.Settle,
       metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
       options?: grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
       callback?: grpc_1.requestCallback<Message.Result>
     ): grpc_1.ClientUnaryCall => {
       return super.nack(message, metadata, options, callback);
+    };
+    reject: GrpcUnaryServiceInterface<Message.Settle, Message.Result> = (
+      message: Message.Settle,
+      metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
+      options?: grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
+      callback?: grpc_1.requestCallback<Message.Result>
+    ): grpc_1.ClientUnaryCall => {
+      return super.reject(message, metadata, options, callback);
+    };
+    ackAll: GrpcUnaryServiceInterface<Message.Settle, Message.Result> = (
+      message: Message.Settle,
+      metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
+      options?: grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
+      callback?: grpc_1.requestCallback<Message.Result>
+    ): grpc_1.ClientUnaryCall => {
+      return super.ackAll(message, metadata, options, callback);
+    };
+    nackAll: GrpcUnaryServiceInterface<Message.Settle, Message.Result> = (
+      message: Message.Settle,
+      metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
+      options?: grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
+      callback?: grpc_1.requestCallback<Message.Result>
+    ): grpc_1.ClientUnaryCall => {
+      return super.nackAll(message, metadata, options, callback);
     };
   }
 }

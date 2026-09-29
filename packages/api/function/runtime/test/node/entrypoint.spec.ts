@@ -1,5 +1,11 @@
-import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function-queue";
-import {Database, event, Firehose, Http} from "@spica-server/function-queue-proto";
+import {
+  DatabaseQueue,
+  EventQueue,
+  FirehoseQueue,
+  HttpQueue,
+  RabbitMQQueue
+} from "@spica-server/function-queue";
+import {Database, event, Firehose, Http, RabbitMQ} from "@spica-server/function-queue-proto";
 import {Builder} from "@spica-server/function-builder";
 import {BuildMeta} from "@spica-server/interface-function-builder";
 import {LegacyBuilder} from "@spica-server/function-builder-legacy";
@@ -817,6 +823,99 @@ describe("Entrypoint", () => {
       const exitCode = await spawn().catch(e => e);
 
       expect(exitCode).toBe(4);
+    });
+  });
+
+  describe("rabbitmq", () => {
+    let rabbitmqQueue: RabbitMQQueue;
+    let channel: {ack: jest.Mock; nack: jest.Mock; reject: jest.Mock};
+
+    async function enqueueMessage() {
+      const ev = new event.Event({
+        type: event.Type.RABBITMQ,
+        target: new event.Target({
+          cwd: meta.cwd,
+          handler: "default",
+          context: new event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
+      queue.enqueue(ev);
+
+      rabbitmqQueue.enqueue(
+        ev.id,
+        new RabbitMQ.Message({
+          content: Buffer.from("hello"),
+          fields: JSON.stringify({deliveryTag: 5, routingKey: "key"}),
+          properties: JSON.stringify({headers: {binary: Buffer.from("abc")}})
+        }),
+        {channel: channel as any, deliveryTag: 5}
+      );
+    }
+
+    beforeEach(() => {
+      queue.drain();
+      rabbitmqQueue = new RabbitMQQueue();
+      queue.addQueue(rabbitmqQueue);
+      queue.listen();
+      channel = {ack: jest.fn(), nack: jest.fn(), reject: jest.fn()};
+    });
+
+    it("should pass the message with its binary headers restored", async () => {
+      await initializeFn(`
+      export default function(message) {
+        const isExpected =
+          message.content.toString() == "hello" &&
+          message.fields.routingKey == "key" &&
+          Buffer.isBuffer(message.properties.headers.binary) &&
+          message.properties.headers.binary.toString() == "abc";
+        if (isExpected) {
+          process.exit(4);
+        }
+      }`);
+      await enqueueMessage();
+
+      const exitCode = await spawn().catch(e => e);
+
+      expect(exitCode).toBe(4);
+    });
+
+    it("should let the handler await the ack", async () => {
+      await initializeFn(`
+      export default async function(message, channel) {
+        await channel.ack(message);
+        process.exit(4);
+      }`);
+      await enqueueMessage();
+
+      const exitCode = await spawn().catch(e => e);
+
+      expect(exitCode).toBe(4);
+      expect(channel.ack).toHaveBeenCalledWith({fields: {deliveryTag: 5}}, false);
+      expect(rabbitmqQueue.pendingDeliveries).toBe(0);
+    });
+
+    it("should reject when the message is settled twice", async () => {
+      await initializeFn(`
+      export default async function(message, channel) {
+        await channel.nack(message, false, false);
+        try {
+          await channel.ack(message);
+        } catch (error) {
+          if (error.message.includes("No unsettled delivery")) {
+            process.exit(4);
+          }
+        }
+      }`);
+      await enqueueMessage();
+
+      const exitCode = await spawn().catch(e => e);
+
+      expect(exitCode).toBe(4);
+      expect(channel.nack).toHaveBeenCalledWith({fields: {deliveryTag: 5}}, false, false);
+      expect(channel.ack).not.toHaveBeenCalled();
     });
   });
 

@@ -4,16 +4,88 @@
   "description": "RabbitMQ enqueuer for functions",
   "type": "object",
   "required": ["url"],
+  "definitions": {
+    "arguments": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "pattern": {
+      "title": "Pattern",
+      "description": "Routing key of the binding, or a list of routing keys to bind with one by one",
+      "type": ["string", "array"],
+      "items": {
+        "type": "string"
+      },
+      "examples": ["#", "*.orange.*", "*.*.rabbit", "lazy.#", ["info", "error"]]
+    }
+  },
   "properties": {
     "url": {
       "title": "URl",
-      "description": "RabbitMQ connection URL",
+      "description": "RabbitMQ connection URL. Connection parameters such as heartbeat, frameMax and channelMax can be given as query parameters",
       "type": "string",
-      "examples": ["amqp://localhost:5672"]
+      "examples": ["amqp://localhost:5672", "amqps://localhost:5671/vhost?heartbeat=30"]
+    },
+    "socketOptions": {
+      "title": "Socket Options",
+      "description": "Options passed to amqplib's connect as socket options, for example the TLS options (ca, cert, key, passphrase, servername, rejectUnauthorized), timeout, or clientProperties",
+      "type": "object",
+      "properties": {
+        "ca": {
+          "title": "CA",
+          "description": "Trusted CA certificates in PEM format",
+          "type": ["string", "array"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "cert": {
+          "title": "Certificate",
+          "description": "Client certificate chain in PEM format",
+          "type": "string"
+        },
+        "key": {
+          "title": "Key",
+          "description": "Client private key in PEM format",
+          "type": "string"
+        },
+        "passphrase": {
+          "title": "Passphrase",
+          "description": "Passphrase of the client private key",
+          "type": "string"
+        },
+        "servername": {
+          "title": "Server Name",
+          "description": "Server name for the SNI and the certificate verification",
+          "type": "string"
+        },
+        "rejectUnauthorized": {
+          "title": "Reject Unauthorized",
+          "description": "Reject the server if its certificate can not be verified",
+          "type": "boolean"
+        },
+        "timeout": {
+          "title": "Timeout",
+          "description": "Connection timeout in milliseconds",
+          "type": "number"
+        },
+        "clientProperties": {
+          "title": "Client Properties",
+          "description": "Properties sent to the broker, such as connection_name, which is shown in the management UI",
+          "type": "object",
+          "additionalProperties": true,
+          "examples": [
+            {
+              "connection_name": "spica"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
     },
     "exchange": {
       "title": "Exchange",
-      "description": "Exchange to publish messages to",
+      "description": "Exchange to declare and bind the queue to",
       "type": "object",
       "required": ["name", "type"],
       "properties": {
@@ -25,9 +97,9 @@
         },
         "type": {
           "title": "Type",
-          "description": "Exchange type",
+          "description": "Exchange type, including the ones provided by plugins",
           "type": "string",
-          "enum": ["direct", "fanout", "topic", "headers"]
+          "examples": ["direct", "fanout", "topic", "headers", "x-delayed-message"]
         },
         "durable": {
           "title": "Durable",
@@ -35,16 +107,44 @@
           "type": "boolean",
           "default": false
         },
+        "internal": {
+          "title": "Internal",
+          "description": "Exchange that can not be published to directly, only through bindings from other exchanges",
+          "type": "boolean"
+        },
+        "autoDelete": {
+          "title": "Auto Delete",
+          "description": "Delete the exchange when it is no longer bound to anything",
+          "type": "boolean"
+        },
+        "alternateExchange": {
+          "title": "Alternate Exchange",
+          "description": "Exchange that receives the messages this exchange can not route",
+          "type": "string"
+        },
+        "arguments": {
+          "title": "Arguments",
+          "description": "Additional arguments of the exchange declaration, such as x-delayed-type",
+          "$ref": "#/definitions/arguments"
+        },
+        "passive": {
+          "title": "Passive",
+          "description": "Only check that the exchange exists instead of declaring it. Useful for an exchange that is declared elsewhere with other settings",
+          "type": "boolean"
+        },
         "pattern": {
           "title": "Pattern",
-          "description": "Pattern for exchange",
-          "type": "string",
-          "default": "",
-          "examples": ["#", "*.orange.*", "*.*.rabbit", "lazy.#"]
+          "description": "Routing key of the binding, or a list of routing keys to bind with one by one",
+          "type": ["string", "array"],
+          "items": {
+            "type": "string"
+          },
+          "examples": ["#", "*.orange.*", "*.*.rabbit", "lazy.#", ["info", "error"]],
+          "default": ""
         },
         "headers": {
           "title": "Headers",
-          "description": "Headers for exchange",
+          "description": "Binding arguments, used to match the headers of the messages for an exchange of type headers",
           "type": "object",
           "additionalProperties": {
             "type": ["string", "number", "boolean"]
@@ -62,11 +162,67 @@
             }
           ]
         }
+      },
+      "additionalProperties": false
+    },
+    "bindings": {
+      "title": "Bindings",
+      "description": "Additional bindings of the queue to existing exchanges",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["exchange"],
+        "properties": {
+          "exchange": {
+            "title": "Exchange",
+            "description": "Name of the exchange to bind the queue to",
+            "type": "string"
+          },
+          "pattern": {
+            "$ref": "#/definitions/pattern"
+          },
+          "arguments": {
+            "title": "Arguments",
+            "description": "Binding arguments, such as the headers to match for an exchange of type headers",
+            "$ref": "#/definitions/arguments"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "exchangeBindings": {
+      "title": "Exchange Bindings",
+      "description": "Bindings between existing exchanges, so a message published to the source is routed to the destination as well",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "destination"],
+        "properties": {
+          "source": {
+            "title": "Source",
+            "description": "Name of the exchange the messages come from",
+            "type": "string"
+          },
+          "destination": {
+            "title": "Destination",
+            "description": "Name of the exchange the messages are routed to",
+            "type": "string"
+          },
+          "pattern": {
+            "$ref": "#/definitions/pattern"
+          },
+          "arguments": {
+            "title": "Arguments",
+            "description": "Binding arguments, such as the headers to match for an exchange of type headers",
+            "$ref": "#/definitions/arguments"
+          }
+        },
+        "additionalProperties": false
       }
     },
     "queue": {
       "title": "Queue",
-      "description": "Queue to publish messages to",
+      "description": "Queue to declare and consume messages from",
       "type": "object",
       "default": {
         "name": "",
@@ -75,7 +231,7 @@
       "properties": {
         "name": {
           "title": "Name",
-          "description": "Queue name",
+          "description": "Queue name. An empty name lets the broker generate one",
           "type": "string",
           "default": "",
           "examples": ["my_queue"]
@@ -90,18 +246,109 @@
           "title": "Exclusive",
           "description": "Exclusive queue",
           "type": "boolean"
+        },
+        "autoDelete": {
+          "title": "Auto Delete",
+          "description": "Delete the queue when its last consumer goes away",
+          "type": "boolean"
+        },
+        "messageTtl": {
+          "title": "Message TTL",
+          "description": "Time in milliseconds after which a message in the queue expires",
+          "type": "number"
+        },
+        "expires": {
+          "title": "Expires",
+          "description": "Time in milliseconds the queue can stay unused before it is deleted",
+          "type": "number"
+        },
+        "deadLetterExchange": {
+          "title": "Dead Letter Exchange",
+          "description": "Exchange that receives the messages that are rejected, expired or dropped from the queue",
+          "type": "string"
+        },
+        "deadLetterRoutingKey": {
+          "title": "Dead Letter Routing Key",
+          "description": "Routing key the dead lettered messages are published with",
+          "type": "string"
+        },
+        "maxLength": {
+          "title": "Max Length",
+          "description": "Maximum number of messages in the queue",
+          "type": "number"
+        },
+        "maxPriority": {
+          "title": "Max Priority",
+          "description": "Maximum priority the messages of the queue can have",
+          "type": "number"
+        },
+        "arguments": {
+          "title": "Arguments",
+          "description": "Additional arguments of the queue declaration, such as x-queue-type, x-delivery-limit or x-overflow",
+          "$ref": "#/definitions/arguments",
+          "examples": [
+            {
+              "x-queue-type": "quorum",
+              "x-delivery-limit": 5
+            }
+          ]
+        },
+        "passive": {
+          "title": "Passive",
+          "description": "Only check that the queue exists instead of declaring it. Useful for a queue that is declared elsewhere with other settings",
+          "type": "boolean"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "prefetch": {
       "title": "Prefetch",
-      "description": "Number of messages to prefetch",
+      "description": "Number of unacknowledged messages the broker delivers at once",
       "type": "integer",
+      "minimum": 0,
       "examples": [1, 10]
+    },
+    "prefetchGlobal": {
+      "title": "Prefetch Global",
+      "description": "Apply the prefetch limit to the whole channel instead of each consumer",
+      "type": "boolean"
+    },
+    "consume": {
+      "title": "Consume",
+      "description": "Options of the consumer",
+      "type": "object",
+      "properties": {
+        "consumerTag": {
+          "title": "Consumer Tag",
+          "description": "Identifier of the consumer, generated by the broker if omitted",
+          "type": "string"
+        },
+        "exclusive": {
+          "title": "Exclusive",
+          "description": "Do not let other consumers consume from the queue",
+          "type": "boolean"
+        },
+        "priority": {
+          "title": "Priority",
+          "description": "Priority of the consumer",
+          "type": "integer"
+        },
+        "noLocal": {
+          "title": "No Local",
+          "description": "Do not deliver the messages published on the same connection",
+          "type": "boolean"
+        },
+        "arguments": {
+          "title": "Arguments",
+          "description": "Additional arguments of the consumer, such as x-stream-offset for streams",
+          "$ref": "#/definitions/arguments"
+        }
+      },
+      "additionalProperties": false
     },
     "noAck": {
       "title": "No Acknowledgement",
-      "description": "No acknowledgement for messages",
+      "description": "The broker considers a message acknowledged as soon as it is delivered. Turn it off to acknowledge messages from the function with channel.ack and channel.nack",
       "type": "boolean",
       "default": true
     }
