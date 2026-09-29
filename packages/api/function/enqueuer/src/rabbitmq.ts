@@ -9,10 +9,10 @@ import {Logger} from "@nestjs/common";
 export interface RabbitMQRetryPolicy {
   initialDelayMs: number;
   maxDelayMs: number;
-  // How long a subscription has to consume without failing before it is trusted again: the
-  // backoff and the error dedup both reset. Until then, a connection that is accepted and then
-  // immediately cancelled (a flapping queue, a policy repeatedly killing the consumer) keeps
-  // retrying at the last delay it earned instead of dropping back to initialDelayMs.
+  // How long a subscription has to consume without failing before its backoff resets. Until
+  // then, a connection that is accepted and then immediately cancelled (a flapping queue, a
+  // policy repeatedly killing the consumer) keeps retrying at the last delay it earned instead
+  // of dropping back to initialDelayMs.
   stableAfterMs: number;
 }
 
@@ -186,7 +186,6 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
         return;
       }
       subscription.attempt = 0;
-      subscription.lastError = undefined;
     }, this.retryPolicy.stableAfterMs);
     subscription.stabilizeTimer.unref?.();
   }
@@ -251,7 +250,8 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   }
 
   // Retries forever so a broker that is down for a while is picked up again without anyone
-  // touching the function. The function is only told when the failure changes, not on every retry.
+  // touching the function. Every retry reports its failure, even a repeat of the last one: the
+  // function log is the only place that shows the system is still down, not recovered quietly.
   private fail(subscription: Subscription, run: number, message: string) {
     if (subscription.cancelled || subscription.run !== run) {
       return;
@@ -261,10 +261,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     subscription.run++;
     this.release(subscription);
 
-    if (subscription.lastError !== message) {
-      subscription.lastError = message;
-      this.onErrorHandler(subscription.target, message);
-    }
+    this.onErrorHandler(subscription.target, message);
 
     const {initialDelayMs, maxDelayMs} = this.retryPolicy;
     const delay = Math.min(initialDelayMs * 2 ** subscription.attempt, maxDelayMs);
@@ -314,7 +311,6 @@ type Subscription = {
   cancelled: boolean;
   run: number;
   attempt: number;
-  lastError?: string;
   retryTimer?: NodeJS.Timeout;
   stabilizeTimer?: NodeJS.Timeout;
   connection?: amqp.ChannelModel;

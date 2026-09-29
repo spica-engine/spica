@@ -425,7 +425,7 @@ describe("rabbitmq enqueuer", () => {
       return (await channel.checkQueue(queue)).consumerCount;
     }
 
-    it("should keep retrying an unreachable broker but report the failure only once", async () => {
+    it("should keep retrying an unreachable broker and report every attempt", async () => {
       const unreachable = "amqp://127.0.0.1:1";
       const connect = jest.spyOn(amqp, "connect");
 
@@ -438,11 +438,15 @@ describe("rabbitmq enqueuer", () => {
 
       const attempts = connect.mock.calls.filter(([target]) => target === unreachable);
       expect(attempts.length).toBeGreaterThan(3);
-      expect(reportedErrors()).toHaveLength(1);
-      expect(reportedErrors()[0]).toMatch(/^Connection failed\./);
+      // Every attempt is reported, not just the first: silence should mean nothing is happening,
+      // not that the same failure is still recurring.
+      expect(reportedErrors()).toHaveLength(attempts.length);
+      expect(reportedErrors()).toEqual(
+        attempts.map(() => expect.stringMatching(/^Connection failed\./))
+      );
     });
 
-    it("should report a failed step once and not continue with a dead channel", async () => {
+    it("should report a failed step on every retry and not continue with a dead channel", async () => {
       await channel.assertExchange("conflicting-exchange", "direct", {durable: false});
 
       await rabbitmqEnqueuer.subscribe(noopTarget, {
@@ -453,8 +457,13 @@ describe("rabbitmq enqueuer", () => {
       });
       await delay(800);
 
-      expect(reportedErrors()).toHaveLength(1);
-      expect(reportedErrors()[0]).toContain("inequivalent arg 'type'");
+      // Every retry hits the same exchange assertion and stops there; none of them mention a
+      // later step (queue, binding, consume), which is what "not continuing with a dead
+      // channel" means in practice.
+      expect(reportedErrors().length).toBeGreaterThan(1);
+      expect(reportedErrors().every(message => message.includes("inequivalent arg 'type'"))).toBe(
+        true
+      );
     });
 
     it("should consume again when the broker cancels the consumer", async () => {
@@ -555,7 +564,6 @@ describe("rabbitmq enqueuer", () => {
       // Left alone past stableAfterMs, the now-healthy consumer earns back a clean backoff.
       await delay(1200);
       expect(subscription.attempt).toBe(0);
-      expect(subscription.lastError).toBeUndefined();
     });
 
     it("should not return the connect promise, matching the void signature the base class declares", () => {
@@ -739,7 +747,10 @@ describe("rabbitmq enqueuer", () => {
         noAck: true
       });
       await delay(200);
-      expect(reportedErrors()).toHaveLength(1);
+      // A failed checkQueue closes the channel, so amqplib's own close/error listener usually
+      // wins the race and reports before the attempt() wrapper's rejection does; either way,
+      // it keeps failing and retrying instead of treating a missing queue as attached.
+      expect(reportedErrors().length).toBeGreaterThan(0);
 
       // A queue with settings the trigger knows nothing about, declared by someone else.
       const declaring = await connection.createChannel();
@@ -750,11 +761,13 @@ describe("rabbitmq enqueuer", () => {
       await delay(600);
 
       expect(await consumerCount("passive-queue")).toBe(1);
-      expect(reportedErrors()).toHaveLength(1);
+      const errorsOnceAttached = reportedErrors().length;
 
       declaring.sendToQueue("passive-queue", Buffer.from("hello"));
       await delay(300);
       expect(received()).toEqual(["hello"]);
+      // Attaching successfully doesn't itself get reported as a failure.
+      expect(reportedErrors().length).toBe(errorsOnceAttached);
     });
 
     it("should only check a passive exchange", async () => {
