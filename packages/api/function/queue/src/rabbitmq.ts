@@ -5,8 +5,6 @@ import amqp from "amqplib";
 
 type Arguments = Record<string, any>;
 
-// Field names follow the options of the matching amqplib calls (connect, assertExchange,
-// assertQueue, bindQueue, bindExchange, prefetch and consume) so its documentation applies as is.
 export interface RabbitMQOptions {
   url: string;
   socketOptions?: Record<string, any>;
@@ -181,8 +179,6 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
   ) {
     const delivery = this.deliveries.get(request.id);
 
-    // Settling a delivery twice, or one the broker never expected an ack for (noAck), makes
-    // RabbitMQ close the whole channel, so it has to be rejected before reaching amqplib.
     if (!delivery) {
       return callback(
         {
@@ -220,7 +216,6 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
   }
 }
 
-// amqplib only reads fields.deliveryTag from the message it is asked to settle.
 function toMessage(delivery: RabbitMQDelivery) {
   return {fields: {deliveryTag: delivery.deliveryTag}} as unknown as amqp.Message;
 }

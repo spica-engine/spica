@@ -9,10 +9,6 @@ import {Logger} from "@nestjs/common";
 export interface RabbitMQRetryPolicy {
   initialDelayMs: number;
   maxDelayMs: number;
-  // How long a subscription has to consume without failing before its backoff resets. Until
-  // then, a connection that is accepted and then immediately cancelled (a flapping queue, a
-  // policy repeatedly killing the consumer) keeps retrying at the last delay it earned instead
-  // of dropping back to initialDelayMs.
   stableAfterMs: number;
 }
 
@@ -45,9 +41,6 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   subscribe(target: event.Target, options: RabbitMQOptions): void {
     const subscription: Subscription = {target, options, cancelled: false, run: 0, attempt: 0};
     this.subscriptions.push(subscription);
-    // subscribe() is declared void by the base class; connect() never rejects today (every
-    // failure inside it routes to fail()), but this keeps a future rejection from becoming an
-    // unhandled one instead of silently defeating the trigger.
     this.connect(subscription).catch(error =>
       this.logger.error(
         `Unexpected error while connecting ${this.describe(subscription)}: ${error.message}`
@@ -65,8 +58,6 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     matching.forEach(subscription => this.stop(subscription));
   }
 
-  // Closing the connections makes RabbitMQ requeue whatever is unacked, so another consumer
-  // picks it up.
   onEventsAreDrained(events: event.Event[]): Promise<any> {
     [...this.subscriptions].forEach(subscription => this.stop(subscription));
     return Promise.resolve();
@@ -208,7 +199,6 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
       return;
     }
 
-    // RabbitMQ signals a consumer cancelled on its side (e.g. the queue was deleted) with null.
     if (msg === null) {
       return this.fail(subscription, run, "The consumer was cancelled by the broker.");
     }
@@ -227,7 +217,6 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
       properties: JSON.stringify(msg.properties)
     });
 
-    // With noAck the broker already forgot the message, settling it would kill the channel.
     const delivery = options.noAck ? undefined : {channel, deliveryTag: msg.fields.deliveryTag};
 
     this.rabbitmqQueue.enqueue(ev.id, message, delivery);
@@ -249,15 +238,11 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     this.queue.enqueue(ev);
   }
 
-  // Retries forever so a broker that is down for a while is picked up again without anyone
-  // touching the function. Every retry reports its failure, even a repeat of the last one: the
-  // function log is the only place that shows the system is still down, not recovered quietly.
   private fail(subscription: Subscription, run: number, message: string) {
     if (subscription.cancelled || subscription.run !== run) {
       return;
     }
 
-    // Invalidates this run: its late callbacks (a close after an error, a pending await) are ignored.
     subscription.run++;
     this.release(subscription);
 

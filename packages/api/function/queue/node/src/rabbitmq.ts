@@ -83,8 +83,6 @@ export class RabbitMQMessage {
   }
 }
 
-// Mirrors amqplib's Channel settle methods, including their defaults. Each delivery is bound to
-// its own event, so the message argument is only there for signature parity and is not read.
 export class RabbitMQChannel {
   constructor(
     private eventId: string,
@@ -116,8 +114,6 @@ export class RabbitMQChannel {
   }
 }
 
-// JSON turns the Buffers amqplib puts in fields and properties (e.g. binary headers) into
-// {type: "Buffer", data: [...]}.
 export function reviveBuffers(_key: string, value: any) {
   const isSerializedBuffer =
     value?.type === "Buffer" && Array.isArray(value.data) && Object.keys(value).length === 2;
