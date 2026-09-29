@@ -402,7 +402,8 @@ describe("rabbitmq enqueuer", () => {
     beforeEach(async () => {
       rabbitmqEnqueuer = new RabbitMQEnqueuer(eventQueue as any, rabbitmqQueue as any, {
         initialDelayMs: 50,
-        maxDelayMs: 200
+        maxDelayMs: 200,
+        stableAfterMs: 1000
       });
       connection = await amqp.connect(url);
       channel = await connection.createChannel();
@@ -462,6 +463,7 @@ describe("rabbitmq enqueuer", () => {
         queue: {name: "cancelled-queue", durable: false},
         noAck: true
       });
+      await delay(300);
       expect(await consumerCount("cancelled-queue")).toBe(1);
 
       await channel.deleteQueue("cancelled-queue");
@@ -483,6 +485,7 @@ describe("rabbitmq enqueuer", () => {
         queue: {name: "connection-error-queue", durable: false},
         noAck: true
       });
+      await delay(300);
 
       const [subscription] = rabbitmqEnqueuer["subscriptions"];
       subscription.connection.emit("error", new Error("boom"));
@@ -518,6 +521,7 @@ describe("rabbitmq enqueuer", () => {
         queue: {name: "drained-queue", durable: false},
         noAck: true
       });
+      await delay(300);
       expect(await consumerCount("drained-queue")).toBe(1);
 
       await rabbitmqEnqueuer.onEventsAreDrained([]);
@@ -525,6 +529,43 @@ describe("rabbitmq enqueuer", () => {
 
       expect(rabbitmqEnqueuer["subscriptions"]).toHaveLength(0);
       expect(await consumerCount("drained-queue")).toBe(0);
+    });
+
+    it("should keep the backoff climbing when the broker cancels the consumer faster than it can prove itself stable", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "flapping-queue", durable: false},
+        noAck: true
+      });
+      await delay(300);
+
+      const [subscription] = rabbitmqEnqueuer["subscriptions"];
+      const attemptAfterEachCancel: number[] = [];
+
+      for (let i = 0; i < 4; i++) {
+        // Longer than maxDelayMs (200ms) so each cancel's reconnect finishes before the next
+        // one, but well inside stableAfterMs (1000ms), so it shouldn't count as stable either.
+        await channel.deleteQueue("flapping-queue");
+        await delay(300);
+        attemptAfterEachCancel.push(subscription.attempt);
+      }
+
+      expect(attemptAfterEachCancel).toEqual([1, 2, 3, 4]);
+
+      // Left alone past stableAfterMs, the now-healthy consumer earns back a clean backoff.
+      await delay(1200);
+      expect(subscription.attempt).toBe(0);
+      expect(subscription.lastError).toBeUndefined();
+    });
+
+    it("should not return the connect promise, matching the void signature the base class declares", () => {
+      const result = rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "void-return-queue", durable: false},
+        noAck: true
+      });
+
+      expect(result).toBeUndefined();
     });
   });
 
@@ -535,7 +576,8 @@ describe("rabbitmq enqueuer", () => {
     beforeEach(async () => {
       rabbitmqEnqueuer = new RabbitMQEnqueuer(eventQueue as any, rabbitmqQueue as any, {
         initialDelayMs: 50,
-        maxDelayMs: 200
+        maxDelayMs: 200,
+        stableAfterMs: 1000
       });
       connection = await amqp.connect(url);
       channel = await connection.createChannel();
@@ -642,6 +684,7 @@ describe("rabbitmq enqueuer", () => {
         queue: {name: "", durable: false},
         noAck: true
       });
+      await delay(300);
 
       channel.publish("multi-key-exchange", "info", Buffer.from("info"));
       channel.publish("multi-key-exchange", "error", Buffer.from("error"));
@@ -661,6 +704,7 @@ describe("rabbitmq enqueuer", () => {
         queue: {name: "", durable: false},
         noAck: true
       });
+      await delay(300);
 
       channel.publish("main-exchange", "main", Buffer.from("from main"));
       channel.publish("extra-exchange", "extra", Buffer.from("from extra"));
@@ -680,6 +724,7 @@ describe("rabbitmq enqueuer", () => {
         queue: {name: "", durable: false},
         noAck: true
       });
+      await delay(300);
 
       channel.publish("source-exchange", "", Buffer.from("through the source"));
       await delay(500);
@@ -724,6 +769,7 @@ describe("rabbitmq enqueuer", () => {
         queue: {name: "", durable: false},
         noAck: true
       });
+      await delay(300);
 
       channel.publish("existing-exchange", "key", Buffer.from("hello"));
       await delay(300);
@@ -739,6 +785,7 @@ describe("rabbitmq enqueuer", () => {
         consume: {consumerTag: "spica-consumer"},
         noAck: true
       });
+      await delay(300);
 
       channel.sendToQueue("tagged-queue", Buffer.from("hello"));
       await delay(300);
@@ -754,6 +801,7 @@ describe("rabbitmq enqueuer", () => {
         consume: {exclusive: true},
         noAck: true
       });
+      await delay(300);
 
       const other = await connection.createChannel();
       other.on("error", () => {});
@@ -768,6 +816,7 @@ describe("rabbitmq enqueuer", () => {
         prefetch: 1,
         noAck: false
       });
+      await delay(300);
 
       for (const body of ["1", "2", "3"]) {
         channel.sendToQueue("prefetched-queue", Buffer.from(body));
@@ -806,6 +855,7 @@ describe("rabbitmq enqueuer", () => {
           queue: {name: "nacked-queue", durable: true, deadLetterExchange: "nacked-dlx"},
           noAck: false
         });
+        await delay(300);
         channel.sendToQueue("nacked-queue", Buffer.from("poison"));
         await delay(600);
 
@@ -828,6 +878,7 @@ describe("rabbitmq enqueuer", () => {
           },
           noAck: false
         });
+        await delay(300);
         channel.sendToQueue("limited-queue", Buffer.from("poison"));
         await delay(1500);
 

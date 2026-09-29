@@ -9,6 +9,11 @@ import {Logger} from "@nestjs/common";
 export interface RabbitMQRetryPolicy {
   initialDelayMs: number;
   maxDelayMs: number;
+  // How long a subscription has to consume without failing before it is trusted again: the
+  // backoff and the error dedup both reset. Until then, a connection that is accepted and then
+  // immediately cancelled (a flapping queue, a policy repeatedly killing the consumer) keeps
+  // retrying at the last delay it earned instead of dropping back to initialDelayMs.
+  stableAfterMs: number;
 }
 
 export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
@@ -28,15 +33,26 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   constructor(
     private queue: EventQueue,
     private rabbitmqQueue: RabbitMQQueue,
-    private retryPolicy: RabbitMQRetryPolicy = {initialDelayMs: 1_000, maxDelayMs: 60_000}
+    private retryPolicy: RabbitMQRetryPolicy = {
+      initialDelayMs: 1_000,
+      maxDelayMs: 60_000,
+      stableAfterMs: 30_000
+    }
   ) {
     super();
   }
 
-  subscribe(target: event.Target, options: RabbitMQOptions) {
+  subscribe(target: event.Target, options: RabbitMQOptions): void {
     const subscription: Subscription = {target, options, cancelled: false, run: 0, attempt: 0};
     this.subscriptions.push(subscription);
-    return this.connect(subscription);
+    // subscribe() is declared void by the base class; connect() never rejects today (every
+    // failure inside it routes to fail()), but this keeps a future rejection from becoming an
+    // unhandled one instead of silently defeating the trigger.
+    this.connect(subscription).catch(error =>
+      this.logger.error(
+        `Unexpected error while connecting ${this.describe(subscription)}: ${error.message}`
+      )
+    );
   }
 
   unsubscribe(target: event.Target): void {
@@ -58,7 +74,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
 
   private stop(subscription: Subscription) {
     subscription.cancelled = true;
-    clearTimeout(subscription.timer);
+    clearTimeout(subscription.retryTimer);
     this.release(subscription);
     this.subscriptions.splice(this.subscriptions.indexOf(subscription), 1);
   }
@@ -105,8 +121,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
       if (isStale()) {
         return;
       }
-      subscription.attempt = 0;
-      subscription.lastError = undefined;
+      this.armStabilization(subscription, run);
     } catch (error) {
       this.fail(subscription, run, error.message);
     }
@@ -162,6 +177,18 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
         noAck: options.noAck
       })
     );
+  }
+
+  private armStabilization(subscription: Subscription, run: number) {
+    clearTimeout(subscription.stabilizeTimer);
+    subscription.stabilizeTimer = setTimeout(() => {
+      if (subscription.cancelled || subscription.run !== run) {
+        return;
+      }
+      subscription.attempt = 0;
+      subscription.lastError = undefined;
+    }, this.retryPolicy.stableAfterMs);
+    subscription.stabilizeTimer.unref?.();
   }
 
   private async attempt<T>(failureMessage: string, action: () => Promise<T>): Promise<T> {
@@ -243,14 +270,15 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     const delay = Math.min(initialDelayMs * 2 ** subscription.attempt, maxDelayMs);
     subscription.attempt++;
 
-    subscription.timer = setTimeout(() => this.connect(subscription), delay);
-    subscription.timer.unref?.();
+    subscription.retryTimer = setTimeout(() => this.connect(subscription), delay);
+    subscription.retryTimer.unref?.();
   }
 
   private release(subscription: Subscription) {
     const {channel, connection} = subscription;
     subscription.channel = undefined;
     subscription.connection = undefined;
+    clearTimeout(subscription.stabilizeTimer);
 
     if (channel) {
       this.rabbitmqQueue.purge(channel);
@@ -287,7 +315,8 @@ type Subscription = {
   run: number;
   attempt: number;
   lastError?: string;
-  timer?: NodeJS.Timeout;
+  retryTimer?: NodeJS.Timeout;
+  stabilizeTimer?: NodeJS.Timeout;
   connection?: amqp.ChannelModel;
   channel?: amqp.Channel;
 };
