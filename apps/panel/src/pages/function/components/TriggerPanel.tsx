@@ -3,12 +3,17 @@
  * email: rio.kenan@gmail.com
  */
 
-import {memo, useCallback} from "react";
+import {memo, useCallback, useEffect, useRef, useState} from "react";
 import {useCopyToClipboard} from "../../../hooks/useCopyToClipboard";
-import {Button, FlexElement, Icon, Input, Select, Switch} from "oziko-ui-kit";
-import PanelAccordion, {
-  PanelAccordionItem
-} from "../../../components/molecules/panel-accordion/PanelAccordion";
+import {
+  Button,
+  FlexElement,
+  Icon,
+  Input,
+  Select,
+  Switch
+} from "oziko-ui-kit";
+import PanelAccordion, {PanelAccordionItem} from "../../../components/molecules/panel-accordion/PanelAccordion";
 import JsonFieldInput from "../../../components/molecules/json-field-input/JsonFieldInput";
 import type {FunctionTrigger, Enqueuer} from "../../../store/api/functionApi";
 import styles from "./TriggerPanel.module.scss";
@@ -20,10 +25,6 @@ type TriggerPanelProps = {
   onChange: (triggers: FunctionTrigger[]) => void;
 };
 
-// Types the panel knows how to build dedicated fields for, in the order they should be offered.
-// Anything the backend reports that isn't in here (a future enqueuer, or one the panel hasn't
-// caught up with yet, e.g. gRPC) still gets listed and gets a raw JSON options editor as a
-// fallback, instead of being hidden — see the DEFAULT case in the trigger body below.
 const KNOWN_TRIGGER_TYPES = [
   "http",
   "firehose",
@@ -54,6 +55,49 @@ function removeBindingAt<T>(list: T[] | undefined, bindingIndex: number): T[] {
 function updateBindingAt<T>(list: T[] | undefined, bindingIndex: number, patch: Partial<T>): T[] {
   return (list ?? []).map((binding, i) => (i === bindingIndex ? {...binding, ...patch} : binding));
 }
+
+function deriveRoutingKeys(raw: string): string | string[] {
+  const list = raw
+    .split(",")
+    .map(p => p.trim())
+    .filter(Boolean);
+  return list.length > 1 ? list : raw;
+}
+
+function routingKeysToText(value: string | string[] | undefined): string {
+  return Array.isArray(value) ? value.join(", ") : (value ?? "");
+}
+
+type RoutingKeysInputProps = {
+  value: string | string[] | undefined;
+  onChange: (value: string | string[]) => void;
+};
+
+const RoutingKeysInput = ({value, onChange}: RoutingKeysInputProps) => {
+  const [text, setText] = useState(() => routingKeysToText(value));
+  const lastEmitted = useRef(value);
+
+  useEffect(() => {
+    if (value === lastEmitted.current) return;
+    lastEmitted.current = value;
+    setText(routingKeysToText(value));
+  }, [value]);
+
+  return (
+    <Input
+      dimensionX="fill"
+      placeholder="orders.* or a comma-separated list"
+      value={text}
+      onChange={e => {
+        const raw = e.target.value;
+        setText(raw);
+        const next = deriveRoutingKeys(raw);
+        lastEmitted.current = next;
+        onChange(next);
+      }}
+    />
+  );
+};
 
 const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelProps) => {
   const handleAddTrigger = useCallback(() => {
@@ -104,8 +148,6 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
     [triggers, onChange]
   );
 
-  // Sets a field one level down (options.queue.durable, options.consume.priority, ...) without
-  // disturbing the rest of that section.
   const handleSectionFieldChange = useCallback(
     (index: number, section: string, field: string, value: any) => {
       onChange(
@@ -119,8 +161,6 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
     [triggers, onChange]
   );
 
-  // For a type the panel has no dedicated fields for: the JSON editor owns the whole
-  // options object, not just one key of it.
   const handleReplaceOptions = useCallback(
     (index: number, options: Record<string, any>) => {
       onChange(triggers.map((t, i) => (i === index ? {...t, options} : t)));
@@ -175,8 +215,6 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
     [triggers, onChange]
   );
 
-  // Shared by the exchange toggle and the two binding lists: enabling adds a starter shape,
-  // disabling drops the key entirely rather than leaving an empty object/array behind.
   const handleToggleSection = useCallback(
     (index: number, section: string, enabled: boolean, starter: any) => {
       onChange(
@@ -259,9 +297,6 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
 
   const {copied: urlCopied, copy: copyUrl} = useCopyToClipboard();
 
-  // The dropdown lists whatever the backend actually registered, so a type the panel has no
-  // dedicated UI for (a custom enqueuer, gRPC today) is still selectable — it falls back to a
-  // raw JSON options editor instead of vanishing. See the DEFAULT branch below.
   const typeOptions = enqueuers
     .map(e => e.description.name)
     .sort((a, b) => {
@@ -290,7 +325,7 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
       const viewEnum = prop.viewEnum as string[] | undefined;
       return prop.enum.map((val: string, i: number) => ({
         label: viewEnum?.[i] ?? val,
-        value: val
+        value: val,
       }));
     },
     [enqueuers]
@@ -300,7 +335,7 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
     const handlerOptions = handlers.map(h => ({
       label: h,
       value: h,
-      disabled: triggers.some((t, ti) => ti !== index && t.handler === h)
+      disabled: triggers.some((t, ti) => ti !== index && t.handler === h),
     }));
 
     return (
@@ -328,14 +363,7 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
               aria-label="Delete trigger"
               onClick={() => handleDeleteTrigger(index)}
             >
-              <svg
-                width="11"
-                height="11"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
+              <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
               </svg>
@@ -343,12 +371,7 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
           </>
         }
       >
-        <FlexElement
-          direction="vertical"
-          dimensionX="fill"
-          gap={12}
-          className={styles.triggerItemContent}
-        >
+        <FlexElement direction="vertical" dimensionX="fill" gap={12} className={styles.triggerItemContent}>
           <div className={styles.fieldGroup}>
             <span className={styles.fieldLabel}>Handler</span>
             <Select
@@ -816,27 +839,9 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
                       </div>
                       <div className={styles.fieldGroup}>
                         <span className={styles.fieldLabel}>Routing Key(s)</span>
-                        <Input
-                          dimensionX="fill"
-                          placeholder="orders.* or a comma-separated list"
-                          value={
-                            Array.isArray(exchange.pattern)
-                              ? exchange.pattern.join(", ")
-                              : (exchange.pattern ?? "")
-                          }
-                          onChange={e => {
-                            const raw = e.target.value;
-                            const list = raw
-                              .split(",")
-                              .map(p => p.trim())
-                              .filter(Boolean);
-                            handleSectionFieldChange(
-                              index,
-                              "exchange",
-                              "pattern",
-                              list.length > 1 ? list : raw
-                            );
-                          }}
+                        <RoutingKeysInput
+                          value={exchange.pattern}
+                          onChange={value => handleSectionFieldChange(index, "exchange", "pattern", value)}
                         />
                       </div>
                       <div className={styles.togglesGrid}>
@@ -1178,15 +1183,12 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
       ) : (
         <PanelAccordion className={styles.triggerList}>{triggerItems}</PanelAccordion>
       )}
-      <button type="button" onClick={handleAddTrigger} className={styles.addTriggerButton}>
-        <svg
-          width="11"
-          height="11"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        >
+      <button
+        type="button"
+        onClick={handleAddTrigger}
+        className={styles.addTriggerButton}
+      >
+        <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
           <line x1="12" y1="5" x2="12" y2="19" />
           <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
@@ -1197,3 +1199,4 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
 };
 
 export default memo(TriggerPanel);
+
