@@ -33,7 +33,7 @@ export interface SpicaFunction {
 
 export interface FunctionTrigger {
   handler?: string;
-  type: 'http' | 'firehose' | 'database' | 'schedule' | 'system' | 'bucket';
+  type: 'http' | 'firehose' | 'database' | 'schedule' | 'system' | 'bucket' | 'rabbitmq' | 'grpc' | (string & {});
   active?: boolean;
   options: Record<string, any>;
 }
