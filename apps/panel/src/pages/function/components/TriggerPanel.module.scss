@@ -330,3 +330,69 @@
   height: 44px;
   font-size: var(--font-size-md);
 }
+
+// ─── RabbitMQ trigger sections ────────────────────────────────────────────────
+
+.sectionTitle {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  opacity: 0.75;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+  width: 100%;
+}
+
+.fieldHint {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  opacity: 0.7;
+  margin-top: -4px;
+}
+
+.togglesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+  width: 100%;
+}
+
+.bindingRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+
+  // Each Input grows evenly; the trailing remove button stays a fixed size.
+  > *:not(button) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  > button {
+    flex-shrink: 0;
+  }
+}
+
+.addRowButton {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1.5px dashed var(--color-border, rgba(0, 0, 0, 0.15));
+  background: transparent;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: var(--color-accent, var(--color-primary, #6366f1));
+    color: var(--color-accent, var(--color-primary, #6366f1));
+  }
+}
