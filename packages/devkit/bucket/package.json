@@ -2,6 +2,11 @@
   "name": "@spica-devkit/bucket",
   "license": "AGPLv3",
   "version": "0.0.0-PLACEHOLDER",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spica-engine/spica.git",
+    "directory": "packages/devkit/bucket"
+  },
   "description": "Bucket package for Spica.",
   "author": "spica",
   "keywords": [

@@ -115,11 +115,11 @@ Use `/release <version>` (`.claude/commands/release.md`) to execute a full relea
 6. Verify artifacts are live: Docker Hub tags, npm versions, Helm chart index
 7. If any job fails, inspect with `gh run view <run_id> --repo spica-engine/spica --log-failed`
 
-### GitHub secrets required
+### GitHub credentials required
 
-- `NPM_TOKEN` — publish token for npmjs.com with `package:write` on all `@spica/*` packages
+- npm — no secret. Each of the 8 packages has an npm trusted publisher for `spica-engine/spica`, workflow `release.yml`, environment `release` (OIDC).
+- GCS — no secret. `vars.GCP_PROJECT_ID` + `vars.GCP_WORKLOAD_IDENTITY_PROVIDER` point at a Workload Identity Federation provider that trusts the `release` environment (OIDC).
 - `DOCKERHUB_TOKEN` + `DOCKERHUB_USERNAME` (var) — Docker Hub credentials for `spicaengine` org
-- `GCP_CREDENTIALS` — GCP service account JSON for Helm chart sync to GCS
 
 ## Comments
 

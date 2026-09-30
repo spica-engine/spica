@@ -2,6 +2,11 @@
   "name": "@spica-devkit/sync",
   "license": "AGPLv3",
   "version": "0.0.0-PLACEHOLDER",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spica-engine/spica.git",
+    "directory": "packages/devkit/sync"
+  },
   "description": "Plan and apply Spica resource files against a Spica instance from code.",
   "author": "spica",
   "keywords": [
