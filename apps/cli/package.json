@@ -1,6 +1,11 @@
 {
   "name": "@spica/cli",
   "version": "0.0.0-PLACEHOLDER",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spica-engine/spica.git",
+    "directory": "apps/cli"
+  },
   "type": "module",
   "exports": {
     ".": {

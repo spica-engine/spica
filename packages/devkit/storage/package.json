@@ -2,6 +2,11 @@
   "name": "@spica-devkit/storage",
   "license": "AGPLv3",
   "version": "0.0.0-PLACEHOLDER",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spica-engine/spica.git",
+    "directory": "packages/devkit/storage"
+  },
   "description": "Storage package for Spica.",
   "author": "spica",
   "keywords": [

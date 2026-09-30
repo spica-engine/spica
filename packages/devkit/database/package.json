@@ -2,6 +2,11 @@
   "name": "@spica-devkit/database",
   "license": "AGPLv3",
   "version": "0.0.0-PLACEHOLDER",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spica-engine/spica.git",
+    "directory": "packages/devkit/database"
+  },
   "description": "Database package for Spica functions.",
   "author": "spica",
   "keywords": [

@@ -2,6 +2,11 @@
   "name": "@spica-devkit/testing",
   "license": "AGPLv3",
   "version": "0.0.0-PLACEHOLDER",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spica-engine/spica.git",
+    "directory": "packages/devkit/testing"
+  },
   "description": "Spin up disposable Spica instances to run e2e tests against your resources.",
   "author": "spica",
   "keywords": [

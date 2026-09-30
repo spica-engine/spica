@@ -25,7 +25,7 @@ rm -rf $OUT_DIR
 mkdir -p $OUT_DIR
 
 # Get current index.yaml from the repository
-gsutil cp "$GCS_BUCKET/index.yaml" "$OUT_DIR/index.yaml"
+gcloud storage cp "$GCS_BUCKET/index.yaml" "$OUT_DIR/index.yaml"
 
 # Substitute placeholder with current version
 cp -R charts/* charts-${VERSION}
@@ -38,4 +38,4 @@ helm package --destination $OUT_DIR ./charts-${VERSION}/spica
 helm repo index --url $REPOSITORY_URL --merge "$OUT_DIR/index.yaml" $OUT_DIR
 
 # Recursively sync output directory to gcs bucket
-gsutil -m rsync $OUT_DIR $GCS_BUCKET
+gcloud storage rsync $OUT_DIR $GCS_BUCKET

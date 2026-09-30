@@ -9,6 +9,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 jobs:
   docker-images:
     name: Release Docker image (${{ matrix.project }})
@@ -92,6 +95,10 @@ jobs:
   npm-packages:
     name: Release npm package (${{ matrix.target }})
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       matrix:
         target:
@@ -116,7 +123,9 @@ jobs:
           node-version: 22.x
           cache: yarn
           cache-dependency-path: yarn.lock
-          registry-url: https://registry.npmjs.org/
+
+      - name: Install npm with trusted publishing support
+        run: npm install -g npm@^11.5.1
 
       - name: Restore Node Modules Cache
         uses: actions/cache@v4
@@ -143,12 +152,14 @@ jobs:
 
       - name: Release npm packages
         run: yarn run publish:${{ matrix.target }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   helm-charts:
     name: Release Helm charts
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout
@@ -164,13 +175,14 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4.2.0
 
-      - name: Setup GCP
-        uses: "google-github-actions/auth@v2"
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v3
         with:
-          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
 
-      - name: Login to GCP
-        run: gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Release Helm charts
         run: ./scripts/sync_charts.sh
