@@ -13,13 +13,13 @@ describe("start", () => {
         order.push(label);
       });
 
-    jest.spyOn(DockerOrchestrator.prototype, "ensureImages").mockImplementation(track("ensureImages"));
     jest
-      .spyOn(DockerOrchestrator.prototype, "createNetwork")
-      .mockImplementation(async () => {
-        order.push("createNetwork");
-        return {} as any;
-      });
+      .spyOn(DockerOrchestrator.prototype, "ensureImages")
+      .mockImplementation(track("ensureImages"));
+    jest.spyOn(DockerOrchestrator.prototype, "createNetwork").mockImplementation(async () => {
+      order.push("createNetwork");
+      return {} as any;
+    });
     jest.spyOn(DockerOrchestrator.prototype, "startMongo").mockImplementation(track("startMongo"));
     jest
       .spyOn(DockerOrchestrator.prototype, "initReplicaSet")

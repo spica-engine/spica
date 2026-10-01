@@ -124,9 +124,9 @@ describe("DockerOrchestrator", () => {
 
       // detected shell is used (mongosh), and rs.status() was polled
       expect(docker.execCalls.some((c: any) => (c.Cmd || []).includes("mongosh"))).toBe(true);
-      expect(
-        docker.execCalls.some((c: any) => (c.Cmd || []).join(" ").includes("rs.status"))
-      ).toBe(true);
+      expect(docker.execCalls.some((c: any) => (c.Cmd || []).join(" ").includes("rs.status"))).toBe(
+        true
+      );
     });
 
     it("rejects when initiation never returns ok", async () => {
