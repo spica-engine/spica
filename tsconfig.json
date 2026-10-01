@@ -410,6 +410,9 @@
       "path": "./packages/devkit/database"
     },
     {
+      "path": "./packages/devkit/postgres"
+    },
+    {
       "path": "./packages/devkit/storage"
     },
     {
@@ -434,13 +437,10 @@
       "path": "./packages/database/driver"
     },
     {
-      "path": "./packages/database/postgres"
-    },
-    {
       "path": "./packages/database/contract-test"
     },
     {
-      "path": "./packages/devkit/postgres"
+      "path": "./packages/database/postgres"
     }
   ]
 }
