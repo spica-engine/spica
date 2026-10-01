@@ -38,6 +38,20 @@ export function JSONPR(reviver?: (key: string, value: any) => any): PipeTransfor
   };
 }
 
+/**
+ * Tells a Mongo JSON filter from an expression, for the `OR(...)` in front of a `filter` query parameter.
+ *
+ * A leading `{` is the whole test: the expression language has no literal that starts with one, so the
+ * two surfaces cannot collide. It lives here rather than next to the bucket filters because nine
+ * management endpoints use it now (K-13), and only one of them is a bucket endpoint.
+ */
+export function isJSONFilter(value: any): boolean {
+  if (typeof value == "string" && value.trim().length) {
+    return value.trim()[0] == "{";
+  }
+  return false;
+}
+
 export function EXPRESSION(parse: (value: string) => any): PipeTransform<string, string> {
   return {
     transform: value => {
