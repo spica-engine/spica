@@ -64,10 +64,18 @@ async function list() {
       }
     }
 
-    const databaseContainers = containers.filter(container => container.Image.startsWith("mongo"));
+    /**
+     * The database container can be one of two images (K-5): `project start --database=postgres`
+     * creates a single `postgres` container. Looking only for `mongo` meant **never seeing** the
+     * database container in a PostgreSQL project — so a database that had gone down would look healthy.
+     */
+    const isDatabaseImage = (image: string) =>
+      image.startsWith("mongo") || image.startsWith("postgres");
+
+    const databaseContainers = containers.filter(container => isDatabaseImage(container.Image));
 
     const runningDatabaseContainers = containers.filter(
-      container => container.Image.startsWith("mongo") && container.State == "running"
+      container => isDatabaseImage(container.Image) && container.State == "running"
     );
 
     if (runningDatabaseContainers.length != databaseContainers.length) {
