@@ -1,10 +1,10 @@
-import {CreateIndexesOptions} from "@spica-server/database";
+import {CreateIndexOptions} from "@spica-server/database-driver";
 
 export interface IndexDefinition {
   definition: {
     [key: string]: any;
   };
-  options?: CreateIndexesOptions;
+  options?: CreateIndexOptions;
   name: string;
 }
 

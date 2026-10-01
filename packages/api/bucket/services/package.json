@@ -14,6 +14,7 @@
     "@spica-server/core-patch": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
+    "@spica-server/database-driver": "workspace:*",
     "@spica-server/interface-bucket": "workspace:*",
     "@spica-server/interface-core": "workspace:*",
     "@spica-server/preference-services": "workspace:*",
