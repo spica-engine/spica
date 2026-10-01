@@ -58,7 +58,9 @@ describe("resourceInstaller.install", () => {
 
   it("aborts on the first failure when abortOnError is set", async () => {
     const http = fakeHttp(() => {});
-    await expect(resourceInstaller.install(http, root, {abortOnError: true})).rejects.toThrow(/bad/i);
+    await expect(resourceInstaller.install(http, root, {abortOnError: true})).rejects.toThrow(
+      /bad/i
+    );
   });
 });
 
@@ -75,7 +77,10 @@ function makeSelectionProject(): string {
 
   const fnDir = path.join(root, "function", "seeder");
   fs.mkdirSync(fnDir, {recursive: true});
-  fs.writeFileSync(path.join(fnDir, "schema.yaml"), `name: Seeder\nlanguage: javascript\ntriggers: {}\n`);
+  fs.writeFileSync(
+    path.join(fnDir, "schema.yaml"),
+    `name: Seeder\nlanguage: javascript\ntriggers: {}\n`
+  );
   fs.writeFileSync(path.join(fnDir, "index.mjs"), "export default () => {};\n");
   fs.writeFileSync(path.join(fnDir, "package.json"), '{"name":"seeder","dependencies":{}}\n');
   return root;
