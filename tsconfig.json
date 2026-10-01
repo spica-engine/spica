@@ -435,6 +435,9 @@
     },
     {
       "path": "./packages/database/postgres"
+    },
+    {
+      "path": "./packages/database/contract-test"
     }
   ]
 }
