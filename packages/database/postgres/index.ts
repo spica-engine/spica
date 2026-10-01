@@ -4,3 +4,5 @@ export * from "./src/schema/codec.js";
 export * from "./src/schema/inspect.js";
 export * from "./src/schema/system-tables.js";
 export * from "./src/compiler/expression-to-sql.js";
+export * from "./src/compiler/crud-filter-to-sql.js";
+export * from "./src/compiler/crud-update-to-sql.js";
