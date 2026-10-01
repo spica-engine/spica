@@ -31,12 +31,9 @@ export function filterReviver(k: string, v: string, hashSecret?: string) {
   return v;
 }
 
-export function isJSONFilter(value: any) {
-  if (typeof value == "string" && value.trim().length) {
-    return value.trim()[0] == "{";
-  }
-  return false;
-}
+// Moved to `@spica-server/core` when the management endpoints started using it too; re-exported
+// so the existing import path keeps working.
+export {isJSONFilter} from "@spica-server/core";
 
 export const constructFilterValues = async (
   filter: object,

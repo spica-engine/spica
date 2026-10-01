@@ -13,7 +13,7 @@
       "path": "../preference"
     },
     {
-      "path": "../../database"
+      "path": "../../database/driver"
     }
   ]
 }

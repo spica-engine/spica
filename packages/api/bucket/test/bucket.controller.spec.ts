@@ -913,4 +913,77 @@ describe("BucketController", () => {
       ]);
     });
   });
+
+  describe("property order", () => {
+    // The authored key order is the field order the panel renders. `jsonb` normalizes object keys by
+    // length then bytes, so every fixture below is authored in an order those rules would not produce:
+    // "m" would come first and "alpha" before "zebra" if the storage layer got to decide.
+    const outOfOrderProperties = () => ({
+      zebra: {type: "string", options: {}},
+      alpha: {type: "string", options: {}},
+      m: {type: "number", options: {}}
+    });
+
+    it("should keep the authored order of properties through a full update", async () => {
+      const {body: created} = await req.post("/bucket", {
+        title: "Ordered",
+        description: "Ordered bucket",
+        properties: outOfOrderProperties()
+      });
+
+      expect(Object.keys(created.properties)).toEqual(["zebra", "alpha", "m"]);
+
+      await req.put(`/bucket/${created._id}`, {
+        ...created,
+        title: "Ordered again",
+        properties: {...outOfOrderProperties(), nine: {type: "string", options: {}}}
+      });
+
+      const {body: updated} = await req.get(`/bucket/${created._id}`, {});
+      expect(Object.keys(updated.properties)).toEqual(["zebra", "alpha", "m", "nine"]);
+    });
+
+    it("should keep the authored order of the remaining properties when a relation is dropped", async () => {
+      const {body: target} = await req.post("/bucket", {
+        title: "Target",
+        description: "Target bucket",
+        properties: {name: {type: "string", options: {}}}
+      });
+
+      const {body: owner} = await req.post("/bucket", {
+        title: "Owner",
+        description: "Owner bucket",
+        properties: {
+          ...outOfOrderProperties(),
+          target: {
+            type: "relation",
+            bucketId: target._id,
+            relationType: "onetoone",
+            options: {}
+          },
+          nested: {
+            type: "object",
+            options: {},
+            properties: {
+              zulu: {type: "string", options: {}},
+              target: {
+                type: "relation",
+                bucketId: target._id,
+                relationType: "onetoone",
+                options: {}
+              },
+              b: {type: "string", options: {}}
+            }
+          }
+        }
+      });
+
+      await req.delete(`/bucket/${target._id}`);
+
+      const {body: afterDrop} = await req.get(`/bucket/${owner._id}`, {});
+
+      expect(Object.keys(afterDrop.properties)).toEqual(["zebra", "alpha", "m", "nested"]);
+      expect(Object.keys(afterDrop.properties.nested.properties)).toEqual(["zulu", "b"]);
+    });
+  });
 });

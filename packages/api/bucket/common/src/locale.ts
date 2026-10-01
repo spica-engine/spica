@@ -90,40 +90,19 @@ export function provideLanguageFinalizer(
       return Promise.resolve();
     }
 
-    const buckets = await bucketService
-      .aggregate<Bucket>([
-        {
-          $project: {
-            properties: {
-              $objectToArray: "$properties"
-            }
-          }
-        },
-        {
-          $match: {
-            "properties.v.options.translate": true
-          }
-        },
-        {
-          $project: {
-            properties: {
-              $filter: {
-                input: "$properties",
-                as: "property",
-                cond: {$eq: ["$$property.v.options.translate", true]}
-              }
-            }
-          }
-        },
-        {
-          $project: {
-            properties: {
-              $arrayToObject: "$properties"
-            }
-          }
-        }
-      ])
-      .toArray();
+    /**
+     * The buckets that have a translatable property — filtered **in the application layer**.
+     *
+     * An aggregation used to run with a `$objectToArray` + `$filter` + `$arrayToObject` chain. That chain's
+     * only job was asking the database "is there anything in the properties map with `options.translate`";
+     * the schema is already in memory and `hasTranslatedProperties` sits right above. The right move is to
+     * **remove** a Mongo-specific escape hatch rather than move it into a finite compiler (
+     * a gradual move to `read()`).
+     *
+     * The number of buckets is in the dozens and they are cached anyway; this is faster than the
+     * `$objectToArray` gymnastics too.
+     */
+    const buckets = (await bucketService.find()).filter(hasTranslatedProperties);
 
     const promises = [];
 
@@ -134,10 +113,11 @@ export function provideLanguageFinalizer(
 
       const targets = {};
 
-      for (const fieldName of Object.keys(bucket.properties)) {
+      // Translatable fields only: the aggregation used to narrow `properties` down the same way.
+      for (const [fieldName, definition] of Object.entries(bucket.properties)) {
+        if (!definition.options?.translate) continue;
         for (const language of deletedLanguages) {
-          const target = fieldName + "." + language;
-          targets[target] = "";
+          targets[`${fieldName}.${language}`] = "";
         }
       }
 
