@@ -1,7 +1,7 @@
 import pg from "pg";
 
 /**
- * **Raw PostgreSQL** access for functions — the PG counterpart of `@spica-devkit/database` (K-11).
+ * **Raw PostgreSQL** access for functions — the PG counterpart of `@spica-devkit/database`.
  *
  * There is **no** neutral intermediate layer and that is deliberate: portability is already provided by
  * the HTTP devkits (`@spica-devkit/bucket` and friends), and the only reason to drop to a raw devkit is
@@ -13,7 +13,7 @@ import pg from "pg";
  * startup (`compileFunctionGrants`); the role itself is created by the provisioning layer.
  *
  * When the role is not configured this module **refuses explicitly**. Handing over the API's fully
- * privileged connection would be easy, but it is exactly what K-11 was written to prevent: function code
+ * privileged connection would be easy, but it is exactly what the privilege boundary prevents: function code
  * would become able to drop bucket tables.
  */
 

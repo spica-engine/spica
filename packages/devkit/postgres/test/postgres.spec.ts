@@ -3,7 +3,7 @@ import {APP_SCHEMA, close, database} from "../src/postgres";
 
 /**
  * These tests **open no connection**: the subject is under what conditions a connection is given at all
- * (K-11). The real query path is covered by the driver's contract tests and by `compileFunctionGrants`'s
+ *. The real query path is covered by the driver's contract tests and by `compileFunctionGrants`'s
  * own tests.
  */
 describe("@spica-devkit/postgres — the conditions of a connection", () => {
@@ -22,7 +22,7 @@ describe("@spica-devkit/postgres — the conditions of a connection", () => {
 
   /**
    * The most important claim: when the role is absent the API's fully privileged connection is **not**
-   * handed over, an error is raised. K-11 was written to prevent exactly that — raw SQL plus full
+   * handed over, an error is raised. The privilege boundary prevents exactly that — raw SQL plus full
    * privileges can drop bucket tables.
    */
   it("refuses when the function role is not configured", async () => {
