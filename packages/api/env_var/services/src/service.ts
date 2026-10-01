@@ -22,7 +22,7 @@ export class EnvVarService extends BaseCollection<EnvVar>("env_var") {
     private readonly changeDispatcher: EnvVarChangeDispatcher
   ) {
     super(db, {
-      afterInit: () => this._coll.createIndex({key: 1}, {unique: true})
+      afterInit: () => this.createIndex({key: 1}, {unique: true})
     });
   }
 
