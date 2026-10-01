@@ -4,10 +4,19 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": ["src/**/*.ts", "mongo/**/*.ts", "postgres-adapter/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../interface/bucket"
+    },
+    {
+      "path": "postgres"
+    },
+    {
       "path": "../interface/database"
+    },
+    {
+      "path": "driver"
     }
   ]
 }
