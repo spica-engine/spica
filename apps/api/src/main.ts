@@ -2,13 +2,18 @@ import {Logger, Module} from "@nestjs/common";
 import {NestFactory} from "@nestjs/core";
 import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
-import {Middlewares} from "@spica-server/core";
+import {DriverCapabilityExceptionFilter, Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core-schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {WsAdapter} from "@spica-server/core-websocket";
 import {DashboardModule} from "@spica-server/dashboard";
-import {DatabaseModule} from "@spica-server/database";
+import {
+  backendFromUri,
+  DatabaseModule,
+  DatabaseService,
+  guardInstance
+} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
 import {BuilderType} from "@spica-server/interface-function-builder";
 import {PassportModule} from "@spica-server/passport";
@@ -103,7 +108,8 @@ const args = yargsInstance
   .options({
     "database-uri": {
       string: true,
-      description: "MongoDB connection url."
+      description:
+        "Database connection url. Scheme selects the backend: mongodb:// or mongodb+srv:// for MongoDB, postgres:// or postgresql:// for PostgreSQL."
     },
     "database-name": {
       string: true,
@@ -112,7 +118,29 @@ const args = yargsInstance
     "database-replica-set": {
       string: true,
       alias: ["replica-set"],
-      description: "Name of the replica set."
+      description:
+        "Name of the replica set. MongoDB only; passing it with a postgres:// uri is an error."
+    },
+    "instance-id": {
+      string: true,
+      description:
+        "Identity of this Spica instance, supplied by the provisioning layer (HQ id or Helm release name). When given, startup refuses to run against a database that belongs to a different instance or was initialized on a different backend. Omitted means the guard is off."
+    },
+    "database-initialize": {
+      boolean: true,
+      default: false,
+      description:
+        "Allow starting against an empty database. Given only on the first install of a provisioned instance; without it an empty database is treated as a misconfigured --database-uri."
+    },
+    "database-listen-uri": {
+      string: true,
+      description:
+        "PostgreSQL only. Direct connection used for LISTEN, bypassing a connection pooler. LISTEN is session-bound so it cannot come from the pool; without it change capture falls back to polling and stays correct."
+    },
+    "database-functions-uri": {
+      string: true,
+      description:
+        "PostgreSQL only. Connection given to user functions via @spica-devkit/postgres. Its role is granted DML on bucket data, read-only on Spica's own tables and full rights on the 'app' schema. The role must already exist: Spica grants, it does not create roles. Without it @spica-devkit/postgres refuses to connect rather than handing over the API's own full-rights connection."
     },
     "database-pool-size": {
       number: true,
@@ -664,8 +692,16 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     default: ".*"
   })
   .middleware(args => {
-    const username = process.env.MONGODB_USERNAME;
-    const password = process.env.MONGODB_PASSWORD;
+    /**
+     * The credential env var names are **neutral**; `MONGODB_*` stays as a backwards-compatible alias.
+     *
+     * The injection itself is already schema-independent (`new URL()` works for `postgres://` too), but
+     * the `MONGODB_` name was lying in a PostgreSQL installation: the Helm chart would have had to pass
+     * the PG password as `MONGODB_PASSWORD`. The old names keep being read so that existing
+     * installations are not broken.
+     */
+    const username = process.env.DATABASE_USERNAME || process.env.MONGODB_USERNAME;
+    const password = process.env.DATABASE_PASSWORD || process.env.MONGODB_PASSWORD;
 
     if (username && password) {
       const uri = new URL(args["database-uri"]);
@@ -675,6 +711,16 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 
       args["database-uri"] = uri.toString();
     }
+
+    /**
+     * The function connection is read from the environment too.
+     *
+     * Passing it as an argument writes the password into the pod definition (visible with
+     * `kubectl describe`); an env var can come from a `secretKeyRef`. The same rationale holds for the
+     * main connection's credentials, which also come from the environment.
+     */
+    const functionsUri = process.env.DATABASE_FUNCTIONS_URI;
+    if (functionsUri) args["database-functions-uri"] = functionsUri;
 
     const masterKey = process.env.MASTER_KEY;
     if (masterKey) args["master-key"] = masterKey;
@@ -723,6 +769,26 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     }
   })
   .check(args => {
+    /**
+     * The backend is selected from the URI scheme (K-5). On an unrecognized scheme `backendFromUri`
+     * raises at startup; there is no silent default, because connecting to the wrong backend is the
+     * easiest way to split the data in two.
+     */
+    const backend = backendFromUri(args["database-uri"]);
+
+    if (backend === "postgres") {
+      // It is not ignored but raised: it has to stay visible as a signal of a misconfiguration.
+      if (args["database-replica-set"]) {
+        throw new TypeError(
+          "--database-replica-set is MongoDB-only and cannot be used with a postgres:// uri."
+        );
+      }
+    } else if (args["database-listen-uri"]) {
+      throw new TypeError(
+        "--database-listen-uri is PostgreSQL-only and cannot be used with a mongodb:// uri."
+      );
+    }
+
     if (!args["passport-identity-token-expiration-seconds-limit"]) {
       args["passport-identity-token-expiration-seconds-limit"] =
         args["passport-identity-token-expires-in"];
@@ -887,7 +953,9 @@ const modules = [
     maxPoolSize: args["database-pool-size"],
     appName: "spica",
     readPreference: args["database-read-preference"],
-    changeStreamAwaitTimeMS: args["database-change-stream-await-time"]
+    changeStreamAwaitTimeMS: args["database-change-stream-await-time"],
+    listenUri: args["database-listen-uri"],
+    functionsUri: args["database-functions-uri"]
   }),
   EnvVarModule.forRoot({
     realtime: true
@@ -996,6 +1064,7 @@ const modules = [
     databaseName: args["database-name"],
     databaseReplicaSet: args["database-replica-set"],
     databaseUri: args["database-uri"],
+    databaseFunctionsUri: args["database-functions-uri"],
     apiUrl: args["function-api-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
@@ -1080,6 +1149,12 @@ NestFactory.create(RootModule, {
   app.getHttpAdapter().getInstance().set("trust proxy", args["trust-proxy"]);
   console.log("PROXY at main.ts", app.getHttpAdapter().getInstance().get("trust proxy"));
   app.useWebSocketAdapter(new WsAdapter(app));
+
+  /**
+   * "This backend cannot do that" gets an HTTP answer instead of a 500 (D25): a capability gap is 501, a
+   * refused expression is 400. Everything else keeps Nest's own handling, because the filter delegates.
+   */
+  app.useGlobalFilters(new DriverCapabilityExceptionFilter(app.getHttpAdapter()));
   app.use(
     Middlewares.Headers(responseHeaders),
     Middlewares.Preflight({
@@ -1116,5 +1191,27 @@ NestFactory.create(RootModule, {
 
   const {port} = await args;
   await app.listen(port);
+
+  /**
+   * Which backend it is on has to be obvious to the operator **from the start** (K-8). An installation
+   * connected to the wrong database is discovered in the most expensive way, after the data has been
+   * split; the startup log makes it visible in a single line.
+   */
+  const database = app.get(DatabaseService);
+  new Logger("Bootstrap").log(
+    `: database backend is ${database.capabilities.backend} (${database.databaseName})`
+  );
+
+  /**
+   * The guard against a silent backend switch (K-8). It should run before the server starts listening,
+   * not **after**; it sits here because `DatabaseService` can only be resolved once the application has
+   * been created. If the guard fires the process exits, so an API connected to the wrong database does
+   * not stay up.
+   */
+  await guardInstance(database, {
+    instanceId: args["instance-id"],
+    initialize: args["database-initialize"]
+  });
+
   new Logger("Bootstrap").log(`: APIs are ready on port ${port}`);
 });
