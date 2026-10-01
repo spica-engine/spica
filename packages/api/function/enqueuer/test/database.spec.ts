@@ -42,7 +42,7 @@ describe("DatabaseEnqueuer", () => {
     await createAdHocCollection(database, "test_collection", {test: {type: "boolean"}});
 
     /**
-     * D9: the neutral probe. The old `stream` shim patched `Db.prototype`, so it worked on MongoDB only;
+     * the neutral probe. The old `stream` shim patched `Db.prototype`, so it worked on MongoDB only;
      * this call observes whichever backend was injected.
      */
     probe = probeWatch(database);

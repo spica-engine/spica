@@ -115,7 +115,7 @@ describe("Preference Service", () => {
     });
 
     it("should keep propagating after a reload fails", done => {
-      const coll = (preferenceService as any)._coll;
+      const coll = (preferenceService as any).inner;
       const findOne = coll.findOne.bind(coll);
       let alreadyFailed = false;
 

@@ -104,8 +104,8 @@ export async function findOne<
  *
  * It used to be done with a `$lookup`, and because `localField` is an **array of ids** that `$lookup`
  * shape differed from the other two (no `$unwind`, and the result is an array of documents). Rather than
- * writing a third structural recognizer the escape hatch was removed — the direction Phase 7 item 4 calls
- * "a gradual move to `read()`", and the same decision was made in `provideLanguageFinalizer` (R65).
+ * writing a third structural recognizer the escape hatch was removed — the direction this work calls
+ * "a gradual move to `read()`", and the same decision was made in `provideLanguageFinalizer`.
  *
  * **No N+1:** the ids every function sends are collected into one set and **one** query is issued per
  * collection. So `find()` costs three queries in total: functions, env_vars, secrets.

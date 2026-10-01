@@ -14,7 +14,7 @@ export type EnqueuerFactory<QueueType, OptionsT> = (
 export interface SchedulingOptions {
   databaseUri: string;
   /**
-   * The PostgreSQL connection given to functions (K-11). The API's own connection is **not** given:
+   * The PostgreSQL connection given to functions. The API's own connection is **not** given:
    * `@spica-devkit/postgres` offers raw SQL and a privilege boundary is mandatory for that reason.
    */
   databaseFunctionsUri?: string;

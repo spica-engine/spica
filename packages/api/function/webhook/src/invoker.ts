@@ -56,7 +56,7 @@ export class WebhookInvoker implements OnModuleDestroy {
         maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS
       });
     /**
-     * The payload is **still in Mongo's shape** (D1). `watch()` promises no neutral type, because this
+     * The payload is **still in Mongo's shape**. `watch()` promises no neutral type, because this
      * payload is exposed to users: `updateDescription.updatedFields` is a field→value object on Mongo and
      * an array of names in the contract's `DatabaseChange`. Neutralizing it would be a breaking change for
      * function authors, so it requires a separate decision; only the subscription form was fixed here.

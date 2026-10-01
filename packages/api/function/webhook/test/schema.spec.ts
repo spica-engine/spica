@@ -30,7 +30,7 @@ describe("Schema Resolver", () => {
   it("should resolve the inital schema", async () => {
     /**
      * The collection is created **first**: MongoDB creates it itself on the first write, while a relational
-     * model needs a table (R68). The `insertOne` is only there to make the collection appear in the
+     * model needs a table. The `insertOne` is only there to make the collection appear in the
      * listing.
      */
     await createAdHocCollection(db, "test");

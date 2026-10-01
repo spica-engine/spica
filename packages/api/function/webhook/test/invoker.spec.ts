@@ -65,7 +65,7 @@ describe("Webhook Invoker", () => {
     db = module.get(DatabaseService);
 
     /**
-     * D9: the neutral probe. The old `stream` shim patched `Db.prototype`, so it worked on MongoDB only;
+     * the neutral probe. The old `stream` shim patched `Db.prototype`, so it worked on MongoDB only;
      * this call observes whichever backend was injected.
      */
     probe = probeWatch(db);
@@ -81,7 +81,7 @@ describe("Webhook Invoker", () => {
 
     /**
      * The trigger's target collection is created **beforehand**: in a relational model there has to be a
-     * table to watch, and in production a trigger also only targets collections that exist (R68).
+     * table to watch, and in production a trigger also only targets collections that exist.
      */
     await createAdHocCollection(db, "stream_coll", {doc: {type: "string"}});
 

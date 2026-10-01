@@ -46,7 +46,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
       });
 
     /**
-     * The payload is **still in Mongo's shape** (D1) — `onChangeHandler` passes
+     * The payload is **still in Mongo's shape** — `onChangeHandler` passes
      * `updateDescription.updatedFields` to the function as a field→value object, and that is a contract
      * exposed to users. Because the contract's `DatabaseChange` gives an array of names the transition is
      * breaking; it requires a separate decision.

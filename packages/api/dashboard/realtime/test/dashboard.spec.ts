@@ -164,13 +164,13 @@ describe("Dashboard Realtime", () => {
         .then(r =>
           insertData.map((data, index) => ({
             ...data,
-            _id: r.insertedIds[index].toString()
+            _id: r[index].toString()
           }))
         );
     });
 
     afterEach(async () => {
-      await db.collection("dashboard").drop();
+      await db.dropCollection("dashboard");
     });
 
     it("should do the initial sync", async () => {

@@ -243,7 +243,7 @@ describe("Engine", () => {
   });
 
   it("should get initial schema for database trigger", async () => {
-    // In a relational model a table cannot be created without declaring a shape; the helper works on both legs (R68).
+    // In a relational model a table cannot be created without declaring a shape; the helper works on both legs.
     await createAdHocCollection(database, "test");
     const expectedSchema: any = {
       $id: "http://spica.internal/function/enqueuer/database",

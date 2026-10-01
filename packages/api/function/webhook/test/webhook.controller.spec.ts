@@ -48,7 +48,7 @@ describe("Webhook Controller", () => {
     await app.listen(req.socket);
 
     const db = module.get(DatabaseService);
-    // In a relational model a table cannot be created without declaring a shape; the helper works on both legs (R68).
+    // In a relational model a table cannot be created without declaring a shape; the helper works on both legs.
     await createAdHocCollection(db, "coll1");
     await createAdHocCollection(db, "coll2");
 
