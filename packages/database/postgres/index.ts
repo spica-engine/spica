@@ -10,3 +10,7 @@ export * from "./src/compiler/read-plan-to-sql.js";
 export * from "./src/compiler/index-to-sql.js";
 export * from "./src/compiler/table-to-sql.js";
 export * from "./src/compiler/aggregate-to-sql.js";
+export * from "./src/driver/privileges.js";
+export * from "./src/driver/function-grants.js";
+export * from "./src/driver/idempotent-ddl.js";
+export * from "./src/driver/wait-for-postgres.js";
