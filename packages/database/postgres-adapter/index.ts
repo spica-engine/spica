@@ -93,7 +93,7 @@ export class PostgresDatabaseService
       idleTimeoutMillis?: number;
       /** A ready `LISTEN` client. **Ownership stays with the caller**: `close()` does not close it. */
       listenClient?: Client;
-      /** The connection given to functions; that role's K-11 privileges are applied at startup. */
+      /** The connection given to functions; that role's privileges are applied at startup. */
       functionsUri?: string;
     } = {}
   ): Promise<PostgresDatabaseService> {
@@ -151,7 +151,7 @@ export class PostgresDatabaseService
   }
 
   /**
-   * Applies the K-11 privileges to the function role.
+   * Applies the privileges to the function role.
    *
    * It runs **after** the schemas are created: `GRANT … ON ALL TABLES IN SCHEMA` raises on a schema that does
    * not exist. `ALTER DEFAULT PRIVILEGES` is here too, because bucket tables are created at runtime.

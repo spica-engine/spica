@@ -8,6 +8,21 @@ export type Backend = "mongodb" | "postgres";
 export interface ConnectionOptions extends Partial<MongoClientOptions> {
   database: string;
   changeStreamAwaitTimeMS?: number;
+  /**
+   * A direct connection that bypasses the pooler, for `LISTEN` on PostgreSQL. It cannot be taken from
+   * the pool because it is session bound; without it CDC runs on polling alone and correctness is
+   * unchanged.
+   */
+  listenUri?: string;
+  /**
+   * The PostgreSQL connection given to functions. When it is supplied, that role's privileges are
+   * applied at startup: DML on `bucket`/`rel`, read-only on `spica`, full privileges on `app`.
+   *
+   * Spica does **not** create the role — the `CREATEROLE` that `CREATE ROLE` requires is not in the
+   * privilege list we ask for. The role is created by the provisioning layer, Spica only applies the
+   * `GRANT`s.
+   */
+  functionsUri?: string;
 }
 
 /**
@@ -37,7 +52,7 @@ export function backendFromUri(uri: string): Backend {
 export class DatabaseModule {
   static withConnection(uri: string, options: ConnectionOptions): DynamicModule {
     const backend = backendFromUri(uri);
-    const {database, changeStreamAwaitTimeMS, ...driverOptions} = options;
+    const {database, changeStreamAwaitTimeMS, listenUri, functionsUri, ...driverOptions} = options;
 
     /**
      * The selection goes through `await import()`: `pg` (and the reverse) is never brought into memory
@@ -48,14 +63,10 @@ export class DatabaseModule {
       {
         provide: DatabaseService,
         useFactory: async (): Promise<DatabaseService> => {
-          if (backend !== "mongodb") {
-            throw new Error(
-              `This build carries the MongoDB driver only; '${uri.split(":")[0]}://' needs the ` +
-                `PostgreSQL driver, which is not part of it.`
-            );
-          }
-
-          const service = await connectMongo(uri, database, driverOptions);
+          const service =
+            backend === "mongodb"
+              ? await connectMongo(uri, database, driverOptions)
+              : await connectPostgres(uri, database, listenUri, functionsUri);
 
           service.changeStreamAwaitTimeMS = changeStreamAwaitTimeMS;
           return service;
@@ -80,3 +91,26 @@ async function connectMongo(
   return new MongoDatabase(client.db(database), client);
 }
 
+/**
+ * The PostgreSQL connection **and the startup setup**.
+ *
+ * `bootstrap()` lives here, inside the provider factory: it is idempotent (`IF NOT EXISTS`) and runs once
+ * at API startup. The schemas, the system tables, the CDC outbox and the trigger functions are
+ * created in this step — opening the panel triggers no schema operation at all.
+ *
+ * There is no counterpart on MongoDB, because collections appear by themselves on the first write; on a
+ * relational backend the table has to exist beforehand.
+ */
+async function connectPostgres(
+  uri: string,
+  database: string,
+  listenUri?: string,
+  functionsUri?: string
+): Promise<DatabaseService> {
+  const {PostgresDatabaseService} = await import("../postgres-adapter/index.js");
+  const service = await PostgresDatabaseService.connect(uri, database, listenUri, undefined, {
+    functionsUri
+  });
+  await service.bootstrap();
+  return service;
+}
