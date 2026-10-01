@@ -13,5 +13,7 @@ export default {
   testEnvironment: "node",
   resolver: path.join(__dirname, "jest.resolver.cjs"),
   setupFilesAfterEnv: [path.join(__dirname, "jest.setup.js")],
+  globalSetup: path.join(__dirname, "jest.global-setup.js"),
+  globalTeardown: path.join(__dirname, "jest.global-teardown.js"),
   extensionsToTreatAsEsm: [".ts", ".tsx", ".mts"]
 };
