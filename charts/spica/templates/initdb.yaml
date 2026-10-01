@@ -1,3 +1,6 @@
+{{- /* The Mongo init scripts — bundled MongoDB only. Not rendered when an external URI is given or
+     when the backend is postgres (Phase 6 item 8). */ -}}
+{{- if and (include "database.bundled" .) (not (include "database.is-postgres" .)) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -123,3 +126,4 @@ data:
       db.setProfilingLevel($PROFILING_LEVEL,{ slowms: $PROFILING_SLOWMS})
     EOF
     echo "Set Profiling level!"
+{{- end }}
