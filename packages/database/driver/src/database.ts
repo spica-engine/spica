@@ -27,7 +27,7 @@ export interface IDatabase {
   command?(command: Record<string, any>): Promise<any>;
 
   /**
-   * Re-aligns a collection's **physical** schema after its logical definition has changed (K-12).
+   * Re-aligns a collection's **physical** schema after its logical definition has changed.
    *
    * A no-op in a document store: there is no schema and a new field appears on the first write. That is
    * why the method is optional — the same rationale as `ISupportsReadPlan` and `ISupportsIndexManager`:
@@ -35,7 +35,7 @@ export interface IDatabase {
    *
    * It is mandatory on a relational driver: when a bucket schema gains a field the table has to gain a
    * column, otherwise writing to that field is rejected with "is not a property of this bucket". This
-   * registration **was missing** — `ISchemaManager` (K-7/K-12) existed from the start but had no caller
+   * registration **was missing** — `ISchemaManager` existed from the start but had no caller
    * inside `packages/api`, so creating a bucket worked while **updating** one silently never touched the
    * physical schema.
    *
@@ -58,22 +58,17 @@ export interface LogicalSchema {
 }
 
 /**
- * Index management — it arrives in Phase 4 with the PostgreSQL driver, and on the Mongo side when the
- * index manager is moved. Kept separate from `IDatabase`: no driver implements it in Phase 1, and making
- * it a mandatory method would write a promise into the contract that is not kept (the same rationale as
- * `ISupportsReadPlan`).
+ * Index management, kept **separate** from `IDatabase`: a driver that cannot serve it declares the gap
+ * instead of having a mandatory method it does not keep — the same rationale as `ISupportsReadPlan`.
  */
 export interface ISupportsIndexManager {
   indexes(collection: string): IIndexManager;
 }
 
-/**
- * Schema management (K-7, K-12) — meaningful on PostgreSQL only; on Mongo it amounts to opening a
- * collection. The output of Phase 4.
- */
+/** Schema management — meaningful on PostgreSQL only; on Mongo it amounts to opening a collection. */
 export interface ISupportsSchemaManager {
   schema(): ISchemaManager;
 }
 
-/** The target after Phase 4. */
+/** A driver that serves every optional capability as well. */
 export type IFullDatabase = IDatabase & ISupportsIndexManager & ISupportsSchemaManager;

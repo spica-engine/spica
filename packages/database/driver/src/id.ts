@@ -1,7 +1,7 @@
 import {Binary, Decimal128, Long, ObjectId} from "bson";
 
 /**
- * Spica's document id. Generation stays in the application layer (K-1); it is stored as a BSON ObjectId
+ * Spica's document id. Generation stays in the application layer; it is stored as a BSON ObjectId
  * on MongoDB and as the `char(24)` hex representation of the same value on PostgreSQL.
  */
 export type Id = ObjectId;
@@ -10,7 +10,7 @@ export type Id = ObjectId;
 export type NonJsonValue = ObjectId | Date | Long | Decimal128 | Binary;
 
 /**
- * The row ↔ document mapper (Phase 2). Because a real column carries the type on the column itself, the
+ * The row ↔ document mapper. Because a real column carries the type on the column itself, the
  * work done here is narrow: only the values *inside* free-form fields (`type: object | json`) have to be
  * tagged.
  */
@@ -32,7 +32,7 @@ export interface DocumentCodec {
  *
  * A harder reason: on the PostgreSQL driver the codec will produce ids with the application layer's
  * class, and on Mongo with the driver's. `instanceof` would work on PG and not on Mongo — the silent
- * difference K-10 forbids. A `_bsontype` check gives the same result on both copies (measured).
+ * silent difference between the backends. A `_bsontype` check gives the same result on both copies.
  */
 export function isId(value: unknown): value is Id {
   return (

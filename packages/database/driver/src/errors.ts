@@ -1,9 +1,8 @@
 /**
  * The contract's error types.
  *
- * The plan says "types only" for Phase 1; this file is a deliberate exception. K-4 **promises** that "an
- * unsupported expression is rejected loudly", so the error itself is part of the contract — without its
- * type the promise cannot be checked.
+ * The contract **promises** that an unsupported expression is rejected loudly, so the error type is part
+ * of the contract: without it the promise cannot be checked.
  */
 export class UnsupportedExpressionError extends Error {
   readonly code = "UNSUPPORTED_EXPRESSION";
@@ -29,7 +28,7 @@ export class UnsupportedCapabilityError extends Error {
   }
 }
 
-/** A schema change could not take the lock; the plan was not applied (K-7). */
+/** A schema change could not take the lock; the plan was not applied. */
 export class SchemaLockTimeoutError extends Error {
   readonly code = "SCHEMA_LOCK_TIMEOUT";
   constructor(
@@ -44,7 +43,7 @@ export class SchemaLockTimeoutError extends Error {
   }
 }
 
-/** The intent and the derivative diverged (K-12). */
+/** The intent and the derivative diverged. */
 export class SchemaDriftError extends Error {
   readonly code = "SCHEMA_DRIFT";
   constructor(

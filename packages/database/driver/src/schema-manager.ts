@@ -69,7 +69,7 @@ export interface SchemaChange {
 export interface SchemaPlan {
   collection: string;
   changes: SchemaChange[];
-  /** The statements the driver will produce; recorded for auditability (K-7). */
+  /** The statements the driver will produce; recorded for auditability. */
   statements: string[];
   /**
    * Whether the data is **rewritten**, not whether the change is slow: `ALTER COLUMN TYPE` rewrites,

@@ -15,9 +15,9 @@ export interface CreateIndexOptions {
   /** The partial index condition; compiled into a `WHERE` clause on PostgreSQL. */
   partialFilterExpression?: Record<string, any>;
   expireAfterSeconds?: number;
-  /** No counterpart on PostgreSQL — `UnsupportedCapabilityError` (K-10). */
+  /** No counterpart on PostgreSQL — `UnsupportedCapabilityError`. */
   sparse?: boolean;
-  /** No counterpart on PostgreSQL — `UnsupportedCapabilityError` (K-10). */
+  /** No counterpart on PostgreSQL — `UnsupportedCapabilityError`. */
   collation?: Record<string, any>;
 }
 
@@ -37,7 +37,7 @@ export interface IIndexManager {
    * This collection's retention period in seconds, or `undefined` when it is not set.
    *
    * **Why `list()` is not enough.** On MongoDB retention is a TTL **index**; on PostgreSQL it is a
-   * sweeper registration (`nativeTTLIndex: false` declares that, R30). Reading it through `list()` means
+   * sweeper registration (`nativeTTLIndex: false` declares that). Reading it through `list()` means
    * asserting the mechanism — the specs were looking for an index named `created_at_1` and no such
    * object exists on PG, nor should it.
    *

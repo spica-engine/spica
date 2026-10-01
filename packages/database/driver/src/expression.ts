@@ -1,13 +1,12 @@
 /**
- * The abstract syntax tree of Spica's expression language (a subset of CEL) — K-3's canonical input.
+ * The abstract syntax tree of Spica's expression language (a subset of CEL) — the canonical input.
  *
  * This type lives in the driver contract, because **the compiler targets are inside the drivers**: the
  * Mongo driver compiles the same tree into a `$match`, the PostgreSQL driver into a `WHERE`. There is no
  * Mongo-to-SQL translation.
  *
- * Note: `packages/api/bucket/expression` currently returns untyped objects from the PEG parser
- * (`src/ast.ts` contains helper functions only). Phase 3's first job is to connect the parser's output to
- * the types here.
+ * Note: `packages/api/bucket/expression` returns untyped objects from the PEG parser; `fromLegacyAst`
+ * is the bridge that turns them into the types here.
  */
 export type Expression =
   | LiteralExpression
@@ -56,7 +55,7 @@ export interface UnaryExpression {
 }
 
 /**
- * The closed operator set (K-4). Anything outside this list is rejected with
+ * The closed operator set. Anything outside this list is rejected with
  * `UnsupportedExpressionError`; on user input, an HTTP 400.
  */
 export type BinaryOperator =
@@ -90,7 +89,7 @@ export interface ConditionalExpression {
 }
 
 /**
- * The registered builtin functions (K-4). The inventory was produced by measurement:
+ * The registered builtin functions. The inventory was produced by measurement:
  * `docs/expression-surface.md`.
  */
 export type BuiltinFunction =

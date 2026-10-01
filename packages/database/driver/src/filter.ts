@@ -1,11 +1,10 @@
 /**
  * The types of the document CRUD level.
  *
- * Phase 1's rule is zero behaviour change: these aliases take the place of the names that come from
- * `mongodb` today and are **structurally permissive**. The Mongo driver can assign its own types to them
- * and the 127 calling files do not change.
+ * These aliases take the place of the names that used to come from `mongodb` and are **structurally
+ * permissive**, so the Mongo driver can assign its own types to them and no calling file changes.
  *
- * The canonical query language is not at this level but at the `Expression` + `ReadPlan` level (K-3). The
+ * The canonical query language is not at this level but at the `Expression` + `ReadPlan` level. The
  * `DocumentFilter` here is not a contract but a carrier for the existing CRUD calls.
  */
 export type DocumentFilter<T = any> = Record<string, any> | Partial<T>;
@@ -18,7 +17,7 @@ export type DocumentUpdate<T = any> = Record<string, any> | Partial<T>;
  * The shape is kept **structurally** identical to the MongoDB driver's counterparts (`EnhancedOmit` plus
  * `_id`). The point is for the `MongoCollection implements ICollection` step to pass without touching the
  * body: the `WithId<T>` the driver returns has to be assignable to the `WithId<T>` here. `_id`'s type is
- * deliberately `any` — id generation lives in the application layer, not in the driver (K-1).
+ * deliberately `any` — id generation lives in the application layer, not in the driver.
  */
 export type EnhancedOmit<T, K> = string extends keyof T
   ? T

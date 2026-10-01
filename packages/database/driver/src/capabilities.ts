@@ -8,7 +8,7 @@ export interface DriverCapabilities {
   readonly version: string;
 
   /**
-   * Whether a raw Mongo JSON filter is accepted on `bucket/:id/data` (AK-6).
+   * Whether a raw Mongo JSON filter is accepted on `bucket/:id/data`.
    *
    * `"subset"` is a genuine third state, for the same reason `aggregationPipeline` has one: on PostgreSQL
    * the **measured closed set** (`$gt`, `$in`, `$and`, `$or`, `$regex`, …) compiles and answers correctly,
@@ -28,7 +28,7 @@ export interface DriverCapabilities {
   /** Whether there is a native TTL index; without one the sweeper takes over. */
   nativeTTLIndex: boolean;
   indexOptions: {sparse: boolean; collation: boolean; partial: boolean};
-  /** Direct database access for functions (K-11). */
+  /** Direct database access for functions. */
   directAccessDevkit: false | "@spica-devkit/database" | "@spica-devkit/postgres";
   /** Real foreign key integrity (present on PostgreSQL, in the application layer on Mongo). */
   referentialIntegrity: boolean;

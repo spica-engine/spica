@@ -11,7 +11,7 @@ export interface ReadPlan {
   /** Multi-language resolution; without it the fields come back raw (as a language map). */
   localize?: LocalizeSpec;
 
-  /** The condition compiled from the bucket's ACL rule (K-11: a `WHERE`/`$match`, not RLS). */
+  /** The condition compiled from the bucket's ACL rule (a `WHERE`/`$match`, not RLS). */
   acl?: Expression;
 
   /** The user's `?filter=` expression. */
@@ -76,7 +76,7 @@ export interface ProjectionSpec {
   /** The fields closed to the user **unconditionally**, coming from field-level ACL. */
   denied?: string[];
   /**
-   * The conditional form of field-level ACL (the second step of AK-10).
+   * The conditional form of field-level ACL (the second step ).
    *
    * `denied` is a **static** list and cannot express `properties[x].acl`: that rule is evaluated per
    * document — within the same read a field is visible on one row and not on another. So the plan

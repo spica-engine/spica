@@ -1,4 +1,4 @@
-// `bson`, not `mongodb` — the rationale is in `realtime.ts` (D28).
+// `bson`, not `mongodb` — the rationale is in `realtime.ts`.
 import {ObjectId} from "bson";
 
 export interface PaginationPlan {

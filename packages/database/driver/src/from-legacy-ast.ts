@@ -11,7 +11,7 @@ import {UnsupportedExpressionError} from "./errors.js";
  *
  * This function joins the two: the parser's current output is turned into the typed tree unchanged, so
  * that **the same expression** can be given both to the Mongo target (`convert.ts`) and to the PG target
- * (`expression-to-sql.ts`). That is the precondition of the differential test (Phase 3d).
+ * (`expression-to-sql.ts`). That is the precondition of the differential test.
  *
  * In the long run the parser should produce these types directly; then this adapter is deleted.
  *
