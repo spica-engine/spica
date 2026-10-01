@@ -53,7 +53,7 @@ describe("user Controller", () => {
     db = module.get(DatabaseService);
 
     /**
-     * The profiler **depends on a capability** (K-10). Mongo keeps a profile per collection
+     * The profiler **depends on a capability**. Mongo keeps a profile per collection
      * (`system.profile`); PostgreSQL's `pg_stat_statements` is a different interface and `findOnProfiler`
      * does not exist there. This whole file is profiler-specific, so it is out of scope on the PG leg —
      * recorded in `pg-known-failures.md`.
@@ -74,7 +74,7 @@ describe("user Controller", () => {
      * A profile entry is written by the server **after** it has answered, so a request returning is not a
      * promise that its entry is already queryable. The pagination tests need at least two, and they used to
      * read whatever happened to be there: once the shared test server stopped being the slow part the race
-     * became visible, 1 run in 3 (D26, R123). Waiting for the entries to appear is the assertion the tests
+     * became visible, 1 run in 3. Waiting for the entries to appear is the assertion the tests
      * actually depend on.
      */
     async function waitForProfileEntries(minimum: number) {

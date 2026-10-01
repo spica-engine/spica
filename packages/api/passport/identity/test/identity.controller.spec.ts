@@ -53,7 +53,7 @@ describe("Identity Controller", () => {
     db = module.get(DatabaseService);
 
     /**
-     * The profiler **depends on a capability** (K-10). Mongo keeps a profile per collection
+     * The profiler **depends on a capability**. Mongo keeps a profile per collection
      * (`system.profile`); PostgreSQL's counterpart is `pg_stat_statements` and its interface is entirely
      * different, so `setProfilingLevel` is a declared absence there.
      *
@@ -442,7 +442,7 @@ describe("Identity Controller", () => {
   });
 
   /**
-   * The profiler tests are **Mongo-specific** and that is a declared capability difference (K-10), not a
+   * The profiler tests are **Mongo-specific** and that is a declared capability difference, not a
    * skipped test: `findOnProfiler` reads a profile entry per collection and PostgreSQL's
    * `pg_stat_statements` does not provide that. It is recorded as out of scope in `pg-known-failures.md`.
    */

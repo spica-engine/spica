@@ -157,7 +157,7 @@ describe("ApiKey", () => {
       ]);
     });
 
-    // K-13: the expression language on the same parameter, through `PipelineBuilder`'s `$match`.
+    // the expression language on the same parameter, through `PipelineBuilder`'s `$match`.
     it("should filter tokens by an expression", async () => {
       const res = await req.get("/passport/refresh-token", {filter: 'identity == "user2"'});
       expect(res.body).toEqual([

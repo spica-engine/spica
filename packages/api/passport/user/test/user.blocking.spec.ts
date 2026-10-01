@@ -13,12 +13,12 @@ import {UserModule} from "@spica-server/passport-user";
 import {UserService} from "@spica-server/passport-user/src/user.service";
 
 /**
- * Login attempt blocking — there was **no test at all** for it on the `user` side (D13).
+ * Login attempt blocking — there was **no test at all** for it on the `user` side.
  *
  * The gap was expensive: `isUserBlocked` wrote
  * `failedAttempts.filter(attempt => attempt > lastLogin)` and, when `lastLogin` is absent, that is always
  * false, so the account is never blocked. On MongoDB it worked through two accidents lining up (the
- * driver turns `undefined` into `null`, and `Date > null` coerces `null` to 0); once R51 stopped writing
+ * driver turns `undefined` into `null`, and `Date > null` coerces `null` to 0); once the service stopped writing
  * an undefined `lastLogin`, blocking broke silently **on both backends** and no test saw it.
  *
  * This spec is deliberately at the service level: the blocking decision is made in `UserService.login`

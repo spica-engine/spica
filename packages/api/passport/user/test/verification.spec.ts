@@ -171,7 +171,7 @@ describe("VerificationService", () => {
      * The timestamp has to be `created_at`, because that is the field `upsertTTLIndex` is hard-wired to on
      * both drivers. Written under any other name the record is never a candidate for expiry, and the
      * retention this service asks for in `afterInit` silently does nothing — which is exactly what happened
-     * while the field was called `createdAt` (D12).
+     * while the field was called `createdAt`.
      */
     it("should write the timestamp under the field the retention actually reads", async () => {
       const userId = new ObjectId();
