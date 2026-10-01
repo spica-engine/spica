@@ -7,16 +7,19 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../testing"
-    },
-    {
-      "path": "../../interface/database"
+      "path": "../driver"
     },
     {
       "path": "../../interface/realtime"
     },
     {
+      "path": "../../interface/database"
+    },
+    {
       "path": ".."
+    },
+    {
+      "path": "../testing"
     }
   ]
 }

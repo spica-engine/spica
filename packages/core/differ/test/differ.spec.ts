@@ -37,7 +37,7 @@ describe("differ", () => {
     });
   });
 
-  it("should flatten and diff newly added array and its item", () => {
+  it("should flatten and diff a newly added array of objects and their fields", () => {
     const changes = diff({}, {tags: [{tagName: "develop"}, {tagName: "engine"}]});
     expect(changes.length).toBe(2);
     expect(changes[0]).toEqual({
