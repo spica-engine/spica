@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "bson";
 
 export type FunctionAssetFilename = "index.ts" | "index.mjs" | "package.json";
 

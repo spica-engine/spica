@@ -128,7 +128,11 @@ export class Default extends BaseStrategy {
     return fs.promises.rm(objectPath, {recursive: true});
   }
 
-  async proxyRead(id: string, requestHeaders: Record<string, string>, meta: StorageObjectMeta): Promise<ProxyReadResult> {
+  async proxyRead(
+    id: string,
+    requestHeaders: Record<string, string>,
+    meta: StorageObjectMeta
+  ): Promise<ProxyReadResult> {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
     const stat = await fs.promises.stat(objectPath);
@@ -136,7 +140,7 @@ export class Default extends BaseStrategy {
 
     const headers: Record<string, string> = {
       "content-type": meta.content.type,
-      "etag": eTagValue,
+      etag: eTagValue,
       "cache-control": "public, max-age=3600, must-revalidate",
       "content-length": String(stat.size)
     };

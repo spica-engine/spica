@@ -131,7 +131,10 @@ export class PlanExecutor {
     const hasActiveTrigger = Object.keys(triggers).some(handler => triggers[handler]?.active);
 
     this.scheduler.reconcileContext(target, context);
-    this.scheduler.reconcileConcurrency(target, fn.concurrencyPerWorker ?? DEFAULT_EVENT_CONCURRENCY);
+    this.scheduler.reconcileConcurrency(
+      target,
+      fn.concurrencyPerWorker ?? DEFAULT_EVENT_CONCURRENCY
+    );
 
     // supersede before refilling the warm reserve: supersedeWorkers kills the stale reserve, then
     // reconcileWarmWorkers rebuilds it from fresh state. A function with no active trigger has
@@ -144,7 +147,7 @@ export class PlanExecutor {
       }
     }
 
-    this.scheduler.reconcileWarmWorkers(target, hasActiveTrigger ? fn.warmWorkers ?? 0 : 0);
+    this.scheduler.reconcileWarmWorkers(target, hasActiveTrigger ? (fn.warmWorkers ?? 0) : 0);
   }
 
   private buildSchedulingContext(

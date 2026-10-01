@@ -387,13 +387,15 @@ describe("GCloud", () => {
     const meta = {name: "test", content: {type: "text/plain"}} as any;
 
     it("should fetch metadata and stream object with response headers", async () => {
-      File.getMetadata.mockResolvedValueOnce([{
-        contentType: "image/jpeg",
-        size: "2048",
-        etag: '"abc123"',
-        updated: "2024-01-15T10:00:00Z",
-        cacheControl: "public, max-age=3600"
-      }]);
+      File.getMetadata.mockResolvedValueOnce([
+        {
+          contentType: "image/jpeg",
+          size: "2048",
+          etag: '"abc123"',
+          updated: "2024-01-15T10:00:00Z",
+          cacheControl: "public, max-age=3600"
+        }
+      ]);
       const mockStream = Readable.from(Buffer.from("image data"));
       File.createReadStream.mockReturnValueOnce(mockStream);
 
@@ -412,12 +414,14 @@ describe("GCloud", () => {
     });
 
     it("should return 304 when if-none-match matches etag", async () => {
-      File.getMetadata.mockResolvedValueOnce([{
-        contentType: "image/jpeg",
-        size: "2048",
-        etag: '"abc123"',
-        cacheControl: "public, max-age=3600"
-      }]);
+      File.getMetadata.mockResolvedValueOnce([
+        {
+          contentType: "image/jpeg",
+          size: "2048",
+          etag: '"abc123"',
+          cacheControl: "public, max-age=3600"
+        }
+      ]);
 
       const result = await service.proxyRead("photo.jpg", {"if-none-match": '"abc123"'}, meta);
 
@@ -427,11 +431,13 @@ describe("GCloud", () => {
     });
 
     it("should not return 304 when if-none-match does not match etag", async () => {
-      File.getMetadata.mockResolvedValueOnce([{
-        contentType: "text/plain",
-        size: "100",
-        etag: '"current-etag"'
-      }]);
+      File.getMetadata.mockResolvedValueOnce([
+        {
+          contentType: "text/plain",
+          size: "100",
+          etag: '"current-etag"'
+        }
+      ]);
       const mockStream = Readable.from(Buffer.from("content"));
       File.createReadStream.mockReturnValueOnce(mockStream);
 
@@ -442,11 +448,13 @@ describe("GCloud", () => {
     });
 
     it("should return 206 and set content-range for a range request", async () => {
-      File.getMetadata.mockResolvedValueOnce([{
-        contentType: "video/mp4",
-        size: "10000",
-        etag: '"vid123"'
-      }]);
+      File.getMetadata.mockResolvedValueOnce([
+        {
+          contentType: "video/mp4",
+          size: "10000",
+          etag: '"vid123"'
+        }
+      ]);
       const mockStream = Readable.from(Buffer.from("chunk"));
       File.createReadStream.mockReturnValueOnce(mockStream);
 
@@ -459,11 +467,13 @@ describe("GCloud", () => {
     });
 
     it("should calculate end as fileSize-1 when range end is omitted", async () => {
-      File.getMetadata.mockResolvedValueOnce([{
-        contentType: "video/mp4",
-        size: "10000",
-        etag: '"vid123"'
-      }]);
+      File.getMetadata.mockResolvedValueOnce([
+        {
+          contentType: "video/mp4",
+          size: "10000",
+          etag: '"vid123"'
+        }
+      ]);
       const mockStream = Readable.from(Buffer.from("rest of file"));
       File.createReadStream.mockReturnValueOnce(mockStream);
 
@@ -476,11 +486,13 @@ describe("GCloud", () => {
     });
 
     it("should use default cache-control when metadata.cacheControl is absent", async () => {
-      File.getMetadata.mockResolvedValueOnce([{
-        contentType: "text/plain",
-        size: "10",
-        etag: '"etag"'
-      }]);
+      File.getMetadata.mockResolvedValueOnce([
+        {
+          contentType: "text/plain",
+          size: "10",
+          etag: '"etag"'
+        }
+      ]);
       File.createReadStream.mockReturnValueOnce(Readable.from(Buffer.from("data")));
 
       const result = await service.proxyRead("file.txt", {}, meta);
@@ -489,11 +501,13 @@ describe("GCloud", () => {
     });
 
     it("should not set content-length when metadata.size is zero", async () => {
-      File.getMetadata.mockResolvedValueOnce([{
-        contentType: "text/plain",
-        size: "0",
-        etag: '"etag"'
-      }]);
+      File.getMetadata.mockResolvedValueOnce([
+        {
+          contentType: "text/plain",
+          size: "0",
+          etag: '"etag"'
+        }
+      ]);
       File.createReadStream.mockReturnValueOnce(Readable.from(Buffer.from("")));
 
       const result = await service.proxyRead("file.txt", {}, meta);
@@ -502,11 +516,13 @@ describe("GCloud", () => {
     });
 
     it("should return 416 when range is requested on a zero-size file", async () => {
-      File.getMetadata.mockResolvedValueOnce([{
-        contentType: "video/mp4",
-        size: "0",
-        etag: '"empty"'
-      }]);
+      File.getMetadata.mockResolvedValueOnce([
+        {
+          contentType: "video/mp4",
+          size: "0",
+          etag: '"empty"'
+        }
+      ]);
 
       const result = await service.proxyRead("empty.mp4", {range: "bytes=0-499"}, meta);
 
@@ -517,11 +533,13 @@ describe("GCloud", () => {
     });
 
     it("should return 416 when range start is beyond file size", async () => {
-      File.getMetadata.mockResolvedValueOnce([{
-        contentType: "text/plain",
-        size: "100",
-        etag: '"etag"'
-      }]);
+      File.getMetadata.mockResolvedValueOnce([
+        {
+          contentType: "text/plain",
+          size: "100",
+          etag: '"etag"'
+        }
+      ]);
 
       const result = await service.proxyRead("file.txt", {range: "bytes=200-299"}, meta);
 
@@ -532,11 +550,13 @@ describe("GCloud", () => {
     });
 
     it("should clamp explicit range end to fileSize-1 when end exceeds file size", async () => {
-      File.getMetadata.mockResolvedValueOnce([{
-        contentType: "text/plain",
-        size: "100",
-        etag: '"etag"'
-      }]);
+      File.getMetadata.mockResolvedValueOnce([
+        {
+          contentType: "text/plain",
+          size: "100",
+          etag: '"etag"'
+        }
+      ]);
       const mockStream = Readable.from(Buffer.from("data"));
       File.createReadStream.mockReturnValueOnce(mockStream);
 

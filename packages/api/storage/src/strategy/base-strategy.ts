@@ -72,5 +72,9 @@ export abstract class BaseStrategy extends Strategy {
   abstract delete(id: string): Promise<void> | void;
   abstract url(id: string): Promise<string>;
   abstract rename(oldKey: string, newKey: string): Promise<void>;
-  abstract proxyRead(id: string, requestHeaders: Record<string, string>, meta: StorageObjectMeta): Promise<ProxyReadResult>;
+  abstract proxyRead(
+    id: string,
+    requestHeaders: Record<string, string>,
+    meta: StorageObjectMeta
+  ): Promise<ProxyReadResult>;
 }

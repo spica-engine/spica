@@ -15,7 +15,6 @@ export function createSchema(db: DatabaseService): Promise<JSONSchema7> {
   return db
     .collection("buckets")
     .find({})
-    .toArray()
     .then(buckets => {
       for (const bucket of buckets) {
         slugs.set(bucket._id.toString(), bucket.title);

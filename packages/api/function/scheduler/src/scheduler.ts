@@ -1,7 +1,7 @@
 import path from "path";
 import {Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {DatabaseService} from "@spica-server/database";
+import {backendFromUri, DatabaseService} from "@spica-server/database";
 import {Builder} from "@spica-server/function-builder";
 import {LegacyBuilder} from "@spica-server/function-builder-legacy";
 import {RollupBuilder} from "@spica-server/function-builder-rollup";
@@ -769,9 +769,29 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     const id: string = uniqid();
     const node = this.runtimes.get("node") as Node;
     const env: {[key: string]: string} = {
+      /**
+       * The Mongo-specific names are **kept**, because a user's function may be pinned to an older devkit that
+       * reads them. The neutral names are added beside them: `__INTERNAL__SPICA__MONGOURL__` carrying a
+       * `postgres://` URI is a lying name, and the devkit hands it to `MongoClient`.
+       */
       __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
       __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
       __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
+      __INTERNAL__SPICA__DATABASE_URI__: this.options.databaseUri,
+      __INTERNAL__SPICA__DATABASE_NAME__: this.options.databaseName,
+      /**
+       * With no URI the backend is **not declared**, and not guessed either: `backendFromUri` raises on an
+       * unrecognized scheme, and the scheduler can legitimately be set up without a database. The devkits read
+       * a missing value as "not declared" rather than blocking.
+       */
+      __INTERNAL__SPICA__DATABASE_BACKEND__: this.options.databaseUri
+        ? backendFromUri(this.options.databaseUri)
+        : "",
+      /**
+       * The connection for functions is **not the API's**: raw SQL is handed over, so a privilege boundary is
+       * mandatory. Unsupplied it stays empty and the devkit refuses explicitly.
+       */
+      __INTERNAL__SPICA__DATABASE_FUNCTIONS_URI__: this.options.databaseFunctionsUri || "",
       __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
       __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
         ? "true"

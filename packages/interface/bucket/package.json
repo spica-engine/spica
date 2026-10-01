@@ -10,8 +10,9 @@
     }
   },
   "dependencies": {
-    "@spica-server/database": "workspace:*",
-    "@spica-server/interface-preference": "workspace:*"
+    "@spica-server/database-driver": "workspace:*",
+    "@spica-server/interface-preference": "workspace:*",
+    "bson": "^6.10.4"
   },
   "devDependencies": {
     "@types/json-schema": "^7.0.15"

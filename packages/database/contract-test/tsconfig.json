@@ -1,0 +1,28 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../interface/bucket"
+    },
+    {
+      "path": "../testing"
+    },
+    {
+      "path": "../postgres"
+    },
+    {
+      "path": "../driver"
+    },
+    {
+      "path": ".."
+    },
+    {
+      "path": "../../api/bucket/expression"
+    }
+  ]
+}

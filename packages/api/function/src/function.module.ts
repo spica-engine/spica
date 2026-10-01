@@ -61,6 +61,7 @@ export class FunctionModule {
           databaseName: options.databaseName,
           databaseReplicaSet: options.databaseReplicaSet,
           databaseUri: options.databaseUri,
+          databaseFunctionsUri: options.databaseFunctionsUri,
           apiUrl: options.apiUrl,
           timeout: options.timeout,
           experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache,

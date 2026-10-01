@@ -1,0 +1,22 @@
+{
+  "name": "@spica-devkit/postgres",
+  "license": "AGPLv3",
+  "version": "0.0.0-PLACEHOLDER",
+  "description": "PostgreSQL package for Spica functions.",
+  "author": "spica",
+  "keywords": [
+    "spica",
+    "devkit"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
