@@ -56,7 +56,7 @@ describe("realtime database", () => {
      * MongoDB creates a namespace on the first write and can watch one that does not exist yet; in a
      * relational model there has to be a table to watch, and its column types have to be known before a
      * row can be converted or a filter compiled. `createAdHocCollection` ignores the shape on the Mongo
-     * leg, so the spec does not need to know which backend it runs on (R68).
+     * leg, so the spec does not need to know which backend it runs on.
      *
      * All of them are created together rather than one per test: the spec deliberately gives every test
      * its own collection so the tests cannot interfere, and threading a per-test name through 24 tests
@@ -64,7 +64,7 @@ describe("realtime database", () => {
      * the PG leg, so this has to happen per test, not once per file.
      *
      * **Sequentially, not with `Promise.all`.** The test pool is capped at two connections on purpose
-     * (R48), and creating a table takes a dedicated client for its transaction — twenty-four of them at
+     *, and creating a table takes a dedicated client for its transaction — twenty-four of them at
      * once starve the pool and the run deadlocks with no output at all.
      */
     for (const name of COLLECTIONS) await createAdHocCollection(database, name, DOCUMENT_SHAPE);

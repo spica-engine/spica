@@ -1,6 +1,6 @@
 import {Query} from "mingo";
 import {ChunkKind, StreamChunk} from "@spica-server/interface-realtime";
-// `bson`, not `mongodb`; `Collection` was imported and never used — the field is an `ICollection` (D28).
+// `bson`, not `mongodb`; `Collection` was imported and never used — the field is an `ICollection`.
 import {ObjectId} from "bson";
 import {asyncScheduler, Observable, Subject, Subscriber, Subscription, TeardownLogic} from "rxjs";
 import {filter, bufferTime, switchMap, share} from "rxjs/operators";

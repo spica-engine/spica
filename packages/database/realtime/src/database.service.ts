@@ -26,9 +26,9 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
   /**
    * One stream per collection; the subscribers are multiplexed through the `hub`.
    *
-   * In Phase 6 `stream.stream()` (the Node `Readable` of Mongo's `ChangeStream`) was removed: in the
+   * `stream.stream()` (the Node `Readable` of Mongo's `ChangeStream`) is gone: in the
    * contract `watch()` returns an `Observable`. The bridge is one line — the subscription writes to the
-   * `hub`. The payload is still the raw Mongo change document (the same rationale as D1: the payload is
+   * `hub`. The payload is still the raw Mongo change document (the same rationale as the payload is
    * exposed to users).
    */
   private getChangeStream(name: string): ChangeStreamEntry {
@@ -166,7 +166,7 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
    * The two have to be ordered, and the order is not free: a subscriber is told `EndOfInitial` and then
    * writes, and on MongoDB the stream's start point is only fixed when the server runs the `aggregate` —
    * a few milliseconds after `watch()` returns. Reading first meant the subscriber's own write could
-   * land inside that window and produce **no event at all** (D30). Deferring the initial read closes it:
+   * land inside that window and produce **no event at all**. Deferring the initial read closes it:
    * by the time anything is sent to the client, every later write is inside the stream's window.
    */
   find<T extends Document = any>(
