@@ -23,7 +23,7 @@ describe("Activity Acceptance", () => {
     created_at = new Date();
     const module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.create(),
+        DatabaseTestingModule.standalone(),
         CoreTestingModule,
         PassportTestingModule.initialize(),
         ActivityModule.forRoot({expireAfterSeconds: 60})
@@ -43,8 +43,8 @@ describe("Activity Acceptance", () => {
       .collection("identity")
       .insertMany([{identifier: "user1"}, {identifier: "user2"}])
       .then(res => {
-        user1Id = res.insertedIds[0];
-        user2Id = res.insertedIds[1];
+        user1Id = res[0];
+        user2Id = res[1];
       });
 
     insertedActivityIds = await service.insert([
@@ -255,7 +255,7 @@ describe("Activity Acceptance", () => {
       .collection("user")
       .insertOne({username: "testuser1"})
       .then(res => {
-        testUser1Id = res.insertedId;
+        testUser1Id = res._id;
       });
 
     await service.insert([

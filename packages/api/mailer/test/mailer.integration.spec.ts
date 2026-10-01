@@ -28,7 +28,9 @@ describe("MailerService Integration", () => {
       apiPort = parseInt(apiParts[1]);
     } else {
       try {
-        container = await new GenericContainer("mailhog/mailhog").withExposedPorts(1025, 8025).start();
+        container = await new GenericContainer("mailhog/mailhog")
+          .withExposedPorts(1025, 8025)
+          .start();
         smtpPort = container.getMappedPort(1025);
         apiPort = container.getMappedPort(8025);
       } catch (e) {
