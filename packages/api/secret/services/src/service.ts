@@ -25,7 +25,7 @@ export class SecretService extends BaseCollection<Secret>("secret") {
     private readonly changeDispatcher: SecretChangeDispatcher
   ) {
     super(db, {
-      afterInit: () => this._coll.createIndex({key: 1}, {unique: true})
+      afterInit: () => this.createIndex({key: 1}, {unique: true})
     });
   }
 

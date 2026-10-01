@@ -1,10 +1,6 @@
 import {Controller} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {
-  DatabaseService,
-  DatabaseTestingModule,
-  getConnectionUri
-} from "@spica-server/database-testing";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
 import {ClassCommander, ReplicationModule} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
 
@@ -40,12 +36,16 @@ export class ShiftController {
   }
 }
 describe("Commander", () => {
-  function getModuleBuilder(controller, connectionUri?: string, dbName?: string) {
+  /**
+   * When `shared` is given, the second module joins the **same** database (the two-replica scenario). This
+   * used to be done with `connect(getConnectionUri(), dbName)`; that path was Mongo-specific and on the PG
+   * leg it tried to connect to a Mongo server that does not exist and hung. `join()` does the right thing
+   * on both backends.
+   */
+  function getModuleBuilder(controller, shared?: DatabaseService) {
     return Test.createTestingModule({
       imports: [
-        connectionUri
-          ? DatabaseTestingModule.connect(connectionUri, dbName)
-          : DatabaseTestingModule.replicaSet(),
+        shared ? DatabaseTestingModule.join(shared) : DatabaseTestingModule.replicaSet(),
         ReplicationModule.forRoot()
       ],
       controllers: [controller]
@@ -63,8 +63,7 @@ describe("Commander", () => {
       ctrl1 = module1.get(SyncController);
       const db = module1.get(DatabaseService);
 
-      const connectionUri = getConnectionUri();
-      module2 = await getModuleBuilder(SyncController, connectionUri, db.databaseName).compile();
+      module2 = await getModuleBuilder(SyncController, db).compile();
       ctrl2 = module2.get(SyncController);
       await wait(5000);
     });
@@ -114,8 +113,7 @@ describe("Commander", () => {
       ctrl1 = module1.get(ShiftController);
       const db = module1.get(DatabaseService);
 
-      const connectionUri = getConnectionUri();
-      module2 = await getModuleBuilder(ShiftController, connectionUri, db.databaseName).compile();
+      module2 = await getModuleBuilder(ShiftController, db).compile();
 
       ctrl2 = module2.get(ShiftController);
       await wait(5000);

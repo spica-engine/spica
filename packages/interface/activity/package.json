@@ -10,6 +10,6 @@
     }
   },
   "dependencies": {
-    "@spica-server/database": "workspace:*"
+    "bson": "^6.10.4"
   }
 }
