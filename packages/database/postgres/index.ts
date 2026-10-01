@@ -6,3 +6,6 @@ export * from "./src/schema/system-tables.js";
 export * from "./src/compiler/expression-to-sql.js";
 export * from "./src/compiler/crud-filter-to-sql.js";
 export * from "./src/compiler/crud-update-to-sql.js";
+export * from "./src/compiler/read-plan-to-sql.js";
+export * from "./src/compiler/index-to-sql.js";
+export * from "./src/compiler/table-to-sql.js";
