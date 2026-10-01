@@ -1,9 +1,11 @@
-import {Test} from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
 import {
   ChangeStream,
+  createAdHocCollection,
   DatabaseService,
   DatabaseTestingModule,
-  stream
+  probeWatch,
+  WatchProbe
 } from "@spica-server/database-testing";
 import {DatabaseEnqueuer} from "@spica-server/function-enqueuer";
 import {DatabaseQueue, EventQueue} from "@spica-server/function-queue";
@@ -22,14 +24,28 @@ describe("DatabaseEnqueuer", () => {
   let noopTarget: event.Target;
   let databaseEnqueuer: DatabaseEnqueuer;
   let database: DatabaseService;
-
+  let probe: WatchProbe;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()]
     }).compile();
 
     database = module.get(DatabaseService);
+
+    /**
+     * The collection is created **beforehand**. MongoDB can watch a namespace that does not exist, while a
+     * relational model needs a table to watch — and in production a database trigger also only targets
+     * collections that exist.
+     */
+    await createAdHocCollection(database, "test_collection", {test: {type: "boolean"}});
+
+    /**
+     * D9: the neutral probe. The old `stream` shim patched `Db.prototype`, so it worked on MongoDB only;
+     * this call observes whichever backend was injected.
+     */
+    probe = probeWatch(database);
 
     noopTarget = createTarget();
 
@@ -40,16 +56,27 @@ describe("DatabaseEnqueuer", () => {
       enqueue: jest.fn()
     };
 
-    databaseEnqueuer = new DatabaseEnqueuer(
-      eventQueue as any,
-      databaseQueue as any,
-      database
-    );
+    databaseEnqueuer = new DatabaseEnqueuer(eventQueue as any, databaseQueue as any, database);
+  });
+
+  /**
+   * The subscriptions have to be dropped, and the module closed, before the next test.
+   *
+   * Every test used to leave a live change stream behind. On MongoDB that is close to harmless; on
+   * PostgreSQL a subscription owns a polling timer that keeps querying the pool, so once the pool was
+   * ended the drain raised `Cannot use a pool after calling end on the pool` — and jest attributes an
+   * async error to whatever test is running, which is why it surfaced two spec files later, in
+   * `grpc.spec.ts`. The leak was here.
+   */
+  afterEach(async () => {
+    for (const subscription of databaseEnqueuer["streams"]) subscription.unsubscribe();
+    databaseEnqueuer["streams"].clear();
+    await module.close();
   });
 
   it("should subscribe", async () => {
     databaseEnqueuer.subscribe(noopTarget, {collection: "test_collection", type: "INSERT"});
-    await stream.wait();
+    await probe.wait();
 
     const streams = databaseEnqueuer["streams"];
     expect(streams.size).toEqual(1);
@@ -68,7 +95,7 @@ describe("DatabaseEnqueuer", () => {
     databaseEnqueuer.subscribe(target2, {collection: "test_collection", type: "INSERT"});
     databaseEnqueuer.subscribe(target3, {collection: "test_collection", type: "INSERT"});
 
-    await stream.wait();
+    await probe.wait();
 
     const streams = databaseEnqueuer["streams"];
     const target1Stream = Array.from(streams)[0] as ChangeStream & {target: event.Target};
@@ -93,9 +120,9 @@ describe("DatabaseEnqueuer", () => {
   it("should enqueue INSERT events", async () => {
     databaseEnqueuer.subscribe(noopTarget, {collection: "test_collection", type: "INSERT"});
 
-    await stream.wait();
+    await probe.wait();
     await database.collection("test_collection").insertOne({test: true});
-    await stream.change.wait();
+    await probe.change.wait();
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(databaseQueue.enqueue).toHaveBeenCalledTimes(1);
     const change = databaseQueue.enqueue.mock.calls[databaseQueue.enqueue.mock.calls.length - 1][1];
@@ -106,12 +133,12 @@ describe("DatabaseEnqueuer", () => {
   it("should enqueue UPDATE events", async () => {
     const coll = database.collection("test_collection");
 
-    const insertedId = (await coll.insertOne({test: true})).insertedId;
+    const insertedId = (await coll.insertOne({test: true}))._id;
 
     databaseEnqueuer.subscribe(noopTarget, {collection: "test_collection", type: "UPDATE"});
-    await stream.wait();
+    await probe.wait();
     await coll.updateOne({}, {$set: {test: false}});
-    await stream.change.wait();
+    await probe.change.wait();
 
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(databaseQueue.enqueue).toHaveBeenCalledTimes(1);
@@ -125,13 +152,13 @@ describe("DatabaseEnqueuer", () => {
   it("should enqueue DELETE events", async () => {
     const coll = database.collection("test_collection");
 
-    const insertedId = (await coll.insertOne({test: true})).insertedId;
+    const insertedId = (await coll.insertOne({test: true}))._id;
 
     databaseEnqueuer.subscribe(noopTarget, {collection: "test_collection", type: "DELETE"});
 
-    await stream.wait();
+    await probe.wait();
     await coll.deleteMany({});
-    await stream.change.wait();
+    await probe.change.wait();
 
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(databaseQueue.enqueue).toHaveBeenCalledTimes(1);

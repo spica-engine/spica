@@ -702,7 +702,11 @@ export namespace Http {
     }
   };
   export class QueueClient extends grpc_1.makeGenericClientConstructor(Queue, "Queue", {}) {
-    constructor(address: string, credentials: grpc_1.ChannelCredentials, options?: Partial<grpc_1.ChannelOptions>) {
+    constructor(
+      address: string,
+      credentials: grpc_1.ChannelCredentials,
+      options?: Partial<grpc_1.ChannelOptions>
+    ) {
       super(address, credentials, options);
     }
   }

@@ -20,9 +20,7 @@ export abstract class Builder {
   private get strategy(): BuildStrategy {
     const strategy = this.strategies.get(this.language);
     if (!strategy) {
-      throw new Error(
-        `Language "${this.language}" is not supported by ${this.constructor.name}.`
-      );
+      throw new Error(`Language "${this.language}" is not supported by ${this.constructor.name}.`);
     }
     return strategy;
   }

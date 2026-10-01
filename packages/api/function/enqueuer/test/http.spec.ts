@@ -39,7 +39,6 @@ describe("http enqueuer", () => {
   let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
   let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
 
-
   let corsOptions = {
     allowCredentials: true,
     allowedHeaders: ["*"],
@@ -415,7 +414,6 @@ describe("http enqueuer with authentication and authorization", () => {
   let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
   let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
 
-
   let guardService: {
     checkAuthentication: jest.Mock;
     checkAuthorization: jest.Mock;
@@ -743,7 +741,6 @@ describe("http enqueuer with rate limiting", () => {
 
   let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
   let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
-
 
   let guardService: {
     checkAuthentication: jest.Mock;
