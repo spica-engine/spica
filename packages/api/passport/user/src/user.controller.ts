@@ -22,7 +22,8 @@ import {
   Logger
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
+import {DEFAULT, EXPRESSION, isJSONFilter, NUMBER, JSONP, BOOLEAN, OR} from "@spica-server/core";
+import {filterToMatch} from "@spica-server/bucket-expression";
 import {Schema} from "@spica-server/core-schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
@@ -161,7 +162,7 @@ export class UserController {
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: object,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
-    @Query("filter", JSONP) filter: object,
+    @Query("filter", OR(isJSONFilter, JSONP, EXPRESSION(filterToMatch))) filter: object,
     @ResourceFilter() resourceFilter: object
   ) {
     const pipelineBuilder = await new UserPipelineBuilder(this.userService)
@@ -578,7 +579,11 @@ export class UserController {
       body.provider
     );
     const cookiePath = "passport/user/session/refresh";
-    res.cookie("refreshToken", result.refreshToken.token, this.userService.getCookieOptions(cookiePath));
+    res.cookie(
+      "refreshToken",
+      result.refreshToken.token,
+      this.userService.getCookieOptions(cookiePath)
+    );
     return res.status(201).json(result.accessToken);
   }
   @Post("forgot-password/start")

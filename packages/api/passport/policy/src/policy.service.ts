@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {Collection, DatabaseService, ObjectId, BaseCollection} from "@spica-server/database";
+import {DatabaseService, ObjectId, BaseCollection} from "@spica-server/database";
 import {Policy} from "@spica-server/interface-passport-policy";
 import managedPolicies from "./policies/index.js";
 
@@ -18,16 +18,13 @@ export class PolicyService extends BaseCollection<Policy>("policies") {
   }
 
   _findAll(): Promise<Policy[]> {
-    return this._coll
-      .find()
-      .toArray()
-      .then(policies => {
-        this.customerManagedPolicies = policies.map(p => {
-          const policy = {...p, system: false};
-          return policy as PolicyWithType;
-        });
-        return this.policies;
+    return this.find().then(policies => {
+      this.customerManagedPolicies = policies.map(p => {
+        const policy = {...p, system: false};
+        return policy as PolicyWithType;
       });
+      return this.policies;
+    });
   }
 
   paginate(filter: object, limit: number, skip: number = 0) {

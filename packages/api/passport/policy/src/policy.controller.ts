@@ -15,7 +15,8 @@ import {
   HttpStatus
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
+import {NUMBER, DEFAULT, EXPRESSION, isJSONFilter, JSONP, OR} from "@spica-server/core";
+import {filterToMatch} from "@spica-server/bucket-expression";
 import {Schema} from "@spica-server/core-schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
@@ -40,7 +41,8 @@ export class PolicyController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:policy:index"))
   find(
-    @Query("filter", DEFAULT({}), JSONP) filter: object,
+    @Query("filter", DEFAULT({}), OR(isJSONFilter, JSONP, EXPRESSION(filterToMatch)))
+    filter: object,
     @ResourceFilter() resourceFilter?: object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number
