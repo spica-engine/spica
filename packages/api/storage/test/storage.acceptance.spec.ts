@@ -145,6 +145,27 @@ describe("Storage Acceptance", () => {
   });
 
   describe("filter", () => {
+    /**
+     * K-13: the management endpoints take the expression language on the same parameter. The leading `{`
+     * decides which of the two the value is, so both forms stay available.
+     */
+    it("should work with an expression filter", async () => {
+      const {body} = await req.get("/storage", {filter: 'name == "third.txt"'});
+      expect(body.length).toEqual(1);
+      expect(body[0].name).toEqual("third.txt");
+    });
+
+    it("should work with an expression filter over a nested field", async () => {
+      const {body} = await req.get("/storage", {filter: "document.content.size > 4"});
+      expect(body.length).toBeGreaterThan(0);
+      body.forEach(item => expect(item.content.size).toBeGreaterThan(4));
+    });
+
+    it("should work with regex() in an expression filter", async () => {
+      const {body} = await req.get("/storage", {filter: 'regex(document.name, "^third")'});
+      expect(body.map(item => item.name)).toEqual(["third.txt"]);
+    });
+
     it("should work with filter", async () => {
       const {body} = await req.get("/storage", {
         filter: JSON.stringify({name: "third.txt"})

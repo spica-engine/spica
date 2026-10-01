@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "bson";
 
 export interface Policy {
   _id: string | ObjectId;

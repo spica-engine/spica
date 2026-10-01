@@ -23,6 +23,10 @@ describe("Default", () => {
   });
 
   it("should create the directory", async () => {
+    // The constructor hands the directory to `FileStore`, which creates it **asynchronously** and exposes
+    // no promise — so asserting right after construction is a race that loses under load. The guarantee
+    // production relies on is this call, which every write path awaits.
+    await service["ensureStorageDiskExists"]();
     expect(fs.existsSync(service["path"])).toEqual(true);
   });
 
