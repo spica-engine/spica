@@ -68,7 +68,7 @@ export async function create({args: cmdArgs, options}: ActionParameters) {
   const persistentPath = "/var/data";
 
   /**
-   * Backend selection (K-5). The default is `mongodb`, so existing usage does not change at all.
+   * Backend selection. The default is `mongodb`, so existing usage does not change at all.
    *
    * There is **no** replica set step on PostgreSQL: a single container is created. The credentials are
    * inside the URI, because this command is for local development and the `postgres` image does not

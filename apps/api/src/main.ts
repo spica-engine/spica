@@ -770,7 +770,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   })
   .check(args => {
     /**
-     * The backend is selected from the URI scheme (K-5). On an unrecognized scheme `backendFromUri`
+     * The backend is selected from the URI scheme. On an unrecognized scheme `backendFromUri`
      * raises at startup; there is no silent default, because connecting to the wrong backend is the
      * easiest way to split the data in two.
      */
@@ -1151,7 +1151,7 @@ NestFactory.create(RootModule, {
   app.useWebSocketAdapter(new WsAdapter(app));
 
   /**
-   * "This backend cannot do that" gets an HTTP answer instead of a 500 (D25): a capability gap is 501, a
+   * "This backend cannot do that" gets an HTTP answer instead of a 500: a capability gap is 501, a
    * refused expression is 400. Everything else keeps Nest's own handling, because the filter delegates.
    */
   app.useGlobalFilters(new DriverCapabilityExceptionFilter(app.getHttpAdapter()));
@@ -1193,7 +1193,7 @@ NestFactory.create(RootModule, {
   await app.listen(port);
 
   /**
-   * Which backend it is on has to be obvious to the operator **from the start** (K-8). An installation
+   * Which backend it is on has to be obvious to the operator **from the start**. An installation
    * connected to the wrong database is discovered in the most expensive way, after the data has been
    * split; the startup log makes it visible in a single line.
    */
@@ -1203,7 +1203,7 @@ NestFactory.create(RootModule, {
   );
 
   /**
-   * The guard against a silent backend switch (K-8). It should run before the server starts listening,
+   * The guard against a silent backend switch. It should run before the server starts listening,
    * not **after**; it sits here because `DatabaseService` can only be resolved once the application has
    * been created. If the guard fires the process exits, so an API connected to the wrong database does
    * not stay up.

@@ -65,7 +65,7 @@ async function list() {
     }
 
     /**
-     * The database container can be one of two images (K-5): `project start --database=postgres`
+     * The database container can be one of two images: `project start --database=postgres`
      * creates a single `postgres` container. Looking only for `mongo` meant **never seeing** the
      * database container in a PostgreSQL project — so a database that had gone down would look healthy.
      */
