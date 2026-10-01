@@ -91,9 +91,28 @@ export function getConnectionHandlers(
     });
   }
 
+  /**
+   * A disconnect must not throw — and the reason is not tidiness.
+   *
+   * `getCollectionName` raises on a request it cannot resolve (`/bucket/<garbage>/data`, for instance).
+   * `handleConnection` catches that and closes the socket, but this handler did not, and it is invoked
+   * from inside an RxJS subscriber: the rejection escaped as an unhandled error and **took the whole API
+   * process down**. Any client could do it by opening one websocket on a malformed path and closing it
+   * again. Measured at a real boot, on both backends — this file is backend-neutral.
+   *
+   * Returning early is correct rather than merely safe: a request that cannot be resolved never got past
+   * `handleConnection`, so no emitter was ever registered and there is nothing to clean up. The client
+   * was already told why its connection closed.
+   */
   async function handleDisconnect(client: any, req: any) {
-    const collection = await getCollectionName(client, req);
-    const options = await getFindOptions(client, req);
+    let collection: string;
+    let options: unknown;
+    try {
+      collection = await getCollectionName(client, req);
+      options = await getFindOptions(client, req);
+    } catch {
+      return;
+    }
 
     if (realtime.doesEmitterExist(collection, options)) {
       realtime.removeEmitter(collection, options);
