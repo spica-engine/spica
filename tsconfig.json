@@ -432,6 +432,9 @@
     },
     {
       "path": "./packages/database/driver"
+    },
+    {
+      "path": "./packages/database/postgres"
     }
   ]
 }
