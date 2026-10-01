@@ -1,3 +1,6 @@
+{{- /* The replica set controller — bundled MongoDB only. Not rendered when an external URI is given
+     or when the backend is postgres (Phase 6 item 8). */ -}}
+{{- if and (include "database.bundled" .) (not (include "database.is-postgres" .)) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -49,3 +52,4 @@ spec:
       tolerations:
 {{ toYaml .Values.database.tolerations | indent 8 }}
       {{- end }}
+{{- end }}

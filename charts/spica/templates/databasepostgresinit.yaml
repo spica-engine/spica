@@ -1,0 +1,47 @@
+{{- /*
+Creating the function role (K-11) — on bundled PostgreSQL.
+
+**Why `initdb` rather than a separate Job.** The role has to exist before the API starts: the API
+applies `GRANT`s to it at startup and a `GRANT` on a role that does not exist raises. Helm hooks run
+**before** the main resources, so a `pre-install` Job cannot connect to a database that is not up yet;
+a `post-install` one runs after the API, by which point the API has already failed. The
+`docker-entrypoint-initdb.d` directory of the `postgres` image runs on first startup, the moment the
+database is ready and before anything else — so there is no ordering problem left.
+
+**A declared limit:** `initdb` runs on the **first** startup only. On an existing installation the
+function password cannot be changed this way; there the role is updated by hand, or a managed role is
+supplied through `database.functions.externalUri`. Even if the password changes the API raises a clear
+error at startup (it says what to do when the role cannot be found) rather than staying silent.
+
+`%I` / `%L` are PostgreSQL's own quoting forms: the first for an identifier, the second for a value.
+The password is not embedded into the SQL directly, it is passed as a `psql` variable.
+*/ -}}
+{{- if and (include "database.bundled" .) (include "database.is-postgres" .) .Values.database.functions.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}-database-functions-init
+  labels:
+    app.kubernetes.io/name: database-functions-init
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: helm
+data:
+  create-functions-role.sh: |
+    #!/bin/sh
+    set -e
+    psql -v ON_ERROR_STOP=1 \
+      --username "$POSTGRES_USER" \
+      --dbname "$POSTGRES_DB" \
+      -v fnuser="$FUNCTIONS_USERNAME" \
+      -v fnpass="$FUNCTIONS_PASSWORD" <<'SQL'
+    SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'fnuser', :'fnpass')
+    WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'fnuser')
+    \gexec
+    SELECT format('ALTER ROLE %I WITH LOGIN PASSWORD %L', :'fnuser', :'fnpass')
+    \gexec
+    SQL
+{{- end }}
