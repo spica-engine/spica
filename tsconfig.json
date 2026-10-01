@@ -410,6 +410,9 @@
       "path": "./packages/devkit/database"
     },
     {
+      "path": "./packages/devkit/postgres"
+    },
+    {
       "path": "./packages/devkit/storage"
     },
     {
@@ -429,6 +432,15 @@
     },
     {
       "path": "./packages/devkit/sync"
+    },
+    {
+      "path": "./packages/database/driver"
+    },
+    {
+      "path": "./packages/database/contract-test"
+    },
+    {
+      "path": "./packages/database/postgres"
     }
   ]
 }
