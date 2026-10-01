@@ -1,4 +1,5 @@
-import {ObjectId, BaseCollection} from "@spica-server/database";
+import {ObjectId} from "bson";
+import {ICollection} from "@spica-server/database-driver";
 import {Bucket, BucketPreferences} from "@spica-server/interface-bucket";
 
 export interface CrudOptions<Paginate> {
@@ -21,7 +22,7 @@ export interface CrudParams {
 }
 
 export interface CrudFactories<T> {
-  collection: (schema: Bucket) => BaseCollection<T>;
+  collection: (schema: Bucket) => ICollection<T>;
   preference: () => Promise<BucketPreferences>;
   schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
 }

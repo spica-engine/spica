@@ -151,9 +151,34 @@ async function updateDocumentsOnChange(
     // for array targets
     .map(change => change.path.join(".").replace(/\/\[0-9]\*\//g, "$[]"));
 
+  const collection = bucketDataService.children(previousSchema);
+
+  /**
+   * On a relational backend clearing the **root** fields is both needless and impossible.
+   *
+   * Needless: the **column** of a removed root field, or one whose type changed, is dropped
+   * (`alignCollection` → `ISchemaManager.plan`, `clearOnTypeChange`), so the data goes with it.
+   * Impossible: it would mean writing an `$unset` to a column that no longer exists, and the compiler
+   * rightly rejects that (`'root_removed' is not a property of this bucket`) — in the measurement
+   * `PUT /bucket/:id` was returning a 500 because of it.
+   *
+   * Paths whose root **remains** (`nested_object.child.removed`) are not filtered out: those live inside a
+   * single `jsonb` column, the column is in place and the sub-path really does have to be deleted.
+   *
+   * No filtering is done on MongoDB: there is no schema there and a field only leaves the document through
+   * an `$unset`.
+   */
+  const backend = (collection as unknown as {db?: {capabilities?: {backend?: string}}}).db
+    ?.capabilities?.backend;
+  const currentProperties = currentSchema.properties || {};
+  const applicable =
+    backend && backend !== "mongodb"
+      ? targets.filter(target => target.split(".")[0] in currentProperties)
+      : targets;
+
   const unsetFields = {};
 
-  for (const target of targets) {
+  for (const target of applicable) {
     unsetFields[target] = "";
   }
 
@@ -161,7 +186,45 @@ async function updateDocumentsOnChange(
     return;
   }
 
-  await bucketDataService.children(previousSchema).updateMany({}, {$unset: unsetFields});
+  await collection.updateMany({}, {$unset: unsetFields});
+}
+
+type BucketProperties = NonNullable<Bucket["properties"]>;
+
+/**
+ * A copy of `properties` without the given relation paths.
+ *
+ * A path is dotted in document terms (`a.b`), which in the definition means `a.properties.b`. Keys are
+ * re-inserted in their original order — that order is the field order, so preserving it is the whole point.
+ */
+function withoutRelationFields(properties: BucketProperties, paths: string[]): BucketProperties {
+  const removals = new Map<string, string[]>();
+
+  for (const path of paths) {
+    const [head, ...rest] = path.split(".");
+    if (!removals.has(head)) removals.set(head, []);
+    if (rest.length) removals.get(head)!.push(rest.join("."));
+  }
+
+  const result: BucketProperties = {};
+
+  for (const [key, property] of Object.entries(properties)) {
+    const nested = removals.get(key);
+
+    // No entry: untouched. An entry with no remainder: this field itself is the relation being removed.
+    if (!nested) {
+      result[key] = property;
+      continue;
+    }
+    if (!nested.length) continue;
+
+    result[key] = {
+      ...property,
+      properties: withoutRelationFields((property.properties as BucketProperties) ?? {}, nested)
+    };
+  }
+
+  return result;
 }
 
 async function clearRelationsOnDrop(
@@ -178,14 +241,21 @@ async function clearRelationsOnDrop(
       findRelations(bucket.properties, bucketId.toHexString(), "", new Map()).keys()
     );
 
-    const unsetFieldsBucket = targets.reduce((acc, current) => {
-      current = "properties." + current.replace(/\./g, ".properties.");
-      acc = {...acc, [current]: ""};
-      return acc;
-    }, {});
-
-    if (Object.keys(unsetFieldsBucket).length) {
-      updatePromises.push(bucketService.updateMany({_id: bucket._id}, {$unset: unsetFieldsBucket}));
+    /**
+     * The definition is rewritten **in JS** and written back whole, rather than `$unset`ing the sub-paths.
+     *
+     * A bucket's `properties` is an ordered object: its key order is the field order the panel shows. Writing
+     * a sub-path means `jsonb_set`, and `jsonb` normalizes keys by length then bytes — so removing one
+     * relation field silently reshuffled all the others (R97, D16). Rebuilding the object keeps the order the
+     * author chose, on both backends: the remaining keys are re-inserted in their original sequence.
+     */
+    if (targets.length) {
+      updatePromises.push(
+        bucketService.updateMany(
+          {_id: bucket._id},
+          {$set: {properties: withoutRelationFields(bucket.properties, targets)}}
+        )
+      );
     }
 
     const unsetFieldsBucketData = targets.reduce((acc, current) => {
