@@ -152,13 +152,13 @@ describe("Function Realtime", () => {
         .then(r =>
           insertData.map((data, index) => ({
             ...data,
-            _id: r.insertedIds[index].toString()
+            _id: r[index].toString()
           }))
         );
     });
 
     afterEach(async () => {
-      await db.collection("function").drop();
+      await db.dropCollection("function");
     });
 
     it("should do the initial sync", done => {
