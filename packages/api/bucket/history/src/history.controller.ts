@@ -61,8 +61,8 @@ export class HistoryController {
   )
   @HttpCode(HttpStatus.NO_CONTENT)
   async clearHistories(@Param("bucketId", OBJECT_ID) bucketId: ObjectId) {
-    const res = await this.historyService.deleteMany({bucket_id: bucketId});
-    if (!res.deletedCount) {
+    const deletedCount = await this.historyService.deleteMany({bucket_id: bucketId});
+    if (!deletedCount) {
       throw new NotFoundException("No bucket history found with the provided IDs");
     }
   }
