@@ -320,7 +320,7 @@ describe("FunctionAssetReconciler.reconcileFunction", () => {
   it("should do nothing when no stored assets exist", async () => {
     const reconciler = buildReconciler();
     mockDeps.assetService.findByFunction.mockResolvedValue([]);
-    await reconciler.reconcileFunction(mockFn);
+    await expect(reconciler.reconcileFunction(mockFn)).resolves.toBe(false);
     expect(mockDeps.strategy.read).not.toHaveBeenCalled();
     expect(mockDeps.preparationService.prepare).not.toHaveBeenCalled();
   });
@@ -341,7 +341,7 @@ describe("FunctionAssetReconciler.reconcileFunction", () => {
     ]);
     mockDeps.preparationService.readFileBuffer.mockResolvedValue(data);
 
-    await reconciler.reconcileFunction(mockFn);
+    await expect(reconciler.reconcileFunction(mockFn)).resolves.toBe(false);
 
     expect(mockDeps.strategy.read).not.toHaveBeenCalled();
     expect(mockDeps.preparationService.prepare).not.toHaveBeenCalled();
@@ -366,7 +366,7 @@ describe("FunctionAssetReconciler.reconcileFunction", () => {
     mockDeps.preparationService.readFileBuffer.mockResolvedValue(localData);
     mockDeps.strategy.read.mockResolvedValue(remoteData);
 
-    await reconciler.reconcileFunction(mockFn);
+    await expect(reconciler.reconcileFunction(mockFn)).resolves.toBe(true);
 
     expect(mockDeps.strategy.read).toHaveBeenCalledWith("functions/my-function/index.ts");
     expect(mockDeps.preparationService.writeFileBuffer).toHaveBeenCalledWith(

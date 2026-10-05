@@ -4,12 +4,15 @@ import {FunctionService, FunctionAssetService} from "@spica-server/function-serv
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
+import {PlanExecutor} from "./plan-executor.js";
+import {refreshPlan} from "./change.js";
 import * as CRUD from "./crud.js";
 
 /**
  * Watches the function_assets change stream and reconciles peer-originated writes.
  *
- * Peer writes (from other nodes) trigger reconciliation + re-prepare.
+ * Peer writes (from other nodes) trigger reconciliation + re-prepare, then a
+ * worker refresh so no worker keeps serving code built before the sync.
  * Self-writes (from this node) are suppressed via SelfWriteTracker.
  * Delete events trigger directory cleanup on peer replicas.
  */
@@ -23,7 +26,8 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
     private readonly functionService: FunctionService,
     private readonly reconciler: FunctionAssetReconciler,
     private readonly tracker: SelfWriteTracker,
-    private readonly preparationService: FunctionPreparationService
+    private readonly preparationService: FunctionPreparationService,
+    private readonly executor: PlanExecutor
   ) {}
 
   onModuleInit() {
@@ -89,7 +93,14 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
               `[asset-watcher] Peer asset change detected for ${fn.name}/${filename} — reconciling`
             );
 
-            await this.reconciler.reconcileFunction(fn);
+            const changed = await this.reconciler.reconcileFunction(fn);
+            if (changed) {
+              // The replicated refresh from the writing replica can land before this replica
+              // finishes rebuilding, so its replacement workers may have preloaded the old build.
+              // Refresh locally via the executor, not engine.applyChangePlan, which would
+              // re-broadcast to every replica.
+              await this.executor.apply(refreshPlan(functionId.toHexString()));
+            }
           } catch (err) {
             this.logger.error(
               `[asset-watcher] Error handling change: ${err instanceof Error ? err.message : err}`
