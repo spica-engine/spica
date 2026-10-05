@@ -14,3 +14,5 @@ export * from "./src/driver/privileges.js";
 export * from "./src/driver/function-grants.js";
 export * from "./src/driver/idempotent-ddl.js";
 export * from "./src/driver/wait-for-postgres.js";
+export * from "./src/cdc/changes-schema.js";
+export * from "./src/cdc/postgres.change-stream.js";
