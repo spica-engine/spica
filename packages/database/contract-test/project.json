@@ -1,0 +1,5 @@
+{
+  "name": "database/contract-test",
+  "sourceRoot": "packages/database/contract-test",
+  "projectType": "library"
+}
