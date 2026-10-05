@@ -1,10 +1,34 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {
+  createAdHocCollection,
+  DatabaseService,
+  DatabaseTestingModule,
+  ObjectId
+} from "@spica-server/database-testing";
 import {bufferCount, delay, first, skip, take, tap} from "rxjs/operators";
 import {RealtimeDatabaseService} from "@spica-server/database-realtime/src/database.service";
 import {ChunkKind, SequenceKind} from "@spica-server/interface-realtime";
 
 const LATENCY = 500;
+
+/** Every collection the spec touches; each test uses its own so they cannot interfere. */
+const COLLECTIONS = [
+  "test",
+  ...Array.from({length: 22}, (_, index) => `test${index + 1}`),
+  "willbedropped"
+];
+
+/** The union of the fields the tests insert, filter and sort on. */
+const DOCUMENT_SHAPE = {
+  test: {type: "number"},
+  stars: {type: "number"},
+  subfilter: {type: "boolean"},
+  anotherfilter: {type: "boolean"},
+  has_star: {type: "boolean"},
+  status: {type: "string"},
+  q: {type: "string"},
+  a: {type: "boolean"}
+};
 
 function wait(time: number = LATENCY) {
   return new Promise(resolve => setTimeout(resolve, time));
@@ -25,6 +49,25 @@ describe("realtime database", () => {
 
     realtime = bed.get(RealtimeDatabaseService);
     database = bed.get(DatabaseService);
+
+    /**
+     * The collections are created **up front**, with their shape declared.
+     *
+     * MongoDB creates a namespace on the first write and can watch one that does not exist yet; in a
+     * relational model there has to be a table to watch, and its column types have to be known before a
+     * row can be converted or a filter compiled. `createAdHocCollection` ignores the shape on the Mongo
+     * leg, so the spec does not need to know which backend it runs on.
+     *
+     * All of them are created together rather than one per test: the spec deliberately gives every test
+     * its own collection so the tests cannot interfere, and threading a per-test name through 24 tests
+     * would be a bigger change than creating the set in the fixture. Each module gets its own database on
+     * the PG leg, so this has to happen per test, not once per file.
+     *
+     * **Sequentially, not with `Promise.all`.** The test pool is capped at two connections on purpose
+     *, and creating a table takes a dedicated client for its transaction — twenty-four of them at
+     * once starve the pool and the run deadlocks with no output at all.
+     */
+    for (const name of COLLECTIONS) await createAdHocCollection(database, name, DOCUMENT_SHAPE);
   });
 
   afterEach(async () => {
@@ -115,7 +158,7 @@ describe("realtime database", () => {
           .pipe(skip(3), take(1))
           .subscribe(deleted => {
             expect(deleted.kind).toBe(ChunkKind.Delete);
-            expect(inserted.insertedIds[1].equals(deleted.document._id)).toBeTruthy();
+            expect(inserted[1].equals(deleted.document._id)).toBeTruthy();
             done();
           });
         wait().then(() => coll.deleteOne({test: 3}));
@@ -192,7 +235,7 @@ describe("realtime database", () => {
             .pipe(skip(3), take(1))
             .subscribe(deleted => {
               expect(deleted.kind).toBe(ChunkKind.Delete);
-              expect(inserted.insertedIds[1].equals(deleted.document._id)).toBeTruthy();
+              expect(inserted[1].equals(deleted.document._id)).toBeTruthy();
               done();
             });
           wait().then(() =>
@@ -222,7 +265,7 @@ describe("realtime database", () => {
       const coll = database.collection("test9");
       coll
         .insertOne({test: 2, subfilter: true})
-        .then(r => r.insertedId)
+        .then(r => r._id)
         .then(id => {
           realtime
             .find("test9", {filter: {subfilter: true}})
@@ -235,11 +278,21 @@ describe("realtime database", () => {
         });
     });
 
+    /**
+     * The value changes from one **string** to another, not from a string to a boolean.
+     *
+     * The fixture used to write `status: "active"` and then `status: false`, which only a schemaless store
+     * can hold: one field, two types. A relational column has one type, so the write failed with
+     * `invalid input syntax for type boolean: "active"`. What this test is about is that a document which
+     * stops matching the filter gets expunged — the second value only has to differ, not to change type,
+     * so the subject is unchanged. A field that genuinely holds mixed types is a different question and has
+     * an answer of its own: declare it `json`.
+     */
     it("should expunge updated document if it does not match the filter condition anymore", done => {
       const coll = database.collection("test22");
       coll
         .insertOne({status: "active"})
-        .then(r => r.insertedId)
+        .then(r => r._id)
         .then(id => {
           realtime
             .find("test22", {filter: {status: "active"}})
@@ -248,7 +301,7 @@ describe("realtime database", () => {
               expect(updated).toEqual({kind: ChunkKind.Expunge, document: {_id: id}});
               done();
             });
-          wait().then(() => coll.updateOne({_id: id}, {$set: {status: false}}));
+          wait().then(() => coll.updateOne({_id: id}, {$set: {status: "inactive"}}));
         });
     });
 
@@ -256,7 +309,7 @@ describe("realtime database", () => {
       const coll = database.collection("test10");
       coll
         .insertOne({test: 2, subfilter: true})
-        .then(r => r.insertedId)
+        .then(r => r._id)
         .then(id => {
           realtime
             .find("test10", {filter: {subfilter: true, test: 2}})
@@ -273,7 +326,7 @@ describe("realtime database", () => {
   describe("with skip/limit", () => {
     it("should skip N items", done => {
       const coll = database.collection("test11");
-      coll.insertMany([{test: 2}, {test: 2}, {test: 4}, {test: 5}]).then(({insertedIds}) => {
+      coll.insertMany([{test: 2}, {test: 2}, {test: 4}, {test: 5}]).then(insertedIds => {
         let totalEmit = 0;
         let laterInsertedId: ObjectId;
         realtime
@@ -303,7 +356,7 @@ describe("realtime database", () => {
         wait().then(() =>
           coll
             .insertOne({test: 7})
-            .then(r => r.insertedId)
+            .then(r => r._id)
             .then(_laterInsertedId => {
               laterInsertedId = _laterInsertedId;
               coll.findOneAndReplace({_id: laterInsertedId}, {test: 3}).then(() =>
@@ -314,7 +367,7 @@ describe("realtime database", () => {
                       Promise.all([
                         coll.updateOne({_id: insertedIds[1]}, {$set: {test: 25}}),
                         coll.deleteOne({_id: insertedIds[1]})
-                      ]).then(() => wait().then(() => coll.drop()))
+                      ]).then(() => wait().then(() => database.dropCollection(coll.name)))
                     )
                   )
                 )
@@ -328,7 +381,7 @@ describe("realtime database", () => {
       const coll = database.collection("test12");
       coll
         .insertMany([{test: 1}, {test: 7}, {test: 2}, {test: -1}])
-        .then(r => r.insertedIds)
+
         .then(insertedIds => {
           let totalEmit = 0;
           realtime
@@ -368,7 +421,7 @@ describe("realtime database", () => {
                           Promise.all([
                             coll.insertMany([{q: "do we rock?"}, {a: true}]),
                             coll.insertMany([{test: 12}, {test: 19.5}])
-                          ]).then(() => wait().then(() => coll.drop()))
+                          ]).then(() => wait().then(() => database.dropCollection(coll.name)))
                         )
                       )
                     )
@@ -380,46 +433,54 @@ describe("realtime database", () => {
         });
     });
 
+    /**
+     * The fixture is numeric throughout.
+     *
+     * It used to insert `{test: true}` and `{test: "test"}` alongside numbers — one field with three
+     * types, which only a schemaless store can hold; on a typed column the write failed with
+     * `invalid input syntax for type double precision: "true"`. Those two values were filler: the subject
+     * is the skip/limit window over five documents and the values are only echoed back, so numbering them
+     * leaves the assertion exactly as strong.
+     */
     it("should skip and limit to N items", done => {
       const coll = database.collection("test13");
-      coll
-        .insertMany([{test: 1}, {test: 7}, {test: 2}, {test: true}, {test: "test"}])
-        .then(({insertedIds}) => {
-          let totalEmit = 0;
-          realtime
-            .find("test13", {limit: 2, skip: 2})
-            .pipe(
-              tap(() => (totalEmit += 1)),
-              bufferCount(5),
-              take(1)
-            )
-            .subscribe({
-              next: chunks => {
-                expect(chunks).toEqual([
-                  {kind: ChunkKind.Initial, document: {_id: insertedIds[2], test: 2}},
-                  {kind: ChunkKind.Initial, document: {_id: insertedIds[3], test: true}},
-                  {kind: ChunkKind.EndOfInitial},
-                  {kind: ChunkKind.Delete, document: {_id: insertedIds[3]}},
-                  {kind: ChunkKind.Initial, document: {_id: insertedIds[4], test: "test"}}
-                ]);
-              },
-              complete: () => {
-                expect(totalEmit).toBe(5);
-                done();
-              }
-            });
-          wait().then(() =>
-            coll.deleteOne({_id: insertedIds[3]}).then(() => wait().then(() => coll.drop()))
-          );
-        });
+      coll.insertMany([{test: 1}, {test: 7}, {test: 2}, {test: 3}, {test: 4}]).then(insertedIds => {
+        let totalEmit = 0;
+        realtime
+          .find("test13", {limit: 2, skip: 2})
+          .pipe(
+            tap(() => (totalEmit += 1)),
+            bufferCount(5),
+            take(1)
+          )
+          .subscribe({
+            next: chunks => {
+              expect(chunks).toEqual([
+                {kind: ChunkKind.Initial, document: {_id: insertedIds[2], test: 2}},
+                {kind: ChunkKind.Initial, document: {_id: insertedIds[3], test: 3}},
+                {kind: ChunkKind.EndOfInitial},
+                {kind: ChunkKind.Delete, document: {_id: insertedIds[3]}},
+                {kind: ChunkKind.Initial, document: {_id: insertedIds[4], test: 4}}
+              ]);
+            },
+            complete: () => {
+              expect(totalEmit).toBe(5);
+              done();
+            }
+          });
+        wait().then(() =>
+          coll
+            .deleteOne({_id: insertedIds[3]})
+            .then(() => wait().then(() => database.dropCollection(coll.name)))
+        );
+      });
     });
   });
 
   describe("with sort", () => {
     it("should order descending by id", async () => {
       const coll = database.collection("test14");
-      const insertedIds = (await coll.insertMany([{test: 1}, {test: 2}, {test: 4}, {test: 5}]))
-        .insertedIds;
+      const insertedIds = await coll.insertMany([{test: 1}, {test: 2}, {test: 4}, {test: 5}]);
       realtime
         .find("test14", {sort: {_id: -1}})
         .pipe(bufferCount(5), take(1))
@@ -436,8 +497,7 @@ describe("realtime database", () => {
 
     it("should order ascending by id", async () => {
       const coll = database.collection("test15");
-      const insertedIds = (await coll.insertMany([{test: 1}, {test: 2}, {test: 4}, {test: 5}]))
-        .insertedIds;
+      const insertedIds = await coll.insertMany([{test: 1}, {test: 2}, {test: 4}, {test: 5}]);
 
       realtime
         .find("test15", {sort: {_id: 1}})
@@ -455,7 +515,7 @@ describe("realtime database", () => {
 
     it("should order descending by number property", done => {
       const coll = database.collection("test16");
-      coll.insertMany([{test: 1}, {test: 3}, {test: 4}]).then(({insertedIds}) => {
+      coll.insertMany([{test: 1}, {test: 3}, {test: 4}]).then(insertedIds => {
         realtime
           .find("test16", {sort: {test: 1}})
           .pipe(bufferCount(6), take(1))
@@ -492,7 +552,7 @@ describe("realtime database", () => {
 
     it("should order descending by _id property and limit to 2", done => {
       const coll = database.collection("test17");
-      coll.insertOne({test: 1}).then(({insertedId}) => {
+      coll.insertOne({test: 1}).then(({_id: insertedId}) => {
         let laterInsertedId: ObjectId;
         realtime
           .find("test17", {sort: {_id: -1}, limit: 2})
@@ -523,16 +583,14 @@ describe("realtime database", () => {
             done();
           });
         wait().then(() =>
-          coll
-            .insertOne({test: 2})
-            .then(({insertedId: _insertedId}) => (laterInsertedId = _insertedId))
+          coll.insertOne({test: 2}).then(({_id: _insertedId}) => (laterInsertedId = _insertedId))
         );
       });
     });
 
     it("should order descending by _id property and limit to one", done => {
       const coll = database.collection("test18");
-      coll.insertOne({test: 1}).then(({insertedId}) => {
+      coll.insertOne({test: 1}).then(({_id: insertedId}) => {
         let laterInsertedId;
         realtime
           .find("test18", {sort: {_id: -1}, limit: 1})
@@ -556,16 +614,14 @@ describe("realtime database", () => {
             done();
           });
         wait(LATENCY).then(() =>
-          coll
-            .insertOne({test: 2})
-            .then(({insertedId: _insertedId}) => (laterInsertedId = _insertedId))
+          coll.insertOne({test: 2}).then(({_id: _insertedId}) => (laterInsertedId = _insertedId))
         );
       });
     });
 
-    it("should order descending by _id property and limit to one and expunge", done => {
+    it("should order descending by _id, keep the limit of four and expunge the overflow", done => {
       const coll = database.collection("test19");
-      coll.insertOne({test: 1}).then(({insertedId}) => {
+      coll.insertOne({test: 1}).then(({_id: insertedId}) => {
         let laterInsertedIds;
         let laterInsertedIds2;
         realtime
@@ -603,21 +659,21 @@ describe("realtime database", () => {
             done();
           });
         wait(LATENCY).then(() =>
-          coll.insertMany([{test: 2}, {test: 3}, {test: 4}]).then(({insertedIds: _insertedId}) => {
+          coll.insertMany([{test: 2}, {test: 3}, {test: 4}]).then(_insertedId => {
             laterInsertedIds = _insertedId;
             wait(LATENCY).then(() =>
               coll
                 .insertMany([{test: 5}, {test: 6}, {test: 7}])
-                .then(({insertedIds: _insertedIds2}) => (laterInsertedIds2 = _insertedIds2))
+                .then(_insertedIds2 => (laterInsertedIds2 = _insertedIds2))
             );
           })
         );
       });
     });
 
-    it("should order descending by _id property and limit to one and expunge", done => {
+    it("should order descending by _id and expunge both initial documents past the limit of two", done => {
       const coll = database.collection("test20");
-      coll.insertMany([{test: 1}, {test: 2}]).then(({insertedIds: initiallyInsertedIds}) => {
+      coll.insertMany([{test: 1}, {test: 2}]).then(initiallyInsertedIds => {
         let laterInsertedIds;
         realtime
           .find("test20", {sort: {_id: -1}, limit: 2})
@@ -642,7 +698,7 @@ describe("realtime database", () => {
         wait(LATENCY * 2).then(() =>
           coll
             .insertMany([{test: 3}, {test: 4}])
-            .then(({insertedIds: _insertedIds}) => (laterInsertedIds = _insertedIds))
+            .then(_insertedIds => (laterInsertedIds = _insertedIds))
         );
       });
     });
