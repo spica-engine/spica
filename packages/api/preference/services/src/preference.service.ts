@@ -51,7 +51,10 @@ export class PreferenceService extends BaseCollection("preferences") {
       const sub = this.changeDispatcher.watch().subscribe(change => {
         chain = chain.then(async () => {
           try {
-            const preference = await this._coll.findOne<T>({_id: change.documentKey._id});
+            // `findOne` takes no generic in the contract; the collection's own type comes back.
+            const preference = (await this.findOne({
+              _id: change.documentKey._id
+            })) as unknown as T;
             if (preference && preference.scope === scope) {
               observer.next(preference);
             }
@@ -65,9 +68,9 @@ export class PreferenceService extends BaseCollection("preferences") {
   }
 
   get<T extends Preference>(scope: string) {
-    return this._coll
-      .findOne<T>({scope})
-      .then(preference => preference || deepCopy((this._defaults.get(scope) as T) || {}));
+    return this.findOne({scope}).then(
+      preference => (preference as unknown as T) || deepCopy((this._defaults.get(scope) as T) || {})
+    );
   }
 
   async replace<T extends Preference>(
@@ -75,7 +78,7 @@ export class PreferenceService extends BaseCollection("preferences") {
     preference: T,
     options?: FindOneAndReplaceOptions
   ) {
-    const result = await this._coll.findOneAndReplace(filter, preference, {
+    const result = await this.findOneAndReplace(filter, preference, {
       returnDocument: ReturnDocument.AFTER,
       ...options
     });
@@ -89,12 +92,20 @@ export class PreferenceService extends BaseCollection("preferences") {
   }
 
   async insertOne<T extends OptionalId<Preference>>(preference: T): Promise<WithId<Preference>> {
-    const result = await this._coll.insertOne(preference);
+    /**
+     * `super`, NOT `this`: this method overrides `insertOne`, so `this.insertOne` would call itself. The
+     * `_coll` sweep turned `this._coll.insertOne(x)` into `this.insertOne(x)` and produced
+     * exactly that recursion (`RangeError: Maximum call stack size exceeded`).
+     */
+    const inserted = await super.insertOne(preference);
     this.changeDispatcher.dispatch({
       operationType: "insert",
-      documentKey: {_id: result.insertedId as ObjectId}
+      documentKey: {_id: inserted._id as ObjectId}
     });
-    return {_id: result.insertedId, ...preference};
+    // In the contract `insertOne` returns the inserted document, not Mongo's result object.
+    // The cast is necessary: the base class gives the collection's own type and this override declares a
+    // narrower one.
+    return inserted as unknown as WithId<Preference>;
   }
 
   default<T extends Preference>(preference: T) {

@@ -2,6 +2,7 @@ import {WebhookLogService} from "@spica-server/function-webhook/src/log.service"
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
+import {getIndexManager} from "@spica-server/database";
 
 describe("Webhook Log Service", () => {
   let module: TestingModule;
@@ -27,21 +28,20 @@ describe("Webhook Log Service", () => {
     return await module.close();
   });
 
-  it("should create ttl index", async () => {
-    let indexes = await logService._coll.listIndexes().toArray();
-    expect(indexes.length).toEqual(2);
-
-    let ttlIndex = indexes.find(index => index.name == "created_at_1");
-    expect(ttlIndex.expireAfterSeconds).toEqual(5);
+  /**
+   * The retention period is verified **independently of the mechanism**: a TTL index on MongoDB, a sweeper
+   * registration on PostgreSQL (`nativeTTLIndex: false`). `ttlSeconds()` is the contract's
+   * neutral read.
+   */
+  it("should set the log retention period", async () => {
+    const retention = await getIndexManager(logService.db, logService.name).ttlSeconds();
+    expect(retention).toEqual(5);
   });
 
-  it("should update existing ttl index expireAfterSeconds value", async () => {
+  it("should update the log retention period", async () => {
     await logService.upsertTTLIndex(10);
 
-    let indexes = await logService._coll.listIndexes().toArray();
-    expect(indexes.length).toEqual(2);
-
-    let ttlIndex = indexes.find(index => index.name == "created_at_1");
-    expect(ttlIndex.expireAfterSeconds).toEqual(10);
+    const retention = await getIndexManager(logService.db, logService.name).ttlSeconds();
+    expect(retention).toEqual(10);
   });
 });

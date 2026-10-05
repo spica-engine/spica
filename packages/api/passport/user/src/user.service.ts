@@ -42,18 +42,18 @@ export class UserService extends BaseCollection<User>("user") {
   ) {
     super(database, {
       entryLimit: userOptions.entryLimit,
-      afterInit: () => {
-        this._coll.createIndex({username: 1}, {unique: true});
-        this._coll.createIndex(
-          {"email.hash": 1},
-          {unique: true, partialFilterExpression: {"email.hash": {$exists: true}}}
-        );
-
-        this._coll.createIndex(
-          {"phone.hash": 1},
-          {unique: true, partialFilterExpression: {"phone.hash": {$exists: true}}}
-        );
-      }
+      afterInit: () =>
+        Promise.all([
+          this.createIndex({username: 1}, {unique: true}),
+          this.createIndex(
+            {"email.hash": 1},
+            {unique: true, partialFilterExpression: {"email.hash": {$exists: true}}}
+          ),
+          this.createIndex(
+            {"phone.hash": 1},
+            {unique: true, partialFilterExpression: {"phone.hash": {$exists: true}}}
+          )
+        ])
     });
   }
 
@@ -145,10 +145,7 @@ export class UserService extends BaseCollection<User>("user") {
     await this.verify(refreshToken);
   }
 
-  private async verifyTokenCanBeUsed(
-    accessToken: string,
-    refreshToken: string
-  ) {
+  private async verifyTokenCanBeUsed(accessToken: string, refreshToken: string) {
     const hashedToken = this.hashRefreshToken(refreshToken);
     const refreshTokenData = await this.refreshTokenService.findOne({token: hashedToken});
     if (!refreshTokenData) {
@@ -257,10 +254,28 @@ export class UserService extends BaseCollection<User>("user") {
       result = null;
     }
 
-    await this.findOneAndUpdate(
-      {username},
-      {$set: {failedAttempts: user.failedAttempts, lastLogin: user.lastLogin}}
-    );
+    /**
+     * `lastLogin` is written only when it **is set**.
+     *
+     * On a failed login `user.lastLogin` is undefined and writing it stores the field as `null` on
+     * MongoDB (the driver turns `undefined` into `null`). On PostgreSQL the column becomes `NULL` and
+     * the driver reads it as "the field is absent" — the two backends were producing different response
+     * shapes.
+     *
+     * Rather than carrying the difference in the driver it was removed at the source: writing an
+     * undefined value was accidental to begin with, and once it is not written **both backends** leave
+     * the field out entirely.
+     *
+     * But one consumer relied on that `null`: `isUserBlocked` writes `attempt > lastLogin` and `null`
+     * was coerced to 0 there. This change broke it silently (there is no test for user blocking); the
+     * comparison was fixed by writing it out explicitly below.
+     */
+    const changes: Record<string, unknown> = {failedAttempts: user.failedAttempts};
+    if (user.lastLogin !== undefined) {
+      changes.lastLogin = user.lastLogin;
+    }
+
+    await this.findOneAndUpdate({username}, {$set: changes});
 
     this.checkUserIsBlocked(user);
 
@@ -279,7 +294,20 @@ export class UserService extends BaseCollection<User>("user") {
 
   isUserBlocked(user: User) {
     user.failedAttempts = user.failedAttempts || [];
-    const lastFailedAttempts = user.failedAttempts.filter(attempt => attempt > user.lastLogin);
+    /**
+     * "The attempts **after** the last successful login" — all of them when there has been none.
+     *
+     * It used to write an unconditional `attempt > user.lastLogin`, and with no `lastLogin` that is
+     * **always false**, so the account was never blocked. It worked by accident on MongoDB: the driver
+     * turns `undefined` into `null`, and `Date > null` coerces `null` to 0. On PostgreSQL (and on Mongo
+     * too) the field does not come back at all and no coercion happens.
+     *
+     * Because there was no test for blocking on the user side this was silently broken; the intent is
+     * now written out in the comparison and does not depend on BSON's `undefined` behaviour.
+     */
+    const lastFailedAttempts = user.lastLogin
+      ? user.failedAttempts.filter(attempt => attempt > user.lastLogin)
+      : user.failedAttempts;
 
     const isAttemptLimitReached =
       lastFailedAttempts.length == this.userOptions.blockingOptions.failedAttemptLimit;

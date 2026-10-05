@@ -25,7 +25,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   ) {
     super(database, {
       entryLimit: identityOptions.entryLimit,
-      afterInit: () => this._coll.createIndex({identifier: 1}, {unique: true})
+      afterInit: () => this.createIndex({identifier: 1}, {unique: true})
     });
   }
 
@@ -116,10 +116,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     await this.verify(refreshToken);
   }
 
-  private async verifyTokenCanBeUsed(
-    accessToken: string,
-    refreshToken: string
-  ) {
+  private async verifyTokenCanBeUsed(accessToken: string, refreshToken: string) {
     const hashedToken = this.hashRefreshToken(refreshToken);
     const refreshTokenData = await this.refreshTokenService.findOne({token: hashedToken});
     if (!refreshTokenData) {
@@ -227,10 +224,13 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       result = null;
     }
 
-    await this.findOneAndUpdate(
-      {identifier},
-      {$set: {failedAttempts: identity.failedAttempts, lastLogin: identity.lastLogin}}
-    );
+    // An undefined `lastLogin` is not written — the rationale is in `user.service.ts`.
+    const changes: Record<string, unknown> = {failedAttempts: identity.failedAttempts};
+    if (identity.lastLogin !== undefined) {
+      changes.lastLogin = identity.lastLogin;
+    }
+
+    await this.findOneAndUpdate({identifier}, {$set: changes});
 
     this.checkIdentityIsBlocked(identity);
 
@@ -248,9 +248,10 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   }
 
   isIdentityBlocked(identity: Identity) {
-    const lastFailedAttempts = identity.failedAttempts.filter(
-      attempt => attempt > identity.lastLogin
-    );
+    // When there has been no successful login every attempt counts; for the detail see `user.service.ts`.
+    const lastFailedAttempts = identity.lastLogin
+      ? identity.failedAttempts.filter(attempt => attempt > identity.lastLogin)
+      : identity.failedAttempts;
 
     const isAttemptLimitReached =
       lastFailedAttempts.length == this.identityOptions.blockingOptions.failedAttemptLimit;

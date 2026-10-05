@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "bson";
 import {EncryptedData} from "@spica-server/core-encryption";
 import {FactorMeta} from "@spica-server/interface-passport-authfactor";
 
@@ -67,9 +67,17 @@ export interface UserVerification {
   attempts: number;
   code: string;
   strategy: string;
+  /** Which channel the code went out on — `upsertVerificationRecord` writes it. */
+  provider: string;
   purpose: string;
   is_used: boolean;
   requestCount?: number;
+  /**
+   * The field the retention reads. It has to be spelled exactly this way: `upsertTTLIndex` is hard-wired to
+   * `created_at` on both drivers, and while the document wrote `createdAt` the retention never took effect
+   * at all.
+   */
+  created_at: Date;
 }
 
 export interface RateLimitGroupConfig {
