@@ -1,4 +1,5 @@
-import {ChangeStream, DatabaseService} from "@spica-server/database";
+import {DatabaseService} from "@spica-server/database";
+import {Subscription} from "rxjs";
 import {DatabaseQueue, EventQueue} from "@spica-server/function-queue";
 import {Database, event} from "@spica-server/function-queue-proto";
 import {JobReducer} from "@spica-server/replication";
@@ -20,7 +21,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     description: "Catch up the events happen in the database."
   };
 
-  private streams = new Set<ChangeStream>();
+  private streams = new Set<Subscription>();
 
   constructor(
     private queue: EventQueue,
@@ -37,16 +38,24 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   }
 
   subscribe(target: event.Target, options: DatabaseOptions): void {
-    const stream = this.db.collection(options.collection).watch(
-      [{$match: {operationType: options.type.toLowerCase()}}],
-      {fullDocument: "updateLookup", maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS}
-    );
+    const stream = this.db
+      .collection(options.collection)
+      .watch([{$match: {operationType: options.type.toLowerCase()}}], {
+        fullDocument: "updateLookup",
+        maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS
+      });
 
-    stream.on("change", change => this.onChangeHandler(change, target));
+    /**
+     * The payload is **still in Mongo's shape** — `onChangeHandler` passes
+     * `updateDescription.updatedFields` to the function as a field→value object, and that is a contract
+     * exposed to users. Because the contract's `DatabaseChange` gives an array of names the transition is
+     * breaking; it requires a separate decision.
+     */
+    const subscription = stream.subscribe(change => this.onChangeHandler(change, target));
 
-    Object.defineProperty(stream, "target", {writable: false, value: target});
+    Object.defineProperty(subscription, "target", {writable: false, value: target});
 
-    this.streams.add(stream);
+    this.streams.add(subscription);
   }
 
   unsubscribe(target: event.Target): void {
@@ -57,7 +66,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
           stream["target"].cwd == target.cwd &&
           stream["target"].handler == target.handler)
       ) {
-        stream.close();
+        stream.unsubscribe();
         this.streams.delete(stream);
       }
     }

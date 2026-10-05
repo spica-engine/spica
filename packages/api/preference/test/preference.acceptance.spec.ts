@@ -31,7 +31,7 @@ describe("PreferenceController", () => {
     await app.listen(req.socket);
   }, 120000);
 
-  afterEach(async () => await db.collection("preferences").drop());
+  afterEach(async () => await db.dropCollection("preferences"));
 
   afterAll(async () => await app.close());
 

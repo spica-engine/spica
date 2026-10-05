@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, ObjectId} from "@spica-server/database";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {createAdHocCollection, DatabaseTestingModule} from "@spica-server/database-testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {PlanExecutor} from "@spica-server/function/src/plan-executor";
@@ -243,7 +243,8 @@ describe("Engine", () => {
   });
 
   it("should get initial schema for database trigger", async () => {
-    await database.createCollection("test");
+    // In a relational model a table cannot be created without declaring a shape; the helper works on both legs.
+    await createAdHocCollection(database, "test");
     const expectedSchema: any = {
       $id: "http://spica.internal/function/enqueuer/database",
       type: "object",

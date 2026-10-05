@@ -2,7 +2,12 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {
+  createAdHocCollection,
+  DatabaseService,
+  DatabaseTestingModule,
+  ObjectId
+} from "@spica-server/database-testing";
 import {WebhookService, WebhookChangeDispatcher} from "@spica-server/function-webhook";
 import {Webhook} from "@spica-server/interface-function-webhook";
 import {SchemaResolver} from "@spica-server/function-webhook/src/schema";
@@ -43,8 +48,9 @@ describe("Webhook Controller", () => {
     await app.listen(req.socket);
 
     const db = module.get(DatabaseService);
-    await db.createCollection("coll1");
-    await db.createCollection("coll2");
+    // In a relational model a table cannot be created without declaring a shape; the helper works on both legs.
+    await createAdHocCollection(db, "coll1");
+    await createAdHocCollection(db, "coll2");
 
     webhook = {
       title: "wh1",
@@ -111,18 +117,25 @@ describe("Webhook Controller", () => {
     expect(existingWebhook).toEqual(hook);
   });
 
+  /**
+   * The list is verified by **containment**, not by exact equality.
+   *
+   * MongoDB creates a namespace on the first write, so on a fresh test database only the ones created here
+   * are visible. On PostgreSQL the system tables **have to** be created at startup (nothing can be written
+   * without column types), so they are on the list too. There is no difference in production — there
+   * everything has been written to every system collection; the difference only shows on a fresh database.
+   *
+   * The driver's own bookkeeping tables (`_changes`, `bucket_schema_changes`) must **not** be on the list
+   * and that is verified separately: offering the CDC outbox as a webhook target was a concrete defect.
+   */
   it("should list collections", async () => {
     const {body: collections} = await req.get("/webhook/collections", undefined);
-    expect(collections.map(c => c.id).sort((a, b) => a.localeCompare(b))).toEqual([
-      "coll1",
-      "coll2",
-      "webhook_logs"
-    ]);
-    expect(collections.map(c => c.slug).sort((a, b) => a.localeCompare(b))).toEqual([
-      "coll1",
-      "coll2",
-      "webhook_logs"
-    ]);
+    const ids = collections.map(c => c.id);
+    const slugs = collections.map(c => c.slug);
+
+    expect(ids).toEqual(expect.arrayContaining(["coll1", "coll2", "webhook_logs"]));
+    expect(slugs).toEqual(expect.arrayContaining(["coll1", "coll2", "webhook_logs"]));
+    expect(ids).not.toEqual(expect.arrayContaining(["_changes", "bucket_schema_changes"]));
   });
 
   describe("validation", () => {

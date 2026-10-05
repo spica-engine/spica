@@ -102,6 +102,22 @@ describe("Environment Variable", () => {
       const bodyWithoutIds2 = res2.body.map(({_id, updated_at, ...rest}) => rest);
       expect(bodyWithoutIds2).toEqual([envVar2]);
     });
+
+    // the same parameter takes the expression language; a leading `{` is what tells the two apart.
+    it("should filter by an expression", async () => {
+      const envVar1 = {key: "ENV_KEY_1", value: "val_1"};
+      const envVar2 = {key: "ENV_KEY_2", value: "val_2"};
+
+      await req.post("/env-var", envVar1);
+      await req.post("/env-var", envVar2);
+
+      const res = await req.get(`/env-var`, {filter: 'key == "ENV_KEY_2"'});
+      const bodyWithoutIds = res.body.map(({_id, updated_at, ...rest}) => rest);
+      expect(bodyWithoutIds).toEqual([envVar2]);
+
+      const regexed = await req.get(`/env-var`, {filter: 'regex(document.key, "_1$")'});
+      expect(regexed.body.map(({_id, updated_at, ...rest}) => rest)).toEqual([envVar1]);
+    });
   });
 
   describe("findOne", () => {

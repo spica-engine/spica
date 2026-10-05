@@ -1,15 +1,15 @@
 import {Injectable, OnModuleDestroy} from "@nestjs/common";
-import {ChangeStream, DatabaseService} from "@spica-server/database";
+import {DatabaseService} from "@spica-server/database";
 import fetch from "node-fetch";
 import {Webhook, ChangeKind} from "@spica-server/interface-function-webhook";
 import {WebhookLogService} from "./log.service.js";
 import {WebhookService} from "./webhook.service.js";
 import handlebars from "handlebars";
-import {Subject, takeUntil} from "rxjs";
+import {Subject, Subscription, takeUntil} from "rxjs";
 
 @Injectable()
 export class WebhookInvoker implements OnModuleDestroy {
-  private targets = new Map<string, ChangeStream>();
+  private targets = new Map<string, Subscription>();
   private onDestroySubject = new Subject();
 
   constructor(
@@ -49,11 +49,19 @@ export class WebhookInvoker implements OnModuleDestroy {
       body = "{{{ toJSON this }}}";
     }
     const bodyTemplate = handlebars.compile(body, {strict: true});
-    const stream = this.db.collection(trigger.options.collection).watch(
-      [{$match: {operationType: trigger.options.type.toLowerCase()}}],
-      {fullDocument: "updateLookup", maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS}
-    );
-    stream.on("change", (rawChange: any) => {
+    const stream = this.db
+      .collection(trigger.options.collection)
+      .watch([{$match: {operationType: trigger.options.type.toLowerCase()}}], {
+        fullDocument: "updateLookup",
+        maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS
+      });
+    /**
+     * The payload is **still in Mongo's shape**. `watch()` promises no neutral type, because this
+     * payload is exposed to users: `updateDescription.updatedFields` is a field→value object on Mongo and
+     * an array of names in the contract's `DatabaseChange`. Neutralizing it would be a breaking change for
+     * function authors, so it requires a separate decision; only the subscription form was fixed here.
+     */
+    const subscription = stream.subscribe((rawChange: any) => {
       const change = {
         type: rawChange.operationType,
         document: rawChange.fullDocument || rawChange.fullDocumentBeforeChange,
@@ -114,13 +122,14 @@ export class WebhookInvoker implements OnModuleDestroy {
         .catch(() => {});
     });
 
-    this.targets.set(target, stream);
+    this.targets.set(target, subscription);
   }
 
   private unsubscribe(target: string) {
     const stream = this.targets.get(target);
     if (stream) {
-      return stream.close().then(() => this.targets.delete(target));
+      stream.unsubscribe();
+      return Promise.resolve(this.targets.delete(target)).then(() => {});
     }
   }
 

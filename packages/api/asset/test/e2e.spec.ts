@@ -31,8 +31,14 @@ describe("E2E Tests", () => {
     return req.get(`asset/${id}`).then(r => r.body);
   }
 
+  // `GET /asset` has no sort parameter, so the response order is whatever the store returns. That is
+  // stable on MongoDB (a document keeps its record id when updated) and not on PostgreSQL (an update
+  // writes a new row version at the end of the heap). Sorting by `_id` — monotonic, since the ids are
+  // generated in the application layer — gives insertion order on both.
   function getAssets() {
-    return req.get("asset").then(r => r.body);
+    return req
+      .get("asset")
+      .then(r => (r.body as any[]).sort((a, b) => String(a._id).localeCompare(String(b._id))));
   }
 
   let req: Request;
@@ -65,7 +71,10 @@ describe("E2E Tests", () => {
   });
 
   afterEach(async () => {
-    await app.get(DatabaseService).dropDatabase();
+    const db = app.get(DatabaseService);
+    for (const {name} of await db.listCollections()) {
+      await db.dropCollection(name);
+    }
     await app.close();
   });
 

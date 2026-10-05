@@ -56,12 +56,15 @@ export async function find<
   const pipeline = new FunctionPipelineBuilder()
     .filterResources(options?.filter?.resources)
     .filterByEnvVars(options?.filter?.envVars)
-    .resolveEnvRelation(options?.resolveEnvRelations)
-    .resolveSecretRelation(options?.resolveSecretRelations)
-    .hideSecrets()
     .filterByLanguage(options?.filter?.language)
     .result();
   let fns = await fs.aggregate<Function<ER, SR>>(pipeline).toArray();
+
+  await resolveRelations(fs, fns as any[], {
+    resolveEnvRelations: options?.resolveEnvRelations,
+    resolveSecretRelations: options?.resolveSecretRelations,
+    hideSecretValues: true
+  });
 
   if (options?.filter?.index) {
     fns = await index.filter(fns, options.filter.index, engine);
@@ -80,19 +83,79 @@ export async function findOne<
     resolveSecretRelations?: SR;
   }
 ): Promise<Function<ER, SR>> {
-  const pipeline = new FunctionPipelineBuilder()
-    .findOneIfRequested(id)
-    .resolveEnvRelation(options.resolveEnvRelations)
-    .resolveSecretRelation(options.resolveSecretRelations)
-    .hideSecrets()
-    .result();
+  const pipeline = new FunctionPipelineBuilder().findOneIfRequested(id).result();
 
   const res = await fs.aggregate<Function<ER, SR>>(pipeline).next();
   if (!res) {
     throw new NotFoundException(`Couldn't find the function with id ${id}`);
   }
 
+  await resolveRelations(fs, [res], {
+    resolveEnvRelations: options.resolveEnvRelations,
+    resolveSecretRelations: options.resolveSecretRelations,
+    hideSecretValues: true
+  });
+
   return res;
+}
+
+/**
+ * Resolves the `env_vars` / `secrets` relations **in the application layer**.
+ *
+ * It used to be done with a `$lookup`, and because `localField` is an **array of ids** that `$lookup`
+ * shape differed from the other two (no `$unwind`, and the result is an array of documents). Rather than
+ * writing a third structural recognizer the escape hatch was removed — the direction this work calls
+ * "a gradual move to `read()`", and the same decision was made in `provideLanguageFinalizer`.
+ *
+ * **No N+1:** the ids every function sends are collected into one set and **one** query is issued per
+ * collection. So `find()` costs three queries in total: functions, env_vars, secrets.
+ *
+ * The `hideSecretValues` distinction is real: the controller paths must **never** return a secret's
+ * value, but `findOneForRuntime` needs it to run the function. That distinction used to be carried by
+ * whether `hideSecrets()` was added to the pipeline; it is explicit in the code now.
+ */
+async function resolveRelations(
+  fs: FunctionService,
+  fns: any[],
+  options: {
+    resolveEnvRelations?: EnvRelation;
+    resolveSecretRelations?: SecretRelation;
+    hideSecretValues: boolean;
+  }
+): Promise<void> {
+  const resolveEnv = options.resolveEnvRelations === EnvRelation.Resolved;
+  const resolveSecret = options.resolveSecretRelations === SecretRelation.Resolved;
+  if (!fns.length || (!resolveEnv && !resolveSecret)) return;
+
+  const load = async (collection: string, field: string) => {
+    const wanted = new Map<string, ObjectId>();
+    for (const fn of fns) {
+      for (const id of fn[field] || []) wanted.set(String(id), new ObjectId(id));
+    }
+    if (!wanted.size) return new Map<string, any>();
+
+    const documents = await fs.db.collection(collection).find({_id: {$in: [...wanted.values()]}});
+    return new Map(documents.map(document => [String(document._id), document]));
+  };
+
+  const envVars = resolveEnv ? await load("env_var", "env_vars") : undefined;
+  const secrets = resolveSecret ? await load("secret", "secrets") : undefined;
+
+  for (const fn of fns) {
+    if (envVars) {
+      fn.env_vars = (fn.env_vars || []).map(id => envVars.get(String(id))).filter(Boolean);
+    }
+    if (secrets) {
+      fn.secrets = (fn.secrets || [])
+        .map(id => secrets.get(String(id)))
+        .filter(Boolean)
+        .map(secret => {
+          if (!options.hideSecretValues) return secret;
+          const {value, ...rest} = secret as any;
+          return rest;
+        });
+    }
+  }
 }
 
 export async function findByName<
@@ -429,11 +492,7 @@ export async function findOneForRuntime(
   fs: FunctionService,
   id: ObjectId
 ): Promise<Function<EnvRelation.Resolved, SecretRelation.Resolved>> {
-  const pipeline = new FunctionPipelineBuilder()
-    .findOneIfRequested(id)
-    .resolveEnvRelation(EnvRelation.Resolved)
-    .resolveSecretRelation(SecretRelation.Resolved)
-    .result();
+  const pipeline = new FunctionPipelineBuilder().findOneIfRequested(id).result();
 
   const res = await fs
     .aggregate<Function<EnvRelation.Resolved, SecretRelation.Resolved>>(pipeline)
@@ -441,6 +500,13 @@ export async function findOneForRuntime(
   if (!res) {
     throw new NotFoundException(`Couldn't find the function with id ${id}`);
   }
+
+  // The runtime needs the secret's **value**; the controller paths do not.
+  await resolveRelations(fs, [res], {
+    resolveEnvRelations: EnvRelation.Resolved,
+    resolveSecretRelations: SecretRelation.Resolved,
+    hideSecretValues: false
+  });
 
   return res;
 }
