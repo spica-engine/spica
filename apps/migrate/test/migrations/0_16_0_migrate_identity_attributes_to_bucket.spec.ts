@@ -1,11 +1,14 @@
-import {
-  Db,
-  getConnectionUri,
-  getDatabaseName,
-  ObjectId,
-  start
-} from "@spica-server/database-testing";
-import {MongoClient} from "mongodb";
+import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/database-testing";
+/**
+ * `ObjectId` comes from the **driver**, not from `@spica-server/database`.
+ *
+ * `packages/database` re-exports it from `bson` (the ESM build), while this spec reads documents through
+ * the raw mongodb driver, which deserializes with its own CJS copy of `bson` — the same version, two
+ * module instances, two classes. `expect.any()` is an `instanceof` check, so the neutral export never
+ * matches a value the driver produced. `apps/migrate` is MongoDB-specific by construction (it builds a
+ * `new MongoClient` itself), so taking the driver's class here is the truthful choice.
+ */
+import {MongoClient, ObjectId} from "mongodb";
 import color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate";
 import path from "path";
