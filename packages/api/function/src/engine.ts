@@ -17,7 +17,7 @@ import {
   SchemaWithName
 } from "@spica-server/interface-function";
 
-import {createPlan, mergePlans} from "./change.js";
+import {createPlan, mergePlans, refreshPlan} from "./change.js";
 import {PlanExecutor} from "./plan-executor.js";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
@@ -149,6 +149,12 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   // the executor's promise so callers can await context resolution before proceeding.
   applyChangePlan(plan: FunctionChangePlan): Promise<void> {
     return this.executor.apply(plan);
+  }
+
+  // Deliberately not replicated: peers refresh themselves from the asset watcher once their own
+  // copy of the code is synced and rebuilt. Replicating this would refresh them before that.
+  refreshLocally(functionId: string): Promise<void> {
+    return this.executor.apply(refreshPlan(functionId));
   }
 
   private getDefaultPackageManager(): DelegatePkgManager {

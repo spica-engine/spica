@@ -24,6 +24,7 @@ let mockFunctionService: {findOne: jest.Mock};
 let mockReconciler: {reconcileFunction: jest.Mock};
 let mockTracker: {isSelfWrite: jest.Mock};
 let mockPreparationService: {deleteFunctionDirectory: jest.Mock};
+let mockExecutor: {apply: jest.Mock};
 
 const buildWatcher = () =>
   new FunctionAssetWatcher(
@@ -31,7 +32,8 @@ const buildWatcher = () =>
     mockFunctionService as any,
     mockReconciler as any,
     mockTracker as any,
-    mockPreparationService as any
+    mockPreparationService as any,
+    mockExecutor as any
   );
 
 const makeDeleteChange = (key = "functions/my-function/index.ts") => ({
@@ -67,6 +69,10 @@ beforeEach(() => {
   mockPreparationService = {
     deleteFunctionDirectory: jest.fn().mockResolvedValue(undefined)
   };
+
+  mockExecutor = {
+    apply: jest.fn().mockResolvedValue(undefined)
+  };
 });
 
 // ---------------------------------------------------------------------------
@@ -99,6 +105,39 @@ describe("FunctionAssetWatcher — happy path", () => {
 
     expect(mockFunctionService.findOne).toHaveBeenCalledWith({
       _id: expect.objectContaining({toHexString: expect.any(Function)})
+    });
+
+    watcher.onModuleDestroy();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Worker refresh after a peer sync
+// ---------------------------------------------------------------------------
+
+describe("FunctionAssetWatcher — worker refresh", () => {
+  it("should refresh the function's workers locally only after the reconcile has finished", async () => {
+    let finishReconcile: () => void;
+    mockReconciler.reconcileFunction.mockReturnValue(
+      new Promise<void>(resolve => (finishReconcile = resolve))
+    );
+
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+
+    changeSubject.next(makeChange());
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(mockExecutor.apply).not.toHaveBeenCalled();
+
+    finishReconcile();
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(mockExecutor.apply).toHaveBeenCalledTimes(1);
+    expect(mockExecutor.apply).toHaveBeenCalledWith({
+      routing: [],
+      outdate: ["507f1f77bcf86cd799439011"],
+      reconcile: ["507f1f77bcf86cd799439011"]
     });
 
     watcher.onModuleDestroy();

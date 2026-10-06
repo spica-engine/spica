@@ -4,12 +4,15 @@ import {FunctionService, FunctionAssetService} from "@spica-server/function-serv
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
+import {PlanExecutor} from "./plan-executor.js";
+import {refreshPlan} from "./change.js";
 import * as CRUD from "./crud.js";
 
 /**
  * Watches the function_assets change stream and reconciles peer-originated writes.
  *
- * Peer writes (from other nodes) trigger reconciliation + re-prepare.
+ * Peer writes (from other nodes) trigger reconciliation + re-prepare, then a
+ * worker refresh once this node's copy of the code is ready.
  * Self-writes (from this node) are suppressed via SelfWriteTracker.
  * Delete events trigger directory cleanup on peer replicas.
  */
@@ -23,7 +26,8 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
     private readonly functionService: FunctionService,
     private readonly reconciler: FunctionAssetReconciler,
     private readonly tracker: SelfWriteTracker,
-    private readonly preparationService: FunctionPreparationService
+    private readonly preparationService: FunctionPreparationService,
+    private readonly executor: PlanExecutor
   ) {}
 
   onModuleInit() {
@@ -90,6 +94,10 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
             );
 
             await this.reconciler.reconcileFunction(fn);
+            // The writing replica refreshes only itself, so this is the sole refresh peers get.
+            // It must run even when nothing changed locally (shared disk), and must stay local:
+            // engine.applyChangePlan would re-broadcast it to every replica.
+            await this.executor.apply(refreshPlan(functionId.toHexString()));
           } catch (err) {
             this.logger.error(
               `[asset-watcher] Error handling change: ${err instanceof Error ? err.message : err}`

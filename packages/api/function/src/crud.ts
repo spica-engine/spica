@@ -202,7 +202,7 @@ export namespace index {
       return Buffer.from(index, "utf-8");
     });
 
-    await engine.applyChangePlan(refreshPlan(id.toString()));
+    await engine.refreshLocally(id.toString());
   }
 
   export async function filter(
@@ -279,7 +279,7 @@ export namespace dependencies {
         const pkgContent = await engine.read(fn, "dependency");
         return Buffer.from(pkgContent, "utf-8");
       });
-      await engine.applyChangePlan(refreshPlan(fn._id.toString()));
+      await engine.refreshLocally(fn._id.toString());
     }
   }
 
@@ -325,7 +325,7 @@ export namespace dependencies {
       return Buffer.from(pkgContent, "utf-8");
     });
 
-    await engine.applyChangePlan(refreshPlan(fn._id.toString()));
+    await engine.refreshLocally(fn._id.toString());
   }
 }
 
