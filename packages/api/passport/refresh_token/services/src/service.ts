@@ -8,8 +8,8 @@ export class RefreshTokenService extends BaseCollection<RefreshToken>("refresh_t
     super(db, {
       afterInit: () =>
         Promise.all([
-          this._coll.createIndex({token: 1}, {unique: true}),
-          this._coll.createIndex({expired_at: 1}, {expireAfterSeconds: 0})
+          this.createIndex({token: 1}, {unique: true}),
+          this.createIndex({expired_at: 1}, {expireAfterSeconds: 0})
         ])
     });
   }

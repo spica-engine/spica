@@ -1,4 +1,4 @@
-import {BaseCollection} from "@spica-server/database";
+import {ICollection} from "@spica-server/database-driver";
 import {PartialObserver, Observable, share} from "rxjs";
 import {MemoryOptions, IPubSub} from "@spica-server/interface-replication";
 
@@ -6,7 +6,7 @@ export class MongoMemory<T> implements IPubSub<T> {
   private changeStream$: Observable<any>;
 
   constructor(
-    private service: BaseCollection<any>,
+    private service: ICollection<any>,
     private options: MemoryOptions
   ) {
     this.changeStream$ = this.service
@@ -15,7 +15,8 @@ export class MongoMemory<T> implements IPubSub<T> {
   }
 
   publish(document: T) {
-    this.service._coll.insertOne(document).then(r => ({...document, _id: r.insertedId}));
+    // In the contract `insertOne` returns the inserted document, not Mongo's result object.
+    this.service.insertOne(document as any);
   }
 
   subscribe(observer: PartialObserver<T>) {

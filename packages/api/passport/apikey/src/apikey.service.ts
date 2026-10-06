@@ -6,7 +6,7 @@ import {ApiKey} from "@spica-server/interface-passport-apikey";
 export class ApiKeyService extends BaseCollection<ApiKey>("apikey") {
   constructor(db: DatabaseService) {
     super(db, {
-      afterInit: () => this._coll.createIndex({key: 1}, {unique: true})
+      afterInit: () => this.createIndex({key: 1}, {unique: true})
     });
   }
 }

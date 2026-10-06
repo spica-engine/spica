@@ -2,13 +2,14 @@ import {ActivityService} from "@spica-server/activity-services";
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {ACTIVITY_OPTIONS} from "@spica-server/interface-activity";
+import {getIndexManager} from "@spica-server/database";
 
 describe("Activity Service", () => {
   let module: TestingModule;
   let service: ActivityService;
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create()],
+      imports: [DatabaseTestingModule.standalone()],
       providers: [
         ActivityService,
         {
@@ -27,21 +28,24 @@ describe("Activity Service", () => {
     return await module.close();
   });
 
-  it("should create ttl index", async () => {
-    let indexes = await service._coll.listIndexes().toArray();
-    expect(indexes.length).toEqual(2);
-
-    let ttlIndex = indexes.find(index => index.name == "created_at_1");
-    expect(ttlIndex.expireAfterSeconds).toEqual(5);
+  /**
+   * The retention period is verified **independently of the mechanism**, the same way as in
+   * `api/function/log`.
+   *
+   * It used to look for an index named `created_at_1` and count `indexes.length`. Both are MongoDB
+   * specific: on PostgreSQL retention is a sweeper registration rather than a TTL index
+   * (`nativeTTLIndex: false` declares that) and such an index **not existing** is correct.
+   * `ttlSeconds()` is the contract's neutral read; both backends give the same answer.
+   */
+  it("should set the activity retention period", async () => {
+    const retention = await getIndexManager(service.db, service.name).ttlSeconds();
+    expect(retention).toEqual(5);
   });
 
-  it("should update existing ttl index expireAfterSeconds value", async () => {
+  it("should update the activity retention period", async () => {
     await service.upsertTTLIndex(10);
 
-    let indexes = await service._coll.listIndexes().toArray();
-    expect(indexes.length).toEqual(2);
-
-    let ttlIndex = indexes.find(index => index.name == "created_at_1");
-    expect(ttlIndex.expireAfterSeconds).toEqual(10);
+    const retention = await getIndexManager(service.db, service.name).ttlSeconds();
+    expect(retention).toEqual(10);
   });
 });
