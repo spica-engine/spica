@@ -185,14 +185,12 @@ export class FunctionAssetReconciler {
    * All changed assets are written to disk first, then prepare steps run in
    * deterministic order (package.json install before index compile) and each
    * step runs at most once regardless of how many assets changed.
-   *
-   * Resolves true when any local file was replaced and re-prepared.
    */
-  async reconcileFunction(fn: Function & {_id: ObjectId}): Promise<boolean> {
+  async reconcileFunction(fn: Function & {_id: ObjectId}): Promise<void> {
     const storedAssets = await this.assetService.findByFunction(fn._id);
     if (storedAssets.length === 0) {
       // No metadata recorded; nothing to reconcile.
-      return false;
+      return;
     }
 
     const changedFilenames: FunctionAssetFilename[] = [];
@@ -216,7 +214,7 @@ export class FunctionAssetReconciler {
       changedFilenames.push(asset.filename);
     }
 
-    if (changedFilenames.length === 0) return false;
+    if (changedFilenames.length === 0) return;
 
     // Phase 2: run prepare steps in deterministic order — install before compile.
     // Each step runs at most once even if multiple assets changed.
@@ -237,8 +235,6 @@ export class FunctionAssetReconciler {
         `[reconcile] Unknown asset filename "${filename}" for function ${fn.name} — skipping prepare`
       );
     }
-
-    return true;
   }
 
   /**

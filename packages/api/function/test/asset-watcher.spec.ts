@@ -59,7 +59,7 @@ beforeEach(() => {
   };
 
   mockReconciler = {
-    reconcileFunction: jest.fn().mockResolvedValue(false)
+    reconcileFunction: jest.fn().mockResolvedValue(undefined)
   };
 
   mockTracker = {
@@ -116,10 +116,10 @@ describe("FunctionAssetWatcher — happy path", () => {
 // ---------------------------------------------------------------------------
 
 describe("FunctionAssetWatcher — worker refresh", () => {
-  it("should refresh the function's workers locally only after the reconcile has rebuilt it", async () => {
-    let finishReconcile: (changed: boolean) => void;
+  it("should refresh the function's workers locally only after the reconcile has finished", async () => {
+    let finishReconcile: () => void;
     mockReconciler.reconcileFunction.mockReturnValue(
-      new Promise<boolean>(resolve => (finishReconcile = resolve))
+      new Promise<void>(resolve => (finishReconcile = resolve))
     );
 
     const watcher = buildWatcher();
@@ -130,7 +130,7 @@ describe("FunctionAssetWatcher — worker refresh", () => {
 
     expect(mockExecutor.apply).not.toHaveBeenCalled();
 
-    finishReconcile(true);
+    finishReconcile();
     await new Promise(r => setTimeout(r, 0));
 
     expect(mockExecutor.apply).toHaveBeenCalledTimes(1);
@@ -139,20 +139,6 @@ describe("FunctionAssetWatcher — worker refresh", () => {
       outdate: ["507f1f77bcf86cd799439011"],
       reconcile: ["507f1f77bcf86cd799439011"]
     });
-
-    watcher.onModuleDestroy();
-  });
-
-  it("should NOT refresh workers when the local files were already up to date", async () => {
-    mockReconciler.reconcileFunction.mockResolvedValue(false);
-
-    const watcher = buildWatcher();
-    watcher.onModuleInit();
-
-    changeSubject.next(makeChange());
-    await new Promise(r => setTimeout(r, 0));
-
-    expect(mockExecutor.apply).not.toHaveBeenCalled();
 
     watcher.onModuleDestroy();
   });

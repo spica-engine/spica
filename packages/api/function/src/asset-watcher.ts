@@ -12,7 +12,7 @@ import * as CRUD from "./crud.js";
  * Watches the function_assets change stream and reconciles peer-originated writes.
  *
  * Peer writes (from other nodes) trigger reconciliation + re-prepare, then a
- * worker refresh so no worker keeps serving code built before the sync.
+ * worker refresh once this node's copy of the code is ready.
  * Self-writes (from this node) are suppressed via SelfWriteTracker.
  * Delete events trigger directory cleanup on peer replicas.
  */
@@ -93,14 +93,11 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
               `[asset-watcher] Peer asset change detected for ${fn.name}/${filename} — reconciling`
             );
 
-            const changed = await this.reconciler.reconcileFunction(fn);
-            if (changed) {
-              // The replicated refresh from the writing replica can land before this replica
-              // finishes rebuilding, so its replacement workers may have preloaded the old build.
-              // Refresh locally via the executor, not engine.applyChangePlan, which would
-              // re-broadcast to every replica.
-              await this.executor.apply(refreshPlan(functionId.toHexString()));
-            }
+            await this.reconciler.reconcileFunction(fn);
+            // The writing replica refreshes only itself, so this is the sole refresh peers get.
+            // It must run even when nothing changed locally (shared disk), and must stay local:
+            // engine.applyChangePlan would re-broadcast it to every replica.
+            await this.executor.apply(refreshPlan(functionId.toHexString()));
           } catch (err) {
             this.logger.error(
               `[asset-watcher] Error handling change: ${err instanceof Error ? err.message : err}`
