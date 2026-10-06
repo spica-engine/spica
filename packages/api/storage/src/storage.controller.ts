@@ -57,7 +57,7 @@ export class StorageController {
    * @param limit The maximum amount documents that can be present in the response.
    * @param skip The amount of documents to skip.
    * @param sort A JSON string to sort the documents by its properties.
-   * Example: Descending `{"content.size": -1}` 
+   * Example: Descending `{"content.size": -1}`
    Ascending `{"content.size": 1}`
    */
   @Get()
