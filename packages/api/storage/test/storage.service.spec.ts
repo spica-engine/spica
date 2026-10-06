@@ -44,11 +44,17 @@ describe("Storage Service", () => {
     }).compile();
     storageService = module.get(StorageService);
     strategyInstance = module.get(Strategy);
+    /**
+     * `.compile()` does not run `onModuleInit`, so the unique index on `name` that `afterInit` asks for is
+     * not in place yet. Without this the duplicate-name test inserted both rows and the index build failed
+     * afterwards, in whichever test happened to be running at the time.
+     */
+    await storageService.initialized;
   });
 
-  afterEach(() => {
-    storageService.deleteMany({});
-    module.close();
+  afterEach(async () => {
+    await storageService.deleteMany({});
+    await module.close();
   });
 
   it("should add storage objects", async () => {
@@ -81,8 +87,8 @@ describe("Storage Service", () => {
   });
 
   it("should not insert storage object with an already existing name", async () => {
-    await storageService
-      .insert([
+    await expect(
+      storageService.insert([
         {
           name: "my_obj",
           content: {
@@ -98,10 +104,12 @@ describe("Storage Service", () => {
           }
         }
       ])
-      .catch(error => {
-        expect(error.response.statusCode).toBe(400);
-        expect(error.response.message).toBe("An object with this name already exists.");
-      });
+    ).rejects.toMatchObject({
+      response: {
+        statusCode: 400,
+        message: "An object with this name already exists."
+      }
+    });
   });
 
   describe("transaction rollback consistency", () => {
@@ -164,7 +172,7 @@ describe("Storage Service", () => {
       const newName = "renamed_object";
 
       jest
-        .spyOn((storageService as any)._coll, "updateMany")
+        .spyOn((storageService as any).inner, "updateMany")
         .mockRejectedValueOnce(new Error("MongoDB updateMany failed"));
 
       await expect(storageService.updateMeta(storageObjectId, newName)).rejects.toThrow(
@@ -386,14 +394,29 @@ describe("Storage Service", () => {
 
   describe("filter", () => {
     beforeEach(async () => {
+      /**
+       * The timestamps are set **explicitly**, because `insertMany` bypasses the service's `insert()` — the
+       * only place that writes them.
+       *
+       * Without them `created_at` was undefined, so the date tests below compared against `undefined`. That
+       * passed on MongoDB for a reason unrelated to dates: `{$gte: null}` matches a missing field there
+       * (BSON type bracketing), so *every* document came back. On a typed column `created_at >= NULL` is
+       * NULL and nothing matched. The tests say they filter by a date, so they are given one and now
+       * exercise that on both backends.
+       */
+      const at = new Date("2026-09-01T00:00:00.000Z");
       const storageObjects = [
         {
           name: "object1",
-          content: {data: Buffer.from(""), type: "type1"}
+          content: {data: Buffer.from(""), type: "type1"},
+          created_at: at,
+          updated_at: at
         },
         {
           name: "object2",
-          content: {data: Buffer.from(""), type: "type2"}
+          content: {data: Buffer.from(""), type: "type2"},
+          created_at: at,
+          updated_at: at
         }
       ];
       await storageService.insertMany(storageObjects);
@@ -738,8 +761,10 @@ describe("Storage Service", () => {
           }
         };
 
-        await storageService.insertMany([storageObject]).catch(e => {
-          expect(e).toEqual(new Error("Total storage object size limit exceeded"));
+        // Through `insert()`, like the positive case above: the limit lives there, not on the raw
+        // collection's `insertMany`.
+        await expect(storageService.insert([storageObject])).rejects.toMatchObject({
+          response: {message: "Total storage object size limit exceeded"}
         });
       });
     });
@@ -755,8 +780,10 @@ describe("Storage Service", () => {
       it("should not update if it exceed the limit", async () => {
         storageObjects[0].content.size = 5.6 * MB;
 
-        await storageService.update(storageObjects[0]._id, storageObjects[0]).catch(e => {
-          expect(e).toEqual(new Error("Total storage object size limit exceeded"));
+        await expect(
+          storageService.update(storageObjects[0]._id, storageObjects[0])
+        ).rejects.toMatchObject({
+          response: {message: "Total storage object size limit exceeded"}
         });
       });
     });

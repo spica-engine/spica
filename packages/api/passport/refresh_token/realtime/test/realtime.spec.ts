@@ -161,6 +161,16 @@ describe("Realtime", () => {
     });
   });
 
+  /**
+   * The fixtures leave `last_used_at` **out** rather than setting it to `null`.
+   *
+   * A token that has never been used has no value there, and the two backends do not agree on how an
+   * unset field is spelled: MongoDB keeps an explicit `null`, while on PostgreSQL a `NULL` column decodes
+   * as an **absent** field (a declared limit — see `CodecOptions` in `postgres/src/schema/codec.ts`; the
+   * alternative, handing back `{authFactor: null, lastLogin: null, …}` for every unset column, broke
+   * callers). Nothing in the codebase distinguishes the two, so the fixtures do not assert the
+   * difference.
+   */
   describe("documents", () => {
     const messageSpy = jest.fn();
 
@@ -172,16 +182,14 @@ describe("Realtime", () => {
             token: "TestToken1",
             identity: new ObjectId().toHexString(),
             created_at: "2025-07-30T18:52:08.088Z",
-            expired_at: "2025-08-02T18:52:08.088Z",
-            last_used_at: null
+            expired_at: "2025-08-02T18:52:08.088Z"
           },
           {
             _id: new ObjectId().toHexString(),
             token: "TestToken2",
             identity: new ObjectId().toHexString(),
             created_at: "2025-07-30T18:52:08.088Z",
-            expired_at: "2025-08-02T18:52:08.088Z",
-            last_used_at: null
+            expired_at: "2025-08-02T18:52:08.088Z"
           }
         ];
         await service.insertMany(refreshTokens);
@@ -231,8 +239,7 @@ describe("Realtime", () => {
                 token: "TestToken3",
                 identity: new ObjectId().toHexString(),
                 created_at: new Date(),
-                expired_at: new Date(Date.now() + 86400000),
-                last_used_at: null
+                expired_at: new Date(Date.now() + 86400000)
               });
               return;
             }
@@ -267,24 +274,21 @@ describe("Realtime", () => {
             token: "TestToken1",
             identity: new ObjectId().toHexString(),
             created_at: "2025-07-30T18:52:08.088Z",
-            expired_at: "2025-08-02T18:52:08.088Z",
-            last_used_at: null
+            expired_at: "2025-08-02T18:52:08.088Z"
           },
           {
             _id: new ObjectId().toHexString(),
             token: "TestToken2",
             identity: new ObjectId().toHexString(),
             created_at: "2025-07-30T18:52:08.088Z",
-            expired_at: "2025-08-02T18:52:08.088Z",
-            last_used_at: null
+            expired_at: "2025-08-02T18:52:08.088Z"
           },
           {
             _id: new ObjectId().toHexString(),
             token: "TestToken3",
             identity: new ObjectId().toHexString(),
             created_at: "2025-07-30T18:52:08.088Z",
-            expired_at: "2025-08-02T18:52:08.088Z",
-            last_used_at: null
+            expired_at: "2025-08-02T18:52:08.088Z"
           }
         ];
         await service.insertMany(refreshTokens);
@@ -308,24 +312,21 @@ describe("Realtime", () => {
             token: "TestToken1",
             identity: new ObjectId().toHexString(),
             created_at: "2025-07-30T18:52:08.088Z",
-            expired_at: "2025-08-02T18:52:08.088Z",
-            last_used_at: null
+            expired_at: "2025-08-02T18:52:08.088Z"
           },
           {
             _id: new ObjectId().toHexString(),
             token: "TestToken2",
             identity: new ObjectId().toHexString(),
             created_at: "2025-07-30T18:52:08.088Z",
-            expired_at: "2025-08-02T18:52:08.088Z",
-            last_used_at: null
+            expired_at: "2025-08-02T18:52:08.088Z"
           },
           {
             _id: new ObjectId().toHexString(),
             token: "TestToken3",
             identity: new ObjectId().toHexString(),
             created_at: "2025-07-30T18:52:08.088Z",
-            expired_at: "2025-08-02T18:52:08.088Z",
-            last_used_at: null
+            expired_at: "2025-08-02T18:52:08.088Z"
           }
         ];
         await service.insertMany(refreshTokens);
@@ -349,24 +350,21 @@ describe("Realtime", () => {
             token: "c-token",
             identity: new ObjectId().toHexString(),
             created_at: "2025-07-30T18:52:08.088Z",
-            expired_at: "2025-08-02T18:52:08.088Z",
-            last_used_at: null
+            expired_at: "2025-08-02T18:52:08.088Z"
           },
           {
             _id: new ObjectId().toHexString(),
             token: "a-token",
             identity: new ObjectId().toHexString(),
             created_at: "2025-07-30T18:52:08.088Z",
-            expired_at: "2025-08-02T18:52:08.088Z",
-            last_used_at: null
+            expired_at: "2025-08-02T18:52:08.088Z"
           },
           {
             _id: new ObjectId().toHexString(),
             token: "b-token",
             identity: new ObjectId().toHexString(),
             created_at: "2025-07-30T18:52:08.088Z",
-            expired_at: "2025-08-02T18:52:08.088Z",
-            last_used_at: null
+            expired_at: "2025-08-02T18:52:08.088Z"
           }
         ];
         await service.insertMany(refreshTokens);
