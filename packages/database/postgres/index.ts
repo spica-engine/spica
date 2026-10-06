@@ -16,3 +16,5 @@ export * from "./src/driver/idempotent-ddl.js";
 export * from "./src/driver/wait-for-postgres.js";
 export * from "./src/cdc/changes-schema.js";
 export * from "./src/cdc/postgres.change-stream.js";
+export * from "./src/driver/postgres.collection.js";
+export * from "./src/driver/ttl-sweeper.js";
