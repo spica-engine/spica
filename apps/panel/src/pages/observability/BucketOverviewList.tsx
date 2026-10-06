@@ -4,11 +4,7 @@ import type {BucketType} from "../../store/api/bucketApi";
 import EntityCountCell from "./EntityCountCell";
 import HealthPill from "./HealthPill";
 import BucketOverviewSummary from "./BucketOverviewSummary";
-import {
-  deriveBucketHealth,
-  healthReason,
-  type BucketHealthStatus,
-} from "./bucketHealth";
+import {deriveBucketHealth, healthReason, type BucketHealthStatus} from "./bucketHealth";
 import styles from "./Observability.module.scss";
 
 type BucketOverviewListProps = {
@@ -17,12 +13,18 @@ type BucketOverviewListProps = {
   isError: boolean;
   onRetry: () => void;
   onSelectBucket: (bucketId: string) => void;
+  /**
+   * Whether the per-bucket profiler drill-in leads anywhere. It reads the `system.profile` collection,
+   * which only MongoDB has; PostgreSQL's counterpart is `pg_stat_statements` and a different interface.
+   * The overview itself works on both, so only the drill-in is withheld.
+   */
+  profilerAvailable: boolean;
 };
 
 const EMPTY_HEALTH: Record<BucketHealthStatus, number> = {
   healthy: 0,
   attention: 0,
-  critical: 0,
+  critical: 0
 };
 
 const BucketOverviewList = ({
@@ -31,6 +33,7 @@ const BucketOverviewList = ({
   isError,
   onRetry,
   onSelectBucket,
+  profilerAvailable
 }: BucketOverviewListProps) => {
   // Per-bucket entity counts lifted from each row's lazy query, so the summary
   // strip can aggregate totals + health without a second round of requests.
@@ -68,16 +71,14 @@ const BucketOverviewList = ({
             <Icon name="bucket" size={16} />
             <span>{row.title}</span>
           </FlexElement>
-        ),
+        )
       },
       {
         header: <FlexElement>Entities</FlexElement>,
         key: "entities",
         width: "160px",
         minWidth: "120px",
-        renderCell: ({row}) => (
-          <EntityCountCell bucketId={row._id} onCount={handleCount} />
-        ),
+        renderCell: ({row}) => <EntityCountCell bucketId={row._id} onCount={handleCount} />
       },
       {
         header: <FlexElement>Health</FlexElement>,
@@ -89,7 +90,7 @@ const BucketOverviewList = ({
           if (typeof count !== "number") return <HealthPill status="healthy" loading />;
           const status = deriveBucketHealth(count, row);
           return <HealthPill status={status} title={healthReason(count, row)} />;
-        },
+        }
       },
       {
         header: (
@@ -100,16 +101,17 @@ const BucketOverviewList = ({
         key: "actions",
         width: "120px",
         minWidth: "100px",
-        renderCell: ({row}) => (
-          <FlexElement dimensionX="fill" alignment="rightCenter" direction="horizontal">
-            <Button variant="icon" color="default" onClick={() => onSelectBucket(row._id)}>
-              <Icon name="chevronRight" />
-            </Button>
-          </FlexElement>
-        ),
-      },
+        renderCell: ({row}) =>
+          profilerAvailable ? (
+            <FlexElement dimensionX="fill" alignment="rightCenter" direction="horizontal">
+              <Button variant="icon" color="default" onClick={() => onSelectBucket(row._id)}>
+                <Icon name="chevronRight" />
+              </Button>
+            </FlexElement>
+          ) : null
+      }
     ],
-    [counts, handleCount, onSelectBucket]
+    [counts, handleCount, onSelectBucket, profilerAvailable]
   );
 
   return (
@@ -158,10 +160,10 @@ const BucketOverviewList = ({
             data={buckets}
             loading={isLoading}
             skeletonRowCount={8}
-            onRowClick={({row}) => onSelectBucket(row._id)}
+            onRowClick={profilerAvailable ? ({row}) => onSelectBucket(row._id) : undefined}
             emptyState={{
               title: "No buckets",
-              description: "There are no buckets to observe yet. Create one to get started.",
+              description: "There are no buckets to observe yet. Create one to get started."
             }}
           />
         )}

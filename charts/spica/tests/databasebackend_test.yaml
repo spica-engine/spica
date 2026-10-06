@@ -1,0 +1,285 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+#
+# Backend selection and the bundled/external distinction. The matrix: mongodb|postgres ×
+# bundled|external.
+#
+# Why a separate suite: the selection does not live in one template but in the **six** templates that
+# ask the `database.is-postgres` and `database.bundled` helpers. Tests spread out per template made it
+# invisible to skip one when a backend was added; this suite keeps the whole matrix in one place.
+suite: database backend selection
+# `databasesecrets.yaml` is on the list because both StatefulSets compute a checksum annotation
+# against it (include + sha256sum). Presence/absence is asserted per template rather than a document
+# count.
+templates:
+  - templates/database.yaml
+  - templates/databasepostgres.yaml
+  - templates/databasereplication.yaml
+  - templates/initdb.yaml
+  - templates/databasesrv.yaml
+  - templates/databasesecrets.yaml
+  - templates/databasepostgresinit.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.masterKey: test-master-key
+  application.publicHost: https://test.example.com
+
+tests:
+  - it: bundled mongodb renders the mongo statefulset
+    template: templates/database.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: mongo:8.0.4
+
+  - it: bundled mongodb does not render the postgres statefulset
+    template: templates/databasepostgres.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # Replica set setup and init scripts have no counterpart on PostgreSQL.
+  - it: bundled postgres renders its own statefulset with the postgres image
+    set:
+      database.backend: postgres
+    template: templates/databasepostgres.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: postgres:16
+      # A single replica is deliberate: more than one pod means a replication topology, and that is
+      # not the chart's job.
+      - equal:
+          path: spec.replicas
+          value: 1
+
+  - it: bundled postgres does not render the mongo statefulset
+    set:
+      database.backend: postgres
+    template: templates/database.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: bundled postgres does not render mongo init scripts
+    set:
+      database.backend: postgres
+    template: templates/initdb.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: bundled postgres does not render the replica set controller
+    set:
+      database.backend: postgres
+    template: templates/databasereplication.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # The `root` user and the replica auth key are Mongo-specific; PG is created with a single user.
+  - it: bundled postgres renders only the spica credentials secret
+    set:
+      database.backend: postgres
+    template: templates/databasesecrets.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: release-name-database-spica-credentials
+
+  - it: mongodb renders spica, root and replica auth secrets
+    template: templates/databasesecrets.yaml
+    asserts:
+      - hasDocuments:
+          count: 3
+
+  # An external (managed) database: the chart creates no database resource at all, the service
+  # included.
+  - it: an external uri suppresses the bundled mongo statefulset
+    set:
+      database.external.uri: mongodb://managed:27017
+    template: templates/database.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: an external uri suppresses the bundled postgres statefulset
+    set:
+      database.backend: postgres
+      database.external.uri: postgres://managed:5432/spica
+    template: templates/databasepostgres.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: an external uri suppresses the database service
+    set:
+      database.external.uri: mongodb://managed:27017
+    template: templates/databasesrv.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: the service exposes 27017 on mongodb
+    template: templates/databasesrv.yaml
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 27017
+
+  - it: the service exposes the configured postgres port
+    set:
+      database.backend: postgres
+      database.postgres.port: 5433
+    template: templates/databasesrv.yaml
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 5433
+
+  # GitOps: ArgoCD renders with `helm template`, `lookup` returns empty and the generated password
+  # would change on every sync. The render stops rather than rotating it silently.
+  - it: managedSecrets fails the render when the password is not supplied
+    set:
+      database.managedSecrets: true
+    template: templates/databasesecrets.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: "database.managedSecrets is true, so database.spicaPassword must be provided: generated passwords would rotate on every GitOps sync."
+
+  - it: managedSecrets renders when every secret is supplied
+    set:
+      database.managedSecrets: true
+      database.spicaPassword: given-spica
+      database.rootPassword: given-root
+      database.replicaAuthKey: given-key
+    template: templates/databasesecrets.yaml
+    asserts:
+      - hasDocuments:
+          count: 3
+
+  # ── Raw SQL access for functions
+  #
+  # The closed default is deliberate: were it open, the API's fully privileged connection would have to
+  # be handed over and bucket tables could be dropped with raw SQL. While it is closed the devkit
+  # refuses explicitly.
+  - it: does not render the functions role by default
+    set:
+      database.backend: postgres
+    template: templates/databasepostgresinit.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders the functions role init script when enabled
+    set:
+      database.backend: postgres
+      database.functions.enabled: true
+      database.functions.password: fn-secret
+    template: templates/databasepostgresinit.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      # `%I`/`%L`: quoting the identifier and the value is left to PostgreSQL, the password is not
+      # embedded into the SQL.
+      - matchRegex:
+          path: data["create-functions-role.sh"]
+          pattern: "CREATE ROLE %I LOGIN PASSWORD %L"
+
+  # When no password is supplied the render **stops**, rather than creating the role without one or
+  # connecting with an empty password.
+  - it: requires a password when the functions role is enabled
+    set:
+      database.backend: postgres
+      database.functions.enabled: true
+    template: templates/databasesecrets.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: "database.functions.enabled is true, so database.functions.password (or externalUri) must be provided."
+
+  # The function role is meaningless on MongoDB: `@spica-devkit/postgres` only works on PG.
+  - it: ignores the functions role on mongodb
+    set:
+      database.functions.enabled: true
+      database.functions.password: fn-secret
+    template: templates/databasepostgresinit.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # ── HA
+  #
+  # `database.replicas` is Mongo's knob. On bundled PostgreSQL it used to be ignored silently, so
+  # `replicas: 3` gave one pod and looked like HA. Now the render stops and the message names the path
+  # that does give HA.
+  - it: raising replicas on bundled postgres fails the render
+    set:
+      database.backend: postgres
+      database.replicas: 3
+    template: templates/databasepostgres.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: "database.replicas applies to the bundled MongoDB replica set only. Bundled PostgreSQL is single-pod by design; for PostgreSQL HA run an operator-managed cluster (CloudNativePG) and point database.external.uri at its -rw service — see docs/postgresql-ha.md."
+
+  # HQ suspends a tenant by setting both tiers' replicas to 0. A hardcoded 1 kept a suspended
+  # tenant's PostgreSQL running.
+  - it: scaling bundled postgres to zero suspends the database
+    set:
+      database.backend: postgres
+      database.replicas: 0
+    template: templates/databasepostgres.yaml
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 0
+
+  # The same value stays meaningful on MongoDB — that is the whole point of failing only on postgres.
+  - it: raising replicas on mongodb renders the replica set
+    set:
+      database.replicas: 3
+    template: templates/database.yaml
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  # HA on PostgreSQL is the external path: the chart creates no database resource and names no operator.
+  - it: an external postgres uri leaves the chart with no database resource
+    set:
+      database.backend: postgres
+      database.external.uri: postgres://cnpg-cluster-rw.db.svc:5432/spica
+      database.replicas: 3
+    template: templates/databasepostgres.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # The password lives in a secret, not in an argument: an argument would be written into the pod
+  # definition.
+  - it: keeps the functions uri in a secret
+    set:
+      database.backend: postgres
+      database.functions.enabled: true
+      database.functions.password: fn-secret
+    template: templates/databasesecrets.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: release-name-database-functions-credentials
+        documentIndex: 1

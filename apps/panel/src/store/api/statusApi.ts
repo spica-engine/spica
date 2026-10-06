@@ -21,6 +21,39 @@ export type StatusModule = {
 
 export type HealthResponse = {status: string};
 
+/**
+ * The driver's own declaration of what this installation can do.
+ *
+ * The backend is chosen when the instance is provisioned and never changes afterwards, so the panel
+ * reads this once and treats it as fixed. The whole reason the endpoint exists is for the panel to stop
+ * offering surfaces the backend has no counterpart for — before this was wired up, a PostgreSQL
+ * installation still showed the collation option, the Mongo-only index kinds and the profiler views, and
+ * the user only found out when the request failed.
+ *
+ * Mirrors `DriverCapabilities` in `packages/database/driver/src/capabilities.ts`. `"subset"` is a real
+ * third state on two of these: not everything works, but enough does that hiding the surface would be
+ * wrong too.
+ */
+export type DriverCapabilities = {
+  backend: string;
+  version: string;
+  rawMongoFilter: boolean | "subset";
+  aggregationPipeline: boolean | "subset";
+  queryProfiler: false | "system.profile" | "pg_stat_statements";
+  nativeTTLIndex: boolean;
+  indexOptions: {sparse: boolean; collation: boolean; partial: boolean};
+  directAccessDevkit: false | "@spica-devkit/database" | "@spica-devkit/postgres";
+  referentialIntegrity: boolean;
+  maxLifetimeFieldsPerCollection: number | null;
+  requiresReplicaSet: boolean;
+};
+
+export type CapabilitiesResponse = {
+  backend: string;
+  database: string;
+  capabilities: DriverCapabilities;
+};
+
 export type ModuleStatusArgs = {
   module: string;
   begin?: string;
@@ -46,6 +79,10 @@ export const statusApi = baseApi.injectEndpoints({
 
     getReadiness: builder.query<HealthResponse, void>({
       query: () => ({url: "status/ready"})
+    }),
+
+    getCapabilities: builder.query<CapabilitiesResponse, void>({
+      query: () => ({url: "status/capabilities"})
     })
   }),
   overrideExisting: false
@@ -55,7 +92,8 @@ export const {
   useGetStatusesQuery,
   useGetModuleStatusQuery,
   useGetLivenessQuery,
-  useGetReadinessQuery
+  useGetReadinessQuery,
+  useGetCapabilitiesQuery
 } = statusApi;
 
 export const statusApiReducerPath = statusApi.reducerPath;

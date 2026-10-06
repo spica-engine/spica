@@ -509,3 +509,127 @@ tests:
       - equal:
           path: spec.template.spec.containers[1].env[1].valueFrom.secretKeyRef.key
           value: secret
+
+  # ── The backend-specific API arguments and the instance guard
+  #
+  # The same secret feeds both backends; the env name is neutral. The API reads the old `MONGODB_*`
+  # names too, but the chart passes the name that does not lie about the backend.
+  - it: should pass the database credentials under neutral env names
+    template: templates/application.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: DATABASE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-spica-credentials
+                key: spicaUsername
+
+  - it: should pass --database-replica-set on mongodb and not the listen uri
+    template: templates/application.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-replica-set"
+      - notContains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-listen-uri"
+
+  # `LISTEN` is session bound and cannot be taken from the pool; without it change capture falls back
+  # to polling.
+  - it: should pass --database-listen-uri on postgres and not the replica set
+    set:
+      database.backend: postgres
+    template: templates/application.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-listen-uri"
+      - notContains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-replica-set"
+
+  - it: should point the api at the postgres service uri
+    set:
+      database.backend: postgres
+    template: templates/application.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: postgres://release-name-database.default.svc.cluster.local:5432/spica
+
+  - it: should point the api at an external uri when given
+    set:
+      database.external.uri: postgres://managed:5432/spica
+    template: templates/application.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: postgres://managed:5432/spica
+
+  # Measured: the api middleware rewrites the uri's user and password whenever both env vars are
+  # set, so wiring them next to an external uri threw the operator's own credentials away and replaced
+  # them with `spica` plus a generated password. An external uri is now used exactly as given.
+  - it: should not inject credentials into an external uri
+    set:
+      database.external.uri: postgres://real-user:real-pass@managed:5432/spica
+    template: templates/application.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: DATABASE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-spica-credentials
+                key: spicaUsername
+      - notContains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-spica-credentials
+                key: spicaPassword
+
+  # Setting the password explicitly is how the operator says the opposite: keep the external database's
+  # credentials in a secret rather than in the uri.
+  - it: should inject credentials into an external uri when the password is given explicitly
+    set:
+      database.external.uri: postgres://managed:5432/spica
+      database.spicaPassword: explicit-password
+    template: templates/application.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-spica-credentials
+                key: spicaPassword
+
+  # The instance record. The release name is used by default; because a populated database is
+  # accepted without the flag as well, existing installations are not broken.
+  - it: should default the instance id to the release name
+    template: templates/application.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--instance-id"
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: release-name
+
+  - it: should drop the instance guard args when instanceId is explicitly empty
+    set:
+      database.instanceId: ""
+    template: templates/application.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[1].args
+          content: "--instance-id"
+      - notContains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-initialize"

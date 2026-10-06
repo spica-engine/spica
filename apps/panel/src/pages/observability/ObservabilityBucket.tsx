@@ -5,6 +5,7 @@ import ProfilerTable from "../../components/organisms/profiler-table/ProfilerTab
 import {useProfilerInfiniteList} from "../../hooks/useProfilerInfiniteList";
 import {createProfilerFilterDefaultValues} from "../../utils/profilerFilter";
 import ObservabilityActionBar from "../../components/molecules/observability-action-bar/ObservabilityActionBar";
+import {useBackendCapabilities} from "../../hooks/useBackendCapabilities";
 import BucketOverviewList from "./BucketOverviewList";
 import bucketStyles from "../bucket/Bucket.module.scss";
 import styles from "../shared/EntityPage.module.scss";
@@ -16,15 +17,22 @@ const ObservabilityBucket = () => {
   const [bucketId, setBucketId] = useState<string | undefined>(undefined);
   const profiler = useProfilerInfiniteList(PAGE_SIZE);
 
+  /**
+   * The profiler drill-in reads `system.profile`, which only MongoDB has. On PostgreSQL the
+   * endpoint raises, so the drill-in is not offered at all — the overview below works on both backends and
+   * stays.
+   */
+  const {hasQueryProfiler} = useBackendCapabilities();
+
   const {
     data: buckets = [],
     isLoading: bucketsLoading,
     isError: bucketsError,
-    refetch: refetchBuckets,
+    refetch: refetchBuckets
   } = useGetBucketsQuery();
 
   const {data, isLoading, isFetching, isError, refetch} = useGetBucketDataProfileQuery(
-    bucketId ? {...profiler.queryParams, bucketId} : skipToken,
+    bucketId && hasQueryProfiler ? {...profiler.queryParams, bucketId} : skipToken,
     {refetchOnMountOrArgChange: true}
   );
 
@@ -41,12 +49,19 @@ const ObservabilityBucket = () => {
     profiler.onQueryResult(data, isFetching, profiler.skip);
   }, [data, isFetching, profiler.skip]);
 
+  // The declaration can arrive after the drill-in is already open (a deep link, or a slow first response).
+  // Falling back to the overview is better than leaving the user in a view that can never load.
+  useEffect(() => {
+    if (!hasQueryProfiler && bucketId) setBucketId(undefined);
+  }, [hasQueryProfiler, bucketId]);
+
   const handleSelectBucket = useCallback(
     (value: string) => {
+      if (!hasQueryProfiler) return;
       setBucketId(value);
       profiler.handleFilterChange(createProfilerFilterDefaultValues());
     },
-    [profiler.handleFilterChange]
+    [profiler.handleFilterChange, hasQueryProfiler]
   );
 
   const handleBack = useCallback(() => setBucketId(undefined), []);
@@ -65,6 +80,7 @@ const ObservabilityBucket = () => {
           isError={bucketsError}
           onRetry={refetchBuckets}
           onSelectBucket={handleSelectBucket}
+          profilerAvailable={hasQueryProfiler}
         />
       </div>
     );
