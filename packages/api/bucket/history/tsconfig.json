@@ -22,6 +22,9 @@
       "path": "../../../interface/bucket"
     },
     {
+      "path": "../../../database/driver"
+    },
+    {
       "path": "../../../database"
     },
     {

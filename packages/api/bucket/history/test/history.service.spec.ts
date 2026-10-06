@@ -1,10 +1,9 @@
 import {TestingModule, Test} from "@nestjs/testing";
 import {
-  DatabaseTestingModule,
+  createAdHocCollection,
   DatabaseService,
-  ObjectId,
-  DeleteResult,
-  InsertOneResult
+  DatabaseTestingModule,
+  ObjectId
 } from "@spica-server/database-testing";
 import {HistoryService} from "@spica-server/bucket-history";
 import {diff} from "@spica-server/core-differ";
@@ -15,13 +14,20 @@ describe("History Service", () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create()],
+      imports: [DatabaseTestingModule.standalone()],
       providers: [HistoryService]
     }).compile();
     historyService = module.get(HistoryService);
 
     //insert bucket and document
     await module.get(DatabaseService).collection("buckets").insertOne(bucket);
+
+    // The table is created from the schema beforehand: because `BucketService` is bypassed, nobody creates it.
+    await createAdHocCollection(
+      module.get(DatabaseService),
+      `bucket_${bucket._id}`,
+      bucket.properties as any
+    );
     await module.get(DatabaseService).collection(`bucket_${bucket._id}`).insertOne(bucketDocument);
 
     //update bucket
@@ -83,6 +89,13 @@ describe("History Service", () => {
     beforeAll(async () => {
       await module.get(DatabaseService).collection("buckets").insertOne(bucket);
 
+      // The table is created from the schema beforehand; because `BucketService` is bypassed, nobody creates it.
+      await createAdHocCollection(
+        module.get(DatabaseService),
+        `bucket_${bucket._id}`,
+        bucket.properties as any
+      );
+
       await module
         .get(DatabaseService)
         .collection(`bucket_${bucket._id}`)
@@ -104,6 +117,13 @@ describe("History Service", () => {
     });
   });
 
+  /**
+   * The reads are **explicitly ordered**.
+   *
+   * `find({})` is unordered; MongoDB gives insertion order in practice but that is no guarantee, and on
+   * PostgreSQL the heap order changes after updates. Because the tests compare ordered arrays, the order
+   * has to be part of the assertion — the subject is the content, but the comparison is order sensitive.
+   */
   describe("history methods", () => {
     describe("get", () => {
       const bucketId = new ObjectId();
@@ -283,12 +303,12 @@ describe("History Service", () => {
       });
 
       it("should delete specific bucket document histories", async () => {
-        const response: DeleteResult = await historyService.deleteMany({
+        const deletedCount = await historyService.deleteMany({
           $and: [{bucket_id: bucketId}, {document_id: documentId}]
         });
-        expect(response.deletedCount).toBe(2);
+        expect(deletedCount).toBe(2);
 
-        const histories = (await historyService.collection.find({}).toArray()).filter(
+        const histories = (await historyService.collection.find({}, {sort: {_id: 1}})).filter(
           history => delete history._id
         );
         expect(histories).toEqual([
@@ -309,22 +329,22 @@ describe("History Service", () => {
       });
 
       it("shouldn't delete anything", async () => {
-        const response: DeleteResult = await historyService.deleteMany({
+        const deletedCount = await historyService.deleteMany({
           document_id: new ObjectId()
         });
-        expect(response.deletedCount).toBe(0);
+        expect(deletedCount).toBe(0);
       });
 
       it("should delete all of them", async () => {
-        const response: DeleteResult = await historyService.deleteMany({});
-        expect(response.deletedCount).toBe(3);
+        const deletedCount = await historyService.deleteMany({});
+        expect(deletedCount).toBe(3);
       });
 
       it("should delete histories which contain changes about only title field ,should remove title changes on histories which contain changes about title and more, shouldn't update which doesnt contain changes about title", async () => {
-        const response = await historyService.deleteHistoryAtPath(bucketId, ["title"]);
-        expect(response.deletedCount).toBe(1);
+        const deletedCount = await historyService.deleteHistoryAtPath(bucketId, ["title"]);
+        expect(deletedCount).toBe(1);
 
-        const histories = (await historyService.collection.find({}).toArray()).map(
+        const histories = (await historyService.collection.find({}, {sort: {_id: 1}})).map(
           history => history.changes
         );
         expect(histories).toEqual([
@@ -348,29 +368,44 @@ describe("History Service", () => {
         await historyService.collection.deleteMany({});
       });
 
-      it("should delete first history before add new history if history count is ten or more", async () => {
-        //fill the collection
-        const histories = Array.from(new Array(10), (val, index) => ({
-          bucket_id: bucketId,
-          document_id: documentId,
-          //index starts with 0
-          title: `${index + 1}. history`
-        }));
-        await historyService.collection.insertMany(histories);
+      it("should delete the oldest history when the count reaches ten", async () => {
+        /**
+         * The insertion order is deliberately the **reverse** of the `_id` order, so "whichever row comes
+         * back first" is no longer the same document as "the oldest": an unsorted `deleteOne` passes a
+         * same-order fixture by luck and fails this one.
+         *
+         * The `_id`s come from the same generator the service uses. Left to the driver they come from its
+         * own bson instance while the service's come from the application layer's — two module instances,
+         * two `PROCESS_UNIQUE` values (see `packages/database/index.ts`) — and inside the same second the
+         * order between the two groups is random.
+         */
+        const ids = Array.from(new Array(10), () => new ObjectId()).sort((a, b) =>
+          a.toHexString() < b.toHexString() ? -1 : 1
+        );
 
-        //add history
-        const response: InsertOneResult = await historyService.insertOne({
+        for (let index = ids.length - 1; index >= 0; index--) {
+          await historyService.collection.insertOne({
+            _id: ids[index],
+            bucket_id: bucketId,
+            document_id: documentId,
+            title: `${index + 1}. history`
+          } as any);
+        }
+
+        const inserted = await historyService.insertOne({
           bucket_id: bucketId,
           document_id: documentId,
           title: "add me"
         });
-        expect(response.acknowledged).toBe(true);
+        expect(inserted._id).toBeDefined();
 
-        const historyTitles = (await historyService.collection.find({}).toArray()).map(
+        const titles = (await historyService.collection.find({}, {sort: {_id: 1}})).map(
           history => history.title
         );
-        expect(historyTitles.length).toBe(10);
-        expect(historyTitles).toEqual([
+
+        expect(titles.length).toBe(10);
+        expect(titles).not.toContain("1. history");
+        expect(titles).toEqual([
           "2. history",
           "3. history",
           "4. history",
@@ -385,7 +420,7 @@ describe("History Service", () => {
       });
 
       it("should add new history", async () => {
-        const response: InsertOneResult = await historyService.createHistory(
+        const inserted = await historyService.createHistory(
           bucketId,
           {
             _id: documentId,
@@ -396,13 +431,13 @@ describe("History Service", () => {
             name: "updated name"
           }
         );
-        expect(response.acknowledged).toBe(true);
+        expect(inserted._id).toBeDefined();
 
         const histories = await historyService.getHistory({
-          _id: response.insertedId
+          _id: inserted._id
         });
         expect(histories).toEqual({
-          _id: response.insertedId,
+          _id: inserted._id,
           bucket_id: bucketId,
           document_id: documentId,
           changes: diff(
@@ -419,7 +454,7 @@ describe("History Service", () => {
       });
 
       it("should update histories", async () => {
-        const response: InsertOneResult = await historyService.createHistory(
+        const inserted = await historyService.createHistory(
           bucketId,
           {
             _id: documentId,
@@ -465,10 +500,10 @@ describe("History Service", () => {
         await new Promise(resolve => setTimeout(resolve, 3000));
 
         const history = await historyService.getHistory({
-          _id: response.insertedId
+          _id: inserted._id
         });
         expect(history).toEqual({
-          _id: response.insertedId,
+          _id: inserted._id,
           bucket_id: bucketId,
           document_id: documentId,
           changes: diff(

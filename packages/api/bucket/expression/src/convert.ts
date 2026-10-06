@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "bson";
 import {getMostLeftSelectIdentifier} from "./ast.js";
 import {compile} from "./compile.js";
 import * as func from "./func.js";
@@ -178,6 +178,9 @@ function visitBinaryOperator(node, mode: Mode) {
     case "-":
       return visitBinaryOperatorSubtract(node, mode);
 
+    case "in":
+      return visitBinaryOperatorIn(node, mode);
+
     case "select":
       return visitBinaryOperatorSelect(node, mode);
     default:
@@ -269,6 +272,20 @@ function visitBinaryOperatorLessOrEqual(node, mode: Mode) {
 function visitBinaryOperatorEqual(node, mode: Mode) {
   return ctx => {
     const expression = {$eq: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
+  };
+}
+
+/**
+ * `x in y` — membership. The argument order matches: Mongo's `$in` takes the needle first.
+ *
+ * The operator has always been in the grammar and the PostgreSQL compiler has implemented it from the start,
+ * while this target did not — so the same expression worked on one backend and returned
+ * `unknown binary operator in` on the other. Not silent, but a parity gap all the same.
+ */
+function visitBinaryOperatorIn(node, mode: Mode) {
+  return ctx => {
+    const expression = {$in: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
     return wrapExpressionByMode(expression, mode);
   };
 }

@@ -3,7 +3,12 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {HistoryModule} from "@spica-server/bucket-history";
 import {ServicesModule} from "@spica-server/bucket-services";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {
+  createAdHocCollection,
+  DatabaseService,
+  DatabaseTestingModule,
+  ObjectId
+} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {POLICY_RESOLVER} from "@spica-server/interface-passport-guard";
@@ -35,7 +40,7 @@ describe("History Acceptance", () => {
       imports: [
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.create(),
+        DatabaseTestingModule.standalone(),
         PreferenceTestingModule,
         ServicesModule.initialize(undefined),
         HistoryModule.register()
@@ -71,6 +76,18 @@ describe("History Acceptance", () => {
         },
         history: true
       });
+
+    /**
+     * The bucket data table is created **beforehand**.
+     *
+     * The spec writes the bucket document straight into the `buckets` collection, that is, it bypasses
+     * `BucketService`; MongoDB creates the namespace on the first write but a relational model needs a
+     * table. The shape comes from the bucket's own schema, so the fixture does not repeat itself.
+     */
+    await createAdHocCollection(app.get(DatabaseService), `bucket_${bucketId}`, {
+      title: {type: "string"},
+      description: {type: "string"}
+    });
 
     await app
       .get(DatabaseService)
@@ -285,7 +302,7 @@ describe("History Authorization", () => {
       imports: [
         CoreTestingModule,
         PassportTestingModule.initialize({skipActionCheck: false}),
-        DatabaseTestingModule.create(),
+        DatabaseTestingModule.standalone(),
         PreferenceTestingModule,
         ServicesModule.initialize(undefined),
         HistoryModule.register(),
@@ -306,6 +323,15 @@ describe("History Authorization", () => {
     req = module.get(Request);
     db = app.get(DatabaseService);
     await app.listen(req.socket);
+
+    /**
+     * The authorization tests touch the bucket data table too (`afterEach` cleans it and even the paths
+     * that expect a 403 open the collection), so the table is created here as well.
+     */
+    await createAdHocCollection(db, `bucket_${bucketId}`, {
+      title: {type: "string"},
+      description: {type: "string"}
+    });
   }, 120000);
 
   afterEach(async () => {

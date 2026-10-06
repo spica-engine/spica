@@ -32,7 +32,8 @@ import {
   JSONPR,
   NUMBER,
   OR,
-  EXPRESSION
+  EXPRESSION,
+  driverErrorStatus
 } from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
@@ -576,7 +577,12 @@ export class BucketDataController {
   }
 
   errorHandler(error: {status: number; message: string}) {
-    throw new HttpException(error.message, error.status || 500);
+    /**
+     * A driver-contract error keeps its own status. Without this the `|| 500` flattened "this backend has no
+     * such thing" and "your filter used an operator we do not carry" into a server error, and the global
+     * filter never got to see them.
+     */
+    throw new HttpException(error.message, driverErrorStatus(error) ?? error.status ?? 500);
   }
 
   validateDocument(bucketId: ObjectId, document: BucketDocument): Promise<void> {
