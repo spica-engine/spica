@@ -25,6 +25,7 @@ import {FunctionAssetWatcher} from "./asset-watcher.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
 import {FunctionArtifactManager} from "./artifact-manager.js";
+import {AssetRecorder} from "./asset-recorder.js";
 
 @Module({})
 export class FunctionModule {
@@ -114,7 +115,8 @@ export class FunctionModule {
         FunctionAssetReconciler,
         FunctionAssetWatcher,
         SelfWriteTracker,
-        FunctionPreparationService
+        FunctionPreparationService,
+        AssetRecorder
       ]
     };
 

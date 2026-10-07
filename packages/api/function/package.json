@@ -72,6 +72,10 @@
       "types": "./src/asset-keys.ts",
       "default": "./dist/src/asset-keys.js"
     },
+    "./src/asset-recorder": {
+      "types": "./src/asset-recorder.ts",
+      "default": "./dist/src/asset-recorder.js"
+    },
     "./src/artifact-manager": {
       "types": "./src/artifact-manager.ts",
       "default": "./dist/src/artifact-manager.js"

@@ -6,26 +6,17 @@ import path from "path";
 import * as tar from "tar";
 import {rimraf} from "rimraf";
 import {ObjectId} from "@spica-server/database";
-import {FunctionArtifactService, FunctionAssetService} from "@spica-server/function-services";
+import {FunctionArtifactService} from "@spica-server/function-services";
 import {Function, Options, FUNCTION_OPTIONS} from "@spica-server/interface-function";
 import {
   FunctionArtifactInputs,
-  FunctionAssetFilename,
-  FunctionAssetStorageOptions,
   FunctionAssetStrategy,
   FUNCTION_ASSET_FILENAMES,
-  FUNCTION_ASSET_STORAGE_OPTIONS,
   FUNCTION_ASSET_STRATEGY
 } from "@spica-server/interface-function-asset-storage";
-import {
-  artifactKey,
-  artifactPrefix,
-  assetKey,
-  hashBuffer,
-  isArtifactKey,
-  platformId
-} from "./asset-keys.js";
+import {artifactKey, artifactPrefix, hashBuffer, isArtifactKey, platformId} from "./asset-keys.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
+import {AssetRecorder} from "./asset-recorder.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
 
 type FunctionWithId = Function & {_id: ObjectId};
@@ -93,13 +84,11 @@ export class FunctionArtifactManager implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     @Inject(FUNCTION_ASSET_STRATEGY) private readonly strategy: FunctionAssetStrategy,
-    @Inject(FUNCTION_ASSET_STORAGE_OPTIONS)
-    private readonly storageOptions: FunctionAssetStorageOptions,
     @Inject(FUNCTION_OPTIONS) private readonly options: Options,
     private readonly artifactService: FunctionArtifactService,
-    private readonly assetService: FunctionAssetService,
     private readonly preparationService: FunctionPreparationService,
-    private readonly tracker: SelfWriteTracker
+    private readonly tracker: SelfWriteTracker,
+    private readonly recorder: AssetRecorder
   ) {
     // Per host, because with a shared (ReadWriteMany) disk every replica would otherwise clear
     // the others' in-flight downloads on startup.
@@ -127,20 +116,6 @@ export class FunctionArtifactManager implements OnModuleInit, OnModuleDestroy {
         if (this.locks.get(functionName) === next) this.locks.delete(functionName);
       });
     return next;
-  }
-
-  private async trackAsset(fn: FunctionWithId, filename: FunctionAssetFilename, data: Buffer) {
-    const key = assetKey(fn.name, filename);
-    const hash = hashBuffer(data);
-    await this.strategy.write(key, data);
-    this.tracker.stamp({functionId: fn._id.toHexString(), filename, hash});
-    await this.assetService.upsertAsset(fn._id, filename, {
-      key,
-      hash,
-      size: data.byteLength,
-      uploadDate: new Date(),
-      strategy: this.storageOptions.strategy
-    });
   }
 
   async rebuild(fn: Function): Promise<boolean> {
@@ -305,9 +280,7 @@ export class FunctionArtifactManager implements OnModuleInit, OnModuleDestroy {
   private async trackLockfile(fn: FunctionWithId) {
     const local = await this.preparationService.readFileBuffer(fn, "package-lock.json");
     if (!local) return;
-    const record = await this.assetService.findByFilename(fn._id, "package-lock.json");
-    if (record?.hash === hashBuffer(local)) return;
-    await this.trackAsset(fn, "package-lock.json", local);
+    await this.recorder.storeIfChanged(fn, "package-lock.json", local);
   }
 
   private async computeInputs(fn: Function): Promise<FunctionArtifactInputs> {

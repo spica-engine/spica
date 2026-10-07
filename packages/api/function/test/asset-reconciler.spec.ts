@@ -4,6 +4,7 @@ import {
   hashBuffer,
   assetKey
 } from "@spica-server/function/src/asset-reconciler";
+import {AssetRecorder} from "@spica-server/function/src/asset-recorder";
 import {
   FUNCTION_ASSET_STRATEGY,
   FUNCTION_ASSET_STORAGE_OPTIONS
@@ -29,7 +30,12 @@ const buildReconciler = (overrides: Partial<typeof mockDeps> = {}) => {
     merged.storageOptions as any,
     merged.assetService as any,
     merged.preparationService as any,
-    merged.tracker as any,
+    new AssetRecorder(
+      merged.strategy as any,
+      merged.storageOptions as any,
+      merged.assetService as any,
+      merged.tracker as any
+    ),
     merged.artifactManager as any
   );
   // Inject tokens manually (NestJS @Inject decorators are metadata; for pure unit
@@ -38,7 +44,6 @@ const buildReconciler = (overrides: Partial<typeof mockDeps> = {}) => {
   (reconciler as any).storageOptions = merged.storageOptions;
   (reconciler as any).assetService = merged.assetService;
   (reconciler as any).preparationService = merged.preparationService;
-  (reconciler as any).tracker = merged.tracker;
   (reconciler as any).artifactManager = merged.artifactManager;
   return reconciler;
 };

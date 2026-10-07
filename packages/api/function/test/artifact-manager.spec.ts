@@ -5,6 +5,7 @@ import {ObjectId} from "@spica-server/database";
 import {DefaultStrategy} from "@spica-server/function-asset-storage";
 import {FunctionArtifactManager} from "@spica-server/function/src/artifact-manager";
 import {SelfWriteTracker} from "@spica-server/function/src/asset-write-tracker";
+import {AssetRecorder} from "@spica-server/function/src/asset-recorder";
 import {
   artifactKey,
   hashBuffer,
@@ -30,12 +31,11 @@ let manager: FunctionArtifactManager;
 function buildManager() {
   return new FunctionArtifactManager(
     strategy,
-    {strategy: "default", prebuiltArtifacts: true} as any,
     {root, outDir: ".build", timeout: 1, builder: "legacy"},
     artifactService as any,
-    assetService as any,
     preparationService as any,
-    tracker
+    tracker,
+    new AssetRecorder(strategy, {strategy: "default"}, assetService as any, tracker)
   );
 }
 

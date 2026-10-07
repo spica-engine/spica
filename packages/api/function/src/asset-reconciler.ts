@@ -2,7 +2,6 @@ import {Inject, Injectable, Logger, Optional} from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
 import {FunctionAssetService} from "@spica-server/function-services";
 import {
-  FunctionAsset,
   FunctionAssetFilename,
   FunctionAssetStrategy,
   FUNCTION_ASSET_STORAGE_OPTIONS,
@@ -11,7 +10,7 @@ import {
 } from "@spica-server/interface-function-asset-storage";
 import {Function} from "@spica-server/interface-function";
 import {FunctionPreparationService} from "./function-preparation.service.js";
-import {SelfWriteTracker} from "./asset-write-tracker.js";
+import {AssetRecorder, UploadedAsset} from "./asset-recorder.js";
 import {FunctionArtifactManager} from "./artifact-manager.js";
 import {hashBuffer, assetKey} from "./asset-keys.js";
 
@@ -50,26 +49,16 @@ export class FunctionAssetReconciler {
     private readonly storageOptions: FunctionAssetStorageOptions,
     private readonly assetService: FunctionAssetService,
     private readonly preparationService: FunctionPreparationService,
-    private readonly tracker: SelfWriteTracker,
+    private readonly recorder: AssetRecorder,
     @Optional() private readonly artifactManager?: FunctionArtifactManager
   ) {}
 
-  async uploadAsset(
+  uploadAsset(
     functionName: string,
     filename: FunctionAssetFilename,
     data: Buffer
-  ): Promise<Omit<FunctionAsset, "functionId" | "_id">> {
-    const key = assetKey(functionName, filename);
-    const hash = hashBuffer(data);
-    await this.strategy.write(key, data);
-    return {
-      filename,
-      key,
-      hash,
-      size: data.byteLength,
-      uploadDate: new Date(),
-      strategy: this.storageOptions.strategy
-    };
+  ): Promise<UploadedAsset> {
+    return this.recorder.upload(functionName, filename, data);
   }
 
   private async readFromStorage(key: string): Promise<Buffer> {
@@ -185,24 +174,17 @@ export class FunctionAssetReconciler {
     const records = await this.assetService.findByFunction(fn._id);
     if (records.length > 0) return "already-stored";
 
-    const uploaded: Array<Omit<FunctionAsset, "functionId" | "_id">> = [];
+    const uploaded: UploadedAsset[] = [];
     for (const filename of [this.preparationService.indexFilename(fn), "package.json"] as const) {
       const data = await this.preparationService.readFileBuffer(fn, filename);
       if (!data) continue;
-      uploaded.push(await this.uploadAsset(fn.name, filename, data));
+      uploaded.push(await this.recorder.upload(fn.name, filename, data));
     }
     if (uploaded.length == 0) return "no-local-files";
 
     try {
-      for (const {filename, key, hash, size, uploadDate, strategy} of uploaded) {
-        this.tracker.stamp({functionId: fn._id.toHexString(), filename, hash});
-        await this.assetService.upsertAsset(fn._id, filename, {
-          key,
-          hash,
-          size,
-          uploadDate,
-          strategy
-        });
+      for (const asset of uploaded) {
+        await this.recorder.record(fn._id, asset);
       }
     } catch (e) {
       await this.assetService
