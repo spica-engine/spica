@@ -12,6 +12,7 @@ import {
 } from "@spica-server/interface-function-asset-storage";
 import {Function} from "@spica-server/interface-function";
 import {FunctionPreparationService} from "./function-preparation.service.js";
+import {SelfWriteTracker} from "./asset-write-tracker.js";
 
 export function hashBuffer(buf: Buffer): string {
   return createHash("sha256").update(buf).digest("hex");
@@ -25,6 +26,24 @@ function errMsg(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
+const BACKFILL_CONCURRENCY = 4;
+
+type BackfillOutcome = "already-stored" | "uploaded" | "no-local-files";
+
+async function forEachWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  task: (item: T) => Promise<void>
+): Promise<void> {
+  let next = 0;
+  const lanes = Array.from({length: Math.min(limit, items.length)}, async () => {
+    while (next < items.length) {
+      await task(items[next++]);
+    }
+  });
+  await Promise.all(lanes);
+}
+
 @Injectable()
 export class FunctionAssetReconciler {
   private readonly logger = new Logger(FunctionAssetReconciler.name);
@@ -34,12 +53,10 @@ export class FunctionAssetReconciler {
     @Inject(FUNCTION_ASSET_STORAGE_OPTIONS)
     private readonly storageOptions: FunctionAssetStorageOptions,
     private readonly assetService: FunctionAssetService,
-    private readonly preparationService: FunctionPreparationService
+    private readonly preparationService: FunctionPreparationService,
+    private readonly tracker: SelfWriteTracker
   ) {}
 
-  /**
-   * Upload a local asset to the configured strategy. Returns the metadata record.
-   */
   async uploadAsset(
     functionName: string,
     filename: FunctionAssetFilename,
@@ -58,32 +75,18 @@ export class FunctionAssetReconciler {
     };
   }
 
-  /**
-   * Read a raw buffer from the configured storage strategy.
-   */
   private async readFromStorage(key: string): Promise<Buffer> {
     return this.strategy.read(key);
   }
 
-  /**
-   * Write a raw buffer to the configured storage strategy.
-   * Used during rollback to restore pre-existing objects that were overwritten.
-   */
   private async writeToStorage(key: string, data: Buffer): Promise<void> {
     return this.strategy.write(key, data);
   }
 
-  /**
-   * Delete a key from the configured storage strategy.
-   */
   private async deleteFromStorage(key: string): Promise<void> {
     return this.strategy.delete(key);
   }
 
-  /**
-   * Restore a single asset from remote storage back to local disk.
-   * No-op when prevAsset is null (file did not previously exist).
-   */
   private async restoreAsset(
     fn: Function,
     prevAsset: {key: string; filename: FunctionAssetFilename} | null
@@ -99,25 +102,15 @@ export class FunctionAssetReconciler {
     }
   }
 
-  /**
-   * Read and cache the buffer of a single pre-existing asset from storage.
-   * Returns null when prevAsset is null (new file — nothing to snapshot).
-   */
   async snapshotAsset(prevAsset: {key: string} | null): Promise<Buffer | null> {
     if (!prevAsset) return null;
     try {
       return await this.readFromStorage(prevAsset.key);
     } catch {
-      // Asset in metadata but missing from storage — treat as absent.
       return null;
     }
   }
 
-  /**
-   * Restore a single file from storage to disk, then run the targeted prepare
-   * step for that filename (compile for index files, install for package.json).
-   * No-op when prevAsset is null — nothing to restore.
-   */
   async rollbackDisk(
     fn: Function,
     prevAsset: {key: string; filename: FunctionAssetFilename} | null
@@ -143,13 +136,6 @@ export class FunctionAssetReconciler {
     });
   }
 
-  /**
-   * Full rollback for a single-file upload failure: restore the storage key to
-   * its pre-upload state (re-write old buffer or delete if it was a new file),
-   * then restore disk + re-prepare.
-   *
-   * Storage must be restored before disk so restoreAsset reads the correct content.
-   */
   async rollback(
     fn: Function,
     prevAsset: {key: string; filename: FunctionAssetFilename} | null,
@@ -162,9 +148,6 @@ export class FunctionAssetReconciler {
     await this.rollbackDisk(fn, prevAsset);
   }
 
-  /**
-   * Delete all stored assets for a function from both storage and metadata.
-   */
   async deleteAll(fn: Function & {_id: ObjectId}): Promise<void> {
     const prevAssets = await this.assetService.findByFunction(fn._id);
     await Promise.all(
@@ -177,25 +160,78 @@ export class FunctionAssetReconciler {
     await this.assetService.deleteByFunction(fn._id);
   }
 
-  /**
-   * Reconcile a single function: compare local file hashes to stored metadata.
-   * Downloads and restores any file whose hash doesn't match (or is missing),
-   * then re-prepares the function if any file changed.
-   *
-   * All changed assets are written to disk first, then prepare steps run in
-   * deterministic order (package.json install before index compile) and each
-   * step runs at most once regardless of how many assets changed.
-   */
+  async backfill(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
+    if (this.storageOptions.strategy == "default") return;
+
+    const unrecoverable: string[] = [];
+    await forEachWithConcurrency(fns, BACKFILL_CONCURRENCY, async fn => {
+      try {
+        const outcome = await this.backfillFunction(fn);
+        if (outcome == "no-local-files") unrecoverable.push(fn.name);
+      } catch (e) {
+        this.logger.error(
+          `[backfill] Failed for function ${fn.name}, retrying on next start: ${errMsg(e)}`
+        );
+      }
+    });
+
+    if (unrecoverable.length) {
+      this.logger.warn(
+        `[backfill] Functions without stored assets and without local files to upload, their code cannot be restored: ${unrecoverable.join(", ")}`
+      );
+    }
+  }
+
+  private async backfillFunction(fn: Function & {_id: ObjectId}): Promise<BackfillOutcome> {
+    const records = await this.assetService.findByFunction(fn._id);
+    if (records.length > 0) return "already-stored";
+
+    const uploaded: Array<Omit<FunctionAsset, "functionId" | "_id">> = [];
+    for (const filename of [this.preparationService.indexFilename(fn), "package.json"] as const) {
+      const data = await this.preparationService.readFileBuffer(fn, filename);
+      if (!data) continue;
+      uploaded.push(await this.uploadAsset(fn.name, filename, data));
+    }
+    if (uploaded.length == 0) return "no-local-files";
+
+    try {
+      for (const {filename, key, hash, size, uploadDate, strategy} of uploaded) {
+        this.tracker.stamp({functionId: fn._id.toHexString(), filename, hash});
+        await this.assetService.upsertAsset(fn._id, filename, {
+          key,
+          hash,
+          size,
+          uploadDate,
+          strategy
+        });
+      }
+    } catch (e) {
+      await this.assetService
+        .deleteMany({
+          $or: uploaded.map(({filename, hash}) => ({functionId: fn._id, filename, hash}))
+        })
+        .catch(rollbackError =>
+          this.logger.error(
+            `[backfill] Could not roll back records of ${fn.name}: ${errMsg(rollbackError)}`
+          )
+        );
+      throw e;
+    }
+
+    this.logger.log(
+      `[backfill] Uploaded ${uploaded.map(({filename}) => `${fn.name}/${filename}`).join(", ")}`
+    );
+    return "uploaded";
+  }
+
   async reconcileFunction(fn: Function & {_id: ObjectId}): Promise<void> {
     const storedAssets = await this.assetService.findByFunction(fn._id);
     if (storedAssets.length === 0) {
-      // No metadata recorded; nothing to reconcile.
       return;
     }
 
     const changedFilenames: FunctionAssetFilename[] = [];
 
-    // Phase 1: restore all changed assets to disk before running any prepare step.
     for (const asset of storedAssets) {
       const buf = await this.preparationService.readFileBuffer(fn, asset.filename);
       const local = buf ? {hash: hashBuffer(buf)} : null;
@@ -216,8 +252,6 @@ export class FunctionAssetReconciler {
 
     if (changedFilenames.length === 0) return;
 
-    // Phase 2: run prepare steps in deterministic order — install before compile.
-    // Each step runs at most once even if multiple assets changed.
     const needsInstall = changedFilenames.includes("package.json");
     const needsCompile = changedFilenames.some(f => f === "index.ts" || f === "index.mjs");
     const unknownFilenames = changedFilenames.filter(
@@ -237,10 +271,6 @@ export class FunctionAssetReconciler {
     }
   }
 
-  /**
-   * Run reconciliation for all provided functions.
-   * After syncing files, runs installPackages + compile when any file changed.
-   */
   async reconcileAll(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
     await Promise.all(
       fns.map(async fn => {
