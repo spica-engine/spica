@@ -1,4 +1,4 @@
-import {Inject, Injectable, Logger} from "@nestjs/common";
+import {Inject, Injectable, Logger, Optional} from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
 import {FunctionAssetService} from "@spica-server/function-services";
 import {
@@ -51,7 +51,7 @@ export class FunctionAssetReconciler {
     private readonly assetService: FunctionAssetService,
     private readonly preparationService: FunctionPreparationService,
     private readonly tracker: SelfWriteTracker,
-    private readonly artifactManager: FunctionArtifactManager
+    @Optional() private readonly artifactManager?: FunctionArtifactManager
   ) {}
 
   async uploadAsset(
@@ -156,7 +156,7 @@ export class FunctionAssetReconciler {
       )
     );
     await this.assetService.deleteByFunction(fn._id);
-    await this.artifactManager.deleteArtifacts(fn);
+    await this.artifactManager?.deleteArtifacts(fn);
   }
 
   async backfill(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
@@ -252,12 +252,13 @@ export class FunctionAssetReconciler {
     fn: Function & {_id: ObjectId},
     opts: {allowFallback: boolean} = {allowFallback: true}
   ): Promise<boolean> {
-    if (this.artifactManager.enabled) {
-      return this.artifactManager.runExclusive(fn.name, async () => {
+    const artifactManager = this.artifactManager;
+    if (artifactManager) {
+      return artifactManager.runExclusive(fn.name, async () => {
         const storedAssets = await this.assetService.findByFunction(fn._id);
         if (storedAssets.length === 0) return false;
         await this.syncSources(fn);
-        return this.artifactManager.restoreOrBuild(fn, opts);
+        return artifactManager.restoreOrBuild(fn, opts);
       });
     }
 
@@ -284,7 +285,7 @@ export class FunctionAssetReconciler {
   }
 
   async reconcileAll(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
-    const limit = this.artifactManager.enabled ? PREBUILT_RECONCILE_CONCURRENCY : fns.length;
+    const limit = this.artifactManager ? PREBUILT_RECONCILE_CONCURRENCY : fns.length;
     await forEachWithConcurrency(fns, limit, async fn => {
       try {
         await this.reconcileFunction(fn);

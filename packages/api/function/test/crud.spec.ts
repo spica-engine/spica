@@ -19,9 +19,7 @@ describe("CRUD worker refresh", () => {
       removePackage: jest.fn().mockResolvedValue(undefined),
       read: jest.fn().mockResolvedValue("{}"),
       refreshLocally: jest.fn().mockResolvedValue(undefined),
-      applyChangePlan: jest.fn().mockResolvedValue(undefined),
-      publishArtifact: jest.fn().mockResolvedValue(undefined),
-      rebuildForArtifact: jest.fn().mockResolvedValue(true)
+      applyChangePlan: jest.fn().mockResolvedValue(undefined)
     };
   });
 
@@ -45,6 +43,12 @@ describe("CRUD worker refresh", () => {
     expectLocalRefreshOnly();
   });
 
+  it("should not rebuild after installing dependencies without an artifact manager", async () => {
+    await CRUD.dependencies.install(engine as any, fn, ["left-pad@1.3.0"]);
+
+    expect(engine.build).not.toHaveBeenCalled();
+  });
+
   it("should refresh only the local replica after uninstalling dependencies", async () => {
     await CRUD.dependencies.uninstall(engine as any, fn, ["left-pad"]);
 
@@ -57,7 +61,7 @@ describe("CRUD prebuilt artifacts", () => {
   const fn = {_id: fnId, name: "my-function", language: "typescript"} as any;
 
   let fs: {findOne: jest.Mock};
-  let engine: Record<string, jest.Mock>;
+  let engine: Record<string, any>;
   let calls: string[];
 
   beforeEach(() => {
@@ -81,15 +85,17 @@ describe("CRUD prebuilt artifacts", () => {
       removePackage: jest.fn(track("removePackage")),
       read: jest.fn().mockResolvedValue("{}"),
       refreshLocally: jest.fn(track("refreshLocally")),
-      publishArtifact: jest.fn(track("publishArtifact")),
-      rebuildForArtifact: jest.fn(track("rebuildForArtifact", true))
+      artifactManager: {
+        publish: jest.fn(track("publish")),
+        rebuild: jest.fn(track("rebuild", true))
+      }
     };
   });
 
   it("should publish the artifact after storing the index and before refreshing", async () => {
     await CRUD.index.write(fs as any, engine as any, fnId, "export default () => {}");
 
-    expect(calls).toEqual(["update", "build", "storeAssets", "publishArtifact", "refreshLocally"]);
+    expect(calls).toEqual(["update", "build", "storeAssets", "publish", "refreshLocally"]);
   });
 
   it("should rebuild inside the install op, then publish, then refresh", async () => {
@@ -97,31 +103,25 @@ describe("CRUD prebuilt artifacts", () => {
 
     expect(calls).toEqual([
       "installPackages",
-      "rebuildForArtifact",
+      "rebuild",
       "storeAssets",
-      "publishArtifact",
+      "publish",
       "refreshLocally"
     ]);
-    expect(engine.publishArtifact).toHaveBeenCalledWith(fn, {buildFailed: false});
+    expect(engine.artifactManager.publish).toHaveBeenCalledWith(fn, {buildFailed: false});
   });
 
   it("should publish an unavailable artifact when the rebuild after install fails", async () => {
-    engine.rebuildForArtifact.mockResolvedValue(false);
+    engine.artifactManager.rebuild.mockResolvedValue(false);
 
     await CRUD.dependencies.install(engine as any, fn, ["left-pad@1.3.0"]);
 
-    expect(engine.publishArtifact).toHaveBeenCalledWith(fn, {buildFailed: true});
+    expect(engine.artifactManager.publish).toHaveBeenCalledWith(fn, {buildFailed: true});
   });
 
   it("should rebuild inside the uninstall op, then publish, then refresh", async () => {
     await CRUD.dependencies.uninstall(engine as any, fn, ["left-pad"]);
 
-    expect(calls).toEqual([
-      "removePackage",
-      "rebuildForArtifact",
-      "storeAssets",
-      "publishArtifact",
-      "refreshLocally"
-    ]);
+    expect(calls).toEqual(["removePackage", "rebuild", "storeAssets", "publish", "refreshLocally"]);
   });
 });

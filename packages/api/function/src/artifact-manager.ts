@@ -86,7 +86,6 @@ async function pathExists(target: string): Promise<boolean> {
 @Injectable()
 export class FunctionArtifactManager implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(FunctionArtifactManager.name);
-  readonly enabled: boolean;
   private readonly platform = platformId();
   private readonly scratchRoot: string;
   private readonly locks = new Map<string, Promise<unknown>>();
@@ -102,14 +101,12 @@ export class FunctionArtifactManager implements OnModuleInit, OnModuleDestroy {
     private readonly preparationService: FunctionPreparationService,
     private readonly tracker: SelfWriteTracker
   ) {
-    this.enabled = !!storageOptions.prebuiltArtifacts;
     // Per host, because with a shared (ReadWriteMany) disk every replica would otherwise clear
     // the others' in-flight downloads on startup.
     this.scratchRoot = path.join(path.dirname(options.root), ".function-artifacts", os.hostname());
   }
 
   async onModuleInit() {
-    if (!this.enabled) return;
     await rimraf(this.scratchRoot);
     const jitter = Math.floor(Math.random() * GC_INITIAL_DELAY_MS);
     this.gcTimer = setTimeout(() => this.runGarbageCollection(), GC_INITIAL_DELAY_MS + jitter);
@@ -147,7 +144,6 @@ export class FunctionArtifactManager implements OnModuleInit, OnModuleDestroy {
   }
 
   async rebuild(fn: Function): Promise<boolean> {
-    if (!this.enabled) return true;
     const index = await this.preparationService.readFileBuffer(
       fn,
       this.preparationService.indexFilename(fn)
@@ -165,7 +161,6 @@ export class FunctionArtifactManager implements OnModuleInit, OnModuleDestroy {
   }
 
   publish(fn: FunctionWithId, opts: {buildFailed?: boolean} = {}): Promise<void> {
-    if (!this.enabled) return Promise.resolve();
     return this.runExclusive(fn.name, () => this.publishUnlocked(fn, opts));
   }
 
@@ -175,7 +170,6 @@ export class FunctionArtifactManager implements OnModuleInit, OnModuleDestroy {
    * archive or, with allowFallback, install + build locally and publish the result.
    */
   async restoreOrBuild(fn: FunctionWithId, opts: {allowFallback: boolean}): Promise<boolean> {
-    if (!this.enabled) return false;
     const inputs = await this.computeInputs(fn);
     const key = artifactKey(fn.name, inputs, this.platform);
     if ((await this.readMarker(fn)) === key) return false;
@@ -206,7 +200,6 @@ export class FunctionArtifactManager implements OnModuleInit, OnModuleDestroy {
   }
 
   async deleteArtifacts(fn: FunctionWithId): Promise<void> {
-    if (!this.enabled) return;
     try {
       const objects = await this.strategy.list(artifactPrefix(fn.name));
       await Promise.all(objects.map(object => this.strategy.delete(object.key)));
@@ -217,7 +210,6 @@ export class FunctionArtifactManager implements OnModuleInit, OnModuleDestroy {
   }
 
   async collectGarbage(now = Date.now()): Promise<void> {
-    if (!this.enabled) return;
     const referenced = await this.artifactService.findReferencedKeys();
     const objects = await this.strategy.list("functions/");
     const unreferenced = objects.filter(

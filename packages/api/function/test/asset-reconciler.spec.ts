@@ -67,8 +67,7 @@ let mockDeps: {
     indexFilename: jest.Mock;
   }>;
   tracker: {stamp: jest.Mock};
-  artifactManager: {
-    enabled: boolean;
+  artifactManager?: {
     runExclusive: jest.Mock;
     restoreOrBuild: jest.Mock;
     deleteArtifacts: jest.Mock;
@@ -99,13 +98,7 @@ beforeEach(() => {
       writeFileBuffer: jest.fn().mockResolvedValue(undefined),
       indexFilename: jest.fn().mockReturnValue("index.ts")
     },
-    tracker: {stamp: jest.fn()},
-    artifactManager: {
-      enabled: false,
-      runExclusive: jest.fn((_name, task) => task()),
-      restoreOrBuild: jest.fn().mockResolvedValue(true),
-      deleteArtifacts: jest.fn().mockResolvedValue(undefined)
-    }
+    tracker: {stamp: jest.fn()}
   };
 });
 
@@ -802,7 +795,11 @@ describe("FunctionAssetReconciler with prebuilt artifacts", () => {
   });
 
   beforeEach(() => {
-    mockDeps.artifactManager.enabled = true;
+    mockDeps.artifactManager = {
+      runExclusive: jest.fn((_name, task) => task()),
+      restoreOrBuild: jest.fn().mockResolvedValue(true),
+      deleteArtifacts: jest.fn().mockResolvedValue(undefined)
+    };
   });
 
   it("should sync sources and let the artifact manager restore inside the function lock", async () => {

@@ -26,7 +26,7 @@ let mockTracker: {isSelfWrite: jest.Mock};
 let mockPreparationService: {deleteFunctionDirectory: jest.Mock};
 let mockExecutor: {apply: jest.Mock};
 let mockArtifactService: {watch: jest.Mock};
-let mockArtifactManager: {enabled: boolean; runExclusive: jest.Mock};
+let mockArtifactManager: {runExclusive: jest.Mock} | undefined;
 let artifactSubject: Subject<unknown>;
 
 const buildWatcher = () =>
@@ -83,10 +83,7 @@ beforeEach(() => {
   mockArtifactService = {
     watch: jest.fn().mockReturnValue(artifactSubject.asObservable())
   };
-  mockArtifactManager = {
-    enabled: false,
-    runExclusive: jest.fn((_name, task) => task())
-  };
+  mockArtifactManager = undefined;
 });
 
 // ---------------------------------------------------------------------------
@@ -344,13 +341,13 @@ describe("FunctionAssetWatcher — prebuilt artifacts", () => {
   const flush = () => new Promise(r => setTimeout(r, 0));
 
   beforeEach(() => {
-    mockArtifactManager.enabled = true;
+    mockArtifactManager = {runExclusive: jest.fn((_name, task) => task())};
     (mockReconciler as any).syncSources = jest.fn().mockResolvedValue([]);
     mockReconciler.reconcileFunction.mockResolvedValue(true);
   });
 
-  it("should not watch artifacts when prebuilt artifacts are disabled", () => {
-    mockArtifactManager.enabled = false;
+  it("should not watch artifacts without an artifact manager", () => {
+    mockArtifactManager = undefined;
     const watcher = buildWatcher();
     watcher.onModuleInit();
 

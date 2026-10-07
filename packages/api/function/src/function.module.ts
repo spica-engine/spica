@@ -114,10 +114,13 @@ export class FunctionModule {
         FunctionAssetReconciler,
         FunctionAssetWatcher,
         SelfWriteTracker,
-        FunctionPreparationService,
-        FunctionArtifactManager
+        FunctionPreparationService
       ]
     };
+
+    if (options.assetStorage?.prebuiltArtifacts) {
+      module.providers.push(FunctionArtifactManager);
+    }
 
     if (options.realtime) {
       module.imports.push(FunctionRealtimeModule.register());

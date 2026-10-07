@@ -27,10 +27,10 @@ let preparationService: Record<string, jest.Mock>;
 let tracker: SelfWriteTracker;
 let manager: FunctionArtifactManager;
 
-function buildManager(enabled = true) {
+function buildManager() {
   return new FunctionArtifactManager(
     strategy,
-    {strategy: "default", prebuiltArtifacts: enabled} as any,
+    {strategy: "default", prebuiltArtifacts: true} as any,
     {root, outDir: ".build", timeout: 1, builder: "legacy"},
     artifactService as any,
     assetService as any,
@@ -205,16 +205,6 @@ describe("FunctionArtifactManager.publish", () => {
         hash: record.key
       })
     ).toBe(true);
-  });
-
-  it("should do nothing when prebuilt artifacts are disabled", async () => {
-    manager = buildManager(false);
-    const upload = jest.spyOn(strategy, "upload");
-
-    await manager.publish(fn);
-
-    expect(upload).not.toHaveBeenCalled();
-    expect(artifactService.upsertArtifact).not.toHaveBeenCalled();
   });
 });
 

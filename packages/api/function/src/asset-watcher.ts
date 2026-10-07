@@ -1,4 +1,4 @@
-import {Injectable, Logger, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
+import {Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {Subscription} from "rxjs";
 import {
   FunctionArtifactService,
@@ -43,11 +43,11 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
     private readonly preparationService: FunctionPreparationService,
     private readonly executor: PlanExecutor,
     private readonly artifactService: FunctionArtifactService,
-    private readonly artifactManager: FunctionArtifactManager
+    @Optional() private readonly artifactManager?: FunctionArtifactManager
   ) {}
 
   onModuleInit() {
-    if (this.artifactManager.enabled) {
+    if (this.artifactManager) {
       this.watchArtifacts();
     }
 
@@ -109,7 +109,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
               return;
             }
 
-            if (this.artifactManager.enabled) {
+            if (this.artifactManager) {
               this.logger.log(
                 `[asset-watcher] Peer asset change detected for ${fn.name}/${filename} — syncing sources`
               );
