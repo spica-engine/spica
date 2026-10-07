@@ -48,17 +48,32 @@ export class AWSS3Strategy implements FunctionAssetStrategy {
     return JSON.parse(readFileSync(this.credentialsPath!, "utf-8"));
   }
 
-  async read(key: string): Promise<Buffer> {
+  private async getObjectBody(key: string): Promise<Readable> {
     const res = await this.s3.send(
       new GetObjectCommand({
         Bucket: this.bucketName,
         Key: key
       })
     );
+    return res.Body as Readable;
+  }
+
+  private async putObject(key: string, body: Buffer | Readable, contentLength?: number) {
+    await this.s3.send(
+      new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+        Body: body,
+        ...(contentLength === undefined ? {} : {ContentLength: contentLength})
+      })
+    );
+  }
+
+  async read(key: string): Promise<Buffer> {
+    const stream = await this.getObjectBody(key);
 
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
-      const stream = res.Body as NodeJS.ReadableStream;
       stream.on("data", chunk => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
       stream.on("end", () => resolve(Buffer.concat(chunks)));
       stream.on("error", reject);
@@ -66,13 +81,7 @@ export class AWSS3Strategy implements FunctionAssetStrategy {
   }
 
   async write(key: string, data: Buffer): Promise<void> {
-    await this.s3.send(
-      new PutObjectCommand({
-        Bucket: this.bucketName,
-        Key: key,
-        Body: data
-      })
-    );
+    await this.putObject(key, data);
   }
 
   async delete(key: string): Promise<void> {
@@ -103,24 +112,11 @@ export class AWSS3Strategy implements FunctionAssetStrategy {
 
   async upload(key: string, filePath: string): Promise<void> {
     const {size} = await fs.promises.stat(filePath);
-    await this.s3.send(
-      new PutObjectCommand({
-        Bucket: this.bucketName,
-        Key: key,
-        Body: fs.createReadStream(filePath),
-        ContentLength: size
-      })
-    );
+    await this.putObject(key, fs.createReadStream(filePath), size);
   }
 
   async download(key: string, filePath: string): Promise<void> {
-    const res = await this.s3.send(
-      new GetObjectCommand({
-        Bucket: this.bucketName,
-        Key: key
-      })
-    );
-    await pipeline(res.Body as Readable, fs.createWriteStream(filePath));
+    await pipeline(await this.getObjectBody(key), fs.createWriteStream(filePath));
   }
 
   async list(prefix: string): Promise<StoredObject[]> {

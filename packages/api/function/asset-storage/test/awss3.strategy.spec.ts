@@ -53,6 +53,26 @@ describe("AWSS3Strategy", () => {
     expect(await strategy.exists("functions/abc/missing.ts")).toBe(false);
   });
 
+  it("should send exactly the bucket, key and body when writing and reading", async () => {
+    const {Readable} = await import("stream");
+    sendMock
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({Body: Readable.from([Buffer.from("x")])});
+
+    await strategy.write("functions/abc/index.ts", Buffer.from("data"));
+    await strategy.read("functions/abc/index.ts");
+
+    expect(sendMock.mock.calls[0][0].input).toEqual({
+      Bucket: bucketName,
+      Key: "functions/abc/index.ts",
+      Body: Buffer.from("data")
+    });
+    expect(sendMock.mock.calls[1][0].input).toEqual({
+      Bucket: bucketName,
+      Key: "functions/abc/index.ts"
+    });
+  });
+
   it("should upload a file as a stream with its content length", async () => {
     const {mkdtemp, writeFile} = await import("fs/promises");
     const {tmpdir} = await import("os");
