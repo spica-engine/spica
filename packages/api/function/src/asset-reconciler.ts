@@ -206,30 +206,7 @@ export class FunctionAssetReconciler {
     const lost: string[] = [];
     await forEachWithConcurrency(fns, BACKFILL_CONCURRENCY, async fn => {
       try {
-        const records = await this.assetService.findByFunction(fn._id);
-        if (records.length > 0) return;
-
-        let hasCode = false;
-        const filenames = [this.preparationService.indexFilename(fn), "package.json"] as const;
-        for (const filename of filenames) {
-          const data = await this.preparationService.readFileBuffer(fn, filename);
-          if (!data) continue;
-          const {key, hash, size, uploadDate, strategy} = await this.uploadAsset(
-            fn.name,
-            filename,
-            data
-          );
-          this.tracker.stamp({functionId: fn._id.toHexString(), filename, hash});
-          await this.assetService.upsertAsset(fn._id, filename, {
-            key,
-            hash,
-            size,
-            uploadDate,
-            strategy
-          });
-          hasCode = true;
-          this.logger.log(`[backfill] Uploaded ${fn.name}/${filename}`);
-        }
+        const hasCode = await this.backfillFunction(fn);
         if (!hasCode) lost.push(fn.name);
       } catch (e) {
         this.logger.error(`[backfill] Failed for function ${fn.name}: ${errMsg(e)}`);
@@ -241,6 +218,51 @@ export class FunctionAssetReconciler {
         `[backfill] No stored assets and no local files for: ${lost.join(", ")}. Their code cannot be restored.`
       );
     }
+  }
+
+  private async backfillFunction(fn: Function & {_id: ObjectId}): Promise<boolean> {
+    const records = await this.assetService.findByFunction(fn._id);
+    if (records.length > 0) return true;
+
+    const uploaded: Array<Omit<FunctionAsset, "functionId" | "_id">> = [];
+    for (const filename of [this.preparationService.indexFilename(fn), "package.json"] as const) {
+      const data = await this.preparationService.readFileBuffer(fn, filename);
+      if (!data) continue;
+      uploaded.push(await this.uploadAsset(fn.name, filename, data));
+    }
+    if (uploaded.length == 0) return false;
+
+    // A function with any record is skipped from then on, so a partially recorded back-fill would
+    // never be completed. Records are written only after every object is stored, and removed again
+    // if writing them fails, leaving the function with no records to be retried on the next start.
+    try {
+      for (const {filename, key, hash, size, uploadDate, strategy} of uploaded) {
+        this.tracker.stamp({functionId: fn._id.toHexString(), filename, hash});
+        await this.assetService.upsertAsset(fn._id, filename, {
+          key,
+          hash,
+          size,
+          uploadDate,
+          strategy
+        });
+      }
+    } catch (e) {
+      await this.assetService
+        .deleteMany({
+          $or: uploaded.map(({filename, hash}) => ({functionId: fn._id, filename, hash}))
+        })
+        .catch(rollbackError =>
+          this.logger.error(
+            `[backfill] Could not roll back records of ${fn.name}: ${errMsg(rollbackError)}`
+          )
+        );
+      throw e;
+    }
+
+    this.logger.log(
+      `[backfill] Uploaded ${uploaded.map(({filename}) => `${fn.name}/${filename}`).join(", ")}`
+    );
+    return true;
   }
 
   /**

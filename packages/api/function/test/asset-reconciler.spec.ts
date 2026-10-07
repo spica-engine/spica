@@ -54,6 +54,7 @@ let mockDeps: {
     findByFilename: jest.Mock;
     upsertAsset: jest.Mock;
     deleteByFunction: jest.Mock;
+    deleteMany: jest.Mock;
   }>;
   preparationService: jest.Mocked<{
     prepare: jest.Mock;
@@ -79,7 +80,8 @@ beforeEach(() => {
       findByFunction: jest.fn().mockResolvedValue([]),
       findByFilename: jest.fn().mockResolvedValue(null),
       upsertAsset: jest.fn().mockResolvedValue(undefined),
-      deleteByFunction: jest.fn().mockResolvedValue(1)
+      deleteByFunction: jest.fn().mockResolvedValue(1),
+      deleteMany: jest.fn().mockResolvedValue(1)
     },
     preparationService: {
       prepare: jest.fn().mockResolvedValue(undefined),
@@ -619,6 +621,54 @@ describe("FunctionAssetReconciler.backfill", () => {
       "package.json",
       expect.anything()
     );
+  });
+
+  it("should write no record when an upload fails, and complete the function on the next run", async () => {
+    mockDeps.strategy.write.mockImplementation(async key => {
+      if (key == "functions/my-function/package.json") throw new Error("bucket hiccup");
+    });
+    const reconciler = buildReconciler();
+
+    await reconciler.backfill([mockFn]);
+
+    expect(mockDeps.assetService.upsertAsset).not.toHaveBeenCalled();
+
+    mockDeps.strategy.write.mockResolvedValue(undefined);
+    await reconciler.backfill([mockFn]);
+
+    expect(mockDeps.assetService.upsertAsset.mock.calls.map(call => call[1])).toEqual([
+      "index.ts",
+      "package.json"
+    ]);
+  });
+
+  it("should remove the written records when recording a later file fails", async () => {
+    mockDeps.assetService.upsertAsset
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("mongo hiccup"));
+    const reconciler = buildReconciler();
+    const error = jest.spyOn((reconciler as any).logger, "error").mockImplementation(() => {});
+
+    await reconciler.backfill([mockFn]);
+
+    expect(mockDeps.assetService.deleteMany).toHaveBeenCalledWith({
+      $or: [
+        {functionId: mockFn._id, filename: "index.ts", hash: hashBuffer(files["index.ts"])},
+        {functionId: mockFn._id, filename: "package.json", hash: hashBuffer(files["package.json"])}
+      ]
+    });
+    expect(error).toHaveBeenCalledWith(expect.stringContaining("mongo hiccup"));
+  });
+
+  it("should log but not throw when the rollback itself fails", async () => {
+    mockDeps.assetService.upsertAsset.mockRejectedValueOnce(new Error("mongo hiccup"));
+    mockDeps.assetService.deleteMany.mockRejectedValueOnce(new Error("still down"));
+    const reconciler = buildReconciler();
+    const error = jest.spyOn((reconciler as any).logger, "error").mockImplementation(() => {});
+
+    await expect(reconciler.backfill([mockFn])).resolves.toBeUndefined();
+
+    expect(error).toHaveBeenCalledWith(expect.stringContaining("still down"));
   });
 
   it("should warn about functions with neither stored assets nor local files", async () => {
