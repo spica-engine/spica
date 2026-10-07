@@ -68,7 +68,7 @@ You can file new issues by selecting from our [new issue templates](https://gith
 
 Before you submit your Pull Request (PR) consider the following guidelines:
 
-1. Search [GitHub](https://github.com/spica/spica-engine/pulls) for an open or closed PR
+1. Search [GitHub](https://github.com/spica-engine/spica/pulls) for an open or closed PR
    that relates to your submission. You don't want to duplicate effort.
 1. Be sure that an issue describes the problem you're fixing, or documents the design for the feature you'd like to add.
    Discussing the design up front helps to ensure that we're ready to accept your work.
