@@ -1,4 +1,30 @@
-{{- if .Release.IsUpgrade }}
+{{- /*
+The migration Job — **unconditional and idempotent**.
+
+It used to be guarded by `{{- if .Release.IsUpgrade }}` and that was silently broken under ArgoCD:
+ArgoCD renders the chart with `helm template`, where `IsUpgrade` is **always false**, so the migration
+Job **was never created** — an installation that skipped versions never ran its migrations at all.
+
+Removing the guard is safe, because the Job is idempotent already: `--from` reads the running version
+from a ConfigMap and `--continue-if-versions-are-equal` exits without doing anything when they are
+equal.
+
+**A fresh installation has no `-version` ConfigMap yet.** Pre-install hooks run before any of the
+release's ordinary resources, and an ArgoCD PreSync hook runs before the first sync creates them. A
+required `configMapKeyRef` would leave the pod in `CreateContainerConfigError` and hang `helm install`
+(or the first sync) until it times out. So the reference is optional and the script exits before
+`migrate` starts when it is missing: a new installation has no old data to migrate, and its database
+is not up yet anyway.
+
+Both hooks together: `helm.sh/hook` for a real `helm install/upgrade`, `argocd.argoproj.io/hook` for a
+GitOps sync. `before-hook-creation` is necessary because a Job spec is immutable and cannot be applied
+a second time under the same name.
+
+`migrate` is **MongoDB-specific**: `apps/migrate/src/migrate.ts` constructs a `new mongodb.MongoClient`
+directly and every script transforms the Mongo documents of a past version. On a PostgreSQL
+installation there is no old data to transform, so it is not rendered.
+*/ -}}
+{{- if not (include "database.is-postgres" .) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -12,7 +38,11 @@ metadata:
     app.kubernetes.io/part-of: {{ .Chart.Name }}
     app.kubernetes.io/managed-by: helm
   annotations:
-    helm.sh/hook: pre-upgrade
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   backoffLimit: 5
   template:
@@ -22,19 +52,32 @@ spec:
         - name: migrate
           image: {{ .Values.images.migrate }}:{{ $.Chart.AppVersion }}
           imagePullPolicy: Always
-          args: [
-            --from, "$(FROM)",
-            --to, {{ .Chart.Version }},
-            --database-uri, {{ template "database.connection-uri" . }},
-            --database-name,  {{ .Values.database.name }},
-            --continue-if-versions-are-equal
-          ]
+          command: ["sh", "-c"]
+          args:
+            - |
+              if [ -z "$FROM" ]; then
+                echo "No version ConfigMap yet: a new installation, nothing to migrate."
+                exit 0
+              fi
+              exec node src/main.js \
+                --from "$FROM" \
+                --to "$TO" \
+                --database-uri "$DATABASE_URI" \
+                --database-name "$DATABASE_NAME" \
+                --continue-if-versions-are-equal
           env:
             - name: FROM
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Release.Name }}-version
                   key: VERSION
+                  optional: true
+            - name: TO
+              value: {{ .Chart.Version | quote }}
+            - name: DATABASE_URI
+              value: {{ template "database.connection-uri" . }}
+            - name: DATABASE_NAME
+              value: {{ .Values.database.name | quote }}
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:

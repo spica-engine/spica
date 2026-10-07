@@ -302,11 +302,11 @@ export function getDatabaseSchema(
   db: DatabaseService,
   collSlug: CollectionSlug = id => Promise.resolve(id)
 ): Promise<JSONSchema7> {
-  return db.collections().then(async collections => {
+  return db.listCollections().then(async collections => {
     const collSlugMap: Map<string, string> = new Map();
 
     for (const collection of collections) {
-      collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
+      collSlugMap.set(collection.name, await collSlug(collection.name));
     }
 
     const schema: JSONSchema7 = {

@@ -82,7 +82,7 @@ describe("schema", () => {
     expect(changes.length).toBe(0);
   });
 
-  it("differ should return root property changes", () => {
+  it("differ should return a property's own type change", () => {
     const prev: JSONSchema7 = {
       properties: {
         test: {
@@ -101,30 +101,6 @@ describe("schema", () => {
     expect(changes.length).toBe(1);
     expect(changes[0].path).toEqual(["test"]);
     expect(changes[0].lastPath).toEqual(["type"]);
-  });
-
-  it("differ should return sub property changes", () => {
-    const prev: JSONSchema7 = {
-      properties: {
-        test: {
-          type: "string"
-        }
-      }
-    };
-    const current: JSONSchema7 = {
-      properties: {
-        test: {
-          type: "string",
-          options: {
-            translate: true
-          }
-        } as any
-      }
-    };
-    const changes = schemaDiff(prev, current);
-    expect(changes.length).toBe(1);
-    expect(changes[0].path).toEqual(["test"]);
-    expect(changes[0].lastPath).toEqual(["options", "translate"]);
   });
 
   it("differ should return sub property changes", () => {

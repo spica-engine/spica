@@ -67,11 +67,16 @@ describe("PlanExecutor", () => {
     const ss = new SecretService(database, "test-encryption-secret", new SecretChangeDispatcher());
     fs = new FunctionService(database, evs, ss, {} as any);
 
-    executor = new PlanExecutor(fs, scheduler, (val => val) as any, {
-      root: "test_root",
-      timeout: 1,
-      outDir: ".build"
-    } as any);
+    executor = new PlanExecutor(
+      fs,
+      scheduler,
+      (val => val) as any,
+      {
+        root: "test_root",
+        timeout: 1,
+        outDir: ".build"
+      } as any
+    );
 
     await app.init();
 

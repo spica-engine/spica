@@ -18,8 +18,8 @@
     }
   },
   "dependencies": {
-    "@spica-server/database": "workspace:*",
     "@spica-server/interface-bucket-expression": "workspace:*",
+    "bson": "^6.10.4",
     "pegjs": "^0.10.0"
   }
 }

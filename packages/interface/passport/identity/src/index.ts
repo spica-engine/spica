@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "bson";
 import {FactorMeta} from "@spica-server/interface-passport-authfactor";
 
 export interface IdentitySettingsContents {

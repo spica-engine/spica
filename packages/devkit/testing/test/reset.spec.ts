@@ -106,7 +106,9 @@ describe("reset", () => {
       }),
       listCollections: () => ({toArray: () => Promise.resolve([])})
     } as any);
-    await expect(runReset("mongodb://localhost:1/?directConnection=true", ctx, ["function"])).resolves.toBeUndefined();
+    await expect(
+      runReset("mongodb://localhost:1/?directConnection=true", ctx, ["function"])
+    ).resolves.toBeUndefined();
   });
 
   describe("expandModules", () => {

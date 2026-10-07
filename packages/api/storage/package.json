@@ -14,6 +14,7 @@
     "@google-cloud/storage": "^7.15.2",
     "@nestjs/common": "^10.4.22",
     "@spica-server/activity-services": "workspace:*",
+    "@spica-server/bucket-expression": "workspace:*",
     "@spica-server/core": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",

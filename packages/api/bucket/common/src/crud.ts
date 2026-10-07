@@ -1,4 +1,5 @@
 import {BaseCollection, ObjectId, ReturnDocument} from "@spica-server/database";
+import {ICollection} from "@spica-server/database-driver";
 import * as expression from "@spica-server/bucket-expression";
 import {
   createRelationMap,
@@ -14,6 +15,8 @@ import {
 } from "./exception.js";
 import {categorizePropertyMap} from "./helpers.js";
 import {BucketPipelineBuilder} from "./pipeline.builder.js";
+import {buildReadPlan} from "./read-plan.js";
+import {resolveCandidateRelations} from "./resolve-candidate.js";
 import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 import {
   CrudOptions,
@@ -59,6 +62,58 @@ export async function findDocuments<T>(
   encryptionSecret?: string
 ): Promise<unknown> {
   const collection = factories.collection(schema);
+
+  /**
+   * **The neutral read path** (K-3, AK-10 option B).
+   *
+   * The pipeline below builds `$expr`, `$lookup`, `$cond` and `$facet`; those are decisions about
+   * **how** the driver will do the work, and K-3 says to take them out of the plan. `ReadPlan` carries
+   * **what** is wanted, compiling it is the driver's job.
+   *
+   * The MongoDB leg stays on the pipeline: there is a working implementation there and `read()` does not
+   * exist yet; changing it would be a needless regression risk (it stands as (C) in AK-10). The same
+   * path is taken when no plan can be produced (field-level ACL, a raw Mongo JSON filter) —
+   * `buildReadPlan` reports that with `undefined` rather than giving a silently wrong result (K-4).
+   */
+  /**
+   * The capability is queried through a narrow cast: `ICollection` does not carry `db`, but every
+   * collection that arrives here is a `BaseCollection` (that is, a `DelegatingCollection`) and that
+   * exposes a `readonly db`. The alternative was adding `capabilities` to `ICollection` — widening the
+   * contract for this would be premature.
+   *
+   * Checking whether the method **exists** is not enough: `read` is now always present on the bridge and
+   * raises at runtime on a driver that does not implement it. The distinction is a mechanism difference,
+   * so the capability is consulted — the same distinction was used for `explain()` and TTL in this
+   * effort.
+   */
+  const backend = (collection as unknown as {db?: {capabilities?: {backend?: string}}}).db
+    ?.capabilities?.backend;
+
+  if (backend && backend !== "mongodb") {
+    const plan = await buildReadPlan({
+      schema,
+      params,
+      options,
+      factories,
+      preferences: await factories.preference(),
+      hashSecret
+    });
+
+    if (plan) {
+      const result = await (collection as any).read(plan).catch(error => {
+        throw new DatabaseException(error.message);
+      });
+
+      const documents = encryptionSecret
+        ? result.data.map(doc =>
+            decryptDocumentFields(doc as any, schema, encryptionSecret, factories.schema)
+          )
+        : result.data;
+
+      return options.paginate ? {meta: {total: result.total ?? 0}, data: documents} : documents;
+    }
+  }
+
   const pipelineBuilder = new BucketPipelineBuilder(
     schema,
     factories,
@@ -212,7 +267,7 @@ export async function insertDocument(
     applyAcl?: boolean;
   },
   factories: {
-    collection: (schema: Bucket) => BaseCollection<any>;
+    collection: (schema: Bucket) => ICollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
     deleteOne: (documentId: ObjectId) => Promise<void>;
   },
@@ -264,7 +319,7 @@ export async function replaceDocument(
     applyAcl?: boolean;
   },
   factories: {
-    collection: (schema: Bucket) => BaseCollection<any>;
+    collection: (schema: Bucket) => ICollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
   },
   options: {
@@ -311,7 +366,7 @@ export async function patchDocument(
     applyAcl?: boolean;
   },
   factories: {
-    collection: (schema: Bucket) => BaseCollection<any>;
+    collection: (schema: Bucket) => ICollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
   },
   options: {
@@ -357,7 +412,7 @@ export async function deleteDocument(
     applyAcl?: boolean;
   },
   factories: {
-    collection: (schema: Bucket) => BaseCollection<BucketDocument>;
+    collection: (schema: Bucket) => ICollection<BucketDocument>;
     schema: (schema: string | ObjectId) => Promise<Bucket> | Bucket;
   },
   hashSecret?: string,
@@ -396,7 +451,7 @@ async function executeWriteRule(
   schema: Bucket,
   resolve: (id: string) => Promise<Bucket> | Bucket,
   document: BucketDocument,
-  collection: BaseCollection<unknown>,
+  collection: ICollection<unknown>,
   auth: object,
   hashSecret?: string
 ) {
@@ -416,22 +471,25 @@ async function executeWriteRule(
     resolve
   });
 
-  const documentRelationStage = getRelationPipeline(documentRelationMap, undefined);
-
-  const aggregation = [
-    {$limit: 1},
-    {
-      $replaceWith: {$literal: document}
-    },
-    ...documentRelationStage
-  ];
-
-  const fullDocument = await collection
-    .aggregate(aggregation)
-    .next()
-    .catch(error => {
-      throw new DatabaseException(error.message);
-    });
+  /**
+   * The candidate document's relations are resolved **in the application layer**.
+   *
+   * The collection used to be used as a calculation engine:
+   * `[{$limit: 1}, {$replaceWith: {$literal: document}}, ...$lookup]` — an arbitrary row was taken and
+   * thrown away, the candidate document was put in its place and the relations were resolved with
+   * `$lookup`. The rationale and its two defects (working on Mongo only, and **returning `null` on Mongo
+   * too when the collection is empty**) are written down in `resolveCandidateRelations`.
+   */
+  const fullDocument = await resolveCandidateRelations(
+    document as unknown as Record<string, unknown>,
+    documentRelationMap,
+    (target, ids) =>
+      collection.collection(target).find({_id: {$in: ids}} as any) as Promise<
+        Record<string, unknown>[]
+      >
+  ).catch(error => {
+    throw new DatabaseException(error.message);
+  });
 
   const replacers = await buildExpressionReplacers(
     schema,

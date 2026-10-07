@@ -11,7 +11,10 @@ import {resourceFilterFunction} from "@spica-server/passport-guard";
 export class UserRealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   readonly COLLECTION = "user";
 
-  constructor(private realtime: RealtimeDatabaseService, private guardService: GuardService) {}
+  constructor(
+    private realtime: RealtimeDatabaseService,
+    private guardService: GuardService
+  ) {}
 
   private handlers = getConnectionHandlers(
     this.guardService,

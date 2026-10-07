@@ -5,6 +5,12 @@ import path from "path";
 
 process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(process.cwd(), "dist/src");
 
+/**
+ * `db` here is the **raw** mongodb `Db` (`connection.db(...)`), not the neutral `DatabaseService`, so
+ * `insertOne` returns an `InsertOneResult` and the new id is `insertedId` — the neutral contract's
+ * "returns the document" shape does not apply. Reading `res._id` gave `undefined`, the fixtures landed in
+ * `bucket_undefined`, and the migration (which iterates the real buckets) never touched them.
+ */
 describe("Update location for bucket schema and bucket-data", () => {
   let db: Db;
   let args: string[];

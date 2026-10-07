@@ -12,10 +12,15 @@ import DateRangePicker, {
   type DateRange,
   type RangePreset
 } from "../../components/molecules/date-range-picker/DateRangePicker";
-import {CATEGORICAL_PALETTE, formatBytes, formatCount} from "../../components/molecules/chart-kit/chartTheme";
+import {
+  CATEGORICAL_PALETTE,
+  formatBytes,
+  formatCount
+} from "../../components/molecules/chart-kit/chartTheme";
 import {useDashboardData, type HealthState, type LimitGauge} from "./useDashboardData";
 import {useTrafficTimeline} from "./useTrafficTimeline";
 import {useGetModuleStatusQuery} from "../../store/api/statusApi";
+import {useBackendCapabilities} from "../../hooks/useBackendCapabilities";
 
 const currentRelease = (import.meta.env.VITE_APP_RELEASE as string) || "0.0.0-dev";
 
@@ -96,10 +101,28 @@ const Home = () => {
   const showBucketPanel = limits.status === "loading" || limits.buckets.length > 0;
   const healthPanelStatus = health.status === "loading" ? "loading" : "ready";
 
+  const {backend, database, declaration} = useBackendCapabilities();
+
   return (
     <div className={styles.home}>
       <FlexElement dimensionX="fill" direction="vertical" gap={16} className={styles.content}>
         <WelcomeText />
+        {/**
+         * Which database this installation runs on, read-only (K-8). The backend is chosen when the
+         * instance is provisioned and cannot be changed from here — moving an instance between backends is
+         * an operator task, not an application setting. Showing it matters because the panel's own
+         * behaviour depends on it: several controls are withheld on a backend that has no counterpart for
+         * them, and without this line that would look arbitrary.
+         */}
+        {backend && (
+          <div className={styles.backendLine}>
+            <Text>
+              Database backend: {backend}
+              {declaration?.version ? ` ${declaration.version}` : ""}
+              {database ? ` · ${database}` : ""}
+            </Text>
+          </div>
+        )}
         <FlexElement dimensionX="fill">
           <Quicklinks currentVersion={currentRelease} />
         </FlexElement>
@@ -230,7 +253,9 @@ const Home = () => {
               </div>
               <div className={styles.statRow}>
                 <Text className={styles.statLabel}>Uploaded</Text>
-                <Text className={styles.statValue}>{formatBytes(totals.uploadedMb * 1_000_000)}</Text>
+                <Text className={styles.statValue}>
+                  {formatBytes(totals.uploadedMb * 1_000_000)}
+                </Text>
               </div>
               <div className={styles.statRow}>
                 <Text className={styles.statLabel}>Downloaded</Text>

@@ -10,7 +10,10 @@ import {LogOptionsBuilder} from "./log-options.builder.js";
 export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
   readonly COLLECTION = "function_logs";
 
-  constructor(private realtime: RealtimeDatabaseService, private guardService: GuardService) {}
+  constructor(
+    private realtime: RealtimeDatabaseService,
+    private guardService: GuardService
+  ) {}
 
   private handlers = getConnectionHandlers(
     this.guardService,
