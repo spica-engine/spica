@@ -103,6 +103,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   onModuleInit() {
     const startupSequence = async () => {
       const fns = await this.fs.find();
+      await this.reconciler.backfill(fns);
       await this.reconciler.reconcileAll(fns);
       await this.registerTriggers();
       if (this.commander) {

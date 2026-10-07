@@ -4,6 +4,7 @@ import path from "path";
 import {rimraf} from "rimraf";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {Function, Options, FUNCTION_OPTIONS} from "@spica-server/interface-function";
+import {FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
 
 /**
  * Owns the install-packages + build steps for a function.
@@ -19,6 +20,11 @@ export class FunctionPreparationService {
 
   private getFunctionRoot(fn: Function): string {
     return path.join(this.options.root, fn.name);
+  }
+
+  indexFilename(fn: Function): FunctionAssetFilename {
+    return this.scheduler.builders.get(fn.language).description.entrypoints
+      .build as FunctionAssetFilename;
   }
 
   installPackages(fn: Function, qualifiedNames: string | string[]): Promise<void> {

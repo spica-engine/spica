@@ -12,6 +12,7 @@ import {
 } from "@spica-server/interface-function-asset-storage";
 import {Function} from "@spica-server/interface-function";
 import {FunctionPreparationService} from "./function-preparation.service.js";
+import {SelfWriteTracker} from "./asset-write-tracker.js";
 
 export function hashBuffer(buf: Buffer): string {
   return createHash("sha256").update(buf).digest("hex");
@@ -25,6 +26,22 @@ function errMsg(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
+const BACKFILL_CONCURRENCY = 4;
+
+async function forEachWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  task: (item: T) => Promise<void>
+): Promise<void> {
+  let next = 0;
+  const lanes = Array.from({length: Math.min(limit, items.length)}, async () => {
+    while (next < items.length) {
+      await task(items[next++]);
+    }
+  });
+  await Promise.all(lanes);
+}
+
 @Injectable()
 export class FunctionAssetReconciler {
   private readonly logger = new Logger(FunctionAssetReconciler.name);
@@ -34,7 +51,8 @@ export class FunctionAssetReconciler {
     @Inject(FUNCTION_ASSET_STORAGE_OPTIONS)
     private readonly storageOptions: FunctionAssetStorageOptions,
     private readonly assetService: FunctionAssetService,
-    private readonly preparationService: FunctionPreparationService
+    private readonly preparationService: FunctionPreparationService,
+    private readonly tracker: SelfWriteTracker
   ) {}
 
   /**
@@ -175,6 +193,54 @@ export class FunctionAssetReconciler {
       )
     );
     await this.assetService.deleteByFunction(fn._id);
+  }
+
+  /**
+   * Upload the local files of functions that have no stored assets (created before asset storage
+   * existed), so a replica without this persistent disk can still restore them. Files that already
+   * have a record are never read or uploaded: the stored copy stays authoritative.
+   */
+  async backfill(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
+    if (this.storageOptions.strategy == "default") return;
+
+    const lost: string[] = [];
+    await forEachWithConcurrency(fns, BACKFILL_CONCURRENCY, async fn => {
+      try {
+        const records = await this.assetService.findByFunction(fn._id);
+        if (records.length > 0) return;
+
+        let hasCode = false;
+        const filenames = [this.preparationService.indexFilename(fn), "package.json"] as const;
+        for (const filename of filenames) {
+          const data = await this.preparationService.readFileBuffer(fn, filename);
+          if (!data) continue;
+          const {key, hash, size, uploadDate, strategy} = await this.uploadAsset(
+            fn.name,
+            filename,
+            data
+          );
+          this.tracker.stamp({functionId: fn._id.toHexString(), filename, hash});
+          await this.assetService.upsertAsset(fn._id, filename, {
+            key,
+            hash,
+            size,
+            uploadDate,
+            strategy
+          });
+          hasCode = true;
+          this.logger.log(`[backfill] Uploaded ${fn.name}/${filename}`);
+        }
+        if (!hasCode) lost.push(fn.name);
+      } catch (e) {
+        this.logger.error(`[backfill] Failed for function ${fn.name}: ${errMsg(e)}`);
+      }
+    });
+
+    if (lost.length) {
+      this.logger.warn(
+        `[backfill] No stored assets and no local files for: ${lost.join(", ")}. Their code cannot be restored.`
+      );
+    }
   }
 
   /**
