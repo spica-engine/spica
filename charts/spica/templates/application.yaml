@@ -1,11 +1,20 @@
-{{- if eq .Values.application.diskAccessMode "ReadWriteMany"}}
+{{- $mode := include "spica.diskMode" . }}
+{{- $assets := .Values.application.functionAssets }}
+{{- if and $assets.strategy (include "spica.argValue" (list "--function-asset-storage-strategy" .Values.application.args)) }}
+{{- fail "Set the function asset storage either with application.functionAssets or with --function-asset-* flags in application.args, not both." }}
+{{- end }}
+{{- if eq $mode "Diskless" }}
+{{- include "spica.validateDiskless" . }}
+{{- end }}
+{{- $gcsSecret := $assets.gcs.serviceAccountSecret }}
+{{- if eq $mode "ReadWriteMany"}}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ .Release.Name }}-data
 spec:
   accessModes:
-    - {{ .Values.application.diskAccessMode }}
+    - {{ $mode }}
   resources:
     requests:
       storage: {{ .Values.application.storageSize }}
@@ -13,10 +22,10 @@ spec:
 ---
 {{- end}}
 apiVersion: apps/v1
-{{- if eq .Values.application.diskAccessMode "ReadWriteMany"}}
-kind: Deployment
-{{- else }}
+{{- if eq $mode "ReadWriteOnce"}}
 kind: StatefulSet
+{{- else }}
+kind: Deployment
 {{- end }}
 metadata:
   namespace: {{.Release.Namespace}}
@@ -29,7 +38,7 @@ metadata:
     app.kubernetes.io/part-of: {{ .Chart.Name }}
     app.kubernetes.io/managed-by: helm
 spec:
-  {{- if ne .Values.application.diskAccessMode "ReadWriteMany"}}
+  {{- if eq $mode "ReadWriteOnce"}}
   serviceName: {{ .Release.Name }}-application
   {{- end }}
   replicas: {{ .Values.application.replicas }}
@@ -78,7 +87,7 @@ spec:
             initialDelaySeconds: {{ .Values.application.apiStartupProbeInitialDelaySeconds }}
             periodSeconds: {{ .Values.application.apiStartupProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.application.apiStartupProbeTimeoutSeconds }}
-            failureThreshold: {{ .Values.application.apiStartupProbeFailureThreshold }}
+            failureThreshold: {{ ternary .Values.application.apiStartupProbeFailureThresholdDiskless .Values.application.apiStartupProbeFailureThreshold (eq $mode "Diskless") }}
           livenessProbe:
             httpGet:
               path: /status/live
@@ -113,12 +122,30 @@ spec:
             --database-name,  {{ .Values.database.name }},
             --passport-default-identity-password,  {{ .Values.application.defaultPassword }},
             --public-url, {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}},
+{{- if $assets.strategy }}
+            --function-asset-storage-strategy, {{ $assets.strategy | quote }},
+{{- if eq $assets.strategy "awss3" }}
+            --function-asset-awss3-bucket-name, {{ required "application.functionAssets.awss3.bucketName is required when application.functionAssets.strategy is awss3" $assets.awss3.bucketName | quote }},
+{{- if $assets.awss3.credentialsPath }}
+            --function-asset-awss3-credentials-path, {{ $assets.awss3.credentialsPath | quote }},
+{{- end }}
+{{- else if eq $assets.strategy "gcs" }}
+            --function-asset-gcs-bucket-name, {{ required "application.functionAssets.gcs.bucketName is required when application.functionAssets.strategy is gcs" $assets.gcs.bucketName | quote }},
+            --function-asset-gcs-service-account-path, {{ required "application.functionAssets.gcs.serviceAccountPath or serviceAccountSecret is required when application.functionAssets.strategy is gcs" (include "spica.functionAssets.gcsServiceAccountPath" .) | quote }},
+{{- end }}
+{{- end }}
             --persistent-path, /data,
+            --function-prebuilt-artifacts, "{{ eq $mode "Diskless" }}",
             --replication, "{{ ternary true false (gt (int .Values.application.replicas) 1) }}"
           ]
           volumeMounts:
             - name: {{ .Release.Name }}-data
               mountPath: /data
+{{- if $gcsSecret }}
+            - name: {{ .Release.Name }}-function-assets-gcs
+              mountPath: /etc/spica/function-assets-gcs
+              readOnly: true
+{{- end }}
           env:
             - name: MASTER_KEY
               valueFrom:
@@ -198,19 +225,31 @@ spec:
       tolerations:
 {{ toYaml .Values.application.tolerations | indent 8 }}
       {{- end }}
-      {{- if eq .Values.application.diskAccessMode "ReadWriteMany"}}
+      {{- if or (ne $mode "ReadWriteOnce") $gcsSecret }}
       volumes:
+      {{- if eq $mode "ReadWriteMany"}}
       - name: {{ .Release.Name }}-data
         persistentVolumeClaim:
           claimName: {{ .Release.Name }}-data
-      {{- else}}
+      {{- else if eq $mode "Diskless" }}
+      - name: {{ .Release.Name }}-data
+        emptyDir:
+          sizeLimit: {{ .Values.application.emptyDirSizeLimit }}
+      {{- end }}
+      {{- if $gcsSecret }}
+      - name: {{ .Release.Name }}-function-assets-gcs
+        secret:
+          secretName: {{ $gcsSecret }}
+      {{- end }}
+      {{- end }}
+      {{- if eq $mode "ReadWriteOnce"}}
   volumeClaimTemplates:
     - metadata:
         name: {{ .Release.Name }}-data
       spec:
         storageClassName: {{ .Values.application.storageClass }}
         accessModes:
-          - {{ .Values.application.diskAccessMode }}
+          - {{ $mode }}
         resources:
           requests:
             storage: {{ .Values.application.storageSize }}

@@ -12,11 +12,12 @@ set:
   application.secret: test-secret
   application.masterKey: test-master-key
   application.publicHost: https://test.example.com
+  application.diskAccessMode: ReadWriteOnce
 
 tests:
   # ── Document count ──────────────────────────────────────────────────────────
 
-  - it: should render 1 document from application.yaml by default (StatefulSet)
+  - it: should render 1 document from application.yaml for ReadWriteOnce (StatefulSet)
     template: templates/application.yaml
     asserts:
       - hasDocuments:
@@ -38,7 +39,7 @@ tests:
 
   # ── Default (ReadWriteOnce) StatefulSet ─────────────────────────────────────
 
-  - it: should render a StatefulSet by default (ReadWriteOnce)
+  - it: should render a StatefulSet for ReadWriteOnce
     template: templates/application.yaml
     documentSelector:
       path: kind

@@ -34,7 +34,18 @@ jobs:
           helm lint charts/spica \
             --set application.secret=lint-secret \
             --set application.bucketDataHashSecret=lint-hash-secret \
-            --set application.publicHost=lint.example.com
+            --set application.publicHost=lint.example.com \
+            --set application.diskAccessMode=ReadWriteOnce
+
+      - name: Lint Helm Charts (diskless)
+        run: |
+          helm lint charts/spica \
+            --set application.secret=lint-secret \
+            --set application.bucketDataHashSecret=lint-hash-secret \
+            --set application.publicHost=lint.example.com \
+            --set application.functionAssets.strategy=awss3 \
+            --set application.functionAssets.awss3.bucketName=lint-function-assets \
+            --set "application.args={--storage-strategy,awss3,--awss3-bucket-name,lint-storage}"
 
   helm_unittest:
     name: Helm Unit Tests

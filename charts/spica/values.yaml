@@ -77,7 +77,34 @@ application:
   #   Cache-Control: "no-store"
   #   X-Frame-Options: "DENY"
   responseHeaders: {}
-  diskAccessMode: ReadWriteOnce
+  # How the API keeps /data (cached function code; storage objects with --storage-strategy default).
+  #   empty (default): diskless. A Deployment with an emptyDir; functions are restored from prebuilt
+  #     archives in the function asset bucket. Requires functionAssets (awss3 or gcs) and a
+  #     non-default --storage-strategy in args.
+  #   ReadWriteOnce: a StatefulSet with a volume per pod.
+  #   ReadWriteMany: a Deployment with one shared volume.
+  # Releases created when ReadWriteOnce was the default keep it when this is empty, detected through
+  # their existing StatefulSet. `helm template` (e.g. ArgoCD) cannot detect it, so set ReadWriteOnce
+  # explicitly before upgrading such installations. To move an existing release to diskless, upgrade
+  # once with its current mode and functionAssets set, so functions created before asset storage are
+  # uploaded to the bucket, then clear this value.
+  diskAccessMode:
+  # size limit of the /data emptyDir in diskless mode
+  emptyDirSizeLimit: 10Gi
+  # bucket that holds function sources and prebuilt archives (required in diskless mode).
+  # Rendered as --function-asset-* flags; do not pass those flags in args as well.
+  functionAssets:
+    strategy: # default | awss3 | gcs
+    awss3:
+      bucketName:
+      # optional, the AWS SDK default credential chain (e.g. IRSA) is used when empty
+      credentialsPath:
+    gcs:
+      bucketName:
+      serviceAccountPath:
+      # name of a Secret holding the service account key, mounted at /etc/spica/function-assets-gcs
+      serviceAccountSecret:
+      serviceAccountSecretKey: key.json
   serviceAccountName: default
   podAnnotations: {}
   # probes
@@ -86,6 +113,8 @@ application:
   apiStartupProbePeriodSeconds: 5
   apiStartupProbeTimeoutSeconds: 3
   apiStartupProbeFailureThreshold: 24
+  # diskless pods download every function on start, which takes longer on large projects
+  apiStartupProbeFailureThresholdDiskless: 120
   # liveness
   apiLivenessProbePeriodSeconds: 30
   apiLivenessProbeTimeoutSeconds: 10

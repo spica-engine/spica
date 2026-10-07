@@ -1,0 +1,292 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: application disk modes
+templates:
+  - templates/application.yaml
+  - templates/applicationsecrets.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.masterKey: test-master-key
+  application.publicHost: https://test.example.com
+  application.functionAssets.strategy: awss3
+  application.functionAssets.awss3.bucketName: function-assets
+  application.args:
+    - --storage-strategy
+    - awss3
+    - --awss3-bucket-name
+    - storage
+
+tests:
+  # ── Diskless (diskAccessMode empty, fresh install) ──────────────────────────
+
+  - it: should render only a Deployment when diskAccessMode is empty
+    template: templates/application.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - notExists:
+          path: spec.serviceName
+      - notExists:
+          path: spec.volumeClaimTemplates
+
+  - it: should mount an emptyDir with a size limit at /data in diskless mode
+    template: templates/application.yaml
+    set:
+      application.emptyDirSizeLimit: 20Gi
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: release-name-data
+            emptyDir:
+              sizeLimit: 20Gi
+      - contains:
+          path: spec.template.spec.containers[1].volumeMounts
+          content:
+            name: release-name-data
+            mountPath: /data
+
+  - it: should enable prebuilt artifacts and render the function asset flags in diskless mode
+    template: templates/application.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: --function-prebuilt-artifacts
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "true"
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: --function-asset-storage-strategy
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: awss3
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: --function-asset-awss3-bucket-name
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: function-assets
+
+  - it: should use the diskless startup probe threshold
+    template: templates/application.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.failureThreshold
+          value: 120
+
+  - it: should accept the function asset bucket from args in either flag form
+    template: templates/application.yaml
+    set:
+      application.functionAssets.strategy: null
+      application.args:
+        - --function-asset-storage-strategy=gcs
+        - --function-asset-gcs-bucket-name
+        - function-assets
+        - --function-asset-gcs-service-account-path=/sa.json
+        - --storage-strategy=gcloud
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: should fail in diskless mode without a function asset bucket
+    template: templates/application.yaml
+    set:
+      application.functionAssets.strategy: null
+    asserts:
+      - failedTemplate:
+          errorMessage: "Diskless mode (application.diskAccessMode is empty) needs a function asset bucket: set application.functionAssets.strategy to awss3 or gcs with its bucketName, or set application.diskAccessMode to ReadWriteOnce or ReadWriteMany."
+
+  - it: should fail in diskless mode when the storage strategy is missing
+    template: templates/application.yaml
+    set:
+      application.args: []
+    asserts:
+      - failedTemplate:
+          errorMessage: "Diskless mode (application.diskAccessMode is empty) cannot keep storage objects on the pod disk: add --storage-strategy gcloud or awss3 (with its bucket options) to application.args, or set application.diskAccessMode to ReadWriteOnce or ReadWriteMany."
+
+  - it: should fail in diskless mode when the storage strategy is default
+    template: templates/application.yaml
+    set:
+      application.args:
+        - --storage-strategy=default
+    asserts:
+      - failedTemplate:
+          errorMessage: "Diskless mode (application.diskAccessMode is empty) cannot keep storage objects on the pod disk: add --storage-strategy gcloud or awss3 (with its bucket options) to application.args, or set application.diskAccessMode to ReadWriteOnce or ReadWriteMany."
+
+  # ── Empty diskAccessMode on an existing release ────────────────────────────
+
+  - it: should keep the StatefulSet of an existing release when diskAccessMode is empty
+    template: templates/application.yaml
+    set:
+      application.functionAssets.strategy: null
+      application.args: []
+    kubernetesProvider:
+      scheme:
+        "apps/v1/StatefulSet":
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: release-name-application
+            namespace: default
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.serviceName
+          value: release-name-application
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: ReadWriteOnce
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "false"
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.failureThreshold
+          value: 24
+
+  # ── Explicit modes ──────────────────────────────────────────────────────────
+
+  - it: should render a StatefulSet with a volume per pod for ReadWriteOnce
+    template: templates/application.yaml
+    set:
+      application.diskAccessMode: ReadWriteOnce
+      application.functionAssets.strategy: null
+      application.args: []
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: ReadWriteOnce
+      - notExists:
+          path: spec.template.spec.volumes
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "false"
+      - notContains:
+          path: spec.template.spec.containers[1].args
+          content: "true"
+
+  - it: should render a shared PVC and a Deployment for ReadWriteMany
+    set:
+      application.diskAccessMode: ReadWriteMany
+      application.functionAssets.strategy: null
+      application.args: []
+    template: templates/application.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: PersistentVolumeClaim
+        documentIndex: 0
+      - isKind:
+          of: Deployment
+        documentIndex: 1
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: release-name-data
+            persistentVolumeClaim:
+              claimName: release-name-data
+        documentIndex: 1
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "false"
+        documentIndex: 1
+
+  - it: should fail for an unknown diskAccessMode
+    template: templates/application.yaml
+    set:
+      application.diskAccessMode: ReadOnlyMany
+    asserts:
+      - failedTemplate:
+          errorMessage: 'application.diskAccessMode must be ReadWriteOnce, ReadWriteMany or empty (diskless), got "ReadOnlyMany"'
+
+  # ── Function asset values ───────────────────────────────────────────────────
+
+  - it: should render the awss3 credentials path when set
+    template: templates/application.yaml
+    set:
+      application.functionAssets.awss3.credentialsPath: /creds.json
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: --function-asset-awss3-credentials-path
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: /creds.json
+
+  - it: should mount the gcs service account secret and point the flag at it
+    template: templates/application.yaml
+    set:
+      application.functionAssets.strategy: gcs
+      application.functionAssets.gcs.bucketName: function-assets
+      application.functionAssets.gcs.serviceAccountSecret: gcs-sa
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: /etc/spica/function-assets-gcs/key.json
+      - contains:
+          path: spec.template.spec.containers[1].volumeMounts
+          content:
+            name: release-name-function-assets-gcs
+            mountPath: /etc/spica/function-assets-gcs
+            readOnly: true
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: release-name-function-assets-gcs
+            secret:
+              secretName: gcs-sa
+
+  - it: should mount the gcs secret next to the volume claim templates in ReadWriteOnce
+    template: templates/application.yaml
+    set:
+      application.diskAccessMode: ReadWriteOnce
+      application.functionAssets.strategy: gcs
+      application.functionAssets.gcs.bucketName: function-assets
+      application.functionAssets.gcs.serviceAccountSecret: gcs-sa
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - name: release-name-function-assets-gcs
+              secret:
+                secretName: gcs-sa
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: release-name-data
+
+  - it: should fail when the gcs strategy has no service account
+    template: templates/application.yaml
+    set:
+      application.functionAssets.strategy: gcs
+      application.functionAssets.gcs.bucketName: function-assets
+    asserts:
+      - failedTemplate:
+          errorMessage: application.functionAssets.gcs.serviceAccountPath or serviceAccountSecret is required when application.functionAssets.strategy is gcs
+
+  - it: should fail when the function asset storage is set both in values and in args
+    template: templates/application.yaml
+    set:
+      application.args:
+        - --storage-strategy=awss3
+        - --function-asset-storage-strategy=awss3
+    asserts:
+      - failedTemplate:
+          errorMessage: Set the function asset storage either with application.functionAssets or with --function-asset-* flags in application.args, not both.
