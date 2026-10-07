@@ -24,7 +24,8 @@ import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {FunctionAssetWatcher} from "./asset-watcher.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
-import {FunctionArtifactManager} from "./artifact-manager.js";
+import {ARTIFACT_PROVIDERS} from "./artifact/index.js";
+import {KeyedMutex} from "./keyed-mutex.js";
 import {AssetRecorder} from "./asset-recorder.js";
 
 @Module({})
@@ -116,12 +117,13 @@ export class FunctionModule {
         FunctionAssetWatcher,
         SelfWriteTracker,
         FunctionPreparationService,
-        AssetRecorder
+        AssetRecorder,
+        KeyedMutex
       ]
     };
 
     if (options.assetStorage?.prebuiltArtifacts) {
-      module.providers.push(FunctionArtifactManager);
+      module.providers.push(...ARTIFACT_PROVIDERS);
     }
 
     if (options.realtime) {

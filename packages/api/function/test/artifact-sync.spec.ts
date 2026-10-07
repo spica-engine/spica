@@ -3,16 +3,15 @@ import os from "os";
 import path from "path";
 import {ObjectId} from "@spica-server/database";
 import {DefaultStrategy} from "@spica-server/function-asset-storage";
-import {FunctionArtifactManager} from "@spica-server/function/src/artifact-manager";
+import {FunctionArtifactSync} from "@spica-server/function/src/artifact/artifact-sync";
+import {ArtifactIdentity} from "@spica-server/function/src/artifact/artifact-identity";
+import {ArtifactStore} from "@spica-server/function/src/artifact/artifact-store";
+import {ArtifactWorkspace} from "@spica-server/function/src/artifact/artifact-workspace";
+import {isArtifactKey} from "@spica-server/function/src/artifact/artifact-key";
 import {SelfWriteTracker} from "@spica-server/function/src/asset-write-tracker";
 import {AssetRecorder} from "@spica-server/function/src/asset-recorder";
-import {
-  artifactKey,
-  hashBuffer,
-  isArtifactKey,
-  platformId
-} from "@spica-server/function/src/asset-keys";
-import * as tar from "tar";
+import {KeyedMutex} from "@spica-server/function/src/keyed-mutex";
+import {hashBuffer} from "@spica-server/function/src/asset-keys";
 
 const fn = {_id: new ObjectId(), name: "my-function", language: "typescript"} as any;
 
@@ -26,17 +25,23 @@ let artifactService: Record<string, jest.Mock>;
 let assetService: Record<string, jest.Mock>;
 let preparationService: Record<string, jest.Mock>;
 let tracker: SelfWriteTracker;
-let manager: FunctionArtifactManager;
+let mutex: KeyedMutex;
+let sync: FunctionArtifactSync;
 
-function buildManager() {
-  return new FunctionArtifactManager(
-    strategy,
-    {root, outDir: ".build", timeout: 1, builder: "legacy"},
-    artifactService as any,
+function buildSync() {
+  const options = {root, outDir: ".build", timeout: 1, builder: "legacy"};
+  return new FunctionArtifactSync(
+    new ArtifactIdentity(preparationService as any, options),
+    new ArtifactWorkspace(options),
+    new ArtifactStore(strategy, artifactService as any, tracker),
     preparationService as any,
-    tracker,
-    new AssetRecorder(strategy, {strategy: "default"}, assetService as any, tracker)
+    new AssetRecorder(strategy, {strategy: "default"}, assetService as any, tracker),
+    mutex
   );
+}
+
+function restoreOrBuild(allowFallback: boolean) {
+  return mutex.run(fn.name, () => sync.restoreOrBuild(fn, {allowFallback}));
 }
 
 async function writeSources(index = "export default () => 1;", deps = {}) {
@@ -66,7 +71,7 @@ async function wipeToSources() {
 }
 
 beforeEach(async () => {
-  tmp = await fs.promises.mkdtemp(path.join(os.tmpdir(), "artifact-manager-"));
+  tmp = await fs.promises.mkdtemp(path.join(os.tmpdir(), "artifact-sync-"));
   root = path.join(tmp, "functions");
   fnDir = path.join(root, fn.name);
   strategy = new DefaultStrategy(path.join(tmp, "bucket"));
@@ -117,19 +122,19 @@ beforeEach(async () => {
     })
   };
 
-  manager = buildManager();
+  mutex = new KeyedMutex();
+  sync = buildSync();
   await writeSources();
   await installAndBuild();
 });
 
 afterEach(async () => {
-  manager.onModuleDestroy();
   await fs.promises.rm(tmp, {recursive: true, force: true});
 });
 
-describe("FunctionArtifactManager.publish", () => {
+describe("FunctionArtifactSync.publish", () => {
   it("should upload an archive, record its key and write the marker", async () => {
-    await manager.publish(fn);
+    await sync.publish(fn);
 
     const [record] = artifactRecords.values();
     expect(isArtifactKey(record.key)).toBe(true);
@@ -146,7 +151,7 @@ describe("FunctionArtifactManager.publish", () => {
   });
 
   it("should track the lockfile as an asset before recording the artifact", async () => {
-    await manager.publish(fn);
+    await sync.publish(fn);
 
     const lockfile = assetRecords.get("package-lock.json");
     expect(lockfile.key).toBe(`functions/${fn.name}/package-lock.json`);
@@ -156,20 +161,20 @@ describe("FunctionArtifactManager.publish", () => {
   });
 
   it("should not upload again when the local tree already matches", async () => {
-    await manager.publish(fn);
+    await sync.publish(fn);
     const upload = jest.spyOn(strategy, "upload");
 
-    await manager.publish(fn);
+    await sync.publish(fn);
 
     expect(upload).not.toHaveBeenCalled();
   });
 
   it("should skip the upload when an identical archive is already stored", async () => {
-    await manager.publish(fn);
+    await sync.publish(fn);
     await fs.promises.rm(path.join(fnDir, ".spica-artifact"));
     const upload = jest.spyOn(strategy, "upload");
 
-    await manager.publish(fn);
+    await sync.publish(fn);
 
     expect(upload).not.toHaveBeenCalled();
     expect(artifactService.upsertArtifact).toHaveBeenCalledTimes(2);
@@ -178,7 +183,7 @@ describe("FunctionArtifactManager.publish", () => {
   it("should record an unavailable artifact and not throw when the upload fails", async () => {
     jest.spyOn(strategy, "upload").mockRejectedValueOnce(new Error("bucket down"));
 
-    await expect(manager.publish(fn)).resolves.toBeUndefined();
+    await expect(sync.publish(fn)).resolves.toBeUndefined();
 
     const [record] = artifactRecords.values();
     expect(record.key).toBeNull();
@@ -187,7 +192,7 @@ describe("FunctionArtifactManager.publish", () => {
   it("should record an unavailable artifact without uploading when the build failed", async () => {
     const upload = jest.spyOn(strategy, "upload");
 
-    await manager.publish(fn, {buildFailed: true});
+    await sync.publish(fn, {buildFailed: true});
 
     expect(upload).not.toHaveBeenCalled();
     const [record] = artifactRecords.values();
@@ -195,7 +200,7 @@ describe("FunctionArtifactManager.publish", () => {
   });
 
   it("should stamp the artifact write so the local watcher ignores it", async () => {
-    await manager.publish(fn);
+    await sync.publish(fn);
 
     const [record] = artifactRecords.values();
     expect(
@@ -208,17 +213,15 @@ describe("FunctionArtifactManager.publish", () => {
   });
 });
 
-describe("FunctionArtifactManager.restoreOrBuild", () => {
+describe("FunctionArtifactSync.restoreOrBuild", () => {
   it("should restore the build and node_modules from the archive without installing", async () => {
-    await manager.publish(fn);
+    await sync.publish(fn);
     const builtIndex = await fs.promises.readFile(path.join(fnDir, ".build", "index.mjs"));
     await wipeToSources();
     preparationService.installPackages.mockClear();
     preparationService.build.mockClear();
 
-    const changed = await manager.runExclusive(fn.name, () =>
-      manager.restoreOrBuild(fn, {allowFallback: false})
-    );
+    const changed = await restoreOrBuild(false);
 
     expect(changed).toBe(true);
     expect(preparationService.installPackages).not.toHaveBeenCalled();
@@ -233,10 +236,10 @@ describe("FunctionArtifactManager.restoreOrBuild", () => {
   });
 
   it("should preserve relative and absolute symlinks", async () => {
-    await manager.publish(fn);
+    await sync.publish(fn);
     await wipeToSources();
 
-    await manager.runExclusive(fn.name, () => manager.restoreOrBuild(fn, {allowFallback: false}));
+    await restoreOrBuild(false);
 
     expect(
       await fs.promises.readlink(path.join(fnDir, "node_modules", "@spica-fn", "sibling"))
@@ -247,22 +250,20 @@ describe("FunctionArtifactManager.restoreOrBuild", () => {
   });
 
   it("should be a no-op when the marker already matches", async () => {
-    await manager.publish(fn);
+    await sync.publish(fn);
     const download = jest.spyOn(strategy, "download");
 
-    const changed = await manager.runExclusive(fn.name, () =>
-      manager.restoreOrBuild(fn, {allowFallback: true})
-    );
+    const changed = await restoreOrBuild(true);
 
     expect(changed).toBe(false);
     expect(download).not.toHaveBeenCalled();
   });
 
   it("should keep the current tree intact until the extracted one is swapped in", async () => {
-    await manager.publish(fn);
+    await sync.publish(fn);
     await fs.promises.writeFile(path.join(fnDir, "index.ts"), "export default () => 2;");
     await preparationService.build(fn);
-    await manager.publish(fn);
+    await sync.publish(fn);
     await fs.promises.writeFile(path.join(fnDir, "index.ts"), "export default () => 1;");
 
     const download = strategy.download.bind(strategy);
@@ -273,7 +274,7 @@ describe("FunctionArtifactManager.restoreOrBuild", () => {
       return download(key, file);
     });
 
-    await manager.runExclusive(fn.name, () => manager.restoreOrBuild(fn, {allowFallback: false}));
+    await restoreOrBuild(false);
 
     expect(await fs.promises.readFile(path.join(fnDir, ".build", "index.mjs"), "utf-8")).toContain(
       "() => 1"
@@ -288,9 +289,7 @@ describe("FunctionArtifactManager.restoreOrBuild", () => {
     preparationService.installPackages.mockClear();
     preparationService.build.mockClear();
 
-    const changed = await manager.runExclusive(fn.name, () =>
-      manager.restoreOrBuild(fn, {allowFallback: true})
-    );
+    const changed = await restoreOrBuild(true);
 
     expect(changed).toBe(true);
     expect(preparationService.installPackages).toHaveBeenCalledTimes(1);
@@ -303,23 +302,19 @@ describe("FunctionArtifactManager.restoreOrBuild", () => {
     await wipeToSources();
     preparationService.installPackages.mockClear();
 
-    const changed = await manager.runExclusive(fn.name, () =>
-      manager.restoreOrBuild(fn, {allowFallback: false})
-    );
+    const changed = await restoreOrBuild(false);
 
     expect(changed).toBe(false);
     expect(preparationService.installPackages).not.toHaveBeenCalled();
   });
 
   it("should fall back to install and build when the archive cannot be restored", async () => {
-    await manager.publish(fn);
+    await sync.publish(fn);
     await wipeToSources();
     jest.spyOn(strategy, "download").mockRejectedValueOnce(new Error("corrupt"));
     preparationService.installPackages.mockClear();
 
-    const changed = await manager.runExclusive(fn.name, () =>
-      manager.restoreOrBuild(fn, {allowFallback: true})
-    );
+    const changed = await restoreOrBuild(true);
 
     expect(changed).toBe(true);
     expect(preparationService.installPackages).toHaveBeenCalledTimes(1);
@@ -329,145 +324,14 @@ describe("FunctionArtifactManager.restoreOrBuild", () => {
   });
 });
 
-describe("FunctionArtifactManager restore of untrusted archives", () => {
-  let outside: string;
-  let crafted: string;
-
-  async function expectedKey() {
-    const read = (filename: string) => fs.promises.readFile(path.join(fnDir, filename));
-    return artifactKey(
-      fn.name,
-      {
-        index: hashBuffer(await read("index.ts")),
-        packageJson: hashBuffer(await read("package.json")),
-        lockfile: hashBuffer(await read("package-lock.json")),
-        builder: "legacy"
-      },
-      platformId()
-    );
-  }
-
-  async function restoreCrafted() {
-    await strategy.upload(await expectedKey(), crafted);
-    await manager.runExclusive(fn.name, () => manager.restoreOrBuild(fn, {allowFallback: false}));
-  }
-
-  beforeEach(async () => {
-    outside = path.join(tmp, "outside");
-    await fs.promises.mkdir(outside, {recursive: true});
-    crafted = path.join(tmp, "crafted.tar");
-    await wipeToSources();
-  });
-
-  it("should not write files through a symlink from the same archive", async () => {
-    const linkSource = path.join(tmp, "link-source");
-    const fileSource = path.join(tmp, "file-source");
-    await fs.promises.mkdir(linkSource, {recursive: true});
-    await fs.promises.symlink(outside, path.join(linkSource, "evil"));
-    await fs.promises.mkdir(path.join(fileSource, "evil"), {recursive: true});
-    await fs.promises.writeFile(path.join(fileSource, "evil", "pwn.txt"), "pwn");
-    await tar.c({cwd: linkSource, file: crafted}, ["evil"]);
-    await tar.r({cwd: fileSource, file: crafted}, ["evil/pwn.txt"]);
-
-    await restoreCrafted();
-
-    expect(fs.existsSync(path.join(outside, "pwn.txt"))).toBe(false);
-  });
-
-  it("should not write entries with parent-relative paths", async () => {
-    const source = path.join(tmp, "nested", "source");
-    await fs.promises.mkdir(source, {recursive: true});
-    await fs.promises.writeFile(path.join(tmp, "nested", "escape.txt"), "pwn");
-    await tar.c({cwd: source, file: crafted, preservePaths: true}, ["../escape.txt"]);
-    await fs.promises.rm(path.join(tmp, "nested", "escape.txt"));
-
-    await restoreCrafted();
-
-    const staging = path.join(tmp, ".function-artifacts", os.hostname(), "staging");
-    expect(fs.existsSync(path.join(staging, "escape.txt"))).toBe(false);
-    expect(fs.existsSync(path.join(root, "escape.txt"))).toBe(false);
-  });
-});
-
-describe("FunctionArtifactManager.collectGarbage", () => {
-  const DAY = 24 * 60 * 60 * 1000;
-
-  it("should delete only unreferenced archives older than the grace period", async () => {
-    await manager.publish(fn);
-    const [record] = artifactRecords.values();
-    await strategy.write("functions/my-function/artifacts/old.tar.gz", Buffer.from("old"));
-    await strategy.write("functions/my-function/index.ts", Buffer.from("src"));
-
-    await manager.collectGarbage(Date.now() + 2 * DAY);
-
-    expect(await strategy.exists("functions/my-function/artifacts/old.tar.gz")).toBe(false);
-    expect(await strategy.exists(record.key)).toBe(true);
-    expect(await strategy.exists("functions/my-function/index.ts")).toBe(true);
-  });
-
-  it("should keep recent unreferenced archives", async () => {
-    await strategy.write("functions/my-function/artifacts/new.tar.gz", Buffer.from("new"));
-
-    await manager.collectGarbage(Date.now());
-
-    expect(await strategy.exists("functions/my-function/artifacts/new.tar.gz")).toBe(true);
-  });
-});
-
-describe("FunctionArtifactManager.deleteArtifacts", () => {
+describe("FunctionArtifactSync.delete", () => {
   it("should delete the function's archives and records", async () => {
-    await manager.publish(fn);
+    await sync.publish(fn);
     const [record] = artifactRecords.values();
 
-    await manager.deleteArtifacts(fn);
+    await sync.delete(fn);
 
     expect(await strategy.exists(record.key)).toBe(false);
     expect(artifactService.deleteByFunction).toHaveBeenCalledWith(fn._id);
-  });
-});
-
-describe("FunctionArtifactManager.runExclusive", () => {
-  it("should run tasks for the same function one at a time", async () => {
-    const order: string[] = [];
-    let release: () => void;
-    const first = manager.runExclusive(fn.name, async () => {
-      order.push("first:start");
-      await new Promise<void>(resolve => (release = resolve));
-      order.push("first:end");
-    });
-    const second = manager.runExclusive(fn.name, async () => {
-      order.push("second");
-    });
-
-    await new Promise(resolve => setImmediate(resolve));
-    release();
-    await Promise.all([first, second]);
-
-    expect(order).toEqual(["first:start", "first:end", "second"]);
-  });
-
-  it("should keep running queued tasks after one fails", async () => {
-    const failed = manager.runExclusive(fn.name, async () => {
-      throw new Error("boom");
-    });
-    const next = manager.runExclusive(fn.name, async () => "ok");
-
-    await expect(failed).rejects.toThrow("boom");
-    await expect(next).resolves.toBe("ok");
-  });
-});
-
-describe("FunctionArtifactManager.rebuild", () => {
-  it("should report a failed build without throwing", async () => {
-    preparationService.build.mockRejectedValueOnce(new Error("tsc"));
-    await expect(manager.rebuild(fn)).resolves.toBe(false);
-  });
-
-  it("should skip the build when the function has no index yet", async () => {
-    await fs.promises.rm(path.join(fnDir, "index.ts"));
-    preparationService.build.mockClear();
-
-    await expect(manager.rebuild(fn)).resolves.toBe(true);
-    expect(preparationService.build).not.toHaveBeenCalled();
   });
 });

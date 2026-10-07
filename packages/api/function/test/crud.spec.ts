@@ -43,7 +43,7 @@ describe("CRUD worker refresh", () => {
     expectLocalRefreshOnly();
   });
 
-  it("should not rebuild after installing dependencies without an artifact manager", async () => {
+  it("should not rebuild after installing dependencies with prebuilt artifacts off", async () => {
     await CRUD.dependencies.install(engine as any, fn, ["left-pad@1.3.0"]);
 
     expect(engine.build).not.toHaveBeenCalled();
@@ -85,9 +85,9 @@ describe("CRUD prebuilt artifacts", () => {
       removePackage: jest.fn(track("removePackage")),
       read: jest.fn().mockResolvedValue("{}"),
       refreshLocally: jest.fn(track("refreshLocally")),
-      artifactManager: {
-        publish: jest.fn(track("publish")),
-        rebuild: jest.fn(track("rebuild", true))
+      tryBuild: jest.fn(track("tryBuild", true)),
+      artifactSync: {
+        publish: jest.fn(track("publish"))
       }
     };
   });
@@ -103,25 +103,31 @@ describe("CRUD prebuilt artifacts", () => {
 
     expect(calls).toEqual([
       "installPackages",
-      "rebuild",
+      "tryBuild",
       "storeAssets",
       "publish",
       "refreshLocally"
     ]);
-    expect(engine.artifactManager.publish).toHaveBeenCalledWith(fn, {buildFailed: false});
+    expect(engine.artifactSync.publish).toHaveBeenCalledWith(fn, {buildFailed: false});
   });
 
   it("should publish an unavailable artifact when the rebuild after install fails", async () => {
-    engine.artifactManager.rebuild.mockResolvedValue(false);
+    engine.tryBuild.mockResolvedValue(false);
 
     await CRUD.dependencies.install(engine as any, fn, ["left-pad@1.3.0"]);
 
-    expect(engine.artifactManager.publish).toHaveBeenCalledWith(fn, {buildFailed: true});
+    expect(engine.artifactSync.publish).toHaveBeenCalledWith(fn, {buildFailed: true});
   });
 
   it("should rebuild inside the uninstall op, then publish, then refresh", async () => {
     await CRUD.dependencies.uninstall(engine as any, fn, ["left-pad"]);
 
-    expect(calls).toEqual(["removePackage", "rebuild", "storeAssets", "publish", "refreshLocally"]);
+    expect(calls).toEqual([
+      "removePackage",
+      "tryBuild",
+      "storeAssets",
+      "publish",
+      "refreshLocally"
+    ]);
   });
 });

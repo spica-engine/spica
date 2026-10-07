@@ -11,7 +11,8 @@ import {
 import {Function} from "@spica-server/interface-function";
 import {FunctionPreparationService} from "./function-preparation.service.js";
 import {AssetRecorder, UploadedAsset} from "./asset-recorder.js";
-import {FunctionArtifactManager} from "./artifact-manager.js";
+import {FunctionArtifactSync} from "./artifact/artifact-sync.js";
+import {KeyedMutex} from "./keyed-mutex.js";
 import {hashBuffer, assetKey} from "./asset-keys.js";
 
 export {hashBuffer, assetKey};
@@ -50,7 +51,8 @@ export class FunctionAssetReconciler {
     private readonly assetService: FunctionAssetService,
     private readonly preparationService: FunctionPreparationService,
     private readonly recorder: AssetRecorder,
-    @Optional() private readonly artifactManager?: FunctionArtifactManager
+    private readonly mutex: KeyedMutex,
+    @Optional() private readonly artifactSync?: FunctionArtifactSync
   ) {}
 
   uploadAsset(
@@ -145,7 +147,7 @@ export class FunctionAssetReconciler {
       )
     );
     await this.assetService.deleteByFunction(fn._id);
-    await this.artifactManager?.deleteArtifacts(fn);
+    await this.artifactSync?.delete(fn);
   }
 
   async backfill(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
@@ -234,13 +236,13 @@ export class FunctionAssetReconciler {
     fn: Function & {_id: ObjectId},
     opts: {allowFallback: boolean} = {allowFallback: true}
   ): Promise<boolean> {
-    const artifactManager = this.artifactManager;
-    if (artifactManager) {
-      return artifactManager.runExclusive(fn.name, async () => {
+    const artifactSync = this.artifactSync;
+    if (artifactSync) {
+      return this.mutex.run(fn.name, async () => {
         const storedAssets = await this.assetService.findByFunction(fn._id);
         if (storedAssets.length === 0) return false;
         await this.syncSources(fn);
-        return artifactManager.restoreOrBuild(fn, opts);
+        return artifactSync.restoreOrBuild(fn, opts);
       });
     }
 
@@ -267,7 +269,7 @@ export class FunctionAssetReconciler {
   }
 
   async reconcileAll(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
-    const limit = this.artifactManager ? PREBUILT_RECONCILE_CONCURRENCY : fns.length;
+    const limit = this.artifactSync ? PREBUILT_RECONCILE_CONCURRENCY : fns.length;
     await forEachWithConcurrency(fns, limit, async fn => {
       try {
         await this.reconcileFunction(fn);

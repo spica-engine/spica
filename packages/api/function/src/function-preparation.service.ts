@@ -1,4 +1,4 @@
-import {Inject, Injectable} from "@nestjs/common";
+import {Inject, Injectable, Logger} from "@nestjs/common";
 import fs from "fs";
 import path from "path";
 import {rimraf} from "rimraf";
@@ -13,6 +13,8 @@ import {FunctionAssetFilename} from "@spica-server/interface-function-asset-stor
  */
 @Injectable()
 export class FunctionPreparationService {
+  private readonly logger = new Logger(FunctionPreparationService.name);
+
   constructor(
     private readonly scheduler: Scheduler,
     @Inject(FUNCTION_OPTIONS) private readonly options: Options
@@ -39,6 +41,17 @@ export class FunctionPreparationService {
       outDir: outDirRelative,
       entrypoints: builder.description.entrypoints
     });
+  }
+
+  async tryBuild(fn: Function): Promise<boolean> {
+    if (!(await this.readFileBuffer(fn, this.indexFilename(fn)))) return true;
+    try {
+      await this.build(fn);
+      return true;
+    } catch (e) {
+      this.logger.error(`Build of ${fn.name} failed: ${e instanceof Error ? e.message : e}`);
+      return false;
+    }
   }
 
   async prepare(fn: Function): Promise<void> {

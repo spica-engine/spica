@@ -36,7 +36,8 @@ const buildReconciler = (overrides: Partial<typeof mockDeps> = {}) => {
       merged.assetService as any,
       merged.tracker as any
     ),
-    merged.artifactManager as any
+    merged.mutex as any,
+    merged.artifactSync as any
   );
   // Inject tokens manually (NestJS @Inject decorators are metadata; for pure unit
   // tests we patch the private members directly after construction).
@@ -44,7 +45,7 @@ const buildReconciler = (overrides: Partial<typeof mockDeps> = {}) => {
   (reconciler as any).storageOptions = merged.storageOptions;
   (reconciler as any).assetService = merged.assetService;
   (reconciler as any).preparationService = merged.preparationService;
-  (reconciler as any).artifactManager = merged.artifactManager;
+  (reconciler as any).artifactSync = merged.artifactSync;
   return reconciler;
 };
 
@@ -72,10 +73,10 @@ let mockDeps: {
     indexFilename: jest.Mock;
   }>;
   tracker: {stamp: jest.Mock};
-  artifactManager?: {
-    runExclusive: jest.Mock;
+  mutex: {run: jest.Mock};
+  artifactSync?: {
     restoreOrBuild: jest.Mock;
-    deleteArtifacts: jest.Mock;
+    delete: jest.Mock;
   };
 };
 
@@ -103,7 +104,8 @@ beforeEach(() => {
       writeFileBuffer: jest.fn().mockResolvedValue(undefined),
       indexFilename: jest.fn().mockReturnValue("index.ts")
     },
-    tracker: {stamp: jest.fn()}
+    tracker: {stamp: jest.fn()},
+    mutex: {run: jest.fn((_key, task) => task())}
   };
 });
 
@@ -800,14 +802,13 @@ describe("FunctionAssetReconciler with prebuilt artifacts", () => {
   });
 
   beforeEach(() => {
-    mockDeps.artifactManager = {
-      runExclusive: jest.fn((_name, task) => task()),
+    mockDeps.artifactSync = {
       restoreOrBuild: jest.fn().mockResolvedValue(true),
-      deleteArtifacts: jest.fn().mockResolvedValue(undefined)
+      delete: jest.fn().mockResolvedValue(undefined)
     };
   });
 
-  it("should sync sources and let the artifact manager restore inside the function lock", async () => {
+  it("should sync sources and restore the artifact inside the function lock", async () => {
     const reconciler = buildReconciler();
     const remoteData = Buffer.from("remote");
     mockDeps.assetService.findByFunction.mockResolvedValue([indexRecord(remoteData)]);
@@ -816,32 +817,29 @@ describe("FunctionAssetReconciler with prebuilt artifacts", () => {
     const changed = await reconciler.reconcileFunction(mockFn, {allowFallback: false});
 
     expect(changed).toBe(true);
-    expect(mockDeps.artifactManager.runExclusive).toHaveBeenCalledWith(
-      "my-function",
-      expect.any(Function)
-    );
+    expect(mockDeps.mutex.run).toHaveBeenCalledWith("my-function", expect.any(Function));
     expect(mockDeps.preparationService.writeFileBuffer).toHaveBeenCalledWith(
       mockFn,
       "index.ts",
       remoteData
     );
-    expect(mockDeps.artifactManager.restoreOrBuild).toHaveBeenCalledWith(mockFn, {
+    expect(mockDeps.artifactSync.restoreOrBuild).toHaveBeenCalledWith(mockFn, {
       allowFallback: false
     });
     expect(mockDeps.preparationService.prepareIndex).not.toHaveBeenCalled();
     expect(mockDeps.preparationService.preparePackageJson).not.toHaveBeenCalled();
   });
 
-  it("should still ask the artifact manager when sources already match", async () => {
+  it("should still restore the artifact when sources already match", async () => {
     const reconciler = buildReconciler();
     const data = Buffer.from("same");
     mockDeps.assetService.findByFunction.mockResolvedValue([indexRecord(data)]);
     mockDeps.preparationService.readFileBuffer.mockResolvedValue(data);
-    mockDeps.artifactManager.restoreOrBuild.mockResolvedValue(false);
+    mockDeps.artifactSync.restoreOrBuild.mockResolvedValue(false);
 
     await expect(reconciler.reconcileFunction(mockFn)).resolves.toBe(false);
 
-    expect(mockDeps.artifactManager.restoreOrBuild).toHaveBeenCalledWith(mockFn, {
+    expect(mockDeps.artifactSync.restoreOrBuild).toHaveBeenCalledWith(mockFn, {
       allowFallback: true
     });
   });
@@ -851,7 +849,7 @@ describe("FunctionAssetReconciler with prebuilt artifacts", () => {
 
     await expect(reconciler.reconcileFunction(mockFn)).resolves.toBe(false);
 
-    expect(mockDeps.artifactManager.restoreOrBuild).not.toHaveBeenCalled();
+    expect(mockDeps.artifactSync.restoreOrBuild).not.toHaveBeenCalled();
   });
 
   it("should reconcile at most four functions at a time", async () => {
@@ -879,6 +877,6 @@ describe("FunctionAssetReconciler with prebuilt artifacts", () => {
 
     await reconciler.deleteAll(mockFn);
 
-    expect(mockDeps.artifactManager.deleteArtifacts).toHaveBeenCalledWith(mockFn);
+    expect(mockDeps.artifactSync.delete).toHaveBeenCalledWith(mockFn);
   });
 });

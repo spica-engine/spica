@@ -76,9 +76,13 @@
       "types": "./src/asset-recorder.ts",
       "default": "./dist/src/asset-recorder.js"
     },
-    "./src/artifact-manager": {
-      "types": "./src/artifact-manager.ts",
-      "default": "./dist/src/artifact-manager.js"
+    "./src/keyed-mutex": {
+      "types": "./src/keyed-mutex.ts",
+      "default": "./dist/src/keyed-mutex.js"
+    },
+    "./src/artifact/*": {
+      "types": "./src/artifact/*.ts",
+      "default": "./dist/src/artifact/*.js"
     }
   },
   "dependencies": {

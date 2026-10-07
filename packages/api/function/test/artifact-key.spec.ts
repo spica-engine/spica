@@ -3,7 +3,7 @@ import {
   artifactPrefix,
   isArtifactKey,
   platformId
-} from "@spica-server/function/src/asset-keys";
+} from "@spica-server/function/src/artifact/artifact-key";
 
 const inputs = {index: "i", packageJson: "p", lockfile: "l", builder: "legacy"};
 
