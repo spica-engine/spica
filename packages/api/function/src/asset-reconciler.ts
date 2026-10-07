@@ -1,5 +1,4 @@
 import {Inject, Injectable, Logger} from "@nestjs/common";
-import {createHash} from "crypto";
 import {ObjectId} from "@spica-server/database";
 import {FunctionAssetService} from "@spica-server/function-services";
 import {
@@ -13,20 +12,17 @@ import {
 import {Function} from "@spica-server/interface-function";
 import {FunctionPreparationService} from "./function-preparation.service.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
+import {FunctionArtifactManager} from "./artifact-manager.js";
+import {hashBuffer, assetKey} from "./asset-keys.js";
 
-export function hashBuffer(buf: Buffer): string {
-  return createHash("sha256").update(buf).digest("hex");
-}
-
-export function assetKey(functionName: string, filename: string): string {
-  return `functions/${functionName}/${filename}`;
-}
+export {hashBuffer, assetKey};
 
 function errMsg(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
 const BACKFILL_CONCURRENCY = 4;
+const PREBUILT_RECONCILE_CONCURRENCY = 4;
 
 type BackfillOutcome = "already-stored" | "uploaded" | "no-local-files";
 
@@ -54,7 +50,8 @@ export class FunctionAssetReconciler {
     private readonly storageOptions: FunctionAssetStorageOptions,
     private readonly assetService: FunctionAssetService,
     private readonly preparationService: FunctionPreparationService,
-    private readonly tracker: SelfWriteTracker
+    private readonly tracker: SelfWriteTracker,
+    private readonly artifactManager: FunctionArtifactManager
   ) {}
 
   async uploadAsset(
@@ -120,6 +117,7 @@ export class FunctionAssetReconciler {
     let prepareStep: () => Promise<void>;
     switch (prevAsset.filename) {
       case "package.json":
+      case "package-lock.json":
         prepareStep = () => this.preparationService.preparePackageJson(fn);
         break;
       case "index.ts":
@@ -158,6 +156,7 @@ export class FunctionAssetReconciler {
       )
     );
     await this.assetService.deleteByFunction(fn._id);
+    await this.artifactManager.deleteArtifacts(fn);
   }
 
   async backfill(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
@@ -224,12 +223,8 @@ export class FunctionAssetReconciler {
     return "uploaded";
   }
 
-  async reconcileFunction(fn: Function & {_id: ObjectId}): Promise<void> {
+  async syncSources(fn: Function & {_id: ObjectId}): Promise<FunctionAssetFilename[]> {
     const storedAssets = await this.assetService.findByFunction(fn._id);
-    if (storedAssets.length === 0) {
-      return;
-    }
-
     const changedFilenames: FunctionAssetFilename[] = [];
 
     for (const asset of storedAssets) {
@@ -250,13 +245,34 @@ export class FunctionAssetReconciler {
       changedFilenames.push(asset.filename);
     }
 
-    if (changedFilenames.length === 0) return;
+    return changedFilenames;
+  }
 
-    const needsInstall = changedFilenames.includes("package.json");
-    const needsCompile = changedFilenames.some(f => f === "index.ts" || f === "index.mjs");
-    const unknownFilenames = changedFilenames.filter(
-      f => f !== "package.json" && f !== "index.ts" && f !== "index.mjs"
+  async reconcileFunction(
+    fn: Function & {_id: ObjectId},
+    opts: {allowFallback: boolean} = {allowFallback: true}
+  ): Promise<boolean> {
+    if (this.artifactManager.enabled) {
+      return this.artifactManager.runExclusive(fn.name, async () => {
+        const storedAssets = await this.assetService.findByFunction(fn._id);
+        if (storedAssets.length === 0) return false;
+        await this.syncSources(fn);
+        return this.artifactManager.restoreOrBuild(fn, opts);
+      });
+    }
+
+    const storedAssets = await this.assetService.findByFunction(fn._id);
+    if (storedAssets.length === 0) {
+      return false;
+    }
+
+    const changedFilenames = await this.syncSources(fn);
+    if (changedFilenames.length === 0) return false;
+
+    const needsInstall = changedFilenames.some(
+      f => f === "package.json" || f === "package-lock.json"
     );
+    const needsCompile = changedFilenames.some(f => f === "index.ts" || f === "index.mjs");
 
     if (needsInstall) {
       await this.preparationService.preparePackageJson(fn);
@@ -264,24 +280,19 @@ export class FunctionAssetReconciler {
     if (needsCompile) {
       await this.preparationService.prepareIndex(fn);
     }
-    for (const filename of unknownFilenames) {
-      this.logger.warn(
-        `[reconcile] Unknown asset filename "${filename}" for function ${fn.name} — skipping prepare`
-      );
-    }
+    return true;
   }
 
   async reconcileAll(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
-    await Promise.all(
-      fns.map(async fn => {
-        try {
-          await this.reconcileFunction(fn);
-        } catch (err) {
-          this.logger.error(
-            `[reconcile] Failed for function ${fn.name}: ${err instanceof Error ? err.message : err}`
-          );
-        }
-      })
-    );
+    const limit = this.artifactManager.enabled ? PREBUILT_RECONCILE_CONCURRENCY : fns.length;
+    await forEachWithConcurrency(fns, limit, async fn => {
+      try {
+        await this.reconcileFunction(fn);
+      } catch (err) {
+        this.logger.error(
+          `[reconcile] Failed for function ${fn.name}: ${err instanceof Error ? err.message : err}`
+        );
+      }
+    });
   }
 }

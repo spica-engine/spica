@@ -54,4 +54,31 @@ describe("DefaultStrategy", () => {
     const result = await strategy.read("file.txt");
     expect(result.toString()).toBe("v2");
   });
+
+  it("should upload a file and download it back", async () => {
+    const source = path.join(tmpDir, "source.bin");
+    const target = path.join(tmpDir, "out", "target.bin");
+    await fsSync.promises.writeFile(source, "archive");
+
+    await strategy.upload("functions/fn/artifacts/a.tar.gz", source);
+    await strategy.download("functions/fn/artifacts/a.tar.gz", target);
+
+    expect((await fsSync.promises.readFile(target)).toString()).toBe("archive");
+  });
+
+  it("should list only keys under the prefix", async () => {
+    await strategy.write("functions/fn/artifacts/a.tar.gz", Buffer.from("a"));
+    await strategy.write("functions/fn/index.ts", Buffer.from("b"));
+    await strategy.write("functions/other/artifacts/c.tar.gz", Buffer.from("c"));
+
+    const objects = await strategy.list("functions/fn/artifacts/");
+
+    expect(objects.map(o => o.key)).toEqual(["functions/fn/artifacts/a.tar.gz"]);
+    expect(objects[0].lastModified.getTime()).toEqual(expect.any(Number));
+  });
+
+  it("should return an empty list when nothing was stored", async () => {
+    const empty = new DefaultStrategy(path.join(tmpDir, "missing"));
+    expect(await empty.list("functions/")).toEqual([]);
+  });
 });

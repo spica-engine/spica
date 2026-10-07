@@ -52,4 +52,56 @@ describe("AWSS3Strategy", () => {
     sendMock.mockRejectedValueOnce({name: "NotFound"});
     expect(await strategy.exists("functions/abc/missing.ts")).toBe(false);
   });
+
+  it("should upload a file as a stream with its content length", async () => {
+    const {mkdtemp, writeFile} = await import("fs/promises");
+    const {tmpdir} = await import("os");
+    const {join} = await import("path");
+    const dir = await mkdtemp(join(tmpdir(), "awss3-upload-"));
+    const filePath = join(dir, "archive.tar.gz");
+    await writeFile(filePath, "archive");
+    sendMock.mockResolvedValueOnce({});
+
+    await strategy.upload("functions/abc/artifacts/x.tar.gz", filePath);
+
+    const input = sendMock.mock.calls[0][0].input;
+    expect(input.Key).toBe("functions/abc/artifacts/x.tar.gz");
+    expect(input.ContentLength).toBe(7);
+  });
+
+  it("should download a file to disk", async () => {
+    const {Readable} = await import("stream");
+    const {mkdtemp, readFile} = await import("fs/promises");
+    const {tmpdir} = await import("os");
+    const {join} = await import("path");
+    const dir = await mkdtemp(join(tmpdir(), "awss3-download-"));
+    const filePath = join(dir, "archive.tar.gz");
+    sendMock.mockResolvedValueOnce({Body: Readable.from([Buffer.from("archive")])});
+
+    await strategy.download("functions/abc/artifacts/x.tar.gz", filePath);
+
+    expect((await readFile(filePath)).toString()).toBe("archive");
+  });
+
+  it("should list objects across pages", async () => {
+    const date = new Date("2026-01-01");
+    sendMock
+      .mockResolvedValueOnce({
+        Contents: [{Key: "functions/abc/artifacts/1.tar.gz", LastModified: date}],
+        IsTruncated: true,
+        NextContinuationToken: "next"
+      })
+      .mockResolvedValueOnce({
+        Contents: [{Key: "functions/abc/artifacts/2.tar.gz", LastModified: date}],
+        IsTruncated: false
+      });
+
+    const objects = await strategy.list("functions/abc/artifacts/");
+
+    expect(objects).toEqual([
+      {key: "functions/abc/artifacts/1.tar.gz", lastModified: date},
+      {key: "functions/abc/artifacts/2.tar.gz", lastModified: date}
+    ]);
+    expect(sendMock.mock.calls[1][0].input.ContinuationToken).toBe("next");
+  });
 });

@@ -124,6 +124,7 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
     const pkgContent = await engine.read(fn, "dependency");
     return Buffer.from(pkgContent, "utf-8");
   });
+  await engine.publishArtifact(fn as Function & {_id: any});
 
   return fn;
 }
@@ -201,6 +202,7 @@ export namespace index {
       await engine.build(fn);
       return Buffer.from(index, "utf-8");
     });
+    await engine.publishArtifact(fn as Function & {_id: any});
 
     await engine.refreshLocally(id.toString());
   }
@@ -274,11 +276,14 @@ export namespace dependencies {
     }
 
     if (deps.length) {
+      let built = true;
       await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
         await engine.installPackages(fn, deps as string[]);
+        built = await engine.rebuildForArtifact(fn);
         const pkgContent = await engine.read(fn, "dependency");
         return Buffer.from(pkgContent, "utf-8");
       });
+      await engine.publishArtifact(fn as Function & {_id: any}, {buildFailed: !built});
       await engine.refreshLocally(fn._id.toString());
     }
   }
@@ -313,6 +318,7 @@ export namespace dependencies {
       throw new NotFoundException("Could not find the function.");
     }
 
+    let built = true;
     await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
       await Promise.all(
         deps.map(dep =>
@@ -321,9 +327,11 @@ export namespace dependencies {
           })
         )
       );
+      built = await engine.rebuildForArtifact(fn);
       const pkgContent = await engine.read(fn, "dependency");
       return Buffer.from(pkgContent, "utf-8");
     });
+    await engine.publishArtifact(fn as Function & {_id: any}, {buildFailed: !built});
 
     await engine.refreshLocally(fn._id.toString());
   }

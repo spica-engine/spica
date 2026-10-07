@@ -6,6 +6,7 @@ export interface Options {
   timeout: number;
   root: string;
   outDir: string;
+  builder?: string;
 }
 
 export interface FunctionOptions {

@@ -67,6 +67,14 @@
     "./src/function-preparation.service": {
       "types": "./src/function-preparation.service.ts",
       "default": "./dist/src/function-preparation.service.js"
+    },
+    "./src/asset-keys": {
+      "types": "./src/asset-keys.ts",
+      "default": "./dist/src/asset-keys.js"
+    },
+    "./src/artifact-manager": {
+      "types": "./src/artifact-manager.ts",
+      "default": "./dist/src/artifact-manager.js"
     }
   },
   "dependencies": {
@@ -111,6 +119,7 @@
     "bson": "^6.10.4",
     "rimraf": "^6.0.1",
     "rxjs": "^7.8.2",
+    "tar": "^7.5.13",
     "ws": "^8.18.3",
     "yaml": "^2.7.1"
   },

@@ -2,6 +2,7 @@ import {Module} from "@nestjs/common";
 import {FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface-function";
 import {FunctionService} from "./service.js";
 import {FunctionAssetService} from "./asset.service.js";
+import {FunctionArtifactService} from "./artifact.service.js";
 import {
   EnvVarService,
   ServicesModule as EnvVarServicesModule
@@ -17,13 +18,14 @@ export class ServicesModule {
       providers: [
         FunctionService,
         FunctionAssetService,
+        FunctionArtifactService,
         {
           provide: FUNCTION_OPTIONS,
           useValue: options
         },
         EnvVarService
       ],
-      exports: [FunctionService, FunctionAssetService]
+      exports: [FunctionService, FunctionAssetService, FunctionArtifactService]
     };
   }
 }

@@ -49,4 +49,33 @@ describe("GCSStrategy", () => {
     fileMock.exists.mockResolvedValueOnce([false]);
     expect(await strategy.exists("functions/abc/missing.ts")).toBe(false);
   });
+
+  it("should upload a file to the given key", async () => {
+    (bucketMock as any).upload = jest.fn().mockResolvedValueOnce(undefined);
+    await strategy.upload("functions/abc/artifacts/x.tar.gz", "/tmp/archive.tar.gz");
+    expect((bucketMock as any).upload).toHaveBeenCalledWith("/tmp/archive.tar.gz", {
+      destination: "functions/abc/artifacts/x.tar.gz"
+    });
+  });
+
+  it("should download a file to disk", async () => {
+    fileMock.download.mockResolvedValueOnce(undefined);
+    await strategy.download("functions/abc/artifacts/x.tar.gz", "/tmp/archive.tar.gz");
+    expect(fileMock.download).toHaveBeenCalledWith({destination: "/tmp/archive.tar.gz"});
+  });
+
+  it("should list objects under a prefix", async () => {
+    (bucketMock as any).getFiles = jest
+      .fn()
+      .mockResolvedValueOnce([
+        [{name: "functions/abc/artifacts/1.tar.gz", metadata: {updated: "2026-01-01T00:00:00Z"}}]
+      ]);
+
+    const objects = await strategy.list("functions/abc/artifacts/");
+
+    expect((bucketMock as any).getFiles).toHaveBeenCalledWith({prefix: "functions/abc/artifacts/"});
+    expect(objects).toEqual([
+      {key: "functions/abc/artifacts/1.tar.gz", lastModified: new Date("2026-01-01T00:00:00Z")}
+    ]);
+  });
 });

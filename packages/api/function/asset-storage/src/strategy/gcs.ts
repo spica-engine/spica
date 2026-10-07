@@ -1,5 +1,5 @@
 import {Storage, Bucket} from "@google-cloud/storage";
-import {FunctionAssetStrategy} from "@spica-server/interface-function-asset-storage";
+import {FunctionAssetStrategy, StoredObject} from "@spica-server/interface-function-asset-storage";
 
 export class GCSStrategy implements FunctionAssetStrategy {
   private readonly storage: Storage;
@@ -36,5 +36,21 @@ export class GCSStrategy implements FunctionAssetStrategy {
   async exists(key: string): Promise<boolean> {
     const [exists] = await this.bucket.file(key).exists();
     return exists;
+  }
+
+  async upload(key: string, filePath: string): Promise<void> {
+    await this.bucket.upload(filePath, {destination: key});
+  }
+
+  async download(key: string, filePath: string): Promise<void> {
+    await this.bucket.file(key).download({destination: filePath});
+  }
+
+  async list(prefix: string): Promise<StoredObject[]> {
+    const [files] = await this.bucket.getFiles({prefix});
+    return files.map(file => ({
+      key: file.name,
+      lastModified: new Date(file.metadata.updated)
+    }));
   }
 }

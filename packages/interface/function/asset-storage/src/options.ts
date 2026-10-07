@@ -11,6 +11,8 @@ export interface FunctionAssetStorageOptions {
   // Google Cloud Storage strategy
   gcsServiceAccountPath?: string;
   gcsBucketName?: string;
+
+  prebuiltArtifacts?: boolean;
 }
 
 export const FUNCTION_ASSET_STORAGE_OPTIONS = Symbol.for("FUNCTION_ASSET_STORAGE_OPTIONS");

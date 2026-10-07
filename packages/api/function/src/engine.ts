@@ -22,6 +22,7 @@ import {PlanExecutor} from "./plan-executor.js";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
+import {FunctionArtifactManager} from "./artifact-manager.js";
 import {applyAssetChange} from "./asset-pipeline.js";
 import {FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
 
@@ -65,7 +66,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     private reconciler: FunctionAssetReconciler,
     private assetService: FunctionAssetService,
     private tracker: SelfWriteTracker,
-    private preparationService: FunctionPreparationService
+    private preparationService: FunctionPreparationService,
+    private artifactManager: FunctionArtifactManager
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
@@ -188,6 +190,16 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     op: () => Promise<Buffer>
   ): Promise<void> {
     return applyAssetChange(fn, filename, op, this.reconciler, this.assetService, this.tracker);
+  }
+
+  publishArtifact(fn: Function & {_id: ObjectId}, opts?: {buildFailed?: boolean}): Promise<void> {
+    return this.artifactManager.publish(fn, opts);
+  }
+
+  // Dependency changes do not rebuild by default, but an archive must hold a build that matches
+  // its node_modules (rollup bundles dependencies into the output).
+  rebuildForArtifact(fn: Function): Promise<boolean> {
+    return this.artifactManager.rebuild(fn);
   }
 
   /**

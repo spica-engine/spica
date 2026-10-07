@@ -3,10 +3,13 @@ import {
   GetObjectCommand,
   PutObjectCommand,
   DeleteObjectCommand,
-  HeadObjectCommand
+  HeadObjectCommand,
+  ListObjectsV2Command
 } from "@aws-sdk/client-s3";
-import {readFileSync} from "fs";
-import {FunctionAssetStrategy} from "@spica-server/interface-function-asset-storage";
+import fs, {readFileSync} from "fs";
+import {Readable} from "stream";
+import {pipeline} from "stream/promises";
+import {FunctionAssetStrategy, StoredObject} from "@spica-server/interface-function-asset-storage";
 
 interface AwsCredentials {
   accessKeyId: string;
@@ -96,5 +99,46 @@ export class AWSS3Strategy implements FunctionAssetStrategy {
       }
       throw e;
     }
+  }
+
+  async upload(key: string, filePath: string): Promise<void> {
+    const {size} = await fs.promises.stat(filePath);
+    await this.s3.send(
+      new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+        Body: fs.createReadStream(filePath),
+        ContentLength: size
+      })
+    );
+  }
+
+  async download(key: string, filePath: string): Promise<void> {
+    const res = await this.s3.send(
+      new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key
+      })
+    );
+    await pipeline(res.Body as Readable, fs.createWriteStream(filePath));
+  }
+
+  async list(prefix: string): Promise<StoredObject[]> {
+    const objects: StoredObject[] = [];
+    let continuationToken: string | undefined;
+    do {
+      const res = await this.s3.send(
+        new ListObjectsV2Command({
+          Bucket: this.bucketName,
+          Prefix: prefix,
+          ContinuationToken: continuationToken
+        })
+      );
+      for (const object of res.Contents ?? []) {
+        objects.push({key: object.Key!, lastModified: object.LastModified!});
+      }
+      continuationToken = res.IsTruncated ? res.NextContinuationToken : undefined;
+    } while (continuationToken);
+    return objects;
   }
 }

@@ -25,6 +25,9 @@ let mockReconciler: {reconcileFunction: jest.Mock};
 let mockTracker: {isSelfWrite: jest.Mock};
 let mockPreparationService: {deleteFunctionDirectory: jest.Mock};
 let mockExecutor: {apply: jest.Mock};
+let mockArtifactService: {watch: jest.Mock};
+let mockArtifactManager: {enabled: boolean; runExclusive: jest.Mock};
+let artifactSubject: Subject<unknown>;
 
 const buildWatcher = () =>
   new FunctionAssetWatcher(
@@ -33,7 +36,9 @@ const buildWatcher = () =>
     mockReconciler as any,
     mockTracker as any,
     mockPreparationService as any,
-    mockExecutor as any
+    mockExecutor as any,
+    mockArtifactService as any,
+    mockArtifactManager as any
   );
 
 const makeDeleteChange = (key = "functions/my-function/index.ts") => ({
@@ -72,6 +77,15 @@ beforeEach(() => {
 
   mockExecutor = {
     apply: jest.fn().mockResolvedValue(undefined)
+  };
+
+  artifactSubject = new Subject();
+  mockArtifactService = {
+    watch: jest.fn().mockReturnValue(artifactSubject.asObservable())
+  };
+  mockArtifactManager = {
+    enabled: false,
+    runExclusive: jest.fn((_name, task) => task())
   };
 });
 
@@ -310,5 +324,125 @@ describe("FunctionAssetWatcher — lifecycle", () => {
 
     // Second destroy should be safe
     expect(() => watcher.onModuleDestroy()).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Prebuilt artifacts
+// ---------------------------------------------------------------------------
+
+describe("FunctionAssetWatcher — prebuilt artifacts", () => {
+  const makeArtifactChange = (key: string | null = "functions/my-function/artifacts/a.tar.gz") => ({
+    operationType: "update",
+    fullDocument: {
+      functionId: {toHexString: () => "507f1f77bcf86cd799439011"},
+      platform: "linux-x64-glibc-abi127",
+      key
+    }
+  });
+
+  const flush = () => new Promise(r => setTimeout(r, 0));
+
+  beforeEach(() => {
+    mockArtifactManager.enabled = true;
+    (mockReconciler as any).syncSources = jest.fn().mockResolvedValue([]);
+    mockReconciler.reconcileFunction.mockResolvedValue(true);
+  });
+
+  it("should not watch artifacts when prebuilt artifacts are disabled", () => {
+    mockArtifactManager.enabled = false;
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+
+    expect(mockArtifactService.watch).not.toHaveBeenCalled();
+    watcher.onModuleDestroy();
+  });
+
+  it("should only sync sources on an asset change, without rebuilding or refreshing", async () => {
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+
+    changeSubject.next(makeChange());
+    await flush();
+
+    expect((mockReconciler as any).syncSources).toHaveBeenCalledTimes(1);
+    expect(mockArtifactManager.runExclusive).toHaveBeenCalledWith(
+      "my-function",
+      expect.any(Function)
+    );
+    expect(mockReconciler.reconcileFunction).not.toHaveBeenCalled();
+    expect(mockExecutor.apply).not.toHaveBeenCalled();
+    watcher.onModuleDestroy();
+  });
+
+  it("should reconcile with fallback and refresh when a peer records an artifact", async () => {
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+
+    artifactSubject.next(makeArtifactChange());
+    await flush();
+
+    expect(mockReconciler.reconcileFunction).toHaveBeenCalledWith(
+      expect.objectContaining({name: "my-function"}),
+      {allowFallback: true}
+    );
+    expect(mockExecutor.apply).toHaveBeenCalledWith({
+      routing: [],
+      outdate: ["507f1f77bcf86cd799439011"],
+      reconcile: ["507f1f77bcf86cd799439011"]
+    });
+    watcher.onModuleDestroy();
+  });
+
+  it("should not refresh when the local tree already matched the artifact", async () => {
+    mockReconciler.reconcileFunction.mockResolvedValue(false);
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+
+    artifactSubject.next(makeArtifactChange());
+    await flush();
+
+    expect(mockReconciler.reconcileFunction).toHaveBeenCalledTimes(1);
+    expect(mockExecutor.apply).not.toHaveBeenCalled();
+    watcher.onModuleDestroy();
+  });
+
+  it("should ignore artifacts recorded by this replica", async () => {
+    mockTracker.isSelfWrite.mockReturnValue(true);
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+
+    artifactSubject.next(makeArtifactChange(null));
+    await flush();
+
+    expect(mockTracker.isSelfWrite).toHaveBeenCalledWith({
+      functionId: "507f1f77bcf86cd799439011",
+      filename: "artifact",
+      hash: "unavailable"
+    });
+    expect(mockReconciler.reconcileFunction).not.toHaveBeenCalled();
+    watcher.onModuleDestroy();
+  });
+
+  it("should keep the artifact subscription alive when reconciling throws", async () => {
+    mockReconciler.reconcileFunction.mockRejectedValueOnce(new Error("boom"));
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+
+    artifactSubject.next(makeArtifactChange());
+    await flush();
+    artifactSubject.next(makeArtifactChange());
+    await flush();
+
+    expect(mockReconciler.reconcileFunction).toHaveBeenCalledTimes(2);
+    watcher.onModuleDestroy();
+  });
+
+  it("should unsubscribe from artifacts on onModuleDestroy", () => {
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+    watcher.onModuleDestroy();
+
+    expect(artifactSubject.observed).toBe(false);
   });
 });

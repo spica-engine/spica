@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import {FunctionAssetStrategy} from "@spica-server/interface-function-asset-storage";
+import {FunctionAssetStrategy, StoredObject} from "@spica-server/interface-function-asset-storage";
 
 export class DefaultStrategy implements FunctionAssetStrategy {
   constructor(private readonly storagePath: string) {}
@@ -35,5 +35,39 @@ export class DefaultStrategy implements FunctionAssetStrategy {
       .access(this.buildPath(key))
       .then(() => true)
       .catch(() => false);
+  }
+
+  async upload(key: string, filePath: string): Promise<void> {
+    const target = this.buildPath(key);
+    await this.ensureDir(target);
+    await fs.promises.copyFile(filePath, target);
+  }
+
+  async download(key: string, filePath: string): Promise<void> {
+    await this.ensureDir(filePath);
+    await fs.promises.copyFile(this.buildPath(key), filePath);
+  }
+
+  async list(prefix: string): Promise<StoredObject[]> {
+    const objects: StoredObject[] = [];
+    const walk = async (dir: string) => {
+      const entries = await fs.promises.readdir(dir, {withFileTypes: true}).catch(e => {
+        if (e.code === "ENOENT") return [];
+        throw e;
+      });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          await walk(fullPath);
+          continue;
+        }
+        const key = path.relative(this.storagePath, fullPath).split(path.sep).join("/");
+        if (!key.startsWith(prefix)) continue;
+        const stat = await fs.promises.stat(fullPath);
+        objects.push({key, lastModified: stat.mtime});
+      }
+    };
+    await walk(this.storagePath);
+    return objects;
   }
 }

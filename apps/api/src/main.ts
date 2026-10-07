@@ -441,6 +441,12 @@ const args = yargsInstance
     "function-asset-gcs-bucket-name": {
       string: true,
       description: "Name of the GCS bucket to store function assets."
+    },
+    "function-prebuilt-artifacts": {
+      boolean: true,
+      default: false,
+      description:
+        "Pack each built function (build output, node_modules, package.json, lockfile) into a content-addressed archive in the function asset bucket, and restore functions from those archives instead of running npm install and the build. Requires --function-asset-storage-strategy to be 'awss3' or 'gcs'."
     }
   })
   /* Storage Options */
@@ -828,6 +834,16 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       );
     }
 
+    if (
+      args["function-prebuilt-artifacts"] &&
+      args["function-asset-storage-strategy"] != "awss3" &&
+      args["function-asset-storage-strategy"] != "gcs"
+    ) {
+      throw new TypeError(
+        "--function-prebuilt-artifacts requires --function-asset-storage-strategy to be 'awss3' or 'gcs'."
+      );
+    }
+
     if (args["storage-strategy"] == "default") {
       if (!args["default-storage-path"]) {
         throw new TypeError(
@@ -1026,7 +1042,8 @@ const modules = [
       awss3CredentialsPath: args["function-asset-awss3-credentials-path"],
       awss3BucketName: args["function-asset-awss3-bucket-name"],
       gcsServiceAccountPath: args["function-asset-gcs-service-account-path"],
-      gcsBucketName: args["function-asset-gcs-bucket-name"]
+      gcsBucketName: args["function-asset-gcs-bucket-name"],
+      prebuiltArtifacts: args["function-prebuilt-artifacts"]
     },
     payloadSizeLimit: args["payload-size-limit"]
   }),

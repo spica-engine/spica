@@ -29,7 +29,8 @@ const buildReconciler = (overrides: Partial<typeof mockDeps> = {}) => {
     merged.storageOptions as any,
     merged.assetService as any,
     merged.preparationService as any,
-    merged.tracker as any
+    merged.tracker as any,
+    merged.artifactManager as any
   );
   // Inject tokens manually (NestJS @Inject decorators are metadata; for pure unit
   // tests we patch the private members directly after construction).
@@ -38,6 +39,7 @@ const buildReconciler = (overrides: Partial<typeof mockDeps> = {}) => {
   (reconciler as any).assetService = merged.assetService;
   (reconciler as any).preparationService = merged.preparationService;
   (reconciler as any).tracker = merged.tracker;
+  (reconciler as any).artifactManager = merged.artifactManager;
   return reconciler;
 };
 
@@ -65,6 +67,12 @@ let mockDeps: {
     indexFilename: jest.Mock;
   }>;
   tracker: {stamp: jest.Mock};
+  artifactManager: {
+    enabled: boolean;
+    runExclusive: jest.Mock;
+    restoreOrBuild: jest.Mock;
+    deleteArtifacts: jest.Mock;
+  };
 };
 
 beforeEach(() => {
@@ -91,7 +99,13 @@ beforeEach(() => {
       writeFileBuffer: jest.fn().mockResolvedValue(undefined),
       indexFilename: jest.fn().mockReturnValue("index.ts")
     },
-    tracker: {stamp: jest.fn()}
+    tracker: {stamp: jest.fn()},
+    artifactManager: {
+      enabled: false,
+      runExclusive: jest.fn((_name, task) => task()),
+      restoreOrBuild: jest.fn().mockResolvedValue(true),
+      deleteArtifacts: jest.fn().mockResolvedValue(undefined)
+    }
   };
 });
 
@@ -734,5 +748,135 @@ describe("FunctionAssetReconciler.backfill", () => {
 
     expect(mockDeps.assetService.findByFunction).toHaveBeenCalledTimes(10);
     expect(peak).toBe(4);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Lockfile tracking
+// ---------------------------------------------------------------------------
+
+describe("FunctionAssetReconciler lockfile", () => {
+  it("should reinstall when only the lockfile changed", async () => {
+    const reconciler = buildReconciler();
+    const remoteData = Buffer.from("lock");
+    mockDeps.assetService.findByFunction.mockResolvedValue([
+      {
+        filename: "package-lock.json",
+        key: "functions/my-function/package-lock.json",
+        hash: hashBuffer(remoteData),
+        size: remoteData.byteLength,
+        strategy: "default",
+        functionId: mockFn._id
+      }
+    ]);
+    mockDeps.strategy.read.mockResolvedValue(remoteData);
+
+    await expect(reconciler.reconcileFunction(mockFn)).resolves.toBe(true);
+
+    expect(mockDeps.preparationService.preparePackageJson).toHaveBeenCalledTimes(1);
+    expect(mockDeps.preparationService.prepareIndex).not.toHaveBeenCalled();
+  });
+
+  it("should reinstall when rolling back the lockfile", async () => {
+    const reconciler = buildReconciler();
+    await reconciler.rollbackDisk(mockFn, {
+      key: "functions/my-function/package-lock.json",
+      filename: "package-lock.json"
+    });
+    expect(mockDeps.preparationService.preparePackageJson).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Prebuilt artifacts
+// ---------------------------------------------------------------------------
+
+describe("FunctionAssetReconciler with prebuilt artifacts", () => {
+  const indexRecord = (data: Buffer) => ({
+    filename: "index.ts",
+    key: "functions/my-function/index.ts",
+    hash: hashBuffer(data),
+    size: data.byteLength,
+    strategy: "awss3",
+    functionId: mockFn._id
+  });
+
+  beforeEach(() => {
+    mockDeps.artifactManager.enabled = true;
+  });
+
+  it("should sync sources and let the artifact manager restore inside the function lock", async () => {
+    const reconciler = buildReconciler();
+    const remoteData = Buffer.from("remote");
+    mockDeps.assetService.findByFunction.mockResolvedValue([indexRecord(remoteData)]);
+    mockDeps.strategy.read.mockResolvedValue(remoteData);
+
+    const changed = await reconciler.reconcileFunction(mockFn, {allowFallback: false});
+
+    expect(changed).toBe(true);
+    expect(mockDeps.artifactManager.runExclusive).toHaveBeenCalledWith(
+      "my-function",
+      expect.any(Function)
+    );
+    expect(mockDeps.preparationService.writeFileBuffer).toHaveBeenCalledWith(
+      mockFn,
+      "index.ts",
+      remoteData
+    );
+    expect(mockDeps.artifactManager.restoreOrBuild).toHaveBeenCalledWith(mockFn, {
+      allowFallback: false
+    });
+    expect(mockDeps.preparationService.prepareIndex).not.toHaveBeenCalled();
+    expect(mockDeps.preparationService.preparePackageJson).not.toHaveBeenCalled();
+  });
+
+  it("should still ask the artifact manager when sources already match", async () => {
+    const reconciler = buildReconciler();
+    const data = Buffer.from("same");
+    mockDeps.assetService.findByFunction.mockResolvedValue([indexRecord(data)]);
+    mockDeps.preparationService.readFileBuffer.mockResolvedValue(data);
+    mockDeps.artifactManager.restoreOrBuild.mockResolvedValue(false);
+
+    await expect(reconciler.reconcileFunction(mockFn)).resolves.toBe(false);
+
+    expect(mockDeps.artifactManager.restoreOrBuild).toHaveBeenCalledWith(mockFn, {
+      allowFallback: true
+    });
+  });
+
+  it("should skip functions without stored assets", async () => {
+    const reconciler = buildReconciler();
+
+    await expect(reconciler.reconcileFunction(mockFn)).resolves.toBe(false);
+
+    expect(mockDeps.artifactManager.restoreOrBuild).not.toHaveBeenCalled();
+  });
+
+  it("should reconcile at most four functions at a time", async () => {
+    const reconciler = buildReconciler();
+    let running = 0;
+    let peak = 0;
+    jest.spyOn(reconciler, "reconcileFunction").mockImplementation(async () => {
+      running++;
+      peak = Math.max(peak, running);
+      await new Promise(r => setTimeout(r, 5));
+      running--;
+      return true;
+    });
+
+    await reconciler.reconcileAll(
+      Array.from({length: 10}, (_, i) => ({...mockFn, name: `fn-${i}`}))
+    );
+
+    expect(reconciler.reconcileFunction).toHaveBeenCalledTimes(10);
+    expect(peak).toBe(4);
+  });
+
+  it("should delete archives together with the assets", async () => {
+    const reconciler = buildReconciler();
+
+    await reconciler.deleteAll(mockFn);
+
+    expect(mockDeps.artifactManager.deleteArtifacts).toHaveBeenCalledWith(mockFn);
   });
 });

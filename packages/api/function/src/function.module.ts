@@ -24,6 +24,7 @@ import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {FunctionAssetWatcher} from "./asset-watcher.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
+import {FunctionArtifactManager} from "./artifact-manager.js";
 
 @Module({})
 export class FunctionModule {
@@ -97,7 +98,8 @@ export class FunctionModule {
             root: path.join(options.path, "functions"),
             timeout: options.timeout,
             entryLimit: options.entryLimit,
-            outDir: ".build"
+            outDir: ".build",
+            builder: options.builder ?? "legacy"
           }
         },
         {
@@ -112,7 +114,8 @@ export class FunctionModule {
         FunctionAssetReconciler,
         FunctionAssetWatcher,
         SelfWriteTracker,
-        FunctionPreparationService
+        FunctionPreparationService,
+        FunctionArtifactManager
       ]
     };
 
