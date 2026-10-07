@@ -1,5 +1,9 @@
 import {AWSS3Strategy} from "../src/strategy/awss3.js";
 import {S3Client} from "@aws-sdk/client-s3";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import {Readable} from "stream";
 
 describe("AWSS3Strategy", () => {
   let strategy: AWSS3Strategy;
@@ -29,12 +33,21 @@ describe("AWSS3Strategy", () => {
 
     const result = await strategy.read("functions/abc/index.ts");
     expect(result.toString()).toBe("content");
+    expect(sendMock.mock.calls[0][0].input).toEqual({
+      Bucket: bucketName,
+      Key: "functions/abc/index.ts"
+    });
   });
 
   it("should write a file", async () => {
     sendMock.mockResolvedValueOnce({});
     await strategy.write("functions/abc/index.ts", Buffer.from("data"));
     expect(sendMock).toHaveBeenCalledTimes(1);
+    expect(sendMock.mock.calls[0][0].input).toEqual({
+      Bucket: bucketName,
+      Key: "functions/abc/index.ts",
+      Body: Buffer.from("data")
+    });
   });
 
   it("should delete a file", async () => {
@@ -53,54 +66,38 @@ describe("AWSS3Strategy", () => {
     expect(await strategy.exists("functions/abc/missing.ts")).toBe(false);
   });
 
-  it("should send exactly the bucket, key and body when writing and reading", async () => {
-    const {Readable} = await import("stream");
-    sendMock
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({Body: Readable.from([Buffer.from("x")])});
+  describe("file transfers", () => {
+    let tmpDir: string;
 
-    await strategy.write("functions/abc/index.ts", Buffer.from("data"));
-    await strategy.read("functions/abc/index.ts");
-
-    expect(sendMock.mock.calls[0][0].input).toEqual({
-      Bucket: bucketName,
-      Key: "functions/abc/index.ts",
-      Body: Buffer.from("data")
+    beforeEach(async () => {
+      tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "awss3-strategy-"));
     });
-    expect(sendMock.mock.calls[1][0].input).toEqual({
-      Bucket: bucketName,
-      Key: "functions/abc/index.ts"
+
+    afterEach(async () => {
+      await fs.promises.rm(tmpDir, {recursive: true, force: true});
     });
-  });
 
-  it("should upload a file as a stream with its content length", async () => {
-    const {mkdtemp, writeFile} = await import("fs/promises");
-    const {tmpdir} = await import("os");
-    const {join} = await import("path");
-    const dir = await mkdtemp(join(tmpdir(), "awss3-upload-"));
-    const filePath = join(dir, "archive.tar.gz");
-    await writeFile(filePath, "archive");
-    sendMock.mockResolvedValueOnce({});
+    it("should upload a file as a stream with its content length", async () => {
+      const filePath = path.join(tmpDir, "archive.tar.gz");
+      await fs.promises.writeFile(filePath, "archive");
+      sendMock.mockResolvedValueOnce({});
 
-    await strategy.upload("functions/abc/artifacts/x.tar.gz", filePath);
+      await strategy.upload("functions/abc/artifacts/x.tar.gz", filePath);
 
-    const input = sendMock.mock.calls[0][0].input;
-    expect(input.Key).toBe("functions/abc/artifacts/x.tar.gz");
-    expect(input.ContentLength).toBe(7);
-  });
+      const input = sendMock.mock.calls[0][0].input;
+      expect(input.Key).toBe("functions/abc/artifacts/x.tar.gz");
+      expect(input.Body).toBeInstanceOf(fs.ReadStream);
+      expect(input.ContentLength).toBe(7);
+    });
 
-  it("should download a file to disk", async () => {
-    const {Readable} = await import("stream");
-    const {mkdtemp, readFile} = await import("fs/promises");
-    const {tmpdir} = await import("os");
-    const {join} = await import("path");
-    const dir = await mkdtemp(join(tmpdir(), "awss3-download-"));
-    const filePath = join(dir, "archive.tar.gz");
-    sendMock.mockResolvedValueOnce({Body: Readable.from([Buffer.from("archive")])});
+    it("should download a file to disk", async () => {
+      const filePath = path.join(tmpDir, "archive.tar.gz");
+      sendMock.mockResolvedValueOnce({Body: Readable.from([Buffer.from("archive")])});
 
-    await strategy.download("functions/abc/artifacts/x.tar.gz", filePath);
+      await strategy.download("functions/abc/artifacts/x.tar.gz", filePath);
 
-    expect((await readFile(filePath)).toString()).toBe("archive");
+      expect((await fs.promises.readFile(filePath)).toString()).toBe("archive");
+    });
   });
 
   it("should list objects across pages", async () => {
