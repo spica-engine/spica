@@ -671,14 +671,36 @@ describe("FunctionAssetReconciler.backfill", () => {
     expect(error).toHaveBeenCalledWith(expect.stringContaining("still down"));
   });
 
-  it("should warn about functions with neither stored assets nor local files", async () => {
+  it("should warn only about functions with neither stored assets nor local files", async () => {
+    const stored = {...mockFn, _id: new ObjectId(), name: "stored"};
+    const failing = {...mockFn, _id: new ObjectId(), name: "failing"};
+    mockDeps.assetService.findByFunction.mockImplementation(async id => {
+      if (id == stored._id) return [{filename: "index.ts"}];
+      if (id == failing._id) throw new Error("db");
+      return [];
+    });
     mockDeps.preparationService.readFileBuffer.mockResolvedValue(null);
     const reconciler = buildReconciler();
     const warn = jest.spyOn((reconciler as any).logger, "warn").mockImplementation(() => {});
+    jest.spyOn((reconciler as any).logger, "error").mockImplementation(() => {});
 
-    await reconciler.backfill([mockFn]);
+    await reconciler.backfill([mockFn, stored, failing]);
 
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("my-function"));
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toMatch(/cannot be restored: my-function$/);
+  });
+
+  it("should not warn when every function is already stored or uploaded", async () => {
+    const stored = {...mockFn, _id: new ObjectId(), name: "stored"};
+    mockDeps.assetService.findByFunction.mockImplementation(async id =>
+      id == stored._id ? [{filename: "index.ts"}] : []
+    );
+    const reconciler = buildReconciler();
+    const warn = jest.spyOn((reconciler as any).logger, "warn").mockImplementation(() => {});
+
+    await reconciler.backfill([mockFn, stored]);
+
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it("should continue with other functions when one fails", async () => {

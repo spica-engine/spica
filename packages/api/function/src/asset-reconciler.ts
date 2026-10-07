@@ -28,6 +28,8 @@ function errMsg(e: unknown): string {
 
 const BACKFILL_CONCURRENCY = 4;
 
+type BackfillOutcome = "already-stored" | "uploaded" | "no-local-files";
+
 async function forEachWithConcurrency<T>(
   items: T[],
   limit: number,
@@ -161,26 +163,28 @@ export class FunctionAssetReconciler {
   async backfill(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
     if (this.storageOptions.strategy == "default") return;
 
-    const lost: string[] = [];
+    const unrecoverable: string[] = [];
     await forEachWithConcurrency(fns, BACKFILL_CONCURRENCY, async fn => {
       try {
-        const hasCode = await this.backfillFunction(fn);
-        if (!hasCode) lost.push(fn.name);
+        const outcome = await this.backfillFunction(fn);
+        if (outcome == "no-local-files") unrecoverable.push(fn.name);
       } catch (e) {
-        this.logger.error(`[backfill] Failed for function ${fn.name}: ${errMsg(e)}`);
+        this.logger.error(
+          `[backfill] Failed for function ${fn.name}, retrying on next start: ${errMsg(e)}`
+        );
       }
     });
 
-    if (lost.length) {
+    if (unrecoverable.length) {
       this.logger.warn(
-        `[backfill] No stored assets and no local files for: ${lost.join(", ")}. Their code cannot be restored.`
+        `[backfill] Functions without stored assets and without local files to upload, their code cannot be restored: ${unrecoverable.join(", ")}`
       );
     }
   }
 
-  private async backfillFunction(fn: Function & {_id: ObjectId}): Promise<boolean> {
+  private async backfillFunction(fn: Function & {_id: ObjectId}): Promise<BackfillOutcome> {
     const records = await this.assetService.findByFunction(fn._id);
-    if (records.length > 0) return true;
+    if (records.length > 0) return "already-stored";
 
     const uploaded: Array<Omit<FunctionAsset, "functionId" | "_id">> = [];
     for (const filename of [this.preparationService.indexFilename(fn), "package.json"] as const) {
@@ -188,7 +192,7 @@ export class FunctionAssetReconciler {
       if (!data) continue;
       uploaded.push(await this.uploadAsset(fn.name, filename, data));
     }
-    if (uploaded.length == 0) return false;
+    if (uploaded.length == 0) return "no-local-files";
 
     try {
       for (const {filename, key, hash, size, uploadDate, strategy} of uploaded) {
@@ -217,7 +221,7 @@ export class FunctionAssetReconciler {
     this.logger.log(
       `[backfill] Uploaded ${uploaded.map(({filename}) => `${fn.name}/${filename}`).join(", ")}`
     );
-    return true;
+    return "uploaded";
   }
 
   async reconcileFunction(fn: Function & {_id: ObjectId}): Promise<void> {
