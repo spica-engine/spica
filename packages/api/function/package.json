@@ -107,11 +107,11 @@
     "@spica-server/secret": "workspace:*",
     "@spica-server/secret-services": "workspace:*",
     "@spica-server/status": "workspace:*",
-    "axios": "^1.8.4",
+    "axios": "^1.18.0",
     "bson": "^6.10.4",
     "rimraf": "^6.0.1",
     "rxjs": "^7.8.2",
-    "ws": "^8.18.3",
+    "ws": "^8.21.1",
     "yaml": "^2.7.1"
   },
   "devDependencies": {
