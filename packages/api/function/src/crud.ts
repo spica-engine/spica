@@ -258,6 +258,27 @@ export namespace dependencies {
     return engine.getPackages(fn);
   }
 
+  async function storeDependencyAssets(
+    engine: FunctionEngine,
+    fn: Function,
+    change: () => Promise<void>
+  ) {
+    await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
+      await change();
+      const pkgContent = await engine.read(fn, "dependency");
+      return Buffer.from(pkgContent, "utf-8");
+    });
+
+    const lockfile = await engine.readLockfile(fn);
+    if (lockfile) {
+      await engine.storeAssets(
+        fn as Function & {_id: any},
+        "package-lock.json",
+        async () => lockfile
+      );
+    }
+  }
+
   export async function install(engine: FunctionEngine, fn: Function, deps: Dependency | string[]) {
     if (!deps) {
       throw new BadRequestException("Dependency name is required.");
@@ -274,15 +295,7 @@ export namespace dependencies {
     }
 
     if (deps.length) {
-      await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
-        await engine.installPackages(fn, deps as string[]);
-        const pkgContent = await engine.read(fn, "dependency");
-        return Buffer.from(pkgContent, "utf-8");
-      });
-      await engine.storeAssets(fn as Function & {_id: any}, "package-lock.json", async () => {
-        const lockContent = await engine.read(fn, "lockfile");
-        return Buffer.from(lockContent, "utf-8");
-      });
+      await storeDependencyAssets(engine, fn, () => engine.installPackages(fn, deps as string[]));
       await engine.refreshLocally(fn._id.toString());
     }
   }
@@ -317,7 +330,7 @@ export namespace dependencies {
       throw new NotFoundException("Could not find the function.");
     }
 
-    await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
+    await storeDependencyAssets(engine, fn, async () => {
       await Promise.all(
         deps.map(dep =>
           engine.removePackage(fn, dep).catch(error => {
@@ -325,12 +338,6 @@ export namespace dependencies {
           })
         )
       );
-      const pkgContent = await engine.read(fn, "dependency");
-      return Buffer.from(pkgContent, "utf-8");
-    });
-    await engine.storeAssets(fn as Function & {_id: any}, "package-lock.json", async () => {
-      const lockContent = await engine.read(fn, "lockfile");
-      return Buffer.from(lockContent, "utf-8");
     });
 
     await engine.refreshLocally(fn._id.toString());
