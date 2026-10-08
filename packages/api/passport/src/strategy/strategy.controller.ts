@@ -98,7 +98,7 @@ export class StrategyController {
       throw new BadRequestException("Type and identity provider of a strategy cannot be changed.");
     }
 
-    const service = this.strategies.find(existingStrategy.type, existingStrategy.options.idp);
+    const service = this.strategies.find(existingStrategy.type, existingStrategy.options?.idp);
 
     let preparedStrategy;
 
