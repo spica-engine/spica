@@ -78,7 +78,7 @@
           "attributes": {
             "type": "object",
             "title": "User attributes",
-            "description": "Maps user attribute names to the fields of the user information response",
+            "description": "Maps user attribute names to the top-level fields of the user information response. Nested fields are not supported.",
             "propertyNames": {"pattern": "^[^.$][^.]*$"},
             "additionalProperties": {"type": "string", "minLength": 1}
           }

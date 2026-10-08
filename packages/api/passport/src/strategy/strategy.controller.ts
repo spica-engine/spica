@@ -93,7 +93,7 @@ export class StrategyController {
 
     if (
       strategy.type != existingStrategy.type ||
-      strategy.options.idp != existingStrategy.options.idp
+      strategy.options?.idp != existingStrategy.options?.idp
     ) {
       throw new BadRequestException("Type and identity provider of a strategy cannot be changed.");
     }
