@@ -1,17 +1,13 @@
 import {Injectable} from "@nestjs/common";
-import {IncomingOAuthPreset, OAuthStrategy} from "@spica-server/interface-passport";
+import {IncomingOAuthPreset} from "@spica-server/interface-passport";
 import {CustomOAuthService} from "./custom.js";
 
 @Injectable()
 export class GoogleOAuthService extends CustomOAuthService {
   _idp = "google";
 
-  async getIdentifier(strategy: OAuthStrategy, tokenResponse) {
-    const {user} = await super.getIdentifier(strategy, tokenResponse);
-    const attributes = Object.fromEntries(
-      ["name", "email"].filter(key => user?.[key] !== undefined).map(key => [key, user[key]])
-    );
-    return {user, attributes};
+  protected getAttributeMapping() {
+    return {name: "name", email: "email"};
   }
 
   prepareToInsert(strategy: IncomingOAuthPreset) {

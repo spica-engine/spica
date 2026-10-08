@@ -827,6 +827,46 @@ describe("E2E Tests", () => {
         await req.post("/passport/strategy", strategy, {Authorization: `IDENTITY ${token}`});
       });
 
+      async function loginWithStrategy(strategyId: string) {
+        const {body: strategy} = await req.get(`/passport/user/strategy/${strategyId}/url`);
+        const loginResponse = req.get("/passport/login", {state: strategy.state});
+
+        const {params} = parseUrl(strategy.url);
+        const {url: completeEndpoint, params: completeParams} = parseUrl(
+          params.redirect_uri,
+          publicUrl
+        );
+        await req.get(completeEndpoint, {...completeParams, code: "code", state: params.state});
+
+        const res = await loginResponse;
+        expect(res.statusCode).toEqual(200);
+        return res.body.token as string;
+      }
+
+      async function getUser(username: string) {
+        const {body: users} = await req.get(
+          "/passport/user",
+          {filter: JSON.stringify({username})},
+          {Authorization: `IDENTITY ${token}`}
+        );
+        expect(users.length).toEqual(1);
+        return users[0];
+      }
+
+      async function getTokenPayload(userToken: string) {
+        const {body} = await req.get("/passport/user/verify", {}, {authorization: userToken});
+        return body;
+      }
+
+      async function getCustomStrategyId() {
+        const {body: strategies} = await req.get("/passport/user/strategies");
+        return strategies.find(s => s.name == strategy.name)._id as string;
+      }
+
+      function updateStrategy(id: string, body: object) {
+        return req.put(`/passport/strategy/${id}`, body, {Authorization: `IDENTITY ${token}`});
+      }
+
       it("should list strategies", async () => {
         const {body: strategies} = await req.get("/passport/user/strategies");
         expect(strategies).toEqual([
@@ -868,6 +908,7 @@ describe("E2E Tests", () => {
                 {authorization: res.body.token}
               );
               expect(body.username).toEqual("testuser@testuser.com");
+              expect(body.attributes).toBeUndefined();
               done();
             });
 
@@ -907,6 +948,96 @@ describe("E2E Tests", () => {
         expect(body.message).toBe("Strategy type is not supported for identities.");
       });
 
+      describe("Custom attributes", () => {
+        it("should store mapped attributes after the mapping is added with an update", async () => {
+          const id = await getCustomStrategyId();
+
+          const {statusCode} = await updateStrategy(id, {
+            ...strategy,
+            options: {
+              ...strategy.options,
+              attributes: {email: "email", avatar: "picture"}
+            }
+          });
+          expect(statusCode).toEqual(200);
+
+          const userToken = await loginWithStrategy(id);
+
+          const expected = {email: "testuser@testuser.com", avatar: "url"};
+          const user = await getUser("testuser@testuser.com");
+          expect(user.attributes).toEqual(expected);
+          expect((await getTokenPayload(userToken)).attributes).toEqual(expected);
+        });
+
+        it("should reject attribute names containing dots", async () => {
+          const {statusCode} = await updateStrategy(await getCustomStrategyId(), {
+            ...strategy,
+            options: {...strategy.options, attributes: {"profile.name": "name"}}
+          });
+          expect(statusCode).toEqual(400);
+        });
+
+        it("should reject attributes mapping on preset strategies", async () => {
+          const {statusCode} = await req.post(
+            "/passport/strategy",
+            {
+              type: "oauth",
+              name: "Google oauth",
+              title: "Google oauth",
+              icon: "login",
+              options: {
+                idp: "google",
+                client_id: "client_id",
+                client_secret: "client_secret",
+                attributes: {email: "email"}
+              }
+            },
+            {Authorization: `IDENTITY ${token}`}
+          );
+          expect(statusCode).toEqual(400);
+        });
+      });
+
+      describe("Update", () => {
+        it("should update preset strategy", async () => {
+          const preset = {
+            type: "oauth",
+            name: "Google oauth",
+            title: "Google oauth",
+            icon: "login",
+            options: {idp: "google", client_id: "client_id", client_secret: "client_secret"}
+          };
+          const {body: inserted} = await req.post("/passport/strategy", preset, {
+            Authorization: `IDENTITY ${token}`
+          });
+
+          const {statusCode, body} = await updateStrategy(inserted._id, {
+            ...preset,
+            options: {...preset.options, client_id: "new_client_id"}
+          });
+
+          expect(statusCode).toEqual(200);
+          expect(body.options.code.params.client_id).toEqual("new_client_id");
+          expect(body.options.code.params.redirect_uri).toEqual(
+            `${publicUrl}/passport/user/strategy/${inserted._id}/complete`
+          );
+        });
+
+        it("should not allow changing the identity provider", async () => {
+          const id = await getCustomStrategyId();
+
+          const {statusCode, body} = await updateStrategy(id, {
+            ...strategy,
+            options: {idp: "google", client_id: "client_id", client_secret: "client_secret"}
+          });
+
+          expect(statusCode).toEqual(400);
+          expect(body.message).toEqual(
+            "Type and identity provider of a strategy cannot be changed."
+          );
+        });
+      });
+
       describe("Google", () => {
         let strategyId: string;
 
@@ -933,36 +1064,7 @@ describe("E2E Tests", () => {
           strategyId = body._id;
         });
 
-        async function loginWithGoogle() {
-          const {body: strategy} = await req.get(`/passport/user/strategy/${strategyId}/url`);
-          const loginResponse = req.get("/passport/login", {state: strategy.state});
-
-          const {params} = parseUrl(strategy.url);
-          const {url: completeEndpoint, params: completeParams} = parseUrl(
-            params.redirect_uri,
-            publicUrl
-          );
-          await req.get(completeEndpoint, {...completeParams, code: "code", state: params.state});
-
-          const res = await loginResponse;
-          expect(res.statusCode).toEqual(200);
-          return res.body.token as string;
-        }
-
-        async function getUser(username: string) {
-          const {body: users} = await req.get(
-            "/passport/user",
-            {filter: JSON.stringify({username})},
-            {Authorization: `IDENTITY ${token}`}
-          );
-          expect(users.length).toEqual(1);
-          return users[0];
-        }
-
-        async function getTokenPayload(userToken: string) {
-          const {body} = await req.get("/passport/user/verify", {}, {authorization: userToken});
-          return body;
-        }
+        const loginWithGoogle = () => loginWithStrategy(strategyId);
 
         it("should request profile scope", async () => {
           const {body: strategy} = await req.get(`/passport/user/strategy/${strategyId}/url`);
