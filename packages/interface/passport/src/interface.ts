@@ -46,6 +46,7 @@ interface OAuthOptions {
   access_token: OAuthRequestDetails;
   identifier: OAuthRequestDetails;
   revoke?: OAuthRequestDetails;
+  attributes?: Record<string, string>;
 }
 
 export interface IncomingCustomOAuth extends Strategy {

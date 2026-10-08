@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -84,14 +85,27 @@ export class StrategyController {
   ) {
     delete strategy._id;
 
-    const service = this.strategies.find(strategy.type);
+    const existingStrategy = await this.strategy.findOne({_id: id});
+
+    if (!existingStrategy) {
+      throw new NotFoundException("Strategy does not exist.");
+    }
+
+    if (
+      strategy.type != existingStrategy.type ||
+      strategy.options.idp != existingStrategy.options.idp
+    ) {
+      throw new BadRequestException("Type and identity provider of a strategy cannot be changed.");
+    }
+
+    const service = this.strategies.find(existingStrategy.type, existingStrategy.options.idp);
 
     let preparedStrategy;
 
     try {
       preparedStrategy = service.prepareToInsert(strategy);
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new BadRequestException(error.message);
     }
 
     let updatedStrategy = await this.strategy.findOneAndReplace({_id: id}, preparedStrategy, {

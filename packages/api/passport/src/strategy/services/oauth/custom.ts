@@ -50,8 +50,24 @@ export class CustomOAuthService implements OAuthStrategyService {
     };
 
     return this.sendRequest(strategy.options.identifier).then(user => {
-      return {user};
+      return {user, attributes: this.pickAttributes(strategy, user)};
     });
+  }
+
+  protected getAttributeMapping(strategy: OAuthStrategy): Record<string, string> {
+    return strategy.options.attributes || {};
+  }
+
+  protected pickAttributes(strategy: OAuthStrategy, user: unknown): Record<string, unknown> {
+    if (!user || typeof user != "object") {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(this.getAttributeMapping(strategy))
+        .filter(([, field]) => Object.prototype.hasOwnProperty.call(user, field))
+        .map(([attribute, field]) => [attribute, user[field]])
+    );
   }
 
   async assert(strategy: OAuthStrategy, body?: unknown, code?: string): Promise<any> {

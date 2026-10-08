@@ -74,6 +74,13 @@
           "identifier": {
             "$ref": "#/definitions/requestDetails",
             "title": "Getting user information by using access token"
+          },
+          "attributes": {
+            "type": "object",
+            "title": "User attributes",
+            "description": "Maps user attribute names to the fields of the user information response",
+            "propertyNames": {"pattern": "^[^.$][^.]*$"},
+            "additionalProperties": {"type": "string", "minLength": 1}
           }
         },
         "required": ["code", "access_token", "identifier"],

@@ -50,7 +50,7 @@ export class FacebookOAuthService extends CustomOAuthService {
     };
 
     return this.sendRequest(strategy.options.identifier).then(user => {
-      return {user};
+      return {user, attributes: this.pickAttributes(strategy, user)};
     });
   }
 }
