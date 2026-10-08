@@ -255,6 +255,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  readLockfile(fn: Function): Promise<Buffer | null> {
+    return this.preparationService.readFileBuffer(fn, "package-lock.json");
+  }
+
   read(fn: Function, scope: "index" | "dependency" | "tsconfig"): Promise<string> {
     let filename: string;
     switch (scope) {

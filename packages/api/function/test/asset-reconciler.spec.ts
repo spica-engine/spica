@@ -597,8 +597,42 @@ describe("FunctionAssetReconciler.backfill", () => {
     });
   });
 
-  it("should not read or upload anything for a function that has stored assets", async () => {
-    mockDeps.assetService.findByFunction.mockResolvedValue([{filename: "package.json"}]);
+  it("should upload only the files that have no stored record", async () => {
+    mockDeps.assetService.findByFunction.mockResolvedValue([
+      {filename: "index.ts"},
+      {filename: "package.json"}
+    ]);
+    const lockfile = Buffer.from("lock");
+    mockDeps.preparationService.readFileBuffer.mockImplementation(async (_fn, filename) =>
+      filename == "package-lock.json" ? lockfile : (files[filename] ?? null)
+    );
+    const reconciler = buildReconciler();
+
+    await reconciler.backfill([mockFn]);
+
+    expect(mockDeps.preparationService.readFileBuffer).toHaveBeenCalledTimes(1);
+    expect(mockDeps.preparationService.readFileBuffer).toHaveBeenCalledWith(
+      mockFn,
+      "package-lock.json"
+    );
+    expect(mockDeps.strategy.write).toHaveBeenCalledTimes(1);
+    expect(mockDeps.strategy.write).toHaveBeenCalledWith(
+      "functions/my-function/package-lock.json",
+      lockfile
+    );
+    expect(mockDeps.assetService.upsertAsset).toHaveBeenCalledWith(
+      mockFn._id,
+      "package-lock.json",
+      expect.objectContaining({hash: hashBuffer(lockfile)})
+    );
+  });
+
+  it("should not read or upload anything when every file has a stored record", async () => {
+    mockDeps.assetService.findByFunction.mockResolvedValue([
+      {filename: "index.ts"},
+      {filename: "package.json"},
+      {filename: "package-lock.json"}
+    ]);
     const reconciler = buildReconciler();
 
     await reconciler.backfill([mockFn]);
@@ -623,59 +657,32 @@ describe("FunctionAssetReconciler.backfill", () => {
     );
   });
 
-  it("should write no record when an upload fails, and complete the function on the next run", async () => {
+  it("should keep files recorded before a failure and upload the rest on the next run", async () => {
     mockDeps.strategy.write.mockImplementation(async key => {
       if (key == "functions/my-function/package.json") throw new Error("bucket hiccup");
     });
     const reconciler = buildReconciler();
+    jest.spyOn((reconciler as any).logger, "error").mockImplementation(() => {});
 
     await reconciler.backfill([mockFn]);
 
-    expect(mockDeps.assetService.upsertAsset).not.toHaveBeenCalled();
+    expect(mockDeps.assetService.upsertAsset.mock.calls.map(call => call[1])).toEqual(["index.ts"]);
 
+    mockDeps.assetService.upsertAsset.mockClear();
+    mockDeps.assetService.findByFunction.mockResolvedValue([{filename: "index.ts"}]);
     mockDeps.strategy.write.mockResolvedValue(undefined);
     await reconciler.backfill([mockFn]);
 
     expect(mockDeps.assetService.upsertAsset.mock.calls.map(call => call[1])).toEqual([
-      "index.ts",
       "package.json"
     ]);
   });
 
-  it("should remove the written records when recording a later file fails", async () => {
-    mockDeps.assetService.upsertAsset
-      .mockResolvedValueOnce(undefined)
-      .mockRejectedValueOnce(new Error("mongo hiccup"));
-    const reconciler = buildReconciler();
-    const error = jest.spyOn((reconciler as any).logger, "error").mockImplementation(() => {});
-
-    await reconciler.backfill([mockFn]);
-
-    expect(mockDeps.assetService.deleteMany).toHaveBeenCalledWith({
-      $or: [
-        {functionId: mockFn._id, filename: "index.ts", hash: hashBuffer(files["index.ts"])},
-        {functionId: mockFn._id, filename: "package.json", hash: hashBuffer(files["package.json"])}
-      ]
-    });
-    expect(error).toHaveBeenCalledWith(expect.stringContaining("mongo hiccup"));
-  });
-
-  it("should log but not throw when the rollback itself fails", async () => {
-    mockDeps.assetService.upsertAsset.mockRejectedValueOnce(new Error("mongo hiccup"));
-    mockDeps.assetService.deleteMany.mockRejectedValueOnce(new Error("still down"));
-    const reconciler = buildReconciler();
-    const error = jest.spyOn((reconciler as any).logger, "error").mockImplementation(() => {});
-
-    await expect(reconciler.backfill([mockFn])).resolves.toBeUndefined();
-
-    expect(error).toHaveBeenCalledWith(expect.stringContaining("still down"));
-  });
-
-  it("should warn only about functions with neither stored assets nor local files", async () => {
-    const stored = {...mockFn, _id: new ObjectId(), name: "stored"};
+  it("should warn about each file with neither a stored copy nor a local file", async () => {
+    const partial = {...mockFn, _id: new ObjectId(), name: "partial"};
     const failing = {...mockFn, _id: new ObjectId(), name: "failing"};
     mockDeps.assetService.findByFunction.mockImplementation(async id => {
-      if (id == stored._id) return [{filename: "index.ts"}];
+      if (id == partial._id) return [{filename: "index.ts"}];
       if (id == failing._id) throw new Error("db");
       return [];
     });
@@ -684,10 +691,28 @@ describe("FunctionAssetReconciler.backfill", () => {
     const warn = jest.spyOn((reconciler as any).logger, "warn").mockImplementation(() => {});
     jest.spyOn((reconciler as any).logger, "error").mockImplementation(() => {});
 
-    await reconciler.backfill([mockFn, stored, failing]);
+    await reconciler.backfill([mockFn, partial, failing]);
 
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toMatch(/cannot be restored: my-function$/);
+    const reported = warn.mock.calls[0][0].split("cannot be restored: ")[1].split(", ").sort();
+    expect(reported).toEqual([
+      "my-function/index.ts",
+      "my-function/package.json",
+      "partial/package.json"
+    ]);
+  });
+
+  it("should not warn about a missing lockfile", async () => {
+    const reconciler = buildReconciler();
+    const warn = jest.spyOn((reconciler as any).logger, "warn").mockImplementation(() => {});
+
+    await reconciler.backfill([mockFn]);
+
+    expect(mockDeps.preparationService.readFileBuffer).toHaveBeenCalledWith(
+      mockFn,
+      "package-lock.json"
+    );
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it("should not warn when every function is already stored or uploaded", async () => {
