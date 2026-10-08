@@ -60,3 +60,7 @@ Every other punctuation character here survives all of those contexts unaltered.
   -}}
   {{- printf "%s%s" (randAlphaNum 1) $body -}}
 {{- end -}}
+
+{{- define "application.is-deployment" -}}
+{{- if or (eq .Values.application.diskAccessMode "ReadWriteMany") (eq .Values.application.diskAccessMode "None") -}}true{{- end -}}
+{{- end -}}

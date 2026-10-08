@@ -77,6 +77,8 @@ application:
   #   Cache-Control: "no-store"
   #   X-Frame-Options: "DENY"
   responseHeaders: {}
+  # ReadWriteOnce (StatefulSet + PVC) | ReadWriteMany (Deployment + shared PVC) | None (Deployment, /data is an emptyDir).
+  # None requires non-default function asset and storage strategies (e.g. awss3 via application.args), otherwise everything under /data is lost on restart.
   diskAccessMode: ReadWriteOnce
   serviceAccountName: default
   podAnnotations: {}

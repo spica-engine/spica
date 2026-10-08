@@ -13,7 +13,7 @@ spec:
 ---
 {{- end}}
 apiVersion: apps/v1
-{{- if eq .Values.application.diskAccessMode "ReadWriteMany"}}
+{{- if include "application.is-deployment" . }}
 kind: Deployment
 {{- else }}
 kind: StatefulSet
@@ -29,7 +29,7 @@ metadata:
     app.kubernetes.io/part-of: {{ .Chart.Name }}
     app.kubernetes.io/managed-by: helm
 spec:
-  {{- if ne .Values.application.diskAccessMode "ReadWriteMany"}}
+  {{- if not (include "application.is-deployment" .) }}
   serviceName: {{ .Release.Name }}-application
   {{- end }}
   replicas: {{ .Values.application.replicas }}
@@ -203,6 +203,10 @@ spec:
       - name: {{ .Release.Name }}-data
         persistentVolumeClaim:
           claimName: {{ .Release.Name }}-data
+      {{- else if eq .Values.application.diskAccessMode "None"}}
+      volumes:
+      - name: {{ .Release.Name }}-data
+        emptyDir: {}
       {{- else}}
   volumeClaimTemplates:
     - metadata:

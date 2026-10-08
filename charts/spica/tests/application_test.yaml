@@ -485,6 +485,30 @@ tests:
           path: spec.volumeClaimTemplates[0].spec.accessModes[0]
           value: ReadWriteOnce
 
+  - it: should render a single Deployment with an emptyDir data volume for diskAccessMode None
+    template: templates/application.yaml
+    set:
+      application.diskAccessMode: None
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - notExists:
+          path: spec.serviceName
+      - notExists:
+          path: spec.volumeClaimTemplates
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: release-name-data
+      - exists:
+          path: spec.template.spec.volumes[0].emptyDir
+      - notExists:
+          path: spec.template.spec.volumes[0].persistentVolumeClaim
+      - equal:
+          path: spec.template.spec.containers[1].volumeMounts[0].mountPath
+          value: /data
+
   - it: should reference application secrets for PASSPORT_SECRET env var
     template: templates/application.yaml
     documentSelector:
