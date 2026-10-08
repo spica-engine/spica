@@ -28,7 +28,7 @@ function errMsg(e: unknown): string {
 
 const BACKFILL_CONCURRENCY = 4;
 
-type BackfillOutcome = "already-stored" | "uploaded" | "no-local-files";
+const REGENERATED_BY_INSTALL = new Set<FunctionAssetFilename>(["package-lock.json"]);
 
 async function forEachWithConcurrency<T>(
   items: T[],
@@ -120,6 +120,7 @@ export class FunctionAssetReconciler {
     let prepareStep: () => Promise<void>;
     switch (prevAsset.filename) {
       case "package.json":
+      case "package-lock.json":
         prepareStep = () => this.preparationService.preparePackageJson(fn);
         break;
       case "index.ts":
@@ -166,8 +167,8 @@ export class FunctionAssetReconciler {
     const unrecoverable: string[] = [];
     await forEachWithConcurrency(fns, BACKFILL_CONCURRENCY, async fn => {
       try {
-        const outcome = await this.backfillFunction(fn);
-        if (outcome == "no-local-files") unrecoverable.push(fn.name);
+        const missing = await this.backfillFunction(fn);
+        unrecoverable.push(...missing.map(filename => `${fn.name}/${filename}`));
       } catch (e) {
         this.logger.error(
           `[backfill] Failed for function ${fn.name}, retrying on next start: ${errMsg(e)}`
@@ -177,51 +178,50 @@ export class FunctionAssetReconciler {
 
     if (unrecoverable.length) {
       this.logger.warn(
-        `[backfill] Functions without stored assets and without local files to upload, their code cannot be restored: ${unrecoverable.join(", ")}`
+        `[backfill] Files without a stored copy and without a local file to upload, they cannot be restored: ${unrecoverable.join(", ")}`
       );
     }
   }
 
-  private async backfillFunction(fn: Function & {_id: ObjectId}): Promise<BackfillOutcome> {
+  private async backfillFunction(fn: Function & {_id: ObjectId}): Promise<FunctionAssetFilename[]> {
     const records = await this.assetService.findByFunction(fn._id);
-    if (records.length > 0) return "already-stored";
+    const stored = new Set(records.map(({filename}) => filename));
+    const candidates: FunctionAssetFilename[] = [
+      this.preparationService.indexFilename(fn),
+      "package.json",
+      "package-lock.json"
+    ];
 
-    const uploaded: Array<Omit<FunctionAsset, "functionId" | "_id">> = [];
-    for (const filename of [this.preparationService.indexFilename(fn), "package.json"] as const) {
+    const uploaded: FunctionAssetFilename[] = [];
+    const missing: FunctionAssetFilename[] = [];
+    for (const filename of candidates.filter(filename => !stored.has(filename))) {
       const data = await this.preparationService.readFileBuffer(fn, filename);
-      if (!data) continue;
-      uploaded.push(await this.uploadAsset(fn.name, filename, data));
-    }
-    if (uploaded.length == 0) return "no-local-files";
-
-    try {
-      for (const {filename, key, hash, size, uploadDate, strategy} of uploaded) {
-        this.tracker.stamp({functionId: fn._id.toHexString(), filename, hash});
-        await this.assetService.upsertAsset(fn._id, filename, {
-          key,
-          hash,
-          size,
-          uploadDate,
-          strategy
-        });
+      if (!data) {
+        if (!REGENERATED_BY_INSTALL.has(filename)) missing.push(filename);
+        continue;
       }
-    } catch (e) {
-      await this.assetService
-        .deleteMany({
-          $or: uploaded.map(({filename, hash}) => ({functionId: fn._id, filename, hash}))
-        })
-        .catch(rollbackError =>
-          this.logger.error(
-            `[backfill] Could not roll back records of ${fn.name}: ${errMsg(rollbackError)}`
-          )
-        );
-      throw e;
+      const {key, hash, size, uploadDate, strategy} = await this.uploadAsset(
+        fn.name,
+        filename,
+        data
+      );
+      this.tracker.stamp({functionId: fn._id.toHexString(), filename, hash});
+      await this.assetService.upsertAsset(fn._id, filename, {
+        key,
+        hash,
+        size,
+        uploadDate,
+        strategy
+      });
+      uploaded.push(filename);
     }
 
-    this.logger.log(
-      `[backfill] Uploaded ${uploaded.map(({filename}) => `${fn.name}/${filename}`).join(", ")}`
-    );
-    return "uploaded";
+    if (uploaded.length) {
+      this.logger.log(
+        `[backfill] Uploaded ${uploaded.map(filename => `${fn.name}/${filename}`).join(", ")}`
+      );
+    }
+    return missing;
   }
 
   async reconcileFunction(fn: Function & {_id: ObjectId}): Promise<void> {
@@ -252,10 +252,13 @@ export class FunctionAssetReconciler {
 
     if (changedFilenames.length === 0) return;
 
-    const needsInstall = changedFilenames.includes("package.json");
+    const needsInstall = changedFilenames.some(
+      f => f === "package.json" || f === "package-lock.json"
+    );
     const needsCompile = changedFilenames.some(f => f === "index.ts" || f === "index.mjs");
     const unknownFilenames = changedFilenames.filter(
-      f => f !== "package.json" && f !== "index.ts" && f !== "index.mjs"
+      f =>
+        f !== "package.json" && f !== "package-lock.json" && f !== "index.ts" && f !== "index.mjs"
     );
 
     if (needsInstall) {

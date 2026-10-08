@@ -1,11 +1,12 @@
 import {ObjectId} from "@spica-server/database";
 
-export type FunctionAssetFilename = "index.ts" | "index.mjs" | "package.json";
+export type FunctionAssetFilename = "index.ts" | "index.mjs" | "package.json" | "package-lock.json";
 
 export const FUNCTION_ASSET_FILENAMES: FunctionAssetFilename[] = [
   "index.ts",
   "index.mjs",
-  "package.json"
+  "package.json",
+  "package-lock.json"
 ];
 
 export interface FunctionAsset {

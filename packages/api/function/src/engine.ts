@@ -255,7 +255,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  read(fn: Function, scope: "index" | "dependency" | "tsconfig"): Promise<string> {
+  read(fn: Function, scope: "index" | "dependency" | "lockfile" | "tsconfig"): Promise<string> {
     let filename: string;
     switch (scope) {
       case "index":
@@ -263,6 +263,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         break;
       case "dependency":
         filename = "package.json";
+        break;
+      case "lockfile":
+        filename = "package-lock.json";
         break;
       case "tsconfig":
         filename = "tsconfig.json";

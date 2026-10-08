@@ -279,6 +279,10 @@ export namespace dependencies {
         const pkgContent = await engine.read(fn, "dependency");
         return Buffer.from(pkgContent, "utf-8");
       });
+      await engine.storeAssets(fn as Function & {_id: any}, "package-lock.json", async () => {
+        const lockContent = await engine.read(fn, "lockfile");
+        return Buffer.from(lockContent, "utf-8");
+      });
       await engine.refreshLocally(fn._id.toString());
     }
   }
@@ -323,6 +327,10 @@ export namespace dependencies {
       );
       const pkgContent = await engine.read(fn, "dependency");
       return Buffer.from(pkgContent, "utf-8");
+    });
+    await engine.storeAssets(fn as Function & {_id: any}, "package-lock.json", async () => {
+      const lockContent = await engine.read(fn, "lockfile");
+      return Buffer.from(lockContent, "utf-8");
     });
 
     await engine.refreshLocally(fn._id.toString());
