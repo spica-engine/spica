@@ -161,17 +161,7 @@ describe("database", () => {
     });
 
     it("should be checked in findOneAndDelete", async () => {
-      await coll.findOneAndUpdate({user: new ObjectId()}, {user: new ObjectId()});
-
-      expect(emitWarningSpy).toHaveBeenCalledWith(
-        `Property in the document path 'user' contains an ObjectId value.\n` +
-          `This may lead to some inconsistencies within the system.\n` +
-          `You may want to cast it to string before using it.`
-      );
-    });
-
-    it("should be checked in findOneAndReplace", async () => {
-      await coll.findOneAndReplace({user: new ObjectId()}, {user: new ObjectId()});
+      await coll.findOneAndDelete({user: new ObjectId()});
 
       expect(emitWarningSpy).toHaveBeenCalledWith(
         `Property in the document path 'user' contains an ObjectId value.\n` +

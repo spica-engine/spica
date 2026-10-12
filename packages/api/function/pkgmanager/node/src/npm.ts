@@ -2,7 +2,7 @@ import child_process from "child_process";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { NodePackageManager } from "./node.js";
+import {NodePackageManager} from "./node.js";
 
 function getNpmPath() {
   let npmPath: string = "npm";
@@ -14,11 +14,10 @@ export class Npm extends NodePackageManager {
     const qualifiedNames: string[] = this.normalizePackageNames(_qualifiedNames);
 
     return new Promise<void>((resolve, reject) => {
-      const proc = child_process.spawn(
-        getNpmPath(),
-        ["install", ...qualifiedNames, "--no-audit"],
-        { cwd, stdio: ["pipe", "ignore", "pipe"] }
-      );
+      const proc = child_process.spawn(getNpmPath(), ["install", ...qualifiedNames, "--no-audit"], {
+        cwd,
+        stdio: ["pipe", "ignore", "pipe"]
+      });
       let stderr: string = "";
       proc.stderr.on("data", chunk => {
         stderr += chunk.toString();
@@ -47,7 +46,7 @@ export class Npm extends NodePackageManager {
           "--cache",
           fs.mkdtempSync(path.join(os.tmpdir(), "_npm_cache_"))
         ],
-        { cwd }
+        {cwd}
       );
       let stderr: string = "";
       proc.stderr.on("data", chunk => {

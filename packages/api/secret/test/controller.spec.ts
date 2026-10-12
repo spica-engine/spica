@@ -80,6 +80,37 @@ describe("Secret", () => {
       expect(res.body.length).toBe(1);
       expect(res.body[0].key).toBe("KEY_2");
     });
+
+    /**
+     * K-13: the management endpoints take the expression language too, not only Mongo JSON. The leading
+     * `{` is what tells the two apart, so both forms stay available on the same parameter.
+     */
+    it("should filter by an expression", async () => {
+      await req.post("/secret", {key: "KEY_1", value: "val_1"});
+      await req.post("/secret", {key: "KEY_2", value: "val_2"});
+
+      const res = await req.get(`/secret`, {filter: 'key == "KEY_2"'});
+      expect(res.body.length).toBe(1);
+      expect(res.body[0].key).toBe("KEY_2");
+    });
+
+    /**
+     * The builtins want the `document.` prefix — that is the expression language's own rule, the same one
+     * bucket rules follow. A bare field name works for the comparison operators (it becomes `$key`).
+     */
+    it("should filter by an expression with regex()", async () => {
+      await req.post("/secret", {key: "ALPHA_1", value: "val_1"});
+      await req.post("/secret", {key: "BETA_1", value: "val_2"});
+
+      const res = await req.get(`/secret`, {filter: 'regex(document.key, "^ALPHA")'});
+      expect(res.body.length).toBe(1);
+      expect(res.body[0].key).toBe("ALPHA_1");
+    });
+
+    it("should reject an unparsable expression with 400", async () => {
+      const res = await req.get(`/secret`, {filter: "key =="});
+      expect(res.statusCode).toBe(400);
+    });
   });
 
   describe("findOne", () => {

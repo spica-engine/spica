@@ -15,7 +15,6 @@ describe("ScheduleEnqueuer", () => {
   let enqueuer: ScheduleEnqueuer;
   let noopTarget: event.Target;
 
-
   beforeEach(async () => {
     eventQueue = {
       enqueue: jest.fn()

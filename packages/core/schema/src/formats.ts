@@ -1,4 +1,4 @@
-import {ObjectId} from "mongodb";
+import {ObjectId} from "bson";
 import {Format} from "@spica-server/interface-core";
 import {hash, encrypt} from "@spica-server/core-encryption";
 

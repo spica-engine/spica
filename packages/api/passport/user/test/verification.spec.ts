@@ -167,6 +167,35 @@ describe("VerificationService", () => {
       });
     });
 
+    /**
+     * The timestamp has to be `created_at`, because that is the field `upsertTTLIndex` is hard-wired to on
+     * both drivers. Written under any other name the record is never a candidate for expiry, and the
+     * retention this service asks for in `afterInit` silently does nothing — which is exactly what happened
+     * while the field was called `createdAt` (D12).
+     */
+    it("should write the timestamp under the field the retention actually reads", async () => {
+      const userId = new ObjectId();
+      const email = "ttl@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-message-id"
+      });
+
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      const record: any = await verificationService.findOne({userId, destination: email});
+      expect(record.created_at).toEqual(expect.any(Date));
+      expect(record.createdAt).toBeUndefined();
+    });
+
     it("should create verification record and send SMS for phone provider", async () => {
       const userId = new ObjectId();
       const phoneNumber = "+1234567890";

@@ -1,0 +1,5 @@
+{
+  "name": "database/driver",
+  "sourceRoot": "packages/database/driver/src",
+  "projectType": "library"
+}

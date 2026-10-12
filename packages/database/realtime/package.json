@@ -22,6 +22,7 @@
     "@spica-server/database": "workspace:*",
     "@spica-server/interface-database": "workspace:*",
     "@spica-server/interface-realtime": "workspace:*",
+    "bson": "^6.10.4",
     "lodash": "^4.17.23",
     "mingo": "^6.5.6",
     "rxjs": "^7.8.2"

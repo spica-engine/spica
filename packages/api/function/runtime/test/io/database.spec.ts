@@ -1,4 +1,4 @@
-import {Test} from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
 import {Logger} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database-testing";
@@ -14,16 +14,23 @@ describe("IO Database", () => {
   let db: DatabaseService;
   let dbOutput: DatabaseOutput;
 
+  let module: TestingModule;
+
   beforeEach(async () => {
-    const module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create()]
+    module = await Test.createTestingModule({
+      imports: [DatabaseTestingModule.standalone()]
     }).compile();
     db = module.get(DatabaseService);
     dbOutput = new DatabaseOutput(db);
   });
 
+  // The module has to be closed: a test-per-module spec that never closes leaves the change-stream
+  // subscription behind, and on the PostgreSQL leg every leaked driver adds a listener to the shared
+  // `LISTEN` client (`MaxListenersExceededWarning: 11 notification listeners`). The same omission in
+  // `api/function/enqueuer` surfaced as a pool error two spec files later.
   afterEach(async () => {
-    await db.collection("function_logs").drop();
+    await db.dropCollection("function_logs");
+    await module.close();
   });
 
   describe("when the log cannot be persisted", () => {
@@ -91,8 +98,12 @@ describe("IO Database", () => {
     stdout.write(Buffer.from("this is my message"), async err => {
       await sleep(5000);
       expect(err).toEqual(null);
+      // `await`ed on purpose: unawaited, the read raced the `afterEach`'s `dropCollection` and failed
+      // with `relation "spica.function_logs" does not exist`. MongoDB answers a query against a
+      // collection being dropped with an empty result, PostgreSQL with an error — so the missing
+      // `await` was invisible on one leg and loud on the other.
       expect(
-        db
+        await db
           .collection("function_logs")
           .findOne({})
           .then(log => {
@@ -102,7 +113,7 @@ describe("IO Database", () => {
             delete log._id;
             return log;
           })
-      ).resolves.toEqual({
+      ).toEqual({
         content: "this is my message",
         channel: "stdout",
         event_id: "event",
@@ -160,7 +171,6 @@ describe("IO Database", () => {
           await db
             .collection("function_logs")
             .find()
-            .toArray()
             .then(logs => {
               logs.forEach(log => {
                 expect(log.created_at).toEqual(expect.any(Date));
@@ -197,7 +207,6 @@ describe("IO Database", () => {
           await db
             .collection("function_logs")
             .find()
-            .toArray()
             .then(logs => {
               logs.forEach(log => {
                 expect(log.created_at).toEqual(expect.any(Date));
@@ -234,7 +243,6 @@ describe("IO Database", () => {
           await db
             .collection("function_logs")
             .find()
-            .toArray()
             .then(logs => {
               logs.forEach(log => {
                 expect(log.created_at).toEqual(expect.any(Date));
@@ -271,7 +279,6 @@ describe("IO Database", () => {
           await db
             .collection("function_logs")
             .find()
-            .toArray()
             .then(logs => {
               logs.forEach(log => {
                 expect(log.created_at).toEqual(expect.any(Date));
@@ -308,7 +315,6 @@ describe("IO Database", () => {
           await db
             .collection("function_logs")
             .find()
-            .toArray()
             .then(logs => {
               logs.forEach(log => {
                 expect(log.created_at).toEqual(expect.any(Date));

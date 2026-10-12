@@ -29,6 +29,23 @@ function checkEnvironment() {
       `The <__INTERNAL__SPICA__MONGOURL__> or <__INTERNAL__SPICA__MONGODBNAME__> variables was not given.`
     );
   }
+
+  /**
+   * This package gives **raw MongoDB** access (K-11), so it has nothing to do when the backend is not
+   * MongoDB.
+   *
+   * The earlier behaviour was not silent but it was unintelligible: the scheduler passes a `postgres://…`
+   * URI under the name `__INTERNAL__SPICA__MONGOURL__` and `MongoClient` tried to parse it, giving the
+   * user an error with no visible connection to the backend. The error now says what to do.
+   */
+  const backend = process.env.__INTERNAL__SPICA__DATABASE_BACKEND__;
+  if (backend && backend !== "mongodb") {
+    throw new Error(
+      `@spica-devkit/database gives raw MongoDB access, but this instance runs on '${backend}'. ` +
+        `Use @spica-devkit/postgres for raw access on PostgreSQL, or @spica-devkit/bucket to stay ` +
+        `portable across backends.`
+    );
+  }
 }
 
 async function connect(): Promise<_mongodb.MongoClient> {

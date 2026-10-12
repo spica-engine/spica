@@ -149,11 +149,32 @@ function visitBinaryOperator(node, mode: Mode) {
     case "-":
       return visitBinaryOperatorSubtract(node, mode);
 
+    case "in":
+      return visitBinaryOperatorIn(node, mode);
+
     case "select":
       return visitBinaryOperatorSelect(node, mode);
     default:
       throw new Error(`unknown binary operator ${node.type}`);
   }
+}
+
+/**
+ * `x in y` — membership, for the predicate target (rules and ACL are evaluated in JS).
+ *
+ * A right side that is not a list **raises** rather than answering "no match". The PostgreSQL compiler
+ * refuses to compile that shape at all, and an expression that quietly evaluates to `false` on one target
+ * while failing loudly on another is the difference this project does not allow (K-4). Here the check can
+ * only happen at evaluation time, so that is where it happens.
+ */
+function visitBinaryOperatorIn(node, mode: Mode) {
+  return ctx => {
+    const haystack = visit(node.right, mode)(ctx);
+    if (!Array.isArray(haystack)) {
+      throw new Error("'in' expects a list on its right side");
+    }
+    return haystack.includes(visit(node.left, mode)(ctx));
+  };
 }
 
 function visitBinaryOperatorSelect(node, mode: Mode) {

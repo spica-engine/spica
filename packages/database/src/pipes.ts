@@ -1,5 +1,7 @@
 import {PipeTransform, HttpException, HttpStatus} from "@nestjs/common";
-import {ObjectId} from "mongodb";
+// It has to be the SAME copy as `index.ts` — otherwise, before `isId()` existed, `instanceof` checks
+// would silently take the wrong branch (see the note in index.ts).
+import {ObjectId} from "bson";
 
 export const OBJECT_ID: PipeTransform<string> = {
   transform: value => {

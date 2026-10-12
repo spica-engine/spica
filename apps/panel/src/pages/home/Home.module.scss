@@ -7,6 +7,16 @@
     padding: var(--padding-md);
   }
 
+  // The read-only backend line (K-8). Deliberately quiet: it is a fact about the installation, not a
+  // control, and there is nothing here for the user to act on.
+  .backendLine {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+
   .sectionTitle {
     font-size: var(--font-size-md);
     font-weight: 600;

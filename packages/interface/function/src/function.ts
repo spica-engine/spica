@@ -2,7 +2,7 @@ import {JSONSchema7} from "json-schema";
 import {Observable} from "rxjs";
 import {EnvVar} from "@spica-server/interface-env_var";
 import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface-secret";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "bson";
 
 export enum EnvRelation {
   Resolved,
@@ -28,6 +28,8 @@ export interface Function<
   language: string;
   warmWorkers?: number;
   concurrencyPerWorker?: number;
+  /** Orders functions in the panel's list; `function.controller.ts`'s schema carries it. */
+  order?: number;
 }
 
 export interface Triggers {

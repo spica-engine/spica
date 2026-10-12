@@ -105,6 +105,10 @@ jobs:
           - devkit:auth
           - devkit:bucket
           - devkit:database
+          # `@spica-devkit/postgres` — the PostgreSQL counterpart of `database` (K-11). Without adding
+          # it here the package stays in the repository but never reaches npm, so functions cannot
+          # install it.
+          - devkit:postgres
           - devkit:identity
           - devkit:storage
           - devkit:testing

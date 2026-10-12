@@ -1,12 +1,14 @@
 import {Query} from "mingo";
 import {ChunkKind, StreamChunk} from "@spica-server/interface-realtime";
-import {Collection, ObjectId} from "mongodb";
+// `bson`, not `mongodb`; `Collection` was imported and never used — the field is an `ICollection` (D28).
+import {ObjectId} from "bson";
 import {asyncScheduler, Observable, Subject, Subscriber, Subscription, TeardownLogic} from "rxjs";
 import {filter, bufferTime, switchMap, share} from "rxjs/operators";
 import {Readable} from "stream";
 import {DatabaseChange, FindOptions, OperationType} from "@spica-server/interface-database";
 import {levenshtein} from "./levenshtein.js";
 import {late} from "./operators.js";
+import {ICollection} from "@spica-server/database-driver";
 
 export class Emitter<T extends {_id: ObjectId}> {
   private sort = new Subject<DatabaseChange<T>>();
@@ -25,11 +27,11 @@ export class Emitter<T extends {_id: ObjectId}> {
 
   private dataHandler: (change: DatabaseChange<T>) => void;
   constructor(
-    private collection: Collection,
+    private collection: ICollection,
     private source: Readable,
     private options: FindOptions<T>
   ) {
-    this.collectionName = collection.collectionName;
+    this.collectionName = collection.name;
     this.subscribe = observer => {
       this.observer = observer;
       if (options.sort) {

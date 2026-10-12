@@ -10,7 +10,7 @@
     }
   },
   "dependencies": {
-    "@spica-server/database": "workspace:*",
-    "@spica-server/interface-bucket": "workspace:*"
+    "@spica-server/interface-bucket": "workspace:*",
+    "bson": "^6.10.4"
   }
 }

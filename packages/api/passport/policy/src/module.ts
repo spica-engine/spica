@@ -51,6 +51,5 @@ export class PolicyModule {
     @Optional() @Inject(APIKEY_POLICY_FINALIZER) apikeyFinalizer: changeFactory,
     @Optional() @Inject(IDENTITY_POLICY_FINALIZER) identityFinalizer: changeFactory,
     validator: Validator
-  ) {
-  }
+  ) {}
 }

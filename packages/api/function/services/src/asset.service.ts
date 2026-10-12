@@ -33,7 +33,7 @@ export class FunctionAssetService extends BaseCollection<FunctionAsset>(collecti
     filename: FunctionAssetFilename,
     fields: Omit<FunctionAsset, "functionId" | "filename" | "_id">
   ): Promise<void> {
-    await this._coll.updateOne(
+    await this.updateOne(
       {functionId, filename},
       {$set: {functionId, filename, ...fields}},
       {upsert: true}

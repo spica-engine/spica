@@ -1,6 +1,10 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core-schema";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
+import {
+  createAdHocCollection,
+  DatabaseService,
+  DatabaseTestingModule
+} from "@spica-server/database-testing";
 import {SchemaResolver} from "@spica-server/function-webhook/src/schema";
 
 describe("Schema Resolver", () => {
@@ -24,8 +28,25 @@ describe("Schema Resolver", () => {
   });
 
   it("should resolve the inital schema", async () => {
+    /**
+     * The collection is created **first**: MongoDB creates it itself on the first write, while a relational
+     * model needs a table (R68). The `insertOne` is only there to make the collection appear in the
+     * listing.
+     */
+    await createAdHocCollection(db, "test");
     await db.collection("test").insertOne({});
-    const schema = await resolver.resolve("http://spica.internal/webhook");
+    const schema: any = await resolver.resolve("http://spica.internal/webhook");
+
+    /**
+     * The collection enum is verified by **containment**, then pinned out of the comparison.
+     *
+     * MongoDB creates a namespace on the first write; on PostgreSQL the system tables have to be created
+     * at startup, so on a fresh database they are on the list too. The rest of the schema is identical on
+     * both backends and is compared exactly.
+     */
+    const collections = schema.properties.trigger.properties.options.properties.collection;
+    expect(collections.enum).toEqual(expect.arrayContaining(["test"]));
+    collections.enum = ["test"];
 
     expect(schema).toEqual({
       $id: "http://spica.internal/webhook",

@@ -6,9 +6,5 @@
     "types": ["node", "multer"]
   },
   "include": ["src/**/*.ts", "index.ts"],
-  "references": [
-    {
-      "path": "../../database"
-    }
-  ]
+  "references": []
 }

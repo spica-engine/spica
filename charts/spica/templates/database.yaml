@@ -1,3 +1,6 @@
+{{- /* The Mongo StatefulSet — bundled MongoDB only. Not rendered when an external URI is given or
+     when the backend is postgres (Phase 6 item 8). */ -}}
+{{- if and (include "database.bundled" .) (not (include "database.is-postgres" .)) }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -184,3 +187,4 @@ spec:
         resources:
           requests:
             storage: {{.Values.database.storageSize}}
+{{- end }}

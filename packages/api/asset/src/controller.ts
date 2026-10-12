@@ -29,7 +29,8 @@ import {
 } from "@spica-server/interface-asset";
 import {exporters, operators, validators} from "./registration.js";
 import {putConfiguration} from "./helpers.js";
-import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
+import {BOOLEAN, DEFAULT, EXPRESSION, isJSONFilter, JSONP, OR} from "@spica-server/core";
+import {filterToMatch} from "@spica-server/bucket-expression";
 import {Schema} from "@spica-server/core-schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {AssetRepManager} from "./representative.js";
@@ -46,7 +47,9 @@ export class AssetController {
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:index"))
-  find(@Query("filter", DEFAULT({}), JSONP) filter: object) {
+  find(
+    @Query("filter", DEFAULT({}), OR(isJSONFilter, JSONP, EXPRESSION(filterToMatch))) filter: object
+  ) {
     return this.service.find(filter);
   }
 

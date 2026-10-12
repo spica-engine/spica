@@ -4,19 +4,13 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
-    {
-      "path": "../../config"
-    },
     {
       "path": "../authfactor"
     },
     {
-      "path": "../../../database"
+      "path": "../../config"
     }
   ]
 }

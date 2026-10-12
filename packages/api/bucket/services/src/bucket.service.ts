@@ -11,21 +11,23 @@ import {Validator} from "@spica-server/core-schema";
 import {Default} from "@spica-server/interface-core";
 import {
   BaseCollection,
-  Collection,
   DatabaseService,
   Filter,
   FindOneAndReplaceOptions,
+  getIndexManager,
   ObjectId,
+  toIndexSpec,
   UpdateFilter,
   UpdateOptions,
   WithId
 } from "@spica-server/database";
+import {IIndexManager} from "@spica-server/database-driver";
 import {PreferenceService} from "@spica-server/preference-services";
 import {deepCopy} from "@spica-server/core-patch";
 import {BehaviorSubject, Observable, Subscription} from "rxjs";
 import {filter, switchMap} from "rxjs/operators";
 import {BucketChangeDispatcher} from "./change-dispatcher.js";
-import {getBucketDataCollection} from "./index.js";
+import {bucketIdFromCollection, getBucketDataCollection} from "./index.js";
 import {
   IndexDefinition,
   ExistingIndex,
@@ -55,11 +57,44 @@ export class BucketService
     @Optional() @Inject(BUCKET_DATA_LIMIT) private bucketDataLimit
   ) {
     super(db);
+
+    /**
+     * **In the constructor, not `onModuleInit`:** a service-level spec settles for `.compile()` and never
+     * initializes the module, and without the registration every `createCollection` raises. It is safe here
+     * because the resolver is a pure read over `schemaCache`, with no warm-up to wait for.
+     */
+    this.registerSchemaResolver();
   }
 
   async onModuleInit() {
+    await super.onModuleInit();
     await this.warmSchemaCache();
     this.startSchemaCacheWatch();
+  }
+
+  /**
+   * Registers itself with the PostgreSQL driver as the schema source: opening a collection there needs the
+   * bucket schema, and those schemas live here. The driver's constructor cannot ask for it — that would be a
+   * circular dependency — so a registration slot is used.
+   *
+   * MongoDB has no such slot and the condition is skipped: no schema is needed there.
+   *
+   * The resolution has to be **synchronous**, because `collection()` is, which works because `schemaCache` is
+   * fed by a change stream; a bucket that is not in it returns `undefined` and the driver raises.
+   */
+  private registerSchemaResolver(): void {
+    // Written structurally rather than imported: the PG adapter is loaded lazily and must stay that way.
+    const db = this.db as unknown as {
+      setSchemaResolver?: (resolver: (collection: string) => Bucket | undefined) => void;
+    };
+    if (typeof db.setSchemaResolver !== "function") {
+      return;
+    }
+
+    db.setSchemaResolver(collection => {
+      const id = bucketIdFromCollection(collection);
+      return id ? this.schemaCache.get(id) : undefined;
+    });
   }
 
   onModuleDestroy() {
@@ -159,20 +194,37 @@ export class BucketService
     return insertedBucket;
   }
 
-  findOneAndReplace(
+  async findOneAndReplace(
     filter: Filter<{_id: ObjectId}>,
     doc: Bucket,
     options?: FindOneAndReplaceOptions
   ): Promise<WithId<Bucket>> {
-    return super.findOneAndReplace(filter, doc, options).then(r => {
-      const replaced = {...doc, _id: filter._id as ObjectId} as WithId<Bucket>;
-      this.schemaCache.set(replaced._id.toString(), deepCopy(replaced));
-      this.changeDispatcher.dispatch({
-        operationType: "replace",
-        documentKey: {_id: replaced._id}
-      });
-      return this.updateIndexes(replaced).then(() => r);
-    });
+    const id = filter._id as ObjectId;
+
+    /**
+     * The old definition is read **before** the change: what `findOneAndReplace` returns is the caller's
+     * choice, and both callers ask for the document *after* it. Diffing the new definition against itself
+     * sees no change and skips the DDL silently.
+     *
+     * The cache is tried first; a cold cache falls back to the store, because a missing `previous` loses the
+     * column difference.
+     */
+    const previous = this.schemaCache.get(id.toString()) ?? (await super.findOne({_id: id}));
+
+    const result = await super.findOneAndReplace(filter, doc, options);
+
+    const replaced = {...doc, _id: id} as WithId<Bucket>;
+    this.schemaCache.set(id.toString(), deepCopy(replaced));
+    this.changeDispatcher.dispatch({operationType: "replace", documentKey: {_id: id}});
+
+    /**
+     * The change is reflected onto the **physical** schema too. A document store needs none of it — a new
+     * field appears on the first write — so `alignCollection` is undefined there and the condition is skipped.
+     */
+    await this.db.alignCollection?.(getBucketDataCollection(id), previous ?? undefined);
+
+    await this.updateIndexes(replaced);
+    return result;
   }
 
   async drop(id: string | ObjectId) {
@@ -208,9 +260,7 @@ export class BucketService
       const sub = this.changeDispatcher
         .watch()
         .pipe(
-          filter(
-            change => change.documentKey._id.equals(_id) && change.operationType !== "delete"
-          ),
+          filter(change => change.documentKey._id.equals(_id) && change.operationType !== "delete"),
           switchMap(change => super.findOne({_id: change.documentKey._id}))
         )
         .subscribe(bucket => observer.next(bucket));
@@ -248,9 +298,9 @@ export class BucketService
   }
 
   async updateIndexes(bucket: Bucket): Promise<void> {
-    const collection = this.db.collection(getBucketDataCollection(bucket._id));
+    const indexes = getIndexManager(this.db, getBucketDataCollection(bucket._id));
 
-    const existingIndexes = await collection.listIndexes().toArray();
+    const existingIndexes = await indexes.list();
 
     const existingNames = new Set(existingIndexes.map(index => index.name));
 
@@ -261,8 +311,8 @@ export class BucketService
 
     const errors = [];
 
-    await this.dropIndexes(collection, indexesToDrop, errors);
-    await this.createIndexes(collection, indexesToCreate, errors);
+    await this.dropIndexes(indexes, indexesToDrop, errors);
+    await this.createIndexes(indexes, indexesToCreate, errors);
 
     if (errors.length) {
       throw new Error(errors.map(e => e.message).join("; "));
@@ -293,21 +343,19 @@ export class BucketService
     return {indexesToDrop, indexesToCreate};
   }
 
-  async dropIndexes(collection: Collection, indexNames: string[], errors: Error[]): Promise<void> {
-    await Promise.all(
-      indexNames.map(name => collection.dropIndex(name).catch(err => errors.push(err)))
-    );
+  async dropIndexes(manager: IIndexManager, indexNames: string[], errors: Error[]): Promise<void> {
+    await Promise.all(indexNames.map(name => manager.drop(name).catch(err => errors.push(err))));
   }
 
   async createIndexes(
-    collection: Collection,
+    manager: IIndexManager,
     indexes: IndexDefinition[],
     errors: Error[]
   ): Promise<void> {
     await Promise.all(
       indexes.map(idx =>
-        collection
-          .createIndex(idx.definition, {...idx.options, name: idx.name})
+        manager
+          .create(toIndexSpec(idx.definition, idx.name), idx.options)
           .catch(err => errors.push(err))
       )
     );

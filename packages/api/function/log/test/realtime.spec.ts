@@ -74,14 +74,14 @@ describe("Realtime", () => {
       .then(r =>
         insertData.map(({created_at, ...rest}, index) => ({
           ...rest,
-          _id: r.insertedIds[index].toString(),
+          _id: r[index].toString(),
           created_at: (created_at as Date).toISOString()
         }))
       );
   });
 
   afterEach(async () => {
-    await db.collection("function_logs").drop();
+    await db.dropCollection("function_logs");
   });
 
   it("should do the initial sync", async () => {
@@ -179,7 +179,7 @@ describe("Realtime", () => {
       .then(r =>
         [insertData].map(({created_at, ...rest}) => ({
           ...rest,
-          _id: r.insertedId.toString(),
+          _id: r._id.toString(),
           created_at: created_at.toISOString()
         }))
       );

@@ -122,11 +122,36 @@ export class AWSS3 extends BaseStrategy {
     };
 
     const headerMappings: [string, (v: string) => void][] = [
-      ["if-none-match",     v => { input.IfNoneMatch = v; }],
-      ["if-match",          v => { input.IfMatch = v; }],
-      ["if-modified-since", v => { input.IfModifiedSince = new Date(v); }],
-      ["if-unmodified-since", v => { input.IfUnmodifiedSince = new Date(v); }],
-      ["range",             v => { input.Range = v; }]
+      [
+        "if-none-match",
+        v => {
+          input.IfNoneMatch = v;
+        }
+      ],
+      [
+        "if-match",
+        v => {
+          input.IfMatch = v;
+        }
+      ],
+      [
+        "if-modified-since",
+        v => {
+          input.IfModifiedSince = new Date(v);
+        }
+      ],
+      [
+        "if-unmodified-since",
+        v => {
+          input.IfUnmodifiedSince = new Date(v);
+        }
+      ],
+      [
+        "range",
+        v => {
+          input.Range = v;
+        }
+      ]
     ];
     for (const [header, apply] of headerMappings) {
       if (requestHeaders[header]) apply(requestHeaders[header]);
@@ -140,7 +165,10 @@ export class AWSS3 extends BaseStrategy {
         (
           [
             ["content-type", response.ContentType],
-            ["content-length", response.ContentLength !== undefined ? String(response.ContentLength) : undefined],
+            [
+              "content-length",
+              response.ContentLength !== undefined ? String(response.ContentLength) : undefined
+            ],
             ["etag", response.ETag],
             ["last-modified", response.LastModified?.toUTCString()],
             ["cache-control", response.CacheControl],

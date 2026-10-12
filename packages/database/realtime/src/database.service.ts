@@ -1,40 +1,71 @@
 import {Injectable, OnModuleDestroy} from "@nestjs/common";
-import {ChangeStream, DatabaseService, Document} from "@spica-server/database";
+import {DatabaseService} from "@spica-server/database";
 import {StreamChunk} from "@spica-server/interface-realtime";
-import {Observable} from "rxjs";
+import {from, Observable} from "rxjs";
+import {switchMap} from "rxjs/operators";
 import {FindOptions} from "@spica-server/interface-database";
 import {Emitter} from "./stream.js";
 import isEqual from "lodash/isEqual.js";
 import {PassThrough, Readable} from "stream";
+import {Subscription} from "rxjs";
+
+interface ChangeStreamEntry {
+  name: string;
+  subscription: Subscription;
+  hub: PassThrough;
+  /** Resolves once the stream can observe subsequent writes; see `ChangeStreamOptions.onReady`. */
+  ready: Promise<void>;
+}
 
 @Injectable()
 export class RealtimeDatabaseService implements OnModuleDestroy {
   constructor(private database: DatabaseService) {}
 
-  private changeStreams = new Map<string, {stream: ChangeStream; hub: PassThrough; cursorReadable: Readable}>();
-  private getChangeStream(name: string) {
+  private changeStreams = new Map<string, ChangeStreamEntry>();
+
+  /**
+   * One stream per collection; the subscribers are multiplexed through the `hub`.
+   *
+   * In Phase 6 `stream.stream()` (the Node `Readable` of Mongo's `ChangeStream`) was removed: in the
+   * contract `watch()` returns an `Observable`. The bridge is one line — the subscription writes to the
+   * `hub`. The payload is still the raw Mongo change document (the same rationale as D1: the payload is
+   * exposed to users).
+   */
+  private getChangeStream(name: string): ChangeStreamEntry {
     if (this.changeStreams.has(name)) {
       return this.changeStreams.get(name)!;
     }
 
-    const stream = this.database.collection(name).watch([], {
-      fullDocument: "updateLookup",
-      maxAwaitTimeMS: this.database.changeStreamAwaitTimeMS
-    });
     const hub = new PassThrough({objectMode: true});
-    // Improvement 1: unlimited listeners — prevents MaxListenersExceededWarning with many subscribers
+    // No listener limit: it prevents MaxListenersExceededWarning on a collection with many subscribers.
     hub.setMaxListeners(0);
-    // Improvement 2: store cursorReadable so it can be explicitly destroyed on teardown
-    const cursorReadable = stream.stream();
-    // Improvement 3: error handlers on both objects — unhandled 'error' events crash the process
-    cursorReadable.on("error", err =>
-      console.error(`[ChangeStream/${name}] cursor error: ${err.message}`)
-    );
-    hub.on("error", err =>
-      console.error(`[ChangeStream/${name}] hub error: ${err.message}`)
-    );
-    cursorReadable.pipe(hub);
-    const entry = {stream, hub, cursorReadable};
+    // An unhandled 'error' event brings the process down.
+    hub.on("error", err => console.error(`[ChangeStream/${name}] hub error: ${err.message}`));
+
+    let announceReady: () => void;
+    const ready = new Promise<void>(resolve => (announceReady = resolve));
+
+    const subscription = this.database
+      .collection(name)
+      .watch([], {
+        fullDocument: "updateLookup",
+        maxAwaitTimeMS: this.database.changeStreamAwaitTimeMS,
+        onReady: () => announceReady()
+      })
+      .subscribe({
+        next: change => {
+          // A last event arriving during shutdown can give `ERR_STREAM_WRITE_AFTER_END`.
+          if (hub.writable) hub.write(change);
+        },
+        error: err => {
+          console.error(`[ChangeStream/${name}] stream error: ${err.message}`);
+          // A stream that failed will never announce readiness; releasing the gate keeps the subscriber
+          // from hanging, and the error is already reported.
+          announceReady();
+        }
+      });
+
+    const entry: ChangeStreamEntry = {name, subscription, hub, ready};
     this.changeStreams.set(name, entry);
 
     return entry;
@@ -129,26 +160,33 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
     return `${name}_${JSON.stringify(options)}`;
   }
 
+  /**
+   * The initial read waits for the change stream to be live.
+   *
+   * The two have to be ordered, and the order is not free: a subscriber is told `EndOfInitial` and then
+   * writes, and on MongoDB the stream's start point is only fixed when the server runs the `aggregate` —
+   * a few milliseconds after `watch()` returns. Reading first meant the subscriber's own write could
+   * land inside that window and produce **no event at all** (D30). Deferring the initial read closes it:
+   * by the time anything is sent to the client, every later write is inside the stream's window.
+   */
   find<T extends Document = any>(
     name: string,
     options: FindOptions<T> = {}
   ): Observable<StreamChunk<T>> {
-    return this.getEmitter(name, options).getObservable();
+    const {ready} = this.getChangeStream(name);
+    return from(ready).pipe(switchMap(() => this.getEmitter(name, options).getObservable()));
   }
 
-  private closeStreamSafely(entry: {stream: ChangeStream; hub: PassThrough; cursorReadable: Readable}) {
-    if (entry && entry.stream && !entry.stream.closed) {
-      // Improvement 4: close ChangeStream first (stops data production), then destroy
-      // cursorReadable (terminates the pipe), then end hub — prevents ERR_STREAM_WRITE_AFTER_END
-      // that could occur when hub.end() is called before the pipe source is stopped.
-      return entry.stream.close().then(() => {
-        entry.cursorReadable.destroy();
-        entry.hub.end();
-      });
-    } else {
-      console.warn(
-        `Change stream for collection ${entry?.stream?.namespace?.collection} is already closed.`
-      );
+  /** The order matters: calling `hub.end()` before the production is stopped gives `ERR_STREAM_WRITE_AFTER_END`. */
+  private closeStreamSafely(entry: ChangeStreamEntry) {
+    if (!entry) return;
+
+    if (entry.subscription.closed) {
+      console.warn(`Change stream for collection ${entry.name} is already closed.`);
+      return;
     }
+
+    entry.subscription.unsubscribe();
+    entry.hub.end();
   }
 }

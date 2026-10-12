@@ -1,0 +1,159 @@
+{{- /*
+Bundled PostgreSQL — only when `database.backend: postgres` and `database.external.uri` is empty.
+
+The counterpart of the Mongo StatefulSet, but **much smaller**: there is no replica set setup, no init
+scripts and no replica auth key. A single pod: the HA path is a managed PostgreSQL (`external.uri`) or
+an operator; putting a second HA mechanism into the chart would mean writing the Mongo one over again.
+
+The service name is the **same** as Mongo's (`<release>-database`), so `database.connection-uri`
+produces a single name and nothing but the API argument changes when the backend changes.
+*/ -}}
+{{- if and (include "database.bundled" .) (include "database.is-postgres" .) }}
+{{- /*
+  `database.replicas` is **Mongo's** HA knob and it is meaningless here: this StatefulSet is single-pod by
+  design (see below). It used to be ignored silently, so `replicas: 3` produced one pod with no warning —
+  someone would have believed they had HA. The render stops instead, and the message names the path that
+  does give HA (AK-7: a CloudNativePG cluster behind `database.external.uri`).
+*/}}
+{{- if gt (int .Values.database.replicas) 1 }}
+{{- fail "database.replicas applies to the bundled MongoDB replica set only. Bundled PostgreSQL is single-pod by design; for PostgreSQL HA run an operator-managed cluster (CloudNativePG) and point database.external.uri at its -rw service — see docs/postgresql-ha.md." }}
+{{- end }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}-database
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}-database
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: helm
+spec:
+  serviceName: {{ .Release.Name }}-database
+  {{- /*
+    A single replica is **deliberate**: on PostgreSQL more than one pod means setting up a
+    replication topology (primary/standby, failover). That is not the chart's job; an installation
+    that wants more connects to a managed cluster through `external.uri`.
+
+    `0` still has to pass through: HQ suspends a tenant by setting `database.replicas: 0`, and a
+    hardcoded `1` kept the database running for every suspended PostgreSQL tenant. Anything above 1
+    has already been rejected above.
+  */}}
+  replicas: {{ int .Values.database.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Release.Name }}-database
+      app.kubernetes.io/component: database
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Release.Name }}-database
+        app.kubernetes.io/component: database
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        app.kubernetes.io/part-of: {{ .Chart.Name }}
+        app.kubernetes.io/managed-by: helm
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/databasesecrets.yaml") . | sha256sum }}
+{{- if .Values.database.functions.enabled }}
+        checksum/functions-init: {{ include (print $.Template.BasePath "/databasepostgresinit.yaml") . | sha256sum }}
+{{- end }}
+    spec:
+{{- if .Values.database.functions.enabled }}
+      volumes:
+        - name: functions-init
+          configMap:
+            name: {{ .Release.Name }}-database-functions-init
+            defaultMode: 0755
+{{- end }}
+      containers:
+        - name: database
+          image: postgres:{{ .Values.database.postgres.version }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.database.postgres.port }}
+          env:
+            {{- /*
+              The database and the user are created from these values on first startup; the API
+              reads the same secret as `DATABASE_USERNAME`/`DATABASE_PASSWORD`, so there is a single
+              source. The user becomes the **owner** of the database: the driver creates schemas and
+              tables at runtime (the K-8 bootstrap), which requires DDL privileges.
+            */}}
+            - name: POSTGRES_DB
+              value: {{ .Values.database.name | quote }}
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-spica-credentials
+                  key: spicaUsername
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-spica-credentials
+                  key: spicaPassword
+            {{- /*
+              `PGDATA` sits **below** the mount root: the root directory can contain `lost+found`
+              and initdb refuses a directory that is not empty.
+            */}}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+{{- if .Values.database.functions.enabled }}
+            {{- /* The `initdb` script reads these two; the role is created on first startup (K-11). */}}
+            - name: FUNCTIONS_USERNAME
+              value: {{ .Values.database.functions.username | default "spica_functions" | quote }}
+            - name: FUNCTIONS_PASSWORD
+              value: {{ required "database.functions.enabled is true, so database.functions.password must be provided." .Values.database.functions.password | quote }}
+{{- end }}
+          startupProbe:
+            exec:
+              command: ["pg_isready", "-U", "$(POSTGRES_USER)", "-d", "$(POSTGRES_DB)"]
+            initialDelaySeconds: {{ .Values.database.startupProbeInitialDelaySeconds }}
+            periodSeconds: {{ .Values.database.startupProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.startupProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.startupProbeFailureThreshold }}
+          livenessProbe:
+            {{- /* A TCP probe: `startupProbe` already ran a real `pg_isready`, and for everything
+                   after it, checking that the listener is up is enough — the same decision as on the
+                   Mongo side. */}}
+            tcpSocket:
+              port: {{ .Values.database.postgres.port }}
+            periodSeconds: {{ .Values.database.livenessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.livenessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.livenessProbeFailureThreshold }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.database.postgres.port }}
+            periodSeconds: {{ .Values.database.readinessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.readinessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.readinessProbeFailureThreshold }}
+          resources:
+{{ toYaml .Values.database.resources | indent 12 }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-data
+              mountPath: /var/lib/postgresql/data
+{{- if .Values.database.functions.enabled }}
+            - name: functions-init
+              mountPath: /docker-entrypoint-initdb.d
+{{- end }}
+      terminationGracePeriodSeconds: {{ .Values.database.terminationGracePeriodSeconds }}
+      {{- if .Values.database.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.database.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.database.tolerations }}
+      tolerations:
+{{ toYaml .Values.database.tolerations | indent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ .Release.Name }}-data
+      spec:
+        storageClassName: {{ .Values.database.storageClass }}
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.database.storageSize }}
+{{- end }}

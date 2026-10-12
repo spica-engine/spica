@@ -7,12 +7,21 @@
     ".": {
       "types": "./index.ts",
       "default": "./dist/index.js"
+    },
+    "./postgres-adapter": {
+      "types": "./postgres-adapter/index.ts",
+      "default": "./dist/postgres-adapter/index.js"
     }
   },
   "dependencies": {
     "@nestjs/common": "^10.4.22",
+    "@spica-server/database-driver": "workspace:*",
+    "@spica-server/database-postgres": "workspace:*",
+    "@spica-server/interface-bucket": "workspace:*",
     "@spica-server/interface-database": "workspace:*",
+    "bson": "^6.10.4",
     "mongodb": "^6.12.0",
+    "pg": "^8.13.0",
     "rxjs": "^7.8.2"
   }
 }

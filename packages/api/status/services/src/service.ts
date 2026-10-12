@@ -26,7 +26,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        return this._coll.updateOne(
+        return this.updateOne(
           {_id: currentMinuteObjectId},
           {
             $inc: {

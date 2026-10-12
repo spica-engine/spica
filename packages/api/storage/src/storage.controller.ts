@@ -21,16 +21,25 @@ import {
   Req
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {BOOLEAN, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
+import {
+  BOOLEAN,
+  EXPRESSION,
+  isJSONFilter,
+  JSONP,
+  NUMBER,
+  DEFAULT,
+  ARRAY,
+  OR
+} from "@spica-server/core";
+import {filterToMatch} from "@spica-server/bucket-expression";
 import {Schema} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {isId, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {
   ActionGuard,
   AuthGuard,
   ResourceFilter,
   SimpleActionGuard
 } from "@spica-server/passport-guard";
-import {OR} from "@spica-server/core";
 import {createStorageActivity} from "./activity.resource.js";
 import {
   BsonBodyParser,
@@ -64,7 +73,7 @@ export class StorageController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:index"))
   async find(
     @ResourceFilter() resourceFilter: object,
-    @Query("filter", JSONP) filter?: object,
+    @Query("filter", OR(isJSONFilter, JSONP, EXPRESSION(filterToMatch))) filter?: object,
     @Query("paginate", BOOLEAN) paginate?: boolean,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
@@ -80,7 +89,7 @@ export class StorageController {
     })
     resourceFilter: object,
     @Query("path") path: string,
-    @Query("filter", JSONP) filter?: object,
+    @Query("filter", OR(isJSONFilter, JSONP, EXPRESSION(filterToMatch))) filter?: object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
@@ -300,7 +309,7 @@ export class StorageController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
   async findOne(@Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string) {
     let object;
-    if (idOrName instanceof ObjectId) {
+    if (isId(idOrName)) {
       object = await this.storage.get(idOrName);
     } else {
       object = await this.storage.getByName(idOrName);
@@ -339,7 +348,7 @@ export class StorageController {
   private async resolveIdsFromElements(elements: (ObjectId | string)[]): Promise<ObjectId[]> {
     const names: string[] = [];
     for (const element of elements) {
-      if (!(element instanceof ObjectId)) {
+      if (!isId(element)) {
         names.push(element as string);
       }
     }
@@ -356,7 +365,7 @@ export class StorageController {
     }
 
     return elements.map(element => {
-      if (element instanceof ObjectId) {
+      if (isId(element)) {
         return element;
       }
       const id = nameToIdMap.get(element as string);

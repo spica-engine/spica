@@ -3,39 +3,14 @@ import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {EnvRelation, SecretRelation} from "@spica-server/interface-function";
 
 export class FunctionPipelineBuilder extends PipelineBuilder {
-  resolveEnvRelation(shouldResolve: EnvRelation) {
-    const aggregation = {
-      $lookup: {
-        from: "env_var",
-        localField: "env_vars",
-        foreignField: "_id",
-        as: "env_vars"
-      }
-    };
-    return this.attachToPipeline(shouldResolve == EnvRelation.Resolved, aggregation);
-  }
-
-  resolveSecretRelation(shouldResolve: SecretRelation) {
-    const aggregation = {
-      $lookup: {
-        from: "secret",
-        localField: "secrets",
-        foreignField: "_id",
-        as: "secrets"
-      }
-    };
-    return this.attachToPipeline(shouldResolve == SecretRelation.Resolved, aggregation);
-  }
-
-  hideSecrets(): this {
-    this.pipeline.push({
-      $project: {
-        "secrets.value": 0
-      }
-    });
-    return this;
-  }
-
+  /**
+   * `resolveEnvRelation`/`resolveSecretRelation`/`hideSecrets` were **removed**.
+   *
+   * All three worked with `$lookup`/`$project` and, because `localField` is an **array** of ids, that
+   * `$lookup` shape differed from the others. The resolution moved to `crud.ts:resolveRelations`: the same
+   * on both backends, without an N+1, and with the secret hiding explicit in the code. The rationale is
+   * written down in `crud.ts`.
+   */
   filterByEnvVars(envVars: ObjectId[]) {
     const filter = {
       $match: {

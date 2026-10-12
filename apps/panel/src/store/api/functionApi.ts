@@ -1,4 +1,4 @@
-import { baseApi } from './baseApi';
+import {baseApi} from "./baseApi";
 
 export interface ResolvedEnvVar {
   _id: string;
@@ -15,8 +15,8 @@ export interface SpicaFunction {
   _id?: string;
   name: string;
   description?: string;
-  language: 'javascript' | 'typescript';
-  runtime?: 'nodejs' | 'deno';
+  language: "javascript" | "typescript";
+  runtime?: "nodejs" | "deno";
   timeout?: number;
   warmWorkers?: number;
   concurrencyPerWorker?: number;
@@ -33,17 +33,29 @@ export interface SpicaFunction {
 
 export interface FunctionTrigger {
   handler?: string;
-  type: 'http' | 'firehose' | 'database' | 'schedule' | 'system' | 'bucket' | 'rabbitmq' | 'grpc' | (string & {});
+  type:
+    | "http"
+    | "firehose"
+    | "database"
+    | "schedule"
+    | "system"
+    | "bucket"
+    | "rabbitmq"
+    | "grpc"
+    | (string & {});
   active?: boolean;
   options: Record<string, any>;
 }
 
-export type TriggerMap = Record<string, { type: string; active?: boolean; options: Record<string, any> }>;
+export type TriggerMap = Record<
+  string,
+  {type: string; active?: boolean; options: Record<string, any>}
+>;
 
 export interface FunctionExecution {
   _id?: string;
   function: string;
-  status: 'running' | 'success' | 'failed';
+  status: "running" | "success" | "failed";
   startedAt?: Date;
   finishedAt?: Date;
   logs?: string[];
@@ -56,7 +68,7 @@ export interface FunctionLog {
   function: string;
   event_id: string;
   content: string;
-  channel: 'stderr' | 'stdout';
+  channel: "stderr" | "stdout";
   created_at: string;
   level: number;
 }
@@ -107,8 +119,8 @@ export interface FunctionExecutionListResponse {
 export interface CreateFunctionRequest {
   name: string;
   description?: string;
-  language: 'javascript' | 'typescript';
-  runtime?: 'nodejs' | 'deno';
+  language: "javascript" | "typescript";
+  runtime?: "nodejs" | "deno";
   timeout?: number;
   warmWorkers?: number;
   concurrencyPerWorker?: number;
@@ -121,8 +133,8 @@ export interface CreateFunctionRequest {
 export interface UpdateFunctionRequest {
   name?: string;
   description?: string;
-  language?: 'javascript' | 'typescript';
-  runtime?: 'nodejs' | 'deno';
+  language?: "javascript" | "typescript";
+  runtime?: "nodejs" | "deno";
   timeout?: number;
   warmWorkers?: number;
   concurrencyPerWorker?: number;
@@ -136,149 +148,173 @@ export interface ExecuteFunctionRequest {
 }
 
 export const functionApi = baseApi.injectEndpoints({
-  endpoints: (builder) => ({
-    getFunctions: builder.query<FunctionListResponse, { 
-      limit?: number; 
-      skip?: number; 
-      sort?: Record<string, 1 | -1>;
-      filter?: Record<string, any>;
-    } | void>({
-      query: (params) => ({
-        url: '/function',
-        params: params || {},
+  endpoints: builder => ({
+    getFunctions: builder.query<
+      FunctionListResponse,
+      {
+        limit?: number;
+        skip?: number;
+        sort?: Record<string, 1 | -1>;
+        filter?: Record<string, any>;
+      } | void
+    >({
+      query: params => ({
+        url: "/function",
+        params: params || {}
       }),
-      providesTags: ['Function'],
+      providesTags: ["Function"]
     }),
 
     getFunction: builder.query<SpicaFunction, string>({
-      query: (id) => `/function/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Function', id }],
+      query: id => `/function/${id}`,
+      providesTags: (result, error, id) => [{type: "Function", id}]
     }),
 
     createFunction: builder.mutation<SpicaFunction, CreateFunctionRequest>({
-      query: (body) => ({
-        url: '/function',
-        method: 'POST',
-        body,
+      query: body => ({
+        url: "/function",
+        method: "POST",
+        body
       }),
-      invalidatesTags: ['Function'],
+      invalidatesTags: ["Function"]
     }),
 
-    updateFunction: builder.mutation<SpicaFunction, { id: string; body: UpdateFunctionRequest }>({
-      query: ({ id, body }) => ({
+    updateFunction: builder.mutation<SpicaFunction, {id: string; body: UpdateFunctionRequest}>({
+      query: ({id, body}) => ({
         url: `/function/${id}`,
-        method: 'PUT',
-        body,
+        method: "PUT",
+        body
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Function', id }, 'Function'],
+      invalidatesTags: (result, error, {id}) => [{type: "Function", id}, "Function"]
     }),
 
-    deleteFunction: builder.mutation<{ message: string }, string>({
-      query: (id) => ({
+    deleteFunction: builder.mutation<{message: string}, string>({
+      query: id => ({
         url: `/function/${id}`,
-        method: 'DELETE',
+        method: "DELETE"
       }),
-      invalidatesTags: (result, error, id) => [{ type: 'Function', id }, 'Function'],
+      invalidatesTags: (result, error, id) => [{type: "Function", id}, "Function"]
     }),
 
-    executeFunction: builder.mutation<any, { id: string; body?: ExecuteFunctionRequest }>({
-      query: ({ id, body = {} }) => ({
+    executeFunction: builder.mutation<any, {id: string; body?: ExecuteFunctionRequest}>({
+      query: ({id, body = {}}) => ({
         url: `/function/${id}/run`,
-        method: 'POST',
-        body,
-      }),
+        method: "POST",
+        body
+      })
     }),
 
-    getFunctionExecutions: builder.query<FunctionExecutionListResponse, { 
-      functionId: string;
-      limit?: number; 
-      skip?: number; 
-      sort?: Record<string, 1 | -1>;
-    }>({
-      query: ({ functionId, ...params }) => ({
+    getFunctionExecutions: builder.query<
+      FunctionExecutionListResponse,
+      {
+        functionId: string;
+        limit?: number;
+        skip?: number;
+        sort?: Record<string, 1 | -1>;
+      }
+    >({
+      query: ({functionId, ...params}) => ({
         url: `/function/${functionId}/logs`,
-        params,
+        params
       }),
-      providesTags: (result, error, { functionId }) => [{ type: 'Function', id: functionId }],
+      providesTags: (result, error, {functionId}) => [{type: "Function", id: functionId}]
     }),
 
     getFunctionDependencies: builder.query<Record<string, string>, string>({
-      query: (id) => `/function/${id}/dependencies`,
-      providesTags: (result, error, id) => [{ type: 'Function', id }],
+      query: id => `/function/${id}/dependencies`,
+      providesTags: (result, error, id) => [{type: "Function", id}]
     }),
 
-    installFunctionDependencies: builder.mutation<{ message: string }, { id: string; dependencies: Record<string, string> }>({
-      query: ({ id, dependencies }) => ({
+    installFunctionDependencies: builder.mutation<
+      {message: string},
+      {id: string; dependencies: Record<string, string>}
+    >({
+      query: ({id, dependencies}) => ({
         url: `/function/${id}/dependencies`,
-        method: 'POST',
-        body: { dependencies },
+        method: "POST",
+        body: {dependencies}
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Function', id }],
+      invalidatesTags: (result, error, {id}) => [{type: "Function", id}]
     }),
 
     getFunctionTriggers: builder.query<FunctionTrigger[], string>({
-      query: (id) => `/function/${id}/triggers`,
-      providesTags: (result, error, id) => [{ type: 'Function', id }],
+      query: id => `/function/${id}/triggers`,
+      providesTags: (result, error, id) => [{type: "Function", id}]
     }),
 
-    updateFunctionTriggers: builder.mutation<SpicaFunction, { id: string; triggers: FunctionTrigger[] }>({
-      query: ({ id, triggers }) => ({
+    updateFunctionTriggers: builder.mutation<
+      SpicaFunction,
+      {id: string; triggers: FunctionTrigger[]}
+    >({
+      query: ({id, triggers}) => ({
         url: `/function/${id}/triggers`,
-        method: 'PUT',
-        body: { triggers },
+        method: "PUT",
+        body: {triggers}
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Function', id }, 'Function'],
+      invalidatesTags: (result, error, {id}) => [{type: "Function", id}, "Function"]
     }),
 
-    injectEnvVar: builder.mutation<void, { functionId: string; envVarId: string }>({
-      query: ({ functionId, envVarId }) => ({
+    injectEnvVar: builder.mutation<void, {functionId: string; envVarId: string}>({
+      query: ({functionId, envVarId}) => ({
         url: `/function/${functionId}/env-var/${envVarId}`,
-        method: 'PUT',
+        method: "PUT"
       }),
-      invalidatesTags: (result, error, { functionId }) => [{ type: 'Function', id: functionId }, 'Function'],
+      invalidatesTags: (result, error, {functionId}) => [
+        {type: "Function", id: functionId},
+        "Function"
+      ]
     }),
 
-    ejectEnvVar: builder.mutation<void, { functionId: string; envVarId: string }>({
-      query: ({ functionId, envVarId }) => ({
+    ejectEnvVar: builder.mutation<void, {functionId: string; envVarId: string}>({
+      query: ({functionId, envVarId}) => ({
         url: `/function/${functionId}/env-var/${envVarId}`,
-        method: 'DELETE',
+        method: "DELETE"
       }),
-      invalidatesTags: (result, error, { functionId }) => [{ type: 'Function', id: functionId }, 'Function'],
+      invalidatesTags: (result, error, {functionId}) => [
+        {type: "Function", id: functionId},
+        "Function"
+      ]
     }),
 
-    injectSecret: builder.mutation<void, { functionId: string; secretId: string }>({
-      query: ({ functionId, secretId }) => ({
+    injectSecret: builder.mutation<void, {functionId: string; secretId: string}>({
+      query: ({functionId, secretId}) => ({
         url: `/function/${functionId}/secret/${secretId}`,
-        method: 'PUT',
+        method: "PUT"
       }),
-      invalidatesTags: (result, error, { functionId }) => [{ type: 'Function', id: functionId }, 'Function'],
+      invalidatesTags: (result, error, {functionId}) => [
+        {type: "Function", id: functionId},
+        "Function"
+      ]
     }),
 
-    ejectSecret: builder.mutation<void, { functionId: string; secretId: string }>({
-      query: ({ functionId, secretId }) => ({
+    ejectSecret: builder.mutation<void, {functionId: string; secretId: string}>({
+      query: ({functionId, secretId}) => ({
         url: `/function/${functionId}/secret/${secretId}`,
-        method: 'DELETE',
+        method: "DELETE"
       }),
-      invalidatesTags: (result, error, { functionId }) => [{ type: 'Function', id: functionId }, 'Function'],
+      invalidatesTags: (result, error, {functionId}) => [
+        {type: "Function", id: functionId},
+        "Function"
+      ]
     }),
 
-    updateFunctionOrder: builder.mutation<SpicaFunction, { functionId: string; order: number }>({
-      query: ({ functionId, order }) => ({
+    updateFunctionOrder: builder.mutation<SpicaFunction, {functionId: string; order: number}>({
+      query: ({functionId, order}) => ({
         url: `/function/${functionId}`,
-        method: 'PATCH',
-        body: JSON.stringify({ order }),
+        method: "PATCH",
+        body: JSON.stringify({order}),
         headers: {
-          'Content-Type': 'application/merge-patch+json',
-        },
+          "Content-Type": "application/merge-patch+json"
+        }
       }),
-      invalidatesTags: (result, error, { functionId }) => [
-        { type: 'Function', id: functionId },
-        'Function',
+      invalidatesTags: (result, error, {functionId}) => [
+        {type: "Function", id: functionId},
+        "Function"
       ],
-      onQueryStarted: async ({ functionId, order }, { dispatch, queryFulfilled }) => {
+      onQueryStarted: async ({functionId, order}, {dispatch, queryFulfilled}) => {
         const patchResult = dispatch(
-          functionApi.util.updateQueryData('getFunctions', undefined, (draft) => {
-            const fn = draft.data.find((f) => f._id === functionId);
+          functionApi.util.updateQueryData("getFunctions", undefined, draft => {
+            const fn = draft.data.find(f => f._id === functionId);
             if (fn) {
               fn.order = order;
             }
@@ -290,130 +326,132 @@ export const functionApi = baseApi.injectEndpoints({
         } catch {
           patchResult.undo();
         }
-      },
+      }
     }),
 
-    changeFunctionCategory: builder.mutation<SpicaFunction, { functionId: string; category: string }>({
-      query: ({ functionId, category }) => ({
-        url: `/function/${functionId}`,
-        method: 'PATCH',
-        body: JSON.stringify({ category }),
-        headers: {
-          'Content-Type': 'application/merge-patch+json',
-        },
-      }),
-      invalidatesTags: (result, error, { functionId }) => [
-        { type: 'Function', id: functionId },
-        'Function',
-      ],
-      onQueryStarted: async ({ functionId, category }, { dispatch, queryFulfilled }) => {
-        const patchResult = dispatch(
-          functionApi.util.updateQueryData('getFunctions', undefined, (draft) => {
-            const fn = draft.data.find((f) => f._id === functionId);
-            if (fn) {
-              fn.category = category;
-            }
-          })
-        );
+    changeFunctionCategory: builder.mutation<SpicaFunction, {functionId: string; category: string}>(
+      {
+        query: ({functionId, category}) => ({
+          url: `/function/${functionId}`,
+          method: "PATCH",
+          body: JSON.stringify({category}),
+          headers: {
+            "Content-Type": "application/merge-patch+json"
+          }
+        }),
+        invalidatesTags: (result, error, {functionId}) => [
+          {type: "Function", id: functionId},
+          "Function"
+        ],
+        onQueryStarted: async ({functionId, category}, {dispatch, queryFulfilled}) => {
+          const patchResult = dispatch(
+            functionApi.util.updateQueryData("getFunctions", undefined, draft => {
+              const fn = draft.data.find(f => f._id === functionId);
+              if (fn) {
+                fn.category = category;
+              }
+            })
+          );
 
-        try {
-          await queryFulfilled;
-        } catch {
-          patchResult.undo();
+          try {
+            await queryFulfilled;
+          } catch {
+            patchResult.undo();
+          }
         }
-      },
+      }
+    ),
+
+    getFunctionIndex: builder.query<{index: string}, string>({
+      query: id => `/function/${id}/index`,
+      providesTags: (result, error, id) => [{type: "Function", id: `${id}-index`}]
     }),
 
-    getFunctionIndex: builder.query<{ index: string }, string>({
-      query: (id) => `/function/${id}/index`,
-      providesTags: (result, error, id) => [{ type: 'Function', id: `${id}-index` }],
-    }),
-
-    updateFunctionIndex: builder.mutation<void, { id: string; index: string }>({
-      query: ({ id, index }) => ({
+    updateFunctionIndex: builder.mutation<void, {id: string; index: string}>({
+      query: ({id, index}) => ({
         url: `/function/${id}/index`,
-        method: 'POST',
-        body: { index },
+        method: "POST",
+        body: {index}
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Function', id: `${id}-index` }],
+      invalidatesTags: (result, error, {id}) => [{type: "Function", id: `${id}-index`}]
     }),
 
     getFunctionInformation: builder.query<FunctionInformation, void>({
-      query: () => '/function/information',
+      query: () => "/function/information"
     }),
 
-    addFunctionDependency: builder.mutation<void, { id: string; name: string }>({
-      query: ({ id, name }) => ({
+    addFunctionDependency: builder.mutation<void, {id: string; name: string}>({
+      query: ({id, name}) => ({
         url: `/function/${id}/dependencies`,
-        method: 'POST',
-        body: { name: [name] },
+        method: "POST",
+        body: {name: [name]}
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Function', id }],
+      invalidatesTags: (result, error, {id}) => [{type: "Function", id}]
     }),
 
-    deleteFunctionDependency: builder.mutation<void, { id: string; name: string }>({
-      query: ({ id, name }) => ({
+    deleteFunctionDependency: builder.mutation<void, {id: string; name: string}>({
+      query: ({id, name}) => ({
         url: `/function/${id}/dependencies/${name}`,
-        method: 'DELETE',
+        method: "DELETE"
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Function', id }],
+      invalidatesTags: (result, error, {id}) => [{type: "Function", id}]
     }),
 
-    getFunctionLogs: builder.query<FunctionLog[], {
-      functions?: string[];
-      begin?: string;
-      end?: string;
-      limit?: number;
-      skip?: number;
-      sort?: Record<string, 1 | -1>;
-      levels?: number[];
-    }>({
-      query: (params) => {
+    getFunctionLogs: builder.query<
+      FunctionLog[],
+      {
+        functions?: string[];
+        begin?: string;
+        end?: string;
+        limit?: number;
+        skip?: number;
+        sort?: Record<string, 1 | -1>;
+        levels?: number[];
+      }
+    >({
+      query: params => {
         const searchParams = new URLSearchParams();
         if (params.functions) {
-          params.functions.forEach(fn => searchParams.append('functions', fn));
+          params.functions.forEach(fn => searchParams.append("functions", fn));
         }
-        if (params.begin) searchParams.set('begin', params.begin);
-        if (params.end) searchParams.set('end', params.end);
-        if (params.limit) searchParams.set('limit', params.limit.toString());
-        if (params.skip) searchParams.set('skip', params.skip.toString());
-        if (params.sort) searchParams.set('sort', JSON.stringify(params.sort));
+        if (params.begin) searchParams.set("begin", params.begin);
+        if (params.end) searchParams.set("end", params.end);
+        if (params.limit) searchParams.set("limit", params.limit.toString());
+        if (params.skip) searchParams.set("skip", params.skip.toString());
+        if (params.sort) searchParams.set("sort", JSON.stringify(params.sort));
         if (params.levels) {
-          params.levels.forEach(level => searchParams.append('levels', level.toString()));
+          params.levels.forEach(level => searchParams.append("levels", level.toString()));
         }
         return `/function-logs?${searchParams.toString()}`;
-      },
+      }
     }),
 
-    clearFunctionLogs: builder.mutation<void, { functionId: string; begin?: string; end?: string }>({
-      query: ({ functionId, begin, end }) => {
+    clearFunctionLogs: builder.mutation<void, {functionId: string; begin?: string; end?: string}>({
+      query: ({functionId, begin, end}) => {
         const searchParams = new URLSearchParams();
-        if (begin) searchParams.set('begin', begin);
-        if (end) searchParams.set('end', end);
+        if (begin) searchParams.set("begin", begin);
+        if (end) searchParams.set("end", end);
         return {
           url: `/function-logs/${functionId}?${searchParams.toString()}`,
-          method: 'DELETE',
+          method: "DELETE"
         };
-      },
+      }
     }),
 
-    renameFunction: builder.mutation<SpicaFunction, { newName: string; fn: SpicaFunction }>({
-      query: ({ newName, fn }) => {
-        const body = { ...fn, name: newName };
+    renameFunction: builder.mutation<SpicaFunction, {newName: string; fn: SpicaFunction}>({
+      query: ({newName, fn}) => {
+        const body = {...fn, name: newName};
         return {
           url: `/function/${fn._id}`,
-          method: 'PUT',
-          body,
+          method: "PUT",
+          body
         };
       },
-      invalidatesTags: (result, error, { fn }) => [
-        { type: 'Function', id: fn._id },
-        'Function',
-      ],
-      onQueryStarted: async ({ newName, fn }, { dispatch, queryFulfilled }) => {
+      invalidatesTags: (result, error, {fn}) => [{type: "Function", id: fn._id}, "Function"],
+      onQueryStarted: async ({newName, fn}, {dispatch, queryFulfilled}) => {
         const patchResult = dispatch(
-          functionApi.util.updateQueryData('getFunctions', undefined, (draft) => {
-            const found = draft.data.find((f) => f._id === fn._id);
+          functionApi.util.updateQueryData("getFunctions", undefined, draft => {
+            const found = draft.data.find(f => f._id === fn._id);
             if (found) {
               found.name = newName;
             }
@@ -425,10 +463,10 @@ export const functionApi = baseApi.injectEndpoints({
         } catch {
           patchResult.undo();
         }
-      },
-    }),
+      }
+    })
   }),
-  overrideExisting: false,
+  overrideExisting: false
 });
 
 export const {
@@ -456,7 +494,7 @@ export const {
   useAddFunctionDependencyMutation,
   useDeleteFunctionDependencyMutation,
   useGetFunctionLogsQuery,
-  useClearFunctionLogsMutation,
+  useClearFunctionLogsMutation
 } = functionApi;
 
 export const functionApiReducerPath = functionApi.reducerPath;

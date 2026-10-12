@@ -326,11 +326,30 @@ describe("Realtime", () => {
     describe("listening changes", () => {
       const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
 
+      /**
+       * The change message is asserted by **awaiting** it, not synchronously.
+       *
+       * The earlier version assumed the `Insert` chunk had arrived as soon as `insertBucket` returned.
+       * That means relying on the change reaching the client within a single event-loop turn: on MongoDB
+       * the change stream pushes it in one hop from an open cursor and that is enough, while on a
+       * relational backend the event is read from the outbox (trigger → `NOTIFY` → a drain query) and
+       * there is one more DB round trip. The content of the assertion is unchanged; only the waiting was
+       * brought into the pattern of the sibling tests in this file
+       * (`if (message.kind == …) { expect(…); done(); }`).
+       */
       it("should listen changes", done => {
         const ws = wsc.get("/bucket");
+        /**
+         * The insert **promise** is kept, not its result: on MongoDB the change message arrives before
+         * `insertBucket` returns (the change stream pushes from an open cursor), and after it on a
+         * relational backend. The one thing that satisfies both orders is awaiting the promise at the
+         * point of the assertion.
+         */
+        let insertPromise: Promise<Bucket>;
 
         ws.onmessage = async e => {
-          messageSpy(JSON.parse(e.data as string));
+          const message = JSON.parse(e.data as string);
+          messageSpy(message);
 
           if (e.data == lastMessage) {
             expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
@@ -339,7 +358,7 @@ describe("Realtime", () => {
               {kind: ChunkKind.EndOfInitial}
             ]);
 
-            const newBucket = await insertBucket({
+            insertPromise = insertBucket({
               title: "new bucket",
               description: "new bucket description",
               properties: {
@@ -351,12 +370,17 @@ describe("Realtime", () => {
               primary: "name",
               acl: {read: "true==true", write: "true==true"}
             });
+            return;
+          }
+
+          if (message.kind == ChunkKind.Insert) {
+            const inserted = await insertPromise;
 
             expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
               {kind: ChunkKind.Initial, document: buckets[0]},
               {kind: ChunkKind.Initial, document: buckets[1]},
               {kind: ChunkKind.EndOfInitial},
-              {kind: ChunkKind.Insert, document: newBucket}
+              {kind: ChunkKind.Insert, document: inserted}
             ]);
 
             await ws.close();

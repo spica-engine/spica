@@ -9,7 +9,7 @@ export class LogService extends BaseCollection<Log>("function_logs") {
       afterInit: () =>
         Promise.all([
           this.upsertTTLIndex(options.expireAfterSeconds),
-          this._coll.createIndex({function: 1, _id: -1})
+          this.createIndex({function: 1, _id: -1})
         ])
     });
   }

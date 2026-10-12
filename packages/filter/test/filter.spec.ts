@@ -4,7 +4,7 @@ import {
   LogicalExtractor,
   replaceFilterObjectIds
 } from "@spica-server/filter";
-import {ObjectId} from "mongodb";
+import {ObjectId} from "bson";
 
 describe("filter", () => {
   let filter;

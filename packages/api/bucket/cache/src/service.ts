@@ -24,25 +24,31 @@ export class BucketCacheService {
     }
   }
 
+  /**
+   * The ids of the buckets that **have a relation to** this bucket — the filtering happens **in the
+   * application layer**.
+   *
+   * An aggregation used to run with `$objectToArray` plus a `$match` on a nested array path. That chain's
+   * only job was asking the database "is there anything in the properties map whose `bucketId` is this";
+   * the schemas number in the dozens and are read anyway. The same decision was made for
+   * `provideLanguageFinalizer` (R65) and `function/crud` (R70): the right move is to **remove** a
+   * Mongo-specific escape hatch rather than move it into a finite compiler.
+   *
+   * This defect was **silent** on PostgreSQL: the computed expression of the `$project` was not
+   * recognized, was ignored, and every column came back; then the `$match` looked at the nested array path
+   * and found nothing. So the cache of the related buckets was **never** cleared and two tests passed on
+   * wrong data. Tightening `$project` to comply with K-4 made it loud.
+   */
   private async getRelatedBucketIds(bucketId: string): Promise<string[]> {
-    return this.db
-      .collection("buckets")
-      .aggregate([
-        {
-          $project: {
-            properties: {
-              $objectToArray: "$properties"
-            }
-          }
-        },
-        {
-          $match: {
-            "properties.v.bucketId": bucketId
-          }
-        }
-      ])
-      .toArray()
-      .then(buckets => buckets.map(bucket => bucket._id.toString()));
+    const buckets = await this.db.collection("buckets").find();
+
+    return buckets
+      .filter(bucket =>
+        Object.values(bucket.properties || {}).some(
+          (property: any) => property?.bucketId === bucketId
+        )
+      )
+      .map(bucket => bucket._id.toString());
   }
 
   reset() {

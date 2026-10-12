@@ -1,3 +1,18 @@
+# This file is the manifest of the **live** master infrastructure: `.github/workflows/deploy.yml`
+# applies it with `kubectl apply -f ./deployment.yaml`. Its backend is MongoDB and it stays that way.
+#
+# No separate manifest is **kept** for a PostgreSQL installation; the chart produces one:
+#
+#   helm template spica charts/spica \
+#     --set database.backend=postgres \
+#     --set application.publicHost=https://<host> \
+#     --set application.masterKey=<key> > deployment.postgres.yaml
+#
+# Why there is no copy: this file is hand-written and pinned to a single environment (the namespace,
+# the image tags, the ingress host). A second copy would drift silently because nobody would apply it —
+# whereas the chart is verified on both backends with `helm unittest`
+# (`tests/databasebackend_test.yaml`). To connect to a managed database, use
+# `--set database.external.uri=...`.
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:

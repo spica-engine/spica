@@ -334,11 +334,15 @@ describe("AWSS3", () => {
       });
 
       const date = "Mon, 01 Jan 2024 00:00:00 GMT";
-      await service.proxyRead("file.txt", {
-        "if-match": '"match-etag"',
-        "if-modified-since": date,
-        "if-unmodified-since": date
-      }, meta);
+      await service.proxyRead(
+        "file.txt",
+        {
+          "if-match": '"match-etag"',
+          "if-modified-since": date,
+          "if-unmodified-since": date
+        },
+        meta
+      );
 
       const command = sendMock.mock.calls[0][0];
       expect(command.input.IfMatch).toBe('"match-etag"');

@@ -2,6 +2,58 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 database:
+  # Which backend: mongodb | postgres (K-5 — the two stay side by side permanently).
+  # The default is mongodb, so existing installations do not change at all with this value.
+  backend: mongodb
+  # A managed database. When it is given the chart creates no database StatefulSet.
+  #
+  # **This is also the PostgreSQL HA path** (AK-7): run an operator-managed cluster — CloudNativePG —
+  # and point this at its `-rw` service, which always resolves to the current primary. The chart names
+  # no operator resource and depends on no CRD; see docs/postgresql-ha.md for why failover is delegated
+  # and why a read replica cannot be used.
+  #
+  # Credentials: put them in the URI, or set `spicaUsername`/`spicaPassword` to keep them in a secret.
+  # The API rewrites the URI's user and password from `DATABASE_USERNAME`/`DATABASE_PASSWORD`, and the
+  # chart only wires those env vars when it owns the credentials — for an external URI that means when
+  # `spicaPassword` is supplied. It used to wire them unconditionally, which replaced the operator's own
+  # credentials with a generated password and broke every external database (D23).
+  external:
+    uri:
+  # The K-8 guard: an instance record is written to the database, which prevents silently connecting
+  # to the wrong database or to a different backend. Left empty, the Helm release name is used;
+  # setting it explicitly to "" switches the guard off.
+  instanceId:
+  # Allows an **empty** database on the first startup. Setting it to `false` after the initial
+  # installation also catches connecting to the wrong URI (a populated database is accepted without
+  # this flag anyway).
+  initialize: true
+  # `true` for GitOps (ArgoCD) installations. ArgoCD renders the chart with `helm template`, so
+  # `lookup` returns empty and the generated password **would change on every sync**. With `true`,
+  # password generation is switched off and, when none is supplied, the render stops with a clear
+  # error — rather than rotating the password silently.
+  managedSecrets: false
+  # Bundled PostgreSQL (created only when backend=postgres and external.uri is empty).
+  postgres:
+    version: '16'
+    port: 5432
+  # Raw SQL access for functions (`@spica-devkit/postgres`, K-11). Meaningful on PostgreSQL only.
+  #
+  # While it is closed the devkit **refuses explicitly**: handing the API's fully privileged connection
+  # to a function would mean bucket tables could be dropped with raw SQL.
+  #
+  # On a bundled installation the role is created by the chart; on a managed database a ready role is
+  # supplied with `externalUri`. Its privileges (DML on bucket, read-only on spica, full on app) are
+  # applied by the API at startup — it does not create the role, it only grants.
+  functions:
+    enabled: false
+    username: spica_functions
+    password:
+    # A managed database: the full connection URI of a ready role. When it is given, username/password
+    # are not used.
+    externalUri:
+  # The bundled **MongoDB** replica set size. It does not apply to PostgreSQL: bundled PostgreSQL is
+  # single-pod by design and the render fails if this is raised there, rather than quietly giving one pod
+  # (AK-7). PostgreSQL HA goes through `external.uri` above.
   replicas: 1
   replicaSetName: 'rs0'
   name: spica

@@ -213,7 +213,13 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
           provider: provider,
           purpose: purpose,
           strategy: strategy,
-          createdAt: new Date()
+          /**
+           * `created_at`, not `createdAt`: `upsertTTLIndex` is hard-wired to this field on both drivers, so
+           * a record written under the other name was never a candidate for expiry — the retention the
+           * service asks for in `afterInit` simply never took effect. Records already written under the old
+           * name keep sitting there; nothing reads the field, so nothing else changes.
+           */
+          created_at: new Date()
         },
         $inc: {
           requestCount: 1

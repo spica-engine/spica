@@ -25,9 +25,11 @@ describe("MailerService", () => {
   let createTransportSpy: jest.SpyInstance;
 
   beforeEach(async () => {
-    createTransportSpy = jest.spyOn(nodemailer, "createTransport").mockImplementation((opts: any) => {
-      return {sendMail: sendMailMock} as any;
-    });
+    createTransportSpy = jest
+      .spyOn(nodemailer, "createTransport")
+      .mockImplementation((opts: any) => {
+        return {sendMail: sendMailMock} as any;
+      });
 
     module = await Test.createTestingModule({
       imports: [MailerModule.forRoot(mockOptions)]

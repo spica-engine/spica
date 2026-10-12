@@ -3,6 +3,12 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../driver"
+    },
+    {
+      "path": "../postgres"
+    },
+    {
       "path": ".."
     }
   ]

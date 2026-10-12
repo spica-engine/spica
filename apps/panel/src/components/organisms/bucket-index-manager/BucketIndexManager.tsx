@@ -6,6 +6,10 @@ import {
   type BucketType,
   type Properties
 } from "../../../store/api/bucketApi";
+import {
+  MONGO_ONLY_INDEX_KINDS,
+  useBackendCapabilities
+} from "../../../hooks/useBackendCapabilities";
 
 // oziko <Drawer size> is a raw px number with no design token; mirrors BucketEntryDrawer's width.
 const DRAWER_WIDTH_PX = 475;
@@ -128,6 +132,22 @@ const BucketIndexManager = ({bucket, isOpen, onClose}: BucketIndexManagerProps) 
 
   const [workingIndexes, setWorkingIndexes] = useState<IndexEntry[]>([]);
   const [mode, setMode] = useState<FormMode>("form");
+
+  /**
+   * The driver decides which of these controls exist (K-10). Offering one the backend has no counterpart
+   * for is not a cosmetic problem: `collation` fails the request outright, and a Mongo-only index kind is
+   * worse — PostgreSQL reads any direction other than `-1` as ascending, so the user gets a plain btree
+   * index and **no** warning.
+   */
+  const capabilities = useBackendCapabilities();
+
+  const kindOptions = useMemo(
+    () =>
+      capabilities.supportsMongoOnlyIndexKinds
+        ? KIND_OPTIONS
+        : KIND_OPTIONS.filter(option => !MONGO_ONLY_INDEX_KINDS.includes(option.value as never)),
+    [capabilities.supportsMongoOnlyIndexKinds]
+  );
 
   const [rows, setRows] = useState<FieldRow[]>([createEmptyRow()]);
   const [unique, setUnique] = useState(false);
@@ -346,7 +366,14 @@ const BucketIndexManager = ({bucket, isOpen, onClose}: BucketIndexManagerProps) 
             <div className={styles.subtitle}>{bucket.title}&nbsp;·&nbsp;MongoDB indexes</div>
           </div>
           <button className={styles.close} onClick={onClose} aria-label="Close">
-            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+            <svg
+              width="13"
+              height="13"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.2}
+            >
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -422,7 +449,7 @@ const BucketIndexManager = ({bucket, isOpen, onClose}: BucketIndexManagerProps) 
                         value={row.kind}
                         onChange={e => handleKindChange(row.id, e.target.value as IndexKind)}
                       >
-                        {KIND_OPTIONS.map(option => (
+                        {kindOptions.map(option => (
                           <option key={option.value} value={option.value}>
                             {option.label}
                           </option>
@@ -457,15 +484,23 @@ const BucketIndexManager = ({bucket, isOpen, onClose}: BucketIndexManagerProps) 
                       checked={unique}
                       onChange={e => setUnique(e.target.checked)}
                     />
-                    <Checkbox
-                      label="Sparse"
-                      checked={sparse}
-                      onChange={e => setSparse(e.target.checked)}
-                    />
+                    {capabilities.supportsSparseIndex && (
+                      <Checkbox
+                        label="Sparse"
+                        checked={sparse}
+                        onChange={e => setSparse(e.target.checked)}
+                      />
+                    )}
                   </div>
 
                   <div className={styles.inlineField}>
-                    <span className={styles.fieldLabel}>TTL (seconds)</span>
+                    {/* The field means the same thing on both backends — rows expire after this many
+                        seconds. Only the mechanism differs, so the label is corrected rather than the
+                        control removed: without a native TTL index the driver registers a sweeper, and a
+                        label promising an "index" would be describing something that does not exist. */}
+                    <span className={styles.fieldLabel}>
+                      {capabilities.hasNativeTTLIndex ? "TTL (seconds)" : "Retention (seconds)"}
+                    </span>
                     <NumberInput
                       className={styles.numberInput}
                       value={ttl ?? undefined}
@@ -499,12 +534,16 @@ const BucketIndexManager = ({bucket, isOpen, onClose}: BucketIndexManagerProps) 
                   </div>
 
                   <div className={styles.collationBlock}>
-                    <Checkbox
-                      label="Collation (case-insensitive)"
-                      checked={collationEnabled}
-                      onChange={e => setCollationEnabled(e.target.checked)}
-                    />
-                    {collationEnabled && (
+                    {/* Hidden rather than disabled: there is nothing to enable, and a greyed-out control
+                        invites the question "why". The backend simply has no collation to offer. */}
+                    {capabilities.supportsCollation && (
+                      <Checkbox
+                        label="Collation (case-insensitive)"
+                        checked={collationEnabled}
+                        onChange={e => setCollationEnabled(e.target.checked)}
+                      />
+                    )}
+                    {capabilities.supportsCollation && collationEnabled && (
                       <div className={styles.collationInputs}>
                         <StringInput
                           className={styles.textInput}
@@ -565,7 +604,9 @@ const BucketIndexManager = ({bucket, isOpen, onClose}: BucketIndexManagerProps) 
                   className={styles.rawTextarea}
                   value={rawText}
                   onChange={e => setRawText(e.target.value)}
-                  placeholder={'{\n  "definition": { "location": "2dsphere" },\n  "options": { "name": "geo_idx" }\n}'}
+                  placeholder={
+                    '{\n  "definition": { "location": "2dsphere" },\n  "options": { "name": "geo_idx" }\n}'
+                  }
                   rows={7}
                   spellCheck={false}
                 />

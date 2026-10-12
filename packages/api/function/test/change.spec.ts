@@ -230,7 +230,11 @@ describe("Change", () => {
   describe("mergePlans", () => {
     it("should concat routing and union outdate/reconcile", () => {
       const a = refreshPlan("a");
-      const b = createPlan(null, {...fn, _id: "b", triggers: {h: {active: true, options: {}, type: "http"}}});
+      const b = createPlan(null, {
+        ...fn,
+        _id: "b",
+        triggers: {h: {active: true, options: {}, type: "http"}}
+      });
       const c = refreshPlan("a"); // duplicate id
 
       expect(mergePlans([a, b, c])).toEqual({

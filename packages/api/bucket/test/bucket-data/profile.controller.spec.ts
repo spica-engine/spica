@@ -18,6 +18,7 @@ describe("BucketDataController profiler", () => {
   let req: Request;
   let module: TestingModule;
   let db: DatabaseService;
+  let profilerAvailable: boolean;
 
   const bucket1 = {
     _id: "6824a87e86e3700817eadc77",
@@ -67,7 +68,17 @@ describe("BucketDataController profiler", () => {
     app = module.createNestApplication();
 
     db = module.get(DatabaseService);
-    await db.setProfilingLevel(ProfilingLevel.all);
+
+    /**
+     * The profiler **depends on a capability** (K-10). Mongo keeps a profile per collection
+     * (`system.profile`); PostgreSQL's `pg_stat_statements` is a different interface and `findOnProfiler`
+     * does not exist there. This whole file is profiler-specific, so it is out of scope on the PG leg —
+     * recorded in `pg-known-failures.md`.
+     */
+    profilerAvailable = db.capabilities.queryProfiler === "system.profile";
+    if (profilerAvailable) {
+      await db.setProfilingLevel(ProfilingLevel.all);
+    }
 
     req = module.get(Request);
     await app.listen(req.socket);
@@ -89,6 +100,7 @@ describe("BucketDataController profiler", () => {
     });
 
     it("should list bucket1 data profile entries", async () => {
+      if (!profilerAvailable) return;
       const res = await req.get(`/bucket/${bucket1._id}/data/profile`);
       expect(res.statusCode).toEqual(200);
       expect(
@@ -97,6 +109,7 @@ describe("BucketDataController profiler", () => {
     });
 
     it("should list bucket2 data profile entries", async () => {
+      if (!profilerAvailable) return;
       const res = await req.get(`/bucket/${bucket2._id}/data/profile`);
       expect(res.statusCode).toEqual(200);
       expect(
@@ -105,6 +118,7 @@ describe("BucketDataController profiler", () => {
     });
 
     it("should filter bucket1 profile entries by operation type", async () => {
+      if (!profilerAvailable) return;
       const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
         filter: JSON.stringify({op: "insert"})
       });
@@ -116,6 +130,7 @@ describe("BucketDataController profiler", () => {
     });
 
     it("should limit bucket1 profile entries", async () => {
+      if (!profilerAvailable) return;
       const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
         limit: 1
       });
@@ -127,6 +142,7 @@ describe("BucketDataController profiler", () => {
     });
 
     it("should skip bucket1 profile entries", async () => {
+      if (!profilerAvailable) return;
       const [{body: allProfileEntries}, skippedRes] = await Promise.all([
         req.get(`/bucket/${bucket1._id}/data/profile`, {limit: 2, sort: JSON.stringify({_id: 1})}),
         req.get(`/bucket/${bucket1._id}/data/profile`, {
@@ -144,6 +160,7 @@ describe("BucketDataController profiler", () => {
     });
 
     it("should sort bucket1 profile entries", async () => {
+      if (!profilerAvailable) return;
       const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
         sort: JSON.stringify({ts: -1})
       });
@@ -160,6 +177,7 @@ describe("BucketDataController profiler", () => {
 
     // to prevent accessing other collections profile entries
     it("should ignore ns on filter", async () => {
+      if (!profilerAvailable) return;
       const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
         filter: JSON.stringify({ns: "test.buckets"})
       });
@@ -172,6 +190,7 @@ describe("BucketDataController profiler", () => {
     });
 
     it("should ignore ns on the nested filter", async () => {
+      if (!profilerAvailable) return;
       const dbName = db.databaseName;
       const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
         filter: JSON.stringify({

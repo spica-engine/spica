@@ -10,7 +10,10 @@ import {ChunkKind} from "@spica-server/interface-realtime";
 export class RealtimeFunctionService implements OnGatewayConnection, OnGatewayDisconnect {
   readonly COLLECTION = "function";
 
-  constructor(private realtime: RealtimeDatabaseService, private guardService: GuardService) {}
+  constructor(
+    private realtime: RealtimeDatabaseService,
+    private guardService: GuardService
+  ) {}
 
   private handlers = getConnectionHandlers(
     this.guardService,

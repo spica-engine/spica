@@ -18,5 +18,9 @@ export abstract class Strategy {
   abstract rename(oldKey: string, newKey: string): Promise<void>;
   abstract handleResumableUpload(req: any, res: any): any;
   abstract get resumableUploadFinished(): Observable<StorageObjectMeta>;
-  abstract proxyRead(id: string, requestHeaders: Record<string, string>, meta: StorageObjectMeta): Promise<ProxyReadResult>;
+  abstract proxyRead(
+    id: string,
+    requestHeaders: Record<string, string>,
+    meta: StorageObjectMeta
+  ): Promise<ProxyReadResult>;
 }

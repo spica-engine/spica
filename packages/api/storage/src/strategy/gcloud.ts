@@ -94,17 +94,17 @@ export class GCloud extends BaseStrategy {
         [
           ["content-type", metadata.contentType],
           ["etag", metadata.etag],
-          ["last-modified", metadata.updated ? new Date(metadata.updated).toUTCString() : undefined],
+          [
+            "last-modified",
+            metadata.updated ? new Date(metadata.updated).toUTCString() : undefined
+          ],
           ["cache-control", metadata.cacheControl ?? "public, max-age=3600, must-revalidate"],
           ["accept-ranges", "bytes"]
         ] as [string, string | undefined][]
       ).filter(([, v]) => v !== undefined)
     ) as Record<string, string>;
 
-    if (
-      requestHeaders["if-none-match"] &&
-      requestHeaders["if-none-match"] === metadata.etag
-    ) {
+    if (requestHeaders["if-none-match"] && requestHeaders["if-none-match"] === metadata.etag) {
       return {stream: null, headers: responseHeaders, statusCode: 304};
     }
 

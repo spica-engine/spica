@@ -7,16 +7,13 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../database"
-    },
-    {
       "path": "../secret"
     },
     {
-      "path": "../env_var"
+      "path": "asset-storage"
     },
     {
-      "path": "asset-storage"
+      "path": "../env_var"
     }
   ]
 }

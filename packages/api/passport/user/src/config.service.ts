@@ -108,10 +108,7 @@ export class UserConfigService extends ConfigService {
 
   watchConfig() {
     return this.watchModule(this.MODULE_NAME).pipe(
-      map(
-        change =>
-          (change.options as UserConfigSettings) || ({} as Partial<UserConfigSettings>)
-      )
+      map(change => (change.options as UserConfigSettings) || ({} as Partial<UserConfigSettings>))
     );
   }
 }

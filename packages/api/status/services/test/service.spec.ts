@@ -45,7 +45,7 @@ describe("StatusService", () => {
         response: {size: 2200}
       });
 
-      const docs = await statusCollection.find({}).toArray();
+      const docs = await statusCollection.find({});
 
       expect(docs.length).toBe(1);
 
@@ -80,7 +80,7 @@ describe("StatusService", () => {
         response: {size: 2200}
       });
 
-      const docs = await statusCollection.find({}).sort({_id: 1}).toArray();
+      const docs = await statusCollection.find({}, {sort: {_id: 1}});
 
       expect(docs.length).toBe(2);
 

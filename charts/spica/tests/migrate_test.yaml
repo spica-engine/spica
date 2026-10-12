@@ -11,10 +11,14 @@ set:
   application.publicHost: https://test.example.com
 
 tests:
-  - it: should render nothing on a fresh install (IsUpgrade false)
+  # The `IsUpgrade` guard was removed: ArgoCD renders the chart with `helm template` and there
+  # `IsUpgrade` is always false — the migration Job was never created. The Job is idempotent anyway.
+  - it: should render on a fresh install too, because ArgoCD renders with IsUpgrade false
     asserts:
       - hasDocuments:
-          count: 0
+          count: 1
+      - isKind:
+          of: Job
 
   - it: should render a Job on upgrade
     release:
@@ -33,13 +37,33 @@ tests:
           path: metadata.name
           value: release-name-migrate
 
-  - it: should carry the pre-upgrade hook annotation
+  - it: should carry both helm and argocd hook annotations
     release:
       upgrade: true
     asserts:
       - equal:
           path: metadata.annotations["helm.sh/hook"]
-          value: pre-upgrade
+          value: pre-install,pre-upgrade
+      # A Job spec is immutable; because it cannot be applied a second time under the same name, the
+      # previous one has to be deleted.
+      - equal:
+          path: metadata.annotations["helm.sh/hook-delete-policy"]
+          value: before-hook-creation
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/hook"]
+          value: PreSync
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/hook-delete-policy"]
+          value: BeforeHookCreation
+
+  # `migrate` is MongoDB-specific by construction: on a PostgreSQL installation there is no old data
+  # to transform.
+  - it: should render nothing when the backend is postgres
+    set:
+      database.backend: postgres
+    asserts:
+      - hasDocuments:
+          count: 0
 
   - it: should have backoffLimit of 5
     release:
@@ -49,35 +73,30 @@ tests:
           path: spec.backoffLimit
           value: 5
 
-  - it: should include --from arg reading from the version ConfigMap
+  - it: should pass --from, --to, --database-uri and --database-name to migrate
     release:
       upgrade: true
     asserts:
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: "--from"
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: "$(FROM)"
-
-  - it: should include --database-uri and --database-name args
-    release:
-      upgrade: true
-    asserts:
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: "--database-uri"
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: "--database-name"
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '--from "\$FROM"'
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '--to "\$TO"'
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '--database-uri "\$DATABASE_URI"'
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '--database-name "\$DATABASE_NAME"'
 
   - it: should include --continue-if-versions-are-equal flag
     release:
       upgrade: true
     asserts:
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: "--continue-if-versions-are-equal"
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: "--continue-if-versions-are-equal"
 
   - it: should read FROM env var from the version ConfigMap
     release:
@@ -92,6 +111,29 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].env[0].valueFrom.configMapKeyRef.key
           value: VERSION
+
+  # Pre-install hooks run before the release's ordinary resources, so on a fresh install the
+  # ConfigMap does not exist yet. A required reference would hang `helm install` in
+  # CreateContainerConfigError until it times out.
+  - it: should not require the version ConfigMap, which a fresh install does not have yet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.configMapKeyRef.optional
+          value: true
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: 'if \[ -z "\$FROM" \]; then[\s\S]*exit 0'
+
+  - it: should migrate up to the chart version
+    release:
+      upgrade: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: TO
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: 0.0.0-PLACEHOLDER
 
   - it: should use OnFailure restart policy
     release:

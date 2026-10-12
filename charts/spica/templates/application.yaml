@@ -109,8 +109,32 @@ spec:
 {{- end }}
             --port, "4300", 
             --database-uri, {{ template "database.connection-uri" . }},
+{{- if include "database.is-postgres" . }}
+            {{- /*
+              `LISTEN` is session bound, so it cannot be taken from the pool. Without it change
+              capture falls back to polling — still correct, but delayed (D8).
+            */}}
+            --database-listen-uri, {{ template "database.connection-uri" . }},
+{{- else }}
             --database-replica-set,  {{ .Values.database.replicaSetName }},
+{{- end }}
             --database-name,  {{ .Values.database.name }},
+{{- /*
+  `default` is not used: it would count an explicitly given `""` as "not given" and fall back to the
+  release name, leaving no way to switch the guard off. `kindIs "invalid"` catches only a value that
+  really was never assigned.
+*/}}
+{{- $instanceId := .Values.database.instanceId }}
+{{- if kindIs "invalid" $instanceId }}{{- $instanceId = .Release.Name }}{{- end }}
+{{- if $instanceId }}
+            {{- /*
+              K-8: the instance record. A populated database is accepted without the flag too, so
+              existing installations are not broken by this argument; the guard is against the wrong
+              database and against a backend switch.
+            */}}
+            --instance-id, {{ $instanceId | quote }},
+            --database-initialize, "{{ .Values.database.initialize }}",
+{{- end }}
             --passport-default-identity-password,  {{ .Values.application.defaultPassword }},
             --public-url, {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}},
             --persistent-path, /data,
@@ -165,16 +189,49 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
                   key: refreshTokenHashSecret
-            - name: MONGODB_USERNAME
+            {{- /*
+              Neutral names: the same secret feeds both backends. The API keeps reading the old
+              `MONGODB_*` names too, but the chart now passes the name that does not lie about the
+              backend.
+            */}}
+{{- if include "database.functions-uri" . }}
+            {{- /*
+              The connection for functions (K-11). As an env var rather than an argument, so the
+              password does not show up in the pod definition. When it is absent
+              `@spica-devkit/postgres` refuses explicitly.
+            */}}
+            - name: DATABASE_FUNCTIONS_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-functions-credentials
+                  key: uri
+{{- end }}
+{{- /*
+  Credentials are injected into the connection URI only when **this chart owns them**.
+
+  The API's middleware rewrites `--database-uri`'s user and password whenever both env vars are set. With
+  `database.external.uri` that was unconditional, so a URI given as
+  `postgres://real-user:real-pass@host/db` reached the server as `spica` plus a **generated** password and
+  authentication failed. Measured (D23): rendering with an external URI produced
+  `DATABASE_USERNAME=spica` and a fresh random `DATABASE_PASSWORD`, discarding the operator's own
+  credentials — so an external database did not work in any credential form, not only without credentials.
+
+  An external URI is the operator's statement of how to connect and the chart does not rewrite it. Setting
+  `database.spicaPassword` is the way to say the opposite: keep the credentials in a secret rather than in
+  the URI, and they are wired again.
+*/}}
+{{- if or (include "database.bundled" .) .Values.database.spicaPassword }}
+            - name: DATABASE_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}-database-spica-credentials
                   key: spicaUsername
-            - name: MONGODB_PASSWORD
+            - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}-database-spica-credentials
                   key: spicaPassword
+{{- end }}
             - name: TWILIO_ACCOUNT_SID
               valueFrom:
                 secretKeyRef:

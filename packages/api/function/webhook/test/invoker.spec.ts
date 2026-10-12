@@ -1,5 +1,11 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database-testing";
+import {
+  createAdHocCollection,
+  DatabaseService,
+  DatabaseTestingModule,
+  probeWatch,
+  WatchProbe
+} from "@spica-server/database-testing";
 import {WebhookService, WebhookChangeDispatcher} from "@spica-server/function-webhook";
 import {Webhook, WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
 import {WebhookInvoker} from "@spica-server/function-webhook/src/invoker";
@@ -28,6 +34,7 @@ describe("Webhook Invoker", () => {
   let module: TestingModule;
   let service: WebhookService;
   let db: DatabaseService;
+  let probe: WatchProbe;
   let logService: WebhookLogService;
 
   let subscribeSpy: jest.SpyInstance;
@@ -56,6 +63,12 @@ describe("Webhook Invoker", () => {
     module.enableShutdownHooks();
     service = module.get(WebhookService);
     db = module.get(DatabaseService);
+
+    /**
+     * D9: the neutral probe. The old `stream` shim patched `Db.prototype`, so it worked on MongoDB only;
+     * this call observes whichever backend was injected.
+     */
+    probe = probeWatch(db);
     logService = module.get(WebhookLogService);
     invoker = module.get(WebhookInvoker);
 
@@ -65,6 +78,12 @@ describe("Webhook Invoker", () => {
     const nodeFetch = {fetch: __fetch__};
     fetchSpy = jest.spyOn(nodeFetch, "fetch");
     insertLogSpy = jest.spyOn(logService, "insertOne" as never).mockImplementation();
+
+    /**
+     * The trigger's target collection is created **beforehand**: in a relational model there has to be a
+     * table to watch, and in production a trigger also only targets collections that exist (R68).
+     */
+    await createAdHocCollection(db, "stream_coll", {doc: {type: "string"}});
 
     webhook = {
       title: "wh1",
@@ -93,7 +112,7 @@ describe("Webhook Invoker", () => {
   it("should subscribe and open a change stream against the collection", async () => {
     const {_id, ...hook} = await service.insertOne(webhook);
     await waitForCall(subscribeSpy);
-    const subsequentStream = await stream.wait();
+    const subsequentStream = await probe.wait();
     expect(subscribeSpy).toHaveBeenCalledTimes(1);
     expect(subscribeSpy).toHaveBeenCalledWith(_id.toHexString(), hook);
     expect(subsequentStream[0]).toBe("stream_coll");
@@ -129,17 +148,17 @@ describe("Webhook Invoker", () => {
   it("should report changes from the database", async () => {
     await service.insertOne(webhook);
     await waitForCall(subscribeSpy);
-    await stream.wait();
-    stream.change.next();
+    await probe.wait();
+    probe.change.next();
     const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
-    await stream.change.wait();
+    await probe.change.wait();
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(fetchSpy).toHaveBeenCalledWith("http://spica.internal", {
       method: "post",
       body: JSON.stringify({
         type: "insert",
-        document: {_id: doc.insertedId.toHexString(), doc: "fromdb"},
-        documentKey: doc.insertedId.toHexString()
+        document: {_id: doc._id.toHexString(), doc: "fromdb"},
+        documentKey: doc._id.toHexString()
       }),
       headers: {
         "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
@@ -152,14 +171,14 @@ describe("Webhook Invoker", () => {
     webhook.body = "{{{toJSON document}}}";
     await service.insertOne(webhook);
     await waitForCall(subscribeSpy);
-    await stream.wait();
-    stream.change.next();
+    await probe.wait();
+    probe.change.next();
     const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
-    await stream.change.wait();
+    await probe.change.wait();
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(fetchSpy).toHaveBeenCalledWith("http://spica.internal", {
       method: "post",
-      body: JSON.stringify({_id: doc.insertedId.toHexString(), doc: "fromdb"}),
+      body: JSON.stringify({_id: doc._id.toHexString(), doc: "fromdb"}),
       headers: {
         "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
         "Content-type": "application/json"
@@ -170,10 +189,20 @@ describe("Webhook Invoker", () => {
   it("should insert a log when hook has been invoked", async () => {
     const hook = await service.insertOne(webhook);
     await waitForCall(subscribeSpy);
-    await stream.wait();
-    stream.change.next();
+    await probe.wait();
+    probe.change.next();
     const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
-    await stream.change.wait();
+
+    /**
+     * Waiting for the change event is not enough: the log write happens **after** `fetch` resolves, so
+     * there is one more round between the event's delivery and the effect completing. On MongoDB that
+     * round closed by accident; on PostgreSQL the timing changed because the event arrives through
+     * polling.
+     *
+     * With the spec's own helper **the effect itself** is awaited. The sibling tests that verify `fetch`
+     * can settle for awaiting the event, because there the effect happens on the event's first round.
+     */
+    await waitForCall(insertLogSpy);
 
     expect(insertLogSpy).toHaveBeenCalledTimes(1);
 
@@ -185,8 +214,8 @@ describe("Webhook Invoker", () => {
         request: {
           body: JSON.stringify({
             type: "insert",
-            document: {_id: doc.insertedId.toHexString(), doc: "fromdb"},
-            documentKey: doc.insertedId.toHexString()
+            document: {_id: doc._id.toHexString(), doc: "fromdb"},
+            documentKey: doc._id.toHexString()
           }),
           headers: {
             "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
@@ -210,10 +239,12 @@ describe("Webhook Invoker", () => {
     webhook.body = "{{{document.title}}}";
     const hook = await service.insertOne(webhook);
     await waitForCall(subscribeSpy);
-    await stream.wait();
-    stream.change.next();
+    await probe.wait();
+    probe.change.next();
     const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
-    await stream.change.wait();
+    // Because the compilation error occurs before `fetch`, awaiting the event is enough today; awaiting
+    // the effect removes the same hidden assumption here as well.
+    await waitForCall(insertLogSpy);
 
     expect(insertLogSpy).toHaveBeenCalledTimes(1);
 

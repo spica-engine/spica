@@ -101,7 +101,6 @@ describe("User Email Hashing and Encryption", () => {
       email: encryptedEmail,
       email_verified_at: createdAt,
       policies: [],
-      lastLogin: null,
       failedAttempts: [],
       lastPasswords: []
     });
@@ -123,7 +122,6 @@ describe("User Email Hashing and Encryption", () => {
       email: "test@example.com",
       email_verified_at: createdAt.toISOString(),
       policies: [],
-      lastLogin: null,
       failedAttempts: []
     });
   });
@@ -144,7 +142,6 @@ describe("User Email Hashing and Encryption", () => {
       email: "test@example.com",
       email_verified_at: createdAt.toISOString(),
       policies: [],
-      lastLogin: null,
       failedAttempts: []
     });
   });
@@ -183,7 +180,6 @@ describe("User Email Hashing and Encryption", () => {
       email: "test@example.com",
       email_verified_at: createdAt.toISOString(),
       policies: [],
-      lastLogin: null,
       failedAttempts: []
     });
   });
@@ -212,7 +208,6 @@ describe("User Email Hashing and Encryption", () => {
       email: "test@example.com",
       email_verified_at: createdAt.toISOString(),
       policies: [],
-      lastLogin: null,
       failedAttempts: []
     });
   });

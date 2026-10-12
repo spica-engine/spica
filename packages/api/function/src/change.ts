@@ -67,7 +67,10 @@ export function mergePlans(plans: FunctionChangePlan[]): FunctionChangePlan {
   };
 }
 
-function changesFromTriggers(previous: FunctionDocument, current: FunctionDocument): TargetChange[] {
+function changesFromTriggers(
+  previous: FunctionDocument,
+  current: FunctionDocument
+): TargetChange[] {
   const insertedTriggers: Triggers = {};
   const updatedTriggers: Triggers = {};
   const removedTriggers: Triggers = {};

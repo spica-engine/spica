@@ -13,7 +13,6 @@ describe("FirehoseEnqueuer", () => {
   let app: INestApplication;
   let wsc: Websocket;
 
-
   beforeEach(async () => {
     eventQueue = {
       enqueue: jest.fn()

@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "bson";
 import {EncryptedData} from "@spica-server/core-encryption";
 
 export interface Secret {

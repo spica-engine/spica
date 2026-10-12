@@ -1,5 +1,5 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {BaseCollection, DatabaseService, getCollection, ObjectId} from "@spica-server/database";
 import {Bucket, BucketDocument, BUCKET_DATA_LIMIT} from "@spica-server/interface-bucket";
 
 @Injectable()
@@ -38,18 +38,15 @@ export class BucketDataService {
   }
 
   private async existingBucketData() {
-    const bucketNames = await this.db
-      .collection("buckets")
+    const bucketNames = await getCollection(this.db, "buckets")
       .find()
-      .toArray()
       .then(buckets => buckets.map(b => `bucket_${b._id}`));
 
     let totalDocumentCount = 0;
 
     return Promise.all(
       bucketNames.map(name =>
-        this.db
-          .collection(name)
+        getCollection(this.db, name)
           .estimatedDocumentCount()
           .then(c => (totalDocumentCount += c))
       )
@@ -74,4 +71,14 @@ export class BucketDataService {
 
 export function getBucketDataCollection(bucketId: string | ObjectId): string {
   return `bucket_${bucketId}`;
+}
+
+/**
+ * The inverse of `getBucketDataCollection`; `undefined` for names that are not a bucket data collection.
+ *
+ * The PostgreSQL driver's schema resolver takes a collection **name**, not a bucket id.
+ */
+export function bucketIdFromCollection(collection: string): string | undefined {
+  const match = /^bucket_([0-9a-fA-F]{24})$/.exec(collection);
+  return match ? match[1] : undefined;
 }

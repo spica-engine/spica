@@ -36,11 +36,11 @@ export class WebhookController {
   @Get("collections")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   collections() {
-    return this.database.collections().then(collections => {
+    return this.database.listCollections().then(collections => {
       const definitions: {id: string; slug: string}[] = [];
 
       const promises = collections.map(collection => {
-        const collName = collection.collectionName;
+        const collName = collection.name;
 
         let promise = Promise.resolve(collName);
 

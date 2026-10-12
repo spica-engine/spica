@@ -80,10 +80,10 @@ export class SchemaResolver {
       const collectionNames = new Set<string>();
 
       return this.db
-        .collections()
+        .listCollections()
         .then(collections => {
           for (const collection of collections) {
-            collectionNames.add(collection.collectionName);
+            collectionNames.add(collection.name);
           }
 
           return getSchema(Array.from(collectionNames));

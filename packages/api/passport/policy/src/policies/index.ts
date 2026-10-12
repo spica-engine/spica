@@ -45,7 +45,6 @@ import StorageReadOnlyAccess from "./storage.readonly.js";
 import StrategyFullAccess from "./strategy.fullaccess.js";
 import StrategyReadOnlyAccess from "./strategy.readonly.js";
 
-
 import WebhookFullAccess from "./webhook.fullaccess.js";
 import WebhookReadOnlyAccess from "./webhook.readonly.js";
 

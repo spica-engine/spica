@@ -1,3 +1,5 @@
+{{- /* The database service — only when the chart creates the database itself. */ -}}
+{{- if include "database.bundled" . }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -13,9 +15,20 @@ metadata:
 spec:
   publishNotReadyAddresses: true
   ports:
+{{- if include "database.is-postgres" . }}
+    - port: {{ .Values.database.postgres.port }}
+      targetPort: {{ .Values.database.postgres.port }}
+{{- else }}
     - port: 27017
       targetPort: 27017
+{{- end }}
+  {{- /*
+    A headless service is **mandatory** on MongoDB: the replica set members find each other by pod
+    DNS name. On PostgreSQL there is a single pod and headless works correctly there too, so no
+    separate service type is needed.
+  */}}
   clusterIP: None
   selector:
     app.kubernetes.io/name: {{ .Release.Name }}-database
     app.kubernetes.io/component: database
+{{- end }}

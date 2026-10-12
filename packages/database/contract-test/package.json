@@ -1,0 +1,23 @@
+{
+  "name": "@spica-server/database-contract-test",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.22",
+    "@nestjs/testing": "^10.4.22",
+    "@spica-server/bucket-expression": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/database-driver": "workspace:*",
+    "@spica-server/database-postgres": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
+    "@spica-server/interface-bucket": "workspace:*",
+    "pg": "^8.13.0"
+  }
+}

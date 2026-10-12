@@ -260,7 +260,12 @@ describe("grpc enqueuer", () => {
         dequeue: jest.fn()
       };
       grpcQueue = new GrpcQueue();
-      grpcEnqueuer = new GrpcEnqueuer(eventQueue as any, grpcQueue, 25 * 1024 * 1024, integrationPort);
+      grpcEnqueuer = new GrpcEnqueuer(
+        eventQueue as any,
+        grpcQueue,
+        25 * 1024 * 1024,
+        integrationPort
+      );
     });
 
     afterEach(async () => {

@@ -35,11 +35,32 @@ export class StatusController {
   @HttpCode(HttpStatus.OK)
   async readiness() {
     try {
-      await this.db.command({ping: 1});
+      await this.db.ping();
       return {status: "ok"};
     } catch {
       throw new ServiceUnavailableException("Database is not ready");
     }
+  }
+
+  /**
+   * The driver's capability declaration (K-10) and the backend's identity (K-8).
+   *
+   * The panel reads it, hides the interfaces that have no counterpart, and shows the backend name
+   * **read-only** — K-8: the backend choice is a provisioning decision and cannot be changed from the
+   * panel.
+   *
+   * It requires authentication but has NO separate policy action: the content is capability information
+   * rather than configuration, and everyone who uses the panel needs to see it. Adding a new action would
+   * mean the panel silently showing an empty interface on existing installations.
+   */
+  @Get("capabilities")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
+  capabilities() {
+    return {
+      backend: this.db.capabilities.backend,
+      database: this.db.databaseName,
+      capabilities: this.db.capabilities
+    };
   }
 
   @Get()

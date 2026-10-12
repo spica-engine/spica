@@ -199,11 +199,7 @@ describe("RealtimeOptionsBuilder", () => {
 
     it("should support sort + limit + skip without filter", () => {
       const builder = new RealtimeOptionsBuilder();
-      const result = builder
-        .sort('{"name": 1}')
-        .limit("25")
-        .skip("0")
-        .result();
+      const result = builder.sort('{"name": 1}').limit("25").skip("0").result();
 
       expect(result).toEqual({
         sort: {name: 1},

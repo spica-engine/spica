@@ -9,6 +9,7 @@ import {
 import {
   BaseCollection,
   DatabaseService,
+  isId,
   ObjectId,
   ReturnDocument,
   WithId
@@ -38,13 +39,13 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     @Inject(STORAGE_OPTIONS) private storageOptions: StorageOptions
   ) {
     super(database, {
-      afterInit: () => this._coll.createIndex({name: 1}, {unique: true})
+      afterInit: () => this.createIndex({name: 1}, {unique: true})
     });
 
     this.service.resumableUploadFinished.subscribe({
       next: async (document: StorageObjectMeta) => {
         try {
-          await this._coll.insertOne(document);
+          await this.insertOne(document);
         } catch (exception) {
           this.service.delete(document.name);
           throw new BadRequestException(
@@ -58,18 +59,17 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   private existingSize(): Promise<number> {
-    return this._coll
-      .aggregate([
-        {
-          $group: {
-            _id: "",
-            total: {$sum: "$content.size"}
-          }
-        },
-        {
-          $project: {total: 1}
+    return this.aggregate([
+      {
+        $group: {
+          _id: "",
+          total: {$sum: "$content.size"}
         }
-      ])
+      },
+      {
+        $project: {total: 1}
+      }
+    ])
       .toArray()
       .then((d: any) => (d.length ? d[0].total : 0));
   }
@@ -122,8 +122,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
 
-    return this._coll
-      .aggregate<StorageResponse>([...pipelineBuilder, ...seeking])
+    return this.aggregate<StorageResponse>([...pipelineBuilder, ...seeking])
       .toArray()
       .then(r => this.putUrls(r));
   }
@@ -153,14 +152,13 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     const plan = pipelineBuilder.buildPaginationPlan(seeking, () => this.estimatedDocumentCount());
 
     if (paginate) {
-      return executePaginationPlan<StorageResponse>(this._coll, plan).then(async r => {
+      return executePaginationPlan<StorageResponse>(this, plan).then(async r => {
         r.data = await this.putUrls(r.data);
         return r as PaginatedStorageResponse;
       });
     }
 
-    return this._coll
-      .aggregate<StorageResponse>(plan.dataPipeline)
+    return this.aggregate<StorageResponse>(plan.dataPipeline)
       .toArray()
       .then(r => this.putUrls(r));
   }
@@ -175,7 +173,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   async get(id: ObjectId): Promise<WithId<StorageObject<Buffer>>> {
-    const object = await this._coll.findOne({_id: new ObjectId(id)});
+    const object = await this.findOne({_id: new ObjectId(id)});
     if (!object) return null;
 
     const objectWithData = object as WithId<StorageObject<Buffer>>;
@@ -184,8 +182,8 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   async delete(idOrName: ObjectId | string): Promise<void> {
-    const query = idOrName instanceof ObjectId ? {_id: idOrName} : {name: idOrName};
-    const result = await this._coll.findOneAndDelete(query);
+    const query = isId(idOrName) ? {_id: idOrName} : {name: idOrName};
+    const result = await this.findOneAndDelete(query);
 
     if (!result) {
       throw new NotFoundException(`Storage object could not be found`);
@@ -198,10 +196,10 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       const escapedName = this.escapeRegex(result.name);
       const childFilter = {name: {$regex: new RegExp(`^${escapedName}`)}};
 
-      const children = await this._coll.find(childFilter).toArray();
+      const children = await this.find(childFilter);
       await Promise.allSettled(children.map(child => this.service.delete(child.name)));
 
-      await this._coll.deleteMany(childFilter);
+      await this.deleteMany(childFilter);
     } catch (error) {
       this.logger.error(
         `Failed to delete storage object ${result.name} from storage:`,
@@ -211,7 +209,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   async deleteManyByIds(ids: ObjectId[]): Promise<void> {
-    const objects = await this._coll.find({_id: {$in: ids}}).toArray();
+    const objects = await this.find({_id: {$in: ids}});
     if (objects.length === 0) {
       return;
     }
@@ -225,10 +223,10 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
         const escapedName = this.escapeRegex(object.name);
         const childFilter = {name: {$regex: new RegExp(`^${escapedName}`)}};
 
-        const children = await this._coll.find(childFilter).toArray();
+        const children = await this.find(childFilter);
         await Promise.allSettled(children.map(child => this.service.delete(child.name)));
 
-        await this._coll.deleteMany(childFilter);
+        await this.deleteMany(childFilter);
       });
 
       await Promise.all(folderDeletionPromises);
@@ -241,7 +239,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   async updateMeta(_id: ObjectId, name: string) {
-    const existing = await this._coll.findOne({_id});
+    const existing = await this.findOne({_id});
     if (!existing) {
       throw new NotFoundException(`Storage object ${_id} could not be found`);
     }
@@ -291,13 +289,13 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
       tx.add({
         execute: async () => {
-          await this._coll.updateMany(
+          await this.updateMany(
             getUpdateFilterForRename(oldName),
             getUpdatePipelineForRename(oldName, name)
           );
         },
         rollback: async () => {
-          await this._coll.updateMany(
+          await this.updateMany(
             getUpdateFilterForRename(name),
             getUpdatePipelineForRename(name, oldName)
           );
@@ -314,7 +312,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     _id: ObjectId,
     object: StorageObject<fs.ReadStream | Buffer>
   ): Promise<StorageObjectMeta> {
-    const existing = await this._coll.findOne({_id});
+    const existing = await this.findOne({_id});
     if (!existing) {
       throw new NotFoundException(`Storage object ${_id} could not be found`);
     }
@@ -337,7 +335,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       delete object._id;
       object.updated_at = new Date();
 
-      return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
+      return this.findOneAndUpdate({_id}, {$set: object}).then(() => {
         return {...object, _id: _id};
       });
     } catch (error) {
@@ -367,9 +365,10 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     tx.add({
       execute: async () => {
         try {
-          insertedObjects = await this._coll
-            .insertMany(schemas)
-            .then(result => schemas.map((s, i) => ({...s, _id: result.insertedIds[i]})));
+          // In the contract `insertMany` returns the array of ids directly, not Mongo's result object.
+          insertedObjects = await this.insertMany(schemas).then(ids =>
+            schemas.map((s, i) => ({...s, _id: ids[i]}))
+          );
         } catch (exception) {
           throw new BadRequestException(
             exception.code === 11000
@@ -381,7 +380,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       rollback: async () => {
         if (insertedObjects) {
           const idsToDelete = insertedObjects.map(o => o._id);
-          await this._coll.deleteMany({_id: {$in: idsToDelete}});
+          await this.deleteMany({_id: {$in: idsToDelete}});
         }
       }
     });
@@ -417,7 +416,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   async getByName(name: string): Promise<WithId<StorageObject<Buffer>>> {
-    const object = await this._coll.findOne({name});
+    const object = await this.findOne({name});
     if (!object) return null;
 
     const objectWithData = object as WithId<StorageObject<Buffer>>;
@@ -426,9 +425,8 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   private async getMeta(idOrName: ObjectId | string): Promise<WithId<StorageObjectMeta> | null> {
-    const query =
-      idOrName instanceof ObjectId ? {_id: new ObjectId(idOrName)} : {name: idOrName as string};
-    return this._coll.findOne(query);
+    const query = isId(idOrName) ? {_id: new ObjectId(idOrName)} : {name: idOrName as string};
+    return this.findOne(query);
   }
 
   async proxyRead(

@@ -54,6 +54,7 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.3",
     "@spica-server/activity-services": "workspace:*",
+    "@spica-server/bucket-expression": "workspace:*",
     "@spica-server/config": "workspace:*",
     "@spica-server/core": "workspace:*",
     "@spica-server/core-encryption": "workspace:*",

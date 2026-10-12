@@ -150,7 +150,7 @@ describe("Webhook Service", () => {
   });
 
   it("should keep reporting after a reload fails", done => {
-    const coll = (service as any)._coll;
+    const coll = (service as any).inner;
     const findOne = coll.findOne.bind(coll);
     let alreadyFailed = false;
 

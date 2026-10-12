@@ -13,7 +13,8 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
+import {BOOLEAN, DEFAULT, EXPRESSION, isJSONFilter, NUMBER, JSONP, OR} from "@spica-server/core";
+import {filterToMatch} from "@spica-server/bucket-expression";
 import {SecretService} from "@spica-server/secret-services";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Schema} from "@spica-server/core-schema";
@@ -34,7 +35,7 @@ export class SecretController {
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: object,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
-    @Query("filter", JSONP) filter: object
+    @Query("filter", OR(isJSONFilter, JSONP, EXPRESSION(filterToMatch))) filter: object
   ) {
     return CRUD.find(this.ss, {resourceFilter, limit, skip, sort, paginate, filter});
   }

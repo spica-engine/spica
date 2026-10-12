@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "bson";
 import {Preference} from "@spica-server/interface-preference";
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 
@@ -14,6 +14,8 @@ export interface Bucket {
     [key: string]: JSONSchema7 & PropertyOptions;
   };
   order?: number;
+  /** Groups buckets in the panel's navigation; `bucket.schema.json` and the controller both carry it. */
+  category?: string;
   required?: string[];
   acl: {
     read: string;
