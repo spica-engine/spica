@@ -215,7 +215,7 @@ describe("RabbitMQQueue", () => {
         forget: jest.fn(),
         purge: jest.fn(),
         handlers: jest.fn().mockReturnValue({
-          storeOffset: (call, callback) => callback(null, new RabbitMQ.Message.Result())
+          custom: (call, callback) => callback(null, new RabbitMQ.Message.Result())
         })
       };
     }
@@ -243,7 +243,17 @@ describe("RabbitMQQueue", () => {
       const handlers = custom.create() as any;
 
       expect(Object.keys(handlers).sort()).toEqual(
-        ["ack", "ackAll", "nack", "nackAll", "pop", "reject", "storeOffset"].sort()
+        [
+          "ack",
+          "ackAll",
+          "custom",
+          "nack",
+          "nackAll",
+          "pop",
+          "queryOffset",
+          "reject",
+          "storeOffset"
+        ].sort()
       );
     });
 

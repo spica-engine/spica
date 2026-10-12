@@ -6,6 +6,8 @@ env:
   MONGODB_URL: "mongodb://172.17.0.1:27017"
   MAILER_URL: "smtp://172.17.0.1:1025,api://172.17.0.1:8025"
   RABBITMQ_URL: "amqp://172.17.0.1:5672"
+  RABBITMQ_STREAM_HOST: "172.17.0.1"
+  RABBITMQ_STREAM_PORT: "5552"
   NX_FORCE_NO_DAEMON: true
 
 on:
@@ -184,11 +186,20 @@ jobs:
         run: |
           docker run -d --rm --name rabbitmq \
             -p 5672:5672 \
+            -p 5552:5552 \
+            -e RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="-rabbitmq_stream advertised_host 172.17.0.1" \
             rabbitmq:4.1
 
           echo "Waiting for RabbitMQ..."
           for i in {1..10}; do
             if nc -z localhost 5672; then
+              break
+            fi
+            sleep 2
+          done
+          docker exec rabbitmq rabbitmq-plugins enable rabbitmq_stream
+          for i in {1..10}; do
+            if nc -z localhost 5552; then
               echo "RabbitMQ is ready."
               break
             fi
@@ -217,7 +228,7 @@ jobs:
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
       - name: Run Tests
-        run: MONGODB_URL=$MONGODB_URL MAILER_URL=$MAILER_URL RABBITMQ_URL=$RABBITMQ_URL yarn nx test ${{ matrix.project }}
+        run: MONGODB_URL=$MONGODB_URL MAILER_URL=$MAILER_URL RABBITMQ_URL=$RABBITMQ_URL RABBITMQ_STREAM_HOST=$RABBITMQ_STREAM_HOST RABBITMQ_STREAM_PORT=$RABBITMQ_STREAM_PORT yarn nx test ${{ matrix.project }}
 
       - name: Stop RabbitMQ
         run: docker stop rabbitmq || true

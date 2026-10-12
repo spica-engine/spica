@@ -9,6 +9,8 @@ message Message {
     string properties = 4;
     bytes errorMessage = 5;
     string mode = 6;
+    string stream = 7;
+    string consumer = 8;
 
     message Pop {
         string id = 1;
@@ -21,6 +23,19 @@ message Message {
     }
 
     message Result {}
+
+    message StoreOffset {
+        string consumer = 1;
+        string offset = 2;
+    }
+
+    message QueryOffset {
+        string consumer = 1;
+    }
+
+    message Offset {
+        string offset = 1;
+    }
 }
 
 service Queue {
@@ -30,4 +45,6 @@ service Queue {
     rpc reject(Message.Settle) returns (Message.Result);
     rpc ackAll(Message.Settle) returns (Message.Result);
     rpc nackAll(Message.Settle) returns (Message.Result);
+    rpc storeOffset(Message.StoreOffset) returns (Message.Result);
+    rpc queryOffset(Message.QueryOffset) returns (Message.Offset);
 }

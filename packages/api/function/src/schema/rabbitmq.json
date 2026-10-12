@@ -21,7 +21,7 @@
   "properties": {
     "mode": {
       "title": "Mode",
-      "description": "Consumption strategy of the trigger. Defaults to queue when omitted",
+      "description": "Consumption strategy of the trigger. queue consumes a queue over AMQP 0.9.1, stream consumes a stream over the RabbitMQ Stream protocol. Defaults to queue when omitted",
       "type": "string"
     },
     "url": {
@@ -350,6 +350,373 @@
       "title": "No Acknowledgement",
       "description": "The broker considers a message acknowledged as soon as it is delivered. Turn it off to acknowledge messages from the function with channel.ack and channel.nack",
       "type": "boolean"
+    },
+    "connection": {
+      "title": "Connection",
+      "description": "Connection to the RabbitMQ Stream protocol (default port 5552, 5551 for TLS). The rabbitmq_stream plugin must be enabled on the broker. The client connects to the node's advertised host and port from the stream metadata; behind Docker, NAT or a load balancer set stream.advertised_host and stream.advertised_port on the broker, or enable addressResolver",
+      "type": "object",
+      "properties": {
+        "hostname": {
+          "title": "Hostname",
+          "description": "Hostname of the broker",
+          "type": "string",
+          "examples": ["rabbitmq"]
+        },
+        "port": {
+          "title": "Port",
+          "description": "Port of the stream protocol",
+          "type": "integer",
+          "default": 5552,
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "vhost": {
+          "title": "Virtual Host",
+          "description": "Virtual host to connect to",
+          "type": "string",
+          "default": "/"
+        },
+        "username": {
+          "title": "Username",
+          "description": "Username to authenticate with",
+          "type": "string"
+        },
+        "password": {
+          "title": "Password",
+          "description": "Password to authenticate with",
+          "type": "string"
+        },
+        "mechanism": {
+          "title": "Mechanism",
+          "description": "SASL authentication mechanism",
+          "type": "string",
+          "enum": ["PLAIN", "EXTERNAL"]
+        },
+        "frameMax": {
+          "title": "Frame Max",
+          "description": "Maximum frame size in bytes to negotiate with the broker",
+          "type": "integer",
+          "minimum": 0
+        },
+        "heartbeat": {
+          "title": "Heartbeat",
+          "description": "Heartbeat interval in seconds to negotiate with the broker",
+          "type": "integer",
+          "minimum": 0
+        },
+        "socketTimeout": {
+          "title": "Socket Timeout",
+          "description": "Socket timeout in milliseconds",
+          "type": "integer",
+          "minimum": 0
+        },
+        "connectionName": {
+          "title": "Connection Name",
+          "description": "Name shown for the connection in the broker management UI",
+          "type": "string"
+        },
+        "ssl": {
+          "title": "SSL",
+          "description": "Connect over TLS. Pass true to use the defaults or an object to provide certificates",
+          "type": ["boolean", "object"],
+          "properties": {
+            "key": {
+              "title": "Key",
+              "description": "Private key in PEM format",
+              "type": "string"
+            },
+            "cert": {
+              "title": "Certificate",
+              "description": "Certificate chain in PEM format",
+              "type": "string"
+            },
+            "ca": {
+              "title": "CA",
+              "description": "Trusted certificate authorities in PEM format",
+              "type": "string"
+            },
+            "rejectUnauthorized": {
+              "title": "Reject Unauthorized",
+              "description": "Reject server certificates that are not signed by a trusted authority",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "addressResolver": {
+          "title": "Address Resolver",
+          "description": "Connect through a load balancer or NAT instead of the advertised address of each node. When enabled the client connects to the endpoint, or to the hostname and port of the connection when no endpoint is given",
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "const": true
+                },
+                "endpoint": {
+                  "type": "object",
+                  "properties": {
+                    "host": {
+                      "type": "string"
+                    },
+                    "port": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 65535
+                    }
+                  },
+                  "required": ["host", "port"],
+                  "additionalProperties": false
+                }
+              },
+              "required": ["enabled"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "const": false
+                }
+              },
+              "required": ["enabled"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "bufferSizeSettings": {
+          "title": "Buffer Size Settings",
+          "description": "Read buffer tuning of the client",
+          "type": "object",
+          "properties": {
+            "initialSize": {
+              "title": "Initial Size",
+              "description": "Initial buffer size in bytes",
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxRatio": {
+              "title": "Max Ratio",
+              "description": "Ratio of the buffer that may be left unused before it is shrunk",
+              "type": "number",
+              "minimum": 0
+            },
+            "multiplier": {
+              "title": "Multiplier",
+              "description": "Factor by which the buffer grows when it is full",
+              "type": "number",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["hostname", "username", "password"],
+      "additionalProperties": false
+    },
+    "stream": {
+      "title": "Stream",
+      "description": "Stream to declare and consume. An existing stream is never deleted, and createStream does not apply new arguments to a stream that already exists (change retention of an existing stream with a policy)",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "description": "Stream name",
+          "type": "string",
+          "examples": ["orders"],
+          "minLength": 1
+        },
+        "passive": {
+          "title": "Passive",
+          "description": "Do not create the stream, consume it only if it already exists",
+          "type": "boolean"
+        },
+        "arguments": {
+          "title": "Arguments",
+          "description": "Arguments the stream is created with",
+          "type": "object",
+          "properties": {
+            "max-age": {
+              "title": "Max Age",
+              "description": "Retention by age, e.g. 7D, 12h or 30m",
+              "type": "string",
+              "examples": ["7D"]
+            },
+            "max-length-bytes": {
+              "title": "Max Length Bytes",
+              "description": "Retention by total size in bytes",
+              "type": "integer",
+              "minimum": 0
+            },
+            "stream-max-segment-size-bytes": {
+              "title": "Segment Size Bytes",
+              "description": "Size of a segment file in bytes",
+              "type": "integer",
+              "minimum": 0
+            },
+            "initial-cluster-size": {
+              "title": "Initial Cluster Size",
+              "description": "Number of replicas the stream starts with",
+              "type": "integer",
+              "minimum": 1
+            },
+            "queue-leader-locator": {
+              "title": "Leader Locator",
+              "description": "Strategy to pick the node of the stream leader",
+              "type": "string",
+              "enum": ["random", "client-local", "least-leaders"]
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "consumer": {
+      "title": "Consumer",
+      "description": "Consumer of the stream",
+      "type": "object",
+      "properties": {
+        "offset": {
+          "title": "Offset",
+          "description": "Position to start consuming from. Defaults to next. With consumerRef set, an offset stored on the server takes precedence on start and consumption continues after it",
+          "type": "object",
+          "properties": {
+            "type": {
+              "title": "Type",
+              "description": "Kind of the starting position",
+              "type": "string",
+              "enum": ["first", "last", "next", "offset", "timestamp"]
+            },
+            "value": {
+              "title": "Value",
+              "description": "Offset number for the offset type, ISO date-time or epoch milliseconds for the timestamp type",
+              "type": ["integer", "string"]
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "offset"
+                  }
+                },
+                "required": ["type"]
+              },
+              "then": {
+                "required": ["value"],
+                "properties": {
+                  "value": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "timestamp"
+                  }
+                },
+                "required": ["type"]
+              },
+              "then": {
+                "required": ["value"],
+                "properties": {
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "consumerRef": {
+          "title": "Consumer Reference",
+          "description": "Name under which the server stores the offset of this consumer. Required to use storeOffset and queryOffset, and to continue after the stored offset on restart",
+          "type": "string",
+          "minLength": 1
+        },
+        "singleActive": {
+          "title": "Single Active",
+          "description": "Only one consumer with the same consumerRef receives messages at a time. Requires consumerRef",
+          "type": "boolean"
+        },
+        "consumerTag": {
+          "title": "Consumer Tag",
+          "description": "Tag of the consumer",
+          "type": "string"
+        },
+        "filter": {
+          "title": "Filter",
+          "description": "Server-side bloom filter on the filter values of the messages",
+          "type": "object",
+          "properties": {
+            "values": {
+              "title": "Values",
+              "description": "Filter values to receive",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "matchUnfiltered": {
+              "title": "Match Unfiltered",
+              "description": "Also receive messages that have no filter value",
+              "type": "boolean"
+            }
+          },
+          "required": ["values"],
+          "additionalProperties": false
+        },
+        "creditPolicy": {
+          "title": "Credit Policy",
+          "description": "Flow control of the chunks delivered by the server",
+          "type": "object",
+          "properties": {
+            "type": {
+              "title": "Type",
+              "description": "When new credits are requested",
+              "type": "string",
+              "enum": ["onChunkReceived", "onChunkCompleted"]
+            },
+            "startFrom": {
+              "title": "Start From",
+              "description": "Credits granted on subscription",
+              "type": "integer",
+              "minimum": 1
+            },
+            "step": {
+              "title": "Step",
+              "description": "Credits requested each time",
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false
+        }
+      },
+      "dependencies": {
+        "singleActive": ["consumerRef"]
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,
@@ -357,7 +724,7 @@
     {
       "properties": {
         "mode": {
-          "enum": ["queue"]
+          "enum": ["queue", "stream"]
         }
       }
     },
@@ -396,6 +763,37 @@
           "prefetchGlobal": false,
           "consume": false,
           "noAck": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "stream"
+          }
+        },
+        "required": ["mode"]
+      },
+      "then": {
+        "required": ["connection", "stream"],
+        "properties": {
+          "connection": true,
+          "stream": true,
+          "consumer": {
+            "default": {
+              "offset": {
+                "type": "next"
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "connection": false,
+          "stream": false,
+          "consumer": false
         }
       }
     }
