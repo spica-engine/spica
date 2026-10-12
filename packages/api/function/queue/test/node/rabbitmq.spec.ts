@@ -132,18 +132,18 @@ describe("RabbitMQ", () => {
       const queue = new RabbitMQQueue();
       const result = new RabbitMQ.Message.Result();
       const method = jest.fn((request, callback) => callback(null, result));
-      (queue as any).client = {storeOffset: method};
+      (queue as any).client = {ack: method};
 
-      const request = {id: "1"};
-      await expect(queue.invoke("storeOffset", request)).resolves.toBe(result);
+      const request = new RabbitMQ.Message.Settle({id: "1"});
+      await expect(queue.invoke("ack", request)).resolves.toBe(result);
       expect(method).toHaveBeenCalledWith(request, expect.any(Function));
     });
 
     it("should reject with the error details", async () => {
       const queue = new RabbitMQQueue();
-      (queue as any).client = {storeOffset: (_, callback) => callback({details: "nope"})};
+      (queue as any).client = {ack: (_, callback) => callback({details: "nope"})};
 
-      await expect(queue.invoke("storeOffset", {})).rejects.toThrow("nope");
+      await expect(queue.invoke("ack", new RabbitMQ.Message.Settle())).rejects.toThrow("nope");
     });
   });
 });

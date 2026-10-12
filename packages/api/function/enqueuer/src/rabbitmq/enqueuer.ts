@@ -1,7 +1,7 @@
 import {EventQueue, RabbitMQOptions, RabbitMQQueue} from "@spica-server/function-queue";
 import {Enqueuer} from "../enqueuer.js";
 import {Description} from "@spica-server/interface-function-enqueuer";
-import {event, RabbitMQ} from "@spica-server/function-queue-proto";
+import {event, RABBITMQ_DEFAULT_MODE, RabbitMQ} from "@spica-server/function-queue-proto";
 import uniqid from "uniqid";
 import {Logger} from "@nestjs/common";
 import {RabbitMQStrategy, Session, Subscription} from "./strategy.js";
@@ -12,8 +12,6 @@ export interface RabbitMQRetryPolicy {
   maxDelayMs: number;
   stableAfterMs: number;
 }
-
-const DEFAULT_MODE = "queue";
 
 export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   type = event.Type.RABBITMQ;
@@ -46,7 +44,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
 
   subscribe(target: event.Target, options: RabbitMQOptions): void {
     const subscription: Subscription = {target, options, cancelled: false, run: 0, attempt: 0};
-    const mode = options.mode ?? DEFAULT_MODE;
+    const mode = options.mode ?? RABBITMQ_DEFAULT_MODE;
 
     if (!this.strategies.has(mode)) {
       const message = `Unknown rabbitmq mode "${mode}".`;
@@ -79,7 +77,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   }
 
   private strategyOf(subscription: Subscription) {
-    return this.strategies.get(subscription.options.mode ?? DEFAULT_MODE);
+    return this.strategies.get(subscription.options.mode ?? RABBITMQ_DEFAULT_MODE);
   }
 
   private stop(subscription: Subscription) {

@@ -7,6 +7,15 @@ export type RabbitMQConsumeMessage = ConsumeMessage;
 export {rabbitmqArguments} from "./rabbitmq/runtime.js";
 export type {RuntimeStrategy} from "./rabbitmq/runtime.js";
 
+type RabbitMQMethod = keyof Pick<
+  RabbitMQ.QueueClient,
+  "pop" | "ack" | "nack" | "reject" | "ackAll" | "nackAll"
+>;
+type RabbitMQRequest<Method extends RabbitMQMethod> = Parameters<RabbitMQ.QueueClient[Method]>[0];
+type RabbitMQResponse<Method extends RabbitMQMethod> = Method extends "pop"
+  ? RabbitMQ.Message
+  : RabbitMQ.Message.Result;
+
 export class RabbitMQQueue {
   private client: RabbitMQ.QueueClient;
 
@@ -54,9 +63,16 @@ export class RabbitMQQueue {
     return this.invoke("nackAll", e);
   }
 
-  invoke<Request, Response>(method: string, e: Request): Promise<Response> {
+  invoke<Method extends RabbitMQMethod>(
+    method: Method,
+    e: RabbitMQRequest<Method>
+  ): Promise<RabbitMQResponse<Method>> {
     return new Promise((resolve, reject) => {
-      (this.client as any)[method](e, (error: grpc.ServiceError | null, result: Response) => {
+      const call = this.client[method].bind(this.client) as (
+        request: RabbitMQRequest<Method>,
+        callback: (error: grpc.ServiceError | null, result: RabbitMQResponse<Method>) => void
+      ) => void;
+      call(e, (error, result) => {
         if (error) {
           reject(new Error(error.details));
         } else {

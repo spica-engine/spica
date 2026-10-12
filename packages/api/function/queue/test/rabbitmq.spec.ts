@@ -265,3 +265,14 @@ describe("RabbitMQQueue", () => {
     });
   });
 });
+
+describe("RabbitMQQueue enqueue with an unregistered mode", () => {
+  it("should throw without keeping the message", () => {
+    const rabbitmqQueue = new RabbitMQQueue();
+
+    expect(() =>
+      rabbitmqQueue.enqueue("1", new RabbitMQ.Message({mode: "bogus"}), {token: 1})
+    ).toThrow('No settlement is registered for the rabbitmq mode "bogus".');
+    expect(rabbitmqQueue.size).toBe(0);
+  });
+});

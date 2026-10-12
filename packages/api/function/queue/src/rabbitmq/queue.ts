@@ -1,10 +1,8 @@
-import {RabbitMQ} from "@spica-server/function-queue-proto";
+import {RABBITMQ_DEFAULT_MODE, RabbitMQ} from "@spica-server/function-queue-proto";
 import grpc from "@grpc/grpc-js";
 import {Queue} from "../queue.js";
 import {RabbitMQSettlement} from "./settlement.js";
 import {RABBITMQ_SETTLEMENTS} from "./settlements.js";
-
-const DEFAULT_MODE = "queue";
 
 export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueService.definition> {
   readonly TYPE = RabbitMQ.UnimplementedQueueService.definition;
@@ -35,10 +33,11 @@ export class RabbitMQQueue extends Queue<typeof RabbitMQ.UnimplementedQueueServi
   }
 
   enqueue(id: string, message: RabbitMQ.Message, delivery?: unknown) {
+    const settlement = delivery
+      ? this.settlementFor(message.mode || RABBITMQ_DEFAULT_MODE)
+      : undefined;
     this.queue.set(id, message);
-    if (delivery) {
-      this.settlementFor(message.mode || DEFAULT_MODE).track(id, delivery);
-    }
+    settlement?.track(id, delivery);
   }
 
   dequeue(id: string) {
