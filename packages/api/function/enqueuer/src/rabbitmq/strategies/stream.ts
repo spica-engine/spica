@@ -40,8 +40,6 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
 
     const client = await attempt("Connection failed.", () =>
       connect({
-        port: 5552,
-        vhost: "/",
         ...connection,
         listeners: {
           connection_closed: () => session.fail("The connection was closed unexpectedly."),
