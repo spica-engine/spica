@@ -114,6 +114,29 @@ describe("Function RabbitMQ Trigger Schema", () => {
     });
   });
 
+  describe("mode", () => {
+    it("should accept the queue mode and store it as given", async () => {
+      const res = await request.post("/function", rabbitmqFunction("mode-queue", {mode: "queue"}));
+
+      expect(res.statusCode).toEqual(201);
+      expect(res.body.triggers.default.options).toEqual({
+        mode: "queue",
+        url: "amqp://localhost:5672",
+        queue: {name: "", durable: false},
+        noAck: true
+      });
+    });
+
+    it("should reject an unknown mode", async () => {
+      const res = await request.post("/function", rabbitmqFunction("mode-bogus", {mode: "bogus"}));
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.message).toEqual(
+        ".triggers.default.options.mode must be equal to one of the allowed values"
+      );
+    });
+  });
+
   describe("valid payloads", () => {
     it("should accept every option", async () => {
       const options = {

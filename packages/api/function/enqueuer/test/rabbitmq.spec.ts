@@ -1,5 +1,5 @@
 import {RabbitMQEnqueuer} from "@spica-server/function-enqueuer";
-import {event} from "@spica-server/function-queue-proto";
+import {event, RabbitMQ} from "@spica-server/function-queue-proto";
 import amqp from "amqplib";
 import {GenericContainer} from "testcontainers";
 
@@ -914,6 +914,132 @@ describe("rabbitmq enqueuer", () => {
 
       expect(connect).toHaveBeenCalledWith(url, socketOptions);
       expect(reportedErrors()).toEqual([]);
+    });
+  });
+  describe("strategies", () => {
+    function reportedErrors() {
+      return rabbitmqQueue.enqueue.mock.calls
+        .map(([, message]) => message)
+        .filter(message => message.errorMessage?.length)
+        .map(message => Buffer.from(message.errorMessage).toString());
+    }
+
+    function fakeStrategy() {
+      return {
+        mode: "fake",
+        open: jest.fn().mockResolvedValue(undefined),
+        release: jest.fn()
+      };
+    }
+
+    const fastRetry = {initialDelayMs: 20, maxDelayMs: 20, stableAfterMs: 10_000};
+
+    it("should use the queue strategy when the mode is absent", async () => {
+      const connect = jest.spyOn(amqp, "connect");
+
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "strategy-default-queue", durable: false},
+        noAck: true
+      });
+
+      expect(connect).toHaveBeenCalledWith(url, undefined);
+      expect(reportedErrors()).toEqual([]);
+    });
+
+    it("should use the queue strategy when the mode is queue", async () => {
+      const connect = jest.spyOn(amqp, "connect");
+
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        mode: "queue",
+        url,
+        queue: {name: "strategy-explicit-queue", durable: false},
+        noAck: true
+      });
+
+      expect(connect).toHaveBeenCalledWith(url, undefined);
+      expect(reportedErrors()).toEqual([]);
+    });
+
+    it("should mark delivered messages with the mode", async () => {
+      await rabbitmqEnqueuer.subscribe(noopTarget, {
+        url,
+        queue: {name: "strategy-mode-queue", durable: false},
+        noAck: true
+      });
+      await delay(500);
+      const connection = await amqp.connect(url);
+      const channel = await connection.createChannel();
+
+      channel.sendToQueue("strategy-mode-queue", Buffer.from("hello"));
+      await delay(500);
+      await channel.close();
+      await connection.close();
+
+      const delivered = rabbitmqQueue.enqueue.mock.calls
+        .map(([, message]) => message)
+        .filter(message => !message.errorMessage?.length);
+      expect(delivered).toHaveLength(1);
+      expect(delivered[0].mode).toBe("queue");
+    });
+
+    it("should report an unknown mode once without retrying", async () => {
+      const strategy = fakeStrategy();
+      rabbitmqEnqueuer = new RabbitMQEnqueuer(eventQueue as any, rabbitmqQueue as any, fastRetry, [
+        strategy
+      ]);
+
+      expect(() =>
+        rabbitmqEnqueuer.subscribe(noopTarget, {mode: "bogus", url} as any)
+      ).not.toThrow();
+      await delay(100);
+
+      expect(reportedErrors()).toEqual(['Unknown rabbitmq mode "bogus".']);
+      expect(strategy.open).not.toHaveBeenCalled();
+      expect(rabbitmqEnqueuer["subscriptions"]).toHaveLength(0);
+    });
+
+    it("should drive a custom strategy through the lifecycle", async () => {
+      const strategy = fakeStrategy();
+      rabbitmqEnqueuer = new RabbitMQEnqueuer(eventQueue as any, rabbitmqQueue as any, fastRetry, [
+        strategy
+      ]);
+
+      rabbitmqEnqueuer.subscribe(noopTarget, {mode: "fake", url} as any);
+      await delay(20);
+      expect(strategy.open).toHaveBeenCalledTimes(1);
+      expect(strategy.release).not.toHaveBeenCalled();
+
+      const session = strategy.open.mock.calls[0][1];
+      session.fail("boom");
+      expect(strategy.release).toHaveBeenCalledTimes(1);
+      expect(reportedErrors()).toEqual(["boom"]);
+
+      await delay(100);
+      expect(strategy.open).toHaveBeenCalledTimes(2);
+
+      rabbitmqEnqueuer.unsubscribe(noopTarget);
+      expect(strategy.release).toHaveBeenCalledTimes(2);
+      await delay(100);
+      expect(strategy.open).toHaveBeenCalledTimes(2);
+    });
+
+    it("should stamp the strategy mode and pass the delivery through", async () => {
+      const strategy = fakeStrategy();
+      rabbitmqEnqueuer = new RabbitMQEnqueuer(eventQueue as any, rabbitmqQueue as any, fastRetry, [
+        strategy
+      ]);
+
+      rabbitmqEnqueuer.subscribe(noopTarget, {mode: "fake", url} as any);
+      await delay(20);
+
+      const delivery = {token: 1};
+      strategy.open.mock.calls[0][1].deliver(new RabbitMQ.Message(), delivery);
+
+      const [, message, passed] = rabbitmqQueue.enqueue.mock.calls[0];
+      expect(message.mode).toBe("fake");
+      expect(passed).toBe(delivery);
+      expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -4,7 +4,8 @@ import type {ConsumeMessage} from "amqplib";
 
 export type RabbitMQConsumeMessage = ConsumeMessage;
 
-type SettleMethod = "ack" | "nack" | "reject" | "ackAll" | "nackAll";
+export {rabbitmqArguments} from "./rabbitmq/runtime.js";
+export type {RuntimeStrategy} from "./rabbitmq/runtime.js";
 
 export class RabbitMQQueue {
   private client: RabbitMQ.QueueClient;
@@ -34,31 +35,28 @@ export class RabbitMQQueue {
   }
 
   ack(e: RabbitMQ.Message.Settle) {
-    return this.settle("ack", e);
+    return this.invoke("ack", e);
   }
 
   nack(e: RabbitMQ.Message.Settle) {
-    return this.settle("nack", e);
+    return this.invoke("nack", e);
   }
 
   reject(e: RabbitMQ.Message.Settle) {
-    return this.settle("reject", e);
+    return this.invoke("reject", e);
   }
 
   ackAll(e: RabbitMQ.Message.Settle) {
-    return this.settle("ackAll", e);
+    return this.invoke("ackAll", e);
   }
 
   nackAll(e: RabbitMQ.Message.Settle) {
-    return this.settle("nackAll", e);
+    return this.invoke("nackAll", e);
   }
 
-  private settle(
-    method: SettleMethod,
-    e: RabbitMQ.Message.Settle
-  ): Promise<RabbitMQ.Message.Result> {
+  invoke<Request, Response>(method: string, e: Request): Promise<Response> {
     return new Promise((resolve, reject) => {
-      this.client[method](e, (error, result) => {
+      (this.client as any)[method](e, (error: grpc.ServiceError | null, result: Response) => {
         if (error) {
           reject(new Error(error.details));
         } else {
@@ -74,12 +72,14 @@ export class RabbitMQMessage {
   fields: string;
   properties: string;
   errorMessage: Uint8Array<ArrayBufferLike>;
+  mode: string;
 
   constructor(message: RabbitMQ.Message) {
     this.content = message.content;
     this.fields = message.fields;
     this.properties = message.properties;
     this.errorMessage = message.errorMessage;
+    this.mode = message.mode;
   }
 }
 

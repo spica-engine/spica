@@ -3,7 +3,6 @@
   "title": "RabbitMQ",
   "description": "RabbitMQ enqueuer for functions",
   "type": "object",
-  "required": ["url"],
   "definitions": {
     "arguments": {
       "type": "object",
@@ -20,6 +19,11 @@
     }
   },
   "properties": {
+    "mode": {
+      "title": "Mode",
+      "description": "Consumption strategy of the trigger. Defaults to queue when omitted",
+      "type": "string"
+    },
     "url": {
       "title": "URl",
       "description": "RabbitMQ connection URL. Connection parameters such as heartbeat, frameMax and channelMax can be given as query parameters",
@@ -224,10 +228,6 @@
       "title": "Queue",
       "description": "Queue to declare and consume messages from",
       "type": "object",
-      "default": {
-        "name": "",
-        "durable": false
-      },
       "properties": {
         "name": {
           "title": "Name",
@@ -349,9 +349,55 @@
     "noAck": {
       "title": "No Acknowledgement",
       "description": "The broker considers a message acknowledged as soon as it is delivered. Turn it off to acknowledge messages from the function with channel.ack and channel.nack",
-      "type": "boolean",
-      "default": true
+      "type": "boolean"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "properties": {
+        "mode": {
+          "enum": ["queue"]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "queue"
+          }
+        }
+      },
+      "then": {
+        "required": ["url"],
+        "properties": {
+          "url": true,
+          "queue": {
+            "default": {
+              "name": "",
+              "durable": false
+            }
+          },
+          "noAck": {
+            "default": true
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "url": false,
+          "socketOptions": false,
+          "exchange": false,
+          "bindings": false,
+          "exchangeBindings": false,
+          "queue": false,
+          "prefetch": false,
+          "prefetchGlobal": false,
+          "consume": false,
+          "noAck": false
+        }
+      }
+    }
+  ]
 }

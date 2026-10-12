@@ -17,6 +17,7 @@ export namespace RabbitMQ {
             fields?: string;
             properties?: string;
             errorMessage?: Uint8Array;
+            mode?: string;
           }
     ) {
       super();
@@ -36,6 +37,9 @@ export namespace RabbitMQ {
         }
         if ("errorMessage" in data && data.errorMessage != undefined) {
           this.errorMessage = data.errorMessage;
+        }
+        if ("mode" in data && data.mode != undefined) {
+          this.mode = data.mode;
         }
       }
     }
@@ -69,12 +73,19 @@ export namespace RabbitMQ {
     set errorMessage(value: Uint8Array) {
       pb_1.Message.setField(this, 5, value);
     }
+    get mode() {
+      return pb_1.Message.getFieldWithDefault(this, 6, "") as string;
+    }
+    set mode(value: string) {
+      pb_1.Message.setField(this, 6, value);
+    }
     static fromObject(data: {
       id?: string;
       content?: Uint8Array;
       fields?: string;
       properties?: string;
       errorMessage?: Uint8Array;
+      mode?: string;
     }): Message {
       const message = new Message({});
       if (data.id != null) {
@@ -92,6 +103,9 @@ export namespace RabbitMQ {
       if (data.errorMessage != null) {
         message.errorMessage = data.errorMessage;
       }
+      if (data.mode != null) {
+        message.mode = data.mode;
+      }
       return message;
     }
     toObject() {
@@ -101,6 +115,7 @@ export namespace RabbitMQ {
         fields?: string;
         properties?: string;
         errorMessage?: Uint8Array;
+        mode?: string;
       } = {};
       if (this.id != null) {
         data.id = this.id;
@@ -117,6 +132,9 @@ export namespace RabbitMQ {
       if (this.errorMessage != null) {
         data.errorMessage = this.errorMessage;
       }
+      if (this.mode != null) {
+        data.mode = this.mode;
+      }
       return data;
     }
     serialize(): Uint8Array;
@@ -128,6 +146,7 @@ export namespace RabbitMQ {
       if (this.fields.length) writer.writeString(3, this.fields);
       if (this.properties.length) writer.writeString(4, this.properties);
       if (this.errorMessage.length) writer.writeBytes(5, this.errorMessage);
+      if (this.mode.length) writer.writeString(6, this.mode);
       if (!w) return writer.getResultBuffer();
     }
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Message {
@@ -150,6 +169,9 @@ export namespace RabbitMQ {
             break;
           case 5:
             message.errorMessage = reader.readBytes();
+            break;
+          case 6:
+            message.mode = reader.readString();
             break;
           default:
             reader.skipField();
