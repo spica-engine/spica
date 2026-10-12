@@ -1,5 +1,11 @@
 import {RabbitMQ} from "@spica-server/function-queue-proto";
-import {RabbitMQChannel, RabbitMQMessage, reviveBuffers} from "../../node/src/rabbitmq";
+import {
+  RabbitMQChannel,
+  RabbitMQMessage,
+  RabbitMQQueue,
+  rabbitmqArguments,
+  reviveBuffers
+} from "../../node/src/rabbitmq";
 
 describe("RabbitMQ", () => {
   describe("Message", () => {
@@ -86,6 +92,58 @@ describe("RabbitMQ", () => {
       const source = {type: "Buffer", data: [1, 2], extra: true};
 
       expect(JSON.parse(JSON.stringify(source), reviveBuffers)).toEqual(source);
+    });
+  });
+  describe("rabbitmqArguments", () => {
+    const client = {ack: jest.fn()} as any;
+
+    function messageOf(mode: string) {
+      return new RabbitMQMessage(
+        new RabbitMQ.Message({
+          content: Buffer.from("payload"),
+          fields: JSON.stringify({routingKey: "key"}),
+          properties: JSON.stringify({headers: {}}),
+          mode
+        })
+      );
+    }
+
+    it.each(["", "queue"])("should build the message and channel for mode %p", mode => {
+      const [message, channel] = rabbitmqArguments("id", messageOf(mode), client) as any[];
+
+      expect(message.content.toString()).toBe("payload");
+      expect(message.fields).toEqual({routingKey: "key"});
+      expect(channel).toBeInstanceOf(RabbitMQChannel);
+    });
+
+    it("should throw a clear error for an unknown mode", () => {
+      expect(() => rabbitmqArguments("id", messageOf("bogus"), client)).toThrow(
+        'No runtime is registered for the rabbitmq mode "bogus".'
+      );
+    });
+  });
+
+  describe("invoke", () => {
+    beforeAll(() => {
+      process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5847";
+    });
+
+    it("should forward the request to the client method and resolve with the result", async () => {
+      const queue = new RabbitMQQueue();
+      const result = new RabbitMQ.Message.Result();
+      const method = jest.fn((request, callback) => callback(null, result));
+      (queue as any).client = {ack: method};
+
+      const request = new RabbitMQ.Message.Settle({id: "1"});
+      await expect(queue.invoke("ack", request)).resolves.toBe(result);
+      expect(method).toHaveBeenCalledWith(request, expect.any(Function));
+    });
+
+    it("should reject with the error details", async () => {
+      const queue = new RabbitMQQueue();
+      (queue as any).client = {ack: (_, callback) => callback({details: "nope"})};
+
+      await expect(queue.invoke("ack", new RabbitMQ.Message.Settle())).rejects.toThrow("nope");
     });
   });
 });

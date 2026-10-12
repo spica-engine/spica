@@ -8,6 +8,7 @@ message Message {
     string fields = 3;
     string properties = 4;
     bytes errorMessage = 5;
+    string mode = 6;
 
     message Pop {
         string id = 1;

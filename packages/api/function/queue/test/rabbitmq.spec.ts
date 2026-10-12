@@ -1,4 +1,4 @@
-import {RabbitMQQueue, EventQueue} from "@spica-server/function-queue";
+import {RabbitMQQueue, EventQueue, RABBITMQ_SETTLEMENTS} from "@spica-server/function-queue";
 import {RabbitMQ} from "@spica-server/function-queue-proto";
 import grpc, {credentials} from "@grpc/grpc-js";
 
@@ -202,5 +202,77 @@ describe("RabbitMQQueue", () => {
       expect(rabbitmqQueue.pendingDeliveries).toBe(1);
       expect((await settle("ack", {id: "1"})).error.code).toBe(grpc.status.NOT_FOUND);
     });
+  });
+});
+
+describe("RabbitMQQueue", () => {
+  describe("settlement strategies", () => {
+    function fakeSettlement() {
+      return {
+        mode: "fake",
+        pending: 0,
+        track: jest.fn(),
+        forget: jest.fn(),
+        purge: jest.fn(),
+        handlers: jest.fn().mockReturnValue({
+          storeOffset: (call, callback) => callback(null, new RabbitMQ.Message.Result())
+        })
+      };
+    }
+
+    it("should route a delivery of a message without mode to the queue settlement", async () => {
+      const rabbitmqQueue = new RabbitMQQueue();
+      const channel = {ack: jest.fn()};
+      rabbitmqQueue.enqueue("1", new RabbitMQ.Message({mode: ""}), {
+        channel: channel as any,
+        deliveryTag: 3
+      });
+
+      expect(rabbitmqQueue.pendingDeliveries).toBe(1);
+      const {ack} = rabbitmqQueue.create() as any;
+      await new Promise<void>(resolve =>
+        ack({request: new RabbitMQ.Message.Settle({id: "1"})}, () => resolve())
+      );
+      expect(channel.ack).toHaveBeenCalledWith({fields: {deliveryTag: 3}}, false);
+      expect(rabbitmqQueue.pendingDeliveries).toBe(0);
+    });
+
+    it("should expose the handlers of every registered settlement", async () => {
+      const settlement = fakeSettlement();
+      const custom = new RabbitMQQueue([...RABBITMQ_SETTLEMENTS(), settlement]);
+      const handlers = custom.create() as any;
+
+      expect(Object.keys(handlers).sort()).toEqual(
+        ["ack", "ackAll", "nack", "nackAll", "pop", "reject", "storeOffset"].sort()
+      );
+    });
+
+    it("should aggregate purge and pending deliveries across settlements", () => {
+      const settlement = fakeSettlement();
+      settlement.pending = 2;
+      const custom = new RabbitMQQueue([...RABBITMQ_SETTLEMENTS(), settlement]);
+
+      custom.enqueue("1", new RabbitMQ.Message({mode: "fake"}), {token: 1});
+      expect(settlement.track).toHaveBeenCalledWith("1", {token: 1});
+      expect(custom.pendingDeliveries).toBe(2);
+
+      const owner = {};
+      custom.purge(owner);
+      expect(settlement.purge).toHaveBeenCalledWith(owner);
+
+      custom.dequeue("1");
+      expect(settlement.forget).toHaveBeenCalledWith("1");
+    });
+  });
+});
+
+describe("RabbitMQQueue enqueue with an unregistered mode", () => {
+  it("should throw without keeping the message", () => {
+    const rabbitmqQueue = new RabbitMQQueue();
+
+    expect(() =>
+      rabbitmqQueue.enqueue("1", new RabbitMQ.Message({mode: "bogus"}), {token: 1})
+    ).toThrow('No settlement is registered for the rabbitmq mode "bogus".');
+    expect(rabbitmqQueue.size).toBe(0);
   });
 });
