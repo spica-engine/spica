@@ -26,6 +26,22 @@ describe("rabbitmq stream message serialization", () => {
     expect(serialized.messageProperties.creationTime).toBe("2026-01-01T00:00:00.000Z");
   });
 
+  it("should carry the 64-bit AMQP values as decimal strings", () => {
+    const serialized = JSON.parse(
+      serialize({
+        content: Buffer.from("payload"),
+        offset: 1n,
+        messageProperties: {messageId: 18446744073709551615n},
+        applicationProperties: {sequence: 9007199254740993n},
+        messageAnnotations: {"x-opt-received": -5n}
+      } as any)
+    );
+
+    expect(serialized.messageProperties.messageId).toBe("18446744073709551615");
+    expect(serialized.applicationProperties.sequence).toBe("9007199254740993");
+    expect(serialized.messageAnnotations["x-opt-received"]).toBe("-5");
+  });
+
   it("should leave the content out", () => {
     const serialized = JSON.parse(serialize({content: Buffer.from("payload"), offset: 1n}));
 

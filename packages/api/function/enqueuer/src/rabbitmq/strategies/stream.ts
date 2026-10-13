@@ -129,13 +129,19 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
       return;
     }
 
-    const message = new RabbitMQ.Message({
-      content: msg.content,
-      stream: serialize(msg),
-      consumer: subscription.token
-    });
+    try {
+      const message = new RabbitMQ.Message({
+        content: msg.content,
+        stream: serialize(msg),
+        consumer: subscription.token
+      });
 
-    session.deliver(message, {token: subscription.token, consumer});
+      session.deliver(message, {token: subscription.token, consumer});
+    } catch (error) {
+      this.logger.error(
+        `Skipped the message at offset ${msg.offset} of ${this.describe(subscription)}, reason: ${error.message}`
+      );
+    }
   }
 
   private close(client: Client) {
@@ -143,7 +149,11 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
   }
 
   private closeErrorMessage(subscription: StreamSubscription, error: Error) {
-    return `Error on closing the consumer of ${subscription.target.cwd}:${subscription.target.handler}, reason: ${error.message}`;
+    return `Error on closing the consumer of ${this.describe(subscription)}, reason: ${error.message}`;
+  }
+
+  private describe(subscription: StreamSubscription) {
+    return `${subscription.target.cwd}:${subscription.target.handler}`;
   }
 }
 
