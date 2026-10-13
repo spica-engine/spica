@@ -329,13 +329,7 @@ describe("rabbitmq stream enqueuer", () => {
   });
 
   describe("resilience", () => {
-    it("should resume without a replay after the connection is lost", async () => {
-      await createStream();
-      await publish(3);
-
-      subscribe({consumer: {offset: {type: "first"}}});
-      await until(() => deliveries().length === 3);
-
+    const loseConnection = async () => {
       const lost = enqueuer["subscriptions"][0].client;
       (enqueuer["subscriptions"][0].consumer as any).connection.socket.destroy();
 
@@ -345,12 +339,37 @@ describe("rabbitmq stream enqueuer", () => {
           enqueuer["subscriptions"][0].consumer !== undefined &&
           enqueuer["subscriptions"][0].client !== lost
       );
+    };
+
+    it("should restart from the configured offset after the connection is lost", async () => {
+      await createStream();
+      await publish(3);
+
+      subscribe({consumer: {offset: {type: "first"}}});
+      await until(() => deliveries().length === 3);
+
+      await loseConnection();
       await publish(2, {}, 3);
 
-      await until(() => deliveries().length === 5);
-      await delay(500);
-      expect(contents()).toEqual([0, 1, 2, 3, 4].map(i => `message-${i}`));
+      await until(() => deliveries().length === 8);
+      expect(contents()).toEqual([0, 1, 2, 0, 1, 2, 3, 4].map(i => `message-${i}`));
       expect(errors()[0]).toContain("closed unexpectedly");
+    });
+
+    it("should continue after the stored offset when the connection is lost", async () => {
+      await createStream();
+      await publish(3);
+
+      subscribe({consumer: {offset: {type: "first"}, consumerRef: "projector"}});
+      await until(() => deliveries().length === 3);
+      await enqueuer["subscriptions"][0].consumer.storeOffset(1n);
+      await delay(500);
+
+      await loseConnection();
+
+      await until(() => deliveries().length === 4);
+      await delay(500);
+      expect(contents()).toEqual(["message-0", "message-1", "message-2", "message-2"]);
     });
 
     it("should keep retrying while the broker is unreachable and report each attempt", async () => {

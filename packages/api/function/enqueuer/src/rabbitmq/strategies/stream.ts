@@ -21,7 +21,6 @@ type StreamResources = {
   client: Client;
   consumer: Consumer;
   token: string;
-  lastOffset: bigint;
 };
 
 export type StreamSubscription = Subscription<RabbitMQStreamOptions, StreamResources>;
@@ -107,10 +106,6 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
   private async resolveOffset(subscription: StreamSubscription, client: Client) {
     const {stream, consumer = {}} = subscription.options;
 
-    if (subscription.lastOffset !== undefined) {
-      return Offset.offset(subscription.lastOffset + 1n);
-    }
-
     if (consumer.consumerRef) {
       const stored = await client
         .queryOffset({reference: consumer.consumerRef, stream: stream.name})
@@ -133,8 +128,6 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
     if (!consumer || session.isStale()) {
       return;
     }
-
-    subscription.lastOffset = msg.offset;
 
     const message = new RabbitMQ.Message({
       content: msg.content,

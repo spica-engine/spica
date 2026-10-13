@@ -580,7 +580,7 @@
       "properties": {
         "offset": {
           "title": "Offset",
-          "description": "Position to start consuming from. Defaults to next. With consumerRef set, an offset stored on the server takes precedence on start and consumption continues after it",
+          "description": "Position to start consuming from. Defaults to next. With consumerRef set, an offset stored on the server takes precedence on start and consumption continues after it. This applies on every subscribe, including reconnects after a lost connection. Without a stored offset the trigger starts from this position again, so handlers should be idempotent or call storeOffset",
           "type": "object",
           "properties": {
             "type": {
