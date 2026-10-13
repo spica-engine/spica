@@ -567,156 +567,6 @@ export namespace RabbitMQ {
         return StoreOffset.deserialize(bytes);
       }
     }
-    export class QueryOffset extends pb_1.Message {
-      #one_of_decls: number[][] = [];
-      constructor(
-        data?:
-          | any[]
-          | {
-              consumer?: string;
-            }
-      ) {
-        super();
-        pb_1.Message.initialize(
-          this,
-          Array.isArray(data) ? data : [],
-          0,
-          -1,
-          [],
-          this.#one_of_decls
-        );
-        if (!Array.isArray(data) && typeof data == "object") {
-          if ("consumer" in data && data.consumer != undefined) {
-            this.consumer = data.consumer;
-          }
-        }
-      }
-      get consumer() {
-        return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
-      }
-      set consumer(value: string) {
-        pb_1.Message.setField(this, 1, value);
-      }
-      static fromObject(data: {consumer?: string}): QueryOffset {
-        const message = new QueryOffset({});
-        if (data.consumer != null) {
-          message.consumer = data.consumer;
-        }
-        return message;
-      }
-      toObject() {
-        const data: {
-          consumer?: string;
-        } = {};
-        if (this.consumer != null) {
-          data.consumer = this.consumer;
-        }
-        return data;
-      }
-      serialize(): Uint8Array;
-      serialize(w: pb_1.BinaryWriter): void;
-      serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
-        const writer = w || new pb_1.BinaryWriter();
-        if (this.consumer.length) writer.writeString(1, this.consumer);
-        if (!w) return writer.getResultBuffer();
-      }
-      static deserialize(bytes: Uint8Array | pb_1.BinaryReader): QueryOffset {
-        const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes),
-          message = new QueryOffset();
-        while (reader.nextField()) {
-          if (reader.isEndGroup()) break;
-          switch (reader.getFieldNumber()) {
-            case 1:
-              message.consumer = reader.readString();
-              break;
-            default:
-              reader.skipField();
-          }
-        }
-        return message;
-      }
-      serializeBinary(): Uint8Array {
-        return this.serialize();
-      }
-      static deserializeBinary(bytes: Uint8Array): QueryOffset {
-        return QueryOffset.deserialize(bytes);
-      }
-    }
-    export class Offset extends pb_1.Message {
-      #one_of_decls: number[][] = [];
-      constructor(
-        data?:
-          | any[]
-          | {
-              offset?: string;
-            }
-      ) {
-        super();
-        pb_1.Message.initialize(
-          this,
-          Array.isArray(data) ? data : [],
-          0,
-          -1,
-          [],
-          this.#one_of_decls
-        );
-        if (!Array.isArray(data) && typeof data == "object") {
-          if ("offset" in data && data.offset != undefined) {
-            this.offset = data.offset;
-          }
-        }
-      }
-      get offset() {
-        return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
-      }
-      set offset(value: string) {
-        pb_1.Message.setField(this, 1, value);
-      }
-      static fromObject(data: {offset?: string}): Offset {
-        const message = new Offset({});
-        if (data.offset != null) {
-          message.offset = data.offset;
-        }
-        return message;
-      }
-      toObject() {
-        const data: {
-          offset?: string;
-        } = {};
-        if (this.offset != null) {
-          data.offset = this.offset;
-        }
-        return data;
-      }
-      serialize(): Uint8Array;
-      serialize(w: pb_1.BinaryWriter): void;
-      serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
-        const writer = w || new pb_1.BinaryWriter();
-        if (this.offset.length) writer.writeString(1, this.offset);
-        if (!w) return writer.getResultBuffer();
-      }
-      static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Offset {
-        const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes),
-          message = new Offset();
-        while (reader.nextField()) {
-          if (reader.isEndGroup()) break;
-          switch (reader.getFieldNumber()) {
-            case 1:
-              message.offset = reader.readString();
-              break;
-            default:
-              reader.skipField();
-          }
-        }
-        return message;
-      }
-      serializeBinary(): Uint8Array {
-        return this.serialize();
-      }
-      static deserializeBinary(bytes: Uint8Array): Offset {
-        return Offset.deserialize(bytes);
-      }
-    }
   }
   interface GrpcUnaryServiceInterface<P, R> {
     (
@@ -834,16 +684,6 @@ export namespace RabbitMQ {
           Message.StoreOffset.deserialize(new Uint8Array(bytes)),
         responseSerialize: (message: Message.Result) => Buffer.from(message.serialize()),
         responseDeserialize: (bytes: Buffer) => Message.Result.deserialize(new Uint8Array(bytes))
-      },
-      queryOffset: {
-        path: "/RabbitMQ.Queue/queryOffset",
-        requestStream: false,
-        responseStream: false,
-        requestSerialize: (message: Message.QueryOffset) => Buffer.from(message.serialize()),
-        requestDeserialize: (bytes: Buffer) =>
-          Message.QueryOffset.deserialize(new Uint8Array(bytes)),
-        responseSerialize: (message: Message.Offset) => Buffer.from(message.serialize()),
-        responseDeserialize: (bytes: Buffer) => Message.Offset.deserialize(new Uint8Array(bytes))
       }
     };
     [method: string]: grpc_1.UntypedHandleCall;
@@ -874,10 +714,6 @@ export namespace RabbitMQ {
     abstract storeOffset(
       call: grpc_1.ServerUnaryCall<Message.StoreOffset, Message.Result>,
       callback: grpc_1.sendUnaryData<Message.Result>
-    ): void;
-    abstract queryOffset(
-      call: grpc_1.ServerUnaryCall<Message.QueryOffset, Message.Offset>,
-      callback: grpc_1.sendUnaryData<Message.Offset>
     ): void;
   }
   export class QueueClient extends grpc_1.makeGenericClientConstructor(
@@ -947,14 +783,6 @@ export namespace RabbitMQ {
       callback?: grpc_1.requestCallback<Message.Result>
     ): grpc_1.ClientUnaryCall => {
       return super.storeOffset(message, metadata, options, callback);
-    };
-    queryOffset: GrpcUnaryServiceInterface<Message.QueryOffset, Message.Offset> = (
-      message: Message.QueryOffset,
-      metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Message.Offset>,
-      options?: grpc_1.CallOptions | grpc_1.requestCallback<Message.Offset>,
-      callback?: grpc_1.requestCallback<Message.Offset>
-    ): grpc_1.ClientUnaryCall => {
-      return super.queryOffset(message, metadata, options, callback);
     };
   }
 }

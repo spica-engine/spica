@@ -9,14 +9,12 @@ export type {RuntimeStrategy} from "./rabbitmq/runtime.js";
 
 type RabbitMQMethod = keyof Pick<
   RabbitMQ.QueueClient,
-  "pop" | "ack" | "nack" | "reject" | "ackAll" | "nackAll" | "storeOffset" | "queryOffset"
+  "pop" | "ack" | "nack" | "reject" | "ackAll" | "nackAll" | "storeOffset"
 >;
 type RabbitMQRequest<Method extends RabbitMQMethod> = Parameters<RabbitMQ.QueueClient[Method]>[0];
 type RabbitMQResponse<Method extends RabbitMQMethod> = Method extends "pop"
   ? RabbitMQ.Message
-  : Method extends "queryOffset"
-    ? RabbitMQ.Message.Offset
-    : RabbitMQ.Message.Result;
+  : RabbitMQ.Message.Result;
 
 export class RabbitMQQueue {
   private client: RabbitMQ.QueueClient;

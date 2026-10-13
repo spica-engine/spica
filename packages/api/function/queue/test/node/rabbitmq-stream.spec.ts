@@ -86,15 +86,5 @@ describe("RabbitMQ stream runtime", () => {
 
       expect(client.invoke.mock.calls[0][1].toObject()).toEqual({consumer: "token", offset: "20"});
     });
-
-    it("should return the stored offset as a bigint", async () => {
-      client.invoke.mockResolvedValue(new RabbitMQ.Message.Offset({offset: "9007199254740993"}));
-
-      const offset = await new RabbitMQStreamConsumer("token", 1n, client as any).queryOffset();
-
-      expect(client.invoke.mock.calls[0][0]).toBe("queryOffset");
-      expect(client.invoke.mock.calls[0][1].toObject()).toEqual({consumer: "token"});
-      expect(offset).toBe(9007199254740993n);
-    });
   });
 });

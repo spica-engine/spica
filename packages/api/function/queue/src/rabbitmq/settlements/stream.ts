@@ -4,7 +4,6 @@ import {RabbitMQSettlement} from "../settlement.js";
 
 export interface StreamConsumerHandle {
   storeOffset(offset?: bigint): Promise<void>;
-  queryOffset(): Promise<bigint>;
 }
 
 export interface RabbitMQStreamDelivery {
@@ -34,8 +33,7 @@ export class StreamSettlement implements RabbitMQSettlement {
 
   handlers() {
     return {
-      storeOffset: this.storeOffset.bind(this),
-      queryOffset: this.queryOffset.bind(this)
+      storeOffset: this.storeOffset.bind(this)
     };
   }
 
@@ -47,16 +45,6 @@ export class StreamSettlement implements RabbitMQSettlement {
     this.run(token, callback, async consumer => {
       await consumer.storeOffset(BigInt(offset));
       return new RabbitMQ.Message.Result();
-    });
-  }
-
-  queryOffset(
-    call: grpc.ServerUnaryCall<RabbitMQ.Message.QueryOffset, RabbitMQ.Message.Offset>,
-    callback: grpc.sendUnaryData<RabbitMQ.Message.Offset>
-  ) {
-    this.run(call.request.consumer, callback, async consumer => {
-      const offset = await consumer.queryOffset();
-      return new RabbitMQ.Message.Offset({offset: String(offset)});
     });
   }
 

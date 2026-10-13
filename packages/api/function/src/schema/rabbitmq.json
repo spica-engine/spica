@@ -649,7 +649,7 @@
         },
         "consumerRef": {
           "title": "Consumer Reference",
-          "description": "Name under which the server stores the offset of this consumer. Required to use storeOffset and queryOffset, and to continue after the stored offset on restart",
+          "description": "Name under which the server stores the offset of this consumer. Required to use storeOffset and to continue after the stored offset on restart",
           "type": "string",
           "minLength": 1
         },

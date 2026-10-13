@@ -10,10 +10,7 @@ describe("RabbitMQQueue stream settlement", () => {
   let client: any;
 
   function fakeConsumer() {
-    return {
-      storeOffset: jest.fn().mockResolvedValue(undefined),
-      queryOffset: jest.fn().mockResolvedValue(42n)
-    };
+    return {storeOffset: jest.fn().mockResolvedValue(undefined)};
   }
 
   function deliver(id: string, token: string, consumer: ReturnType<typeof fakeConsumer>) {
@@ -27,14 +24,6 @@ describe("RabbitMQQueue stream settlement", () => {
     return new Promise<{error: any}>(resolve => {
       client.storeOffset(new RabbitMQ.Message.StoreOffset({consumer, offset}), error =>
         resolve({error})
-      );
-    });
-  }
-
-  function queryOffset(consumer: string) {
-    return new Promise<{error: any; result: RabbitMQ.Message.Offset}>(resolve => {
-      client.queryOffset(new RabbitMQ.Message.QueryOffset({consumer}), (error, result) =>
-        resolve({error, result})
       );
     });
   }
@@ -70,39 +59,22 @@ describe("RabbitMQQueue stream settlement", () => {
     expect(consumer.storeOffset).toHaveBeenCalledWith(9007199254740993n);
   });
 
-  it("should return the stored offset as a string", async () => {
-    const consumer = fakeConsumer();
-    consumer.queryOffset.mockResolvedValue(9007199254740993n);
-    deliver("1", "token", consumer);
-
-    const {error, result} = await queryOffset("token");
-
-    expect(error).toBe(null);
-    expect(result.offset).toBe("9007199254740993");
-  });
-
   it("should answer NOT_FOUND for an unknown token", async () => {
     const stored = await storeOffset("unknown", "1");
-    const queried = await queryOffset("unknown");
 
     expect(stored.error.code).toBe(grpc.status.NOT_FOUND);
     expect(stored.error.details).toContain("unknown");
-    expect(queried.error.code).toBe(grpc.status.NOT_FOUND);
   });
 
   it("should answer FAILED_PRECONDITION when the consumer rejects", async () => {
     const consumer = fakeConsumer();
     consumer.storeOffset.mockRejectedValue(new Error("offset store failed"));
-    consumer.queryOffset.mockRejectedValue(new Error("no stored offset"));
     deliver("1", "token", consumer);
 
     const stored = await storeOffset("token", "1");
-    const queried = await queryOffset("token");
 
     expect(stored.error.code).toBe(grpc.status.FAILED_PRECONDITION);
     expect(stored.error.details).toBe("offset store failed");
-    expect(queried.error.code).toBe(grpc.status.FAILED_PRECONDITION);
-    expect(queried.error.details).toBe("no stored offset");
   });
 
   it("should drop the token when its consumer is purged", async () => {

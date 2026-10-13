@@ -921,7 +921,7 @@ describe("Entrypoint", () => {
 
   describe("rabbitmq stream", () => {
     let rabbitmqQueue: RabbitMQQueue;
-    let consumer: {storeOffset: jest.Mock; queryOffset: jest.Mock};
+    let consumer: {storeOffset: jest.Mock};
 
     async function enqueueMessage() {
       const ev = new event.Event({
@@ -957,7 +957,7 @@ describe("Entrypoint", () => {
       rabbitmqQueue = new RabbitMQQueue();
       queue.addQueue(rabbitmqQueue);
       queue.listen();
-      consumer = {storeOffset: jest.fn().mockResolvedValue(undefined), queryOffset: jest.fn()};
+      consumer = {storeOffset: jest.fn().mockResolvedValue(undefined)};
     });
 
     it("should pass the message with a bigint offset and a buffer content", async () => {

@@ -16,14 +16,6 @@ export class RabbitMQStreamConsumer {
       new RabbitMQ.Message.StoreOffset({consumer: this.token, offset: String(offset)})
     );
   }
-
-  async queryOffset(): Promise<bigint> {
-    const result = await this.client.invoke(
-      "queryOffset",
-      new RabbitMQ.Message.QueryOffset({consumer: this.token})
-    );
-    return BigInt(result.offset);
-  }
 }
 
 export function reviveStreamValues(key: string, value: any) {
@@ -48,6 +40,9 @@ export const streamRuntime: RuntimeStrategy = {
   mode: "stream",
   args(_eventId, message, client) {
     const deserialized = deserialize(message);
-    return [deserialized, new RabbitMQStreamConsumer(message.consumer, deserialized.offset, client)];
+    return [
+      deserialized,
+      new RabbitMQStreamConsumer(message.consumer, deserialized.offset, client)
+    ];
   }
 };

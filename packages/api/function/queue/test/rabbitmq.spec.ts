@@ -243,17 +243,7 @@ describe("RabbitMQQueue", () => {
       const handlers = custom.create() as any;
 
       expect(Object.keys(handlers).sort()).toEqual(
-        [
-          "ack",
-          "ackAll",
-          "custom",
-          "nack",
-          "nackAll",
-          "pop",
-          "queryOffset",
-          "reject",
-          "storeOffset"
-        ].sort()
+        ["ack", "ackAll", "custom", "nack", "nackAll", "pop", "reject", "storeOffset"].sort()
       );
     });
 
