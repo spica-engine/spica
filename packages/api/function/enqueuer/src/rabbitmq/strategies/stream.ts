@@ -157,7 +157,7 @@ function toOffset(offset: ConsumerOptions["offset"]) {
       return Offset.offset(BigInt(offset.value));
     case "timestamp":
       return Offset.timestamp(new Date(offset.value));
-    default:
+    case "next":
       return Offset.next();
   }
 }
