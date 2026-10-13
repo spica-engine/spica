@@ -53,4 +53,56 @@ export interface RabbitMQQueueOptions {
   noAck?: boolean;
 }
 
-export type RabbitMQOptions = RabbitMQQueueOptions;
+export interface RabbitMQStreamOptions {
+  mode: "stream";
+  connection: {
+    hostname: string;
+    username: string;
+    password: string;
+    port?: number;
+    vhost?: string;
+    mechanism?: "PLAIN" | "EXTERNAL";
+    frameMax?: number;
+    heartbeat?: number;
+    socketTimeout?: number;
+    connectionName?: string;
+    ssl?:
+      | boolean
+      | {
+          key?: string;
+          cert?: string;
+          ca?: string;
+          rejectUnauthorized?: boolean;
+        };
+    addressResolver?: {enabled: true; endpoint?: {host: string; port: number}} | {enabled: false};
+    bufferSizeSettings?: {initialSize?: number; maxRatio?: number; multiplier?: number};
+  };
+  stream: {
+    name: string;
+    passive?: boolean;
+    arguments?: {
+      "max-age"?: string;
+      "max-length-bytes"?: number;
+      "stream-max-segment-size-bytes"?: number;
+      "initial-cluster-size"?: number;
+      "queue-leader-locator"?: "random" | "client-local" | "least-leaders";
+      [key: string]: unknown;
+    };
+  };
+  consumer: {
+    offset:
+      | {type: "first" | "last" | "next"}
+      | {type: "offset" | "timestamp"; value: number | string};
+    consumerRef?: string;
+    singleActive?: boolean;
+    consumerTag?: string;
+    filter?: {values: string[]; matchUnfiltered?: boolean};
+    creditPolicy?: {
+      type: "onChunkReceived" | "onChunkCompleted";
+      startFrom?: number;
+      step?: number;
+    };
+  };
+}
+
+export type RabbitMQOptions = RabbitMQQueueOptions | RabbitMQStreamOptions;

@@ -9,7 +9,7 @@ export type {RuntimeStrategy} from "./rabbitmq/runtime.js";
 
 type RabbitMQMethod = keyof Pick<
   RabbitMQ.QueueClient,
-  "pop" | "ack" | "nack" | "reject" | "ackAll" | "nackAll"
+  "pop" | "ack" | "nack" | "reject" | "ackAll" | "nackAll" | "storeOffset"
 >;
 type RabbitMQRequest<Method extends RabbitMQMethod> = Parameters<RabbitMQ.QueueClient[Method]>[0];
 type RabbitMQResponse<Method extends RabbitMQMethod> = Method extends "pop"
@@ -89,6 +89,8 @@ export class RabbitMQMessage {
   properties: string;
   errorMessage: Uint8Array<ArrayBufferLike>;
   mode: string;
+  stream: string;
+  consumer: string;
 
   constructor(message: RabbitMQ.Message) {
     this.content = message.content;
@@ -96,6 +98,8 @@ export class RabbitMQMessage {
     this.properties = message.properties;
     this.errorMessage = message.errorMessage;
     this.mode = message.mode;
+    this.stream = message.stream;
+    this.consumer = message.consumer;
   }
 }
 

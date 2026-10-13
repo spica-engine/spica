@@ -919,6 +919,82 @@ describe("Entrypoint", () => {
     });
   });
 
+  describe("rabbitmq stream", () => {
+    let rabbitmqQueue: RabbitMQQueue;
+    let consumer: {storeOffset: jest.Mock};
+
+    async function enqueueMessage() {
+      const ev = new event.Event({
+        type: event.Type.RABBITMQ,
+        target: new event.Target({
+          cwd: meta.cwd,
+          handler: "default",
+          context: new event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
+      queue.enqueue(ev);
+
+      rabbitmqQueue.enqueue(
+        ev.id,
+        new RabbitMQ.Message({
+          mode: "stream",
+          content: Buffer.from("hello"),
+          stream: JSON.stringify({
+            offset: "7",
+            applicationProperties: {region: "eu"}
+          }),
+          consumer: "token"
+        }),
+        {token: "token", consumer}
+      );
+    }
+
+    beforeEach(() => {
+      queue.drain();
+      rabbitmqQueue = new RabbitMQQueue();
+      queue.addQueue(rabbitmqQueue);
+      queue.listen();
+      consumer = {storeOffset: jest.fn().mockResolvedValue(undefined)};
+    });
+
+    it("should pass the message with a bigint offset and a buffer content", async () => {
+      await initializeFn(`
+      export default function(message) {
+        const isExpected =
+          typeof message.offset == "bigint" &&
+          message.offset == 7n &&
+          Buffer.isBuffer(message.content) &&
+          message.content.toString() == "hello" &&
+          message.applicationProperties.region == "eu";
+        if (isExpected) {
+          process.exit(4);
+        }
+      }`);
+      await enqueueMessage();
+
+      const exitCode = await spawn().catch(e => e);
+
+      expect(exitCode).toBe(4);
+    });
+
+    it("should let the handler await the offset storage", async () => {
+      await initializeFn(`
+      export default async function(message, consumer) {
+        await consumer.storeOffset();
+        process.exit(4);
+      }`);
+      await enqueueMessage();
+
+      const exitCode = await spawn().catch(e => e);
+
+      expect(exitCode).toBe(4);
+      expect(consumer.storeOffset).toHaveBeenCalledWith(7n);
+    });
+  });
+
   describe("firehose", () => {
     let firehoseQueue: FirehoseQueue;
 

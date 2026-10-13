@@ -18,6 +18,8 @@ export namespace RabbitMQ {
             properties?: string;
             errorMessage?: Uint8Array;
             mode?: string;
+            stream?: string;
+            consumer?: string;
           }
     ) {
       super();
@@ -40,6 +42,12 @@ export namespace RabbitMQ {
         }
         if ("mode" in data && data.mode != undefined) {
           this.mode = data.mode;
+        }
+        if ("stream" in data && data.stream != undefined) {
+          this.stream = data.stream;
+        }
+        if ("consumer" in data && data.consumer != undefined) {
+          this.consumer = data.consumer;
         }
       }
     }
@@ -79,6 +87,18 @@ export namespace RabbitMQ {
     set mode(value: string) {
       pb_1.Message.setField(this, 6, value);
     }
+    get stream() {
+      return pb_1.Message.getFieldWithDefault(this, 7, "") as string;
+    }
+    set stream(value: string) {
+      pb_1.Message.setField(this, 7, value);
+    }
+    get consumer() {
+      return pb_1.Message.getFieldWithDefault(this, 8, "") as string;
+    }
+    set consumer(value: string) {
+      pb_1.Message.setField(this, 8, value);
+    }
     static fromObject(data: {
       id?: string;
       content?: Uint8Array;
@@ -86,6 +106,8 @@ export namespace RabbitMQ {
       properties?: string;
       errorMessage?: Uint8Array;
       mode?: string;
+      stream?: string;
+      consumer?: string;
     }): Message {
       const message = new Message({});
       if (data.id != null) {
@@ -106,6 +128,12 @@ export namespace RabbitMQ {
       if (data.mode != null) {
         message.mode = data.mode;
       }
+      if (data.stream != null) {
+        message.stream = data.stream;
+      }
+      if (data.consumer != null) {
+        message.consumer = data.consumer;
+      }
       return message;
     }
     toObject() {
@@ -116,6 +144,8 @@ export namespace RabbitMQ {
         properties?: string;
         errorMessage?: Uint8Array;
         mode?: string;
+        stream?: string;
+        consumer?: string;
       } = {};
       if (this.id != null) {
         data.id = this.id;
@@ -135,6 +165,12 @@ export namespace RabbitMQ {
       if (this.mode != null) {
         data.mode = this.mode;
       }
+      if (this.stream != null) {
+        data.stream = this.stream;
+      }
+      if (this.consumer != null) {
+        data.consumer = this.consumer;
+      }
       return data;
     }
     serialize(): Uint8Array;
@@ -147,6 +183,8 @@ export namespace RabbitMQ {
       if (this.properties.length) writer.writeString(4, this.properties);
       if (this.errorMessage.length) writer.writeBytes(5, this.errorMessage);
       if (this.mode.length) writer.writeString(6, this.mode);
+      if (this.stream.length) writer.writeString(7, this.stream);
+      if (this.consumer.length) writer.writeString(8, this.consumer);
       if (!w) return writer.getResultBuffer();
     }
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Message {
@@ -172,6 +210,12 @@ export namespace RabbitMQ {
             break;
           case 6:
             message.mode = reader.readString();
+            break;
+          case 7:
+            message.stream = reader.readString();
+            break;
+          case 8:
+            message.consumer = reader.readString();
             break;
           default:
             reader.skipField();
@@ -427,6 +471,102 @@ export namespace RabbitMQ {
         return Result.deserialize(bytes);
       }
     }
+    export class StoreOffset extends pb_1.Message {
+      #one_of_decls: number[][] = [];
+      constructor(
+        data?:
+          | any[]
+          | {
+              consumer?: string;
+              offset?: string;
+            }
+      ) {
+        super();
+        pb_1.Message.initialize(
+          this,
+          Array.isArray(data) ? data : [],
+          0,
+          -1,
+          [],
+          this.#one_of_decls
+        );
+        if (!Array.isArray(data) && typeof data == "object") {
+          if ("consumer" in data && data.consumer != undefined) {
+            this.consumer = data.consumer;
+          }
+          if ("offset" in data && data.offset != undefined) {
+            this.offset = data.offset;
+          }
+        }
+      }
+      get consumer() {
+        return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
+      }
+      set consumer(value: string) {
+        pb_1.Message.setField(this, 1, value);
+      }
+      get offset() {
+        return pb_1.Message.getFieldWithDefault(this, 2, "") as string;
+      }
+      set offset(value: string) {
+        pb_1.Message.setField(this, 2, value);
+      }
+      static fromObject(data: {consumer?: string; offset?: string}): StoreOffset {
+        const message = new StoreOffset({});
+        if (data.consumer != null) {
+          message.consumer = data.consumer;
+        }
+        if (data.offset != null) {
+          message.offset = data.offset;
+        }
+        return message;
+      }
+      toObject() {
+        const data: {
+          consumer?: string;
+          offset?: string;
+        } = {};
+        if (this.consumer != null) {
+          data.consumer = this.consumer;
+        }
+        if (this.offset != null) {
+          data.offset = this.offset;
+        }
+        return data;
+      }
+      serialize(): Uint8Array;
+      serialize(w: pb_1.BinaryWriter): void;
+      serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+        const writer = w || new pb_1.BinaryWriter();
+        if (this.consumer.length) writer.writeString(1, this.consumer);
+        if (this.offset.length) writer.writeString(2, this.offset);
+        if (!w) return writer.getResultBuffer();
+      }
+      static deserialize(bytes: Uint8Array | pb_1.BinaryReader): StoreOffset {
+        const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes),
+          message = new StoreOffset();
+        while (reader.nextField()) {
+          if (reader.isEndGroup()) break;
+          switch (reader.getFieldNumber()) {
+            case 1:
+              message.consumer = reader.readString();
+              break;
+            case 2:
+              message.offset = reader.readString();
+              break;
+            default:
+              reader.skipField();
+          }
+        }
+        return message;
+      }
+      serializeBinary(): Uint8Array {
+        return this.serialize();
+      }
+      static deserializeBinary(bytes: Uint8Array): StoreOffset {
+        return StoreOffset.deserialize(bytes);
+      }
+    }
   }
   interface GrpcUnaryServiceInterface<P, R> {
     (
@@ -534,6 +674,16 @@ export namespace RabbitMQ {
         requestDeserialize: (bytes: Buffer) => Message.Settle.deserialize(new Uint8Array(bytes)),
         responseSerialize: (message: Message.Result) => Buffer.from(message.serialize()),
         responseDeserialize: (bytes: Buffer) => Message.Result.deserialize(new Uint8Array(bytes))
+      },
+      storeOffset: {
+        path: "/RabbitMQ.Queue/storeOffset",
+        requestStream: false,
+        responseStream: false,
+        requestSerialize: (message: Message.StoreOffset) => Buffer.from(message.serialize()),
+        requestDeserialize: (bytes: Buffer) =>
+          Message.StoreOffset.deserialize(new Uint8Array(bytes)),
+        responseSerialize: (message: Message.Result) => Buffer.from(message.serialize()),
+        responseDeserialize: (bytes: Buffer) => Message.Result.deserialize(new Uint8Array(bytes))
       }
     };
     [method: string]: grpc_1.UntypedHandleCall;
@@ -559,6 +709,10 @@ export namespace RabbitMQ {
     ): void;
     abstract nackAll(
       call: grpc_1.ServerUnaryCall<Message.Settle, Message.Result>,
+      callback: grpc_1.sendUnaryData<Message.Result>
+    ): void;
+    abstract storeOffset(
+      call: grpc_1.ServerUnaryCall<Message.StoreOffset, Message.Result>,
       callback: grpc_1.sendUnaryData<Message.Result>
     ): void;
   }
@@ -621,6 +775,14 @@ export namespace RabbitMQ {
       callback?: grpc_1.requestCallback<Message.Result>
     ): grpc_1.ClientUnaryCall => {
       return super.nackAll(message, metadata, options, callback);
+    };
+    storeOffset: GrpcUnaryServiceInterface<Message.StoreOffset, Message.Result> = (
+      message: Message.StoreOffset,
+      metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
+      options?: grpc_1.CallOptions | grpc_1.requestCallback<Message.Result>,
+      callback?: grpc_1.requestCallback<Message.Result>
+    ): grpc_1.ClientUnaryCall => {
+      return super.storeOffset(message, metadata, options, callback);
     };
   }
 }

@@ -6,6 +6,8 @@ env:
   MONGODB_URL: "mongodb://172.17.0.1:27017"
   MAILER_URL: "smtp://172.17.0.1:1025,api://172.17.0.1:8025"
   RABBITMQ_URL: "amqp://172.17.0.1:5672"
+  RABBITMQ_STREAM_HOST: "172.17.0.1"
+  RABBITMQ_STREAM_PORT: "5552"
   NX_FORCE_NO_DAEMON: true
 
 on:
@@ -182,18 +184,29 @@ jobs:
 
       - name: Start RabbitMQ
         run: |
+          mkdir -p "$RUNNER_TEMP/rabbitmq"
+          echo "[rabbitmq_stream]." > "$RUNNER_TEMP/rabbitmq/enabled_plugins"
+          echo "stream.advertised_host = 172.17.0.1" > "$RUNNER_TEMP/rabbitmq/20-stream.conf"
+
           docker run -d --rm --name rabbitmq \
             -p 5672:5672 \
+            -p 5552:5552 \
+            -v "$RUNNER_TEMP/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro" \
+            -v "$RUNNER_TEMP/rabbitmq/20-stream.conf:/etc/rabbitmq/conf.d/20-stream.conf:ro" \
             rabbitmq:4.1
 
           echo "Waiting for RabbitMQ..."
-          for i in {1..10}; do
-            if nc -z localhost 5672; then
+          for i in {1..30}; do
+            if docker exec -u rabbitmq rabbitmq rabbitmq-diagnostics -q check_port_listener 5672 >/dev/null 2>&1 &&
+               docker exec -u rabbitmq rabbitmq rabbitmq-diagnostics -q check_port_listener 5552 >/dev/null 2>&1; then
               echo "RabbitMQ is ready."
-              break
+              exit 0
             fi
             sleep 2
           done
+          echo "RabbitMQ did not become ready."
+          docker logs rabbitmq || true
+          exit 1
       - name: Start Mailer
         run: |
           docker run -d --rm --name mailer \
@@ -217,7 +230,7 @@ jobs:
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
       - name: Run Tests
-        run: MONGODB_URL=$MONGODB_URL MAILER_URL=$MAILER_URL RABBITMQ_URL=$RABBITMQ_URL yarn nx test ${{ matrix.project }}
+        run: MONGODB_URL=$MONGODB_URL MAILER_URL=$MAILER_URL RABBITMQ_URL=$RABBITMQ_URL RABBITMQ_STREAM_HOST=$RABBITMQ_STREAM_HOST RABBITMQ_STREAM_PORT=$RABBITMQ_STREAM_PORT yarn nx test ${{ matrix.project }}
 
       - name: Stop RabbitMQ
         run: docker stop rabbitmq || true

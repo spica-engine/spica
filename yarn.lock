@@ -9516,6 +9516,7 @@ __metadata:
     body-parser: "npm:^1.20.5"
     express: "npm:^4.21.2"
     node-schedule: "npm:^2.1.1"
+    rabbitmq-stream-js-client: "npm:1.1.0"
     rxjs: "npm:^7.8.2"
     uniqid: "npm:^5.4.0"
     ws: "npm:^8.18.3"
@@ -27467,6 +27468,15 @@ __metadata:
   version: 5.1.1
   resolution: "quick-lru@npm:5.1.1"
   checksum: 10c0/a24cba5da8cec30d70d2484be37622580f64765fb6390a928b17f60cd69e8dbd32a954b3ff9176fa1b86d86ff2ba05252fae55dc4d40d0291c60412b0ad096da
+  languageName: node
+  linkType: hard
+
+"rabbitmq-stream-js-client@npm:1.1.0":
+  version: 1.1.0
+  resolution: "rabbitmq-stream-js-client@npm:1.1.0"
+  dependencies:
+    semver: "npm:^7.5.4"
+  checksum: 10c0/c23c378c544729208eecb1878fdbd33850c008d7b9760e465875a544dc83711b7549e3b2cc4d990637db44d4efd847e27a03421d37a8c2060d2e004c04cdcc7a
   languageName: node
   linkType: hard
 
