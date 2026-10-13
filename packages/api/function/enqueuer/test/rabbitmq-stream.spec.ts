@@ -175,7 +175,7 @@ describe("rabbitmq stream enqueuer", () => {
       expect(message.content.toString()).toBe("message-0");
       expect(message.mode).toBe("stream");
       expect(message.consumer).toBeTruthy();
-      expect(streamMessage.offset).toEqual({type: "BigInt", value: "0"});
+      expect(streamMessage.offset).toBe("0");
       expect(streamMessage.applicationProperties).toEqual({region: "eu", retries: 2});
       expect(streamMessage.messageProperties).toMatchObject({
         contentType: "text/plain",

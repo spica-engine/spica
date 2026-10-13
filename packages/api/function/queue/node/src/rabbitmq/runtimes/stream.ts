@@ -18,22 +18,9 @@ export class RabbitMQStreamConsumer {
   }
 }
 
-export function reviveStreamValues(key: string, value: any) {
-  switch (value?.type) {
-    case "BigInt":
-      return BigInt(value.value);
-    case "Date":
-      return new Date(value.value);
-    case "AmqpByte":
-      return {byteValue: value.value};
-    default:
-      return reviveBuffers(key, value);
-  }
-}
-
 export function deserialize(message: RabbitMQMessage) {
-  const stream = JSON.parse(message.stream, reviveStreamValues);
-  return {...stream, content: Buffer.from(message.content)};
+  const {offset, ...stream} = JSON.parse(message.stream, reviveBuffers);
+  return {...stream, offset: BigInt(offset), content: Buffer.from(message.content)};
 }
 
 export const streamRuntime: RuntimeStrategy = {

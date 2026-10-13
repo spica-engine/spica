@@ -943,7 +943,7 @@ describe("Entrypoint", () => {
           mode: "stream",
           content: Buffer.from("hello"),
           stream: JSON.stringify({
-            offset: {type: "BigInt", value: "7"},
+            offset: "7",
             applicationProperties: {region: "eu"}
           }),
           consumer: "token"
