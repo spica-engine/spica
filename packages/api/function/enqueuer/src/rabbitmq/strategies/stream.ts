@@ -62,6 +62,11 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
 
     const resolveOffset = () => this.resolveOffset(subscription, client);
     const startOffset = await attempt("Consumer declaration failed.", resolveOffset);
+    const resolvePromotionOffset = () =>
+      attempt("Offset resolution on promotion failed.", resolveOffset).catch(error => {
+        session.fail(error.message);
+        throw error;
+      });
 
     const declaration = client.declareConsumer(
       {
@@ -78,7 +83,7 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
         creditPolicy: toCreditPolicy(consumerOptions.creditPolicy),
         connectionClosedListener: () =>
           session.fail("The consumer connection was closed unexpectedly."),
-        consumerUpdateListener: consumerOptions.singleActive ? resolveOffset : undefined
+        consumerUpdateListener: consumerOptions.singleActive ? resolvePromotionOffset : undefined
       },
       msg => this.onMessage(subscription, session, declaration, msg)
     );
