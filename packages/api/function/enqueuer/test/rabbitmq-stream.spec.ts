@@ -105,6 +105,7 @@ describe("rabbitmq stream enqueuer", () => {
       mode: "stream",
       connection: {...connection},
       stream: {name: stream},
+      consumer: {offset: {type: "next"}},
       ...options
     } as any);
   }
@@ -376,7 +377,8 @@ describe("rabbitmq stream enqueuer", () => {
       enqueuer.subscribe(createTarget(), {
         mode: "stream",
         connection: {...connection, hostname: "127.0.0.1", port: 1, addressResolver: undefined},
-        stream: {name: stream}
+        stream: {name: stream},
+        consumer: {offset: {type: "next"}}
       } as any);
 
       await until(() => errors().length >= 2);

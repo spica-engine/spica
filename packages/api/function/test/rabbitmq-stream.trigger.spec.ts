@@ -31,7 +31,13 @@ describe("Function RabbitMQ Stream Trigger Schema", () => {
         default: {
           type: "rabbitmq",
           active: false,
-          options: {mode: "stream", connection, stream, ...options}
+          options: {
+            mode: "stream",
+            connection,
+            stream,
+            consumer: {offset: {type: "next"}},
+            ...options
+          }
         }
       }
     };
@@ -94,7 +100,7 @@ describe("Function RabbitMQ Stream Trigger Schema", () => {
   }
 
   describe("defaults", () => {
-    it("should default the port, the vhost and the starting offset", async () => {
+    it("should default the port and the vhost", async () => {
       const res = await create("defaults", {});
 
       expect(res.statusCode).toEqual(201);
@@ -293,7 +299,7 @@ describe("Function RabbitMQ Stream Trigger Schema", () => {
       ],
       [
         "consumer",
-        {consumer: {unknown: true}},
+        {consumer: {offset: {type: "first"}, unknown: true}},
         ".triggers.default.options.consumer must NOT have additional properties"
       ],
       [
@@ -303,12 +309,17 @@ describe("Function RabbitMQ Stream Trigger Schema", () => {
       ],
       [
         "filter",
-        {consumer: {filter: {values: ["eu"], unknown: true}}},
+        {consumer: {offset: {type: "first"}, filter: {values: ["eu"], unknown: true}}},
         ".triggers.default.options.consumer.filter must NOT have additional properties"
       ],
       [
         "credit policy",
-        {consumer: {creditPolicy: {type: "onChunkReceived", unknown: true}}},
+        {
+          consumer: {
+            offset: {type: "first"},
+            creditPolicy: {type: "onChunkReceived", unknown: true}
+          }
+        },
         ".triggers.default.options.consumer.creditPolicy must NOT have additional properties"
       ]
     ])("should reject an unknown key in the %s", async (name, options, message) => {
@@ -318,8 +329,31 @@ describe("Function RabbitMQ Stream Trigger Schema", () => {
       expect(res.body.message).toEqual(message);
     });
 
+    it("should reject a stream trigger without a consumer", async () => {
+      const fn = streamFunction("no-consumer", {});
+      delete (fn.triggers.default.options as any).consumer;
+
+      const res = await request.post("/function", fn);
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.message).toEqual(
+        ".triggers.default.options must have required property 'consumer'"
+      );
+    });
+
+    it("should reject a consumer without an offset", async () => {
+      const res = await create("no-offset", {consumer: {consumerRef: "ref"}});
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.message).toEqual(
+        ".triggers.default.options.consumer must have required property 'offset'"
+      );
+    });
+
     it("should reject singleActive without a consumerRef", async () => {
-      const res = await create("single-active", {consumer: {singleActive: true}});
+      const res = await create("single-active", {
+        consumer: {offset: {type: "first"}, singleActive: true}
+      });
 
       expect(res.statusCode).toEqual(400);
       expect(res.body.message).toEqual(
@@ -357,7 +391,9 @@ describe("Function RabbitMQ Stream Trigger Schema", () => {
     });
 
     it("should reject an empty list of filter values", async () => {
-      const res = await create("filter-empty", {consumer: {filter: {values: []}}});
+      const res = await create("filter-empty", {
+        consumer: {offset: {type: "first"}, filter: {values: []}}
+      });
 
       expect(res.statusCode).toEqual(400);
     });

@@ -577,10 +577,11 @@
       "title": "Consumer",
       "description": "Consumer of the stream",
       "type": "object",
+      "required": ["offset"],
       "properties": {
         "offset": {
           "title": "Offset",
-          "description": "Position to start consuming from. Defaults to next. With consumerRef set, an offset stored on the server takes precedence on start and consumption continues after it. This applies on every subscribe, including reconnects after a lost connection. Without a stored offset the trigger starts from this position again, so handlers should be idempotent or call storeOffset",
+          "description": "Position to start consuming from. With consumerRef set, an offset stored on the server takes precedence on start and consumption continues after it. This applies on every subscribe, including reconnects after a lost connection. Without a stored offset the trigger starts from this position again, so handlers should be idempotent or call storeOffset",
           "type": "object",
           "properties": {
             "type": {
@@ -776,17 +777,11 @@
         "required": ["mode"]
       },
       "then": {
-        "required": ["connection", "stream"],
+        "required": ["connection", "stream", "consumer"],
         "properties": {
           "connection": true,
           "stream": true,
-          "consumer": {
-            "default": {
-              "offset": {
-                "type": "next"
-              }
-            }
-          }
+          "consumer": true
         }
       },
       "else": {

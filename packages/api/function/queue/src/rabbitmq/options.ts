@@ -89,11 +89,10 @@ export interface RabbitMQStreamOptions {
       [key: string]: unknown;
     };
   };
-  consumer?: {
-    offset?: {
-      type: "first" | "last" | "next" | "offset" | "timestamp";
-      value?: number | string;
-    };
+  consumer: {
+    offset:
+      | {type: "first" | "last" | "next"}
+      | {type: "offset" | "timestamp"; value: number | string};
     consumerRef?: string;
     singleActive?: boolean;
     consumerTag?: string;

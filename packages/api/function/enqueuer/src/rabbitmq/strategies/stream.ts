@@ -34,7 +34,7 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
   constructor(private rabbitmqQueue: RabbitMQQueue) {}
 
   async open(subscription: StreamSubscription, session: Session) {
-    const {connection, stream, consumer: consumerOptions = {}} = subscription.options;
+    const {connection, stream, consumer: consumerOptions} = subscription.options;
     subscription.token ??= uniqid();
 
     const client = await attempt("Connection failed.", () =>
@@ -104,7 +104,7 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
   }
 
   private async resolveOffset(subscription: StreamSubscription, client: Client) {
-    const {stream, consumer = {}} = subscription.options;
+    const {stream, consumer} = subscription.options;
 
     if (consumer.consumerRef) {
       const stored = await client
@@ -147,7 +147,7 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
   }
 }
 
-function toOffset(offset: ConsumerOptions["offset"] = {type: "next"}) {
+function toOffset(offset: ConsumerOptions["offset"]) {
   switch (offset.type) {
     case "first":
       return Offset.first();
