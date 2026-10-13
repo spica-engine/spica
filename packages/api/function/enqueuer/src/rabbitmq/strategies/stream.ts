@@ -80,7 +80,6 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
       },
       msg => this.onMessage(subscription, session, declaration, msg)
     );
-    declaration.catch(() => {});
 
     const consumer = await attempt("Consumer declaration failed.", () => declaration);
     if (session.isStale()) {
