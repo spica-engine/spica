@@ -15,13 +15,15 @@ export class StreamSettlement implements RabbitMQSettlement {
   readonly mode = "stream";
   readonly pending = 0;
 
-  private consumers = new Map<string, StreamConsumerHandle>();
+  private readonly consumers = new Map<string, StreamConsumerHandle>();
 
   track(_id: string, delivery: RabbitMQStreamDelivery) {
     this.consumers.set(delivery.token, delivery.consumer);
   }
 
-  forget(_id: string) {}
+  forget(_id: string) {
+    // Offsets are stored explicitly by the function, so there is nothing to release per message.
+  }
 
   purge(owner: unknown) {
     for (const [token, consumer] of this.consumers) {
@@ -42,7 +44,7 @@ export class StreamSettlement implements RabbitMQSettlement {
     callback: grpc.sendUnaryData<RabbitMQ.Message.Result>
   ) {
     const {consumer: token, offset} = call.request;
-    this.run(token, callback, async consumer => {
+    void this.run(token, callback, async consumer => {
       await consumer.storeOffset(BigInt(offset));
       return new RabbitMQ.Message.Result();
     });
