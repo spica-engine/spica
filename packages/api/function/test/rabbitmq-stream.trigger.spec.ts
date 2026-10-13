@@ -176,6 +176,8 @@ describe("Function RabbitMQ Stream Trigger Schema", () => {
       ["next", {type: "next"}],
       ["an offset", {type: "offset", value: 0}],
       ["a timestamp in ISO format", {type: "timestamp", value: "2026-01-01T00:00:00.000Z"}],
+      ["a timestamp in ISO date format", {type: "timestamp", value: "2026-01-01"}],
+      ["a timestamp with an offset", {type: "timestamp", value: "2026-01-01T03:00:00+03:00"}],
       ["a timestamp in epoch milliseconds", {type: "timestamp", value: 1767225600000}]
     ])("should accept %s as the starting offset", async (name, offset) => {
       const res = await create(name.replace(/\s+/g, "-"), {consumer: {offset}});
@@ -371,6 +373,19 @@ describe("Function RabbitMQ Stream Trigger Schema", () => {
       expect(res.body.message).toEqual(
         ".triggers.default.options.consumer.offset must have required property 'value'"
       );
+    });
+
+    it.each([
+      ["a free-form text", "yesterday"],
+      ["an out-of-range month", "2026-13-01"],
+      ["a date-time without a separator", "2026-01-01 00:00:00"],
+      ["an epoch in a string", "1767225600000"]
+    ])("should reject %s as the timestamp", async (name, value) => {
+      const res = await create(`timestamp-${name.replace(/\s+/g, "-")}`, {
+        consumer: {offset: {type: "timestamp", value}}
+      });
+
+      expect(res.statusCode).toEqual(400);
     });
 
     it("should reject an unknown offset type", async () => {
