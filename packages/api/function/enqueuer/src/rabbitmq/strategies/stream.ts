@@ -10,10 +10,13 @@ import {
   ConsumerFilter,
   Offset
 } from "rabbitmq-stream-js-client";
+// Not exported from the package root as of rabbitmq-stream-js-client 1.1.0.
 import {
   creditsOnChunkCompleted,
   creditsOnChunkReceived
 } from "rabbitmq-stream-js-client/dist/consumer_credit_policy.js";
+import {isStreamResponseError} from "rabbitmq-stream-js-client/dist/stream_response_error.js";
+import {ResponseCode} from "rabbitmq-stream-js-client/dist/util.js";
 import {attempt, RabbitMQStrategy, Session, Subscription} from "../strategy.js";
 import {serialize} from "./stream-message.js";
 
@@ -109,7 +112,12 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
     if (consumer.consumerRef) {
       const stored = await client
         .queryOffset({reference: consumer.consumerRef, stream: stream.name})
-        .catch(() => undefined);
+        .catch(error => {
+          if (isStreamResponseError(error) && error.code === ResponseCode.NoOffset) {
+            return undefined;
+          }
+          throw error;
+        });
       if (stored !== undefined) {
         return Offset.offset(stored + 1n);
       }

@@ -148,6 +148,17 @@ describe("rabbitmq stream enqueuer", () => {
       expect(await streamExists()).toBe(false);
     });
 
+    it("should report a failing offset query instead of falling back to the configured offset", async () => {
+      subscribe({
+        stream: {name: stream, passive: true},
+        consumer: {offset: {type: "first"}, consumerRef: "projector"}
+      });
+
+      await until(() => errors().length > 0);
+
+      expect(errors()[0]).toContain("Query offset command returned error");
+    });
+
     it("should consume a passive stream that exists", async () => {
       await createStream();
       await publish(1);
