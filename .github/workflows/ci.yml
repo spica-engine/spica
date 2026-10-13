@@ -184,27 +184,29 @@ jobs:
 
       - name: Start RabbitMQ
         run: |
+          mkdir -p "$RUNNER_TEMP/rabbitmq"
+          echo "[rabbitmq_stream]." > "$RUNNER_TEMP/rabbitmq/enabled_plugins"
+          echo "stream.advertised_host = 172.17.0.1" > "$RUNNER_TEMP/rabbitmq/20-stream.conf"
+
           docker run -d --rm --name rabbitmq \
             -p 5672:5672 \
             -p 5552:5552 \
-            -e RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="-rabbitmq_stream advertised_host 172.17.0.1" \
+            -v "$RUNNER_TEMP/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro" \
+            -v "$RUNNER_TEMP/rabbitmq/20-stream.conf:/etc/rabbitmq/conf.d/20-stream.conf:ro" \
             rabbitmq:4.1
 
           echo "Waiting for RabbitMQ..."
-          for i in {1..10}; do
-            if nc -z localhost 5672; then
-              break
-            fi
-            sleep 2
-          done
-          docker exec rabbitmq rabbitmq-plugins enable rabbitmq_stream
-          for i in {1..10}; do
-            if nc -z localhost 5552; then
+          for i in {1..30}; do
+            if docker exec -u rabbitmq rabbitmq rabbitmq-diagnostics -q check_port_listener 5672 >/dev/null 2>&1 &&
+               docker exec -u rabbitmq rabbitmq rabbitmq-diagnostics -q check_port_listener 5552 >/dev/null 2>&1; then
               echo "RabbitMQ is ready."
-              break
+              exit 0
             fi
             sleep 2
           done
+          echo "RabbitMQ did not become ready."
+          docker logs rabbitmq || true
+          exit 1
       - name: Start Mailer
         run: |
           docker run -d --rm --name mailer \
