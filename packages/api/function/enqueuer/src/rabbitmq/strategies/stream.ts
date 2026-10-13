@@ -7,7 +7,6 @@ import {
   ClientParams,
   connect,
   Consumer,
-  ConsumerFilter,
   Offset
 } from "rabbitmq-stream-js-client";
 // Not exported from the package root as of rabbitmq-stream-js-client 1.1.0.
@@ -34,7 +33,7 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
   readonly mode = "stream";
   private readonly logger = new Logger(StreamStrategy.name);
 
-  constructor(private rabbitmqQueue: RabbitMQQueue) {}
+  constructor(private readonly rabbitmqQueue: RabbitMQQueue) {}
 
   async open(subscription: StreamSubscription, session: Session) {
     const {connection, stream, consumer: consumerOptions} = subscription.options;

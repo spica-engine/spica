@@ -5,9 +5,9 @@ import type {RuntimeStrategy} from "../runtime.js";
 
 export class RabbitMQStreamConsumer {
   constructor(
-    private token: string,
-    private messageOffset: bigint | undefined,
-    private client: RabbitMQQueue
+    private readonly token: string,
+    private readonly messageOffset: bigint | undefined,
+    private readonly client: RabbitMQQueue
   ) {}
 
   async storeOffset(offset: bigint | undefined = this.messageOffset): Promise<void> {
