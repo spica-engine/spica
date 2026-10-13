@@ -102,13 +102,12 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
 
     if (consumer) {
       this.rabbitmqQueue.purge(consumer);
-      consumer
-        .close()
-        .catch(error => this.logger.debug(this.closeErrorMessage(subscription, error)));
     }
-    if (client) {
-      this.close(client);
-    }
+    // client.close() closes the consumer as well. Closing the consumer separately races with it
+    // and can hang client.close() before it closes the locator connection, leaking the socket.
+    client
+      ?.close()
+      .catch(error => this.logger.debug(this.closeErrorMessage(subscription, error)));
   }
 
   private async resolveOffset(subscription: StreamSubscription, client: Client) {
@@ -162,7 +161,7 @@ export class StreamStrategy implements RabbitMQStrategy<RabbitMQStreamOptions, S
   }
 
   private closeErrorMessage(subscription: StreamSubscription, error: Error) {
-    return `Error on closing the consumer of ${this.describe(subscription)}, reason: ${error.message}`;
+    return `Error on closing the client of ${this.describe(subscription)}, reason: ${error.message}`;
   }
 
   private describe(subscription: StreamSubscription) {
