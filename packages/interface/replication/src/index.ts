@@ -16,6 +16,7 @@ export interface IJobReducer {
 
 export interface JobMeta {
   _id: string;
+  created_at?: Date;
   [key: string]: any;
 }
 
@@ -32,6 +33,7 @@ export interface CommandMessengerOptions {
 
 export interface CommandMessage {
   _id?: string;
+  created_at?: Date;
   source: CommandSource;
   target: CommandTarget;
 }

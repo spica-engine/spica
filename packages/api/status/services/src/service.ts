@@ -35,7 +35,8 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
               "response.size": status.response.size
             },
             $setOnInsert: {
-              _id: currentMinuteObjectId
+              _id: currentMinuteObjectId,
+              created_at: new Date()
             }
           },
           {upsert: true}

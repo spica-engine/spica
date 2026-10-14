@@ -38,6 +38,7 @@ describe("Memory", () => {
           expect(ObjectId.isValid(msg._id)).toEqual(true);
           expect(msg).toEqual({
             _id: msg._id,
+            created_at: expect.any(Date),
             source: {
               id: "replica1",
               command
