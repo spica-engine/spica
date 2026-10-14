@@ -659,6 +659,44 @@ describe("Scheduler", () => {
       expect(Object.keys(status.functions)).toEqual(["1"]);
     });
 
+    it("should count a worker as idle once its event completes", () => {
+      scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
+      expect(scheduler.getStatus().functions["1"]).toEqual(
+        expect.objectContaining({idle: 0, busy: 1})
+      );
+
+      completeEvent("1");
+
+      expect(scheduler.getStatus().functions["1"]).toEqual(
+        expect.objectContaining({idle: 1, busy: 0})
+      );
+    });
+
+    it("should count a superseded worker alongside its replacement", () => {
+      scheduler.reconcileConcurrency(makeTarget("1"), 2);
+      scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
+
+      scheduler.supersedeWorkers(makeTarget("1"));
+
+      expect(scheduler.getStatus().functions["1"]).toEqual({
+        warming: 1,
+        warm: 0,
+        idle: 1,
+        busy: 0,
+        superseded: 1
+      });
+
+      connectWarmingWorkers();
+
+      expect(scheduler.getStatus().functions["1"]).toEqual({
+        warming: 0,
+        warm: 1,
+        idle: 1,
+        busy: 0,
+        superseded: 1
+      });
+    });
+
     it("should count unassigned fresh workers as spare", () => {
       const fresh = freeWorkers().length;
       expect(scheduler.getStatus().spare.fresh).toEqual(fresh);
