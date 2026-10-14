@@ -633,15 +633,15 @@ describe("Scheduler", () => {
       scheduler.reconcileWarmWorkers(makeTarget("2"), 1);
 
       expect(scheduler.getStatus().functions).toEqual({
-        "1": {warming: 2, warm: 0, idle: 0, busy: 0, superseded: 0},
-        "2": {warming: 1, warm: 0, idle: 0, busy: 0, superseded: 0}
+        "1": {warming: 2, warm: 0, idle: 0, busy: 0, superseded: 0, retiring: 0},
+        "2": {warming: 1, warm: 0, idle: 0, busy: 0, superseded: 0, retiring: 0}
       });
 
       connectWarmingWorkers();
 
       const status = scheduler.getStatus();
-      expect(status.functions["1"]).toEqual({warming: 0, warm: 2, idle: 0, busy: 0, superseded: 0});
-      expect(status.functions["2"]).toEqual({warming: 0, warm: 1, idle: 0, busy: 0, superseded: 0});
+      expect(status.functions["1"]).toEqual({warming: 0, warm: 2, idle: 0, busy: 0, superseded: 0, retiring: 0});
+      expect(status.functions["2"]).toEqual({warming: 0, warm: 1, idle: 0, busy: 0, superseded: 0, retiring: 0});
       expect(status.unit).toEqual("count");
     });
 
@@ -672,7 +672,7 @@ describe("Scheduler", () => {
       );
     });
 
-    it("should count a superseded worker alongside its replacement", () => {
+    it("should count a superseded worker only as superseded, apart from its replacement", () => {
       scheduler.reconcileConcurrency(makeTarget("1"), 2);
       scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
 
@@ -681,9 +681,10 @@ describe("Scheduler", () => {
       expect(scheduler.getStatus().functions["1"]).toEqual({
         warming: 1,
         warm: 0,
-        idle: 1,
+        idle: 0,
         busy: 0,
-        superseded: 1
+        superseded: 1,
+        retiring: 0
       });
 
       connectWarmingWorkers();
@@ -691,15 +692,48 @@ describe("Scheduler", () => {
       expect(scheduler.getStatus().functions["1"]).toEqual({
         warming: 0,
         warm: 1,
-        idle: 1,
+        idle: 0,
         busy: 0,
-        superseded: 1
+        superseded: 1,
+        retiring: 0
       });
     });
 
-    it("should count unassigned fresh workers as spare", () => {
+    it("should count an outdated worker as retiring", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 1);
+      connectWarmingWorkers();
+      const [[, worker]] = warmWorkers();
+
+      worker.markAsOutdated();
+
+      expect(scheduler.getStatus().functions["1"]).toEqual({
+        warming: 0,
+        warm: 0,
+        idle: 0,
+        busy: 0,
+        superseded: 0,
+        retiring: 1
+      });
+    });
+
+    it("should account for every worker exactly once", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+      connectWarmingWorkers();
+      scheduler.reconcileWarmWorkers(makeTarget("2"), 1);
+      scheduler.enqueue(new event.Event({target: makeTarget("3"), type: -1 as any}));
+      scheduler.supersedeWorkers(makeTarget("3"));
+
+      const {functions, spare} = scheduler.getStatus();
+      const perFunction = Object.values(functions).flatMap(counts => Object.values(counts));
+      const total = [...perFunction, ...Object.values(spare)].reduce((a, b) => a + b, 0);
+
+      expect(total).toEqual(allWorkers().length);
+    });
+
+    it("should count unassigned workers as spare", () => {
       const fresh = freeWorkers().length;
       expect(scheduler.getStatus().spare.fresh).toEqual(fresh);
+      expect(scheduler.getStatus().spare.initial).toEqual(allWorkers().length - fresh);
     });
   });
 

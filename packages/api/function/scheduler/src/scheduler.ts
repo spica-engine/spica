@@ -299,18 +299,26 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   getStatus() {
     const functions: Record<
       string,
-      {warming: number; warm: number; idle: number; busy: number; superseded: number}
+      {
+        warming: number;
+        warm: number;
+        idle: number;
+        busy: number;
+        superseded: number;
+        retiring: number;
+      }
     > = {};
-    let spare = 0;
+    const spare = {initial: 0, fresh: 0};
 
     for (const worker of this.workers.values()) {
-      if (worker.state == WorkerState.Fresh) {
-        spare++;
-        continue;
-      }
-
       const targetId = worker.targetId;
+
       if (!targetId) {
+        if (worker.state == WorkerState.Fresh) {
+          spare.fresh++;
+        } else {
+          spare.initial++;
+        }
         continue;
       }
 
@@ -319,30 +327,26 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         warm: 0,
         idle: 0,
         busy: 0,
-        superseded: 0
+        superseded: 0,
+        retiring: 0
       });
 
-      switch (worker.state) {
-        case WorkerState.Warming:
-          counts.warming++;
-          break;
-        case WorkerState.Warm:
-          counts.warm++;
-          break;
-        case WorkerState.Targeted:
-          counts.idle++;
-          break;
-        case WorkerState.Busy:
-          counts.busy++;
-          break;
-      }
-
-      if (worker.isSuperseded && worker.state != WorkerState.Outdated) {
+      if (worker.state == WorkerState.Outdated || worker.state == WorkerState.Timeouted) {
+        counts.retiring++;
+      } else if (worker.isSuperseded) {
         counts.superseded++;
+      } else if (worker.state == WorkerState.Warming) {
+        counts.warming++;
+      } else if (worker.state == WorkerState.Warm) {
+        counts.warm++;
+      } else if (worker.state == WorkerState.Busy) {
+        counts.busy++;
+      } else {
+        counts.idle++;
       }
     }
 
-    return {functions, spare: {fresh: spare}, unit: "count"};
+    return {functions, spare, unit: "count"};
   }
 
   takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} | undefined {
