@@ -5,6 +5,7 @@
 
 import React, {useCallback, useState, useEffect, useMemo} from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { useFillScrollContainer } from "../../../hooks/useFillScrollContainer";
 import FilterPanel from "../filter-panel/FilterPanel";
 import type {FilterField} from "../filter-panel/types";
 import type {Property} from "src/store/api/bucketApi";
@@ -32,6 +33,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
   const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
   const [additionalPages, setAdditionalPages] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const LIMIT = 7;
   const hasBucketId = typeof bucketId === "string" && bucketId.trim().length > 0;
   const resolvedBucketId = hasBucketId ? bucketId : undefined;
@@ -92,6 +94,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
     const nextPage = currentPage + 1;
     const skipValue = nextPage * LIMIT;
 
+    setIsFetchingMore(true);
     try {
       const result = await getBucketData({
         bucketId: resolvedBucketId,
@@ -115,8 +118,18 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
       }
     } catch (error) {
       console.error('Error fetching more data:', error);
+    } finally {
+      setIsFetchingMore(false);
     }
   }, [resolvedBucketId, appliedFilter, currentPage, LIMIT, getBucketData, isFetching]);
+
+  useFillScrollContainer({
+    containerId: "scrollableDiv",
+    hasMore,
+    isFetching: isFetching || isFetchingMore,
+    itemCount: items.length,
+    onLoadMore: fetchMoreData,
+  });
 
   const filterFields = useMemo((): FilterField[] => {
     const props = bucket?.properties || {};
