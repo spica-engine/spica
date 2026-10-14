@@ -37,4 +37,11 @@ describe("Commander", () => {
 
     expect(job).toHaveBeenCalledTimes(2);
   });
+
+  it("should set created_at on the stored job so the TTL index can expire it", async () => {
+    await reducer.do(meta, job);
+
+    const stored = await module.get(JobService).findOne({_id: meta._id});
+    expect(stored.created_at).toBeInstanceOf(Date);
+  });
 });

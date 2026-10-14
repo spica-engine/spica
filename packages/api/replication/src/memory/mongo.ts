@@ -15,7 +15,9 @@ export class MongoMemory<T> implements IPubSub<T> {
   }
 
   publish(document: T) {
-    this.service._coll.insertOne(document).then(r => ({...document, _id: r.insertedId}));
+    this.service._coll
+      .insertOne({...document, created_at: new Date()})
+      .then(r => ({...document, _id: r.insertedId}));
   }
 
   subscribe(observer: PartialObserver<T>) {

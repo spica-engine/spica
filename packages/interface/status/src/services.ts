@@ -10,6 +10,7 @@ export type AttachStatusTracker = (req: Request, res: Response) => void;
 
 export interface ApiStatus {
   _id?: ObjectId;
+  created_at?: Date;
   count: number;
   request: {
     size: number;

@@ -29,6 +29,19 @@ describe("StatusService", () => {
   });
 
   describe("Per-minute aggregation", () => {
+    it("should set created_at once so the TTL index can expire the document", async () => {
+      const payload = {request: {size: 1}, response: {size: 1}};
+      await service.insertOne(payload);
+      const [first] = await statusCollection.find({}).toArray();
+
+      await service.insertOne(payload);
+      const docs = await statusCollection.find({}).toArray();
+
+      expect(docs.length).toBe(1);
+      expect(first.created_at).toBeInstanceOf(Date);
+      expect(docs[0].created_at).toEqual(first.created_at);
+    });
+
     it("should aggregate multiple requests in the same minute into a single document", async () => {
       await service.insertOne({
         request: {size: 1000},
@@ -51,6 +64,7 @@ describe("StatusService", () => {
 
       expect(docs[0]).toEqual({
         _id: docs[0]._id,
+        created_at: expect.any(Date),
         count: 3,
         request: {size: 3700}, // 1000 + 1500 + 1200
         response: {size: 6700} // 2000 + 2500 + 2200
@@ -86,6 +100,7 @@ describe("StatusService", () => {
 
       expect(docs[0]).toEqual({
         _id: minute1ObjectId,
+        created_at: expect.any(Date),
         count: 1,
         request: {size: 1000},
         response: {size: 2000}
@@ -93,6 +108,7 @@ describe("StatusService", () => {
 
       expect(docs[1]).toEqual({
         _id: minute2ObjectId,
+        created_at: expect.any(Date),
         count: 2,
         request: {size: 2700}, // 1500 + 1200
         response: {size: 4700} // 2500 + 2200

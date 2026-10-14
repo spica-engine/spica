@@ -78,7 +78,8 @@ export async function migrate(options: Options) {
   const ctx: Context = {
     database: db,
     console: options.console,
-    session
+    session,
+    dryRun: options.dryRun
   };
 
   let error: Error;
@@ -137,4 +138,5 @@ export type Context = {
   database: mongodb.Db;
   console: typeof console;
   session: mongodb.ClientSession;
+  dryRun?: boolean;
 };
