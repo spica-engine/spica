@@ -627,6 +627,44 @@ describe("Scheduler", () => {
     });
   });
 
+  describe("getStatus", () => {
+    it("should report worker counts per function and spare workers separately", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+      scheduler.reconcileWarmWorkers(makeTarget("2"), 1);
+
+      expect(scheduler.getStatus().functions).toEqual({
+        "1": {warming: 2, warm: 0, idle: 0, busy: 0, superseded: 0},
+        "2": {warming: 1, warm: 0, idle: 0, busy: 0, superseded: 0}
+      });
+
+      connectWarmingWorkers();
+
+      const status = scheduler.getStatus();
+      expect(status.functions["1"]).toEqual({warming: 0, warm: 2, idle: 0, busy: 0, superseded: 0});
+      expect(status.functions["2"]).toEqual({warming: 0, warm: 1, idle: 0, busy: 0, superseded: 0});
+      expect(status.unit).toEqual("count");
+    });
+
+    it("should count a worker serving an event as busy for its function only", () => {
+      scheduler.enqueue(
+        new event.Event({
+          id: "ev",
+          type: -1,
+          target: makeTarget("1")
+        })
+      );
+
+      const status = scheduler.getStatus();
+      expect(status.functions["1"].busy).toEqual(1);
+      expect(Object.keys(status.functions)).toEqual(["1"]);
+    });
+
+    it("should count unassigned fresh workers as spare", () => {
+      const fresh = freeWorkers().length;
+      expect(scheduler.getStatus().spare.fresh).toEqual(fresh);
+    });
+  });
+
   describe("warm workers", () => {
     it("should spawn warm workers on reconcile and mark them Warm once ready", () => {
       spawnSpy.mockClear();

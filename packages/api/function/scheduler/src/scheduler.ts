@@ -297,25 +297,52 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   contextConfigs = new Map<string, event.SchedulingContext>();
 
   getStatus() {
-    const workers = Array.from(this.workers.values());
+    const functions: Record<
+      string,
+      {warming: number; warm: number; idle: number; busy: number; superseded: number}
+    > = {};
+    let spare = 0;
 
-    const initial = workers.filter(w => w.state == WorkerState.Initial).length;
-    const fresh = workers.filter(w => w.state == WorkerState.Fresh).length;
-    const warm = workers.filter(
-      w => w.state == WorkerState.Warm || w.state == WorkerState.Warming
-    ).length;
-    const activated = workers.length - initial - fresh - warm;
-    const superseded = workers.filter(
-      w => w.isSuperseded && w.state != WorkerState.Outdated
-    ).length;
+    for (const worker of this.workers.values()) {
+      if (worker.state == WorkerState.Fresh) {
+        spare++;
+        continue;
+      }
 
-    return {
-      activated: activated,
-      fresh: fresh,
-      warm: warm,
-      superseded: superseded,
-      unit: "count"
-    };
+      const targetId = worker.targetId;
+      if (!targetId) {
+        continue;
+      }
+
+      const counts = (functions[targetId] ??= {
+        warming: 0,
+        warm: 0,
+        idle: 0,
+        busy: 0,
+        superseded: 0
+      });
+
+      switch (worker.state) {
+        case WorkerState.Warming:
+          counts.warming++;
+          break;
+        case WorkerState.Warm:
+          counts.warm++;
+          break;
+        case WorkerState.Targeted:
+          counts.idle++;
+          break;
+        case WorkerState.Busy:
+          counts.busy++;
+          break;
+      }
+
+      if (worker.isSuperseded && worker.state != WorkerState.Outdated) {
+        counts.superseded++;
+      }
+    }
+
+    return {functions, spare: {fresh: spare}, unit: "count"};
   }
 
   takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} | undefined {
