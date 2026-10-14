@@ -75,10 +75,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
     this.watchEnvSubs = this.fs.watchFunctionsForEnvChanges().subscribe({
       next: ({fns, envVarId, operationType}) =>
-        fns.map(fn =>
-          operationType == "delete"
-            ? CRUD.environment.eject(this.fs, fn._id, this, envVarId)
-            : CRUD.environment.reload(fn._id, this)
+        this.refreshLocallyAfterChange(fns, operationType, fnId =>
+          CRUD.environment.detach(this.fs, fnId, envVarId)
         ),
       error: err =>
         this.logger.error(
@@ -88,16 +86,37 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
     this.watchSecretSubs = this.fs.watchFunctionsForSecretChanges().subscribe({
       next: ({fns, secretId, operationType}) =>
-        fns.map(fn =>
-          operationType == "delete"
-            ? CRUD.secret.eject(this.fs, fn._id, this, secretId)
-            : CRUD.secret.reload(fn._id, this)
+        this.refreshLocallyAfterChange(fns, operationType, fnId =>
+          CRUD.secret.detach(this.fs, fnId, secretId)
         ),
       error: err =>
         this.logger.error(
           `Error received on listening functions for secret changes. Reason: ${JSON.stringify(err)}`
         )
     });
+  }
+
+  // The change dispatchers already deliver the event to every replica, so refreshing through
+  // applyChangePlan here would make each replica broadcast it again (N^2 refreshes).
+  private refreshLocallyAfterChange(
+    fns: {_id: ObjectId}[],
+    operationType: string,
+    detach: (fnId: ObjectId) => Promise<void>
+  ) {
+    return Promise.all(
+      fns.map(async fn => {
+        try {
+          if (operationType == "delete") {
+            await detach(fn._id);
+          }
+          await this.refreshLocally(fn._id.toString());
+        } catch (err) {
+          this.logger.error(
+            `Failed to refresh function ${fn._id} after a resource change. Reason: ${err instanceof Error ? err.message : err}`
+          );
+        }
+      })
+    );
   }
 
   onModuleInit() {
@@ -152,8 +171,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return this.executor.apply(plan);
   }
 
-  // Deliberately not replicated: peers refresh themselves from the asset watcher once their own
-  // copy of the code is synced and rebuilt. Replicating this would refresh them before that.
+  // Deliberately not replicated: peers refresh themselves, either from the asset watcher once their
+  // own copy of the code is synced and rebuilt, or from the env var/secret change they receive.
   refreshLocally(functionId: string): Promise<void> {
     return this.executor.apply(refreshPlan(functionId));
   }
