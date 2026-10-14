@@ -366,12 +366,7 @@ export namespace environment {
     return reload(fnId, engine);
   }
 
-  export async function eject(
-    fs: FunctionService,
-    fnId: ObjectId,
-    engine: FunctionEngine,
-    envVarId: ObjectId
-  ) {
+  export async function detach(fs: FunctionService, fnId: ObjectId, envVarId: ObjectId) {
     const res = await fs.findOneAndUpdate(
       {
         _id: fnId
@@ -383,7 +378,15 @@ export namespace environment {
     if (!res) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
+  }
 
+  export async function eject(
+    fs: FunctionService,
+    fnId: ObjectId,
+    engine: FunctionEngine,
+    envVarId: ObjectId
+  ) {
+    await detach(fs, fnId, envVarId);
     return reload(fnId, engine);
   }
 
@@ -414,12 +417,7 @@ export namespace secret {
     return reload(fnId, engine);
   }
 
-  export async function eject(
-    fs: FunctionService,
-    fnId: ObjectId,
-    engine: FunctionEngine,
-    secretId: ObjectId
-  ) {
+  export async function detach(fs: FunctionService, fnId: ObjectId, secretId: ObjectId) {
     const res = await fs.findOneAndUpdate(
       {
         _id: fnId
@@ -431,7 +429,15 @@ export namespace secret {
     if (!res) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
+  }
 
+  export async function eject(
+    fs: FunctionService,
+    fnId: ObjectId,
+    engine: FunctionEngine,
+    secretId: ObjectId
+  ) {
+    await detach(fs, fnId, secretId);
     return reload(fnId, engine);
   }
 
