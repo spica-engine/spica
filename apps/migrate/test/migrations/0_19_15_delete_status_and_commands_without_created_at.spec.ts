@@ -46,7 +46,7 @@ describe("Delete status and commands without created_at", () => {
       {_id: idAt(7200), source: {}},
       {_id: idAt(60), source: {}}
     ];
-    const currentStatus = {_id: idAt(3600), count: 3, created_at: new Date()};
+    const currentStatus = {_id: idAt(1800), count: 3, created_at: new Date()};
     const currentCommand = {_id: idAt(60), source: {}, created_at: new Date()};
 
     await db.collection("status").insertMany([...legacyStatus, currentStatus]);
