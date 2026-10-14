@@ -96,8 +96,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  // The change dispatchers already deliver the event to every replica, so refreshing through
-  // applyChangePlan here would make each replica broadcast it again (N^2 refreshes).
   private refreshLocallyAfterChange(
     fns: {_id: ObjectId}[],
     operationType: string,
@@ -171,8 +169,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return this.executor.apply(plan);
   }
 
-  // Deliberately not replicated: peers refresh themselves, either from the asset watcher once their
-  // own copy of the code is synced and rebuilt, or from the env var/secret change they receive.
   refreshLocally(functionId: string): Promise<void> {
     return this.executor.apply(refreshPlan(functionId));
   }
