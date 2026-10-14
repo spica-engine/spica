@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 interface UseFillScrollContainerOptions {
   containerId: string;
@@ -16,7 +16,9 @@ export function useFillScrollContainer({
   onLoadMore,
 }: UseFillScrollContainerOptions) {
   const onLoadMoreRef = useRef(onLoadMore);
-  onLoadMoreRef.current = onLoadMore;
+  useLayoutEffect(() => {
+    onLoadMoreRef.current = onLoadMore;
+  });
   const lastRequestedItemCountRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -37,9 +39,7 @@ export function useFillScrollContainer({
       }
     };
 
-    // The scroll event never fires on content that fits, so the next page must be requested
-    // proactively; waiting a frame lets the rows of the page that just arrived be laid out first.
-    // Requesting once per item count keeps a failing request from being retried in a loop.
+    // Waiting a frame lets the rows of the page that just arrived be laid out before measuring.
     const frame = requestAnimationFrame(loadMoreIfNotScrollable);
     const resizeObserver = new ResizeObserver(loadMoreIfNotScrollable);
     resizeObserver.observe(container);

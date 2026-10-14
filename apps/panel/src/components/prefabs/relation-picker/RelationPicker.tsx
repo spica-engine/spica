@@ -5,7 +5,7 @@
 
 import React, {useCallback, useState, useEffect, useMemo} from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { useFillScrollContainer } from "../../../hooks/useFillScrollContainer";
+import {useFillScrollContainer} from "../../../hooks/useFillScrollContainer";
 import FilterPanel from "../filter-panel/FilterPanel";
 import type {FilterField} from "../filter-panel/types";
 import type {Property} from "src/store/api/bucketApi";
