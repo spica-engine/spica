@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useFillScrollContainer } from "./useFillScrollContainer";
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -10,6 +11,7 @@ interface UseInfiniteListOptions<T> {
   isFetching: boolean;
   pageSize: number;
   queryKey: string;
+  scrollContainerId: string;
   skip: number;
   setSkip: React.Dispatch<React.SetStateAction<number>>;
 }
@@ -27,6 +29,7 @@ export function useInfiniteList<T extends { _id?: string }>({
   isFetching,
   pageSize,
   queryKey,
+  scrollContainerId,
   skip,
   setSkip,
 }: UseInfiniteListOptions<T>): UseInfiniteListReturn<T> {
@@ -63,6 +66,14 @@ export function useInfiniteList<T extends { _id?: string }>({
       setSkip((prev) => prev + pageSize);
     }
   }, [isFetching, pageSize, setSkip]);
+
+  useFillScrollContainer({
+    containerId: scrollContainerId,
+    hasMore,
+    isFetching,
+    itemCount: allItems.length,
+    onLoadMore: handleLoadMore,
+  });
 
   const resetList = useCallback(() => {
     setSkip(0);

@@ -1,6 +1,7 @@
 import React, {useCallback, useMemo, useState} from "react";
 import {FlexElement, Icon, Spinner, type TableColumn} from "oziko-ui-kit";
 import InfiniteScroll from "react-infinite-scroll-component";
+import {useFillScrollContainer} from "../../../hooks/useFillScrollContainer";
 import SpicaTable from "../table/Table";
 import type {ProfilerEntry} from "../../../store/api/userApi";
 import pageStyles from "../../../pages/shared/EntityPage.module.scss";
@@ -73,6 +74,14 @@ const ProfilerTable = ({
   emptyHint,
 }: ProfilerTableProps) => {
   const [selectedEntry, setSelectedEntry] = useState<ProfilerEntry | null>(null);
+
+  useFillScrollContainer({
+    containerId: scrollContainerId,
+    hasMore,
+    isFetching,
+    itemCount: entries.length,
+    onLoadMore,
+  });
 
   const handleRowClick = useCallback(({row}: {row: ProfilerEntry}) => {
     setSelectedEntry(row);

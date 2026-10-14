@@ -32,6 +32,7 @@ const User = () => {
     isFetching,
     pageSize: PAGE_SIZE,
     queryKey: JSON.stringify(appliedFilter ?? null),
+    scrollContainerId: "user-scroll-container",
     skip,
     setSkip,
   });
