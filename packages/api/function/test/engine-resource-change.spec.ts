@@ -1,3 +1,4 @@
+import {Subject} from "rxjs";
 import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 
@@ -50,5 +51,56 @@ describe("FunctionEngine resource change refresh", () => {
 
     expect(engine.refreshLocally).toHaveBeenCalledWith(other.toString());
     expect(engine.logger.error).toHaveBeenCalledTimes(1);
+  });
+
+  describe("watcher wiring", () => {
+    let envChanges: Subject<any>;
+    let secretChanges: Subject<any>;
+    let executor: {apply: jest.Mock};
+    let wired: any;
+
+    const flush = () => new Promise(resolve => setImmediate(resolve));
+
+    beforeEach(() => {
+      envChanges = new Subject();
+      secretChanges = new Subject();
+      executor = {apply: jest.fn().mockResolvedValue(undefined)};
+      const fs = {
+        watchFunctionsForEnvChanges: () => envChanges,
+        watchFunctionsForSecretChanges: () => secretChanges,
+        findOneAndUpdate: jest.fn().mockResolvedValue({})
+      };
+      wired = new FunctionEngine(
+        fs as any,
+        {} as any,
+        {} as any,
+        undefined,
+        {} as any,
+        undefined,
+        undefined,
+        executor as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any
+      );
+      wired.applyChangePlan = jest.fn();
+    });
+
+    afterEach(() => {
+      envChanges.complete();
+      secretChanges.complete();
+    });
+
+    it.each([
+      ["env var", () => envChanges, "envVarId"],
+      ["secret", () => secretChanges, "secretId"]
+    ])("should refresh locally without broadcasting when a %s changes", async (_, source, key) => {
+      source().next({fns: [{_id: fnId}], [key]: new ObjectId(), operationType: "update"});
+      await flush();
+
+      expect(executor.apply).toHaveBeenCalledTimes(1);
+      expect(wired.applyChangePlan).not.toHaveBeenCalled();
+    });
   });
 });
