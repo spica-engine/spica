@@ -38,6 +38,7 @@ const ApiKeyPage = () => {
       isFetching,
       pageSize: PAGE_SIZE,
       queryKey: JSON.stringify(appliedFilter ?? null),
+      scrollContainerId: "apikey-scroll-container",
       skip,
       setSkip,
     });

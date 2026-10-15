@@ -38,6 +38,7 @@ const Identity = () => {
     isFetching,
     pageSize: PAGE_SIZE,
     queryKey: JSON.stringify(appliedFilter ?? null),
+    scrollContainerId: "identity-scroll-container",
     skip,
     setSkip,
   });
