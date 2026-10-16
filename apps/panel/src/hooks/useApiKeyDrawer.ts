@@ -10,7 +10,7 @@ import {
   useRemoveApiKeyPolicyMutation,
   type ApiKey,
 } from "../store/api/apiKeyApi";
-import { useGetPoliciesQuery } from "../store/api/policyApi";
+import { usePolicyFormBindings } from "./usePolicyFormBindings";
 
 interface UseApiKeyDrawerConfig {
   isOpen: boolean;
@@ -29,7 +29,6 @@ export function useApiKeyDrawer({
   const [updateApiKey, { isLoading: isUpdating }] = useUpdateApiKeyMutation();
   const [addPolicy, { isLoading: isAddingPolicy }] = useAddApiKeyPolicyMutation();
   const [removePolicy, { isLoading: isRemovingPolicy }] = useRemoveApiKeyPolicyMutation();
-  const { data: policies } = useGetPoliciesQuery();
 
   const isEditMode = !!selectedApiKey?._id;
 
@@ -41,6 +40,8 @@ export function useApiKeyDrawer({
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const { policyOptions, policyLabels, handleChange, inputValues, setAllPolicies } =
+    usePolicyFormBindings({ formValues, setFormValues, setFormErrors });
   const isSaving = isCreating || isUpdating || isAddingPolicy || isRemovingPolicy;
 
   useEffect(() => {
@@ -64,11 +65,6 @@ export function useApiKeyDrawer({
     }
   }, [isOpen, selectedApiKey]);
 
-  const policyOptions = useMemo(
-    () => (policies ?? []).map((p) => p._id),
-    [policies]
-  );
-
   const properties: TypeProperties = useMemo(
     () => ({
       name: {
@@ -88,22 +84,10 @@ export function useApiKeyDrawer({
       policies: {
         type: "multiselect",
         title: "Policies",
-        enum: policyOptions,
+        enum: policyLabels,
       },
     }),
-    [policyOptions]
-  );
-
-  const handleChange = useCallback((newValues: TypeRepresenterValue) => {
-    setFormValues((prev) => ({ ...prev, ...newValues }));
-    setFormErrors({});
-  }, []);
-
-  const setAllPolicies = useCallback(
-    (selectAll: boolean) => {
-      setFormValues((prev) => ({...prev, policies: selectAll ? [...policyOptions] : []}));
-    },
-    [policyOptions]
+    [policyLabels]
   );
 
   const handleSave = useCallback(async () => {
@@ -175,6 +159,7 @@ export function useApiKeyDrawer({
     isEditMode,
     isSaving,
     formValues,
+    inputValues,
     formErrors,
     properties,
     policyOptions,

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePolicyFormBindings } from "./usePolicyFormBindings";
 import type { TypeProperties, TypeRepresenterValue } from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 
 export interface EntityWithPolicies {
@@ -11,7 +12,6 @@ interface UseEntityDrawerConfig<TEntity extends EntityWithPolicies> {
   isOpen: boolean;
   selectedEntity: TEntity | null;
   nameField: string;
-  policyOptions: string[];
   createMutation: (arg: any) => { unwrap: () => Promise<TEntity> };
   updateMutation: (arg: any) => { unwrap: () => Promise<TEntity> };
   addPolicyMutation: (arg: any) => { unwrap: () => Promise<any> };
@@ -25,7 +25,6 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
   isOpen,
   selectedEntity,
   nameField,
-  policyOptions,
   createMutation,
   updateMutation,
   addPolicyMutation,
@@ -43,6 +42,8 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const { policyOptions, policyLabels, handleChange, inputValues, setAllPolicies } =
+    usePolicyFormBindings({ formValues, setFormValues, setFormErrors });
   const [isSavingPolicies, setIsSavingPolicies] = useState(false);
   const isSaving = isCreating || isUpdating || isSavingPolicies;
 
@@ -79,21 +80,9 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
     policies: {
       type: "multiselect",
       title: "Policies",
-      enum: policyOptions,
+      enum: policyLabels,
     },
-  }), [nameField, isEditMode, policyOptions]);
-
-  const handleChange = useCallback((newValues: TypeRepresenterValue) => {
-    setFormValues((prev) => ({ ...prev, ...newValues }));
-    setFormErrors({});
-  }, []);
-
-  const setAllPolicies = useCallback(
-    (selectAll: boolean) => {
-      setFormValues((prev) => ({...prev, policies: selectAll ? [...policyOptions] : []}));
-    },
-    [policyOptions]
-  );
+  }), [nameField, isEditMode, policyLabels]);
 
   const handleSave = useCallback(async () => {
     const errors: Record<string, string> = {};
@@ -162,6 +151,8 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
     isEditMode,
     isSaving,
     formValues,
+    inputValues,
+    policyOptions,
     formErrors,
     properties,
     handleChange,
