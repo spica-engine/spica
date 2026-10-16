@@ -33,6 +33,15 @@
   max-width: 280px;
 }
 
+.entityLink {
+  color: var(--color-font-primary);
+  text-decoration: underline;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
 .scrollContainer {
   flex: 1;
   overflow-y: auto;

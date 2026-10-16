@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Button, FlexElement, Icon, Spinner, Table, type TableColumn } from "oziko-ui-kit";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { Link } from "react-router-dom";
 import {
   useGetUsersQuery,
   type User as UserType,
@@ -104,6 +105,26 @@ const User = () => {
             </span>
           );
         },
+      },
+      {
+        header: <FlexElement>Sign-up Strategy</FlexElement>,
+        key: "signUpStrategy",
+        width: "180px",
+        minWidth: "140px",
+        renderCell: ({ row }) =>
+          row.signUpStrategy ? (
+            <Link
+              to={`/passport/strategy?id=${row.signUpStrategy._id}`}
+              className={styles.entityLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {row.signUpStrategy.title}
+            </Link>
+          ) : (
+            <span>—</span>
+          ),
       },
       {
         header: <FlexElement>Last Login</FlexElement>,
