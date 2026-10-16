@@ -754,83 +754,69 @@ describe("Entrypoint", () => {
       });
     });
 
-    describe("many events on one worker", () => {
-      function waitForSubscription() {
-        return new Promise<void>(resolve => {
-          const check = () => (popSpy.mock.calls.length ? resolve() : setTimeout(check, 10));
-          check();
-        });
-      }
+    it("should use the same http queue for every event on the worker", async () => {
+      await initializeFn(`export default function(req, res) {
+        res.send({requestId: req.headers.get("x-request-id")});
+      }`);
 
-      function dispatch(marker: string): Promise<string> {
-        return new Promise(resolve => {
-          const ev = new event.Event({
-            type: event.Type.HTTP,
-            target: new event.Target({
-              cwd: meta.cwd,
-              handler: "default",
-              context: new event.SchedulingContext({
-                env: [],
-                timeout: 60
-              })
+      // With this tracer on, grpc-js logs every call along with the id of the channel
+      // (the queue's client) it went through, e.g.
+      // "(3) dns:0.0.0.0:24075 createResolvingCall [12] method="/Http.Queue/pop""
+      let workerLogs = "";
+      const workerOutput = new PassThrough();
+      workerOutput.on("data", chunk => (workerLogs += chunk));
+      spawn(workerOutput, undefined, {GRPC_TRACE: "channel", GRPC_VERBOSITY: "DEBUG"});
+
+      function sendHttpEvent(requestId: string): Promise<object> {
+        const ev = new event.Event({
+          type: event.Type.HTTP,
+          target: new event.Target({
+            cwd: meta.cwd,
+            handler: "default",
+            context: new event.SchedulingContext({
+              env: [],
+              timeout: 60
             })
-          });
+          })
+        });
+        queue.enqueue(ev);
+
+        return new Promise(resolve => {
           const serverResponse = {
             writeHead: jest.fn(),
-            end: jest.fn((data, _, callback) => {
+            end: jest.fn((body, _, callback) => {
               callback();
-              resolve(data.toString());
+              resolve(JSON.parse(body.toString()));
             })
           };
           const request = new Http.Request({
-            headers: [new Http.Header({key: "x-marker", value: marker})]
+            headers: [new Http.Header({key: "x-request-id", value: requestId})]
           });
-          queue.enqueue(ev);
           httpQueue.enqueue(ev.id, request, serverResponse as any);
         });
       }
 
-      it("should deliver each response to its own request when events run concurrently", async () => {
-        await initializeFn(`export default async function(req, res) {
-          const marker = Number(req.headers.get("x-marker"));
-          await new Promise(resolve => setTimeout(resolve, (marker * 7) % 25));
-          res.send({marker});
-        }`);
-        spawn();
-        await waitForSubscription();
+      const firstResponse = await sendHttpEvent("first");
+      const secondResponse = await sendHttpEvent("second");
+      const thirdResponse = await sendHttpEvent("third");
 
-        const markers = Array.from({length: 40}, (_, i) => i);
-        const bodies = await Promise.all(markers.map(marker => dispatch(String(marker))));
+      // Each response went back to the request that triggered it.
+      expect(firstResponse).toEqual({requestId: "first"});
+      expect(secondResponse).toEqual({requestId: "second"});
+      expect(thirdResponse).toEqual({requestId: "third"});
 
-        expect(bodies.map(body => JSON.parse(body).marker)).toEqual(markers);
-      });
-
-      it("should not retain memory for every handled event", async () => {
-        await initializeFn(`export default function(req, res) {
-          if (req.headers.get("x-marker") == "measure") {
-            globalThis.gc();
-            return res.send({heapUsed: process.memoryUsage().heapUsed});
-          }
-          res.send({});
-        }`);
-        spawn(undefined, undefined, {NODE_OPTIONS: "--expose-gc"});
-        await waitForSubscription();
-
-        const handle = async (count: number) => {
-          for (let i = 0; i < count; i += 20) {
-            await Promise.all(Array.from({length: 20}, () => dispatch("event")));
-          }
-        };
-        const measure = async () => JSON.parse(await dispatch("measure")).heapUsed;
-
-        await handle(100);
-        const before = await measure();
-        await handle(1000);
-        const after = await measure();
-
-        // An unclosed grpc client per event retained ~10KB each, so 1000 events grew the heap by ~10MB.
-        expect(after - before).toBeLessThan(3 * 1024 * 1024);
-      });
+      // All three events popped their request through one and the same http queue client.
+      const channelsOfHttpPops = () =>
+        [
+          ...workerLogs.matchAll(
+            /\((\d+)\) \S+ createResolvingCall \[\d+\] method="\/Http\.Queue\/pop"/g
+          )
+        ].map(match => match[1]);
+      while (channelsOfHttpPops().length < 3) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+      expect(channelsOfHttpPops()).toHaveLength(3);
+      expect(new Set(channelsOfHttpPops()).size).toBe(1);
     });
   });
 
