@@ -4,6 +4,7 @@ import { useGetPoliciesQuery } from "../../../store/api/policyApi";
 import { useEntityDrawer, type EntityWithPolicies } from "../../../hooks/useEntityDrawer";
 import drawerStyles from "../BucketEntryDrawer/BucketEntryDrawer.module.scss";
 import formStyles from "../../molecules/BucketEntryForm/BucketEntryForm.module.scss";
+import { PolicySelectAll } from "../../molecules/PolicySelectAll";
 import { BucketEntryActions } from "../../molecules/BucketEntryActions/BucketEntryActions";
 
 type EntityDrawerProps<TEntity extends EntityWithPolicies> = {
@@ -50,6 +51,7 @@ function EntityDrawer<TEntity extends EntityWithPolicies>({
     formErrors,
     properties,
     handleChange,
+    setAllPolicies,
     handleSave,
   } = useEntityDrawer<TEntity>({
     isOpen,
@@ -72,6 +74,8 @@ function EntityDrawer<TEntity extends EntityWithPolicies>({
     error: formErrors,
     containerClassName: formStyles.inputFieldContainer,
   });
+
+  const selectedPolicyCount = ((formValues.policies as string[] | undefined) ?? []).length;
 
   const subtitle = (selectedEntity as any)?.[nameField] ?? (isEditMode ? "edit" : "new");
 
@@ -105,6 +109,12 @@ function EntityDrawer<TEntity extends EntityWithPolicies>({
         <div className={drawerStyles.drawerBody} ref={formContainerRef}>
           <FlexElement direction="vertical" gap={10} className={formStyles.formContent}>
             {fields}
+            <PolicySelectAll
+              selectedCount={selectedPolicyCount}
+              totalCount={policyOptions.length}
+              onToggle={setAllPolicies}
+              disabled={isSaving}
+            />
             {extraContent}
           </FlexElement>
         </div>

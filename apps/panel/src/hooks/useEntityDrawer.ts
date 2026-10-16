@@ -88,6 +88,13 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
     setFormErrors({});
   }, []);
 
+  const setAllPolicies = useCallback(
+    (selectAll: boolean) => {
+      setFormValues((prev) => ({...prev, policies: selectAll ? [...policyOptions] : []}));
+    },
+    [policyOptions]
+  );
+
   const handleSave = useCallback(async () => {
     const errors: Record<string, string> = {};
     const nameValue = String(formValues[nameField] ?? "").trim();
@@ -158,6 +165,7 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
     formErrors,
     properties,
     handleChange,
+    setAllPolicies,
     handleSave,
   };
 }
