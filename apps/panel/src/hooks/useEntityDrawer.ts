@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePolicyOptions } from "./usePolicyOptions";
 import type { TypeProperties, TypeRepresenterValue } from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 
 export interface EntityWithPolicies {
@@ -11,7 +12,6 @@ interface UseEntityDrawerConfig<TEntity extends EntityWithPolicies> {
   isOpen: boolean;
   selectedEntity: TEntity | null;
   nameField: string;
-  policyOptions: string[];
   createMutation: (arg: any) => { unwrap: () => Promise<TEntity> };
   updateMutation: (arg: any) => { unwrap: () => Promise<TEntity> };
   addPolicyMutation: (arg: any) => { unwrap: () => Promise<any> };
@@ -25,7 +25,6 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
   isOpen,
   selectedEntity,
   nameField,
-  policyOptions,
   createMutation,
   updateMutation,
   addPolicyMutation,
@@ -35,6 +34,7 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
   onClose,
 }: UseEntityDrawerConfig<TEntity>) {
   const isEditMode = !!selectedEntity?._id;
+  const { policyOptions, policyLabels, idsToLabels, labelsToIds } = usePolicyOptions();
 
   const [formValues, setFormValues] = useState<TypeRepresenterValue>({
     [nameField]: "",
@@ -79,14 +79,24 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
     policies: {
       type: "multiselect",
       title: "Policies",
-      enum: policyOptions,
+      enum: policyLabels,
     },
-  }), [nameField, isEditMode, policyOptions]);
+  }), [nameField, isEditMode, policyLabels]);
 
   const handleChange = useCallback((newValues: TypeRepresenterValue) => {
-    setFormValues((prev) => ({ ...prev, ...newValues }));
+    const { policies, ...rest } = newValues;
+    setFormValues((prev) => ({
+      ...prev,
+      ...rest,
+      ...(policies !== undefined && { policies: labelsToIds(policies as string[]) }),
+    }));
     setFormErrors({});
-  }, []);
+  }, [labelsToIds]);
+
+  const inputValues = useMemo(
+    () => ({ ...formValues, policies: idsToLabels((formValues.policies as string[]) ?? []) }),
+    [formValues, idsToLabels]
+  );
 
   const setAllPolicies = useCallback(
     (selectAll: boolean) => {
@@ -162,6 +172,8 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
     isEditMode,
     isSaving,
     formValues,
+    inputValues,
+    policyOptions,
     formErrors,
     properties,
     handleChange,

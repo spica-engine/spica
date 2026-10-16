@@ -1,6 +1,5 @@
-import React, { useMemo, useRef } from "react";
+import React, { useRef } from "react";
 import { Drawer, FlexElement, useInputRepresenter } from "oziko-ui-kit";
-import { useGetPoliciesQuery } from "../../../store/api/policyApi";
 import { useEntityDrawer, type EntityWithPolicies } from "../../../hooks/useEntityDrawer";
 import drawerStyles from "../BucketEntryDrawer/BucketEntryDrawer.module.scss";
 import formStyles from "../../molecules/BucketEntryForm/BucketEntryForm.module.scss";
@@ -37,17 +36,14 @@ function EntityDrawer<TEntity extends EntityWithPolicies>({
   isUpdating,
   extraContent,
 }: EntityDrawerProps<TEntity>) {
-  const { data: policies } = useGetPoliciesQuery();
   const formContainerRef = useRef<HTMLDivElement>(null);
-
-  const policyOptions = useMemo(() => {
-    return (policies ?? []).map((p) => p._id);
-  }, [policies]);
 
   const {
     isEditMode,
     isSaving,
     formValues,
+    inputValues,
+    policyOptions,
     formErrors,
     properties,
     handleChange,
@@ -57,7 +53,6 @@ function EntityDrawer<TEntity extends EntityWithPolicies>({
     isOpen,
     selectedEntity,
     nameField,
-    policyOptions,
     createMutation,
     updateMutation,
     addPolicyMutation,
@@ -69,7 +64,7 @@ function EntityDrawer<TEntity extends EntityWithPolicies>({
 
   const fields = useInputRepresenter({
     properties,
-    value: formValues,
+    value: inputValues,
     onChange: handleChange,
     error: formErrors,
     containerClassName: formStyles.inputFieldContainer,

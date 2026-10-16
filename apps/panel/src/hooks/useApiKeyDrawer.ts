@@ -10,7 +10,7 @@ import {
   useRemoveApiKeyPolicyMutation,
   type ApiKey,
 } from "../store/api/apiKeyApi";
-import { useGetPoliciesQuery } from "../store/api/policyApi";
+import { usePolicyOptions } from "./usePolicyOptions";
 
 interface UseApiKeyDrawerConfig {
   isOpen: boolean;
@@ -29,7 +29,7 @@ export function useApiKeyDrawer({
   const [updateApiKey, { isLoading: isUpdating }] = useUpdateApiKeyMutation();
   const [addPolicy, { isLoading: isAddingPolicy }] = useAddApiKeyPolicyMutation();
   const [removePolicy, { isLoading: isRemovingPolicy }] = useRemoveApiKeyPolicyMutation();
-  const { data: policies } = useGetPoliciesQuery();
+  const { policyOptions, policyLabels, idsToLabels, labelsToIds } = usePolicyOptions();
 
   const isEditMode = !!selectedApiKey?._id;
 
@@ -64,11 +64,6 @@ export function useApiKeyDrawer({
     }
   }, [isOpen, selectedApiKey]);
 
-  const policyOptions = useMemo(
-    () => (policies ?? []).map((p) => p._id),
-    [policies]
-  );
-
   const properties: TypeProperties = useMemo(
     () => ({
       name: {
@@ -88,16 +83,26 @@ export function useApiKeyDrawer({
       policies: {
         type: "multiselect",
         title: "Policies",
-        enum: policyOptions,
+        enum: policyLabels,
       },
     }),
-    [policyOptions]
+    [policyLabels]
   );
 
   const handleChange = useCallback((newValues: TypeRepresenterValue) => {
-    setFormValues((prev) => ({ ...prev, ...newValues }));
+    const { policies, ...rest } = newValues;
+    setFormValues((prev) => ({
+      ...prev,
+      ...rest,
+      ...(policies !== undefined && { policies: labelsToIds(policies as string[]) }),
+    }));
     setFormErrors({});
-  }, []);
+  }, [labelsToIds]);
+
+  const inputValues = useMemo(
+    () => ({ ...formValues, policies: idsToLabels((formValues.policies as string[]) ?? []) }),
+    [formValues, idsToLabels]
+  );
 
   const setAllPolicies = useCallback(
     (selectAll: boolean) => {
@@ -175,6 +180,7 @@ export function useApiKeyDrawer({
     isEditMode,
     isSaving,
     formValues,
+    inputValues,
     formErrors,
     properties,
     policyOptions,

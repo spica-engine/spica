@@ -23,6 +23,7 @@ const ApiKeyDrawer: React.FC<ApiKeyDrawerProps> = ({
     isEditMode,
     isSaving,
     formValues,
+    inputValues,
     formErrors,
     properties,
     policyOptions,
@@ -33,7 +34,7 @@ const ApiKeyDrawer: React.FC<ApiKeyDrawerProps> = ({
 
   const fields = useInputRepresenter({
     properties,
-    value: formValues,
+    value: inputValues,
     onChange: handleChange,
     error: formErrors,
     errorClassName: styles.error,
