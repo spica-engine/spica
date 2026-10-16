@@ -51,8 +51,6 @@ if (!process.env.WORKER_ID) {
   exitAbnormally("Environment variable WORKER_ID was not set.");
 }
 
-// Shared by every event this worker handles: each queue wraps a @grpc/grpc-js client, and
-// grpc-js keeps an unclosed client alive, so creating one per event leaked memory per invocation.
 const httpQueue = new HttpQueue();
 const databaseQueue = new DatabaseQueue();
 const firehoseQueue = new FirehoseQueue();
