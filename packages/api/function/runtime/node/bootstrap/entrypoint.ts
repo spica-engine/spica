@@ -1,16 +1,24 @@
-import {Change as BucketChange} from "@spica-server/bucket-hooks-proto-node";
+import {
+  ChangeQueue as BucketChangeQueue,
+  Change as BucketChange
+} from "@spica-server/bucket-hooks-proto-node";
 import {hooks as BucketHooks} from "@spica-server/bucket-hooks-proto";
 
 import {
   Change,
+  DatabaseQueue,
   EventQueue,
   FirehosePool,
+  FirehoseQueue,
   FirehoseSocket,
+  HttpQueue,
   Message,
   Request,
   Response,
+  RabbitMQQueue,
   RabbitMQMessage,
-  rabbitmqArguments
+  rabbitmqArguments,
+  GrpcQueue as GrpcQueueNode
 } from "@spica-server/function-queue-node";
 
 import {
@@ -26,7 +34,6 @@ import {createRequire} from "module";
 import * as path from "path";
 
 import {getLoggerConsole, logContext} from "@spica-server/function-runtime-logger";
-import * as queues from "./queues.js";
 
 if (process.env.LOGGER) {
   console = getLoggerConsole();
@@ -43,6 +50,15 @@ if (!process.env.ENTRYPOINT) {
 if (!process.env.WORKER_ID) {
   exitAbnormally("Environment variable WORKER_ID was not set.");
 }
+
+// Shared by every event this worker handles: each queue wraps a @grpc/grpc-js client, and
+// grpc-js keeps an unclosed client alive, so creating one per event leaked memory per invocation.
+const httpQueue = new HttpQueue();
+const databaseQueue = new DatabaseQueue();
+const firehoseQueue = new FirehoseQueue();
+const bucketChangeQueue = new BucketChangeQueue();
+const rabbitmqQueue = new RabbitMQQueue();
+const grpcQueue = new GrpcQueueNode();
 
 (async () => {
   const queue = new EventQueue();
@@ -144,7 +160,6 @@ async function _process(ev: event.Event, queue: EventQueue) {
 
   switch (ev.type) {
     case event.Type.HTTP:
-      const httpQueue = queues.httpQueue();
       const httpPop = new Http.Request.Pop({
         id: ev.id
       });
@@ -205,20 +220,18 @@ async function _process(ev: event.Event, queue: EventQueue) {
       };
       break;
     case event.Type.DATABASE:
-      const database = queues.databaseQueue();
       const databasePop = new Database.Change.Pop({
         id: ev.id
       });
-      const change = await database.pop(databasePop);
+      const change = await databaseQueue.pop(databasePop);
       callArguments[0] = new Change(change);
       break;
     case event.Type.FIREHOSE:
-      const firehose = queues.firehoseQueue();
       const {
         client: clientDescription,
         pool: poolDescription,
         message
-      } = await firehose.pop(
+      } = await firehoseQueue.pop(
         new Firehose.Message.Pop({
           id: ev.id
         })
@@ -228,14 +241,14 @@ async function _process(ev: event.Event, queue: EventQueue) {
         socket: new FirehoseSocket(
           clientDescription,
           () => {
-            firehose.close(
+            firehoseQueue.close(
               new Firehose.Close({
                 client: clientDescription
               })
             );
           },
           (message: any) => {
-            firehose.send(
+            firehoseQueue.send(
               new Firehose.Message.Outgoing({
                 client: clientDescription,
                 message
@@ -243,7 +256,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
             );
           }
         ),
-        pool: new FirehosePool(poolDescription, (message: any) => firehose.sendAll(message))
+        pool: new FirehosePool(poolDescription, (message: any) => firehoseQueue.sendAll(message))
       };
       break;
     case event.Type.SCHEDULE:
@@ -253,8 +266,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
       // NO OP
       break;
     case event.Type.BUCKET:
-      const changeQueue = queues.bucketChangeQueue();
-      const bucketChange = await changeQueue.pop(
+      const bucketChange = await bucketChangeQueue.pop(
         new BucketHooks.Pop({
           id: ev.id
         })
@@ -262,12 +274,11 @@ async function _process(ev: event.Event, queue: EventQueue) {
       callArguments[0] = new BucketChange(bucketChange);
       break;
     case event.Type.RABBITMQ:
-      const rabbitmq = queues.rabbitmqQueue();
       const rabbitmqPop = new RabbitMQ.Message.Pop({
         id: ev.id
       });
 
-      const rabbitmqMessage = await rabbitmq.pop(rabbitmqPop);
+      const rabbitmqMessage = await rabbitmqQueue.pop(rabbitmqPop);
       const rabbitmqMessageInstance = new RabbitMQMessage(rabbitmqMessage);
 
       if (rabbitmqMessageInstance.errorMessage?.length) {
@@ -276,10 +287,13 @@ async function _process(ev: event.Event, queue: EventQueue) {
         return;
       }
 
-      callArguments.splice(0, 2, ...rabbitmqArguments(ev.id, rabbitmqMessageInstance, rabbitmq));
+      callArguments.splice(
+        0,
+        2,
+        ...rabbitmqArguments(ev.id, rabbitmqMessageInstance, rabbitmqQueue)
+      );
       break;
     case event.Type.GRPC:
-      const grpcQueue = queues.grpcQueue();
       const grpcPop = new GrpcProto.Request.Pop({
         id: ev.id
       });
