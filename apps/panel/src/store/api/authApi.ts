@@ -10,8 +10,14 @@ export interface Strategy {
 }
 
 export interface LoginRequest {
-  identifier: string;
-  password: string;
+  identifier?: string;
+  password?: string;
+  state?: string;
+}
+
+export interface StrategyLoginUrl {
+  url: string;
+  state: string;
 }
 
 /** Successful identify/factor-verification response: a usable access token. */
@@ -53,10 +59,14 @@ export interface VerifyAuthFactorRequest {
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getStrategies: builder.query<Strategy[], void>({
-      query: () => 'passport/strategies',
+      query: () => 'passport/identity/strategies',
       providesTags: ['Auth'],
     }),
-    
+
+    getStrategyLoginUrl: builder.mutation<StrategyLoginUrl, string>({
+      query: (strategyId) => `passport/identity/strategy/${strategyId}/url`,
+    }),
+
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (credentials) => ({
         url: 'passport/identify',
@@ -117,6 +127,7 @@ export const authApi = baseApi.injectEndpoints({
 
 export const {
   useGetStrategiesQuery,
+  useGetStrategyLoginUrlMutation,
   useLoginMutation,
   useVerifyAuthFactorMutation,
   useLogoutMutation,

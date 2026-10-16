@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import {
   useGetStrategiesQuery,
+  useGetStrategyLoginUrlMutation,
   useLoginMutation,
   useVerifyAuthFactorMutation,
   useLogoutMutation,
@@ -18,6 +19,7 @@ function useAuthService() {
   // RTK Query hooks
   const strategiesQuery = useGetStrategiesQuery();
   const [loginMutation, loginResult] = useLoginMutation();
+  const [getStrategyLoginUrlMutation] = useGetStrategyLoginUrlMutation();
   const [verifyFactorMutation, verifyFactorResult] = useVerifyAuthFactorMutation();
   const [logoutMutation] = useLogoutMutation();
 
@@ -49,6 +51,29 @@ function useAuthService() {
       }
     },
     [loginMutation, navigate]
+  );
+
+  const loginWithStrategy = useCallback(
+    async (strategyId: string): Promise<AuthFactorChallengeResponse | null> => {
+      const popup = window.open("about:blank", "_blank", "width=500,height=700");
+      if (!popup) {
+        throw new Error("The login window was blocked. Allow pop-ups for this site and try again.");
+      }
+
+      try {
+        const { url, state } = await getStrategyLoginUrlMutation(strategyId).unwrap();
+        popup.location.href = url;
+        const loginData = await loginMutation({ state }).unwrap();
+        if (isAuthFactorChallenge(loginData)) {
+          return loginData;
+        }
+        navigate("/dashboard");
+        return null;
+      } finally {
+        popup.close();
+      }
+    },
+    [getStrategyLoginUrlMutation, loginMutation, navigate]
   );
 
   const verifyFactor = useCallback(
@@ -94,6 +119,7 @@ function useAuthService() {
     // Functions (maintaining same interface)
     fetchStrategies,
     login,
+    loginWithStrategy,
     verifyFactor,
     logout,
     

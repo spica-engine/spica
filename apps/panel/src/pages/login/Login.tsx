@@ -5,6 +5,7 @@ import {
   FlexElement,
   Icon,
   InputWithIcon,
+  type IconName,
 } from "oziko-ui-kit";
 import styles from "./Login.module.scss";
 import useAuthService from "../../hooks/useAuthService";
@@ -22,6 +23,7 @@ const Login = () => {
     fetchStrategies,
     strategies,
     login,
+    loginWithStrategy,
     loginLoading,
     loginError,
     verifyFactor,
@@ -35,6 +37,7 @@ const Login = () => {
   // to the factor-verification step.
   const [challenge, setChallenge] = useState<AuthFactorChallengeResponse | null>(null);
   const [otp, setOtp] = useState("");
+  const [strategyError, setStrategyError] = useState<string | null>(null);
 
   const formik = useFormik({
     initialValues: { identifier: "", password: "" },
@@ -66,6 +69,19 @@ const Login = () => {
       // surfaces via verifyFactorError below.
       setOtp("");
     });
+  };
+
+  const submitStrategy = async (strategyId: string) => {
+    setStrategyError(null);
+    try {
+      const factorChallenge = await loginWithStrategy(strategyId);
+      if (factorChallenge) {
+        setOtp("");
+        setChallenge(factorChallenge);
+      }
+    } catch (error) {
+      setStrategyError(getErrorMessage(error));
+    }
   };
 
   const backToCredentials = () => {
@@ -214,9 +230,11 @@ const Login = () => {
               </>
             ) : (
             <>
-            {loginError && (
+            {(strategyError || loginError) && (
               <div className={styles.errorBox}>
-                <div className={styles.errorText}>{getErrorMessage(loginError)}</div>
+                <div className={styles.errorText}>
+                  {strategyError || getErrorMessage(loginError)}
+                </div>
               </div>
             )}
 
@@ -339,8 +357,9 @@ const Login = () => {
                 variant="outlined"
                 disabled={loginLoading}
                 style={{ height: 36 }}
+                onClick={() => submitStrategy(strategy._id)}
               >
-                <Icon size="sm" name="help" />
+                <Icon size="sm" name={(strategy.icon || "help") as IconName} />
                 {strategy.title}
               </Button>
             ))}
