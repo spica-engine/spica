@@ -627,6 +627,116 @@ describe("Scheduler", () => {
     });
   });
 
+  describe("getStatus", () => {
+    it("should report worker counts per function and spare workers separately", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+      scheduler.reconcileWarmWorkers(makeTarget("2"), 1);
+
+      expect(scheduler.getStatus().functions).toEqual({
+        "1": {warming: 2, warm: 0, idle: 0, busy: 0, superseded: 0, retiring: 0},
+        "2": {warming: 1, warm: 0, idle: 0, busy: 0, superseded: 0, retiring: 0}
+      });
+
+      connectWarmingWorkers();
+
+      const status = scheduler.getStatus();
+      expect(status.functions["1"]).toEqual({warming: 0, warm: 2, idle: 0, busy: 0, superseded: 0, retiring: 0});
+      expect(status.functions["2"]).toEqual({warming: 0, warm: 1, idle: 0, busy: 0, superseded: 0, retiring: 0});
+      expect(status.unit).toEqual("count");
+    });
+
+    it("should count a worker serving an event as busy for its function only", () => {
+      scheduler.enqueue(
+        new event.Event({
+          id: "ev",
+          type: -1,
+          target: makeTarget("1")
+        })
+      );
+
+      const status = scheduler.getStatus();
+      expect(status.functions["1"].busy).toEqual(1);
+      expect(Object.keys(status.functions)).toEqual(["1"]);
+    });
+
+    it("should count a worker as idle once its event completes", () => {
+      scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
+      expect(scheduler.getStatus().functions["1"]).toEqual(
+        expect.objectContaining({idle: 0, busy: 1})
+      );
+
+      completeEvent("1");
+
+      expect(scheduler.getStatus().functions["1"]).toEqual(
+        expect.objectContaining({idle: 1, busy: 0})
+      );
+    });
+
+    it("should count a superseded worker only as superseded, apart from its replacement", () => {
+      scheduler.reconcileConcurrency(makeTarget("1"), 2);
+      scheduler.enqueue(new event.Event({target: makeTarget("1"), type: -1 as any}));
+
+      scheduler.supersedeWorkers(makeTarget("1"));
+
+      expect(scheduler.getStatus().functions["1"]).toEqual({
+        warming: 1,
+        warm: 0,
+        idle: 0,
+        busy: 0,
+        superseded: 1,
+        retiring: 0
+      });
+
+      connectWarmingWorkers();
+
+      expect(scheduler.getStatus().functions["1"]).toEqual({
+        warming: 0,
+        warm: 1,
+        idle: 0,
+        busy: 0,
+        superseded: 1,
+        retiring: 0
+      });
+    });
+
+    it("should count an outdated worker as retiring", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 1);
+      connectWarmingWorkers();
+      const [[, worker]] = warmWorkers();
+
+      worker.markAsOutdated();
+
+      expect(scheduler.getStatus().functions["1"]).toEqual({
+        warming: 0,
+        warm: 0,
+        idle: 0,
+        busy: 0,
+        superseded: 0,
+        retiring: 1
+      });
+    });
+
+    it("should account for every worker exactly once", () => {
+      scheduler.reconcileWarmWorkers(makeTarget("1"), 2);
+      connectWarmingWorkers();
+      scheduler.reconcileWarmWorkers(makeTarget("2"), 1);
+      scheduler.enqueue(new event.Event({target: makeTarget("3"), type: -1 as any}));
+      scheduler.supersedeWorkers(makeTarget("3"));
+
+      const {functions, spare} = scheduler.getStatus();
+      const perFunction = Object.values(functions).flatMap(counts => Object.values(counts));
+      const total = [...perFunction, ...Object.values(spare)].reduce((a, b) => a + b, 0);
+
+      expect(total).toEqual(allWorkers().length);
+    });
+
+    it("should count unassigned workers as spare", () => {
+      const fresh = freeWorkers().length;
+      expect(scheduler.getStatus().spare.fresh).toEqual(fresh);
+      expect(scheduler.getStatus().spare.initial).toEqual(allWorkers().length - fresh);
+    });
+  });
+
   describe("warm workers", () => {
     it("should spawn warm workers on reconcile and mark them Warm once ready", () => {
       spawnSpy.mockClear();

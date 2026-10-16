@@ -297,25 +297,56 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   contextConfigs = new Map<string, event.SchedulingContext>();
 
   getStatus() {
-    const workers = Array.from(this.workers.values());
+    const functions: Record<
+      string,
+      {
+        warming: number;
+        warm: number;
+        idle: number;
+        busy: number;
+        superseded: number;
+        retiring: number;
+      }
+    > = {};
+    const spare = {initial: 0, fresh: 0};
 
-    const initial = workers.filter(w => w.state == WorkerState.Initial).length;
-    const fresh = workers.filter(w => w.state == WorkerState.Fresh).length;
-    const warm = workers.filter(
-      w => w.state == WorkerState.Warm || w.state == WorkerState.Warming
-    ).length;
-    const activated = workers.length - initial - fresh - warm;
-    const superseded = workers.filter(
-      w => w.isSuperseded && w.state != WorkerState.Outdated
-    ).length;
+    for (const worker of this.workers.values()) {
+      const targetId = worker.targetId;
 
-    return {
-      activated: activated,
-      fresh: fresh,
-      warm: warm,
-      superseded: superseded,
-      unit: "count"
-    };
+      if (!targetId) {
+        if (worker.state == WorkerState.Fresh) {
+          spare.fresh++;
+        } else {
+          spare.initial++;
+        }
+        continue;
+      }
+
+      const counts = (functions[targetId] ??= {
+        warming: 0,
+        warm: 0,
+        idle: 0,
+        busy: 0,
+        superseded: 0,
+        retiring: 0
+      });
+
+      if (worker.state == WorkerState.Outdated || worker.state == WorkerState.Timeouted) {
+        counts.retiring++;
+      } else if (worker.isSuperseded) {
+        counts.superseded++;
+      } else if (worker.state == WorkerState.Warming) {
+        counts.warming++;
+      } else if (worker.state == WorkerState.Warm) {
+        counts.warm++;
+      } else if (worker.state == WorkerState.Busy) {
+        counts.busy++;
+      } else {
+        counts.idle++;
+      }
+    }
+
+    return {functions, spare, unit: "count"};
   }
 
   takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} | undefined {
