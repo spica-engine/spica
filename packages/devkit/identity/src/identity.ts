@@ -178,7 +178,7 @@ export namespace authfactor {
 }
 
 export function getStrategies(headers?: object) {
-  return service.get<Strategy[]>("/passport/strategies", {headers});
+  return service.get<Strategy[]>("/passport/identity/strategies", {headers});
 }
 
 export function get(id: string, headers?: object): Promise<IdentityGet> {

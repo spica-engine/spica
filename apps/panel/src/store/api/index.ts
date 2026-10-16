@@ -3,6 +3,7 @@ export { baseApi } from './baseApi';
 export {
   authApi,
   useGetStrategiesQuery,
+  useGetStrategyLoginUrlMutation,
   useLoginMutation,
   useVerifyAuthFactorMutation,
   useLogoutMutation,
@@ -12,6 +13,7 @@ export {
 export type {
   Strategy,
   LoginRequest,
+  StrategyLoginUrl,
   LoginResponse,
   LoginSuccessResponse,
   AuthFactorChallengeResponse,
