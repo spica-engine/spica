@@ -1,0 +1,17 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.counter {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary, inherit);
+}
+
+.toggle {
+  border-radius: 6px !important;
+  padding: 3px 10px !important;
+  font-size: 12px !important;
+}

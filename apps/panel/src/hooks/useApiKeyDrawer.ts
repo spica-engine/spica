@@ -99,6 +99,13 @@ export function useApiKeyDrawer({
     setFormErrors({});
   }, []);
 
+  const setAllPolicies = useCallback(
+    (selectAll: boolean) => {
+      setFormValues((prev) => ({...prev, policies: selectAll ? [...policyOptions] : []}));
+    },
+    [policyOptions]
+  );
+
   const handleSave = useCallback(async () => {
     const name = String(formValues.name ?? "").trim();
 
@@ -170,7 +177,9 @@ export function useApiKeyDrawer({
     formValues,
     formErrors,
     properties,
+    policyOptions,
     handleChange,
+    setAllPolicies,
     handleSave,
   };
 }

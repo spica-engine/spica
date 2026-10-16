@@ -3,6 +3,7 @@ import {Drawer, useInputRepresenter} from "oziko-ui-kit";
 import type {ApiKey} from "../../store/api/apiKeyApi";
 import {useApiKeyDrawer} from "../../hooks/useApiKeyDrawer";
 import {BucketEntryActions} from "../../components/molecules/BucketEntryActions";
+import {PolicySelectAll} from "../../components/molecules/PolicySelectAll";
 import styles from "./ApiKeyDrawer.module.scss";
 
 type ApiKeyDrawerProps = {
@@ -24,7 +25,9 @@ const ApiKeyDrawer: React.FC<ApiKeyDrawerProps> = ({
     formValues,
     formErrors,
     properties,
+    policyOptions,
     handleChange,
+    setAllPolicies,
     handleSave,
   } = useApiKeyDrawer({isOpen, selectedApiKey, onClose, onKeyCreated});
 
@@ -66,6 +69,12 @@ const ApiKeyDrawer: React.FC<ApiKeyDrawerProps> = ({
 
         <div className={styles.drawerBody}>
           {fields}
+          <PolicySelectAll
+            selectedCount={((formValues.policies as string[] | undefined) ?? []).length}
+            totalCount={policyOptions.length}
+            onToggle={setAllPolicies}
+            disabled={isSaving}
+          />
         </div>
 
         <BucketEntryActions
