@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { usePolicyOptions } from "./usePolicyOptions";
+import { usePolicyFormBindings } from "./usePolicyFormBindings";
 import type { TypeProperties, TypeRepresenterValue } from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 
 export interface EntityWithPolicies {
@@ -34,7 +34,6 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
   onClose,
 }: UseEntityDrawerConfig<TEntity>) {
   const isEditMode = !!selectedEntity?._id;
-  const { policyOptions, policyLabels, toInputValues, fromInputChange } = usePolicyOptions();
 
   const [formValues, setFormValues] = useState<TypeRepresenterValue>({
     [nameField]: "",
@@ -43,6 +42,8 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const { policyOptions, policyLabels, handleChange, inputValues, setAllPolicies } =
+    usePolicyFormBindings({ formValues, setFormValues, setFormErrors });
   const [isSavingPolicies, setIsSavingPolicies] = useState(false);
   const isSaving = isCreating || isUpdating || isSavingPolicies;
 
@@ -82,20 +83,6 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
       enum: policyLabels,
     },
   }), [nameField, isEditMode, policyLabels]);
-
-  const handleChange = useCallback((newValues: TypeRepresenterValue) => {
-    setFormValues((prev) => ({ ...prev, ...fromInputChange(newValues) }));
-    setFormErrors({});
-  }, [fromInputChange]);
-
-  const inputValues = useMemo(() => toInputValues(formValues), [formValues, toInputValues]);
-
-  const setAllPolicies = useCallback(
-    (selectAll: boolean) => {
-      setFormValues((prev) => ({...prev, policies: selectAll ? [...policyOptions] : []}));
-    },
-    [policyOptions]
-  );
 
   const handleSave = useCallback(async () => {
     const errors: Record<string, string> = {};

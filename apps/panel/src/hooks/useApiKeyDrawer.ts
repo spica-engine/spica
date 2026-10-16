@@ -10,7 +10,7 @@ import {
   useRemoveApiKeyPolicyMutation,
   type ApiKey,
 } from "../store/api/apiKeyApi";
-import { usePolicyOptions } from "./usePolicyOptions";
+import { usePolicyFormBindings } from "./usePolicyFormBindings";
 
 interface UseApiKeyDrawerConfig {
   isOpen: boolean;
@@ -29,7 +29,6 @@ export function useApiKeyDrawer({
   const [updateApiKey, { isLoading: isUpdating }] = useUpdateApiKeyMutation();
   const [addPolicy, { isLoading: isAddingPolicy }] = useAddApiKeyPolicyMutation();
   const [removePolicy, { isLoading: isRemovingPolicy }] = useRemoveApiKeyPolicyMutation();
-  const { policyOptions, policyLabels, toInputValues, fromInputChange } = usePolicyOptions();
 
   const isEditMode = !!selectedApiKey?._id;
 
@@ -41,6 +40,8 @@ export function useApiKeyDrawer({
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const { policyOptions, policyLabels, handleChange, inputValues, setAllPolicies } =
+    usePolicyFormBindings({ formValues, setFormValues, setFormErrors });
   const isSaving = isCreating || isUpdating || isAddingPolicy || isRemovingPolicy;
 
   useEffect(() => {
@@ -87,20 +88,6 @@ export function useApiKeyDrawer({
       },
     }),
     [policyLabels]
-  );
-
-  const handleChange = useCallback((newValues: TypeRepresenterValue) => {
-    setFormValues((prev) => ({ ...prev, ...fromInputChange(newValues) }));
-    setFormErrors({});
-  }, [fromInputChange]);
-
-  const inputValues = useMemo(() => toInputValues(formValues), [formValues, toInputValues]);
-
-  const setAllPolicies = useCallback(
-    (selectAll: boolean) => {
-      setFormValues((prev) => ({...prev, policies: selectAll ? [...policyOptions] : []}));
-    },
-    [policyOptions]
   );
 
   const handleSave = useCallback(async () => {
