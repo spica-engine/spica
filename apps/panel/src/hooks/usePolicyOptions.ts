@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { TypeRepresenterValue } from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import { useGetPoliciesQuery } from "../store/api/policyApi";
 
 export function usePolicyOptions() {
@@ -17,11 +18,20 @@ export function usePolicyOptions() {
       idByLabel.set(label, p._id);
     });
 
+    const idsToLabels = (ids: string[]) => ids.map((id) => labelById.get(id) ?? id);
+    const labelsToIds = (labels: string[]) => labels.map((label) => idByLabel.get(label) ?? label);
+
     return {
       policyOptions: list.map((p) => p._id),
       policyLabels: list.map((p) => labelById.get(p._id)!),
-      idsToLabels: (ids: string[]) => ids.map((id) => labelById.get(id) ?? id),
-      labelsToIds: (labels: string[]) => labels.map((label) => idByLabel.get(label) ?? label),
+      toInputValues: (values: TypeRepresenterValue) => ({
+        ...values,
+        policies: idsToLabels((values.policies as string[]) ?? []),
+      }),
+      fromInputChange: ({ policies, ...rest }: TypeRepresenterValue) => ({
+        ...rest,
+        ...(policies !== undefined && { policies: labelsToIds(policies as string[]) }),
+      }),
     };
   }, [policies]);
 }

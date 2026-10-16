@@ -29,7 +29,7 @@ export function useApiKeyDrawer({
   const [updateApiKey, { isLoading: isUpdating }] = useUpdateApiKeyMutation();
   const [addPolicy, { isLoading: isAddingPolicy }] = useAddApiKeyPolicyMutation();
   const [removePolicy, { isLoading: isRemovingPolicy }] = useRemoveApiKeyPolicyMutation();
-  const { policyOptions, policyLabels, idsToLabels, labelsToIds } = usePolicyOptions();
+  const { policyOptions, policyLabels, toInputValues, fromInputChange } = usePolicyOptions();
 
   const isEditMode = !!selectedApiKey?._id;
 
@@ -90,19 +90,11 @@ export function useApiKeyDrawer({
   );
 
   const handleChange = useCallback((newValues: TypeRepresenterValue) => {
-    const { policies, ...rest } = newValues;
-    setFormValues((prev) => ({
-      ...prev,
-      ...rest,
-      ...(policies !== undefined && { policies: labelsToIds(policies as string[]) }),
-    }));
+    setFormValues((prev) => ({ ...prev, ...fromInputChange(newValues) }));
     setFormErrors({});
-  }, [labelsToIds]);
+  }, [fromInputChange]);
 
-  const inputValues = useMemo(
-    () => ({ ...formValues, policies: idsToLabels((formValues.policies as string[]) ?? []) }),
-    [formValues, idsToLabels]
-  );
+  const inputValues = useMemo(() => toInputValues(formValues), [formValues, toInputValues]);
 
   const setAllPolicies = useCallback(
     (selectAll: boolean) => {
