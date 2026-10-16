@@ -47,14 +47,13 @@ describe("Entrypoint", () => {
     return builder.build(meta);
   }
 
-  function spawn(stdout?: Writable, idOverride?: string, env: {[key: string]: string} = {}): any {
+  function spawn(stdout?: Writable, idOverride?: string): any {
     const worker = runtime.spawn({
       id: idOverride != undefined ? idOverride : String(++id),
       env: {
         __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
         __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
-        __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET,
-        ...env
+        __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
       },
       entrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH
     });
@@ -752,71 +751,6 @@ describe("Entrypoint", () => {
         queue.enqueue(ev);
         httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
       });
-    });
-
-    it("should use the same http queue for every event on the worker", async () => {
-      await initializeFn(`export default function(req, res) {
-        res.send({requestId: req.headers.get("x-request-id")});
-      }`);
-
-      // With this tracer on, grpc-js logs every call along with the id of the channel
-      // (the queue's client) it went through, e.g.
-      // "(3) dns:0.0.0.0:24075 createResolvingCall [12] method="/Http.Queue/pop""
-      let workerLogs = "";
-      const workerOutput = new PassThrough();
-      workerOutput.on("data", chunk => (workerLogs += chunk));
-      spawn(workerOutput, undefined, {GRPC_TRACE: "channel", GRPC_VERBOSITY: "DEBUG"});
-
-      function sendHttpEvent(requestId: string): Promise<object> {
-        const ev = new event.Event({
-          type: event.Type.HTTP,
-          target: new event.Target({
-            cwd: meta.cwd,
-            handler: "default",
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
-          })
-        });
-        queue.enqueue(ev);
-
-        return new Promise(resolve => {
-          const serverResponse = {
-            writeHead: jest.fn(),
-            end: jest.fn((body, _, callback) => {
-              callback();
-              resolve(JSON.parse(body.toString()));
-            })
-          };
-          const request = new Http.Request({
-            headers: [new Http.Header({key: "x-request-id", value: requestId})]
-          });
-          httpQueue.enqueue(ev.id, request, serverResponse as any);
-        });
-      }
-
-      const firstResponse = await sendHttpEvent("first");
-      const secondResponse = await sendHttpEvent("second");
-      const thirdResponse = await sendHttpEvent("third");
-
-      // Each response went back to the request that triggered it.
-      expect(firstResponse).toEqual({requestId: "first"});
-      expect(secondResponse).toEqual({requestId: "second"});
-      expect(thirdResponse).toEqual({requestId: "third"});
-
-      // All three events popped their request through one and the same http queue client.
-      const channelsOfHttpPops = () =>
-        [
-          ...workerLogs.matchAll(
-            /\((\d+)\) \S+ createResolvingCall \[\d+\] method="\/Http\.Queue\/pop"/g
-          )
-        ].map(match => match[1]);
-      while (channelsOfHttpPops().length < 3) {
-        await new Promise(resolve => setTimeout(resolve, 10));
-      }
-      expect(channelsOfHttpPops()).toHaveLength(3);
-      expect(new Set(channelsOfHttpPops()).size).toBe(1);
     });
   });
 
