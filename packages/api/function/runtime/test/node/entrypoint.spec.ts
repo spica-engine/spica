@@ -47,13 +47,14 @@ describe("Entrypoint", () => {
     return builder.build(meta);
   }
 
-  function spawn(stdout?: Writable, idOverride?: string): any {
+  function spawn(stdout?: Writable, idOverride?: string, env: {[key: string]: string} = {}): any {
     const worker = runtime.spawn({
       id: idOverride != undefined ? idOverride : String(++id),
       env: {
         __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
         __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
-        __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
+        __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET,
+        ...env
       },
       entrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH
     });
@@ -750,6 +751,85 @@ describe("Entrypoint", () => {
 
         queue.enqueue(ev);
         httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
+      });
+    });
+
+    describe("many events on one worker", () => {
+      function waitForSubscription() {
+        return new Promise<void>(resolve => {
+          const check = () => (popSpy.mock.calls.length ? resolve() : setTimeout(check, 10));
+          check();
+        });
+      }
+
+      function dispatch(marker: string): Promise<string> {
+        return new Promise(resolve => {
+          const ev = new event.Event({
+            type: event.Type.HTTP,
+            target: new event.Target({
+              cwd: meta.cwd,
+              handler: "default",
+              context: new event.SchedulingContext({
+                env: [],
+                timeout: 60
+              })
+            })
+          });
+          const serverResponse = {
+            writeHead: jest.fn(),
+            end: jest.fn((data, _, callback) => {
+              callback();
+              resolve(data.toString());
+            })
+          };
+          const request = new Http.Request({
+            headers: [new Http.Header({key: "x-marker", value: marker})]
+          });
+          queue.enqueue(ev);
+          httpQueue.enqueue(ev.id, request, serverResponse as any);
+        });
+      }
+
+      it("should deliver each response to its own request when events run concurrently", async () => {
+        await initializeFn(`export default async function(req, res) {
+          const marker = Number(req.headers.get("x-marker"));
+          await new Promise(resolve => setTimeout(resolve, (marker * 7) % 25));
+          res.send({marker});
+        }`);
+        spawn();
+        await waitForSubscription();
+
+        const markers = Array.from({length: 40}, (_, i) => i);
+        const bodies = await Promise.all(markers.map(marker => dispatch(String(marker))));
+
+        expect(bodies.map(body => JSON.parse(body).marker)).toEqual(markers);
+      });
+
+      it("should not retain memory for every handled event", async () => {
+        await initializeFn(`export default function(req, res) {
+          if (req.headers.get("x-marker") == "measure") {
+            globalThis.gc();
+            return res.send({heapUsed: process.memoryUsage().heapUsed});
+          }
+          res.send({});
+        }`);
+        spawn(undefined, undefined, {NODE_OPTIONS: "--expose-gc"});
+        await waitForSubscription();
+
+        const handle = async (count: number) => {
+          for (let i = 0; i < count; i += 20) {
+            await Promise.all(Array.from({length: 20}, () => dispatch("event")));
+          }
+        };
+        const measure = async () => JSON.parse(await dispatch("measure")).heapUsed;
+
+        await handle(100);
+        const before = await measure();
+        await handle(1000);
+        const after = await measure();
+
+        // An unclosed grpc client per event retained ~10KB each, so 1000 events grew the heap by ~10MB.
+        expect(after - before).toBeLessThan(3 * 1024 * 1024);
       });
     });
   });

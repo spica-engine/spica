@@ -1,24 +1,16 @@
-import {
-  ChangeQueue as BucketChangeQueue,
-  Change as BucketChange
-} from "@spica-server/bucket-hooks-proto-node";
+import {Change as BucketChange} from "@spica-server/bucket-hooks-proto-node";
 import {hooks as BucketHooks} from "@spica-server/bucket-hooks-proto";
 
 import {
   Change,
-  DatabaseQueue,
   EventQueue,
   FirehosePool,
-  FirehoseQueue,
   FirehoseSocket,
-  HttpQueue,
   Message,
   Request,
   Response,
-  RabbitMQQueue,
   RabbitMQMessage,
-  rabbitmqArguments,
-  GrpcQueue as GrpcQueueNode
+  rabbitmqArguments
 } from "@spica-server/function-queue-node";
 
 import {
@@ -34,6 +26,7 @@ import {createRequire} from "module";
 import * as path from "path";
 
 import {getLoggerConsole, logContext} from "@spica-server/function-runtime-logger";
+import * as queues from "./queues.js";
 
 if (process.env.LOGGER) {
   console = getLoggerConsole();
@@ -151,7 +144,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
 
   switch (ev.type) {
     case event.Type.HTTP:
-      const httpQueue = new HttpQueue();
+      const httpQueue = queues.httpQueue();
       const httpPop = new Http.Request.Pop({
         id: ev.id
       });
@@ -212,7 +205,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
       };
       break;
     case event.Type.DATABASE:
-      const database = new DatabaseQueue();
+      const database = queues.databaseQueue();
       const databasePop = new Database.Change.Pop({
         id: ev.id
       });
@@ -220,7 +213,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
       callArguments[0] = new Change(change);
       break;
     case event.Type.FIREHOSE:
-      const firehose = new FirehoseQueue();
+      const firehose = queues.firehoseQueue();
       const {
         client: clientDescription,
         pool: poolDescription,
@@ -260,7 +253,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
       // NO OP
       break;
     case event.Type.BUCKET:
-      const changeQueue = new BucketChangeQueue();
+      const changeQueue = queues.bucketChangeQueue();
       const bucketChange = await changeQueue.pop(
         new BucketHooks.Pop({
           id: ev.id
@@ -269,7 +262,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
       callArguments[0] = new BucketChange(bucketChange);
       break;
     case event.Type.RABBITMQ:
-      const rabbitmq = new RabbitMQQueue();
+      const rabbitmq = queues.rabbitmqQueue();
       const rabbitmqPop = new RabbitMQ.Message.Pop({
         id: ev.id
       });
@@ -286,7 +279,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
       callArguments.splice(0, 2, ...rabbitmqArguments(ev.id, rabbitmqMessageInstance, rabbitmq));
       break;
     case event.Type.GRPC:
-      const grpcQueue = new GrpcQueueNode();
+      const grpcQueue = queues.grpcQueue();
       const grpcPop = new GrpcProto.Request.Pop({
         id: ev.id
       });
