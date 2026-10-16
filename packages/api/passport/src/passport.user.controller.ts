@@ -121,7 +121,11 @@ export class PassportUserController {
     }
     const observer = this.assertObservers.get(state);
 
-    const {user: userData, attributes = {}} = await observer
+    const {
+      user: userData,
+      attributes = {},
+      strategy
+    } = await observer
       .pipe(
         timeout(this.SESSION_TIMEOUT_MS),
         take(1),
@@ -161,6 +165,7 @@ export class PassportUserController {
         lastPasswords: [],
         failedAttempts: [],
         lastLogin: undefined,
+        signUpStrategy: {_id: strategy._id, title: strategy.title, type: strategy.type},
         ...(attributeEntries.length ? {attributes: Object.fromEntries(attributeEntries)} : {})
       });
     } else if (attributeEntries.length) {
@@ -414,7 +419,12 @@ export class PassportUserController {
 
     return service
       .assert(strategy, body, code)
-      .then(user => observer.next(user))
+      .then(result =>
+        observer.next({
+          ...result,
+          strategy: {_id: strategy._id, title: strategy.title, type: strategy.type}
+        })
+      )
       .catch(e => {
         observer.error(e.toString());
       });

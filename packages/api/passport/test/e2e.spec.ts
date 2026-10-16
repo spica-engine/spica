@@ -998,6 +998,61 @@ describe("E2E Tests", () => {
         });
       });
 
+      describe("Sign-up strategy", () => {
+        it("should store the strategy on first login", async () => {
+          const id = await getCustomStrategyId();
+          await loginWithStrategy(id);
+
+          const user = await getUser("testuser@testuser.com");
+          expect(user.signUpStrategy).toEqual({_id: id, title: "oauth", type: "oauth"});
+        });
+
+        it("should keep the original snapshot when the strategy is renamed and user logs in again", async () => {
+          const id = await getCustomStrategyId();
+          await loginWithStrategy(id);
+
+          await updateStrategy(id, {...strategy, title: "renamed"});
+          await loginWithStrategy(id);
+
+          const user = await getUser("testuser@testuser.com");
+          expect(user.signUpStrategy).toEqual({_id: id, title: "oauth", type: "oauth"});
+        });
+
+        it("should not set it for users created with a password", async () => {
+          await req.post(
+            "/passport/user",
+            {username: "passworduser", password: "password"},
+            {Authorization: `IDENTITY ${token}`}
+          );
+
+          const user = await getUser("passworduser");
+          expect(user.signUpStrategy).toBeUndefined();
+        });
+
+        it("should reject it on user create and update", async () => {
+          const signUpStrategy = {_id: "1", title: "forged", type: "oauth"};
+
+          const create = await req.post(
+            "/passport/user",
+            {username: "forgeduser", password: "password", signUpStrategy},
+            {Authorization: `IDENTITY ${token}`}
+          );
+          expect(create.statusCode).toEqual(400);
+
+          const {body: created} = await req.post(
+            "/passport/user",
+            {username: "forgeduser", password: "password"},
+            {Authorization: `IDENTITY ${token}`}
+          );
+          const update = await req.put(
+            `/passport/user/${created._id}`,
+            {signUpStrategy},
+            {Authorization: `IDENTITY ${token}`}
+          );
+          expect(update.statusCode).toEqual(400);
+        });
+      });
+
       describe("Update", () => {
         it("should update preset strategy", async () => {
           const preset = {

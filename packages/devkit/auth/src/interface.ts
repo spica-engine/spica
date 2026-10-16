@@ -1,3 +1,9 @@
+export interface SignUpStrategy {
+  _id: string;
+  title: string;
+  type: string;
+}
+
 interface User {
   _id: string;
   username: string;
@@ -5,9 +11,13 @@ interface User {
   policies: string[];
   lastLogin?: Date;
   failedAttempts?: Date[];
+  signUpStrategy?: SignUpStrategy;
 }
 
-export type UserCreate = Omit<User, "_id" | "lastLogin" | "failedAttempts" | "policies">;
+export type UserCreate = Omit<
+  User,
+  "_id" | "lastLogin" | "failedAttempts" | "policies" | "signUpStrategy"
+>;
 export type UserGet = Omit<User, "password">;
 export type UserUpdate = Pick<User, "password">;
 

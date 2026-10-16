@@ -26,6 +26,12 @@ export interface ProfilerQueryParams {
   sort?: Record<string, 1 | -1>;
 }
 
+export interface SignUpStrategy {
+  _id: string;
+  title: string;
+  type: string;
+}
+
 export interface User {
   _id?: string;
   username: string;
@@ -40,6 +46,7 @@ export interface User {
   email_verified_at?: string;
   phone?: string;
   phone_verified_at?: string;
+  signUpStrategy?: SignUpStrategy;
 }
 
 export interface UserListResponse {

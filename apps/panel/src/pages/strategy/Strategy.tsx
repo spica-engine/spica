@@ -3,7 +3,8 @@
  * email: rio.kenan@gmail.com
  */
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button, Drawer, FlexElement, Icon } from "oziko-ui-kit";
 import { useGetAuthenticationStrategiesQuery, useDeleteStrategyMutation } from "../../store/api/authenticationStrategyApi";
 import type { AuthenticationStrategy } from "../../store/api/authenticationStrategyApi";
@@ -18,6 +19,7 @@ const Strategy = () => {
   const [selectedStrategy, setSelectedStrategy] = useState<AuthenticationStrategy | null>(null);
   const [strategyToDelete, setStrategyToDelete] = useState<AuthenticationStrategy | null>(null);
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: strategies, isLoading, error } = useGetAuthenticationStrategiesQuery();
   const [deleteStrategy, { isLoading: isDeleting }] = useDeleteStrategyMutation();
 
@@ -34,7 +36,17 @@ const Strategy = () => {
   const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false);
     setSelectedStrategy(null);
-  }, []);
+    setSearchParams({}, { replace: true });
+  }, [setSearchParams]);
+
+  const requestedStrategyId = searchParams.get("id");
+  useEffect(() => {
+    const requested = strategies?.find((strategy) => strategy._id === requestedStrategyId);
+    if (requested) {
+      setSelectedStrategy(requested);
+      setIsDrawerOpen(true);
+    }
+  }, [requestedStrategyId, strategies]);
 
   const handleDeleteClick = useCallback((e: React.MouseEvent, strategy: AuthenticationStrategy) => {
     e.stopPropagation();

@@ -2,6 +2,12 @@ import {ObjectId} from "@spica-server/database";
 import {EncryptedData} from "@spica-server/core-encryption";
 import {FactorMeta} from "@spica-server/interface-passport-authfactor";
 
+export interface SignUpStrategy {
+  _id: ObjectId;
+  title: string;
+  type: string;
+}
+
 export interface User {
   _id?: ObjectId;
   username: string;
@@ -18,6 +24,7 @@ export interface User {
   phone?: EncryptedData<true>;
   phone_verified_at?: Date;
   attributes?: Record<string, unknown>;
+  signUpStrategy?: SignUpStrategy;
 }
 
 export interface LoginCredentials {
