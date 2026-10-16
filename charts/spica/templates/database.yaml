@@ -24,7 +24,6 @@ spec:
         app.kubernetes.io/name: {{ .Release.Name }}-database
         app.kubernetes.io/component: database
         app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/version: {{ .Chart.AppVersion }}
         app.kubernetes.io/part-of: {{ .Chart.Name }}
         app.kubernetes.io/managed-by: helm
       annotations:
