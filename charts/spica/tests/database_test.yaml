@@ -91,6 +91,19 @@ tests:
           path: spec.template.spec.containers[0].image
           value: "mongo:7.0.0"
 
+  - it: should keep the version label on the StatefulSet but not on the pod template
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - isNotNull:
+          path: metadata.labels["app.kubernetes.io/version"]
+      - isNull:
+          path: spec.template.metadata.labels["app.kubernetes.io/version"]
+      - isNull:
+          path: spec.selector.matchLabels["app.kubernetes.io/version"]
+
   - it: should mount the init-db ConfigMap as a volume
     template: templates/database.yaml
     documentSelector:
