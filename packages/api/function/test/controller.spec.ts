@@ -388,6 +388,93 @@ describe("Function Controller", () => {
     });
   });
 
+  // A worker caches the code of the functions it imports on first execution, so these prove that
+  // saving an imported function retires the stale workers of everything importing it.
+  describe("importers", () => {
+    const unique = (prefix: string) => `${prefix}_${new ObjectId().toHexString()}`;
+
+    async function createHelper(name: string, value: string) {
+      const fn = await request
+        .post("/function", {...fnSchema, name, triggers: {}})
+        .then(r => r.body);
+      await writeHelper(fn, value);
+      return fn;
+    }
+
+    function writeHelper(fn, value: string) {
+      return request.post(`/function/${fn._id}/index`, {
+        index: `export const value = () => "${value}";`
+      });
+    }
+
+    async function createImporter(name: string, imported: string, httpPath?: string) {
+      const triggers = httpPath
+        ? {
+            http: {
+              ...fnSchema.triggers.http,
+              options: {...fnSchema.triggers.http.options, path: httpPath}
+            }
+          }
+        : {};
+      // The worker that served the old code sits outdated after the cutover and is only reaped
+      // by its last event's timeout timer, which app.close() waits for; keep it short.
+      const fn = await request
+        .post("/function", {...fnSchema, name, triggers, timeout: 3})
+        .then(r => r.body);
+
+      const install = await request.post(`/function/${fn._id}/dependencies`, {
+        name: [`@spica-fn/${imported}`]
+      });
+      expect(install.statusCode).toEqual(201);
+
+      const respond = httpPath
+        ? `export function http(req, res){ return res.status(200).send(value()); }`
+        : `export {value};`;
+      await request.post(`/function/${fn._id}/index`, {
+        index: `import {value} from "@spica-fn/${imported}";\n${respond}`
+      });
+      return fn;
+    }
+
+    const execute = (httpPath: string) =>
+      request.get(`/fn-execute${httpPath}`).then(res => [res.statusCode, res.body]);
+
+    // Superseded workers keep serving until their fresh replacements are ready (rolling cutover),
+    // so the new code shows up shortly after the save rather than on the very next request.
+    async function executeUntil(httpPath: string, expected: string, timeoutMs = 10_000) {
+      const deadline = Date.now() + timeoutMs;
+      let last = await execute(httpPath);
+      while (last[1] != expected && Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 250));
+        last = await execute(httpPath);
+      }
+      return last;
+    }
+
+    it("should serve the new code of a directly imported function after it is saved", async () => {
+      const helper = await createHelper(unique("helper"), "v1");
+      await createImporter(unique("importer"), helper.name, "/direct");
+
+      expect(await execute("/direct")).toEqual([200, "v1"]);
+
+      await writeHelper(helper, "v2");
+
+      expect(await executeUntil("/direct", "v2")).toEqual([200, "v2"]);
+    });
+
+    it("should serve the new code of an indirectly imported function after it is saved", async () => {
+      const helper = await createHelper(unique("helper"), "v1");
+      const middle = await createImporter(unique("middle"), helper.name);
+      await createImporter(unique("top"), middle.name, "/indirect");
+
+      expect(await execute("/indirect")).toEqual([200, "v1"]);
+
+      await writeHelper(helper, "v2");
+
+      expect(await executeUntil("/indirect", "v2")).toEqual([200, "v2"]);
+    });
+  });
+
   describe("name operations", () => {
     it("should not allow duplicate function names", async () => {
       //Wait a bit for before test for mongodb to create name indexes to resolve async process issues
