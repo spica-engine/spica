@@ -32,6 +32,14 @@
       "types": "./src/plan-executor.ts",
       "default": "./dist/src/plan-executor.js"
     },
+    "./src/secret-placeholder": {
+      "types": "./src/secret-placeholder.ts",
+      "default": "./dist/src/secret-placeholder.js"
+    },
+    "./src/trigger-secret-resolver": {
+      "types": "./src/trigger-secret-resolver.ts",
+      "default": "./dist/src/trigger-secret-resolver.js"
+    },
     "./src/synchronizer/dependency": {
       "types": "./src/synchronizer/dependency/index.ts",
       "default": "./dist/src/synchronizer/dependency/index.js"

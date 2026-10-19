@@ -4,6 +4,7 @@ import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {PlanExecutor} from "@spica-server/function/src/plan-executor";
+import {TriggerSecretResolver} from "@spica-server/function/src/trigger-secret-resolver";
 import {FunctionService} from "@spica-server/function-services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService, EnvVarChangeDispatcher} from "@spica-server/env_var-services";
@@ -75,7 +76,13 @@ describe("Engine", () => {
     fs = new FunctionService(database, evs, ss, {} as any);
 
     const options = {root: "test_root", timeout: 1, outDir: ".build"} as any;
-    executor = new PlanExecutor(fs, scheduler, (val => val) as any, options);
+    executor = new PlanExecutor(
+      fs,
+      scheduler,
+      (val => val) as any,
+      options,
+      new TriggerSecretResolver(fs, (val => val) as any)
+    );
     engine = new FunctionEngine(
       fs,
       database,

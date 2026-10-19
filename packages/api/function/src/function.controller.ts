@@ -39,6 +39,7 @@ import {
 } from "./activity.resource.js";
 import {FunctionEngine} from "./engine.js";
 import {FunctionService} from "@spica-server/function-services";
+import {SecretService} from "@spica-server/secret-services";
 import {
   Options,
   FUNCTION_OPTIONS,
@@ -62,6 +63,7 @@ export class FunctionController {
     private engine: FunctionEngine,
     private scheduler: Scheduler,
     private log: LogService,
+    private ss: SecretService,
     @Inject(FUNCTION_OPTIONS) private options: Options
   ) {}
 
@@ -343,7 +345,7 @@ export class FunctionController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Param("secretId", OBJECT_ID) secretId: ObjectId
   ) {
-    return CRUD.secret.inject(this.fs, id, this.engine, secretId);
+    return CRUD.secret.inject(this.fs, this.ss, id, this.engine, secretId);
   }
 
   /**
@@ -359,6 +361,6 @@ export class FunctionController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Param("secretId", OBJECT_ID) secretId: ObjectId
   ) {
-    return CRUD.secret.eject(this.fs, id, this.engine, secretId);
+    return CRUD.secret.eject(this.fs, this.ss, id, this.engine, secretId);
   }
 }

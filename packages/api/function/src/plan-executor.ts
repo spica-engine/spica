@@ -18,6 +18,7 @@ import {
 import {EnvVar} from "@spica-server/interface-env_var";
 import {Secret, SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
 import * as CRUD from "./crud.js";
+import {TriggerSecretResolver} from "./trigger-secret-resolver.js";
 
 /**
  * Applies a {@link FunctionChangePlan} to the running system: it drives enqueuer subscriptions
@@ -32,14 +33,17 @@ export class PlanExecutor {
     private fs: FunctionService,
     private scheduler: Scheduler,
     @Inject(SECRET_DECRYPTOR) private secretDecryptor: SecretDecryptor,
-    @Inject(FUNCTION_OPTIONS) private options: Options
+    @Inject(FUNCTION_OPTIONS) private options: Options,
+    private secretResolver: TriggerSecretResolver
   ) {}
 
   // Awaits reconcile so callers can gate on it: at startup this keeps the app from listening
   // before every function's execution context (env/secrets/timeout) is loaded into the
   // scheduler, otherwise a freshly-subscribed route could serve events with empty context.
   async apply(plan: FunctionChangePlan): Promise<void> {
-    for (const change of plan.routing) {
+    const routing = await this.secretResolver.resolve(plan.routing);
+
+    for (const change of routing) {
       switch (change.kind) {
         case ChangeKind.Added:
           this.subscribe(change);
@@ -131,7 +135,10 @@ export class PlanExecutor {
     const hasActiveTrigger = Object.keys(triggers).some(handler => triggers[handler]?.active);
 
     this.scheduler.reconcileContext(target, context);
-    this.scheduler.reconcileConcurrency(target, fn.concurrencyPerWorker ?? DEFAULT_EVENT_CONCURRENCY);
+    this.scheduler.reconcileConcurrency(
+      target,
+      fn.concurrencyPerWorker ?? DEFAULT_EVENT_CONCURRENCY
+    );
 
     // supersede before refilling the warm reserve: supersedeWorkers kills the stale reserve, then
     // reconcileWarmWorkers rebuilds it from fresh state. A function with no active trigger has
@@ -144,7 +151,7 @@ export class PlanExecutor {
       }
     }
 
-    this.scheduler.reconcileWarmWorkers(target, hasActiveTrigger ? fn.warmWorkers ?? 0 : 0);
+    this.scheduler.reconcileWarmWorkers(target, hasActiveTrigger ? (fn.warmWorkers ?? 0) : 0);
   }
 
   private buildSchedulingContext(

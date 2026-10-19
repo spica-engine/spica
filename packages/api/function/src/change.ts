@@ -8,6 +8,7 @@ import {
   EnvRelation,
   SecretRelation
 } from "@spica-server/interface-function";
+import {hasSecretPlaceholder} from "./secret-placeholder.js";
 
 type FunctionDocument = Function<EnvRelation.NotResolved, SecretRelation.NotResolved>;
 
@@ -57,6 +58,25 @@ export function createPlan(
  */
 export function refreshPlan(id: string): FunctionChangePlan {
   return {routing: [], outdate: [id], reconcile: [id]};
+}
+
+/**
+ * A refresh for a change of the given secrets (attached, detached, updated or deleted). Triggers
+ * whose options reference those secrets get re-subscribed so that the enqueuer picks up the
+ * newly resolved options; the rest keep their subscriptions.
+ */
+export function secretRefreshPlan(fn: FunctionDocument, secretKeys: string[]): FunctionChangePlan {
+  const referencingTriggers: Triggers = {};
+  for (const [handler, trigger] of Object.entries(fn.triggers || {})) {
+    if (trigger.active && hasSecretPlaceholder(trigger.options, secretKeys)) {
+      referencingTriggers[handler] = trigger;
+    }
+  }
+
+  return {
+    ...refreshPlan(fn._id.toString()),
+    routing: createTargetChanges({...fn, triggers: referencingTriggers}, ChangeKind.Updated)
+  };
 }
 
 export function mergePlans(plans: FunctionChangePlan[]): FunctionChangePlan {

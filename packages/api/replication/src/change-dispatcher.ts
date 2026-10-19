@@ -14,8 +14,10 @@ export interface CollectionChangeEvent {
 // the watchers on all instances. Subclass per collection so ClassCommander, which routes by
 // ctx.constructor.name, keeps each collection's broadcasts isolated.
 @Injectable()
-export abstract class CollectionChangeDispatcher implements OnModuleDestroy {
-  private readonly changes = new Subject<CollectionChangeEvent>();
+export abstract class CollectionChangeDispatcher<
+  E extends CollectionChangeEvent = CollectionChangeEvent
+> implements OnModuleDestroy {
+  private readonly changes = new Subject<E>();
   private commanderSubscription?: {unsubscribe: () => void};
 
   constructor(@Optional() commander?: ClassCommander) {
@@ -24,11 +26,11 @@ export abstract class CollectionChangeDispatcher implements OnModuleDestroy {
     }
   }
 
-  dispatch(change: CollectionChangeEvent) {
+  dispatch(change: E) {
     this.changes.next(change);
   }
 
-  watch(): Observable<CollectionChangeEvent> {
+  watch(): Observable<E> {
     return this.changes.asObservable();
   }
 

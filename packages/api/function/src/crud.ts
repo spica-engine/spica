@@ -1,4 +1,5 @@
 import {FunctionService} from "@spica-server/function-services";
+import {SecretService} from "@spica-server/secret-services";
 import {
   Dependency,
   EnvRelation,
@@ -6,7 +7,7 @@ import {
   FunctionWithDependencies,
   SecretRelation
 } from "@spica-server/interface-function";
-import {createPlan, refreshPlan} from "./change.js";
+import {createPlan, refreshPlan, secretRefreshPlan} from "./change.js";
 import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "./engine.js";
 import {LogService} from "@spica-server/function-log";
@@ -366,7 +367,7 @@ export namespace environment {
     return reload(fnId, engine);
   }
 
-  export async function detach(fs: FunctionService, fnId: ObjectId, envVarId: ObjectId) {
+  export async function removeReference(fs: FunctionService, fnId: ObjectId, envVarId: ObjectId) {
     const res = await fs.findOneAndUpdate(
       {
         _id: fnId
@@ -386,7 +387,7 @@ export namespace environment {
     engine: FunctionEngine,
     envVarId: ObjectId
   ) {
-    await detach(fs, fnId, envVarId);
+    await removeReference(fs, fnId, envVarId);
     return reload(fnId, engine);
   }
 
@@ -398,11 +399,12 @@ export namespace environment {
 export namespace secret {
   export async function inject(
     fs: FunctionService,
+    ss: SecretService,
     fnId: ObjectId,
     engine: FunctionEngine,
     secretId: ObjectId
   ) {
-    const res = await fs.findOneAndUpdate(
+    const fn = await fs.findOneAndUpdate(
       {
         _id: fnId
       },
@@ -410,15 +412,15 @@ export namespace secret {
         $addToSet: {secrets: secretId}
       }
     );
-    if (!res) {
+    if (!fn) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
 
-    return reload(fnId, engine);
+    return reload(fn, ss, engine, secretId);
   }
 
-  export async function detach(fs: FunctionService, fnId: ObjectId, secretId: ObjectId) {
-    const res = await fs.findOneAndUpdate(
+  export async function removeReference(fs: FunctionService, fnId: ObjectId, secretId: ObjectId) {
+    const fn = await fs.findOneAndUpdate(
       {
         _id: fnId
       },
@@ -426,23 +428,32 @@ export namespace secret {
         $pull: {secrets: secretId}
       }
     );
-    if (!res) {
+    if (!fn) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
+    return fn;
   }
 
   export async function eject(
     fs: FunctionService,
+    ss: SecretService,
     fnId: ObjectId,
     engine: FunctionEngine,
     secretId: ObjectId
   ) {
-    await detach(fs, fnId, secretId);
-    return reload(fnId, engine);
+    const fn = await removeReference(fs, fnId, secretId);
+    return reload(fn, ss, engine, secretId);
   }
 
-  export async function reload(fnId: ObjectId, engine: FunctionEngine) {
-    return engine.applyChangePlan(refreshPlan(fnId.toString()));
+  async function reload(
+    fn: Function,
+    ss: SecretService,
+    engine: FunctionEngine,
+    secretId: ObjectId
+  ) {
+    const secret = await ss.findOne({_id: secretId}, {projection: {key: 1}});
+    const secretKeys = secret ? [secret.key] : [];
+    return engine.applyChangePlan(secretRefreshPlan(fn, secretKeys));
   }
 }
 
@@ -464,4 +475,18 @@ export async function findOneForRuntime(
   }
 
   return res;
+}
+
+export function findWithSecrets(
+  fs: FunctionService,
+  ids: ObjectId[]
+): Promise<Function<EnvRelation.NotResolved, SecretRelation.Resolved>[]> {
+  const pipeline = new FunctionPipelineBuilder()
+    .filterByIds(ids)
+    .resolveSecretRelation(SecretRelation.Resolved)
+    .result();
+
+  return fs
+    .aggregate<Function<EnvRelation.NotResolved, SecretRelation.Resolved>>(pipeline)
+    .toArray();
 }

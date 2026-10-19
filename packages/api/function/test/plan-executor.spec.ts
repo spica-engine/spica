@@ -3,6 +3,7 @@ import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {PlanExecutor} from "@spica-server/function/src/plan-executor";
+import {TriggerSecretResolver} from "@spica-server/function/src/trigger-secret-resolver";
 import {FunctionService} from "@spica-server/function-services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService, EnvVarChangeDispatcher} from "@spica-server/env_var-services";
@@ -67,11 +68,13 @@ describe("PlanExecutor", () => {
     const ss = new SecretService(database, "test-encryption-secret", new SecretChangeDispatcher());
     fs = new FunctionService(database, evs, ss, {} as any);
 
-    executor = new PlanExecutor(fs, scheduler, (val => val) as any, {
-      root: "test_root",
-      timeout: 1,
-      outDir: ".build"
-    } as any);
+    executor = new PlanExecutor(
+      fs,
+      scheduler,
+      (val => val) as any,
+      {root: "test_root", timeout: 1, outDir: ".build"} as any,
+      new TriggerSecretResolver(fs, (val => val) as any)
+    );
 
     await app.init();
 
@@ -96,39 +99,39 @@ describe("PlanExecutor", () => {
     }
   }
 
-  it("should subscribe a new trigger", () => {
+  it("should subscribe a new trigger", async () => {
     const change: TargetChange = {
       kind: ChangeKind.Added,
       target: {id: "test_id", handler: "test_handler", name: "test_function"}
     };
 
-    apply(routing([change]));
+    await apply(routing([change]));
 
     expect(subscribeSpy).toHaveBeenCalledTimes(1);
     expect(subscribeSpy).toHaveBeenCalledWith(change);
     expect(unsubscribeSpy).not.toHaveBeenCalled();
   });
 
-  it("should unsubscribe a removed trigger", () => {
+  it("should unsubscribe a removed trigger", async () => {
     const change: TargetChange = {
       kind: ChangeKind.Removed,
       target: {id: "test_id", handler: "test_handler", name: "test_function"}
     };
 
-    apply(routing([change]));
+    await apply(routing([change]));
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
     expect(unsubscribeSpy).toHaveBeenCalledWith(change);
     expect(subscribeSpy).not.toHaveBeenCalled();
   });
 
-  it("should unsubscribe then subscribe an updated trigger", () => {
+  it("should unsubscribe then subscribe an updated trigger", async () => {
     const change: TargetChange = {
       kind: ChangeKind.Updated,
       target: {id: "test_id", handler: "test_handler", name: "test_function"}
     };
 
-    apply(routing([change]));
+    await apply(routing([change]));
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
     expect(unsubscribeSpy).toHaveBeenCalledWith(change);
@@ -136,10 +139,10 @@ describe("PlanExecutor", () => {
     expect(subscribeSpy).toHaveBeenCalledWith(change);
   });
 
-  it("should not outdate workers on a routing update", () => {
+  it("should not outdate workers on a routing update", async () => {
     const outdateSpy = jest.spyOn(scheduler, "outdateWorkers");
 
-    apply(
+    await apply(
       routing([
         {
           kind: ChangeKind.Updated,
@@ -151,7 +154,7 @@ describe("PlanExecutor", () => {
     expect(outdateSpy).not.toHaveBeenCalled();
   });
 
-  it("should build a routing-only target that carries no execution context", () => {
+  it("should build a routing-only target that carries no execution context", async () => {
     const change: TargetChange = {
       kind: ChangeKind.Added,
       target: {id: "test_id", handler: "test_handler", name: "test_function"},
@@ -164,7 +167,7 @@ describe("PlanExecutor", () => {
     );
     const httpSubscribe = jest.spyOn(httpEnqueuer, "subscribe");
     subscribeSpy.mockRestore();
-    apply(routing([change]));
+    await apply(routing([change]));
 
     const target = httpSubscribe.mock.calls[httpSubscribe.mock.calls.length - 1][0].toObject();
     expect(target.id).toBe("test_id");
