@@ -3,32 +3,30 @@ import {ObjectId} from "@spica-server/database";
 import {TriggerSecretResolver} from "@spica-server/function/src/trigger-secret-resolver";
 
 describe("TriggerSecretResolver failures", () => {
-  const goodId = new ObjectId();
-  const badId = new ObjectId();
+  const fnA = new ObjectId();
+  const fnB = new ObjectId();
 
-  const change = (id: ObjectId, url: string): TargetChange => ({
+  const change = (id: ObjectId, url: string, handler = "default"): TargetChange => ({
     kind: ChangeKind.Added,
     type: "rabbitmq",
     options: {url},
-    target: {id: id.toString(), handler: "default"}
+    target: {id: id.toString(), handler}
   });
 
   const functionService = (toArray: jest.Mock) => ({aggregate: () => ({toArray})}) as any;
   const secretOf = (key: string, value: string) => ({key, value});
 
-  it("should skip every subscription with placeholders when the lookup fails", async () => {
+  it("should keep every change with its placeholders when the lookup fails", async () => {
     const resolver = new TriggerSecretResolver(
       functionService(jest.fn().mockRejectedValue(new Error("db down"))),
       (secret => secret) as any
     );
-    const plain = change(goodId, "amqp://localhost");
+    const routing = [change(fnA, "amqp://${SECRET.USER}@host"), change(fnB, "amqp://localhost")];
 
-    const routing = await resolver.resolve([change(goodId, "amqp://${SECRET.USER}@host"), plain]);
-
-    expect(routing).toEqual([plain]);
+    expect(await resolver.resolve(routing)).toEqual(routing);
   });
 
-  it("should only skip the function whose secret cannot be decrypted", async () => {
+  it("should leave only the undecryptable secret unresolved and resolve everything else", async () => {
     const decryptor = jest.fn(secret => {
       if (secret.key == "BAD") {
         throw new Error("cannot decrypt");
@@ -38,18 +36,23 @@ describe("TriggerSecretResolver failures", () => {
     const resolver = new TriggerSecretResolver(
       functionService(
         jest.fn().mockResolvedValue([
-          {_id: goodId, secrets: [secretOf("USER", "admin")]},
-          {_id: badId, secrets: [secretOf("BAD", "x")]}
+          {_id: fnA, secrets: [secretOf("USER", "admin"), secretOf("BAD", "x")]},
+          {_id: fnB, secrets: [secretOf("USER", "other")]}
         ])
       ),
       decryptor as any
     );
 
     const routing = await resolver.resolve([
-      change(goodId, "amqp://${SECRET.USER}@host"),
-      change(badId, "amqp://${SECRET.BAD}@host")
+      change(fnA, "amqp://${SECRET.USER}@host", "first"),
+      change(fnA, "amqp://${SECRET.BAD}@host", "second"),
+      change(fnB, "amqp://${SECRET.USER}@host")
     ]);
 
-    expect(routing.map(r => r.options)).toEqual([{url: "amqp://admin@host"}]);
+    expect(routing.map(r => r.options)).toEqual([
+      {url: "amqp://admin@host"},
+      {url: "amqp://${SECRET.BAD}@host"},
+      {url: "amqp://other@host"}
+    ]);
   });
 });

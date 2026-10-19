@@ -25,56 +25,53 @@ export class TriggerSecretResolver {
       return routing;
     }
 
-    let secretsByFunction: Map<string, Map<string, string> | Error>;
+    let secretsByFunction: Map<string, Map<string, string>>;
     try {
       secretsByFunction = await this.findDecryptedSecrets(Array.from(functionIds));
     } catch (error) {
       this.logger.error(
-        `Failed to look up secrets of functions ${Array.from(functionIds).join(", ")}. Reason: ${describe(error)}`
+        `Failed to look up secrets of functions ${Array.from(functionIds).join(", ")}, their placeholders stay unresolved. Reason: ${errorMessage(error)}`
       );
-      return routing.filter(change => !isSubscribingWithSecretPlaceholder(change));
+      return routing;
     }
 
-    return routing.flatMap(change => {
-      if (!isSubscribingWithSecretPlaceholder(change)) {
-        return [change];
-      }
+    return routing.map(change => {
       const secrets = secretsByFunction.get(change.target.id);
-      if (secrets instanceof Error) {
-        this.logger.error(
-          `Skipping ${change.type} trigger '${change.target.handler}' of function ${change.target.id}, its secrets could not be resolved. Reason: ${secrets.message}`
-        );
-        return [];
+      if (!secrets || !isSubscribingWithSecretPlaceholder(change)) {
+        return change;
       }
-      return [
-        secrets ? {...change, options: resolveSecretPlaceholders(change.options, secrets)} : change
-      ];
+      return {...change, options: resolveSecretPlaceholders(change.options, secrets)};
     });
   }
 
   private async findDecryptedSecrets(
     functionIds: string[]
-  ): Promise<Map<string, Map<string, string> | Error>> {
+  ): Promise<Map<string, Map<string, string>>> {
     const ids = functionIds.filter(id => ObjectId.isValid(id)).map(id => new ObjectId(id));
     const fns = await CRUD.findWithSecrets(this.fs, ids);
 
-    return new Map<string, Map<string, string> | Error>(
-      fns.map(fn => {
-        try {
-          const decrypted = (fn.secrets || []).map(secret => this.secretDecryptor(secret));
-          return [
-            fn._id.toString(),
-            new Map(decrypted.map(secret => [secret.key, secret.value] as [string, string]))
-          ];
-        } catch (error) {
-          return [fn._id.toString(), error instanceof Error ? error : new Error(String(error))];
-        }
-      })
+    return new Map(
+      fns.map(fn => [
+        fn._id.toString(),
+        new Map(
+          (fn.secrets || []).flatMap(secret => {
+            try {
+              const decrypted = this.secretDecryptor(secret);
+              return [[decrypted.key, decrypted.value] as [string, string]];
+            } catch (error) {
+              this.logger.error(
+                `Failed to decrypt secret '${secret.key}' of function ${fn._id}, its placeholders stay unresolved. Reason: ${errorMessage(error)}`
+              );
+              return [];
+            }
+          })
+        )
+      ])
     );
   }
 }
 
-function describe(error: unknown) {
+function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
