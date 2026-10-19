@@ -22,11 +22,6 @@ import * as CRUD from "./crud.js";
 import {TriggerSecretResolver} from "./trigger-secret-resolver.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
 
-/**
- * Applies a {@link FunctionChangePlan} to the running system: it drives enqueuer subscriptions
- * (routing), retires stale workers (outdate), and re-syncs per-function scheduler config
- * (reconcile). It owns the "how", not the "what" — the plan is decided in change.ts.
- */
 @Injectable()
 export class PlanExecutor {
   private readonly logger = new Logger(PlanExecutor.name);
@@ -40,9 +35,6 @@ export class PlanExecutor {
     private preparationService: FunctionPreparationService
   ) {}
 
-  // Awaits reconcile so callers can gate on it: at startup this keeps the app from listening
-  // before every function's execution context (env/secrets/timeout) is loaded into the
-  // scheduler, otherwise a freshly-subscribed route could serve events with empty context.
   async apply(plan: FunctionChangePlan): Promise<void> {
     await this.renameDirectories(plan.rename ?? []);
 
@@ -62,11 +54,6 @@ export class PlanExecutor {
       }
     }
 
-    // Retire stale workers as part of reconcile: it holds the fresh target the scheduler needs to
-    // pre-warm new-code replacements for a rolling cutover (supersedeWorkers), rather than a blind
-    // outdate that would force the next event to cold-spawn. In every plan `outdate ⊆ reconcile`,
-    // so iterating reconcile covers them; a stray outdate id (function truly gone) is hard-outdated
-    // defensively below.
     const toSupersede = new Set(plan.outdate);
     const reconcileIds = new Set(plan.reconcile);
 
@@ -124,18 +111,11 @@ export class PlanExecutor {
     }
   }
 
-  // Syncs a function's per-function scheduler settings (execution context, warm reserve,
-  // concurrency) from its authoritative state. Per function, never per trigger: driving it per
-  // trigger would let removing one trigger of a multi-trigger function drain the whole reserve,
-  // and a multi-trigger update thrash it.
   private async reconcile(functionId: string, toSupersede: Set<string>): Promise<void> {
     const fn = await this.findFunctionForRuntime(functionId);
 
-    // the function no longer exists (deleted / invalid id) — drop whatever it holds. Resetting
-    // concurrency/context to their defaults clears the function's sparse-map entries.
     if (!fn) {
       const target = new event.Target({id: functionId});
-      // function is gone, so there's no fresh code to roll over to — hard-outdate its workers.
       if (toSupersede.has(functionId)) {
         this.scheduler.outdateWorkers(functionId);
       }
@@ -157,9 +137,6 @@ export class PlanExecutor {
       fn.concurrencyPerWorker ?? DEFAULT_EVENT_CONCURRENCY
     );
 
-    // supersede before refilling the warm reserve: supersedeWorkers kills the stale reserve, then
-    // reconcileWarmWorkers rebuilds it from fresh state. A function with no active trigger has
-    // nothing serving, so fall back to a plain outdate.
     if (toSupersede.has(functionId)) {
       if (hasActiveTrigger) {
         this.scheduler.supersedeWorkers(target);
