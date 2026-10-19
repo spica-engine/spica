@@ -6,11 +6,6 @@ import {Scheduler} from "@spica-server/function-scheduler";
 import {Function, Options, FUNCTION_OPTIONS} from "@spica-server/interface-function";
 import {FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
 
-/**
- * Owns the install-packages + build steps for a function.
- * Injected by FunctionEngine, FunctionAssetWatcher, and FunctionAssetReconciler
- * to avoid the circular dependency that previously required registerPrepareCallback.
- */
 @Injectable()
 export class FunctionPreparationService {
   constructor(
@@ -46,17 +41,14 @@ export class FunctionPreparationService {
     await this.build(fn);
   }
 
-  /** Re-prepare only the index file: rebuild without reinstalling packages. */
   prepareIndex(fn: Function): Promise<void> {
     return this.build(fn);
   }
 
-  /** Re-prepare only package.json: reinstall packages without rebuilding. */
   preparePackageJson(fn: Function): Promise<void> {
     return this.installPackages(fn, []);
   }
 
-  /** Delete a function's directory on disk. rimraf is idempotent — safe to call even if already gone. */
   async deleteFunctionDirectory(name: string): Promise<void> {
     await rimraf(path.join(this.options.root, name));
   }
@@ -74,10 +66,6 @@ export class FunctionPreparationService {
     await fs.promises.rename(source, target);
   }
 
-  /**
-   * Read a file from the function's directory. Returns null when the file does
-   * not exist (ENOENT), throws for any other I/O error.
-   */
   async readFileBuffer(fn: Function, filename: string): Promise<Buffer | null> {
     const filePath = path.join(this.getFunctionRoot(fn), filename);
     try {
@@ -88,10 +76,6 @@ export class FunctionPreparationService {
     }
   }
 
-  /**
-   * Write a buffer to a file in the function's directory.
-   * Creates parent directories if they don't exist.
-   */
   async writeFileBuffer(fn: Function, filename: string, data: Buffer): Promise<void> {
     const filePath = path.join(this.getFunctionRoot(fn), filename);
     await fs.promises.mkdir(path.dirname(filePath), {recursive: true});

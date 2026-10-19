@@ -222,11 +222,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private disabled = false;
 
   async onModuleDestroy() {
-    // stop replenishing the warm reserve while we tear workers down, otherwise
-    // killing warm workers here would immediately respawn them.
     this.disabled = true;
 
-    // drop pending cutover grace timers so none fires mid-teardown.
     for (const timer of this.supersedeTimers.values()) {
       clearTimeout(timer);
     }
@@ -261,39 +258,20 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   eventQueue = new Map<string, event.Event>();
 
-  // Keyed by worker id: one timeout per worker, extended on each new event assigned to
-  // it (a busy worker's deadline is its most recently started event). Firing kills it.
   timeouts = new Map<string, NodeJS.Timeout>();
 
-  // event id -> worker id, so a completing event decrements the right worker's in-flight
-  // count (freeing a slot) and stops routing its logs.
   eventToWorker = new Map<string, string>();
 
-  // One demux per concurrent worker (capacity > 1), keyed by worker id.
   logRouters = new Map<string, {stdout: EventLogRouter; stderr: EventLogRouter}>();
 
   warmConfigs = new Map<string, {desired: number; target: event.Target}>();
 
-  // Transient per-function state for a rolling cutover (function updated under traffic). Holds
-  // the fresh target and how many new-code replacement workers to pre-warm — one per worker that
-  // was serving at update time. Independent of warmConfigs (the steady-state reserve) so the
-  // feature works even when a function's warmWorkers is 0. Cleared when the cutover completes.
   replacementConfigs = new Map<string, {desired: number; target: event.Target}>();
 
-  // Per-function grace timer armed on supersede: if the replacements never become ready (e.g. the
-  // new version crashes on preload), it force-outdates the surviving superseded workers so the new
-  // code runs and its errors surface instead of the stale code masking a broken deploy.
   supersedeTimers = new Map<string, NodeJS.Timeout>();
 
-  // Per-function event concurrency (already clamped to the global max), keyed by function
-  // id, fed in-memory by the engine on function create/update. A worker pinned to a
-  // function gets this as its capacity. Absent -> 1.
   concurrencyConfigs = new Map<string, number>();
 
-  // Per-function execution context (env + timeout), keyed by function id, fed by the engine
-  // whenever env/secret/timeout change. Stamped onto every event at enqueue time so a cold
-  // worker gets the current values without the trigger subscription carrying them — which is
-  // what lets an env change refresh workers without tearing down and rebuilding the route.
   contextConfigs = new Map<string, event.SchedulingContext>();
 
   getStatus() {
@@ -354,30 +332,21 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       return {id, worker};
     });
 
-    // 1. Reuse an already-graduated same-target worker that still has a free lane
-    // (its module is cache-warm).
     const reusable = workers.find(({worker}) => worker.canServe(target.id));
     if (reusable) {
       return reusable;
     }
 
-    // 2. Tap the pre-warmed reserve (steady-state reserve or a rolling-cutover replacement —
-    // both hold fresh code). The first-hit and concurrency-burst path.
     const warm = workers.find(({worker}) => worker.canServeWarm(target.id));
     if (warm) {
       return warm;
     }
 
-    // 3. Mid-cutover, no fresh replacement ready yet: keep serving from a still-hot superseded
-    // (old-code) worker rather than paying a cold start. It's retired the moment a replacement
-    // graduates and takes over.
     const superseded = workers.find(({worker}) => worker.canServeSuperseded(target.id));
     if (superseded) {
       return superseded;
     }
 
-    // 4. Fall back to the shared cold worker. Warm/Warming workers are intentionally
-    // excluded from the concurrency count so the reserve never blocks a cold spawn.
     const activeCount = workers.filter(({worker}) => worker.isActiveFor(target.id)).length;
     if (activeCount < this.options.maxConcurrency) {
       return workers.find(({worker}) => worker.isFresh());
@@ -394,12 +363,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       const {id: workerId, worker} = workerMeta;
 
-      // A fresh-code worker going active (from the warm reserve or a cutover replacement) is the
-      // signal to retire one stale worker — captured before execute() transitions it off Warm.
       const activatingFreshWorker = worker.state == WorkerState.Warm;
 
-      // Pin this worker to the function's concurrency the moment it's assigned. Set before
-      // the capacity>1 log-demux decision and before execute()'s Busy/Targeted transition.
       worker.setCapacity(this.concurrencyConfigs.get(event.target.id) ?? DEFAULT_EVENT_CONCURRENCY);
 
       const streamOptions = {
@@ -411,9 +376,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       const pairs = this.outputs.map(o => o.create(streamOptions));
 
       if (worker.capacity > 1) {
-        // Concurrent worker: one persistent demux per channel routes each event's
-        // framed logs to its own sinks, since detach/attach can't isolate
-        // simultaneously-running events sharing the process stdout.
         let routers = this.logRouters.get(workerId);
         if (!routers) {
           routers = {stdout: new EventLogRouter(), stderr: new EventLogRouter()};
@@ -503,15 +465,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.eventToWorker.delete(id);
 
     if (workerId) {
-      // Free the slot on this event's worker so the scheduler can push it the next queued
-      // event, and stop routing this event's logs on a concurrent worker.
       const worker = this.workers.get(workerId);
       worker?.onComplete();
-
-      // A drained retired worker is deliberately NOT killed here. `complete` only tells us the
-      // handler finished — the event's response travels to the client over a separate channel and
-      // may still be in flight, so killing the worker now races that delivery and strands the
-      // request. Retired workers are reaped by their execution timeout instead.
 
       const routers = this.logRouters.get(workerId);
       if (routers) {
@@ -525,9 +480,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.process();
   }
 
-  // Called once, when a worker opens its event stream. The stream is its readiness signal
-  // and its delivery channel; the scheduler pushes events down it up to the worker's
-  // capacity. There is no per-event handshake.
   workerSubscribed(id: string, push: (event: event.Event) => void) {
     const worker = this.workers.get(id);
 
@@ -544,20 +496,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   lostWorker(id: string) {
     const worker = this.workers.get(id);
-    // An unexpected death of a ready worker (crash / OOM / external kill after it
-    // preloaded) leaves it in Warm state — intentional teardown (trim, outdate) marks
-    // it Outdated first, so it won't match here. Refill so a low-traffic function's
-    // pre-warmed pool doesn't silently shrink until its next event.
-    //
-    // We deliberately do NOT refill a worker lost while still Warming: a module that
-    // hard-crashes during preload (top-level process.exit / OOM / native crash, which
-    // preload()'s try/catch can't intercept) dies in Warming, and refilling there would
-    // spin an unthrottled respawn loop. Reaching Warm proves preload succeeds.
     const lostWarmWorker =
       worker && worker.state == WorkerState.Warm && !worker.isReplacement && worker.targetId;
 
-    // Same reasoning for a ready cutover replacement: refill so the rolling cutover doesn't stall
-    // on a crashed replacement, but never for one lost while still Warming (crash-loop guard).
     const lostReplacementWorker =
       worker && worker.state == WorkerState.Warm && worker.isReplacement && worker.targetId;
 
@@ -566,8 +507,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     clearTimeout(this.timeouts.get(id));
     this.timeouts.delete(id);
 
-    // In-flight events on a dead worker won't complete; drop their mappings so they don't
-    // leak (they're already out of eventQueue, so they aren't reprocessed).
     for (const [eventId, wId] of this.eventToWorker) {
       if (wId == id) {
         this.eventToWorker.delete(eventId);
@@ -601,39 +540,19 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         if (worker.state != WorkerState.Outdated) {
           const wasWarm = worker.state == WorkerState.Warm || worker.state == WorkerState.Warming;
           worker.markAsOutdated();
-          // Warm workers never execute on their own, so they can't drain by finishing
-          // an event — kill them now. The reserve is refilled by the engine's reconcile
-          // (which follows every real code/env change with the fresh target).
           if (wasWarm) {
             worker.kill();
           }
         }
       });
 
-    // A hard outdate ends any rolling cutover in progress for this function (it's being deleted or
-    // deactivated), so drop its transient cutover state now instead of leaving it for the grace
-    // timer to reap.
     this.clearReplacementState(targetId);
   }
 
-  /**
-   * Roll a function's workers over to fresh state without a cold-start gap. Instead of outdating
-   * live workers immediately (which forces the next event to cold-spawn), it keeps them serving the
-   * old code as "superseded" and pre-warms one fresh replacement per serving worker. `takeAWorker`
-   * then prefers the replacements; as each is consumed, one superseded worker is retired. Every
-   * pre-warmed worker (the steady-state reserve and any in-flight replacements from an earlier
-   * update) is killed here since it holds now-stale code; the reserve is refilled by
-   * reconcileWarmWorkers afterwards and replacements are respawned from this newest target.
-   */
   supersedeWorkers(target: event.Target) {
     const fnId = target.id;
     const workers = Array.from(this.workers.values()).filter(worker => worker.hasSameTarget(fnId));
 
-    // Kill every pre-warmed worker of this function — the steady-state reserve AND any in-flight
-    // replacements from an earlier cutover. All of them preloaded now-stale code (a second update
-    // landing mid-warming makes the first update's replacements stale), so none can be reused:
-    // reconcileWarmWorkers refills the reserve and scaleReplacementWorkers respawns replacements,
-    // both from the newest target.
     for (const worker of workers) {
       if (worker.state == WorkerState.Warm || worker.state == WorkerState.Warming) {
         worker.markAsOutdated();
@@ -646,7 +565,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     );
 
     if (active.length == 0) {
-      // nothing is serving — no rolling cutover needed. Drop any stale in-flight cutover state.
       this.clearReplacementState(fnId);
       return;
     }
@@ -667,11 +585,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  // Retire one superseded (old-code) worker now that a fresh replacement has taken over. Idle
-  // Marking it Outdated is enough to stop it taking new events; it is never killed here. A worker
-  // that has served events may still be delivering a completed event's response, and `isIdle()`
-  // only tracks handler completion — killing on it races that delivery and strands the request.
-  // Its execution timeout reaps it, exactly as a plain outdate does.
   private retireOneSuperseded(fnId: string) {
     const stale = Array.from(this.workers.values()).find(
       worker =>
@@ -695,9 +608,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  // Grace timer fired: replacements never took over (typically a new version that crashes on
-  // preload). Force the surviving superseded workers to fresh code so the failure surfaces instead
-  // of the old code silently masking a broken deploy.
   private forceCutover(fnId: string) {
     Array.from(this.workers.values())
       .filter(
@@ -709,8 +619,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.clearReplacementState(fnId);
   }
 
-  // The cutover is over (all superseded workers retired, or forced): drop the transient config and
-  // kill any replacement that was pre-warmed but never needed so it doesn't linger.
   private clearReplacementState(fnId: string) {
     this.replacementConfigs.delete(fnId);
 
@@ -754,7 +662,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.spawnReplacementWorker(target);
       }
     } else if (replacements.length > desired) {
-      // a re-update shrank the set — trim in-flight spawns first, keep the ready ones
       const ordered = replacements.sort((a, b) =>
         a.state == WorkerState.Warming ? -1 : b.state == WorkerState.Warming ? 1 : 0
       );
@@ -829,11 +736,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     return worker;
   }
 
-  /**
-   * Declare how many pre-warmed workers a function should keep on standby.
-   * Idempotent: called once per active trigger of the function, and with 0 when
-   * the function/trigger is removed. The count is clamped to `maxWarmWorkers`.
-   */
   reconcileWarmWorkers(target: event.Target, desired: number) {
     const fnId = target.id;
     const clamped = Math.max(0, Math.min(desired || 0, this.options.maxWarmWorkers || 0));
@@ -847,17 +749,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.scaleWarmWorkers(fnId);
   }
 
-  /**
-   * Declare how many events a function runs in parallel per worker. Clamped to the global
-   * `eventConcurrency` max cap. A worker pinned to this function reads the value as its
-   * capacity on its next assignment, so a live edit takes effect without respawning:
-   * growing lets the worker take more events, shrinking simply stops new ones until it
-   * drains below the new limit.
-   *
-   * `concurrencyConfigs` is a SPARSE map: only functions ABOVE the default are stored;
-   * passing the default (or a removed function) drops the entry, and consumers read back
-   * `?? DEFAULT_EVENT_CONCURRENCY`. So "reset to default" and "clear" are the same call.
-   */
   reconcileConcurrency(target: event.Target, concurrency: number) {
     const max = this.options.eventConcurrency || DEFAULT_EVENT_CONCURRENCY;
     const clamped = Math.max(
@@ -872,10 +763,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  /**
-   * Declare the execution context (env + timeout) events of a function carry. A null context
-   * clears the entry (function removed), after which events fall back to the global default.
-   */
   reconcileContext(target: event.Target, context: event.SchedulingContext | null) {
     if (context) {
       this.contextConfigs.set(target.id, context);
@@ -888,8 +775,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     const config = this.warmConfigs.get(fnId);
     const desired = config ? config.desired : 0;
 
-    // Replacements are the rolling-cutover pool, sized independently of warmWorkers — exclude them
-    // so this steady-state reconcile neither counts nor trims them.
     const warmWorkers = Array.from(this.workers.values()).filter(
       worker =>
         worker.hasSameTarget(fnId) &&
@@ -902,7 +787,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.spawnWarmWorker(config.target);
       }
     } else if (warmWorkers.length > desired) {
-      // trim in-flight spawns first so the ready, immediately-servable reserve is kept
       const ordered = warmWorkers.sort((a, b) =>
         a.state == WorkerState.Warming ? -1 : b.state == WorkerState.Warming ? 1 : 0
       );

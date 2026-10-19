@@ -217,7 +217,7 @@ export namespace index {
       return Buffer.from(index, "utf-8");
     });
 
-    await engine.refreshLocally(id.toString());
+    await engine.refreshWithDependents(fn);
   }
 
   export async function filter(
@@ -311,7 +311,7 @@ export namespace dependencies {
 
     if (deps.length) {
       await storeDependencyAssets(engine, fn, () => engine.installPackages(fn, deps as string[]));
-      await engine.refreshLocally(fn._id.toString());
+      await engine.refreshWithDependents(fn);
     }
   }
 
@@ -355,7 +355,7 @@ export namespace dependencies {
       );
     });
 
-    await engine.refreshLocally(fn._id.toString());
+    await engine.refreshWithDependents(fn);
   }
 }
 

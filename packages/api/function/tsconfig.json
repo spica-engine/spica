@@ -3,6 +3,12 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
+      "path": "pkgmanager/local"
+    },
+    {
+      "path": "pkgmanager/node"
+    },
+    {
       "path": "../status"
     },
     {
@@ -36,10 +42,10 @@
       "path": "../../interface/function/pkgmanager"
     },
     {
-      "path": "../../interface/function"
+      "path": "../../interface/function/asset-storage"
     },
     {
-      "path": "../../interface/function/asset-storage"
+      "path": "../../interface/function"
     },
     {
       "path": "../../interface/env_var"
@@ -57,9 +63,6 @@
       "path": "services"
     },
     {
-      "path": "asset-storage"
-    },
-    {
       "path": "scheduler"
     },
     {
@@ -70,6 +73,9 @@
     },
     {
       "path": "log"
+    },
+    {
+      "path": "asset-storage"
     },
     {
       "path": "../env_var/services"

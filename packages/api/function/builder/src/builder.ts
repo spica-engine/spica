@@ -3,6 +3,8 @@ import {BuildMeta, BuildStrategy, Description} from "@spica-server/interface-fun
 export abstract class Builder {
   protected abstract strategies: Map<string, BuildStrategy>;
 
+  readonly bundlesDependencies: boolean = false;
+
   constructor(protected readonly language: string) {}
 
   get description(): Description {

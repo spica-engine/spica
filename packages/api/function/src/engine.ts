@@ -27,6 +27,7 @@ import {PlanExecutor} from "./plan-executor.js";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
+import {FunctionDependents} from "./function-dependents.js";
 import {applyAssetChange} from "./asset-pipeline.js";
 import {FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
 
@@ -70,7 +71,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     private reconciler: FunctionAssetReconciler,
     private assetService: FunctionAssetService,
     private tracker: SelfWriteTracker,
-    private preparationService: FunctionPreparationService
+    private preparationService: FunctionPreparationService,
+    private dependents: FunctionDependents
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
@@ -149,9 +151,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   private updateTriggers(register: boolean) {
     return this.fs.find().then(fns => {
-      // Registering treats each function as a create (subscribe + reconcile); unregistering as
-      // a delete (unsubscribe + outdate + reconcile). createPlan derives the right shape from
-      // the null side, so startup and shutdown fall out of the same call.
       const plan = mergePlans(
         fns.map(fn => (register ? createPlan(null, fn) : createPlan(fn, null)))
       );
@@ -170,15 +169,16 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return this.unregisterTriggers();
   }
 
-  // Replication seam: the ClassCommander SYNC command, so every plan applied on one replica is
-  // re-applied on the others. The mechanics live in PlanExecutor; this only forwards. Returns
-  // the executor's promise so callers can await context resolution before proceeding.
   applyChangePlan(plan: FunctionChangePlan): Promise<void> {
     return this.executor.apply(plan);
   }
 
   refreshLocally(functionId: string): Promise<void> {
     return this.applyLocally(refreshPlan(functionId));
+  }
+
+  async refreshWithDependents(fn: Function): Promise<void> {
+    return this.applyLocally(await this.dependents.refreshPlan(fn));
   }
 
   private applyLocally(plan: FunctionChangePlan): Promise<void> {
@@ -193,22 +193,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return path.join(this.options.root, fn.name);
   }
 
-  /**
-   * Run npm install + build for a function. Used by reconciler after restoring
-   * assets from storage, and by CRUD pipeline after writing new files.
-   */
   async prepareFunction(fn: Function): Promise<void> {
     return this.preparationService.prepare(fn);
   }
 
-  /**
-   * Store a single asset file for a function via the configured strategy.
-   *
-   * @param fn        The function whose asset is being changed.
-   * @param filename  The asset filename (e.g. "index.ts" or "package.json").
-   * @param op        Callback that performs all disk writes / installs / builds
-   *                  and returns the new file buffer to upload.
-   */
   async storeAssets(
     fn: Function & {_id: ObjectId},
     filename: FunctionAssetFilename,
@@ -217,18 +205,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return applyAssetChange(fn, filename, op, this.reconciler, this.assetService, this.tracker);
   }
 
-  /**
-   * Returns the asset storage filename (e.g. "index.ts" or "index.mjs") for
-   * the function's build entrypoint, based on its language configuration.
-   */
   getIndexFilename(fn: Function): FunctionAssetFilename {
     return this.getFunctionBuilder(fn).description.entrypoints.build as FunctionAssetFilename;
   }
 
-  /**
-   * Delete all stored assets for a function from both storage and metadata.
-   * No-op when asset storage is not configured.
-   */
   async removeAssets(fn: Function & {_id: ObjectId}): Promise<void> {
     return this.reconciler.deleteAll(fn);
   }

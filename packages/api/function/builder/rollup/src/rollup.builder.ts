@@ -7,6 +7,8 @@ import {RollupWorkerHost} from "./worker-host.js";
 export class RollupBuilder extends Builder {
   protected strategies: Map<string, BuildStrategy>;
 
+  readonly bundlesDependencies = true;
+
   private host: RollupWorkerHost;
 
   constructor(language: string, options: {workerPath?: string; maxOldSpaceMb?: number} = {}) {

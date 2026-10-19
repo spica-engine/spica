@@ -25,6 +25,7 @@ let mockReconciler: {reconcileFunction: jest.Mock};
 let mockTracker: {isSelfWrite: jest.Mock};
 let mockPreparationService: {deleteFunctionDirectory: jest.Mock};
 let mockExecutor: {apply: jest.Mock};
+let mockDependents: {refreshPlan: jest.Mock};
 
 const buildWatcher = () =>
   new FunctionAssetWatcher(
@@ -33,7 +34,8 @@ const buildWatcher = () =>
     mockReconciler as any,
     mockTracker as any,
     mockPreparationService as any,
-    mockExecutor as any
+    mockExecutor as any,
+    mockDependents as any
   );
 
 const makeDeleteChange = (key = "functions/my-function/index.ts") => ({
@@ -72,6 +74,14 @@ beforeEach(() => {
 
   mockExecutor = {
     apply: jest.fn().mockResolvedValue(undefined)
+  };
+
+  mockDependents = {
+    refreshPlan: jest.fn().mockImplementation(async fn => ({
+      routing: [],
+      outdate: [fn._id.toHexString()],
+      reconcile: [fn._id.toHexString()]
+    }))
   };
 });
 
@@ -139,6 +149,28 @@ describe("FunctionAssetWatcher — worker refresh", () => {
       outdate: ["507f1f77bcf86cd799439011"],
       reconcile: ["507f1f77bcf86cd799439011"]
     });
+
+    watcher.onModuleDestroy();
+  });
+
+  it("should refresh the functions that import the changed one as well", async () => {
+    const plan = {
+      routing: [],
+      outdate: ["507f1f77bcf86cd799439011", "dependent_id"],
+      reconcile: ["507f1f77bcf86cd799439011", "dependent_id"]
+    };
+    mockDependents.refreshPlan.mockResolvedValue(plan);
+
+    const watcher = buildWatcher();
+    watcher.onModuleInit();
+
+    changeSubject.next(makeChange());
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(mockDependents.refreshPlan).toHaveBeenCalledWith(
+      expect.objectContaining({name: "my-function"})
+    );
+    expect(mockExecutor.apply).toHaveBeenCalledWith(plan);
 
     watcher.onModuleDestroy();
   });

@@ -23,6 +23,7 @@ import {FunctionRealtimeModule} from "@spica-server/function-realtime";
 import {FunctionAssetStorageModule} from "@spica-server/function-asset-storage";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {FunctionAssetWatcher} from "./asset-watcher.js";
+import {FunctionDependents} from "./function-dependents.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
 
@@ -114,7 +115,8 @@ export class FunctionModule {
         FunctionAssetReconciler,
         FunctionAssetWatcher,
         SelfWriteTracker,
-        FunctionPreparationService
+        FunctionPreparationService,
+        FunctionDependents
       ]
     };
 

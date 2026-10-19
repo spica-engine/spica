@@ -294,6 +294,14 @@ describe("Change", () => {
         reconcile: ["fn_id"]
       });
     });
+
+    it("should outdate and reconcile the dependents along with the function", () => {
+      expect(refreshPlan("fn_id", ["dep_a", "dep_b"])).toEqual({
+        routing: [],
+        outdate: ["fn_id", "dep_a", "dep_b"],
+        reconcile: ["fn_id", "dep_a", "dep_b"]
+      });
+    });
   });
 
   describe("mergePlans", () => {
