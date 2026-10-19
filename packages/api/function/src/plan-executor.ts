@@ -12,6 +12,7 @@ import {
   ChangeKind,
   TargetChange,
   FunctionChangePlan,
+  FunctionRename,
   EnvRelation,
   SecretRelation
 } from "@spica-server/interface-function";
@@ -19,6 +20,7 @@ import {EnvVar} from "@spica-server/interface-env_var";
 import {Secret, SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
 import * as CRUD from "./crud.js";
 import {TriggerSecretResolver} from "./trigger-secret-resolver.js";
+import {FunctionPreparationService} from "./function-preparation.service.js";
 
 /**
  * Applies a {@link FunctionChangePlan} to the running system: it drives enqueuer subscriptions
@@ -34,13 +36,16 @@ export class PlanExecutor {
     private scheduler: Scheduler,
     @Inject(SECRET_DECRYPTOR) private secretDecryptor: SecretDecryptor,
     @Inject(FUNCTION_OPTIONS) private options: Options,
-    private secretResolver: TriggerSecretResolver
+    private secretResolver: TriggerSecretResolver,
+    private preparationService: FunctionPreparationService
   ) {}
 
   // Awaits reconcile so callers can gate on it: at startup this keeps the app from listening
   // before every function's execution context (env/secrets/timeout) is loaded into the
   // scheduler, otherwise a freshly-subscribed route could serve events with empty context.
   async apply(plan: FunctionChangePlan): Promise<void> {
+    await this.renameDirectories(plan.rename ?? []);
+
     const routing = await this.secretResolver.resolve(plan.routing);
 
     for (const change of routing) {
@@ -71,6 +76,18 @@ export class PlanExecutor {
       if (!reconcileIds.has(functionId)) {
         this.scheduler.outdateWorkers(functionId);
       }
+    }
+  }
+
+  private async renameDirectories(renames: FunctionRename[]): Promise<void> {
+    for (const {from, to} of renames) {
+      await this.preparationService
+        .renameFunctionDirectory(from, to)
+        .catch(err =>
+          this.logger.error(
+            `Failed to move function directory ${from} to ${to}. Reason: ${err instanceof Error ? err.message : err}`
+          )
+        );
     }
   }
 

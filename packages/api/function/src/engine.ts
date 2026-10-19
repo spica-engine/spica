@@ -233,6 +233,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return this.reconciler.deleteAll(fn);
   }
 
+  moveAssets(fn: Function & {_id: ObjectId}, toName: string): Promise<void> {
+    return this.reconciler.moveAssets(fn, toName);
+  }
+
   getPackages(fn: Function): Promise<Package[]> {
     return this.getDefaultPackageManager().ls(this.getFunctionRoot(fn));
   }

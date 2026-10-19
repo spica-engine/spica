@@ -305,6 +305,89 @@ describe("Function Controller", () => {
     });
   });
 
+  describe("rename", () => {
+    const functionsRoot = path.join(os.tmpdir(), "functions");
+    const unique = (prefix: string) => `${prefix}_${new ObjectId().toHexString()}`;
+
+    async function createWithIndex(name: string, index: string) {
+      const fn = await request.post("/function", {...fnSchema, name}).then(r => r.body);
+      await request.post(`/function/${fn._id}/index`, {index});
+      return fn;
+    }
+
+    it("should move the code, dependencies and stored assets to the new name", async () => {
+      const oldName = unique("before");
+      const newName = unique("after");
+      const fn = await createWithIndex(oldName, `export function http(){ return "renamed" }`);
+
+      const res = await request.put(`/function/${fn._id}`, {...fn, name: newName});
+      expect(res.statusCode).toEqual(200);
+
+      const show = await request.get(`/function/${fn._id}/index`).then(r => r.body);
+      expect(show.index).toContain("renamed");
+
+      const deps = await request.get(`/function/${fn._id}/dependencies`);
+      expect(deps.statusCode).toEqual(200);
+
+      expect(fs.existsSync(path.join(functionsRoot, oldName))).toBe(false);
+      expect(fs.existsSync(path.join(functionsRoot, newName, "index.mjs"))).toBe(true);
+
+      expect(fs.existsSync(path.join(assetsPath, "functions", oldName, "index.mjs"))).toBe(false);
+      expect(fs.existsSync(path.join(assetsPath, "functions", oldName, "package.json"))).toBe(
+        false
+      );
+      expect(fs.readdirSync(path.join(assetsPath, "functions", newName)).sort()).toEqual([
+        "index.mjs",
+        "package.json"
+      ]);
+    });
+
+    it("should keep editing the code after a rename", async () => {
+      const fn = await createWithIndex(unique("before"), `export function http(){ return 1 }`);
+      const newName = unique("after");
+      await request.put(`/function/${fn._id}`, {...fn, name: newName});
+
+      const write = await request.post(`/function/${fn._id}/index`, {
+        index: `export function http(){ return "edited" }`
+      });
+      expect(write.statusCode).toEqual(204);
+
+      const show = await request.get(`/function/${fn._id}/index`).then(r => r.body);
+      expect(show.index).toContain("edited");
+      expect(fs.existsSync(path.join(functionsRoot, newName, "package.json"))).toBe(true);
+      expect(
+        fs.readFileSync(path.join(assetsPath, "functions", newName, "index.mjs"), "utf-8")
+      ).toContain("edited");
+    });
+
+    it("should serve the http trigger from the renamed function's code", async () => {
+      const respondWith = (text: string) =>
+        `export function http(req, res){ return res.status(200).send("${text}"); }`;
+      const fn = await createWithIndex(unique("before"), respondWith("before rename"));
+      await request.put(`/function/${fn._id}`, {...fn, name: unique("after")});
+      await request.post(`/function/${fn._id}/index`, {index: respondWith("after rename")});
+
+      const res = await request.get("/fn-execute/test");
+      expect([res.statusCode, res.body]).toEqual([200, "after rename"]);
+    });
+
+    it("should reject renaming to a taken name and leave the function as it was", async () => {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const taken = await createWithIndex(unique("taken"), `export function http(){}`);
+      const oldName = unique("before");
+      const fn = await createWithIndex(oldName, `export function http(){ return "kept" }`);
+
+      const res = await request.put(`/function/${fn._id}`, {...fn, name: taken.name}).catch(e => e);
+      expect(res.statusCode).toEqual(400);
+
+      const found = await request.get(`/function/${fn._id}`).then(r => r.body);
+      expect(found.name).toEqual(oldName);
+      const show = await request.get(`/function/${fn._id}/index`).then(r => r.body);
+      expect(show.index).toContain("kept");
+    });
+  });
+
   describe("name operations", () => {
     it("should not allow duplicate function names", async () => {
       //Wait a bit for before test for mongodb to create name indexes to resolve async process issues

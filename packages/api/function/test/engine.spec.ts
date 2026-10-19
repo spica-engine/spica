@@ -5,6 +5,7 @@ import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {PlanExecutor} from "@spica-server/function/src/plan-executor";
 import {TriggerSecretResolver} from "@spica-server/function/src/trigger-secret-resolver";
+import {FunctionPreparationService} from "@spica-server/function/src/function-preparation.service";
 import {FunctionService} from "@spica-server/function-services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService, EnvVarChangeDispatcher} from "@spica-server/env_var-services";
@@ -81,7 +82,8 @@ describe("Engine", () => {
       scheduler,
       (val => val) as any,
       options,
-      new TriggerSecretResolver(fs, (val => val) as any)
+      new TriggerSecretResolver(fs, (val => val) as any),
+      new FunctionPreparationService(scheduler, options)
     );
     engine = new FunctionEngine(
       fs,

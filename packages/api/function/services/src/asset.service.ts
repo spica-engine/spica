@@ -49,6 +49,16 @@ export class FunctionAssetService extends BaseCollection<FunctionAsset>(collecti
     );
   }
 
+  async replaceKey(
+    functionId: ObjectId,
+    filename: FunctionAssetFilename,
+    from: string,
+    to: string
+  ): Promise<boolean> {
+    const modified = await this.updateOne({functionId, filename, key: from}, {$set: {key: to}});
+    return modified > 0;
+  }
+
   deleteByFunction(functionId: ObjectId): Promise<number> {
     return this.deleteMany({functionId});
   }

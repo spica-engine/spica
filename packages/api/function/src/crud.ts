@@ -25,16 +25,19 @@ async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn
     const r = await fs.insertOne(fn);
     fn._id = r._id;
   } catch (error: any) {
-    if (error && error.code === 11000) {
-      throw new BadRequestException(
-        `Value of the property .${Object.keys(error.keyValue)[0]} should unique across all documents.`
-      );
-    }
-
-    throw new InternalServerErrorException(error?.message || error);
+    throw toWriteException(error);
   }
 
   await engine.applyChangePlan(createPlan(null, fn));
+}
+
+function toWriteException(error: any) {
+  if (error && error.code === 11000) {
+    return new BadRequestException(
+      `Value of the property .${Object.keys(error.keyValue)[0]} should unique across all documents.`
+    );
+  }
+  return new InternalServerErrorException(error?.message || error);
 }
 
 export async function find<
@@ -136,12 +139,23 @@ export async function replace(fs: FunctionService, engine: FunctionEngine, fn: F
   delete fn._id;
   delete fn.language;
 
-  const preFn = await fs.findOneAndUpdate({_id}, {$set: fn});
+  const preFn = await fs.findOneAndUpdate({_id}, {$set: fn}).catch(error => {
+    throw toWriteException(error);
+  });
   if (!preFn) {
     throw new NotFoundException(`Couldn't find the function with id ${_id}`);
   }
 
   fn._id = _id;
+
+  if (preFn.name != fn.name) {
+    await engine.moveAssets(preFn, fn.name).catch(async error => {
+      await fs.replaceOne({_id}, preFn);
+      throw new InternalServerErrorException(
+        `Failed to move the files of function ${preFn.name} to ${fn.name}: ${error?.message || error}`
+      );
+    });
+  }
 
   await engine.applyChangePlan(createPlan(preFn, fn));
 

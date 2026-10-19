@@ -28,6 +28,13 @@ function errMsg(e: unknown): string {
 
 const BACKFILL_CONCURRENCY = 4;
 
+interface AssetMove {
+  filename: FunctionAssetFilename;
+  hash: string;
+  from: string;
+  to: string;
+}
+
 const REGENERATED_BY_INSTALL = new Set<FunctionAssetFilename>(["package-lock.json"]);
 
 async function forEachWithConcurrency<T>(
@@ -159,6 +166,58 @@ export class FunctionAssetReconciler {
       )
     );
     await this.assetService.deleteByFunction(fn._id);
+  }
+
+  async moveAssets(fn: Function & {_id: ObjectId}, toName: string): Promise<void> {
+    const records = await this.assetService.findByFunction(fn._id);
+    const moves: AssetMove[] = records
+      .map(({filename, hash, key}) => ({filename, hash, from: key, to: assetKey(toName, filename)}))
+      .filter(({from, to}) => from !== to);
+
+    const repointed: AssetMove[] = [];
+    try {
+      for (const move of moves) {
+        await this.strategy.write(move.to, await this.strategy.read(move.from));
+        this.tracker.stamp({
+          functionId: fn._id.toHexString(),
+          filename: move.filename,
+          hash: move.hash
+        });
+        if (await this.assetService.replaceKey(fn._id, move.filename, move.from, move.to)) {
+          repointed.push(move);
+        }
+      }
+    } catch (e) {
+      await this.revertMoves(fn, moves, repointed);
+      throw e;
+    }
+
+    await Promise.all(
+      repointed.map(({from}) =>
+        this.deleteFromStorage(from).catch(e =>
+          this.logger.error(`[move] Could not delete previous asset ${from}: ${errMsg(e)}`)
+        )
+      )
+    );
+  }
+
+  private async revertMoves(
+    fn: Function & {_id: ObjectId},
+    moves: AssetMove[],
+    repointed: AssetMove[]
+  ): Promise<void> {
+    for (const {filename, from, to} of repointed) {
+      await this.assetService
+        .replaceKey(fn._id, filename, to, from)
+        .catch(e => this.logger.error(`[move] Could not restore key ${from}: ${errMsg(e)}`));
+    }
+    await Promise.all(
+      moves.map(({to}) =>
+        this.deleteFromStorage(to).catch(e =>
+          this.logger.error(`[move] Could not delete copied asset ${to}: ${errMsg(e)}`)
+        )
+      )
+    );
   }
 
   async backfill(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
