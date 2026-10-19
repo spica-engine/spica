@@ -6,6 +6,7 @@ import {WebhookModule} from "@spica-server/function-webhook";
 import path from "path";
 import {FunctionEngine} from "./engine.js";
 import {PlanExecutor} from "./plan-executor.js";
+import {TriggerSecretResolver} from "./trigger-secret-resolver.js";
 import {FunctionController} from "./function.controller.js";
 import {LogModule, LogService} from "@spica-server/function-log";
 import {FunctionService, ServicesModule} from "@spica-server/function-services";
@@ -91,6 +92,7 @@ export class FunctionModule {
       providers: [
         FunctionEngine,
         PlanExecutor,
+        TriggerSecretResolver,
         {
           provide: FUNCTION_OPTIONS,
           useValue: {

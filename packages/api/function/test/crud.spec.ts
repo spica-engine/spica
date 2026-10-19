@@ -106,7 +106,7 @@ describe("CRUD dependency assets", () => {
   });
 });
 
-describe("CRUD resource detach", () => {
+describe("CRUD resource reference removal", () => {
   const fnId = new ObjectId();
   const resourceId = new ObjectId();
 
@@ -122,14 +122,14 @@ describe("CRUD resource detach", () => {
   });
 
   it("should pull the env var without refreshing workers", async () => {
-    await CRUD.environment.detach(fs as any, fnId, resourceId);
+    await CRUD.environment.removeReference(fs as any, fnId, resourceId);
 
     expect(fs.findOneAndUpdate).toHaveBeenCalledWith({_id: fnId}, {$pull: {env_vars: resourceId}});
     expect(engine.applyChangePlan).not.toHaveBeenCalled();
   });
 
   it("should pull the secret without refreshing workers", async () => {
-    await CRUD.secret.detach(fs as any, fnId, resourceId);
+    await CRUD.secret.removeReference(fs as any, fnId, resourceId);
 
     expect(fs.findOneAndUpdate).toHaveBeenCalledWith({_id: fnId}, {$pull: {secrets: resourceId}});
     expect(engine.applyChangePlan).not.toHaveBeenCalled();
@@ -138,11 +138,15 @@ describe("CRUD resource detach", () => {
   it("should throw when the function does not exist", async () => {
     fs.findOneAndUpdate.mockResolvedValue(null);
 
-    await expect(CRUD.environment.detach(fs as any, fnId, resourceId)).rejects.toThrow("not found");
+    await expect(CRUD.environment.removeReference(fs as any, fnId, resourceId)).rejects.toThrow(
+      "not found"
+    );
   });
 
   it("should still broadcast the refresh when ejecting through the endpoint", async () => {
-    await CRUD.secret.eject(fs as any, fnId, engine as any, resourceId);
+    const ss = {findOne: jest.fn().mockResolvedValue({_id: resourceId, key: "API_KEY"})};
+
+    await CRUD.secret.eject(fs as any, ss as any, fnId, engine as any, resourceId);
 
     expect(engine.applyChangePlan).toHaveBeenCalledTimes(1);
     expect(engine.refreshLocally).not.toHaveBeenCalled();

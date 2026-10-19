@@ -6,14 +6,15 @@ import {
   FindOneAndDeleteOptions,
   FindOneAndReplaceOptions,
   FindOneAndUpdateOptions,
+  ObjectId,
   OptionalUnlessRequiredId,
+  ReturnDocument,
   UpdateFilter,
   WithId
 } from "@spica-server/database";
 import {Secret} from "@spica-server/interface-secret";
-import {CollectionChangeEvent} from "@spica-server/replication";
 import {Observable} from "rxjs";
-import {SecretChangeDispatcher} from "./change-dispatcher.js";
+import {SecretChangeDispatcher, SecretChangeEvent} from "./change-dispatcher.js";
 
 export const SECRET_ENCRYPTION_SECRET = Symbol.for("SECRET_ENCRYPTION_SECRET");
 
@@ -31,7 +32,7 @@ export class SecretService extends BaseCollection<Secret>("secret") {
 
   async insertOne(doc: OptionalUnlessRequiredId<Secret>): Promise<WithId<Secret>> {
     const result = await super.insertOne(doc);
-    this.changeDispatcher.dispatch({operationType: "insert", documentKey: {_id: result._id}});
+    this.dispatchChange("insert", result._id, [doc]);
     return result;
   }
 
@@ -40,11 +41,16 @@ export class SecretService extends BaseCollection<Secret>("secret") {
     update: UpdateFilter<Secret> | Secret,
     options?: FindOneAndUpdateOptions
   ): Promise<WithId<Secret>> {
-    const result = await super.findOneAndUpdate(filter, update, options);
-    if (result) {
-      this.changeDispatcher.dispatch({operationType: "update", documentKey: {_id: result._id}});
+    const previous = await super.findOneAndUpdate(filter, update, {
+      ...options,
+      returnDocument: ReturnDocument.BEFORE
+    });
+    if (!previous) {
+      return previous;
     }
-    return result;
+    const current = await this.findOne({_id: previous._id});
+    this.dispatchChange("update", previous._id, [previous, current]);
+    return options?.returnDocument == ReturnDocument.AFTER ? current : previous;
   }
 
   async findOneAndReplace(
@@ -52,11 +58,16 @@ export class SecretService extends BaseCollection<Secret>("secret") {
     doc: Secret,
     options?: FindOneAndReplaceOptions
   ): Promise<WithId<Secret>> {
-    const result = await super.findOneAndReplace(filter, doc, options);
-    if (result) {
-      this.changeDispatcher.dispatch({operationType: "replace", documentKey: {_id: result._id}});
+    const previous = await super.findOneAndReplace(filter, doc, {
+      ...options,
+      returnDocument: ReturnDocument.BEFORE
+    });
+    if (!previous) {
+      return previous;
     }
-    return result;
+    const current = {...doc, _id: previous._id};
+    this.dispatchChange("replace", previous._id, [previous, current]);
+    return options?.returnDocument == ReturnDocument.AFTER ? current : previous;
   }
 
   async findOneAndDelete(
@@ -65,12 +76,21 @@ export class SecretService extends BaseCollection<Secret>("secret") {
   ): Promise<WithId<Secret>> {
     const result = await super.findOneAndDelete(filter, options);
     if (result) {
-      this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: result._id}});
+      this.dispatchChange("delete", result._id, [result]);
     }
     return result;
   }
 
-  watchChanges(): Observable<CollectionChangeEvent> {
+  watchChanges(): Observable<SecretChangeEvent> {
     return this.changeDispatcher.watch();
+  }
+
+  private dispatchChange(
+    operationType: SecretChangeEvent["operationType"],
+    _id: ObjectId,
+    secrets: Pick<Secret, "key">[]
+  ) {
+    const keys = Array.from(new Set(secrets.filter(Boolean).map(secret => secret.key)));
+    this.changeDispatcher.dispatch({operationType, documentKey: {_id}, keys});
   }
 }

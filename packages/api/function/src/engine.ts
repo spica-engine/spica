@@ -5,7 +5,12 @@ import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
-import {FunctionService, FunctionAssetService} from "@spica-server/function-services";
+import {
+  FunctionService,
+  FunctionAssetService,
+  EnvVarFunctionsChange,
+  SecretFunctionsChange
+} from "@spica-server/function-services";
 import {
   CollectionSlug,
   Options,
@@ -17,7 +22,7 @@ import {
   SchemaWithName
 } from "@spica-server/interface-function";
 
-import {createPlan, mergePlans, refreshPlan} from "./change.js";
+import {createPlan, mergePlans, refreshPlan, secretRefreshPlan} from "./change.js";
 import {PlanExecutor} from "./plan-executor.js";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
@@ -74,10 +79,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
 
     this.watchEnvSubs = this.fs.watchFunctionsForEnvChanges().subscribe({
-      next: ({fns, envVarId, operationType}) =>
-        this.refreshLocallyAfterChange(fns, operationType, fnId =>
-          CRUD.environment.detach(this.fs, fnId, envVarId)
-        ),
+      next: change => this.onEnvVarChange(change),
       error: err =>
         this.logger.error(
           `Error received on listening functions for environment variable changes. Reason: ${JSON.stringify(err)}`
@@ -85,10 +87,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     });
 
     this.watchSecretSubs = this.fs.watchFunctionsForSecretChanges().subscribe({
-      next: ({fns, secretId, operationType}) =>
-        this.refreshLocallyAfterChange(fns, operationType, fnId =>
-          CRUD.secret.detach(this.fs, fnId, secretId)
-        ),
+      next: change => this.onSecretChange(change),
       error: err =>
         this.logger.error(
           `Error received on listening functions for secret changes. Reason: ${JSON.stringify(err)}`
@@ -96,24 +95,33 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  private refreshLocallyAfterChange(
-    fns: {_id: ObjectId}[],
-    operationType: string,
-    detach: (fnId: ObjectId) => Promise<void>
-  ) {
+  private onEnvVarChange({fns, envVarId, operationType}: EnvVarFunctionsChange) {
+    return this.forEachFunction(fns, async fn => {
+      if (operationType == "delete") {
+        await CRUD.environment.removeReference(this.fs, fn._id, envVarId);
+      }
+      await this.refreshLocally(fn._id.toString());
+    });
+  }
+
+  private onSecretChange({fns, secretId, secretKeys, operationType}: SecretFunctionsChange) {
+    return this.forEachFunction(fns, async fn => {
+      if (operationType == "delete") {
+        await CRUD.secret.removeReference(this.fs, fn._id, secretId);
+      }
+      await this.applyLocally(secretRefreshPlan(fn, secretKeys));
+    });
+  }
+
+  private forEachFunction<F extends {_id: ObjectId}>(fns: F[], handle: (fn: F) => Promise<void>) {
     return Promise.all(
-      fns.map(async fn => {
-        try {
-          if (operationType == "delete") {
-            await detach(fn._id);
-          }
-          await this.refreshLocally(fn._id.toString());
-        } catch (err) {
+      fns.map(fn =>
+        handle(fn).catch(err =>
           this.logger.error(
             `Failed to refresh function ${fn._id} after a resource change. Reason: ${err instanceof Error ? err.message : err}`
-          );
-        }
-      })
+          )
+        )
+      )
     );
   }
 
@@ -170,7 +178,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   refreshLocally(functionId: string): Promise<void> {
-    return this.executor.apply(refreshPlan(functionId));
+    return this.applyLocally(refreshPlan(functionId));
+  }
+
+  private applyLocally(plan: FunctionChangePlan): Promise<void> {
+    return this.executor.apply(plan);
   }
 
   private getDefaultPackageManager(): DelegatePkgManager {

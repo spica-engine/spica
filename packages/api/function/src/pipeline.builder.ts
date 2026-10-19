@@ -36,6 +36,10 @@ export class FunctionPipelineBuilder extends PipelineBuilder {
     return this;
   }
 
+  filterByIds(ids: ObjectId[]) {
+    return this.attachToPipeline(ids && ids.length, {$match: {_id: {$in: ids}}});
+  }
+
   filterByEnvVars(envVars: ObjectId[]) {
     const filter = {
       $match: {

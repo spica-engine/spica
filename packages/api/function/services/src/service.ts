@@ -23,6 +23,21 @@ const relevantOperations = ["update", "replace", "delete"];
 const isRelevantOperation = (change: CollectionChangeEvent) =>
   relevantOperations.includes(change.operationType);
 
+type ResourceOperationType = "replace" | "update" | "delete";
+
+export interface EnvVarFunctionsChange {
+  fns: WithId<Function>[];
+  envVarId: ObjectId;
+  operationType: ResourceOperationType;
+}
+
+export interface SecretFunctionsChange {
+  fns: WithId<Function>[];
+  secretId: ObjectId;
+  secretKeys: string[];
+  operationType: ResourceOperationType;
+}
+
 @Injectable()
 export class FunctionService extends BaseCollection<Function>(collectionName) {
   constructor(
@@ -42,43 +57,36 @@ export class FunctionService extends BaseCollection<Function>(collectionName) {
     });
   }
 
-  private watchFunctionsForResource(
-    changes: Observable<CollectionChangeEvent>,
+  private watchFunctionsForResource<E extends CollectionChangeEvent>(
+    changes: Observable<E>,
     resourceField: "env_vars" | "secrets"
-  ): Observable<{
-    fns: WithId<Function>[];
-    resourceId: ObjectId;
-    operationType: "replace" | "update" | "delete";
-  }> {
+  ): Observable<{fns: WithId<Function>[]; change: E}> {
     return changes.pipe(
-      filter(isRelevantOperation),
+      filter(change => isRelevantOperation(change)),
       switchMap(change =>
-        this.find({[resourceField]: {$in: [change.documentKey._id]}}).then(fns => ({
-          fns,
-          resourceId: change.documentKey._id,
-          operationType: change.operationType as "replace" | "update" | "delete"
-        }))
+        this.find({[resourceField]: {$in: [change.documentKey._id]}}).then(fns => ({fns, change}))
       )
     );
   }
 
-  watchFunctionsForEnvChanges(): Observable<{
-    fns: WithId<Function>[];
-    envVarId: ObjectId;
-    operationType: "replace" | "update" | "delete";
-  }> {
+  watchFunctionsForEnvChanges(): Observable<EnvVarFunctionsChange> {
     return this.watchFunctionsForResource(this.evs.watchChanges(), "env_vars").pipe(
-      map(({fns, resourceId, operationType}) => ({fns, envVarId: resourceId, operationType}))
+      map(({fns, change}) => ({
+        fns,
+        envVarId: change.documentKey._id,
+        operationType: change.operationType as ResourceOperationType
+      }))
     );
   }
 
-  watchFunctionsForSecretChanges(): Observable<{
-    fns: WithId<Function>[];
-    secretId: ObjectId;
-    operationType: "replace" | "update" | "delete";
-  }> {
+  watchFunctionsForSecretChanges(): Observable<SecretFunctionsChange> {
     return this.watchFunctionsForResource(this.ss.watchChanges(), "secrets").pipe(
-      map(({fns, resourceId, operationType}) => ({fns, secretId: resourceId, operationType}))
+      map(({fns, change}) => ({
+        fns,
+        secretId: change.documentKey._id,
+        secretKeys: change.keys,
+        operationType: change.operationType as ResourceOperationType
+      }))
     );
   }
 }
