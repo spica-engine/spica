@@ -19,16 +19,17 @@ describe("CRUD worker refresh", () => {
       removePackage: jest.fn().mockResolvedValue(undefined),
       read: jest.fn().mockResolvedValue("{}"),
       readLockfile: jest.fn().mockResolvedValue(Buffer.from("lock")),
-      refreshLocally: jest.fn().mockResolvedValue(undefined),
+      refreshWithDependents: jest.fn().mockResolvedValue(undefined),
       applyChangePlan: jest.fn().mockResolvedValue(undefined)
     };
   });
 
   // Peers refresh themselves from the asset watcher once their copy is rebuilt; a replicated
   // refresh would reach them before that and preload the old build.
+  // The functions importing it are refreshed along with it, since their workers hold its code too.
   function expectLocalRefreshOnly() {
-    expect(engine.refreshLocally).toHaveBeenCalledTimes(1);
-    expect(engine.refreshLocally).toHaveBeenCalledWith(fnId.toString());
+    expect(engine.refreshWithDependents).toHaveBeenCalledTimes(1);
+    expect(engine.refreshWithDependents).toHaveBeenCalledWith(fn);
     expect(engine.applyChangePlan).not.toHaveBeenCalled();
   }
 
@@ -68,7 +69,7 @@ describe("CRUD dependency assets", () => {
       removePackage: jest.fn().mockResolvedValue(undefined),
       read: jest.fn().mockResolvedValue('{"name":"my-function"}'),
       readLockfile: jest.fn().mockResolvedValue(lockfile),
-      refreshLocally: jest.fn().mockResolvedValue(undefined)
+      refreshWithDependents: jest.fn().mockResolvedValue(undefined)
     };
   });
 
@@ -93,7 +94,7 @@ describe("CRUD dependency assets", () => {
       await run();
 
       expect(stored.map(({filename}) => filename)).toEqual(["package.json"]);
-      expect(engine.refreshLocally).toHaveBeenCalledTimes(1);
+      expect(engine.refreshWithDependents).toHaveBeenCalledTimes(1);
     });
   }
 

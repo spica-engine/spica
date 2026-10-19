@@ -75,6 +75,10 @@
     "./src/function-preparation.service": {
       "types": "./src/function-preparation.service.ts",
       "default": "./dist/src/function-preparation.service.js"
+    },
+    "./src/function-dependents": {
+      "types": "./src/function-dependents.ts",
+      "default": "./dist/src/function-dependents.js"
     }
   },
   "dependencies": {

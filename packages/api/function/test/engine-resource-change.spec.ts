@@ -9,6 +9,7 @@ describe("FunctionEngine resource change refresh", () => {
   let envChanges: Subject<any>;
   let secretChanges: Subject<any>;
   let executor: {apply: jest.Mock};
+  let dependents: {refreshPlan: jest.Mock};
   let fs: {findOneAndUpdate: jest.Mock};
   let engine: any;
 
@@ -23,6 +24,7 @@ describe("FunctionEngine resource change refresh", () => {
     envChanges = new Subject();
     secretChanges = new Subject();
     executor = {apply: jest.fn().mockResolvedValue(undefined)};
+    dependents = {refreshPlan: jest.fn()};
     fs = {findOneAndUpdate: jest.fn().mockResolvedValue({})};
     engine = new FunctionEngine(
       {
@@ -40,7 +42,8 @@ describe("FunctionEngine resource change refresh", () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      dependents as any
     );
     engine.applyChangePlan = jest.fn();
     engine.logger = {error: jest.fn()};
@@ -61,6 +64,8 @@ describe("FunctionEngine resource change refresh", () => {
       expect(executor.apply.mock.calls[0][0].reconcile).toEqual([fnId.toString()]);
       expect(engine.applyChangePlan).not.toHaveBeenCalled();
       expect(fs.findOneAndUpdate).not.toHaveBeenCalled();
+      // env vars and secrets belong to the importing worker's own process, so importers are unaffected
+      expect(dependents.refreshPlan).not.toHaveBeenCalled();
     }
   );
 
@@ -92,4 +97,20 @@ describe("FunctionEngine resource change refresh", () => {
       expect(engine.logger.error).toHaveBeenCalledTimes(1);
     }
   );
+
+  it("should refresh a function with its importers locally without broadcasting", async () => {
+    const fn = {_id: fnId, name: "imported"};
+    const plan = {
+      routing: [],
+      outdate: [fnId.toString(), "importer"],
+      reconcile: [fnId.toString(), "importer"]
+    };
+    dependents.refreshPlan.mockResolvedValue(plan);
+
+    await engine.refreshWithDependents(fn);
+
+    expect(dependents.refreshPlan).toHaveBeenCalledWith(fn);
+    expect(executor.apply).toHaveBeenCalledWith(plan);
+    expect(engine.applyChangePlan).not.toHaveBeenCalled();
+  });
 });
