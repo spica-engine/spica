@@ -12,6 +12,7 @@ import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+import {Scheduler, ScheduleWorker} from "@spica-server/function-scheduler";
 
 describe("Function Controller", () => {
   let app: INestApplication;
@@ -393,6 +394,16 @@ describe("Function Controller", () => {
   describe("importers", () => {
     const unique = (prefix: string) => `${prefix}_${new ObjectId().toHexString()}`;
 
+    let timeoutSpy: jest.SpyInstance;
+    let supersedeSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      timeoutSpy = jest.spyOn(ScheduleWorker.prototype, "markAsTimeouted");
+      supersedeSpy = jest.spyOn(Scheduler.prototype, "supersedeWorkers");
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+
     async function createHelper(name: string, value: string) {
       const fn = await request
         .post("/function", {...fnSchema, name, triggers: {}})
@@ -451,27 +462,35 @@ describe("Function Controller", () => {
       return last;
     }
 
-    it("should serve the new code of a directly imported function after it is saved", async () => {
-      const helper = await createHelper(unique("helper"), "v1");
-      await createImporter(unique("importer"), helper.name, "/direct");
-
-      expect(await execute("/direct")).toEqual([200, "v1"]);
+    // A worker killed by its own timeout timer gets replaced by a fresh one that loads the new code
+    // from disk, which would pass without the fix. Prove the save retired the importer's workers.
+    async function expectSaveToServeNewCode(helper, importer, httpPath: string) {
+      supersedeSpy.mockClear();
 
       await writeHelper(helper, "v2");
 
-      expect(await executeUntil("/direct", "v2")).toEqual([200, "v2"]);
+      expect(supersedeSpy.mock.calls.map(([target]) => target.id)).toContain(importer._id);
+      expect(await executeUntil(httpPath, "v2")).toEqual([200, "v2"]);
+      expect(timeoutSpy).not.toHaveBeenCalled();
+    }
+
+    it("should serve the new code of a directly imported function after it is saved", async () => {
+      const helper = await createHelper(unique("helper"), "v1");
+      const importer = await createImporter(unique("importer"), helper.name, "/direct");
+
+      expect(await execute("/direct")).toEqual([200, "v1"]);
+
+      await expectSaveToServeNewCode(helper, importer, "/direct");
     });
 
     it("should serve the new code of an indirectly imported function after it is saved", async () => {
       const helper = await createHelper(unique("helper"), "v1");
       const middle = await createImporter(unique("middle"), helper.name);
-      await createImporter(unique("top"), middle.name, "/indirect");
+      const top = await createImporter(unique("top"), middle.name, "/indirect");
 
       expect(await execute("/indirect")).toEqual([200, "v1"]);
 
-      await writeHelper(helper, "v2");
-
-      expect(await executeUntil("/indirect", "v2")).toEqual([200, "v2"]);
+      await expectSaveToServeNewCode(helper, top, "/indirect");
     });
   });
 
