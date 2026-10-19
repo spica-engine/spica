@@ -152,3 +152,67 @@ describe("CRUD resource reference removal", () => {
     expect(engine.refreshLocally).not.toHaveBeenCalled();
   });
 });
+
+describe("CRUD replace rename", () => {
+  const _id = new ObjectId();
+  const previous = {_id, name: "before", language: "javascript", timeout: 10, triggers: {}};
+
+  let fs: {findOneAndUpdate: jest.Mock; replaceOne: jest.Mock};
+  let engine: {moveAssets: jest.Mock; applyChangePlan: jest.Mock};
+
+  beforeEach(() => {
+    fs = {
+      findOneAndUpdate: jest.fn().mockResolvedValue({...previous}),
+      replaceOne: jest.fn().mockResolvedValue(1)
+    };
+    engine = {
+      moveAssets: jest.fn().mockResolvedValue(undefined),
+      applyChangePlan: jest.fn().mockResolvedValue(undefined)
+    };
+  });
+
+  const replace = (changes: object) =>
+    CRUD.replace(
+      fs as any,
+      engine as any,
+      {...previous, _id: _id.toHexString(), ...changes} as any
+    );
+
+  it("should move the assets before applying a plan that renames the directory", async () => {
+    await replace({name: "after"});
+
+    expect(engine.moveAssets).toHaveBeenCalledWith(
+      expect.objectContaining({name: "before"}),
+      "after"
+    );
+    expect(engine.applyChangePlan.mock.calls[0][0].rename).toEqual([{from: "before", to: "after"}]);
+  });
+
+  it("should not move assets when the name is unchanged", async () => {
+    await replace({timeout: 20});
+
+    expect(engine.moveAssets).not.toHaveBeenCalled();
+    expect(engine.applyChangePlan).toHaveBeenCalledTimes(1);
+  });
+
+  it("should restore the previous document and skip the plan when moving the assets fails", async () => {
+    engine.moveAssets.mockRejectedValue(new Error("bucket unavailable"));
+
+    await expect(replace({name: "after"})).rejects.toThrow(
+      "Failed to move the files of function before to after: bucket unavailable"
+    );
+
+    expect(fs.replaceOne).toHaveBeenCalledWith({_id}, expect.objectContaining({name: "before"}));
+    expect(engine.applyChangePlan).not.toHaveBeenCalled();
+  });
+
+  it("should reject a name that is already taken as a bad request", async () => {
+    fs.findOneAndUpdate.mockRejectedValue({code: 11000, keyValue: {name: "after"}});
+
+    await expect(replace({name: "after"})).rejects.toMatchObject({
+      status: 400,
+      message: "Value of the property .name should unique across all documents."
+    });
+    expect(engine.moveAssets).not.toHaveBeenCalled();
+  });
+});

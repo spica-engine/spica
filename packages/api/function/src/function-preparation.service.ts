@@ -61,6 +61,19 @@ export class FunctionPreparationService {
     await rimraf(path.join(this.options.root, name));
   }
 
+  async renameFunctionDirectory(from: string, to: string): Promise<void> {
+    const source = path.join(this.options.root, from);
+    const sourceExists = await fs.promises.access(source).then(
+      () => true,
+      () => false
+    );
+    if (!sourceExists) return;
+
+    const target = path.join(this.options.root, to);
+    await rimraf(target);
+    await fs.promises.rename(source, target);
+  }
+
   /**
    * Read a file from the function's directory. Returns null when the file does
    * not exist (ENOENT), throws for any other I/O error.

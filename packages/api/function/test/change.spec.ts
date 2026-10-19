@@ -177,6 +177,75 @@ describe("Change", () => {
       });
     });
 
+    describe("rename", () => {
+      it("should move every trigger from the previous name to the new one", () => {
+        const previous: Fn = deepCopy(fn);
+        previous.triggers = {
+          default: {active: true, options: {path: "/a"}, type: "http"},
+          inactive: {active: false, options: {name: "READY"}, type: "system"}
+        };
+        const current: Fn = deepCopy(previous);
+        current.name = "renamed_fn";
+
+        expect(createPlan(previous, current)).toEqual({
+          routing: [
+            {
+              kind: ChangeKind.Removed,
+              options: {path: "/a"},
+              type: "http",
+              target: {id: "fn_id", handler: "default", name: "my_fn"}
+            },
+            {
+              kind: ChangeKind.Removed,
+              options: {name: "READY"},
+              type: "system",
+              target: {id: "fn_id", handler: "inactive", name: "my_fn"}
+            },
+            {
+              kind: ChangeKind.Added,
+              options: {path: "/a"},
+              type: "http",
+              target: {id: "fn_id", handler: "default", name: "renamed_fn"}
+            },
+            {
+              kind: ChangeKind.Removed,
+              options: {name: "READY"},
+              type: "system",
+              target: {id: "fn_id", handler: "inactive", name: "renamed_fn"}
+            }
+          ],
+          outdate: ["fn_id"],
+          reconcile: ["fn_id"],
+          rename: [{from: "my_fn", to: "renamed_fn"}]
+        });
+      });
+
+      it("should drop removed triggers under the previous name while renaming", () => {
+        const previous: Fn = deepCopy(fn);
+        previous.triggers = {
+          kept: {active: true, options: {path: "/a"}, type: "http"},
+          dropped: {active: true, options: {path: "/b"}, type: "http"}
+        };
+        const current: Fn = deepCopy(previous);
+        current.name = "renamed_fn";
+        delete current.triggers.dropped;
+
+        const plan = createPlan(previous, current);
+        expect(plan.routing.map(c => [c.kind, c.target.handler, c.target.name])).toEqual([
+          [ChangeKind.Removed, "kept", "my_fn"],
+          [ChangeKind.Removed, "dropped", "my_fn"],
+          [ChangeKind.Added, "kept", "renamed_fn"]
+        ]);
+      });
+
+      it("should not rename when the name is unchanged", () => {
+        const current: Fn = deepCopy(fn);
+        current.timeout = fn.timeout + 10;
+
+        expect(createPlan(fn, current).rename).toBeUndefined();
+      });
+    });
+
     describe("context refresh (outdate) detection", () => {
       let previous: Fn;
       beforeEach(() => {
@@ -236,8 +305,18 @@ describe("Change", () => {
       expect(mergePlans([a, b, c])).toEqual({
         routing: b.routing,
         outdate: ["a"],
-        reconcile: ["a", "b"]
+        reconcile: ["a", "b"],
+        rename: []
       });
+    });
+
+    it("should concat renames", () => {
+      const previous: Fn = {...fn, _id: "b"};
+      const rename = createPlan(previous, {...previous, name: "renamed_fn"});
+
+      expect(mergePlans([refreshPlan("a"), rename]).rename).toEqual([
+        {from: "my_fn", to: "renamed_fn"}
+      ]);
     });
   });
 });

@@ -55,6 +55,7 @@ let mockDeps: {
     upsertAsset: jest.Mock;
     deleteByFunction: jest.Mock;
     deleteMany: jest.Mock;
+    replaceKey: jest.Mock;
   }>;
   preparationService: jest.Mocked<{
     prepare: jest.Mock;
@@ -81,7 +82,8 @@ beforeEach(() => {
       findByFilename: jest.fn().mockResolvedValue(null),
       upsertAsset: jest.fn().mockResolvedValue(undefined),
       deleteByFunction: jest.fn().mockResolvedValue(1),
-      deleteMany: jest.fn().mockResolvedValue(1)
+      deleteMany: jest.fn().mockResolvedValue(1),
+      replaceKey: jest.fn().mockResolvedValue(true)
     },
     preparationService: {
       prepare: jest.fn().mockResolvedValue(undefined),
@@ -759,5 +761,113 @@ describe("FunctionAssetReconciler.backfill", () => {
 
     expect(mockDeps.assetService.findByFunction).toHaveBeenCalledTimes(10);
     expect(peak).toBe(4);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// moveAssets
+// ---------------------------------------------------------------------------
+
+describe("FunctionAssetReconciler.moveAssets", () => {
+  const record = (filename: string, name = "my-function") => ({
+    functionId: mockFn._id,
+    filename,
+    key: assetKey(name, filename),
+    hash: `hash-${filename}`
+  });
+
+  beforeEach(() => {
+    mockDeps.strategy.read.mockImplementation(async (key: string) => Buffer.from(`data:${key}`));
+    mockDeps.assetService.findByFunction.mockResolvedValue([
+      record("index.ts"),
+      record("package.json")
+    ]);
+  });
+
+  it("should copy every asset to the new name, repoint its record and delete the previous object", async () => {
+    await buildReconciler().moveAssets(mockFn, "renamed");
+
+    expect(mockDeps.strategy.write).toHaveBeenCalledWith(
+      "functions/renamed/index.ts",
+      Buffer.from("data:functions/my-function/index.ts")
+    );
+    expect(mockDeps.strategy.write).toHaveBeenCalledWith(
+      "functions/renamed/package.json",
+      Buffer.from("data:functions/my-function/package.json")
+    );
+    expect(mockDeps.assetService.replaceKey).toHaveBeenCalledWith(
+      mockFn._id,
+      "index.ts",
+      "functions/my-function/index.ts",
+      "functions/renamed/index.ts"
+    );
+    expect(mockDeps.assetService.replaceKey).toHaveBeenCalledWith(
+      mockFn._id,
+      "package.json",
+      "functions/my-function/package.json",
+      "functions/renamed/package.json"
+    );
+    expect(mockDeps.strategy.delete.mock.calls.map(([key]) => key).sort()).toEqual([
+      "functions/my-function/index.ts",
+      "functions/my-function/package.json"
+    ]);
+  });
+
+  it("should stamp each repointed record as a self-write", async () => {
+    await buildReconciler().moveAssets(mockFn, "renamed");
+
+    expect(mockDeps.tracker.stamp).toHaveBeenCalledWith({
+      functionId: mockFn._id.toHexString(),
+      filename: "index.ts",
+      hash: "hash-index.ts"
+    });
+    expect(mockDeps.tracker.stamp).toHaveBeenCalledWith({
+      functionId: mockFn._id.toHexString(),
+      filename: "package.json",
+      hash: "hash-package.json"
+    });
+  });
+
+  it("should do nothing when every key already matches the name", async () => {
+    await buildReconciler().moveAssets(mockFn, "my-function");
+
+    expect(mockDeps.strategy.read).not.toHaveBeenCalled();
+    expect(mockDeps.strategy.write).not.toHaveBeenCalled();
+    expect(mockDeps.assetService.replaceKey).not.toHaveBeenCalled();
+    expect(mockDeps.strategy.delete).not.toHaveBeenCalled();
+  });
+
+  it("should not delete the previous object when the record was repointed concurrently", async () => {
+    mockDeps.assetService.replaceKey.mockResolvedValue(false);
+
+    await buildReconciler().moveAssets(mockFn, "renamed");
+
+    expect(mockDeps.strategy.delete).not.toHaveBeenCalled();
+  });
+
+  it("should restore keys and delete the copies when a copy fails", async () => {
+    mockDeps.strategy.read.mockImplementation(async (key: string) => {
+      if (key.endsWith("package.json")) throw new Error("read failed");
+      return Buffer.from(`data:${key}`);
+    });
+
+    await expect(buildReconciler().moveAssets(mockFn, "renamed")).rejects.toThrow("read failed");
+
+    expect(mockDeps.assetService.replaceKey).toHaveBeenLastCalledWith(
+      mockFn._id,
+      "index.ts",
+      "functions/renamed/index.ts",
+      "functions/my-function/index.ts"
+    );
+    expect(mockDeps.strategy.delete.mock.calls.map(([key]) => key).sort()).toEqual([
+      "functions/renamed/index.ts",
+      "functions/renamed/package.json"
+    ]);
+  });
+
+  it("should not fail the move when deleting a previous object fails", async () => {
+    mockDeps.strategy.delete.mockRejectedValue(new Error("delete failed"));
+
+    await expect(buildReconciler().moveAssets(mockFn, "renamed")).resolves.toBeUndefined();
   });
 });

@@ -24,6 +24,17 @@ export function createPlan(
 ): FunctionChangePlan {
   if (previous && current) {
     const id = current._id.toString();
+    if (previous.name != current.name) {
+      return {
+        routing: [
+          ...createTargetChanges(previous, ChangeKind.Removed),
+          ...createTargetChanges(current, ChangeKind.Added)
+        ],
+        outdate: [id],
+        reconcile: [id],
+        rename: [{from: previous.name, to: current.name}]
+      };
+    }
     return {
       routing: changesFromTriggers(previous, current),
       outdate: needsContextRefresh(previous, current) ? [id] : [],
@@ -83,7 +94,8 @@ export function mergePlans(plans: FunctionChangePlan[]): FunctionChangePlan {
   return {
     routing: plans.flatMap(plan => plan.routing),
     outdate: [...new Set(plans.flatMap(plan => plan.outdate))],
-    reconcile: [...new Set(plans.flatMap(plan => plan.reconcile))]
+    reconcile: [...new Set(plans.flatMap(plan => plan.reconcile))],
+    rename: plans.flatMap(plan => plan.rename ?? [])
   };
 }
 

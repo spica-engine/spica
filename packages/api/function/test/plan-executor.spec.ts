@@ -4,6 +4,7 @@ import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {PlanExecutor} from "@spica-server/function/src/plan-executor";
 import {TriggerSecretResolver} from "@spica-server/function/src/trigger-secret-resolver";
+import {FunctionPreparationService} from "@spica-server/function/src/function-preparation.service";
 import {FunctionService} from "@spica-server/function-services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService, EnvVarChangeDispatcher} from "@spica-server/env_var-services";
@@ -68,12 +69,14 @@ describe("PlanExecutor", () => {
     const ss = new SecretService(database, "test-encryption-secret", new SecretChangeDispatcher());
     fs = new FunctionService(database, evs, ss, {} as any);
 
+    const options = {root: "test_root", timeout: 1, outDir: ".build"} as any;
     executor = new PlanExecutor(
       fs,
       scheduler,
       (val => val) as any,
-      {root: "test_root", timeout: 1, outDir: ".build"} as any,
-      new TriggerSecretResolver(fs, (val => val) as any)
+      options,
+      new TriggerSecretResolver(fs, (val => val) as any),
+      new FunctionPreparationService(scheduler, options)
     );
 
     await app.init();
@@ -308,5 +311,47 @@ describe("PlanExecutor", () => {
 
     expect(contextSpy).toHaveBeenCalled();
     expect(contextSpy.mock.calls.at(-1)[1].toObject().timeout).toBe(10);
+  });
+
+  describe("rename", () => {
+    let renameSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      renameSpy = jest
+        .spyOn(executor["preparationService"], "renameFunctionDirectory")
+        .mockResolvedValue(undefined);
+    });
+
+    it("should move the function directory before routing", async () => {
+      const change: TargetChange = {
+        kind: ChangeKind.Added,
+        target: {id: "test_id", handler: "test_handler", name: "new_name"}
+      };
+
+      await apply({...routing([change]), rename: [{from: "old_name", to: "new_name"}]});
+
+      expect(renameSpy).toHaveBeenCalledWith("old_name", "new_name");
+      expect(renameSpy.mock.invocationCallOrder[0]).toBeLessThan(
+        subscribeSpy.mock.invocationCallOrder[0]
+      );
+    });
+
+    it("should still route when moving the directory fails", async () => {
+      renameSpy.mockRejectedValue(new Error("EACCES"));
+      const change: TargetChange = {
+        kind: ChangeKind.Added,
+        target: {id: "test_id", handler: "test_handler", name: "new_name"}
+      };
+
+      await apply({...routing([change]), rename: [{from: "old_name", to: "new_name"}]});
+
+      expect(subscribeSpy).toHaveBeenCalledWith(change);
+    });
+
+    it("should not touch directories when the plan has no rename", async () => {
+      await apply(routing([]));
+
+      expect(renameSpy).not.toHaveBeenCalled();
+    });
   });
 });

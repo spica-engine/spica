@@ -103,6 +103,12 @@ export interface FunctionChangePlan {
   // function ids whose per-function scheduler config (context, warm reserve, concurrency) is
   // re-synced from the function's authoritative state
   reconcile: string[];
+  rename?: FunctionRename[];
+}
+
+export interface FunctionRename {
+  from: string;
+  to: string;
 }
 
 export type FunctionWithContent = Function & {content?: string; type?: string};
