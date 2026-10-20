@@ -176,7 +176,7 @@ const FunctionPage = () => {
 
         await updateFunction({
           id: fn._id,
-          body: {name: fn.name, language: fn.language, timeout: fn.timeout, category: fn.category, triggers: triggersMap},
+          body: {name: fn.name, language: fn.language, timeout: fn.timeout, category: fn.category, warmWorkers: fn.warmWorkers, concurrencyPerWorker: fn.concurrencyPerWorker, triggers: triggersMap},
         }).unwrap();
       }
 
@@ -244,7 +244,7 @@ const FunctionPage = () => {
       try {
         await updateFunction({
           id: fn._id,
-          body: {name: newName, language: fn.language, timeout: fn.timeout, category: fn.category, triggers: fn.triggers as any},
+          body: {name: newName, language: fn.language, timeout: fn.timeout, category: fn.category, warmWorkers: fn.warmWorkers, concurrencyPerWorker: fn.concurrencyPerWorker, triggers: fn.triggers as any},
         }).unwrap();
       } catch {
         // revert on error
