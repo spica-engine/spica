@@ -8,7 +8,8 @@ import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {WsAdapter} from "@spica-server/core-websocket";
 import {DashboardModule} from "@spica-server/dashboard";
-import {DatabaseModule} from "@spica-server/database";
+import {DataModule} from "@spica-server/data";
+import {MongoDataAdapter} from "@spica-server/data-mongodb";
 import {FunctionModule} from "@spica-server/function";
 import {BuilderType} from "@spica-server/interface-function-builder";
 import {PassportModule} from "@spica-server/passport";
@@ -881,14 +882,16 @@ const modules = [
   DashboardModule.forRoot({realtime: true}),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),
-  DatabaseModule.withConnection(args["database-uri"], {
-    database: args["database-name"],
-    replicaSet: args["database-replica-set"],
-    maxPoolSize: args["database-pool-size"],
-    appName: "spica",
-    readPreference: args["database-read-preference"],
-    changeStreamAwaitTimeMS: args["database-change-stream-await-time"]
-  }),
+  DataModule.forRoot(
+    MongoDataAdapter.forRoot(args["database-uri"], {
+      database: args["database-name"],
+      replicaSet: args["database-replica-set"],
+      maxPoolSize: args["database-pool-size"],
+      appName: "spica",
+      readPreference: args["database-read-preference"],
+      changeStreamAwaitTimeMS: args["database-change-stream-await-time"]
+    })
+  ),
   EnvVarModule.forRoot({
     realtime: true
   }),
