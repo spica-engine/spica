@@ -35,17 +35,12 @@ import {
   EXPRESSION
 } from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ReturnDocument} from "@spica-server/database";
 import {DocumentId, ID, ids} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, StrategyType} from "@spica-server/passport-guard";
 import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket-cache";
 import {
-  deleteDocument,
-  insertDocument,
-  patchDocument,
-  replaceDocument,
   authIdToString,
   isJSONFilter,
   filterReviver,
@@ -54,7 +49,9 @@ import {
 } from "@spica-server/bucket-common";
 import {
   BUCKET_QUERY,
+  BUCKET_WRITE,
   BucketQueryFacade,
+  BucketWriteFacade,
   BucketReadContext,
   BucketReadSpec
 } from "@spica-server/interface-bucket-common";
@@ -83,6 +80,7 @@ export class BucketDataController {
     private bds: BucketDataService,
     private validator: Validator,
     @Inject(BUCKET_QUERY) private queries: BucketQueryFacade,
+    @Inject(BUCKET_WRITE) private writes: BucketWriteFacade,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
     @Optional() @Inject() private activityService: ActivityService,
@@ -152,8 +150,8 @@ export class BucketDataController {
     };
 
     const read = paginate
-      ? this.queries.paginate(schema, spec, this.readContext())
-      : this.queries.find(schema, spec, this.readContext());
+      ? this.queries.paginate(schema, spec, this.bucketContext())
+      : this.queries.find(schema, spec, this.bucketContext());
 
     return read.then(({result, locale}) => {
       setContentLanguage(req, locale);
@@ -246,7 +244,7 @@ export class BucketDataController {
           applyAcl: strategyType === ReqAuthStrategy.USER,
           user: req.user
         },
-        this.readContext()
+        this.bucketContext()
       )
       .then(({result, locale}) => {
         setContentLanguage(req, locale);
@@ -298,18 +296,17 @@ export class BucketDataController {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
-    const document = await insertDocument(
-      schema,
-      rawDocument,
-      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
-      {
-        collection: schema => this.bds.children(schema),
-        schema: this.bs.resolveSchema,
-        deleteOne: documentId => this.deleteOne(strategyType, req, bucketId, documentId)
-      },
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
+    const document = await this.writes
+      .insert(
+        schema,
+        rawDocument,
+        {applyAcl: strategyType === ReqAuthStrategy.USER, user: req.user},
+        {
+          ...this.bucketContext(),
+          deleteOne: documentId => this.deleteOne(strategyType, req, bucketId, documentId)
+        }
+      )
+      .catch(this.errorHandler);
 
     if (!document) {
       return;
@@ -365,19 +362,14 @@ export class BucketDataController {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
-    const schemaResolver = this.bs.resolveSchema;
-    const previousDocument = await replaceDocument(
-      schema,
-      {...document, _id: documentId},
-      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
-      {
-        collection: schema => this.bds.children(schema),
-        schema: schemaResolver
-      },
-      undefined,
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
+    const previousDocument = await this.writes
+      .replace(
+        schema,
+        {...document, _id: documentId},
+        {applyAcl: strategyType === ReqAuthStrategy.USER, user: req.user},
+        this.bucketContext()
+      )
+      .catch(this.errorHandler);
 
     if (!previousDocument) {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
@@ -402,7 +394,12 @@ export class BucketDataController {
     }
 
     if (this.encryptionSecret) {
-      return decryptDocumentFields(currentDocument, schema, this.encryptionSecret, schemaResolver);
+      return decryptDocumentFields(
+        currentDocument,
+        schema,
+        this.encryptionSecret,
+        this.bs.resolveSchema
+      );
     }
 
     return currentDocument;
@@ -454,19 +451,15 @@ export class BucketDataController {
 
     await this.validateDocument(bucketId, patchedDocument);
 
-    const currentDocument = await patchDocument(
-      schema,
-      {...patchedDocument, _id: documentId},
-      patch,
-      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
-      {
-        collection: schema => this.bds.children(schema),
-        schema: this.bs.resolveSchema
-      },
-      {returnDocument: ReturnDocument.AFTER},
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
+    const currentDocument = await this.writes
+      .patch(
+        schema,
+        {...patchedDocument, _id: documentId},
+        patch,
+        {applyAcl: strategyType === ReqAuthStrategy.USER, user: req.user, returnDocument: "after"},
+        this.bucketContext()
+      )
+      .catch(this.errorHandler);
 
     if (!currentDocument) {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
@@ -517,17 +510,14 @@ export class BucketDataController {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
-    const deletedDocument = await deleteDocument(
-      schema,
-      documentId,
-      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
-      {
-        collection: schema => this.bds.children(schema),
-        schema: this.bs.resolveSchema
-      },
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
+    const deletedDocument = await this.writes
+      .delete(
+        schema,
+        documentId,
+        {applyAcl: strategyType === ReqAuthStrategy.USER, user: req.user},
+        this.bucketContext()
+      )
+      .catch(this.errorHandler);
 
     if (!deletedDocument) {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
@@ -575,7 +565,7 @@ export class BucketDataController {
     }
   }
 
-  private readContext(): BucketReadContext {
+  private bucketContext(): BucketReadContext {
     return {
       resolveSchema: this.bs.resolveSchema,
       preferences: () => this.bs.getPreferences(),
