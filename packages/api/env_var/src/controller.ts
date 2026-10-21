@@ -32,7 +32,7 @@ export class EnvVarController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:index"))
   async find(
-    @ResourceFilter() resourceFilter: object,
+    @ResourceFilter({collection: "env_var"}) resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: object,

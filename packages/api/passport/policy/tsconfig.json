@@ -4,11 +4,7 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts",
-    "src/**/*.json"
-  ],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
       "path": "realtime"
@@ -23,10 +19,16 @@
       "path": "../../../interface/passport/guard"
     },
     {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../../interface/activity"
     },
     {
       "path": "../../../database"
+    },
+    {
+      "path": "../../../data"
     },
     {
       "path": "../../../core/schema"

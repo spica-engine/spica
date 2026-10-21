@@ -1,5 +1,6 @@
 export interface Id {
   toString(): string;
+  toJSON(): unknown;
 }
 
 export interface IdType<T extends Id = Id> {
