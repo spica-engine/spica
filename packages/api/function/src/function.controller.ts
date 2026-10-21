@@ -26,7 +26,7 @@ import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import os from "os";
@@ -66,7 +66,8 @@ export class FunctionController {
     private scheduler: Scheduler,
     private log: LogService,
     private ss: SecretService,
-    @Inject(FUNCTION_OPTIONS) private options: Options
+    @Inject(FUNCTION_OPTIONS) private options: Options,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
   ) {}
 
   /**
@@ -103,7 +104,7 @@ export class FunctionController {
     @ResourceFilter({collection: "function"}) resourceFilter,
     @Query("filter", DEFAULT({}), JSONP) filter: {index?: string}
   ) {
-    return CRUD.find(this.fs, this.engine, {
+    return CRUD.find(this.queries, this.engine, {
       filter: {
         resources: resourceFilter,
         index: filter.index
@@ -122,7 +123,7 @@ export class FunctionController {
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:show"))
   findOne(@Param("id", ID("function")) id: Id) {
-    return CRUD.findOne(this.fs, id, {
+    return CRUD.findOne(this.queries, id, {
       resolveEnvRelations: EnvRelation.Resolved,
       resolveSecretRelations: SecretRelation.Resolved
     }).catch(error => {

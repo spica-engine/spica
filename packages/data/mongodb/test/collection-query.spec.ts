@@ -245,6 +245,117 @@ describe("MongoCollectionQueryFacade", () => {
       expect(calls).toEqual([{collection: "apikey", pipeline: legacy}]);
     });
 
+    describe("function", () => {
+      const envLookup = {
+        $lookup: {from: "env_var", localField: "env_vars", foreignField: "_id", as: "env_vars"}
+      };
+      const secretLookup = {
+        $lookup: {from: "secret", localField: "secrets", foreignField: "_id", as: "secrets"}
+      };
+      const hideSecrets = {$project: {"secrets.value": 0}};
+
+      it("should build the function list pipeline of FunctionPipelineBuilder", async () => {
+        await facade.find("function", {
+          resourceFilter,
+          relations: ["env_vars", "secrets"],
+          fields: {"secrets.value": 0}
+        });
+
+        expect(calls[0].pipeline).toEqual([resourceFilter, envLookup, secretLookup, hideSecrets]);
+      });
+
+      it("should build the single function pipelines", async () => {
+        const id = new ObjectId();
+
+        await facade.findOne("function", {
+          id,
+          relations: ["env_vars", "secrets"],
+          fields: {"secrets.value": 0}
+        });
+        await facade.findOne("function", {id, relations: ["env_vars", "secrets"]});
+
+        expect(calls.map(call => call.pipeline)).toEqual([
+          [{$match: {_id: id}}, envLookup, secretLookup, hideSecrets],
+          [{$match: {_id: id}}, envLookup, secretLookup]
+        ]);
+      });
+
+      it("should build the functions with secrets pipeline", async () => {
+        const ids = [new ObjectId(), new ObjectId()];
+
+        await facade.find("function", {where: {_id: {in: ids}}, relations: ["secrets"]});
+
+        expect(calls[0].pipeline).toEqual([{$match: {_id: {$in: ids}}}, secretLookup]);
+      });
+
+      it("should reject relations the collection does not define", async () => {
+        await expect(facade.find("function", {relations: ["owner"]})).rejects.toThrow(
+          "Collection function has no relation named owner."
+        );
+      });
+    });
+
+    it("should build the function logs pipeline", async () => {
+      const from = new Date("2024-01-01T00:00:00.000Z");
+      const to = new Date("2024-01-01T23:59:59.999Z");
+
+      await facade.find("function_logs", {
+        createdBetween: {from, to},
+        where: {
+          channel: {eq: "stdout"},
+          level: {in: [1, 2]},
+          function: {in: ["fn"]},
+          content: {matches: "err", caseInsensitive: true}
+        },
+        sort: {_id: -1},
+        skip: 10,
+        limit: 20,
+        relations: ["function"]
+      });
+
+      expect(calls[0].pipeline).toEqual([
+        {
+          $match: {
+            _id: {
+              $gte: ObjectId.createFromTime(from.getTime() / 1000),
+              $lt: ObjectId.createFromTime(to.getTime() / 1000)
+            },
+            channel: "stdout",
+            level: {$in: [1, 2]},
+            function: {$in: ["fn"]},
+            content: {$regex: "err", $options: "i"}
+          }
+        },
+        {$sort: {_id: -1}},
+        {$skip: 10},
+        {$limit: 20},
+        {$set: {fn_id: {$toObjectId: "$function"}}},
+        {$lookup: {from: "function", localField: "fn_id", foreignField: "_id", as: "fn"}},
+        {$unwind: {path: "$fn", preserveNullAndEmptyArrays: true}},
+        {$set: {function: {$ifNull: ["$fn.name", "$function"]}}},
+        {$unset: ["fn", "fn_id"]}
+      ]);
+    });
+
+    it("should keep the empty $match of the webhook logs pipeline", async () => {
+      await facade.find("webhook_logs", {where: {}, sort: {_id: -1}});
+
+      expect(calls[0].pipeline).toEqual([{$match: {}}, {$sort: {_id: -1}}]);
+    });
+
+    it("should count pages narrowed by where conditions exactly", async () => {
+      await facade.paginate(
+        "webhook_logs",
+        {where: {succeed: {eq: true}}},
+        "estimate-unless-filtered"
+      );
+
+      expect(calls.map(call => call.pipeline)).toEqual([
+        [{$match: {succeed: true}}],
+        [{$match: {succeed: true}}, {$count: "total"}]
+      ]);
+    });
+
     it("should keep $skip in the $facet data stage when nothing else is requested", async () => {
       await facade.paginate("apikey", {resourceFilter}, "exact");
 
@@ -316,6 +427,22 @@ describe("MongoCollectionQueryFacade", () => {
       );
 
       expect(page).toEqual({meta: {total: 0}, data: []});
+    });
+
+    it("should match succeed like the webhook logs $eq condition", async () => {
+      await db.collection("webhook_logs").insertMany([{succeed: true}, {succeed: false}]);
+      const legacy = await db
+        .collection("webhook_logs")
+        .aggregate([{$match: {succeed: {$eq: true}}}, {$sort: {_id: -1}}])
+        .toArray();
+
+      const logs = await facade.find("webhook_logs", {
+        where: {succeed: {eq: true}},
+        sort: {_id: -1}
+      });
+
+      expect(logs).toEqual(legacy);
+      expect(logs).toHaveLength(1);
     });
 
     it("should return the same page as executePaginationPlan", async () => {

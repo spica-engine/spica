@@ -1,3 +1,4 @@
+import {COLLECTION_QUERY} from "@spica-server/interface-data";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
@@ -78,11 +79,11 @@ describe("Engine", () => {
 
     const options = {root: "test_root", timeout: 1, outDir: ".build"} as any;
     executor = new PlanExecutor(
-      fs,
+      module.get(COLLECTION_QUERY),
       scheduler,
       (val => val) as any,
       options,
-      new TriggerSecretResolver(fs, (val => val) as any),
+      new TriggerSecretResolver(module.get(COLLECTION_QUERY), (val => val) as any),
       new FunctionPreparationService(scheduler, options)
     );
     engine = new FunctionEngine(
