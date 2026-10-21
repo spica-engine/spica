@@ -6,7 +6,6 @@ import {
   FindOneAndDeleteOptions,
   FindOneAndReplaceOptions,
   FindOneAndUpdateOptions,
-  ObjectId,
   OptionalUnlessRequiredId,
   ReturnDocument,
   UpdateFilter,
@@ -15,6 +14,7 @@ import {
 import {Secret} from "@spica-server/interface-secret";
 import {Observable} from "rxjs";
 import {SecretChangeDispatcher, SecretChangeEvent} from "./change-dispatcher.js";
+import {Id} from "@spica-server/interface-data";
 
 export const SECRET_ENCRYPTION_SECRET = Symbol.for("SECRET_ENCRYPTION_SECRET");
 
@@ -87,7 +87,7 @@ export class SecretService extends BaseCollection<Secret>("secret") {
 
   private dispatchChange(
     operationType: SecretChangeEvent["operationType"],
-    _id: ObjectId,
+    _id: Id,
     secrets: Pick<Secret, "key">[]
   ) {
     const keys = Array.from(new Set(secrets.filter(Boolean).map(secret => secret.key)));

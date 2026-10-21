@@ -16,7 +16,6 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {AssetService} from "./service.js";
-import {OBJECT_ID, ObjectId} from "@spica-server/database";
 import {
   Asset,
   Config,
@@ -35,6 +34,8 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {AssetRepManager} from "./representative.js";
 import {createReadStream} from "fs";
 import {OptionalId} from "@spica-server/database";
+import {ID} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 
 @Controller("asset")
 export class AssetController {
@@ -52,7 +53,7 @@ export class AssetController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:show", "asset"))
-  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  async findOne(@Param("id", ID("asset")) id: Id) {
     return this.service.findOne({_id: id}).then(r => {
       if (!r) {
         throw new NotFoundException();
@@ -112,7 +113,7 @@ export class AssetController {
   @Post(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:install", "asset"))
   async install(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID("asset")) id: Id,
     @Body(
       Schema.validate({
         type: "object",
@@ -173,10 +174,7 @@ export class AssetController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:delete", "asset"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Query("type") type: "soft" | "hard" = "soft"
-  ) {
+  async delete(@Param("id", ID("asset")) id: Id, @Query("type") type: "soft" | "hard" = "soft") {
     const asset = await this.service.findOne({_id: id});
 
     if (!asset) {

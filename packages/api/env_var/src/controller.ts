@@ -17,13 +17,14 @@ import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
 import {EnvVarService} from "@spica-server/env_var-services";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Schema} from "@spica-server/core-schema";
 import {AuthGuard, ActionGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {EnvVar} from "@spica-server/interface-env_var";
 import * as CRUD from "./crud.js";
 import {activity} from "@spica-server/activity-services";
 import {createEnvVarActivity} from "./activity.resource.js";
+import {ID} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 
 @Controller("env-var")
 export class EnvVarController {
@@ -44,7 +45,7 @@ export class EnvVarController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:show"))
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  findOne(@Param("id", ID("env_var")) id: Id) {
     return CRUD.findOne(this.evs, id);
   }
 
@@ -64,7 +65,7 @@ export class EnvVarController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:update"))
   async updateOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID("env_var")) id: Id,
     @Body(Schema.validate("http://spica.internal/env_var"))
     envVar: EnvVar
   ) {
@@ -77,7 +78,7 @@ export class EnvVarController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:delete"))
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  async deleteOne(@Param("id", ID("env_var")) id: Id) {
     return CRUD.remove(this.evs, id);
   }
 }

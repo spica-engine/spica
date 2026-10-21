@@ -5,7 +5,6 @@ import {
   DatabaseService,
   Filter,
   FindOneAndReplaceOptions,
-  ObjectId,
   OptionalId,
   ReturnDocument,
   WithId
@@ -14,6 +13,7 @@ import {Preference} from "@spica-server/interface-preference";
 import {Observable} from "rxjs";
 import {deepCopy} from "@spica-server/core-patch";
 import {PreferenceChangeDispatcher} from "./change-dispatcher.js";
+import {Id} from "@spica-server/interface-data";
 
 @Injectable()
 export class PreferenceService extends BaseCollection("preferences") {
@@ -82,7 +82,7 @@ export class PreferenceService extends BaseCollection("preferences") {
     if (result) {
       this.changeDispatcher.dispatch({
         operationType: "replace",
-        documentKey: {_id: result._id as ObjectId}
+        documentKey: {_id: result._id as Id}
       });
     }
     return result;
@@ -92,7 +92,7 @@ export class PreferenceService extends BaseCollection("preferences") {
     const result = await this._coll.insertOne(preference);
     this.changeDispatcher.dispatch({
       operationType: "insert",
-      documentKey: {_id: result.insertedId as ObjectId}
+      documentKey: {_id: result.insertedId as Id}
     });
     return {_id: result.insertedId, ...preference};
   }

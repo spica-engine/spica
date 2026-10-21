@@ -10,7 +10,7 @@
     }
   },
   "dependencies": {
-    "@spica-server/database": "workspace:*"
+    "@spica-server/interface-data": "workspace:*"
   },
   "devDependencies": {
     "@types/express": "^4.17.25"
