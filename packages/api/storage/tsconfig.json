@@ -18,6 +18,9 @@
       "path": "../../interface/storage"
     },
     {
+      "path": "../../interface/data"
+    },
+    {
       "path": "../../interface/core"
     },
     {
@@ -28,6 +31,9 @@
     },
     {
       "path": "../../database"
+    },
+    {
+      "path": "../../data"
     },
     {
       "path": "../../core/schema"

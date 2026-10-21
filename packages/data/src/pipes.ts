@@ -10,6 +10,7 @@ import {
   Type
 } from "@nestjs/common";
 import {Id, ID_TYPES, IdType, IdTypes} from "@spica-server/interface-data";
+import {ids} from "./ids.js";
 
 function parseOrReject(idType: IdType, value: unknown): Id {
   if (!value) {
@@ -32,6 +33,10 @@ export function ID(collection: string): Type<PipeTransform<unknown, Id>> {
     }
   }
   return mixin(IdPipe);
+}
+
+export function idTransform(collection: string): PipeTransform<unknown, Id> {
+  return {transform: value => parseOrReject(ids().forCollection(collection), value)};
 }
 
 interface DocumentIdParams {

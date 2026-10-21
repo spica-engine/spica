@@ -1,11 +1,11 @@
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 
 export interface DashboardAsset {
   schema: Dashboard;
 }
 
 export interface Dashboard {
-  _id?: ObjectId;
+  _id?: Id;
   name: string;
   icon: string;
   components: Component[];
