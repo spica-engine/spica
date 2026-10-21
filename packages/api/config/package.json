@@ -8,6 +8,7 @@
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/interface-config": "workspace:*",
+    "@spica-server/interface-data": "workspace:*",
     "@spica-server/interface-replication": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/replication": "workspace:*",
