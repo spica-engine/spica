@@ -63,7 +63,7 @@ export class WebhookController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:index"))
   find(
-    @ResourceFilter() resourceFilter: object,
+    @ResourceFilter({collection: "webhook"}) resourceFilter: object,
     @Query("limit", DEFAULT(10), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", DEFAULT({_id: -1}), JSONP) sort: {[k: string]: number}

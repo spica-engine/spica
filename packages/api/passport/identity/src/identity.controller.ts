@@ -24,7 +24,9 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
+import {ReturnDocument} from "@spica-server/database";
+import {ID} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {Factor, FactorMeta} from "@spica-server/interface-passport-authfactor";
@@ -87,7 +89,7 @@ export class IdentityController {
           if (!identity.authFactor) {
             continue;
           }
-          this.authFactor.register(identity._id.toHexString(), identity.authFactor);
+          this.authFactor.register(identity._id.toString(), identity.authFactor);
         }
       })
       .catch(error => {
@@ -171,7 +173,7 @@ export class IdentityController {
     @Query("sort", JSONP) sort: object,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
-    @ResourceFilter() resourceFilter: object
+    @ResourceFilter({collection: "identity"}) resourceFilter: object
   ) {
     const pipelineBuilder = await new PipelineBuilder()
       .filterResources(resourceFilter)
@@ -218,11 +220,11 @@ export class IdentityController {
       registerPolicyAttacher("IdentityFullAccess")
     )
   )
-  async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
+  async deleteFactor(@Param("id", ID("identity")) id: Id) {
     // deleteIdentityFactor only clears any in-progress activation; an already-activated factor is
     // no longer in that transient map, so existence must be derived from the persisted record.
-    this.deleteIdentityFactor(id.toHexString());
-    this.authFactor.unregister(id.toHexString());
+    this.deleteIdentityFactor(id.toString());
+    this.authFactor.unregister(id.toString());
 
     const identity = await this.identityService.findOneAndUpdate(
       {_id: id},
@@ -243,7 +245,7 @@ export class IdentityController {
       registerPolicyAttacher("IdentityReadOnlyAccess")
     )
   )
-  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  async findOne(@Param("id", ID("identity")) id: Id) {
     const identity = await this.identityService.findOne(
       {_id: id},
       {projection: this.hideSecretsExpression()}
@@ -296,7 +298,7 @@ export class IdentityController {
     )
   )
   async completeFactorVerification(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID("identity")) id: Id,
     @Body(
       Schema.validate({
         type: "object",
@@ -311,7 +313,7 @@ export class IdentityController {
     )
     {answer}: {answer: string}
   ) {
-    const factor = this.identityFactors.get(id.toHexString());
+    const factor = this.identityFactors.get(id.toString());
 
     if (!factor) {
       throw new BadRequestException("Start a factor verification before complete it.");
@@ -321,13 +323,13 @@ export class IdentityController {
       throw new BadRequestException(e);
     });
 
-    this.deleteIdentityFactor(id.toHexString());
+    this.deleteIdentityFactor(id.toString());
 
     if (!isVerified) {
       throw new UnauthorizedException("Verification has been failed.");
     }
 
-    this.authFactor.register(id.toHexString(), factor.getMeta());
+    this.authFactor.register(id.toString(), factor.getMeta());
 
     const meta = factor.getMeta();
     return this.identityService
@@ -383,7 +385,7 @@ export class IdentityController {
     ActionGuard("passport:identity:update", undefined, registerPolicyAttacher("IdentityFullAccess"))
   )
   async updateOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID("identity")) id: Id,
     @Body(Schema.validate("http://spica.internal/passport/identity"))
     identity: Partial<Identity>
   ) {
@@ -441,7 +443,7 @@ export class IdentityController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  async deleteOne(@Param("id", ID("identity")) id: Id) {
     // prevent to delete the last user
     const userCount = await this.identityService.estimatedDocumentCount();
     if (userCount == 1) {
@@ -452,8 +454,8 @@ export class IdentityController {
       if (!res) {
         throw new NotFoundException(`Identity with ID ${id} not found`);
       }
-      if (this.authFactor.hasFactor(id.toHexString())) {
-        this.authFactor.unregister(id.toHexString());
+      if (this.authFactor.hasFactor(id.toString())) {
+        this.authFactor.unregister(id.toString());
       }
     });
   }
@@ -462,7 +464,7 @@ export class IdentityController {
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:policy:add"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
+  async addPolicy(@Param("id", ID("identity")) id: Id, @Param("policyId") policyId: string) {
     const res = await this.identityService.findOneAndUpdate(
       {
         _id: id
@@ -485,7 +487,7 @@ export class IdentityController {
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
+  async removePolicy(@Param("id", ID("identity")) id: Id, @Param("policyId") policyId: string) {
     const res = await this.identityService.findOneAndUpdate(
       {
         _id: id

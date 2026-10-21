@@ -14,7 +14,7 @@ export class ConfigController {
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("config:index"))
-  async getAllConfigs(@ResourceFilter() resourceFilter: object) {
+  async getAllConfigs(@ResourceFilter({collection: "config"}) resourceFilter: object) {
     return this.configService.aggregate([resourceFilter]).toArray();
   }
 

@@ -14,7 +14,9 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
+import {ReturnDocument} from "@spica-server/database";
+import {ID} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "@spica-server/interface-passport";
 import {Strategy, StrategyTypeServices} from "@spica-server/interface-passport";
@@ -31,13 +33,13 @@ export class StrategyController {
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:index"))
-  find(@ResourceFilter() resourceFilter: object) {
+  find(@ResourceFilter({collection: "strategy"}) resourceFilter: object) {
     return this.strategy.aggregate([resourceFilter]).toArray();
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:show"))
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  findOne(@Param("id", ID("strategy")) id: Id) {
     return this.strategy.findOne({_id: id}).then(strategy => {
       const scope = strategy.type === "oauth" ? "user" : "identity";
       strategy["callbackUrl"] =
@@ -49,7 +51,7 @@ export class StrategyController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  deleteOne(@Param("id", ID("strategy")) id: Id) {
     return this.strategy.deleteOne({_id: id});
   }
 
@@ -80,7 +82,7 @@ export class StrategyController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:update"))
   async replaceOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID("strategy")) id: Id,
     @Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy
   ) {
     delete strategy._id;
