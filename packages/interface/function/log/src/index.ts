@@ -1,8 +1,8 @@
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 import {LogLevels, LogChannels} from "@spica-server/interface-function-runtime";
 
 export interface Log {
-  _id: ObjectId;
+  _id: Id;
   function: string;
   event_id: string;
   content: string;

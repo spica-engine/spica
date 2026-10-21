@@ -66,7 +66,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
             if (!functionId) return;
 
             // Skip if this node originated the write.
-            if (this.tracker.isSelfWrite({functionId: functionId.toHexString(), filename, hash})) {
+            if (this.tracker.isSelfWrite({functionId: functionId.toString(), filename, hash})) {
               this.logger.debug(
                 `[asset-watcher] Suppressing self-write for ${functionId}/${filename}`
               );
