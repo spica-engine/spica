@@ -61,6 +61,12 @@ export function findLocale(language: string, preferences: BucketPreferences): Lo
   return {best, fallback};
 }
 
+export function setContentLanguage(req: any, locale?: Locale) {
+  if (locale) {
+    req.res.header("Content-language", locale.best || locale.fallback);
+  }
+}
+
 export function hasTranslatedProperties(schema: Bucket) {
   for (const property in schema.properties) {
     const definition = schema.properties[property];
