@@ -8,22 +8,23 @@ import {
   NotFoundException,
   Param,
   Query,
-  UseGuards
+  UseGuards,
+  Inject
 } from "@nestjs/common";
 import {ActivityService} from "@spica-server/activity-services";
 import {DATE, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
-import {Filter} from "@spica-server/database";
-import {Activity} from "@spica-server/interface-activity";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
-import {ActivityPipelineBuilder} from "./pipeline.builder.js";
 import {ID, ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
 
 const activityIds = () => ids().forCollection("activity");
 
 @Controller("activity")
 export class ActivityController {
-  constructor(private activityService: ActivityService) {}
+  constructor(
+    private activityService: ActivityService,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("activity:index"))
@@ -37,18 +38,22 @@ export class ActivityController {
     @Query("skip", NUMBER) skip: number,
     @Query("limit", NUMBER) limit: number
   ) {
-    const builder = await new ActivityPipelineBuilder().resolveRelations().filterByUserRequest({
-      action,
-      identifier,
-      username,
-      resource,
-      begin,
-      end
+    const where: ReadSpec["where"] = {
+      ...(identifier && {identifier: {eq: identifier}}),
+      ...(username && {username: {eq: username}}),
+      ...(resource && {resource: {eq: resource}}),
+      ...(action?.length && {action: {in: action}})
+    };
+    const hasRange = begin?.getTime() && end?.getTime();
+
+    return this.queries.find("activity", {
+      relations: ["identifier", "username"],
+      where: Object.keys(where).length ? where : undefined,
+      createdBetween: hasRange ? {from: begin, to: end} : undefined,
+      sort: {_id: -1},
+      skip,
+      limit
     });
-
-    builder.sort({_id: -1}).skip(skip).limit(limit);
-
-    return this.activityService.aggregate(builder.result()).toArray();
   }
 
   @Delete(":id")

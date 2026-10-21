@@ -11,7 +11,8 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  Inject
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {SecretService} from "@spica-server/secret-services";
@@ -21,11 +22,14 @@ import {activity} from "@spica-server/activity-services";
 import {createSecretActivity} from "./activity.resource.js";
 import * as CRUD from "./crud.js";
 import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 
 @Controller("secret")
 export class SecretController {
-  constructor(private ss: SecretService) {}
+  constructor(
+    private ss: SecretService,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:index"))
@@ -33,17 +37,17 @@ export class SecretController {
     @ResourceFilter({collection: "secret"}) resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", JSONP) sort: object,
+    @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object
   ) {
-    return CRUD.find(this.ss, {resourceFilter, limit, skip, sort, paginate, filter});
+    return CRUD.find(this.queries, {resourceFilter, limit, skip, sort, paginate, filter});
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:show"))
   findOne(@Param("id", ID("secret")) id: Id) {
-    return CRUD.findOne(this.ss, id);
+    return CRUD.findOne(this.queries, id);
   }
 
   @UseInterceptors(activity(createSecretActivity))

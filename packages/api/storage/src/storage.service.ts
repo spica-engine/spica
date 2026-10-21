@@ -7,7 +7,7 @@ import {
   NotFoundException
 } from "@nestjs/common";
 import {BaseCollection, DatabaseService, ReturnDocument, WithId} from "@spica-server/database";
-import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {StoragePipelineBuilder} from "./storage-pipeline.builder.js";
 import {
   StorageOptions,
@@ -22,7 +22,7 @@ import {TransactionExecutor} from "@spica-server/transaction";
 
 import fs from "fs";
 import {ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 
 const storageIds = () => ids().forCollection("storage");
 
@@ -33,7 +33,8 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   constructor(
     database: DatabaseService,
     private service: Strategy,
-    @Inject(STORAGE_OPTIONS) private storageOptions: StorageOptions
+    @Inject(STORAGE_OPTIONS) private storageOptions: StorageOptions,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
   ) {
     super(database, {
       afterInit: () => this._coll.createIndex({name: 1}, {unique: true})
@@ -142,25 +143,18 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     skip: number = 0,
     sort?: any
   ): Promise<PaginatedStorageResponse | StorageResponse[]> {
-    let pipelineBuilder = await new PipelineBuilder()
-      .filterResources(resourceFilter)
-      .filterByUserRequest(filter);
-
-    const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
-
-    const plan = pipelineBuilder.buildPaginationPlan(seeking, () => this.estimatedDocumentCount());
+    const spec = {resourceFilter, filter, sort, skip, limit};
 
     if (paginate) {
-      return executePaginationPlan<StorageResponse>(this._coll, plan).then(async r => {
-        r.data = await this.putUrls(r.data);
-        return r as PaginatedStorageResponse;
-      });
+      return this.queries
+        .paginate<StorageResponse>("storage", spec, "estimate-unless-filtered")
+        .then(async r => {
+          r.data = await this.putUrls(r.data);
+          return r as PaginatedStorageResponse;
+        });
     }
 
-    return this._coll
-      .aggregate<StorageResponse>(plan.dataPipeline)
-      .toArray()
-      .then(r => this.putUrls(r));
+    return this.queries.find<StorageResponse>("storage", spec).then(r => this.putUrls(r));
   }
 
   putUrls(objects: StorageResponse[]) {
