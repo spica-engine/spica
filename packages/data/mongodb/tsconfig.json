@@ -7,13 +7,25 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": ".."
+      "path": "../../interface/database"
+    },
+    {
+      "path": "../../interface/data"
+    },
+    {
+      "path": "../../filter"
+    },
+    {
+      "path": "../../database/pipeline"
     },
     {
       "path": "../../database"
     },
     {
-      "path": "../../interface/data"
+      "path": ".."
+    },
+    {
+      "path": "../../database/testing"
     }
   ]
 }
