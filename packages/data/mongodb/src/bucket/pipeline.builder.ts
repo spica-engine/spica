@@ -1,16 +1,15 @@
 import * as expression from "@spica-server/bucket-expression";
 import {
   buildExpressionReplacers,
-  buildI18nAggregation,
   categorizePropertyMap,
   compareAndUpdateRelations,
   constructFilterValues,
   createRelationMap,
   findLocale,
-  getRelationPipeline,
   hasTranslatedProperties
 } from "@spica-server/bucket-common";
 import {deepCopy} from "@spica-server/core-patch";
+import {buildI18nAggregation, getRelationPipeline} from "./stages.js";
 import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {extractFilterPropertyMap} from "@spica-server/filter";
 import {BucketReadContext, Locale, RelationMap} from "@spica-server/interface-bucket-common";
