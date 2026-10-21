@@ -14,7 +14,8 @@ import {
   BadRequestException
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ID} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";
 import {RefreshToken, PaginationResponse} from "@spica-server/interface-passport-refresh_token";
@@ -39,7 +40,7 @@ export class RefreshTokenController {
     @Query("sort", JSONP) sort: object,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
-    @ResourceFilter() resourceFilter: object
+    @ResourceFilter({collection: "refresh_token"}) resourceFilter: object
   ) {
     const pipelineBuilder = await new RefreshTokenPipelineBuilder(
       this.options.refreshTokenHashSecret
@@ -69,7 +70,7 @@ export class RefreshTokenController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:show"))
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  findOne(@Param("id", ID("refresh_token")) id: Id) {
     const pipeline = new PipelineBuilder()
       .findOneIfRequested(id)
       .setVisibilityOfFields({...this.HIDDEN_FIELDS})
@@ -88,7 +89,7 @@ export class RefreshTokenController {
 
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:update"))
-  async update(@Param("id", OBJECT_ID) id: ObjectId, @Body() body: Partial<RefreshToken>) {
+  async update(@Param("id", ID("refresh_token")) id: Id, @Body() body: Partial<RefreshToken>) {
     const disabled = body?.disabled;
 
     if (typeof disabled !== "boolean") {
@@ -111,7 +112,7 @@ export class RefreshTokenController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  deleteOne(@Param("id", ID("refresh_token")) id: Id) {
     return this.service.deleteOne({_id: id}).then(r => {
       if (!r) {
         throw new NotFoundException();

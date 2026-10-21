@@ -29,7 +29,8 @@ import {UrlEncodedBodyParser} from "./body.js";
 import {StrategyService} from "./strategy/services/strategy.service.js";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ID} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface-passport";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {ClassCommander} from "@spica-server/replication";
@@ -183,7 +184,7 @@ export class PassportIdentityController {
     const tokenSchema = this.identityService.sign(identity, expiresIn);
     const refreshTokenSchema = await this.identityService.signRefreshToken(identity);
 
-    const id = identity._id.toHexString();
+    const id = identity._id.toString();
     // Enforce 2FA from the persisted record, not the in-memory AuthFactor map: that map is
     // per-replica and only synced opportunistically, so a replica that missed the registration
     // broadcast would otherwise skip the challenge and let the user bypass 2FA.
@@ -332,7 +333,7 @@ export class PassportIdentityController {
   }
 
   @Get("identity/strategy/:id/url")
-  async getUrl(@Param("id", OBJECT_ID) id: ObjectId) {
+  async getUrl(@Param("id", ID("strategy")) id: Id) {
     const strategy = await this.strategyService.findOne({_id: id});
 
     if (!strategy) {
@@ -366,7 +367,7 @@ export class PassportIdentityController {
   @UseInterceptors(UrlEncodedBodyParser())
   @HttpCode(HttpStatus.NO_CONTENT)
   async complete(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID("strategy")) id: Id,
     @Body() body: unknown,
     @Query("state") stateId: string,
     @Query("code") code: string

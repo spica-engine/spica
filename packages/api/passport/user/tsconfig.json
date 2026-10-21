@@ -46,6 +46,9 @@
       "path": "../../../interface/passport/authfactor"
     },
     {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../../interface/core"
     },
     {
@@ -62,6 +65,9 @@
     },
     {
       "path": "../../../database"
+    },
+    {
+      "path": "../../../data"
     },
     {
       "path": "../../../core/schema"

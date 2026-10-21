@@ -47,7 +47,9 @@ export interface IGuardService {
 // Since we can not depend on since
 export type PolicyResolver<T = unknown> = (ids: string[]) => Promise<T[]>;
 
-export type ResourceFilterFunction = (data: {pure?: boolean}, ctx: ExecutionContext) => {};
+export type ResourceFilterOptions = {pure: true} | {collection: string};
+
+export type ResourceFilterFunction = (data: ResourceFilterOptions, ctx: ExecutionContext) => {};
 
 /**
  * Since we can not depend on policy service directly cause it would create a circular dependency,

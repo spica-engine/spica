@@ -9,7 +9,7 @@ import {
 } from "@spica-server/interface-passport";
 import {StrategyService} from "./strategy.service.js";
 import forge from "node-forge";
-import {ObjectId} from "@spica-server/database";
+import {ids} from "@spica-server/data";
 
 @Injectable()
 export class SamlService implements StrategyTypeService {
@@ -30,7 +30,9 @@ export class SamlService implements StrategyTypeService {
   }
 
   getStrategy(id: string): Promise<SamlStrategy> {
-    return this.strategy.findOne({_id: new ObjectId(id)}) as Promise<SamlStrategy>;
+    return this.strategy.findOne({
+      _id: ids().forCollection("strategy").parse(id)
+    }) as Promise<SamlStrategy>;
   }
 
   getLoginUrl(strategy: SamlStrategy): Promise<{url: string; state: string}> {

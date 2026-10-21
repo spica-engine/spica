@@ -4,12 +4,15 @@ import {ApiKeyService} from "./apikey.service.js";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {Resource} from "@spica-server/interface-asset";
 import {registrar} from "@spica-server/asset";
-import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {ReturnDocument} from "@spica-server/database";
+import {ids} from "@spica-server/data";
 import uniqid from "uniqid";
 import ApiKeySchema from "./schemas/apikey.json" with {type: "json"};
 import {ApikeyAsset} from "@spica-server/interface-passport-apikey";
 
 const _module = "apikey";
+
+const apikeyIds = () => ids().forCollection("apikey");
 
 export function registerAssetHandlers(
   as: ApiKeyService,
@@ -25,7 +28,7 @@ export function registerAssetHandlers(
   const operator = {
     insert: (resource: Resource<ApikeyAsset>) => {
       const apikey = resource.contents.schema;
-      apikey._id = new ObjectId(apikey._id);
+      apikey._id = apikey._id == null ? apikeyIds().generate() : apikeyIds().parse(apikey._id);
 
       apikey.key = apikey.key || uniqid();
 
@@ -34,7 +37,7 @@ export function registerAssetHandlers(
 
     update: (resource: Resource<ApikeyAsset>) => {
       const apikey = resource.contents.schema;
-      const _id = new ObjectId(apikey._id);
+      const _id = apikeyIds().parse(apikey._id);
 
       delete apikey._id;
 
@@ -43,15 +46,16 @@ export function registerAssetHandlers(
       });
     },
 
-    delete: (resource: Resource<ApikeyAsset>) => as.deleteOne({_id: new ObjectId(resource._id)})
+    delete: (resource: Resource<ApikeyAsset>) =>
+      as.deleteOne({_id: apikeyIds().parse(resource._id)})
   };
   registrar.operator(_module, operator);
 
   const exporter = async (_id: string) => {
-    if (!ObjectId.isValid(_id)) {
+    if (!apikeyIds().isValid(_id)) {
       return Promise.reject(`${_id} is not a valid object id`);
     }
-    const apikey = await as.findOne({_id: new ObjectId(_id)});
+    const apikey = await as.findOne({_id: apikeyIds().parse(_id)});
 
     if (!apikey) {
       return Promise.reject(`Apikey does not exist with _id ${_id}`);
@@ -64,7 +68,7 @@ export function registerAssetHandlers(
     as.find().then(apikeys => {
       return apikeys.map(d => {
         return {
-          _id: d._id.toHexString(),
+          _id: d._id.toString(),
           title: d.name
         };
       });
