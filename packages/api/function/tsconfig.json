@@ -84,9 +84,6 @@
       "path": "../env_var/services"
     },
     {
-      "path": "../../database/pipeline"
-    },
-    {
       "path": "../../database"
     },
     {
