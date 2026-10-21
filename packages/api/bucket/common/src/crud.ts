@@ -175,6 +175,11 @@ export async function deleteDocument(
   hashSecret?: string,
   encryptionSecret?: string
 ) {
+  // GraphQL's ObjectId scalar passes null for an invalid literal, which has always deleted nothing.
+  if (documentId == null) {
+    return;
+  }
+
   const collection = factories.collection(schema);
 
   const documentIdType = await ids().forBucket(schema._id.toString());
