@@ -21,6 +21,7 @@ import {
 } from "@spica-server/interface-bucket-common";
 import {Page, RESULT_SHAPER, ResultShaper} from "@spica-server/interface-data";
 import {PaginationPlan} from "@spica-server/interface-database";
+import {aggregatable, AGGREGATE_OPTIONS} from "../aggregate.js";
 import {BucketPipelineBuilder} from "./pipeline.builder.js";
 
 interface BucketReadPlan {
@@ -42,7 +43,7 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
   ): Promise<BucketReadResult<T[]>> {
     const {plan, locale} = await this.plan(bucket, spec, context);
     const documents = await this.collection(bucket)
-      .aggregate<T>(plan.dataPipeline)
+      .aggregate<T>(plan.dataPipeline, AGGREGATE_OPTIONS)
       .toArray()
       .catch(error => {
         throw new DatabaseException(error.message);
@@ -65,9 +66,11 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
     context: BucketReadContext
   ): Promise<BucketReadResult<Page<T>>> {
     const {plan, locale} = await this.plan(bucket, spec, context);
-    const page = await executePaginationPlan<T>(this.collection(bucket), plan).catch(error => {
-      throw new DatabaseException(error.message);
-    });
+    const page = await executePaginationPlan<T>(aggregatable(this.collection(bucket)), plan).catch(
+      error => {
+        throw new DatabaseException(error.message);
+      }
+    );
     page.data = this.decrypt(bucket, page.data, context);
     return {result: this.shape(bucket, page), locale};
   }
