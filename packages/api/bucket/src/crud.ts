@@ -1,8 +1,9 @@
 import {schemaDiff} from "@spica-server/core-differ";
 import {ChangeKind} from "@spica-server/interface-core";
 import {findRelations} from "@spica-server/bucket-common";
-import {BucketDataService, BucketService} from "@spica-server/bucket-services";
-import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {BucketDataService, BucketService, bucketIds} from "@spica-server/bucket-services";
+import {ReturnDocument} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 import {HistoryService} from "@spica-server/bucket-history";
 import * as expression from "@spica-server/bucket-expression";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
@@ -18,7 +19,7 @@ export async function find(
   return bs.aggregate<Bucket>([options.resourceFilter, {$sort: options.sort}]).toArray();
 }
 
-export function findOne(bs: BucketService, id: ObjectId): Promise<Bucket> {
+export function findOne(bs: BucketService, id: Id): Promise<Bucket> {
   return bs.findOne({_id: id});
 }
 
@@ -26,7 +27,7 @@ export async function insert(bs: BucketService, bucket: Bucket) {
   ruleValidation(bucket);
 
   if (bucket._id) {
-    bucket._id = new ObjectId(bucket._id);
+    bucket._id = bucketIds().parse(bucket._id);
   }
 
   await bs.insertOne(bucket);
@@ -45,7 +46,7 @@ export async function replace(
   ruleValidation(bucket);
 
   // check whether we need to delete bucket id
-  const _id = new ObjectId(bucket._id);
+  const _id = bucketIds().parse(bucket._id);
   delete bucket._id;
 
   const previousSchema = await bs.findOne({_id});
@@ -72,9 +73,9 @@ export async function remove(
   bs: BucketService,
   bds: BucketDataService,
   history: HistoryService,
-  id: string | ObjectId
+  id: string | Id
 ) {
-  const schema = await bs.drop(new ObjectId(id));
+  const schema = await bs.drop(bucketIds().parse(id));
 
   if (schema) {
     const promises = [];
@@ -167,7 +168,7 @@ async function updateDocumentsOnChange(
 async function clearRelationsOnDrop(
   bucketService: BucketService,
   bucketDataService: BucketDataService,
-  bucketId: ObjectId
+  bucketId: Id
 ) {
   const buckets = await bucketService.find();
 
@@ -175,7 +176,7 @@ async function clearRelationsOnDrop(
 
   for (const bucket of buckets) {
     const targets = Array.from(
-      findRelations(bucket.properties, bucketId.toHexString(), "", new Map()).keys()
+      findRelations(bucket.properties, bucketId.toString(), "", new Map()).keys()
     );
 
     const unsetFieldsBucket = targets.reduce((acc, current) => {

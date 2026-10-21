@@ -30,6 +30,7 @@
     "@spica-server/function-enqueuer": "workspace:*",
     "@spica-server/function-queue": "workspace:*",
     "@spica-server/function-queue-proto": "workspace:*",
+    "@spica-server/interface-bucket": "workspace:*",
     "@spica-server/interface-bucket-hooks": "workspace:*",
     "@spica-server/interface-function": "workspace:*",
     "@spica-server/interface-function-enqueuer": "workspace:*",
