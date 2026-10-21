@@ -12,7 +12,6 @@ import {HistoryService} from "@spica-server/bucket-history";
 import {ChangeEmitter} from "@spica-server/bucket-hooks";
 import {BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ReturnDocument} from "@spica-server/database";
 import {ids} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {GuardService} from "@spica-server/passport-guard-services";
@@ -29,10 +28,6 @@ import {makeExecutableSchema} from "@graphql-tools/schema";
 import {mergeResolvers, mergeTypeDefs} from "@graphql-tools/merge";
 import {BucketDataService} from "@spica-server/bucket-services";
 import {
-  deleteDocument,
-  insertDocument,
-  patchDocument,
-  replaceDocument,
   clearRelations,
   getDependents,
   findLocale,
@@ -42,8 +37,10 @@ import {
 } from "@spica-server/bucket-common";
 import {
   BUCKET_QUERY,
+  BUCKET_WRITE,
   BucketQueryFacade,
-  BucketReadContext
+  BucketReadContext,
+  BucketWriteFacade
 } from "@spica-server/interface-bucket-common";
 import {FindResponse} from "@spica-server/interface-bucket-graphql";
 import {Bucket, BUCKET_DATA_HASH_SECRET, BucketDocument} from "@spica-server/interface-bucket";
@@ -150,6 +147,7 @@ export class GraphqlController implements OnModuleInit {
     private guardService: GuardService,
     private validator: Validator,
     @Inject(BUCKET_QUERY) private queries: BucketQueryFacade,
+    @Inject(BUCKET_WRITE) private writes: BucketWriteFacade,
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService,
     @Optional() private hookChangeEmitter: ChangeEmitter,
@@ -283,7 +281,7 @@ export class GraphqlController implements OnModuleInit {
           projectMap: responseFields,
           applyAcl: this.shouldApplyAcl(context)
         },
-        this.readContext()
+        this.bucketContext()
       );
       setContentLanguage(context, locale);
       return result;
@@ -324,7 +322,7 @@ export class GraphqlController implements OnModuleInit {
           applyAcl: this.shouldApplyAcl(context)
         },
         {
-          ...this.readContext(),
+          ...this.bucketContext(),
           resolveSchema: (bucketId: string) =>
             Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId))
         }
@@ -352,21 +350,20 @@ export class GraphqlController implements OnModuleInit {
 
       await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
 
-      const insertedDocument = await insertDocument(
-        bucket,
-        input,
-        {req: context, applyAcl: this.shouldApplyAcl(context)},
-        {
-          collection: bucketId => this.bds.children(bucketId),
-          schema: this.bs.resolveSchema,
-          deleteOne: async documentId => {
-            const deleteFn = this.delete(bucket, false);
-            await deleteFn(root, {_id: documentId}, context, info);
+      const insertedDocument = await this.writes
+        .insert(
+          bucket,
+          input,
+          {applyAcl: this.shouldApplyAcl(context), user: context.user},
+          {
+            ...this.bucketContext(),
+            deleteOne: async documentId => {
+              const deleteFn = this.delete(bucket, false);
+              await deleteFn(root, {_id: documentId}, context, info);
+            }
           }
-        },
-        this.hashSecret,
-        this.encryptionSecret
-      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
+        )
+        .catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
       if (!insertedDocument) {
         return;
       }
@@ -393,7 +390,7 @@ export class GraphqlController implements OnModuleInit {
           documentId: insertedDocument._id,
           applyAcl: this.shouldApplyAcl(context)
         },
-        this.readContext()
+        this.bucketContext()
       );
       setContentLanguage(context, locale);
 
@@ -430,18 +427,14 @@ export class GraphqlController implements OnModuleInit {
 
       await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
 
-      const previousDocument = await replaceDocument(
-        bucket,
-        {...input, _id: documentId},
-        {req: context, applyAcl: this.shouldApplyAcl(context)},
-        {
-          collection: bucketId => this.bds.children(bucketId),
-          schema: this.bs.resolveSchema
-        },
-        undefined,
-        this.hashSecret,
-        this.encryptionSecret
-      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
+      const previousDocument = await this.writes
+        .replace(
+          bucket,
+          {...input, _id: documentId},
+          {applyAcl: this.shouldApplyAcl(context), user: context.user},
+          this.bucketContext()
+        )
+        .catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!previousDocument) {
         return;
@@ -475,7 +468,7 @@ export class GraphqlController implements OnModuleInit {
           documentId: (await ids().forBucket(bucket._id.toString())).parse(documentId),
           applyAcl: this.shouldApplyAcl(context)
         },
-        this.readContext()
+        this.bucketContext()
       );
       setContentLanguage(context, locale);
 
@@ -526,19 +519,15 @@ export class GraphqlController implements OnModuleInit {
         throwError(error.message, 400)
       );
 
-      const currentDocument = await patchDocument(
-        bucket,
-        {...patchedDocument, _id: documentId},
-        input,
-        {req: context, applyAcl: this.shouldApplyAcl(context)},
-        {
-          collection: bucketId => this.bds.children(bucketId),
-          schema: this.bs.resolveSchema
-        },
-        {returnDocument: ReturnDocument.AFTER},
-        this.hashSecret,
-        this.encryptionSecret
-      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
+      const currentDocument = await this.writes
+        .patch(
+          bucket,
+          {...patchedDocument, _id: documentId},
+          input,
+          {applyAcl: this.shouldApplyAcl(context), user: context.user, returnDocument: "after"},
+          this.bucketContext()
+        )
+        .catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!currentDocument) {
         return;
@@ -570,7 +559,7 @@ export class GraphqlController implements OnModuleInit {
           documentId: currentDocument._id,
           applyAcl: this.shouldApplyAcl(context)
         },
-        this.readContext()
+        this.bucketContext()
       );
       setContentLanguage(context, locale);
 
@@ -607,17 +596,14 @@ export class GraphqlController implements OnModuleInit {
         );
       }
 
-      const deletedDocument = await deleteDocument(
-        bucket,
-        documentId,
-        {req: context, applyAcl: this.shouldApplyAcl(context)},
-        {
-          collection: schema => this.bds.children(schema),
-          schema: this.bs.resolveSchema
-        },
-        this.hashSecret,
-        this.encryptionSecret
-      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
+      const deletedDocument = await this.writes
+        .delete(
+          bucket,
+          documentId,
+          {applyAcl: this.shouldApplyAcl(context), user: context.user},
+          this.bucketContext()
+        )
+        .catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!deletedDocument) {
         return;
@@ -739,7 +725,7 @@ export class GraphqlController implements OnModuleInit {
     return findLocale(language ? language : preferences.language.default, preferences);
   };
 
-  private readContext(): BucketReadContext {
+  private bucketContext(): BucketReadContext {
     return {
       resolveSchema: this.bs.resolveSchema,
       preferences: () => this.bs.getPreferences(),

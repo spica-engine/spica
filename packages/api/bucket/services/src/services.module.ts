@@ -32,6 +32,7 @@ export class ServicesModule {
         BucketChangeDispatcher,
         BucketService,
         BucketDataService,
+        BUCKET_DATA_LIMIT,
         BUCKET_DATA_HASH_SECRET,
         BUCKET_DATA_ENCRYPTION_SECRET
       ]
