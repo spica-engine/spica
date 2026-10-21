@@ -1,4 +1,4 @@
-import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {ReturnDocument} from "@spica-server/database";
 import {SecretService} from "@spica-server/secret-services";
 import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface-secret";
 import {encrypt} from "@spica-server/core-encryption";
@@ -6,6 +6,10 @@ import {SecretPipelineBuilder} from "./pipeline.builder.js";
 import {executePaginationPlan} from "@spica-server/database-pipeline";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
+import {ids} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
+
+const secretIds = () => ids().forCollection("secret");
 
 export async function find(
   ss: SecretService,
@@ -43,7 +47,7 @@ export async function find(
   return ss.aggregate<HiddenSecret>(plan.dataPipeline).toArray();
 }
 
-export async function findOne(ss: SecretService, id: ObjectId): Promise<HiddenSecret> {
+export async function findOne(ss: SecretService, id: Id): Promise<HiddenSecret> {
   const pipeline = new SecretPipelineBuilder().findOneIfRequested(id).hideSecrets().result();
 
   const res = await ss.aggregate<HiddenSecret>(pipeline).next();
@@ -61,7 +65,7 @@ export async function insert(ss: SecretService, body: DecryptedSecret): Promise<
   };
 
   if (body._id) {
-    secret._id = new ObjectId(body._id);
+    secret._id = secretIds().parse(body._id);
   }
 
   const insertedSecret = await ss.insertOne(secret);
@@ -71,7 +75,7 @@ export async function insert(ss: SecretService, body: DecryptedSecret): Promise<
 
 export async function replace(
   ss: SecretService,
-  id: ObjectId,
+  id: Id,
   body: DecryptedSecret
 ): Promise<HiddenSecret> {
   const encrypted = encrypt(body.value, ss.encryptionSecret);
@@ -90,8 +94,8 @@ export async function replace(
   return result;
 }
 
-export async function remove(ss: SecretService, id: string | ObjectId) {
-  const res = await ss.findOneAndDelete({_id: new ObjectId(id)});
+export async function remove(ss: SecretService, id: string | Id) {
+  const res = await ss.findOneAndDelete({_id: secretIds().parse(id)});
   if (!res) {
     throw new NotFoundException(`Secret with ID ${id} not found`);
   }

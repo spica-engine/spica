@@ -1,7 +1,7 @@
 import {Controller, Get, HttpStatus, INestApplication, Param} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DataModule, DocumentId, ID} from "@spica-server/data";
+import {bindIdTypes, DataModule, DocumentId, ID, idTransform} from "@spica-server/data";
 import {Id, ID_TYPES, IdType, IdTypes} from "@spica-server/interface-data";
 
 const VALID = "valid-id";
@@ -115,6 +115,22 @@ describe("ID pipe", () => {
       const res = await req.get("/bucket/books/data/nope");
       expect(res.statusCode).toBe(HttpStatus.BAD_REQUEST);
       expect(res.body).toEqual({statusCode: 400, message: "Invalid id."});
+    });
+  });
+
+  describe("idTransform", () => {
+    beforeEach(() => bindIdTypes(fakeIdTypes));
+
+    it("should parse with the collection's id type", () => {
+      expect(idTransform("storage").transform(VALID, undefined).toString()).toEqual(
+        `storage:${VALID}`
+      );
+    });
+
+    it("should throw the same 400 as OBJECT_ID for an invalid or missing id", () => {
+      for (const value of ["nope", undefined, ""]) {
+        expect(() => idTransform("storage").transform(value, undefined)).toThrow("Invalid id.");
+      }
     });
   });
 });

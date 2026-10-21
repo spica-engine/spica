@@ -1,4 +1,4 @@
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {
   Activity,
   ACTIVITY_OPTIONS,
@@ -6,6 +6,9 @@ import {
   ModuleActivity
 } from "@spica-server/interface-activity";
 import {Injectable, Inject} from "@nestjs/common";
+import {ids} from "@spica-server/data";
+
+const identityIds = () => ids().forCollection("identity");
 
 @Injectable()
 export class ActivityService extends BaseCollection<Activity>("activity") {
@@ -15,12 +18,12 @@ export class ActivityService extends BaseCollection<Activity>("activity") {
 
   insert(activities: ModuleActivity[]) {
     const preparedActivities = activities.map((activity: Activity) => {
-      if (ObjectId.isValid(activity.identifier)) {
-        activity.identifier = new ObjectId(activity.identifier);
+      if (identityIds().isValid(activity.identifier)) {
+        activity.identifier = identityIds().parse(activity.identifier);
       }
 
-      if (ObjectId.isValid(activity.username)) {
-        activity.username = new ObjectId(activity.username);
+      if (identityIds().isValid(activity.username)) {
+        activity.username = identityIds().parse(activity.username);
       }
 
       activity.created_at = new Date();

@@ -15,12 +15,13 @@ import {
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {SecretService} from "@spica-server/secret-services";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Schema} from "@spica-server/core-schema";
 import {AuthGuard, ActionGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {activity} from "@spica-server/activity-services";
 import {createSecretActivity} from "./activity.resource.js";
 import * as CRUD from "./crud.js";
+import {ID} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 
 @Controller("secret")
 export class SecretController {
@@ -41,7 +42,7 @@ export class SecretController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:show"))
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  findOne(@Param("id", ID("secret")) id: Id) {
     return CRUD.findOne(this.ss, id);
   }
 
@@ -64,7 +65,7 @@ export class SecretController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:update"))
   async updateOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID("secret")) id: Id,
     @Body(Schema.validate("http://spica.internal/secret"))
     body: {key: string; value: string}
   ) {
@@ -77,7 +78,7 @@ export class SecretController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:delete"))
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  async deleteOne(@Param("id", ID("secret")) id: Id) {
     return CRUD.remove(this.ss, id);
   }
 }
