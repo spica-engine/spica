@@ -8943,7 +8943,6 @@ __metadata:
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/data": "workspace:*"
-    "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/filter": "workspace:*"
     "@spica-server/interface-activity": "workspace:*"
@@ -9078,6 +9077,7 @@ __metadata:
     "@nestjs/websockets": "npm:^10.4.22"
     "@spica-server/activity-services": "workspace:*"
     "@spica-server/bucket-cache": "workspace:*"
+    "@spica-server/bucket-common": "workspace:*"
     "@spica-server/bucket-expression": "workspace:*"
     "@spica-server/bucket-history": "workspace:*"
     "@spica-server/bucket-hooks": "workspace:*"
@@ -9092,6 +9092,7 @@ __metadata:
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-activity": "workspace:*"
     "@spica-server/interface-bucket": "workspace:*"
+    "@spica-server/interface-bucket-common": "workspace:*"
     "@spica-server/interface-bucket-realtime": "workspace:*"
     "@spica-server/interface-passport-guard": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
@@ -9887,7 +9888,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/interface-bucket-common@workspace:packages/interface/bucket/common"
   dependencies:
-    "@spica-server/database": "workspace:*"
     "@spica-server/interface-bucket": "workspace:*"
     "@spica-server/interface-data": "workspace:*"
   languageName: unknown

@@ -8,17 +8,18 @@ import {
 import {ActivityService} from "@spica-server/activity-services";
 import {BucketCacheService} from "@spica-server/bucket-cache";
 import {
-  insertDocument,
   insertActivity,
-  replaceDocument,
-  patchDocument,
-  deleteDocument,
   clearRelations,
   getDependents,
   applyFieldLevelAcl,
   decryptDocumentFields
 } from "@spica-server/bucket-common";
 import {HistoryService} from "@spica-server/bucket-history";
+import {
+  BUCKET_WRITE,
+  BucketWriteContext,
+  BucketWriteFacade
+} from "@spica-server/interface-bucket-common";
 import {ChangeEmitter} from "@spica-server/bucket-hooks";
 import {
   BucketService,
@@ -28,7 +29,6 @@ import {
 } from "@spica-server/bucket-services";
 import {applyPatch, deepCopy} from "@spica-server/core-patch";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ReturnDocument} from "@spica-server/database";
 import {ids} from "@spica-server/data";
 import {RealtimeDatabaseService} from "@spica-server/database-realtime";
 import {ChunkKind} from "@spica-server/interface-realtime";
@@ -56,6 +56,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private bucketService: BucketService,
     private bucketDataService: BucketDataService,
     private validator: Validator,
+    @Inject(BUCKET_WRITE) private writes: BucketWriteFacade,
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService,
     @Optional() private hookEmitter: ChangeEmitter,
@@ -161,20 +162,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     let insertedDoc;
 
     try {
-      insertedDoc = await insertDocument(
+      insertedDoc = await this.writes.insert(
         schema,
         document,
-        {
-          req: client.upgradeReq,
-          applyAcl: this.shouldApplyAcl(client.upgradeReq)
-        },
-        {
-          collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver(),
-          deleteOne: id => this.delete(client, {_id: id})
-        },
-        this.hashSecret,
-        this.encryptionSecret
+        {applyAcl: this.shouldApplyAcl(client.upgradeReq), user: client.upgradeReq.user},
+        {...this.writeContext(), deleteOne: id => this.delete(client, {_id: id})}
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -242,20 +234,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     let previousDocument;
 
     try {
-      previousDocument = await replaceDocument(
+      previousDocument = await this.writes.replace(
         schema,
         {...document, _id: documentId},
-        {
-          req: client.upgradeReq,
-          applyAcl: this.shouldApplyAcl(client.upgradeReq)
-        },
-        {
-          collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver()
-        },
-        undefined,
-        this.hashSecret,
-        this.encryptionSecret
+        {applyAcl: this.shouldApplyAcl(client.upgradeReq), user: client.upgradeReq.user},
+        this.writeContext()
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -354,21 +337,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     let currentDocument;
 
     try {
-      currentDocument = await patchDocument(
+      currentDocument = await this.writes.patch(
         schema,
         {...patchedDocument, _id: documentId},
         document,
         {
-          req: client.upgradeReq,
-          applyAcl: this.shouldApplyAcl(client.upgradeReq)
+          applyAcl: this.shouldApplyAcl(client.upgradeReq),
+          user: client.upgradeReq.user,
+          returnDocument: "after"
         },
-        {
-          collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver()
-        },
-        {returnDocument: ReturnDocument.AFTER},
-        this.hashSecret,
-        this.encryptionSecret
+        this.writeContext()
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -443,19 +421,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     let deletedDocument;
 
     try {
-      deletedDocument = await deleteDocument(
+      deletedDocument = await this.writes.delete(
         schema,
         document._id,
-        {
-          req: client.upgradeReq,
-          applyAcl: this.shouldApplyAcl(client.upgradeReq)
-        },
-        {
-          collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver()
-        },
-        this.hashSecret,
-        this.encryptionSecret
+        {applyAcl: this.shouldApplyAcl(client.upgradeReq), user: client.upgradeReq.user},
+        this.writeContext()
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, 500, error.message);
@@ -551,6 +521,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     return schema;
+  }
+
+  private writeContext(): BucketWriteContext {
+    return {
+      resolveSchema: this.getBucketResolver(),
+      hashSecret: this.hashSecret,
+      encryptionSecret: this.encryptionSecret
+    };
   }
 
   getBucketResolver() {
