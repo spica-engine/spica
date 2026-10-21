@@ -2,11 +2,7 @@ import {BaseCollection, ReturnDocument} from "@spica-server/database";
 import {ids} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import * as expression from "@spica-server/bucket-expression";
-import {
-  createRelationMap,
-  getRelationPipeline,
-  resetNonOverlappingPathsInRelationMap
-} from "./relation.js";
+import {createRelationMap, getRelationPipeline} from "./relation.js";
 import {getUpdateQueryForPatch} from "@spica-server/core-patch";
 import {
   ACLSyntaxException,
@@ -15,196 +11,10 @@ import {
   ForbiddenException
 } from "./exception.js";
 import {categorizePropertyMap} from "./helpers.js";
-import {BucketPipelineBuilder} from "./pipeline.builder.js";
-import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
-import {
-  CrudOptions,
-  CrudParams,
-  CrudFactories,
-  CrudPagination,
-  RelationMap
-} from "@spica-server/interface-bucket-common";
+import {CrudFactories} from "@spica-server/interface-bucket-common";
 import {Bucket, LimitExceedBehaviours, BucketDocument} from "@spica-server/interface-bucket";
 import {decryptDocumentFields} from "./decrypt.js";
 import {buildExpressionReplacers} from "./expression.filter.js";
-
-export async function findDocuments<T>(
-  schema: Bucket,
-  params: CrudParams,
-  options: CrudOptions<false>,
-  factories: CrudFactories<T>,
-  hashSecret?: string,
-  encryptionSecret?: string
-): Promise<T[]>;
-export async function findDocuments<T>(
-  schema: Bucket,
-  params: CrudParams,
-  options: CrudOptions<true>,
-  factories: CrudFactories<T>,
-  hashSecret?: string,
-  encryptionSecret?: string
-): Promise<CrudPagination<T>>;
-export async function findDocuments<T>(
-  schema: Bucket,
-  params: CrudParams,
-  options: CrudOptions<boolean>,
-  factories: CrudFactories<T>,
-  hashSecret?: string,
-  encryptionSecret?: string
-): Promise<T[] | CrudPagination<T>>;
-export async function findDocuments<T>(
-  schema: Bucket,
-  params: CrudParams,
-  options: CrudOptions<boolean>,
-  factories: CrudFactories<T>,
-  hashSecret?: string,
-  encryptionSecret?: string
-): Promise<unknown> {
-  const collection = factories.collection(schema);
-  const pipelineBuilder = new BucketPipelineBuilder(
-    schema,
-    factories,
-    hashSecret,
-    encryptionSecret
-  );
-  const seekingPipelineBuilder = new PipelineBuilder();
-
-  let rulePropertyMap;
-  let ruleRelationMap: RelationMap[];
-  let filtersAppliedPipeline;
-
-  let basePipeline = await pipelineBuilder
-    .findOneIfRequested(params.documentId)
-    .filterResources(params.resourceFilter);
-
-  basePipeline = await basePipeline.localize(options.localize, params.language, locale => {
-    params.req.res.header("Content-language", locale.best || locale.fallback);
-  });
-
-  if (params.applyAcl) {
-    const rulesAppliedPipeline = await basePipeline
-      .rules(params.req.user, (propertyMap, relationMap) => {
-        rulePropertyMap = propertyMap;
-        ruleRelationMap = relationMap;
-      })
-      .catch(error => {
-        throw new ACLSyntaxException(error.message);
-      });
-
-    const ruleResetStage = resetNonOverlappingPathsInRelationMap({
-      left: [],
-      right: rulePropertyMap,
-      map: ruleRelationMap
-    });
-    filtersAppliedPipeline = await rulesAppliedPipeline
-      .attachToPipeline(!!ruleResetStage, ruleResetStage)
-      .filterByUserRequest(params.filter);
-  } else {
-    filtersAppliedPipeline = await basePipeline.filterByUserRequest(params.filter);
-  }
-
-  const seekingPipeline = seekingPipelineBuilder
-    .sort(params.sort)
-    .skip(params.skip)
-    .limit(params.limit);
-
-  const relationPropertyMap = params.relationPaths || [];
-
-  const relationPathResolvedPipeline = await filtersAppliedPipeline.resolveRelationPath(
-    relationPropertyMap,
-    relationStage => {
-      seekingPipeline.attachToPipeline(true, ...relationStage);
-    }
-  );
-
-  if (params.applyAcl) {
-    const aclProjection = await buildAclProjection(
-      schema,
-      params.req.user,
-      factories.schema,
-      hashSecret
-    );
-    seekingPipelineBuilder.attachToPipeline(true, {$project: aclProjection});
-  }
-  // for graphql responses
-  seekingPipeline.setVisibilityOfFields(getVisibilityOfFields(params.projectMap));
-
-  const seeking = seekingPipeline.result();
-
-  const plan = relationPathResolvedPipeline.buildPaginationPlan(seeking, () =>
-    collection.estimatedDocumentCount()
-  );
-
-  if (options.paginate) {
-    const result = await executePaginationPlan<T>(collection, plan).catch(error => {
-      throw new DatabaseException(error.message);
-    });
-    if (encryptionSecret) {
-      result.data = result.data.map(doc =>
-        decryptDocumentFields(doc as any, schema, encryptionSecret, factories.schema)
-      ) as T[];
-    }
-    return result;
-  }
-
-  const documents = await collection
-    .aggregate<T>(plan.dataPipeline)
-    .toArray()
-    .catch(error => {
-      throw new DatabaseException(error.message);
-    });
-
-  if (encryptionSecret) {
-    return documents.map(doc =>
-      decryptDocumentFields(doc as any, schema, encryptionSecret, factories.schema)
-    ) as T[];
-  }
-
-  return documents;
-}
-async function buildAclProjection(
-  schema: Bucket,
-  user: any,
-  schemaResolver: (id: string | Id) => Promise<Bucket> | Bucket,
-  hashSecret?: string
-) {
-  const properties = schema.properties as Record<string, {acl?: string}>;
-  const result: Record<string, object | number> = {};
-
-  const allPropertyMaps: string[][] = [];
-  for (const key in properties) {
-    const acl = properties[key].acl;
-    if (acl) {
-      const propMap = expression.extractPropertyMap(acl);
-      const {documentPropertyMap} = categorizePropertyMap(propMap);
-      allPropertyMaps.push(...documentPropertyMap);
-    }
-  }
-
-  const replacers = allPropertyMaps.length
-    ? await buildExpressionReplacers(schema, allPropertyMaps, schemaResolver, hashSecret)
-    : [];
-
-  for (const key in properties) {
-    const acl = properties[key].acl;
-
-    if (acl) {
-      const condition = expression.aggregateWithReplacers(acl, {auth: user}, "project", replacers);
-
-      result[key] = {
-        $cond: {
-          if: condition,
-          then: "$" + key,
-          else: "$$REMOVE"
-        }
-      };
-    } else {
-      result[key] = 1;
-    }
-  }
-
-  return result;
-}
 
 export async function insertDocument(
   schema: Bucket,
@@ -462,14 +272,6 @@ async function executeWriteRule(
   if (!aclResult) {
     throw new ForbiddenException("ACL rules has rejected this operation.");
   }
-}
-
-function getVisibilityOfFields(fieldMap: string[][]) {
-  const result = {};
-  for (const fields of fieldMap) {
-    result[fields.join(".")] = 1;
-  }
-  return result;
 }
 
 function handleWriteErrors(error: any) {

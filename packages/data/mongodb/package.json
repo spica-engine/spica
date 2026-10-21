@@ -11,10 +11,15 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.4.22",
+    "@spica-server/bucket-common": "workspace:*",
+    "@spica-server/bucket-expression": "workspace:*",
+    "@spica-server/core-patch": "workspace:*",
     "@spica-server/data": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/filter": "workspace:*",
+    "@spica-server/interface-bucket": "workspace:*",
+    "@spica-server/interface-bucket-common": "workspace:*",
     "@spica-server/interface-data": "workspace:*",
     "@spica-server/interface-database": "workspace:*"
   },

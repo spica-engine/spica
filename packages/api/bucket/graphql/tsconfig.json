@@ -7,9 +7,6 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../common"
-    },
-    {
       "path": "../../passport/guard/services"
     },
     {
@@ -23,6 +20,9 @@
     },
     {
       "path": "../../../interface/bucket/graphql"
+    },
+    {
+      "path": "../../../interface/bucket/common"
     },
     {
       "path": "../../../interface/bucket"
@@ -50,6 +50,9 @@
     },
     {
       "path": "../history"
+    },
+    {
+      "path": "../common"
     },
     {
       "path": "../../activity/services"
