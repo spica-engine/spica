@@ -52,4 +52,8 @@ export class MongoIdTypes implements IdTypes {
   forBucket(): Promise<IdType> {
     return Promise.resolve(this.objectId);
   }
+
+  unscoped(): IdType {
+    return this.objectId;
+  }
 }
