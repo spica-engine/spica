@@ -57,7 +57,7 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
       const emitHook = (hook: Webhook, kind: ChangeKind) => {
         const change: TargetChange = {
           kind: hook.trigger.active ? kind : ChangeKind.Removed,
-          target: hook._id.toHexString()
+          target: hook._id.toString()
         };
         if (change.kind != ChangeKind.Removed) {
           change.webhook = {
@@ -96,12 +96,12 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
           try {
             const _id = change.documentKey._id;
             if (change.operationType === "delete") {
-              observer.next({kind: ChangeKind.Removed, target: _id.toHexString()});
+              observer.next({kind: ChangeKind.Removed, target: _id.toString()});
               return;
             }
             const hook = await super.findOne({_id});
             if (!hook) {
-              observer.next({kind: ChangeKind.Removed, target: _id.toHexString()});
+              observer.next({kind: ChangeKind.Removed, target: _id.toString()});
               return;
             }
             emitHook(

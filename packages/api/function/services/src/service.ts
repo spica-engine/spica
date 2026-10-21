@@ -6,10 +6,10 @@ import {
   FindOneAndUpdateOptions,
   FindOptions,
   IndexSpecification,
-  ObjectId,
   WithId
 } from "@spica-server/database";
 import {EnvVarService} from "@spica-server/env_var-services";
+import {Id} from "@spica-server/interface-data";
 import {SecretService} from "@spica-server/secret-services";
 import {CollectionChangeEvent} from "@spica-server/replication";
 import {filter, map, Observable, switchMap} from "rxjs";
@@ -27,13 +27,13 @@ type ResourceOperationType = "replace" | "update" | "delete";
 
 export interface EnvVarFunctionsChange {
   fns: WithId<Function>[];
-  envVarId: ObjectId;
+  envVarId: Id;
   operationType: ResourceOperationType;
 }
 
 export interface SecretFunctionsChange {
   fns: WithId<Function>[];
-  secretId: ObjectId;
+  secretId: Id;
   secretKeys: string[];
   operationType: ResourceOperationType;
 }
