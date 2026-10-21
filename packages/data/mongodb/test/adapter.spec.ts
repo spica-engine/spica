@@ -1,8 +1,17 @@
+import {Global, Module} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {DATA_ENGINE, DataModule, ids} from "@spica-server/data";
-import {MongoDataAdapter, MongoIdTypes} from "@spica-server/data-mongodb";
-import {DatabaseModule} from "@spica-server/database";
-import {ID_TYPES} from "@spica-server/interface-data";
+import {DATA_ENGINE, DataModule, ids, PassthroughResultShaper} from "@spica-server/data";
+import {
+  MongoCollectionQueryFacade,
+  MongoDataAdapter,
+  MongoIdTypes
+} from "@spica-server/data-mongodb";
+import {DatabaseModule, DatabaseService} from "@spica-server/database";
+import {COLLECTION_QUERY, ID_TYPES, RESULT_SHAPER} from "@spica-server/interface-data";
+
+@Global()
+@Module({providers: [{provide: DatabaseService, useValue: {}}], exports: [DatabaseService]})
+class ExistingConnectionModule {}
 
 describe("MongoDataAdapter", () => {
   it("should connect through DatabaseModule", () => {
@@ -14,7 +23,7 @@ describe("MongoDataAdapter", () => {
     expect(adapter.engine).toBe("mongodb");
     expect(adapter.module.imports).toHaveLength(1);
     expect(adapter.module.imports[0]).toMatchObject({module: DatabaseModule});
-    expect(adapter.module.exports).toEqual([ID_TYPES]);
+    expect(adapter.module.exports).toEqual([ID_TYPES, RESULT_SHAPER, COLLECTION_QUERY]);
   });
 
   it("should not open a connection of its own for an existing connection", () => {
@@ -23,11 +32,26 @@ describe("MongoDataAdapter", () => {
 
   it("should bind MongoDB id types when registered", async () => {
     const module = await Test.createTestingModule({
-      imports: [DataModule.forRoot(MongoDataAdapter.forExistingConnection())]
+      imports: [
+        ExistingConnectionModule,
+        DataModule.forRoot(MongoDataAdapter.forExistingConnection())
+      ]
     }).compile();
 
     expect(module.get(DATA_ENGINE)).toBe("mongodb");
     expect(module.get(ID_TYPES)).toBeInstanceOf(MongoIdTypes);
     expect(ids()).toBe(module.get(ID_TYPES));
+  });
+
+  it("should provide the query facade and a passthrough result shaper", async () => {
+    const module = await Test.createTestingModule({
+      imports: [
+        ExistingConnectionModule,
+        DataModule.forRoot(MongoDataAdapter.forExistingConnection())
+      ]
+    }).compile();
+
+    expect(module.get(COLLECTION_QUERY)).toBeInstanceOf(MongoCollectionQueryFacade);
+    expect(module.get(RESULT_SHAPER)).toBeInstanceOf(PassthroughResultShaper);
   });
 });
