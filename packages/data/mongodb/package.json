@@ -13,9 +13,13 @@
     "@nestjs/common": "^10.4.22",
     "@spica-server/data": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/interface-data": "workspace:*"
+    "@spica-server/database-pipeline": "workspace:*",
+    "@spica-server/filter": "workspace:*",
+    "@spica-server/interface-data": "workspace:*",
+    "@spica-server/interface-database": "workspace:*"
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.4.22"
+    "@nestjs/testing": "^10.4.22",
+    "@spica-server/database-testing": "workspace:*"
   }
 }
