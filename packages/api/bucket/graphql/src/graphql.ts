@@ -305,6 +305,11 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
+      // The ObjectId scalar turns an invalid literal into null, which has always read as not found.
+      if (documentId == null) {
+        return null;
+      }
+
       const requestedFields = requestedFieldsFromInfo(info);
 
       const {result: document, locale} = await this.queries.findOne<BucketDocument>(
