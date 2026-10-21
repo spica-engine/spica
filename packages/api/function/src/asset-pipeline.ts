@@ -1,5 +1,5 @@
 import {Logger} from "@nestjs/common";
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 import {Function} from "@spica-server/interface-function";
 import {FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
 import {FunctionAssetService} from "@spica-server/function-services";
@@ -8,7 +8,7 @@ import {SelfWriteTracker} from "./asset-write-tracker.js";
 
 const logger = new Logger("FunctionAssetPipeline");
 
-type FunctionWithId = Function & {_id: ObjectId};
+type FunctionWithId = Function & {_id: Id};
 
 /** Format any caught value as a string for use in log messages. */
 function errMsg(e: unknown): string {
@@ -71,7 +71,7 @@ export async function applyAssetChange(
   // Step 6: persist metadata.
   try {
     tracker?.stamp({
-      functionId: fn._id.toHexString(),
+      functionId: fn._id.toString(),
       filename: record.filename,
       hash: record.hash
     });

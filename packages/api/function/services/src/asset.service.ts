@@ -1,5 +1,6 @@
 import {Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId, WithId} from "@spica-server/database";
+import {BaseCollection, DatabaseService, WithId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 import {FunctionAsset, FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
 
 const collectionName = "function_assets";
@@ -17,19 +18,19 @@ export class FunctionAssetService extends BaseCollection<FunctionAsset>(collecti
     });
   }
 
-  findByFunction(functionId: ObjectId): Promise<WithId<FunctionAsset>[]> {
+  findByFunction(functionId: Id): Promise<WithId<FunctionAsset>[]> {
     return this.find({functionId});
   }
 
   findByFilename(
-    functionId: ObjectId,
+    functionId: Id,
     filename: FunctionAssetFilename
   ): Promise<WithId<FunctionAsset> | null> {
     return this.findOne({functionId, filename});
   }
 
   async upsertAsset(
-    functionId: ObjectId,
+    functionId: Id,
     filename: FunctionAssetFilename,
     fields: Omit<FunctionAsset, "functionId" | "filename" | "_id">
   ): Promise<void> {
@@ -41,7 +42,7 @@ export class FunctionAssetService extends BaseCollection<FunctionAsset>(collecti
   }
 
   async upsertMany(
-    functionId: ObjectId,
+    functionId: Id,
     assets: Array<Omit<FunctionAsset, "functionId" | "_id">>
   ): Promise<void> {
     await Promise.all(
@@ -50,7 +51,7 @@ export class FunctionAssetService extends BaseCollection<FunctionAsset>(collecti
   }
 
   async replaceKey(
-    functionId: ObjectId,
+    functionId: Id,
     filename: FunctionAssetFilename,
     from: string,
     to: string
@@ -59,7 +60,7 @@ export class FunctionAssetService extends BaseCollection<FunctionAsset>(collecti
     return modified > 0;
   }
 
-  deleteByFunction(functionId: ObjectId): Promise<number> {
+  deleteByFunction(functionId: Id): Promise<number> {
     return this.deleteMany({functionId});
   }
 }

@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 
 export type FunctionAssetFilename = "index.ts" | "index.mjs" | "package.json" | "package-lock.json";
 
@@ -10,8 +10,8 @@ export const FUNCTION_ASSET_FILENAMES: FunctionAssetFilename[] = [
 ];
 
 export interface FunctionAsset {
-  _id?: ObjectId;
-  functionId: ObjectId;
+  _id?: Id;
+  functionId: Id;
   filename: FunctionAssetFilename;
   key: string;
   hash: string;
