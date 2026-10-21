@@ -43,15 +43,21 @@ import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket-cache";
 import {
   deleteDocument,
-  findDocuments,
   insertDocument,
   patchDocument,
   replaceDocument,
   authIdToString,
   isJSONFilter,
   filterReviver,
-  decryptDocumentFields
+  decryptDocumentFields,
+  setContentLanguage
 } from "@spica-server/bucket-common";
+import {
+  BUCKET_QUERY,
+  BucketQueryFacade,
+  BucketReadContext,
+  BucketReadSpec
+} from "@spica-server/interface-bucket-common";
 import {expressionFilterParser} from "./filter.js";
 import {
   clearRelations,
@@ -76,6 +82,7 @@ export class BucketDataController {
     private bs: BucketService,
     private bds: BucketDataService,
     private validator: Validator,
+    @Inject(BUCKET_QUERY) private queries: BucketQueryFacade,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
     @Optional() @Inject() private activityService: ActivityService,
@@ -131,31 +138,27 @@ export class BucketDataController {
       relation == true ? schema : Array.isArray(relation) ? relation : []
     );
 
-    return findDocuments(
-      schema,
-      {
-        relationPaths,
-        language: acceptedLanguage,
-        filter,
-        limit,
-        skip,
-        sort,
-        req,
-        projectMap: [],
-        applyAcl: strategyType === ReqAuthStrategy.USER
-      },
-      {
-        localize,
-        paginate
-      },
-      {
-        collection: schema => this.bds.children(schema),
-        preference: () => this.bs.getPreferences(),
-        schema: this.bs.resolveSchema
-      },
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
+    const spec: BucketReadSpec = {
+      relationPaths,
+      language: acceptedLanguage,
+      localize,
+      filter,
+      limit,
+      skip,
+      sort,
+      projectMap: [],
+      applyAcl: strategyType === ReqAuthStrategy.USER,
+      user: req.user
+    };
+
+    const read = paginate
+      ? this.queries.paginate(schema, spec, this.readContext())
+      : this.queries.find(schema, spec, this.readContext());
+
+    return read.then(({result, locale}) => {
+      setContentLanguage(req, locale);
+      return result;
+    }, this.errorHandler);
   }
 
   @Get("profile")
@@ -230,30 +233,25 @@ export class BucketDataController {
       relation == true ? schema : Array.isArray(relation) ? relation : []
     );
 
-    const [document]: any = await findDocuments(
-      schema,
-      {
-        relationPaths,
-        language: acceptedLanguage,
-        limit: 1,
-        documentId: documentId,
-        req,
-        projectMap: [],
-        applyAcl: strategyType === ReqAuthStrategy.USER
-      },
-      {
-        localize
-      },
-      {
-        collection: schema => this.bds.children(schema),
-        preference: () => this.bs.getPreferences(),
-        schema: this.bs.resolveSchema
-      },
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
-
-    return document;
+    return this.queries
+      .findOne(
+        schema,
+        {
+          relationPaths,
+          language: acceptedLanguage,
+          localize,
+          limit: 1,
+          documentId: documentId,
+          projectMap: [],
+          applyAcl: strategyType === ReqAuthStrategy.USER,
+          user: req.user
+        },
+        this.readContext()
+      )
+      .then(({result, locale}) => {
+        setContentLanguage(req, locale);
+        return result;
+      }, this.errorHandler);
   }
 
   /**
@@ -575,6 +573,15 @@ export class BucketDataController {
         }
       }
     }
+  }
+
+  private readContext(): BucketReadContext {
+    return {
+      resolveSchema: this.bs.resolveSchema,
+      preferences: () => this.bs.getPreferences(),
+      hashSecret: this.hashSecret,
+      encryptionSecret: this.encryptionSecret
+    };
   }
 
   errorHandler(error: {status: number; message: string}) {
