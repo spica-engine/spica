@@ -17,7 +17,6 @@
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/data": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/env_var-realtime": "workspace:*",
     "@spica-server/env_var-services": "workspace:*",
     "@spica-server/interface-activity": "workspace:*",
