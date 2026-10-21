@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   NotFoundException,
   Param,
   Query,
@@ -11,12 +12,16 @@ import {
 } from "@nestjs/common";
 import {ARRAY, DATE, DEFAULT, NUMBER} from "@spica-server/core";
 import {ObjectId} from "@spica-server/database";
+import {COLLECTION_QUERY, CollectionQueryFacade, ReadSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {LogService} from "./log.service.js";
 
 @Controller("function-logs")
 export class LogController {
-  constructor(private logService: LogService) {}
+  constructor(
+    private logService: LogService,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
@@ -30,59 +35,32 @@ export class LogController {
     @Query("levels", ARRAY(Number)) levels: number[] = [],
     @Query("content") content: string
   ) {
-    const match: any = {
-      _id: {
-        $gte: ObjectId.createFromTime(begin.getTime() / 1000),
-        $lt: ObjectId.createFromTime(end.getTime() / 1000)
-      }
-    };
+    const where: ReadSpec["where"] = {};
 
     if (channel) {
-      match.channel = channel;
+      where.channel = {eq: channel};
     }
 
     if (levels.length) {
-      match.level = {
-        $in: levels
-      };
+      where.level = {in: levels};
     }
 
     if (functions && functions.length) {
-      match.function = {
-        $in: functions
-      };
+      where.function = {in: functions};
     }
 
     if (content) {
-      match.content = {$regex: content, $options: "i"};
+      where.content = {matches: content, caseInsensitive: true};
     }
 
-    const pipeline: any[] = [{$match: match}, {$sort: {_id: -1}}];
-
-    if (skip > 0) {
-      pipeline.push({$skip: skip});
-    }
-
-    if (limit > 0) {
-      pipeline.push({$limit: limit});
-    }
-
-    pipeline.push(
-      {$set: {fn_id: {$toObjectId: "$function"}}},
-      {
-        $lookup: {
-          from: "function",
-          localField: "fn_id",
-          foreignField: "_id",
-          as: "fn"
-        }
-      },
-      {$unwind: {path: "$fn", preserveNullAndEmptyArrays: true}},
-      {$set: {function: {$ifNull: ["$fn.name", "$function"]}}},
-      {$unset: ["fn", "fn_id"]}
-    );
-
-    return this.logService.aggregate(pipeline).toArray();
+    return this.queries.find("function_logs", {
+      createdBetween: {from: begin, to: end},
+      where,
+      sort: {_id: -1},
+      skip: skip > 0 ? skip : undefined,
+      limit: limit > 0 ? limit : undefined,
+      relations: ["function"]
+    });
   }
 
   @Delete(":id")

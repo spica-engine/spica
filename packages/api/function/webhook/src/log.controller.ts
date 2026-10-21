@@ -5,24 +5,26 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   NotFoundException,
   Param,
   Query,
   UseGuards
 } from "@nestjs/common";
 import {ARRAY, DATE, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {Filter, ObjectId} from "@spica-server/database";
 import {ID, ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
-import {Log} from "@spica-server/interface-function-webhook";
 import {WebhookLogService} from "./log.service.js";
 
 const logIds = () => ids().forCollection("webhook_logs");
 
 @Controller("webhook/logs")
 export class WebhookLogController {
-  constructor(private logService: WebhookLogService) {}
+  constructor(
+    private logService: WebhookLogService,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:logs:index"))
@@ -34,36 +36,25 @@ export class WebhookLogController {
     @Query("skip", NUMBER) skip: number,
     @Query("limit", NUMBER) limit: number
   ) {
-    let filter: Filter<Log> = {};
-
-    if (!isNaN(begin.getTime()) && !isNaN(end.getTime())) {
-      filter._id = {
-        $gte: ObjectId.createFromTime(begin.getTime() / 1000),
-        $lt: ObjectId.createFromTime(end.getTime() / 1000)
-      };
-    }
+    const where: ReadSpec["where"] = {};
 
     if (webhook.length) {
-      filter.webhook = {$in: webhook};
+      where.webhook = {in: webhook};
     }
 
     if (succeed != null) {
-      filter.succeed = {$eq: succeed};
+      where.succeed = {eq: succeed};
     }
 
-    const aggregation: object[] = [{$match: filter}];
+    const hasRange = !isNaN(begin.getTime()) && !isNaN(end.getTime());
 
-    aggregation.push({$sort: {_id: -1}});
-
-    if (skip) {
-      aggregation.push({$skip: skip});
-    }
-
-    if (limit) {
-      aggregation.push({$limit: limit});
-    }
-
-    return this.logService.aggregate(aggregation).toArray();
+    return this.queries.find("webhook_logs", {
+      createdBetween: hasRange ? {from: begin, to: end} : undefined,
+      where,
+      sort: {_id: -1},
+      skip,
+      limit
+    });
   }
 
   @Delete(":id")
