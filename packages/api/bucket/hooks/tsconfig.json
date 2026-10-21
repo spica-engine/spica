@@ -25,6 +25,9 @@
       "path": "../../../interface/bucket/hooks"
     },
     {
+      "path": "../../../interface/bucket"
+    },
+    {
       "path": "../../function/queue/proto"
     },
     {
