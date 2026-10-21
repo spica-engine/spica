@@ -60,7 +60,6 @@
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/data": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/filter": "workspace:*",
     "@spica-server/interface-activity": "workspace:*",
     "@spica-server/interface-config": "workspace:*",

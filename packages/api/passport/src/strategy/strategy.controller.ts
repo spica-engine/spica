@@ -16,7 +16,7 @@ import {
 import {Schema} from "@spica-server/core-schema";
 import {ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "@spica-server/interface-passport";
 import {Strategy, StrategyTypeServices} from "@spica-server/interface-passport";
@@ -28,13 +28,14 @@ export class StrategyController {
     private strategy: StrategyService,
     @Inject(STRATEGIES)
     private strategies: StrategyTypeServices,
-    @Inject(PASSPORT_OPTIONS) private options: PassportOptions
+    @Inject(PASSPORT_OPTIONS) private options: PassportOptions,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
   ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:index"))
   find(@ResourceFilter({collection: "strategy"}) resourceFilter: object) {
-    return this.strategy.aggregate([resourceFilter]).toArray();
+    return this.queries.find("strategy", {resourceFilter});
   }
 
   @Get(":id")

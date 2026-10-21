@@ -61,9 +61,6 @@
       "path": "../../../filter"
     },
     {
-      "path": "../../../database/pipeline"
-    },
-    {
       "path": "../../../database"
     },
     {
