@@ -14,6 +14,7 @@ import {
   WhereCondition
 } from "@spica-server/interface-data";
 import {PaginationPlan} from "@spica-server/interface-database";
+import {aggregatable, AGGREGATE_OPTIONS} from "../aggregate.js";
 import {Relation, RelationPlacement, relationsOf} from "./profiles.js";
 
 class ReadPipelineBuilder extends PipelineBuilder {
@@ -77,14 +78,17 @@ export class MongoCollectionQueryFacade implements CollectionQueryFacade {
     const plan = await this.plan(collection, spec);
     const documents = await this.db
       .collection(collection)
-      .aggregate<T>(plan.dataPipeline)
+      .aggregate<T>(plan.dataPipeline, AGGREGATE_OPTIONS)
       .toArray();
     return this.shape(collection, documents);
   }
 
   async findOne<T>(collection: string, spec: ReadSpec): Promise<T | null> {
     const plan = await this.plan(collection, spec);
-    const document = await this.db.collection(collection).aggregate<T>(plan.dataPipeline).next();
+    const document = await this.db
+      .collection(collection)
+      .aggregate<T>(plan.dataPipeline, AGGREGATE_OPTIONS)
+      .next();
     return this.shape(collection, document);
   }
 
@@ -93,7 +97,7 @@ export class MongoCollectionQueryFacade implements CollectionQueryFacade {
       count == "exact"
         ? await this.exactPage<T>(collection, spec)
         : await executePaginationPlan<T>(
-            this.db.collection(collection),
+            aggregatable(this.db.collection(collection)),
             await this.plan(collection, spec)
           );
     return this.shape(collection, page);
@@ -146,7 +150,7 @@ export class MongoCollectionQueryFacade implements CollectionQueryFacade {
       {$facet: {meta: [{$count: "total"}], data}},
       {$set: {meta: {$ifNull: [{$arrayElemAt: ["$meta", 0]}, {$const: {total: 0}}]}}}
     ];
-    return this.db.collection(collection).aggregate<Page<T>>(pipeline).next();
+    return this.db.collection(collection).aggregate<Page<T>>(pipeline, AGGREGATE_OPTIONS).next();
   }
 
   private shape<R>(collection: string, result: R): R {
