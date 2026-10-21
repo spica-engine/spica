@@ -13,6 +13,12 @@
       "path": "../../interface/data"
     },
     {
+      "path": "../../interface/bucket/common"
+    },
+    {
+      "path": "../../interface/bucket"
+    },
+    {
       "path": "../../filter"
     },
     {
@@ -23,6 +29,15 @@
     },
     {
       "path": ".."
+    },
+    {
+      "path": "../../core/patch"
+    },
+    {
+      "path": "../../api/bucket/expression"
+    },
+    {
+      "path": "../../api/bucket/common"
     },
     {
       "path": "../../database/testing"

@@ -30,7 +30,6 @@ import {mergeResolvers, mergeTypeDefs} from "@graphql-tools/merge";
 import {BucketDataService} from "@spica-server/bucket-services";
 import {
   deleteDocument,
-  findDocuments,
   insertDocument,
   patchDocument,
   replaceDocument,
@@ -38,8 +37,14 @@ import {
   getDependents,
   findLocale,
   insertActivity,
-  decryptDocumentFields
+  decryptDocumentFields,
+  setContentLanguage
 } from "@spica-server/bucket-common";
+import {
+  BUCKET_QUERY,
+  BucketQueryFacade,
+  BucketReadContext
+} from "@spica-server/interface-bucket-common";
 import {FindResponse} from "@spica-server/interface-bucket-graphql";
 import {Bucket, BUCKET_DATA_HASH_SECRET, BucketDocument} from "@spica-server/interface-bucket";
 import {BUCKET_DATA_ENCRYPTION_SECRET} from "@spica-server/interface-bucket";
@@ -144,6 +149,7 @@ export class GraphqlController implements OnModuleInit {
     private bds: BucketDataService,
     private guardService: GuardService,
     private validator: Validator,
+    @Inject(BUCKET_QUERY) private queries: BucketQueryFacade,
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService,
     @Optional() private hookChangeEmitter: ChangeEmitter,
@@ -263,11 +269,12 @@ export class GraphqlController implements OnModuleInit {
       const expressionFields = requestedFieldsFromExpression(matchExpression, []);
       const responseFields = requestedFieldsFromInfo(info, "data");
 
-      return findDocuments(
+      const {result, locale} = await this.queries.paginate<BucketDocument>(
         bucket,
         {
           language,
-          req: context,
+          localize: true,
+          user: context.user,
           limit,
           skip,
           sort,
@@ -276,15 +283,10 @@ export class GraphqlController implements OnModuleInit {
           projectMap: responseFields,
           applyAcl: this.shouldApplyAcl(context)
         },
-        {localize: true, paginate: true},
-        {
-          collection: (schema: Bucket) => this.bds.children(schema),
-          preference: () => this.bs.getPreferences(),
-          schema: this.bs.resolveSchema
-        },
-        this.hashSecret,
-        this.encryptionSecret
+        this.readContext()
       );
+      setContentLanguage(context, locale);
+      return result;
     };
   }
 
@@ -305,26 +307,24 @@ export class GraphqlController implements OnModuleInit {
 
       const requestedFields = requestedFieldsFromInfo(info);
 
-      const [document] = await findDocuments(
+      const {result: document, locale} = await this.queries.findOne<BucketDocument>(
         bucket,
         {
           language,
-          req: context,
+          localize: true,
+          user: context.user,
           relationPaths: requestedFields,
           projectMap: requestedFields,
           documentId: (await ids().forBucket(bucket._id.toString())).parse(documentId),
           applyAcl: this.shouldApplyAcl(context)
         },
-        {localize: true, paginate: false},
         {
-          collection: (schema: Bucket) => this.bds.children(schema),
-          preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) =>
+          ...this.readContext(),
+          resolveSchema: (bucketId: string) =>
             Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId))
-        },
-        this.hashSecret,
-        this.encryptionSecret
+        }
       );
+      setContentLanguage(context, locale);
 
       return document;
     };
@@ -378,24 +378,19 @@ export class GraphqlController implements OnModuleInit {
 
       const requestedFields = requestedFieldsFromInfo(info);
 
-      const [document] = await findDocuments(
+      const {result: document, locale} = await this.queries.findOne<BucketDocument>(
         bucket,
         {
+          localize: true,
+          user: context.user,
           relationPaths: requestedFields,
           projectMap: requestedFields,
           documentId: insertedDocument._id,
-          req: context,
           applyAcl: this.shouldApplyAcl(context)
         },
-        {localize: true},
-        {
-          collection: (schema: Bucket) => this.bds.children(schema),
-          preference: () => this.bs.getPreferences(),
-          schema: this.bs.resolveSchema
-        },
-        this.hashSecret,
-        this.encryptionSecret
+        this.readContext()
       );
+      setContentLanguage(context, locale);
 
       if (this.hookChangeEmitter) {
         this.hookChangeEmitter.emitChange(
@@ -465,24 +460,19 @@ export class GraphqlController implements OnModuleInit {
 
       const requestedFields = requestedFieldsFromInfo(info);
 
-      const [document] = await findDocuments(
+      const {result: document, locale} = await this.queries.findOne<BucketDocument>(
         bucket,
         {
+          localize: true,
+          user: context.user,
           relationPaths: requestedFields,
           projectMap: requestedFields,
           documentId: (await ids().forBucket(bucket._id.toString())).parse(documentId),
-          req: context,
           applyAcl: this.shouldApplyAcl(context)
         },
-        {localize: true},
-        {
-          collection: (schema: Bucket) => this.bds.children(schema),
-          preference: () => this.bs.getPreferences(),
-          schema: this.bs.resolveSchema
-        },
-        this.hashSecret,
-        this.encryptionSecret
+        this.readContext()
       );
+      setContentLanguage(context, locale);
 
       if (this.hookChangeEmitter) {
         this.hookChangeEmitter.emitChange(
@@ -565,24 +555,19 @@ export class GraphqlController implements OnModuleInit {
 
       const requestedFields = requestedFieldsFromInfo(info);
 
-      const [document] = await findDocuments(
+      const {result: document, locale} = await this.queries.findOne<BucketDocument>(
         bucket,
         {
+          localize: true,
+          user: context.user,
           relationPaths: requestedFields,
           projectMap: requestedFields,
           documentId: currentDocument._id,
-          req: context,
           applyAcl: this.shouldApplyAcl(context)
         },
-        {localize: true},
-        {
-          collection: (schema: Bucket) => this.bds.children(schema),
-          preference: () => this.bs.getPreferences(),
-          schema: this.bs.resolveSchema
-        },
-        this.hashSecret,
-        this.encryptionSecret
+        this.readContext()
       );
+      setContentLanguage(context, locale);
 
       if (this.hookChangeEmitter) {
         this.hookChangeEmitter.emitChange(
@@ -748,6 +733,15 @@ export class GraphqlController implements OnModuleInit {
     const preferences = await this.bs.getPreferences();
     return findLocale(language ? language : preferences.language.default, preferences);
   };
+
+  private readContext(): BucketReadContext {
+    return {
+      resolveSchema: this.bs.resolveSchema,
+      preferences: () => this.bs.getPreferences(),
+      hashSecret: this.hashSecret,
+      encryptionSecret: this.encryptionSecret
+    };
+  }
 
   private shouldApplyAcl(req: any): boolean {
     const strategyType = extractStrategyType(req);
