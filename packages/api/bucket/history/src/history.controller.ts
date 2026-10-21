@@ -9,7 +9,8 @@ import {
   NotFoundException
 } from "@nestjs/common";
 import {BucketService, compile} from "@spica-server/bucket-services";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {DocumentId, ID} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {applyPatch} from "./differ.js";
 import {HistoryService} from "./history.service.js";
@@ -27,8 +28,8 @@ export class HistoryController {
     ActionGuard("bucket:data:index", "bucket/:bucketId/data")
   )
   getHistories(
-    @Param("bucketId", OBJECT_ID) bucket_id: ObjectId,
-    @Param("documentId", OBJECT_ID) document_id: ObjectId
+    @Param("bucketId", ID("buckets")) bucket_id: Id,
+    @DocumentId("documentId", "bucketId") document_id: Id
   ) {
     return this.historyService.find({$and: [{bucket_id: bucket_id}, {document_id: document_id}]});
   }
@@ -39,9 +40,9 @@ export class HistoryController {
     ActionGuard("bucket:data:index", "bucket/:bucketId/data")
   )
   async revertTo(
-    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @Param("documentId", OBJECT_ID) documentId: ObjectId,
-    @Param("historyId", OBJECT_ID) historyId: ObjectId
+    @Param("bucketId", ID("buckets")) bucketId: Id,
+    @DocumentId("documentId", "bucketId") documentId: Id,
+    @Param("historyId", ID("history")) historyId: Id
   ) {
     const document = await this.historyService.getDocument(bucketId, documentId);
     const schema = await this.bucketService.findOne({_id: bucketId});
@@ -60,7 +61,7 @@ export class HistoryController {
     ActionGuard("bucket:data:delete", "bucket/:bucketId/data")
   )
   @HttpCode(HttpStatus.NO_CONTENT)
-  async clearHistories(@Param("bucketId", OBJECT_ID) bucketId: ObjectId) {
+  async clearHistories(@Param("bucketId", ID("buckets")) bucketId: Id) {
     const res = await this.historyService.deleteMany({bucket_id: bucketId});
     if (!res.deletedCount) {
       throw new NotFoundException("No bucket history found with the provided IDs");

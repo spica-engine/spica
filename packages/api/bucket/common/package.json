@@ -19,6 +19,7 @@
     "@spica-server/core-encryption": "workspace:*",
     "@spica-server/core-patch": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
+    "@spica-server/data": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/filter": "workspace:*",
@@ -27,6 +28,7 @@
     "@spica-server/interface-bucket-common": "workspace:*",
     "@spica-server/interface-bucket-expression": "workspace:*",
     "@spica-server/interface-core": "workspace:*",
+    "@spica-server/interface-data": "workspace:*",
     "locale": "^0.1.0"
   },
   "devDependencies": {

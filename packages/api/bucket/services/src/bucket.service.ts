@@ -15,7 +15,6 @@ import {
   DatabaseService,
   Filter,
   FindOneAndReplaceOptions,
-  ObjectId,
   UpdateFilter,
   UpdateOptions,
   WithId
@@ -23,6 +22,7 @@ import {
 import {PreferenceService} from "@spica-server/preference-services";
 import {deepCopy} from "@spica-server/core-patch";
 import {ids} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 import {BehaviorSubject, Observable, Subscription} from "rxjs";
 import {filter, switchMap} from "rxjs/operators";
 import {BucketChangeDispatcher} from "./change-dispatcher.js";
@@ -35,6 +35,8 @@ import {
   BUCKET_DATA_LIMIT
 } from "@spica-server/interface-bucket";
 import * as crypto from "crypto";
+
+export const bucketIds = () => ids().forCollection("buckets");
 
 @Injectable()
 export class BucketService
@@ -98,9 +100,9 @@ export class BucketService
     });
   }
 
-  resolveSchema = (id: string | ObjectId): Bucket | Promise<Bucket> => {
+  resolveSchema = (id: string | Id): Bucket | Promise<Bucket> => {
     const cached = this.schemaCache.get(id.toString());
-    return cached ? deepCopy(cached) : this.findOne({_id: new ObjectId(id)});
+    return cached ? deepCopy(cached) : this.findOne({_id: bucketIds().parse(id)});
   };
 
   getPreferences() {
@@ -161,12 +163,12 @@ export class BucketService
   }
 
   findOneAndReplace(
-    filter: Filter<{_id: ObjectId}>,
+    filter: Filter<{_id: Id}>,
     doc: Bucket,
     options?: FindOneAndReplaceOptions
   ): Promise<WithId<Bucket>> {
     return super.findOneAndReplace(filter, doc, options).then(r => {
-      const replaced = {...doc, _id: filter._id as ObjectId} as WithId<Bucket>;
+      const replaced = {...doc, _id: filter._id as Id} as WithId<Bucket>;
       this.schemaCache.set(replaced._id.toString(), deepCopy(replaced));
       this.changeDispatcher.dispatch({
         operationType: "replace",
@@ -176,8 +178,8 @@ export class BucketService
     });
   }
 
-  async drop(id: string | ObjectId) {
-    const schema = await super.findOneAndDelete({_id: new ObjectId(id)});
+  async drop(id: string | Id) {
+    const schema = await super.findOneAndDelete({_id: bucketIds().parse(id)});
     if (!schema) {
       throw new NotFoundException(`Bucket with ID ${id} does not exist.`);
     }
@@ -201,7 +203,7 @@ export class BucketService
   }
 
   watchBucket(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
-    const _id = new ObjectId(bucketId);
+    const _id = bucketIds().parse(bucketId);
     return new Observable(observer => {
       if (propagateOnStart) {
         super.findOne({_id}).then(bucket => observer.next(bucket));
@@ -211,8 +213,7 @@ export class BucketService
         .pipe(
           filter(
             change =>
-              ids().forCollection("buckets").equals(change.documentKey._id, _id) &&
-              change.operationType !== "delete"
+              bucketIds().equals(change.documentKey._id, _id) && change.operationType !== "delete"
           ),
           switchMap(change => super.findOne({_id: change.documentKey._id}))
         )
