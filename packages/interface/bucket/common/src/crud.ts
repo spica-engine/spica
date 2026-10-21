@@ -1,4 +1,5 @@
-import {ObjectId, BaseCollection} from "@spica-server/database";
+import {BaseCollection} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 import {Bucket, BucketPreferences} from "@spica-server/interface-bucket";
 
 export interface CrudOptions<Paginate> {
@@ -8,7 +9,7 @@ export interface CrudOptions<Paginate> {
 
 export interface CrudParams {
   resourceFilter?: object;
-  documentId?: ObjectId;
+  documentId?: Id;
   filter?: object | string;
   language?: string;
   relationPaths: string[][];
@@ -23,7 +24,7 @@ export interface CrudParams {
 export interface CrudFactories<T> {
   collection: (schema: Bucket) => BaseCollection<T>;
   preference: () => Promise<BucketPreferences>;
-  schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
+  schema: (id: string | Id) => Promise<Bucket> | Bucket;
 }
 
 export interface CrudPagination<T> {

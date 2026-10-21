@@ -19,6 +19,9 @@
       "path": "../../../interface/passport/guard"
     },
     {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../../interface/bucket/graphql"
     },
     {
@@ -29,6 +32,9 @@
     },
     {
       "path": "../../../database"
+    },
+    {
+      "path": "../../../data"
     },
     {
       "path": "../../../core/schema"

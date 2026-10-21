@@ -129,7 +129,7 @@ export function provideLanguageFinalizer(
 
     for (const bucket of buckets) {
       if (bucketCacheService) {
-        await bucketCacheService.invalidate(bucket._id.toHexString());
+        await bucketCacheService.invalidate(bucket._id.toString());
       }
 
       const targets = {};

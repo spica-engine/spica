@@ -1,6 +1,7 @@
 import {Global, Module} from "@nestjs/common";
-import {BucketService, ServicesModule} from "@spica-server/bucket-services";
-import {DatabaseService, ObjectId} from "@spica-server/database";
+import {BucketService, ServicesModule, bucketIds} from "@spica-server/bucket-services";
+import {DatabaseService, Filter} from "@spica-server/database";
+import {Bucket} from "@spica-server/interface-bucket";
 import {SCHEMA, COLL_SLUG} from "@spica-server/interface-function";
 import {EventQueue} from "@spica-server/function-queue";
 import {ENQUEUER} from "@spica-server/interface-function-scheduler";
@@ -55,7 +56,7 @@ export const collectionSlugFactory = (bs: BucketService) => {
     if (!id) {
       return Promise.resolve(collName);
     }
-    return bs.findOne(new ObjectId(id)).then(b => (b ? b.title : collName));
+    return bs.findOne(bucketIds().parse(id) as Filter<Bucket>).then(b => (b ? b.title : collName));
   };
 };
 

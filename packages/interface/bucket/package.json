@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@spica-server/database": "workspace:*",
+    "@spica-server/interface-data": "workspace:*",
     "@spica-server/interface-preference": "workspace:*"
   },
   "devDependencies": {

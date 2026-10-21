@@ -7,6 +7,9 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../../interface/core"
     },
     {
@@ -29,6 +32,9 @@
     },
     {
       "path": "../../../database"
+    },
+    {
+      "path": "../../../data"
     },
     {
       "path": "../../../core/schema"
