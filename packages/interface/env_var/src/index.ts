@@ -1,6 +1,6 @@
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 export interface EnvVar {
-  _id?: ObjectId;
+  _id?: Id;
   key: string;
   value: string;
   updated_at?: Date;
