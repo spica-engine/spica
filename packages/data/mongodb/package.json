@@ -1,0 +1,21 @@
+{
+  "name": "@spica-server/data-mongodb",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.22",
+    "@spica-server/data": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface-data": "workspace:*"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.22"
+  }
+}
