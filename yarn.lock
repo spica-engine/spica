@@ -9397,7 +9397,6 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.22"
     "@spica-server/data": "workspace:*"
-    "@spica-server/data-mongodb": "workspace:*"
     "@spica-server/database": "workspace:*"
     mongodb: "npm:^6.12.0"
     mongodb-memory-server: "npm:^10.1.4"
