@@ -1,5 +1,7 @@
 import {Injectable, NotFoundException, Inject, BadRequestException, Logger} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {ids} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 import {
   UserVerification,
   UserOptions,
@@ -21,7 +23,7 @@ interface MagicLinkPayload {
 
 interface VerificationStrategyHandler {
   validatePreConditions(provider: string): Promise<void>;
-  generateCode(id: ObjectId, value: string, provider: string, purpose: string): string;
+  generateCode(id: Id, value: string, provider: string, purpose: string): string;
   buildSendPayload(rawCode: string, value: string, provider: string): Partial<VerificationMessage>;
 }
 
@@ -42,7 +44,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   async startVerificationProcess(
-    id: ObjectId,
+    id: Id,
     value: string,
     strategy: string,
     provider: string,
@@ -80,13 +82,13 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   async confirmVerificationProcess(
-    id: ObjectId,
+    id: Id,
     code: string,
     strategy: string,
     provider: string,
     purpose: string
   ): Promise<{
-    userId: ObjectId;
+    userId: Id;
     destination: string;
     verifiedField: string;
     strategy: string;
@@ -134,7 +136,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   async confirmMagicLinkVerification(token: string): Promise<{
-    userId: ObjectId;
+    userId: Id;
     destination: string;
     verifiedField: string;
     strategy: string;
@@ -142,7 +144,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }> {
     const payload = this.decryptMagicLinkToken(token);
     return this.confirmVerificationProcess(
-      new ObjectId(payload.userId),
+      ids().forCollection("user").parse(payload.userId),
       token,
       "MagicLink",
       payload.provider,
@@ -192,7 +194,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   private async upsertVerificationRecord(
-    id: ObjectId,
+    id: Id,
     value: string,
     strategy: string,
     provider: string,
@@ -249,7 +251,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     destination: string,
     provider: string,
     sendPayload: Partial<VerificationMessage>,
-    recordId: ObjectId
+    recordId: Id
   ) {
     try {
       const sendResult = await verificationProvider.send({
@@ -279,7 +281,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   private generateMagicLinkToken(
-    userId: ObjectId,
+    userId: Id,
     value: string,
     provider: string,
     purpose: string
@@ -288,7 +290,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     const ttl = this.userOptions.verificationCodeExpiresIn || this.TTL_INDEX_EXPIRES_IN;
 
     const payload: MagicLinkPayload = {
-      userId: userId.toHexString(),
+      userId: userId.toString(),
       value,
       provider,
       purpose,

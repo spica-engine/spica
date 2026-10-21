@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 import {VerificationService} from "../verification.service.js";
 import {Injectable} from "@nestjs/common";
 import {UserService} from "../user.service.js";
@@ -11,7 +11,7 @@ export class ProviderVerificationService {
   ) {}
 
   async startCredentialsVerification(
-    id: ObjectId,
+    id: Id,
     value: string,
     strategy: string,
     provider: string,
@@ -29,7 +29,7 @@ export class ProviderVerificationService {
   async validateCredentialsVerification(
     code: string,
     strategy: string,
-    id?: ObjectId,
+    id?: Id,
     provider?: string,
     purpose?: string
   ): Promise<{message: string; provider: string; destination: string}> {
@@ -53,7 +53,7 @@ export class ProviderVerificationService {
   }
 
   private async persistVerifiedProvider(
-    userId: ObjectId,
+    userId: Id,
     destination: string,
     verifiedField: string,
     provider: string

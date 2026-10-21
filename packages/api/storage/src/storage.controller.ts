@@ -63,7 +63,7 @@ export class StorageController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:index"))
   async find(
-    @ResourceFilter() resourceFilter: object,
+    @ResourceFilter({collection: "storage"}) resourceFilter: object,
     @Query("filter", JSONP) filter?: object,
     @Query("paginate", BOOLEAN) paginate?: boolean,
     @Query("limit", NUMBER) limit?: number,

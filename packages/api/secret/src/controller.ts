@@ -29,7 +29,7 @@ export class SecretController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:index"))
   async find(
-    @ResourceFilter() resourceFilter: object,
+    @ResourceFilter({collection: "secret"}) resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: object,
