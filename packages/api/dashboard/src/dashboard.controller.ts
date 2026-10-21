@@ -9,7 +9,8 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  HttpException
+  HttpException,
+  Inject
 } from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {DashboardService} from "./dashboard.service.js";
@@ -18,16 +19,19 @@ import {Schema} from "@spica-server/core-schema";
 import {ResourceFilter} from "@spica-server/passport-guard";
 import * as CRUD from "./crud.js";
 import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 
 @Controller("dashboard")
 export class DashboardController {
-  constructor(private dashboardService: DashboardService) {}
+  constructor(
+    private dashboardService: DashboardService,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:index"))
   findAll(@ResourceFilter({collection: "dashboard"}) resourceFilter: object) {
-    return CRUD.find(this.dashboardService, resourceFilter);
+    return CRUD.find(this.queries, resourceFilter);
   }
 
   @Get(":id")
