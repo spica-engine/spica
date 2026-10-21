@@ -28,7 +28,8 @@ function fakeIdType(collection: string): IdType {
 
 const fakeIdTypes: IdTypes = {
   forCollection: collection => fakeIdType(collection),
-  forBucket: async bucketId => fakeIdType(bucketId)
+  forBucket: async bucketId => fakeIdType(bucketId),
+  unscoped: () => fakeIdType("unscoped")
 };
 
 @Controller()
