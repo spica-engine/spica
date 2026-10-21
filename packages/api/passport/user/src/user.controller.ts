@@ -26,7 +26,7 @@ import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {Factor, FactorMeta} from "@spica-server/interface-passport-authfactor";
@@ -45,12 +45,11 @@ import {
 import {registerPolicyAttacher} from "./utility.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
-import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 import {VerificationService} from "./verification.service.js";
 import {ProviderVerificationService} from "./services/provider.verification.service.js";
 import {PasswordlessLoginService} from "./services/passwordless-login.service.js";
 import {PasswordResetService} from "./services/password-reset.service.js";
-import {UserPipelineBuilder} from "./pipeline.builder.js";
+import {replaceProviderFilter} from "./filter.js";
 import {RateLimitGuard} from "./rate-limit.guard.js";
 
 @Controller("passport/user")
@@ -81,6 +80,7 @@ export class UserController {
     private passwordResetService: PasswordResetService,
     @Inject(USER_OPTIONS) private options: UserOptions,
     private authFactor: AuthFactor,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
@@ -116,6 +116,9 @@ export class UserController {
       throw new BadRequestException(e.message);
     });
   }
+
+  private providerFilterReplacer = async (filter: object) =>
+    replaceProviderFilter(filter, value => this.userService.hashProviderValue(value));
 
   private hideSecretsExpression(): {[key: string]: 0} {
     const expression: any = {password: 0, lastPasswords: 0};
@@ -161,35 +164,34 @@ export class UserController {
   async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", JSONP) sort: object,
+    @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
     @ResourceFilter({collection: "user"}) resourceFilter: object
   ) {
-    const pipelineBuilder = await new UserPipelineBuilder(this.userService)
-      .filterResources(resourceFilter)
-      .filterByUserRequest(filter);
-
-    const seekingPipeline = new PipelineBuilder()
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .setVisibilityOfFields(this.hideSecretsExpression())
-      .result();
-
-    const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
-      this.userService.estimatedDocumentCount()
-    );
+    const spec: ReadSpec = {
+      resourceFilter,
+      filter,
+      filterReplacers: [this.providerFilterReplacer],
+      sort,
+      skip,
+      limit,
+      fields: this.hideSecretsExpression()
+    };
 
     if (paginate) {
-      const paginatedResult = await executePaginationPlan<User>(this.userService, plan);
+      const paginatedResult = await this.queries.paginate<User>(
+        "user",
+        spec,
+        "estimate-unless-filtered"
+      );
       return {
         meta: paginatedResult.meta,
         data: paginatedResult.data.map(user => this.userService.decryptProviderFields(user))
       };
     }
 
-    const users = await this.userService.aggregate<User>(plan.dataPipeline).toArray();
+    const users = await this.queries.find<User>("user", spec);
 
     return users.map(user => {
       return this.userService.decryptProviderFields(user);
@@ -239,15 +241,10 @@ export class UserController {
     ActionGuard("passport:user:show", undefined, registerPolicyAttacher("UserReadOnlyAccess"))
   )
   async findOne(@Param("id", ID("user")) id: Id) {
-    const pipelineBuilder = new UserPipelineBuilder(this.userService)
-      .findOneIfRequested(id)
-      .setVisibilityOfFields(this.hideSecretsExpression());
-
-    const pipeline = await pipelineBuilder.result();
-    let user = await this.userService
-      .aggregate<User>(pipeline)
-      .toArray()
-      .then(users => users[0]);
+    const user = await this.queries.findOne<User>("user", {
+      id,
+      fields: this.hideSecretsExpression()
+    });
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -580,7 +577,11 @@ export class UserController {
       body.provider
     );
     const cookiePath = "passport/user/session/refresh";
-    res.cookie("refreshToken", result.refreshToken.token, this.userService.getCookieOptions(cookiePath));
+    res.cookie(
+      "refreshToken",
+      result.refreshToken.token,
+      this.userService.getCookieOptions(cookiePath)
+    );
     return res.status(201).json(result.accessToken);
   }
   @Post("forgot-password/start")
