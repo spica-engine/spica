@@ -49,6 +49,26 @@ describe("MongoBucketQueryFacade", () => {
     }
   );
 
+  it("should allow aggregations to use disk like BaseCollection", async () => {
+    const options: unknown[] = [];
+    const db = {
+      collection: () => ({
+        aggregate: (_: object[], aggregateOptions: unknown) => {
+          options.push(aggregateOptions);
+          return {toArray: async () => [], next: async () => null};
+        },
+        estimatedDocumentCount: async () => 0
+      })
+    } as unknown as DatabaseService;
+    const facade = new MongoBucketQueryFacade(db, new PassthroughResultShaper());
+    const context = {resolveSchema: resolveSchema as any, preferences: async () => preferences};
+
+    await facade.find(schemas.plain, {}, context);
+    await facade.paginate(schemas.plain, {filter: {name: "x"}}, context);
+
+    expect(options).toEqual(Array(3).fill({allowDiskUse: true}));
+  });
+
   it("should return the first document for findOne", async () => {
     const document = {_id: "1"};
     const db = {
