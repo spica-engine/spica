@@ -32,7 +32,7 @@ import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface-passport";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {ClassCommander} from "@spica-server/replication";
@@ -87,6 +87,7 @@ export class PassportUserController {
     private strategyService: StrategyService,
     private authFactor: AuthFactor,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
@@ -358,9 +359,7 @@ export class PassportUserController {
 
   @Get("user/strategies")
   async strategies() {
-    return this.strategyService
-      .aggregate([{$match: {type: "oauth"}}, {$project: {options: 0}}])
-      .toArray();
+    return this.queries.find("strategy", {filter: {type: "oauth"}, fields: {options: 0}});
   }
 
   @Get("user/strategy/:id/url")

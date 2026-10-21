@@ -26,7 +26,7 @@ import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {Factor, FactorMeta} from "@spica-server/interface-passport-authfactor";
@@ -43,7 +43,6 @@ import {
 import {registerPolicyAttacher} from "./utility.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
-import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 
 @Controller("passport/identity")
 export class IdentityController {
@@ -71,6 +70,7 @@ export class IdentityController {
     @Inject(POLICY_PROVIDER)
     private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>,
     private authFactor: AuthFactor,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
@@ -170,33 +170,29 @@ export class IdentityController {
   async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", JSONP) sort: object,
+    @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
     @ResourceFilter({collection: "identity"}) resourceFilter: object
   ) {
-    const pipelineBuilder = await new PipelineBuilder()
-      .filterResources(resourceFilter)
-      .filterByUserRequest(filter);
-
-    const seekingPipeline = new PipelineBuilder()
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .setVisibilityOfFields(this.hideSecretsExpression())
-      .result();
-
-    const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
-      this.identityService.estimatedDocumentCount()
-    );
+    const spec = {
+      resourceFilter,
+      filter,
+      sort,
+      skip,
+      limit,
+      fields: this.hideSecretsExpression()
+    };
 
     if (paginate) {
-      return executePaginationPlan<Identity>(this.identityService, plan) as Promise<
-        PaginationResponse<Identity>
-      >;
+      return this.queries.paginate<Identity>(
+        "identity",
+        spec,
+        "estimate-unless-filtered"
+      ) as Promise<PaginationResponse<Identity>>;
     }
 
-    return this.identityService.aggregate<Identity[]>(plan.dataPipeline).toArray();
+    return this.queries.find<Identity>("identity", spec);
   }
   @Get("predefs")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
