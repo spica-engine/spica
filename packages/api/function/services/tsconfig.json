@@ -22,6 +22,9 @@
     },
     {
       "path": "../../env_var/services"
+    },
+    {
+      "path": "../../../data"
     }
   ],
   "compilerOptions": {

@@ -17,9 +17,14 @@ import {
 } from "@nestjs/common";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {DatabaseService, ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {
+  COLLECTION_NAMES,
+  COLLECTION_QUERY,
+  CollectionNames,
+  CollectionQueryFacade,
+  Id
+} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {Webhook} from "@spica-server/interface-function-webhook";
 import {WebhookInvoker} from "./invoker.js";
@@ -31,7 +36,7 @@ export class WebhookController {
   constructor(
     private webhookService: WebhookService,
     private invoker: WebhookInvoker,
-    private database: DatabaseService,
+    @Inject(COLLECTION_NAMES) private collectionNames: CollectionNames,
     @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Optional() @Inject(COLL_SLUG) private collSlug: CollectionSlug
   ) {}
@@ -39,12 +44,10 @@ export class WebhookController {
   @Get("collections")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   collections() {
-    return this.database.collections().then(collections => {
+    return this.collectionNames.list().then(names => {
       const definitions: {id: string; slug: string}[] = [];
 
-      const promises = collections.map(collection => {
-        const collName = collection.collectionName;
-
+      const promises = names.map(collName => {
         let promise = Promise.resolve(collName);
 
         if (this.collSlug) {
@@ -77,7 +80,7 @@ export class WebhookController {
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:show"))
   findOne(@Param("id", ID("webhook")) id: Id) {
-    return this.webhookService.findOne({_id: id});
+    return this.webhookService.findById(id);
   }
 
   @Post()
@@ -88,7 +91,7 @@ export class WebhookController {
     } catch (error) {
       throw new BadRequestException(error.toString());
     }
-    return this.webhookService.insertOne(hook);
+    return this.webhookService.insert(hook);
   }
 
   @Put(":id")
@@ -102,9 +105,7 @@ export class WebhookController {
     } catch (error) {
       throw new BadRequestException(error.toString());
     }
-    const res = await this.webhookService.findOneAndReplace({_id: id}, hook, {
-      returnDocument: ReturnDocument.AFTER
-    });
+    const res = await this.webhookService.replaceById(id, hook);
     if (!res) {
       throw new NotFoundException(`Webhook with ID ${id} not found`);
     }
@@ -115,7 +116,7 @@ export class WebhookController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", ID("webhook")) id: Id) {
-    const res = await this.webhookService.findOneAndDelete({_id: id});
+    const res = await this.webhookService.deleteById(id);
     if (!res) {
       throw new NotFoundException(`Webhook with ID ${id} not found`);
     }

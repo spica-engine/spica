@@ -11,15 +11,14 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {ARRAY, DATE, DEFAULT, NUMBER} from "@spica-server/core";
-import {ObjectId} from "@spica-server/database";
 import {COLLECTION_QUERY, CollectionQueryFacade, ReadSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
-import {LogService} from "./log.service.js";
+import {FUNCTION_LOG_REPOSITORY, LogRepository} from "@spica-server/interface-function-log";
 
 @Controller("function-logs")
 export class LogController {
   constructor(
-    private logService: LogService,
+    @Inject(FUNCTION_LOG_REPOSITORY) private logRepository: LogRepository,
     @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
   ) {}
 
@@ -72,21 +71,10 @@ export class LogController {
     @Query("end", DEFAULT(() => new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date,
     @Query("levels", ARRAY(Number)) levels: number[] = []
   ) {
-    const filter: any = {
-      _id: {
-        $gte: ObjectId.createFromTime(begin.getTime() / 1000),
-        $lt: ObjectId.createFromTime(end.getTime() / 1000)
-      },
-      function: fnId
-    };
-
-    if (levels.length) {
-      filter.level = {
-        $in: levels
-      };
-    }
-
-    const deletedCount = await this.logService.deleteMany(filter);
+    const deletedCount = await this.logRepository.deleteByFunction(fnId, {
+      createdBetween: {from: begin, to: end},
+      levels
+    });
     if (!deletedCount) {
       throw new NotFoundException(`Log for function with ID ${fnId} not found`);
     }
