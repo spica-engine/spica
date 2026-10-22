@@ -8,6 +8,7 @@ import {
 } from "@spica-server/data-mongodb";
 import {DatabaseModule, DatabaseService} from "@spica-server/database";
 import {
+  COLLECTION_NAMES,
   COLLECTION_QUERY,
   ID_TYPES,
   REPOSITORY_CLASSES,
@@ -35,7 +36,8 @@ describe("MongoDataAdapter", () => {
       COLLECTION_QUERY,
       BUCKET_QUERY,
       BUCKET_WRITE,
-      REPOSITORY_CLASSES
+      REPOSITORY_CLASSES,
+      COLLECTION_NAMES
     ]);
   });
 
