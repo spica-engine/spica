@@ -14,19 +14,14 @@ import {
   applyFieldLevelAcl,
   decryptDocumentFields
 } from "@spica-server/bucket-common";
-import {HistoryService} from "@spica-server/bucket-history";
+import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
 import {
   BUCKET_WRITE,
   BucketWriteContext,
   BucketWriteFacade
 } from "@spica-server/interface-bucket-common";
 import {ChangeEmitter} from "@spica-server/bucket-hooks";
-import {
-  BucketService,
-  bucketIds,
-  getBucketDataCollection,
-  BucketDataService
-} from "@spica-server/bucket-services";
+import {BucketService, bucketIds, getBucketDataCollection} from "@spica-server/bucket-services";
 import {applyPatch, deepCopy} from "@spica-server/core-patch";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {ids} from "@spica-server/data";
@@ -40,7 +35,9 @@ import {
   Bucket,
   BucketDocument,
   BUCKET_DATA_ENCRYPTION_SECRET,
-  BUCKET_DATA_HASH_SECRET
+  BUCKET_DATA_HASH_SECRET,
+  BUCKET_DATA_REPOSITORY,
+  BucketDataRepository
 } from "@spica-server/interface-bucket";
 import {getConnectionHandlers} from "@spica-server/realtime";
 import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
@@ -54,11 +51,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private realtime: RealtimeDatabaseService,
     private guardService: GuardService,
     private bucketService: BucketService,
-    private bucketDataService: BucketDataService,
+    @Inject(BUCKET_DATA_REPOSITORY) private bucketData: BucketDataRepository,
     private validator: Validator,
     @Inject(BUCKET_WRITE) private writes: BucketWriteFacade,
     @Optional() private activity: ActivityService,
-    @Optional() private history: HistoryService,
+    @Optional() @Inject(HISTORY_REPOSITORY) private history: HistoryRepository,
     @Optional() private hookEmitter: ChangeEmitter,
     @Optional() private bucketCacheService: BucketCacheService,
     @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
@@ -101,7 +98,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   private async getFindOptions(_client, req): Promise<any> {
     const schemaId = req.params.id;
 
-    const schema = await this.bucketService.findOne({_id: bucketIds().parse(schemaId)});
+    const schema = await this.bucketService.findById(bucketIds().parse(schemaId));
 
     if (!schema) {
       throw new Error(`Could not find the schema with id ${schemaId}.`);
@@ -313,9 +310,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     const documentId = documentIds.parse(document._id);
 
-    const previousDocument = await this.bucketDataService
-      .children(schema)
-      .findOne({_id: documentId});
+    const previousDocument = await this.bucketData.findById(schema, documentId);
 
     if (!previousDocument) {
       return this.send(
@@ -457,9 +452,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.history) {
-      this.history.deleteMany({
-        document_id: documentIds.parse(document._id)
-      });
+      this.history.deleteByDocument(documentIds.parse(document._id));
     }
 
     if (this.activity) {
@@ -472,7 +465,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       );
     }
 
-    clearRelations(this.bucketService, schema._id, document._id);
+    clearRelations(this.bucketService, this.bucketData, schema._id, document._id);
 
     const dependents = getDependents(schema, deletedDocument);
 
@@ -512,7 +505,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       throw error;
     }
 
-    const schema = await this.bucketService.findOne({_id: bucketIds().parse(schemaId)});
+    const schema = await this.bucketService.findById(bucketIds().parse(schemaId));
 
     if (!schema) {
       const error: any = new Error(`Could not find the schema with id ${schemaId}`);

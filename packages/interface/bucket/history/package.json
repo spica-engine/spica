@@ -10,6 +10,7 @@
     }
   },
   "dependencies": {
+    "@spica-server/interface-bucket": "workspace:*",
     "@spica-server/interface-core": "workspace:*",
     "@spica-server/interface-data": "workspace:*"
   }
