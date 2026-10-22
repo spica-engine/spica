@@ -18,6 +18,9 @@
       "path": "../../../interface/function/enqueuer"
     },
     {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../../interface/core"
     },
     {
@@ -25,9 +28,6 @@
     },
     {
       "path": "../queue"
-    },
-    {
-      "path": "../../../database"
     },
     {
       "path": "../../../core"

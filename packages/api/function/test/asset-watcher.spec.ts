@@ -304,22 +304,19 @@ describe("FunctionAssetWatcher — delete events", () => {
 // ---------------------------------------------------------------------------
 
 describe("FunctionAssetWatcher — lifecycle", () => {
-  it("should subscribe to assetService.watch on onModuleInit with correct pipeline and options", () => {
+  it("should watch the asset feed on onModuleInit with the relevant operations and options", () => {
     const watcher = buildWatcher();
     watcher.onModuleInit();
 
     expect(mockAssetService.watch).toHaveBeenCalledTimes(1);
-    const [pipeline, options] = mockAssetService.watch.mock.calls[0];
-    // Pipeline should filter on the relevant operationTypes
-    expect(pipeline).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          $match: expect.objectContaining({operationType: expect.anything()})
-        })
-      ])
-    );
+    const [collection, options] = mockAssetService.watch.mock.calls[0];
+    expect(collection).toEqual("function_assets");
+    expect(options).toMatchObject({
+      operations: expect.arrayContaining(["insert", "update", "replace", "delete"]),
+      document: "current"
+    });
     // Must request pre-change document so delete events carry fullDocumentBeforeChange
-    expect(options).toMatchObject({fullDocumentBeforeChange: "whenAvailable"});
+    expect(options).toMatchObject({beforeChange: "whenAvailable"});
 
     watcher.onModuleDestroy();
   });
