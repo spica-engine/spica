@@ -11,9 +11,6 @@
     },
     {
       "path": "../data"
-    },
-    {
-      "path": "../../database"
     }
   ]
 }

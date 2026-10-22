@@ -103,4 +103,51 @@ Later parts build on these. Keep them stable once merged, and record their final
 
 ## As built
 
-_Fill in after the last PR merges: package names, contract names, anything that differs from this plan._
+### Packages
+
+| Package                        | Path                     | Contents                                                                                       |
+| ------------------------------ | ------------------------ | ---------------------------------------------------------------------------------------------- |
+| `@spica-server/interface-data` | `packages/interface/data` | Types and tokens of every contract. No runtime code, no MongoDB imports.                     |
+| `@spica-server/data`           | `packages/data`          | `DataModule`, the `ids()` accessor, id pipes, `provideRepository`, `PassthroughResultShaper`, `InvalidIdError`, `DuplicateKeyError`. |
+| `@spica-server/data-mongodb`   | `packages/data/mongodb`  | The MongoDB adapter: id type, facades, bucket read/write code, read profiles, every repository, the change feed. |
+
+`packages/database/**` and `packages/interface/database` stay where they are and count as adapter zone. `apps/api/src/main.ts` is the only non-test file that imports `@spica-server/data-mongodb`.
+
+### Contracts
+
+| Contract             | As built                                                                                                                                                         |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Adapter registration | `DataModule.forRoot(adapter)` with `DataAdapter = {engine, module}`; `MongoDataAdapter.forRoot(uri, options)` and `MongoDataAdapter.forExistingConnection()`. `DATA_ENGINE` names the bound engine. |
+| Id type              | `Id`, `IdType` (`parse`, `isValid`, `generate`, `is`, `equals`, `serialize`), `IdTypes` (`forCollection(name)`, `forBucket(bucketId)` (async), `unscoped()`), token `ID_TYPES`. Static code uses `ids()`. |
+| Id param pipe        | `ID(collection)` for `@Param`, `idTransform(collection)` for composed pipes, `@DocumentId(documentParam, bucketParam)` for bucket documents. Invalid ids answer `400 Invalid id.` as before. |
+| Query facade         | `COLLECTION_QUERY` (`CollectionQueryFacade.find/findOne/paginate(collection, ReadSpec, CountStrategy)`) and `BUCKET_QUERY` (`BucketQueryFacade`, in `interface-bucket-common`). `ReadSpec`: `id, resourceFilter, filter, filterReplacers, where, createdBetween, relations, fields, sort, skip, limit`. `CountStrategy`: `"estimate-unless-filtered" \| "exact"`. Relations resolve through per-collection read profiles in the adapter. |
+| Write facade         | `BUCKET_WRITE` (`BucketWriteFacade.insert/replace/patch/delete`, in `interface-bucket-common`), with `returnDocument: "before" \| "after"`. |
+| Repository pattern   | One `XRepository` interface and `X_REPOSITORY` token per domain in `packages/interface/<domain>`, bound with `provideRepository(X_REPOSITORY)` through the adapter's `REPOSITORY_CLASSES`. Tokens: refresh token, apikey, strategy, policy, identity, user, verification, function, function log, function log sink, function asset, webhook, webhook log, bucket, bucket data, history, dashboard, asset, activity, config, env var, secret, preference, status, storage, replication job and command. Unique index violations surface as `DuplicateKeyError`. |
+| Change feed          | `CHANGE_FEED` (`ChangeFeed.watch(collection, {operations, document: "current", beforeChange: "whenAvailable"})`), emitting `ChangeEvent` in today's change stream shape; `_id._data` stays the replica dedupe key. |
+| Result shaper hook   | `RESULT_SHAPER` (`ResultShaper.shape(resource, result)`); MongoDB binds `PassthroughResultShaper`, which returns the same reference. |
+
+Also added: `COLLECTION_NAMES` (lists collections for the function trigger schema and webhooks) and `DATA_HEALTH` (the `/status/ready` ping).
+
+### Answers to the open questions
+
+- Packages: the three above.
+- Facades: one per area. `CollectionQueryFacade` for system collections, `BucketQueryFacade` and `BucketWriteFacade` for bucket data.
+- Import rule: `scripts/check-data-boundary.mjs`, run by `yarn check:data-boundary` and in CI after `nx sync:check`, with a fixture-based self-test. No ESLint was added.
+
+### Differs from the plan
+
+- `IdTypes.unscoped()` parses ids from client input before the resource is known: the core-schema `objectid` formats, the GraphQL `ObjectId` scalar and the bucket filter reviver.
+- Tests register the adapter from the root `jest.setup.js`, because `database-testing` importing the adapter would make a project reference cycle.
+- Specs that asserted MongoDB filter or update syntax on mocked services now assert the intent methods, and adapter tests pin the MongoDB shape. Specs whose subject moved into the adapter moved with it.
+- `RealtimeDatabaseService` keeps its own change streams and initial snapshot. Realtime gateways may import `RealtimeDatabaseService` and `RealtimeDatabaseModule` from `@spica-server/database-realtime`.
+- The import rule allowlists, with the part that removes each:
+  - `bucket/expression` builtins and converter: ACL rules render to MongoDB filters with ObjectIds (Part 7).
+  - `bucket/graphql/src/schema.ts`: GraphQL where arguments render to MongoDB filters (Part 8).
+  - `storage/src/body.ts`: `application/bson` is a request body format, not database access.
+- Behaviour edges:
+  - apikey and webhook lists with `sort={}` or `limit=0` used to answer 500 and now succeed.
+  - `Content-language` is no longer sent when a bucket read fails.
+  - Webhook log `succeed` filters match by plain equality instead of `$eq`.
+  - Asset `find` passes the client filter through unchanged; it does not gain the facade's id and date coercion.
+  - Closing a change feed subscription closes its change stream without waiting for the close to finish.
+

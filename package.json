@@ -165,6 +165,7 @@
   },
   "scripts": {
     "format:check": "yarn nx format:check",
+    "check:data-boundary": "node scripts/check-data-boundary.mjs && node --test scripts/check-data-boundary.test.mjs",
     "format": "yarn nx format:write",
     "build:*": "yarn nx run-many -t build",
     "build:api": "yarn nx build api",
