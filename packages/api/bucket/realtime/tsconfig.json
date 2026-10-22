@@ -25,6 +25,9 @@
       "path": "../../../interface/bucket/realtime"
     },
     {
+      "path": "../../../interface/bucket/history"
+    },
+    {
       "path": "../../../interface/bucket/common"
     },
     {
@@ -53,9 +56,6 @@
     },
     {
       "path": "../hooks"
-    },
-    {
-      "path": "../history"
     },
     {
       "path": "../expression"

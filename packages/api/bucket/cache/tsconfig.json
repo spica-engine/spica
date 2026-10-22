@@ -10,7 +10,10 @@
       "path": "../../../core/testing"
     },
     {
-      "path": "../../../database"
+      "path": "../../../interface/bucket"
+    },
+    {
+      "path": "../../../data"
     },
     {
       "path": "../../../database/testing"
