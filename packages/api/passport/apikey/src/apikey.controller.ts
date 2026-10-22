@@ -17,19 +17,17 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createApikeyActivity} from "./activity.resource.js";
-import {ApiKeyService} from "./apikey.service.js";
-import {ApiKey} from "@spica-server/interface-passport-apikey";
+import {ApiKey, APIKEY_REPOSITORY, ApiKeyRepository} from "@spica-server/interface-passport-apikey";
 import {nanoid} from "nanoid";
 
 @Controller("passport/apikey")
 export class ApiKeyController {
   constructor(
-    private apiKeyService: ApiKeyService,
+    @Inject(APIKEY_REPOSITORY) private apiKeys: ApiKeyRepository,
     @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
   ) {}
 
@@ -47,7 +45,7 @@ export class ApiKeyController {
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:show"))
   findOne(@Param("id", ID("apikey")) id: Id) {
-    return this.apiKeyService.findOne({_id: id}).then(r => {
+    return this.apiKeys.findById(id).then(r => {
       if (!r) {
         throw new NotFoundException();
       }
@@ -63,7 +61,7 @@ export class ApiKeyController {
       apiKey.key = nanoid(32);
     }
     apiKey.policies = [];
-    return this.apiKeyService.insertOne(apiKey);
+    return this.apiKeys.insert(apiKey);
   }
 
   @UseInterceptors(activity(createApikeyActivity))
@@ -75,12 +73,10 @@ export class ApiKeyController {
   ) {
     delete apiKey.key;
     // We can't perform a replace operation on this endpoint because the "key" key is not present on this endpoint.
-    return this.apiKeyService
-      .findOneAndUpdate({_id: id}, {$set: apiKey}, {returnDocument: ReturnDocument.AFTER})
-      .then(result => {
-        if (!result) throw new NotFoundException();
-        return result;
-      });
+    return this.apiKeys.updateById(id, apiKey).then(result => {
+      if (!result) throw new NotFoundException();
+      return result;
+    });
   }
 
   @UseInterceptors(activity(createApikeyActivity))
@@ -88,7 +84,7 @@ export class ApiKeyController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteOne(@Param("id", ID("apikey")) id: Id) {
-    return this.apiKeyService.deleteOne({_id: id}).then(r => {
+    return this.apiKeys.deleteById(id).then(r => {
       if (!r) {
         throw new NotFoundException();
       }
@@ -104,24 +100,12 @@ export class ApiKeyController {
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:policy:add"))
   async addPolicy(@Param("id", ID("apikey")) id: Id, @Param("policyId") policyId: string) {
-    return this.apiKeyService
-      .findOneAndUpdate(
-        {
-          _id: id
-        },
-        {
-          $addToSet: {policies: policyId}
-        },
-        {
-          returnDocument: ReturnDocument.AFTER
-        }
-      )
-      .then(res => {
-        if (!res) {
-          throw new NotFoundException();
-        }
-        return res;
-      });
+    return this.apiKeys.addPolicy(id, policyId).then(res => {
+      if (!res) {
+        throw new NotFoundException();
+      }
+      return res;
+    });
   }
 
   /**
@@ -134,23 +118,11 @@ export class ApiKeyController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async removePolicy(@Param("id", ID("apikey")) id: Id, @Param("policyId") policyId: string) {
-    return this.apiKeyService
-      .findOneAndUpdate(
-        {
-          _id: id
-        },
-        {
-          $pull: {policies: policyId}
-        },
-        {
-          returnDocument: ReturnDocument.AFTER
-        }
-      )
-      .then(res => {
-        if (!res) {
-          throw new NotFoundException();
-        }
-        return res;
-      });
+    return this.apiKeys.removePolicy(id, policyId).then(res => {
+      if (!res) {
+        throw new NotFoundException();
+      }
+      return res;
+    });
   }
 }

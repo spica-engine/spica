@@ -9360,6 +9360,13 @@ __metadata:
     "@spica-server/interface-bucket-common": "workspace:*"
     "@spica-server/interface-data": "workspace:*"
     "@spica-server/interface-database": "workspace:*"
+    "@spica-server/interface-passport": "workspace:*"
+    "@spica-server/interface-passport-apikey": "workspace:*"
+    "@spica-server/interface-passport-authfactor": "workspace:*"
+    "@spica-server/interface-passport-identity": "workspace:*"
+    "@spica-server/interface-passport-policy": "workspace:*"
+    "@spica-server/interface-passport-refresh_token": "workspace:*"
+    "@spica-server/interface-passport-user": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -9368,6 +9375,7 @@ __metadata:
   resolution: "@spica-server/data@workspace:packages/data"
   dependencies:
     "@nestjs/common": "npm:^10.4.22"
+    "@nestjs/core": "npm:^10.4.22"
     "@nestjs/testing": "npm:^10.4.22"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/interface-data": "workspace:*"
@@ -10369,6 +10377,7 @@ __metadata:
     "@spica-server/interface-passport-authfactor": "workspace:*"
     "@spica-server/interface-passport-identity": "workspace:*"
     "@spica-server/interface-passport-policy": "workspace:*"
+    "@spica-server/interface-passport-refresh_token": "workspace:*"
     "@spica-server/interface-replication": "workspace:*"
     "@spica-server/interface-representative": "workspace:*"
     "@spica-server/passport-authfactor": "workspace:*"
@@ -10452,6 +10461,7 @@ __metadata:
   resolution: "@spica-server/passport-refresh_token-services@workspace:packages/api/passport/refresh_token/services"
   dependencies:
     "@nestjs/common": "npm:^10.4.22"
+    "@spica-server/data": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/interface-passport-refresh_token": "workspace:*"
   languageName: unknown
@@ -10531,6 +10541,7 @@ __metadata:
     "@spica-server/interface-data": "workspace:*"
     "@spica-server/interface-passport-authfactor": "workspace:*"
     "@spica-server/interface-passport-policy": "workspace:*"
+    "@spica-server/interface-passport-refresh_token": "workspace:*"
     "@spica-server/interface-passport-user": "workspace:*"
     "@spica-server/interface-replication": "workspace:*"
     "@spica-server/mailer": "workspace:*"

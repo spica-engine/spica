@@ -1,4 +1,4 @@
-import {IdentityService} from "./identity.service.js";
+import {IdentityRepository} from "@spica-server/interface-passport-identity";
 
 export function registerPolicyAttacher(policy: string | string[]) {
   policy = Array.isArray(policy) ? policy : [policy];
@@ -14,8 +14,6 @@ function isOwnselfAccess(req) {
   return req.params.id == req.user._id;
 }
 
-export function providePolicyFinalizer(identityService: IdentityService) {
-  return (policyId: string) => {
-    return identityService.updateMany({policies: {$in: [policyId]}}, {$pull: {policies: policyId}});
-  };
+export function providePolicyFinalizer(identities: IdentityRepository) {
+  return (policyId: string) => identities.removePolicyFromAll(policyId);
 }
