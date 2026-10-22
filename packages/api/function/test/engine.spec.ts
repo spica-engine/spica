@@ -1,4 +1,5 @@
-import {COLLECTION_QUERY} from "@spica-server/interface-data";
+import {MongoFunctionRepository} from "@spica-server/data-mongodb";
+import {COLLECTION_NAMES, COLLECTION_QUERY} from "@spica-server/interface-data";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
@@ -32,6 +33,7 @@ describe("Engine", () => {
   let scheduler: Scheduler;
   let database: DatabaseService;
   let fs: FunctionService;
+  let functions: MongoFunctionRepository;
   let evs: EnvVarService;
   let ss: SecretService;
 
@@ -75,7 +77,8 @@ describe("Engine", () => {
     evs = new EnvVarService(database, new EnvVarChangeDispatcher());
     ss = new SecretService(database, "test-encryption-secret", new SecretChangeDispatcher());
 
-    fs = new FunctionService(database, evs, ss, {} as any);
+    functions = new MongoFunctionRepository(database, {} as any);
+    fs = new FunctionService(functions, evs, ss);
 
     const options = {root: "test_root", timeout: 1, outDir: ".build"} as any;
     executor = new PlanExecutor(
@@ -88,13 +91,19 @@ describe("Engine", () => {
     );
     engine = new FunctionEngine(
       fs,
-      database,
+      module.get(COLLECTION_NAMES),
       scheduler,
       undefined,
       options,
       undefined,
       undefined,
-      executor
+      executor,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      functions
     );
 
     await app.init();
@@ -114,7 +123,7 @@ describe("Engine", () => {
   });
 
   it("should unregister triggers on module destroy", async () => {
-    await fs.insertOne({
+    await functions.insertOne({
       _id: new ObjectId(hexString),
       env_vars: [],
       language: "js",
@@ -142,7 +151,7 @@ describe("Engine", () => {
 
     const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);
-    await fs.insertOne({
+    await functions.insertOne({
       _id: fnId,
       env_vars: [env._id],
       language: "js",
@@ -167,7 +176,7 @@ describe("Engine", () => {
 
     const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);
-    await fs.insertOne({
+    await functions.insertOne({
       _id: fnId,
       env_vars: [env._id],
       language: "js",
@@ -184,7 +193,7 @@ describe("Engine", () => {
     expect(unsubscribeSpy).not.toHaveBeenCalled();
     expect(envMap(contextSpy.mock.calls.at(-1)[1])).toEqual({});
 
-    const fn = await fs.findOne({_id: fnId});
+    const fn = await functions.findOne({_id: fnId});
     expect(fn.env_vars).toEqual([]);
   });
 
@@ -199,7 +208,7 @@ describe("Engine", () => {
       value: encryptedValue
     });
     const fnId = new ObjectId(hexString);
-    await fs.insertOne({
+    await functions.insertOne({
       _id: fnId,
       env_vars: [],
       secrets: [secret._id],
@@ -230,7 +239,7 @@ describe("Engine", () => {
       value: encryptedValue
     });
     const fnId = new ObjectId(hexString);
-    await fs.insertOne({
+    await functions.insertOne({
       _id: fnId,
       env_vars: [],
       secrets: [secret._id],
@@ -248,7 +257,7 @@ describe("Engine", () => {
     expect(unsubscribeSpy).not.toHaveBeenCalled();
     expect(envMap(contextSpy.mock.calls.at(-1)[1])).not.toHaveProperty("REMOVED_SECRET");
 
-    const fn = await fs.findOne({_id: fnId});
+    const fn = await functions.findOne({_id: fnId});
     expect(fn.secrets).toEqual([]);
   });
 
