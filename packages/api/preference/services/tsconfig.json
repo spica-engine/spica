@@ -13,12 +13,6 @@
       "path": "../../../interface/preference"
     },
     {
-      "path": "../../../interface/data"
-    },
-    {
-      "path": "../../../database"
-    },
-    {
       "path": "../../../core/patch"
     }
   ]

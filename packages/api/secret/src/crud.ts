@@ -1,4 +1,3 @@
-import {ReturnDocument} from "@spica-server/database";
 import {SecretService} from "@spica-server/secret-services";
 import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface-secret";
 import {encrypt} from "@spica-server/core-encryption";
@@ -55,7 +54,7 @@ export async function insert(ss: SecretService, body: DecryptedSecret): Promise<
     secret._id = secretIds().parse(body._id);
   }
 
-  const insertedSecret = await ss.insertOne(secret);
+  const insertedSecret = await ss.insert(secret);
   delete insertedSecret.value;
   return insertedSecret as HiddenSecret;
 }
@@ -67,11 +66,12 @@ export async function replace(
 ): Promise<HiddenSecret> {
   const encrypted = encrypt(body.value, ss.encryptionSecret);
 
-  const result = await ss.findOneAndReplace(
-    {_id: id},
-    {_id: id, key: body.key, value: encrypted, updated_at: new Date()},
-    {returnDocument: ReturnDocument.AFTER}
-  );
+  const result = await ss.replaceById(id, {
+    _id: id,
+    key: body.key,
+    value: encrypted,
+    updated_at: new Date()
+  });
 
   if (!result) {
     throw new NotFoundException(`Secret with ID ${id} not found`);
@@ -82,7 +82,7 @@ export async function replace(
 }
 
 export async function remove(ss: SecretService, id: string | Id) {
-  const res = await ss.findOneAndDelete({_id: secretIds().parse(id)});
+  const res = await ss.deleteById(secretIds().parse(id));
   if (!res) {
     throw new NotFoundException(`Secret with ID ${id} not found`);
   }

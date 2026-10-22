@@ -22,3 +22,19 @@ export interface ApiStatus {
 
 export const STATUS_OPTIONS = Symbol.for("STATUS_OPTIONS");
 export const ATTACH_STATUS_TRACKER = Symbol.for("ATTACH_STATUS_TRACKER");
+
+export interface ApiStatusSummary {
+  request: number;
+  uploaded: number;
+  downloaded: number;
+}
+
+export interface StatusRepository {
+  /**
+   * Counts one request with its payload sizes, adding it to the current minute's totals.
+   */
+  record(status: Omit<ApiStatus, "_id" | "count">): Promise<unknown>;
+  summarize(createdBetween?: {from: Date; to: Date}): Promise<ApiStatusSummary>;
+}
+
+export const STATUS_REPOSITORY = Symbol.for("STATUS_REPOSITORY");

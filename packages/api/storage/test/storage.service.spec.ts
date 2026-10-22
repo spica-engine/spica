@@ -4,13 +4,15 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {StorageService} from "@spica-server/storage";
 import {Default} from "@spica-server/storage";
 import {Strategy} from "@spica-server/storage";
-import {StorageObject, STORAGE_OPTIONS} from "@spica-server/interface-storage";
+import {StorageObject, STORAGE_OPTIONS, STORAGE_REPOSITORY} from "@spica-server/interface-storage";
+import {provideRepository} from "@spica-server/data";
 import {Readable} from "stream";
 
 describe("Storage Service", () => {
   let module: TestingModule;
 
   let storageService: StorageService;
+  let repository: any;
   let storageObject: StorageObject<Buffer>;
   let strategyInstance: Strategy;
   let storageObjectId: ObjectId = new ObjectId("56cb91bdc3464f14678934ca");
@@ -31,6 +33,7 @@ describe("Storage Service", () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.standalone()],
       providers: [
+        provideRepository(STORAGE_REPOSITORY),
         StorageService,
         {
           provide: Strategy,
@@ -43,11 +46,12 @@ describe("Storage Service", () => {
       ]
     }).compile();
     storageService = module.get(StorageService);
+    repository = module.get(STORAGE_REPOSITORY);
     strategyInstance = module.get(Strategy);
   });
 
   afterEach(() => {
-    storageService.deleteMany({});
+    repository.deleteMany({});
     module.close();
   });
 
@@ -148,7 +152,7 @@ describe("Storage Service", () => {
         "Error: Failed to write object name2 to storage. Reason: Upload failed for Item"
       );
 
-      const insertedObjects = await storageService.find();
+      const insertedObjects = await repository.find();
       expect(insertedObjects).toEqual([]);
 
       const objectPromises = storageObjects.map(storageObject =>
@@ -164,7 +168,7 @@ describe("Storage Service", () => {
       const newName = "renamed_object";
 
       jest
-        .spyOn((storageService as any)._coll, "updateMany")
+        .spyOn((repository as any)._coll, "updateMany")
         .mockRejectedValueOnce(new Error("MongoDB updateMany failed"));
 
       await expect(storageService.updateMeta(storageObjectId, newName)).rejects.toThrow(
@@ -396,7 +400,7 @@ describe("Storage Service", () => {
           content: {data: Buffer.from(""), type: "type2"}
         }
       ];
-      await storageService.insertMany(storageObjects);
+      await repository.insertMany(storageObjects);
     });
 
     it("should filter by name", async () => {
@@ -487,7 +491,7 @@ describe("Storage Service", () => {
         content: {data: Buffer.from(""), type: "type4"}
       }
     ];
-    await storageService.insertMany(storageObjects);
+    await repository.insertMany(storageObjects);
     const res = await storageService.getAll(
       resourceFilter,
       {name: {$regex: "^object"}},
@@ -511,7 +515,7 @@ describe("Storage Service", () => {
           type: ""
         }
       }));
-      await storageService.insertMany(storageObjects);
+      await repository.insertMany(storageObjects);
     });
 
     it("should sort storage objects descend by name", async () => {
@@ -654,6 +658,7 @@ describe("Storage Service", () => {
       module = await Test.createTestingModule({
         imports: [DatabaseTestingModule.standalone()],
         providers: [
+          provideRepository(STORAGE_REPOSITORY),
           StorageService,
           {
             provide: Strategy,
@@ -666,6 +671,7 @@ describe("Storage Service", () => {
         ]
       }).compile();
       storageService = module.get(StorageService);
+      repository = module.get(STORAGE_REPOSITORY);
 
       const [insertedObj] = await storageService.insert([
         {
@@ -706,7 +712,7 @@ describe("Storage Service", () => {
           }
         }
       ];
-      await storageService.insertMany(storageObjects);
+      await repository.insertMany(storageObjects);
     });
 
     describe("insert", () => {
@@ -738,7 +744,7 @@ describe("Storage Service", () => {
           }
         };
 
-        await storageService.insertMany([storageObject]).catch(e => {
+        await repository.insertMany([storageObject]).catch(e => {
           expect(e).toEqual(new Error("Total storage object size limit exceeded"));
         });
       });
@@ -763,7 +769,7 @@ describe("Storage Service", () => {
 
     describe("browse", () => {
       beforeEach(async () => {
-        await storageService.deleteMany({});
+        await repository.deleteMany({});
 
         jest.spyOn(strategyInstance, "write").mockResolvedValue(undefined);
         jest.spyOn(strategyInstance, "writeStream").mockResolvedValue(undefined);
@@ -847,7 +853,7 @@ describe("Storage Service", () => {
           }
         ];
 
-        await storageService.insertMany(testFiles);
+        await repository.insertMany(testFiles);
       });
 
       describe("browse filter", () => {

@@ -15,9 +15,10 @@ import {
   Res,
   UseGuards
 } from "@nestjs/common";
-import {AssetService} from "./service.js";
 import {
   Asset,
+  ASSET_REPOSITORY,
+  AssetRepository,
   Config,
   ExportMeta,
   Resource,
@@ -33,14 +34,13 @@ import {Schema} from "@spica-server/core-schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {AssetRepManager} from "./representative.js";
 import {createReadStream} from "fs";
-import {OptionalId} from "@spica-server/database";
 import {ID} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 
 @Controller("asset")
 export class AssetController {
   constructor(
-    private service: AssetService,
+    @Inject(ASSET_REPOSITORY) private assets: AssetRepository,
     @Inject(ASSET_REP_MANAGER) private repManager: AssetRepManager,
     @Inject(INSTALLATION_STRATEGIES) private installationStrategies: IInstallationStrategy[]
   ) {}
@@ -48,13 +48,13 @@ export class AssetController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:index"))
   find(@Query("filter", DEFAULT({}), JSONP) filter: object) {
-    return this.service.find(filter);
+    return this.assets.find(filter);
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:show", "asset"))
   async findOne(@Param("id", ID("asset")) id: Id) {
-    return this.service.findOne({_id: id}).then(r => {
+    return this.assets.findById(id).then(r => {
       if (!r) {
         throw new NotFoundException();
       }
@@ -66,7 +66,7 @@ export class AssetController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:download"))
   async insert(@Body(Schema.validate("http://spica.internal/asset")) asset: Asset) {
     asset.status = "downloaded";
-    return this.service.insertOne(asset);
+    return this.assets.insert(asset);
   }
 
   @Post("export")
@@ -129,7 +129,7 @@ export class AssetController {
     {configs}: {configs: Config[]},
     @Query("preview", BOOLEAN) preview: boolean
   ) {
-    let asset: OptionalId<Asset> = await this.service.findOne({_id: id});
+    let asset: Asset = await this.assets.findById(id);
     if (!asset) {
       throw new NotFoundException();
     }
@@ -138,9 +138,7 @@ export class AssetController {
 
     await this.validateResources(asset.resources);
 
-    const allVersions = await this.service.find({
-      url: asset.url
-    });
+    const allVersions = await this.assets.findVersions(asset.url);
 
     const strategy = this.installationStrategies.find(s => s.isMyTask(asset, allVersions));
 
@@ -166,7 +164,7 @@ export class AssetController {
 
     const assetsAfterInstall = strategy.afterInstall(resourcesAfterInstall);
 
-    await Promise.all(assetsAfterInstall.map(a => this.service.findOneAndReplace({_id: a._id}, a)));
+    await Promise.all(assetsAfterInstall.map(a => this.assets.replaceById(a._id, a)));
 
     return assetsAfterInstall.find(a => a._id == asset._id);
   }
@@ -175,7 +173,7 @@ export class AssetController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:delete", "asset"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param("id", ID("asset")) id: Id, @Query("type") type: "soft" | "hard" = "soft") {
-    const asset = await this.service.findOne({_id: id});
+    const asset = await this.assets.findById(id);
 
     if (!asset) {
       throw new NotFoundException(`Asset with ID ${id} not found`);
@@ -194,14 +192,11 @@ export class AssetController {
         delete r.failure_message;
         return r;
       });
-      return this.service.findOneAndUpdate(
-        {_id: id},
-        {$set: {status: "downloaded", resources: resources}}
-      );
+      return this.assets.updateById(id, {status: "downloaded", resources: resources});
     }
 
     if (type == "hard") {
-      return this.service.findOneAndDelete({_id: id});
+      return this.assets.deleteById(id);
     }
 
     throw new BadRequestException(`Unknown delete type '${type}'`);
