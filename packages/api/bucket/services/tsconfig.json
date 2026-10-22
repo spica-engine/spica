@@ -22,9 +22,6 @@
       "path": "../../../interface/bucket"
     },
     {
-      "path": "../../../database"
-    },
-    {
       "path": "../../../data"
     },
     {

@@ -17,6 +17,11 @@ import {WEBHOOK_LOG_REPOSITORY, WEBHOOK_REPOSITORY} from "@spica-server/interfac
 import {MongoFunctionRepository} from "./function/function.js";
 import {MongoFunctionLogRepository} from "./function/log.js";
 import {MongoWebhookLogRepository, MongoWebhookRepository} from "./function/webhook.js";
+import {BUCKET_DATA_REPOSITORY, BUCKET_REPOSITORY} from "@spica-server/interface-bucket";
+import {HISTORY_REPOSITORY} from "@spica-server/interface-bucket-history";
+import {MongoBucketRepository} from "./bucket/bucket.js";
+import {MongoBucketDataRepository} from "./bucket/bucket-data.js";
+import {MongoHistoryRepository} from "./bucket/history.js";
 
 export const repositoryClasses: RepositoryClasses = new Map<symbol, RepositoryClass>([
   [REFRESH_TOKEN_REPOSITORY, MongoRefreshTokenRepository],
@@ -29,5 +34,8 @@ export const repositoryClasses: RepositoryClasses = new Map<symbol, RepositoryCl
   [FUNCTION_REPOSITORY, MongoFunctionRepository],
   [FUNCTION_LOG_REPOSITORY, MongoFunctionLogRepository],
   [WEBHOOK_REPOSITORY, MongoWebhookRepository],
-  [WEBHOOK_LOG_REPOSITORY, MongoWebhookLogRepository]
+  [WEBHOOK_LOG_REPOSITORY, MongoWebhookLogRepository],
+  [BUCKET_REPOSITORY, MongoBucketRepository],
+  [BUCKET_DATA_REPOSITORY, MongoBucketDataRepository],
+  [HISTORY_REPOSITORY, MongoHistoryRepository]
 ]);
