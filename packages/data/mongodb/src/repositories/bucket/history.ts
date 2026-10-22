@@ -10,13 +10,13 @@ import {ids} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {diff, schemaDiff} from "@spica-server/core-differ";
 import {ChangePaths, ChangeKind} from "@spica-server/interface-core";
-import {History} from "@spica-server/interface-bucket-history";
+import {History, HistoryRepository, HistorySummary} from "@spica-server/interface-bucket-history";
 import {Bucket, BucketDocument} from "@spica-server/interface-bucket";
 
 const historyIds = () => ids().forCollection("history");
 
 @Injectable()
-export class HistoryService {
+export class MongoHistoryRepository implements HistoryRepository {
   readonly collection: Collection<History>;
   constructor(private db: DatabaseService) {
     this.collection = this.db.collection<History>("history");
@@ -50,7 +50,6 @@ export class HistoryService {
     }
   }
 
-  // We can not use BucketDataService as a direct dependency
   getDocument(bucketId: Id, documentId: Id) {
     return this.db.collection<BucketDocument>(`bucket_${bucketId}`).findOne({_id: documentId});
   }
@@ -134,5 +133,23 @@ export class HistoryService {
       ...history,
       _id: history._id == null ? historyIds().generate() : historyIds().parse(history._id)
     });
+  }
+
+  findSummaries(bucketId: Id, documentId: Id) {
+    return this.find({$and: [{bucket_id: bucketId}, {document_id: documentId}]}) as Promise<
+      HistorySummary[]
+    >;
+  }
+
+  findSince(bucketId: Id, documentId: Id, historyId: Id) {
+    return this.findBetweenNow(bucketId, documentId, historyId) as Promise<History[]>;
+  }
+
+  deleteByBucket(bucketId: Id) {
+    return this.deleteMany({bucket_id: bucketId}).then(result => result.deletedCount);
+  }
+
+  deleteByDocument(documentId: Id) {
+    return this.deleteMany({document_id: documentId}).then(result => result.deletedCount);
   }
 }

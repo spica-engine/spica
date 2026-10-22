@@ -13,3 +13,6 @@ export * from "./src/collection-names.js";
 export * from "./src/repositories/function/function.js";
 export * from "./src/repositories/function/log.js";
 export * from "./src/repositories/function/webhook.js";
+export * from "./src/repositories/bucket/bucket.js";
+export * from "./src/repositories/bucket/bucket-data.js";
+export * from "./src/repositories/bucket/history.js";
