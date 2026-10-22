@@ -24,8 +24,7 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ReturnDocument} from "@spica-server/database";
-import {ID} from "@spica-server/data";
+import {DuplicateKeyError, ID} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {AuthFactor} from "@spica-server/passport-authfactor";
@@ -36,7 +35,9 @@ import {UserService} from "./user.service.js";
 import {
   User,
   USER_OPTIONS,
+  USER_REPOSITORY,
   UserOptions,
+  UserRepository,
   PaginationResponse,
   POLICY_PROVIDER,
   UserSelfUpdate,
@@ -74,6 +75,7 @@ export class UserController {
 
   constructor(
     private userService: UserService,
+    @Inject(USER_REPOSITORY) private users: UserRepository,
     private verificationService: VerificationService,
     private providerVerificationService: ProviderVerificationService,
     private passwordlessLoginService: PasswordlessLoginService,
@@ -86,10 +88,8 @@ export class UserController {
     if (this.commander) {
       this.commander.register(this, [this.setUserFactor, this.deleteUserFactor], CommandType.SYNC);
     }
-    this.userService
-      .find({
-        authFactor: {$exists: true, $ne: null}
-      })
+    this.users
+      .findWithAuthFactor()
       .then(users => {
         for (const user of users) {
           if (!user.authFactor) {
@@ -142,21 +142,7 @@ export class UserController {
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: {[key: string]: 1 | -1}
   ) {
-    const cursor = this.userService.findOnProfiler(filter);
-
-    if (limit) {
-      cursor.limit(limit);
-    }
-
-    if (skip) {
-      cursor.skip(skip);
-    }
-
-    if (sort) {
-      cursor.sort(sort);
-    }
-
-    return cursor.toArray();
+    return this.users.profilerEntries({filter, limit, skip, sort});
   }
 
   @Get()
@@ -228,7 +214,7 @@ export class UserController {
     this.deleteUserFactor(id.toString());
     this.authFactor.unregister(id.toString());
 
-    const user = await this.userService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
+    const user = await this.users.removeAuthFactor(id);
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -329,8 +315,8 @@ export class UserController {
     this.authFactor.register(id.toString(), factor.getMeta());
 
     const meta = factor.getMeta();
-    return this.userService
-      .findOneAndUpdate({_id: id}, {$set: {authFactor: meta}})
+    return this.users
+      .setAuthFactor(id, meta)
       .then(() => {
         return {
           message: "Verification has been completed successfully."
@@ -356,12 +342,12 @@ export class UserController {
     user.policies = [];
     user.lastPasswords = [];
 
-    return this.userService
-      .insertOne(user)
+    return this.users
+      .insert(user)
       .then(insertedUser => this.afterUserUpsert(insertedUser))
       .catch(exception => {
         throw new BadRequestException(
-          exception.code === 11000 ? "User already exists." : exception.message
+          exception instanceof DuplicateKeyError ? "User already exists." : exception.message
         );
       });
   }
@@ -399,8 +385,8 @@ export class UserController {
       Object.assign(user, passwordUpdates);
     }
 
-    return this.userService
-      .findOneAndUpdate({_id: id}, {$set: user}, {returnDocument: ReturnDocument.AFTER})
+    return this.users
+      .updateById(id, user as Partial<User>)
       .then(updatedUser => {
         if (!updatedUser) {
           throw new NotFoundException(`User with ID ${id} not found`);
@@ -428,8 +414,8 @@ export class UserController {
       Object.assign(user, passwordUpdates);
     }
 
-    return this.userService
-      .findOneAndUpdate({_id: id}, {$set: user}, {returnDocument: ReturnDocument.AFTER})
+    return this.users
+      .updateById(id, user)
       .then(updatedUser => {
         if (!updatedUser) {
           throw new NotFoundException(`User with ID ${id} not found`);
@@ -438,7 +424,7 @@ export class UserController {
       })
       .catch(exception => {
         throw new BadRequestException(
-          exception.code === 11000 ? "User already exists." : exception.message
+          exception instanceof DuplicateKeyError ? "User already exists." : exception.message
         );
       });
   }
@@ -448,7 +434,7 @@ export class UserController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", ID("user")) id: Id) {
-    return this.userService.deleteOne({_id: id}).then(res => {
+    return this.users.deleteById(id).then(res => {
       if (!res) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
@@ -463,18 +449,7 @@ export class UserController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:policy:add"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async addPolicy(@Param("id", ID("user")) id: Id, @Param("policyId") policyId: string) {
-    const res = await this.userService.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $addToSet: {policies: policyId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER,
-        projection: {password: 0, lastPasswords: 0}
-      }
-    );
+    const res = await this.users.addPolicy(id, policyId);
     if (!res) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
@@ -486,18 +461,7 @@ export class UserController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async removePolicy(@Param("id", ID("user")) id: Id, @Param("policyId") policyId: string) {
-    const res = await this.userService.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $pull: {policies: policyId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER,
-        projection: {password: 0, lastPasswords: 0}
-      }
-    );
+    const res = await this.users.removePolicy(id, policyId);
     if (!res) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }

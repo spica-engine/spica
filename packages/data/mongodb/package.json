@@ -21,7 +21,14 @@
     "@spica-server/interface-bucket": "workspace:*",
     "@spica-server/interface-bucket-common": "workspace:*",
     "@spica-server/interface-data": "workspace:*",
-    "@spica-server/interface-database": "workspace:*"
+    "@spica-server/interface-database": "workspace:*",
+    "@spica-server/interface-passport": "workspace:*",
+    "@spica-server/interface-passport-apikey": "workspace:*",
+    "@spica-server/interface-passport-authfactor": "workspace:*",
+    "@spica-server/interface-passport-identity": "workspace:*",
+    "@spica-server/interface-passport-policy": "workspace:*",
+    "@spica-server/interface-passport-refresh_token": "workspace:*",
+    "@spica-server/interface-passport-user": "workspace:*"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.22",
