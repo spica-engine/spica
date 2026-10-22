@@ -22,3 +22,12 @@ export interface CollectionNames {
 }
 
 export const COLLECTION_NAMES = Symbol.for("SPICA_DATA_COLLECTION_NAMES");
+
+export interface DataHealth {
+  /**
+   * Rejects when the database can not serve requests.
+   */
+  ping(): Promise<void>;
+}
+
+export const DATA_HEALTH = Symbol.for("SPICA_DATA_HEALTH");

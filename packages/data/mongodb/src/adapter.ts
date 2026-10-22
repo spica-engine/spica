@@ -4,12 +4,14 @@ import {DatabaseModule} from "@spica-server/database";
 import {
   COLLECTION_NAMES,
   COLLECTION_QUERY,
+  DATA_HEALTH,
   ID_TYPES,
   REPOSITORY_CLASSES,
   RESULT_SHAPER
 } from "@spica-server/interface-data";
 import {repositoryClasses} from "./repositories/index.js";
 import {MongoCollectionNames} from "./collection-names.js";
+import {MongoDataHealth} from "./health.js";
 import {MongoIdTypes} from "./id.js";
 import {MongoCollectionQueryFacade} from "./query/collection-query.js";
 import {MongoBucketQueryFacade} from "./bucket/query.js";
@@ -28,7 +30,8 @@ const providers = [
   {provide: BUCKET_QUERY, useClass: MongoBucketQueryFacade},
   {provide: BUCKET_WRITE, useClass: MongoBucketWriteFacade},
   {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
-  {provide: COLLECTION_NAMES, useClass: MongoCollectionNames}
+  {provide: COLLECTION_NAMES, useClass: MongoCollectionNames},
+  {provide: DATA_HEALTH, useClass: MongoDataHealth}
 ];
 
 const exported = [
@@ -38,7 +41,8 @@ const exported = [
   BUCKET_QUERY,
   BUCKET_WRITE,
   REPOSITORY_CLASSES,
-  COLLECTION_NAMES
+  COLLECTION_NAMES,
+  DATA_HEALTH
 ];
 
 export class MongoDataAdapter {

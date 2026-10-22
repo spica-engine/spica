@@ -1,4 +1,8 @@
-import {MongoFunctionRepository} from "@spica-server/data-mongodb";
+import {
+  MongoEnvVarRepository,
+  MongoFunctionRepository,
+  MongoSecretRepository
+} from "@spica-server/data-mongodb";
 import {COLLECTION_NAMES, COLLECTION_QUERY} from "@spica-server/interface-data";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, ObjectId} from "@spica-server/database";
@@ -74,8 +78,12 @@ describe("Engine", () => {
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
 
-    evs = new EnvVarService(database, new EnvVarChangeDispatcher());
-    ss = new SecretService(database, "test-encryption-secret", new SecretChangeDispatcher());
+    evs = new EnvVarService(new MongoEnvVarRepository(database), new EnvVarChangeDispatcher());
+    ss = new SecretService(
+      new MongoSecretRepository(database),
+      "test-encryption-secret",
+      new SecretChangeDispatcher()
+    );
 
     functions = new MongoFunctionRepository(database, {} as any);
     fs = new FunctionService(functions, evs, ss);
@@ -149,7 +157,7 @@ describe("Engine", () => {
     // fresh replacements warm), not a hard outdateWorkers.
     const supersedeSpy = jest.spyOn(scheduler, "supersedeWorkers");
 
-    const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
+    const env = await evs.insert({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);
     await functions.insertOne({
       _id: fnId,
@@ -160,7 +168,7 @@ describe("Engine", () => {
       triggers: {test_handler: {active: true, options: {}, type: "http"}}
     });
 
-    await evs.findOneAndUpdate({_id: env._id}, {$set: {value: "YES"}});
+    await evs.updateById(env._id, {value: "YES"});
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -174,7 +182,7 @@ describe("Engine", () => {
   it("should clear the env relation and context when an env var is removed", async () => {
     const contextSpy = jest.spyOn(scheduler, "reconcileContext");
 
-    const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
+    const env = await evs.insert({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);
     await functions.insertOne({
       _id: fnId,
@@ -185,7 +193,7 @@ describe("Engine", () => {
       triggers: {test_handler: {active: true, options: {}, type: "http"}}
     });
 
-    await evs.findOneAndDelete({_id: env._id});
+    await evs.deleteById(env._id);
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -202,7 +210,7 @@ describe("Engine", () => {
 
     const encryptionSecret = "test-encryption-secret";
     const encryptedValue = encrypt("secret_value", encryptionSecret);
-    const secret = await ss.insertOne({
+    const secret = await ss.insert({
       _id: undefined,
       key: "DB_PASSWORD",
       value: encryptedValue
@@ -219,7 +227,7 @@ describe("Engine", () => {
     });
 
     const newEncryptedValue = encrypt("new_secret_value", encryptionSecret);
-    await ss.findOneAndUpdate({_id: secret._id}, {$set: {value: newEncryptedValue}});
+    await ss.updateById(secret._id, {value: newEncryptedValue});
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -233,7 +241,7 @@ describe("Engine", () => {
 
     const encryptionSecret = "test-encryption-secret";
     const encryptedValue = encrypt("secret_value", encryptionSecret);
-    const secret = await ss.insertOne({
+    const secret = await ss.insert({
       _id: undefined,
       key: "REMOVED_SECRET",
       value: encryptedValue
@@ -249,7 +257,7 @@ describe("Engine", () => {
       triggers: {test_handler: {active: true, options: {}, type: "http"}}
     });
 
-    await ss.findOneAndDelete({_id: secret._id});
+    await ss.deleteById(secret._id);
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 

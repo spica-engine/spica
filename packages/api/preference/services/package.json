@@ -12,8 +12,6 @@
   "dependencies": {
     "@nestjs/common": "^10.4.22",
     "@spica-server/core-patch": "workspace:*",
-    "@spica-server/database": "workspace:*",
-    "@spica-server/interface-data": "workspace:*",
     "@spica-server/interface-preference": "workspace:*",
     "rxjs": "^7.8.2"
   }
