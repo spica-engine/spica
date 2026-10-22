@@ -37,7 +37,7 @@ export function registerAssetHandlers(
     if (!envVarIds().isValid(_id)) {
       return Promise.reject(`${_id} is not a valid object id`);
     }
-    const envVar = await evs.findOne({_id: envVarIds().parse(_id)});
+    const envVar = await evs.findById(envVarIds().parse(_id));
 
     if (!envVar) {
       return Promise.reject(`Environment variable does not exist with _id ${_id}`);

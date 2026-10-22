@@ -12,7 +12,6 @@ import {COLLECTION_QUERY, CollectionQueryFacade} from "@spica-server/interface-d
 import {ConfigService} from "./config.service.js";
 import {ConfigSchemaRegistry} from "./config.schema.registry.js";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
-import {ReturnDocument} from "@spica-server/database";
 import {BaseConfig} from "@spica-server/interface-config";
 
 @Controller("config")
@@ -39,7 +38,7 @@ export class ConfigController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("config:show"))
   async getConfig(@Param("module") module: string) {
     this.configSchemaRegistry.validateModule(module);
-    const config = await this.configService.findOne({module});
+    const config = await this.configService.findByModule(module);
     if (!config) {
       throw new NotFoundException(`Configuration with module ${module} does not exist.`);
     }
@@ -54,14 +53,7 @@ export class ConfigController {
       options: data
     };
     await this.configSchemaRegistry.validate(configData);
-    const updatedConfig = await this.configService.findOneAndReplace(
-      {module: configData.module},
-      configData,
-      {
-        returnDocument: ReturnDocument.AFTER,
-        upsert: true
-      }
-    );
+    const updatedConfig = await this.configService.replace(configData.module, configData);
     if (!updatedConfig) {
       throw new NotFoundException(`Configuration with module ${module} does not exist.`);
     }

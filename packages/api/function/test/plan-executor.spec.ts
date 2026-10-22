@@ -1,4 +1,8 @@
-import {MongoFunctionRepository} from "@spica-server/data-mongodb";
+import {
+  MongoEnvVarRepository,
+  MongoFunctionRepository,
+  MongoSecretRepository
+} from "@spica-server/data-mongodb";
 import {COLLECTION_QUERY} from "@spica-server/interface-data";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, ObjectId} from "@spica-server/database";
@@ -68,8 +72,15 @@ describe("PlanExecutor", () => {
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
 
-    const evs = new EnvVarService(database, new EnvVarChangeDispatcher());
-    const ss = new SecretService(database, "test-encryption-secret", new SecretChangeDispatcher());
+    const evs = new EnvVarService(
+      new MongoEnvVarRepository(database),
+      new EnvVarChangeDispatcher()
+    );
+    const ss = new SecretService(
+      new MongoSecretRepository(database),
+      "test-encryption-secret",
+      new SecretChangeDispatcher()
+    );
     functions = new MongoFunctionRepository(database, {} as any);
     fs = new FunctionService(functions, evs, ss);
 

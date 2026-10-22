@@ -1,10 +1,8 @@
 import {Validator, Schema} from "@spica-server/core-schema";
-import {DashboardService} from "@spica-server/dashboard";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {Resource} from "@spica-server/interface-asset";
 import {registrar} from "@spica-server/asset";
-import {ReturnDocument} from "@spica-server/database";
-import {DashboardAsset} from "@spica-server/interface-dashboard";
+import {DashboardAsset, DashboardRepository} from "@spica-server/interface-dashboard";
 import {ids} from "@spica-server/data";
 
 const dashboardIds = () => ids().forCollection("dashboard");
@@ -12,7 +10,7 @@ const dashboardIds = () => ids().forCollection("dashboard");
 const _module = "dashboard";
 
 export function registerAssetHandlers(
-  ds: DashboardService,
+  dashboards: DashboardRepository,
   schemaValidator: Validator,
   assetRepManager: IRepresentativeManager
 ) {
@@ -28,20 +26,18 @@ export function registerAssetHandlers(
       dashboard._id =
         dashboard._id == null ? dashboardIds().generate() : dashboardIds().parse(dashboard._id);
 
-      return ds.insertOne(dashboard);
+      return dashboards.insert(dashboard);
     },
 
     update: (resource: Resource<DashboardAsset>) => {
       const dashboard = resource.contents.schema;
       const _id = dashboardIds().parse(dashboard._id);
       delete dashboard._id;
-      return ds.findOneAndReplace({_id}, dashboard, {
-        returnDocument: ReturnDocument.AFTER
-      });
+      return dashboards.replaceById(_id, dashboard);
     },
 
     delete: (resource: Resource<DashboardAsset>) =>
-      ds.deleteOne({_id: dashboardIds().parse(resource._id)})
+      dashboards.deleteById(dashboardIds().parse(resource._id))
   };
   registrar.operator(_module, operator);
 
@@ -49,7 +45,7 @@ export function registerAssetHandlers(
     if (!dashboardIds().isValid(_id)) {
       return Promise.reject(`${_id} is not a valid object id`);
     }
-    const dashboard = await ds.findOne({_id: dashboardIds().parse(_id)});
+    const dashboard = await dashboards.findById(dashboardIds().parse(_id));
 
     if (!dashboard) {
       return Promise.reject(`Dashboard does not exist with _id ${_id}`);
@@ -59,8 +55,8 @@ export function registerAssetHandlers(
   registrar.exporter(_module, exporter);
 
   const lister = () =>
-    ds.find().then(dashboards => {
-      return dashboards.map(d => {
+    dashboards.findAll().then(all => {
+      return all.map(d => {
         return {
           _id: d._id.toString(),
           title: d.name
