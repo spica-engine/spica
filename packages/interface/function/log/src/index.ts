@@ -29,3 +29,9 @@ export interface LogRepository {
 }
 
 export const FUNCTION_LOG_REPOSITORY = Symbol.for("FUNCTION_LOG_REPOSITORY");
+
+export interface LogSink {
+  insert(log: Omit<Log, "_id">): Promise<unknown>;
+}
+
+export const FUNCTION_LOG_SINK = Symbol.for("FUNCTION_LOG_SINK");

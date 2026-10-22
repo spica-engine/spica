@@ -3,6 +3,7 @@ import {Logger} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database-testing";
 import {DatabaseOutput} from "@spica-server/function-runtime-io";
+import {MongoFunctionLogSink} from "@spica-server/data-mongodb";
 import {generateLog, getLoggerConsole} from "@spica-server/function-runtime-logger";
 import {LogLevels} from "@spica-server/interface-function-runtime";
 
@@ -19,7 +20,7 @@ describe("IO Database", () => {
       imports: [DatabaseTestingModule.create()]
     }).compile();
     db = module.get(DatabaseService);
-    dbOutput = new DatabaseOutput(db);
+    dbOutput = new DatabaseOutput(new MongoFunctionLogSink(db));
   });
 
   afterEach(async () => {
@@ -46,7 +47,7 @@ describe("IO Database", () => {
       jest
         .spyOn(Logger.prototype, "error")
         .mockImplementation((message: string) => loggedErrors.push(message));
-      dbOutput = new DatabaseOutput(db);
+      dbOutput = new DatabaseOutput(new MongoFunctionLogSink(db));
     });
 
     afterEach(() => jest.restoreAllMocks());

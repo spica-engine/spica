@@ -1,23 +1,23 @@
-import {BaseCollection} from "@spica-server/database";
 import {PartialObserver, Observable, share} from "rxjs";
 import {MemoryOptions, IPubSub} from "@spica-server/interface-replication";
+import {ChangeEvent, ChangeFeed} from "@spica-server/interface-data";
 
-export class MongoMemory<T> implements IPubSub<T> {
-  private changeStream$: Observable<any>;
+export class FeedMemory<T> implements IPubSub<T> {
+  private changeStream$: Observable<ChangeEvent<T>>;
 
   constructor(
-    private service: BaseCollection<any>,
+    feed: ChangeFeed,
+    collection: string,
+    private store: {insert(document: T): Promise<unknown>},
     private options: MemoryOptions
   ) {
-    this.changeStream$ = this.service
-      .watch([{$match: {operationType: {$in: this.options.changeType}}}])
+    this.changeStream$ = feed
+      .watch<T>(collection, {operations: this.options.changeType})
       .pipe(share());
   }
 
   publish(document: T) {
-    this.service._coll
-      .insertOne({...document, created_at: new Date()})
-      .then(r => ({...document, _id: r.insertedId}));
+    this.store.insert({...document, created_at: new Date()});
   }
 
   subscribe(observer: PartialObserver<T>) {

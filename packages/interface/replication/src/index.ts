@@ -97,3 +97,10 @@ export interface JobRepository {
 }
 
 export const JOB_REPOSITORY = Symbol.for("JOB_REPOSITORY");
+
+export interface CommandRepository {
+  insert(command: CommandMessage): Promise<unknown>;
+}
+
+export const COMMAND_REPOSITORY = Symbol.for("COMMAND_REPOSITORY");
+export const COMMAND_COLLECTION = "commands";

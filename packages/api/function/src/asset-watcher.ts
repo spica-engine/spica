@@ -1,6 +1,7 @@
 import {Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {Subscription} from "rxjs";
-import {FunctionAssetService} from "@spica-server/function-services";
+import {CHANGE_FEED, ChangeFeed} from "@spica-server/interface-data";
+import {FUNCTION_ASSET_COLLECTION} from "@spica-server/interface-function-asset-storage";
 import {FUNCTION_REPOSITORY, FunctionRepository} from "@spica-server/interface-function";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
@@ -14,7 +15,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
   private subscription: Subscription;
 
   constructor(
-    private readonly assetService: FunctionAssetService,
+    @Inject(CHANGE_FEED) private readonly feed: ChangeFeed,
     @Inject(FUNCTION_REPOSITORY) private readonly functions: FunctionRepository,
     private readonly reconciler: FunctionAssetReconciler,
     private readonly tracker: SelfWriteTracker,
@@ -24,18 +25,11 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
-    const pipeline = [
-      {
-        $match: {
-          operationType: {$in: ["insert", "update", "replace", "delete"]}
-        }
-      }
-    ];
-
-    this.subscription = this.assetService
-      .watch(pipeline, {
-        fullDocument: "updateLookup",
-        fullDocumentBeforeChange: "whenAvailable"
+    this.subscription = this.feed
+      .watch(FUNCTION_ASSET_COLLECTION, {
+        operations: ["insert", "update", "replace", "delete"],
+        document: "current",
+        beforeChange: "whenAvailable"
       })
       .subscribe({
         next: async change => {
