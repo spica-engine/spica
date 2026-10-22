@@ -1,4 +1,3 @@
-import {ChangeStream, DatabaseService} from "@spica-server/database";
 import {DatabaseQueue, EventQueue} from "@spica-server/function-queue";
 import {Database, event} from "@spica-server/function-queue-proto";
 import {JobReducer} from "@spica-server/replication";
@@ -8,6 +7,8 @@ import {ClassCommander} from "@spica-server/replication";
 import uniqid from "uniqid";
 import {DatabaseOptions, Description} from "@spica-server/interface-function-enqueuer";
 import {Logger} from "@nestjs/common";
+import {ChangeFeed, ChangeOperation} from "@spica-server/interface-data";
+import {Subscription} from "rxjs";
 
 export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   type = event.Type.DATABASE;
@@ -20,12 +21,12 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     description: "Catch up the events happen in the database."
   };
 
-  private streams = new Set<ChangeStream>();
+  private streams = new Set<Subscription>();
 
   constructor(
     private queue: EventQueue,
     private databaseQueue: DatabaseQueue,
-    private db: DatabaseService,
+    private feed: ChangeFeed,
     private jobReducer?: JobReducer,
     private commander?: ClassCommander
   ) {
@@ -37,12 +38,12 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   }
 
   subscribe(target: event.Target, options: DatabaseOptions): void {
-    const stream = this.db.collection(options.collection).watch(
-      [{$match: {operationType: options.type.toLowerCase()}}],
-      {fullDocument: "updateLookup", maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS}
-    );
-
-    stream.on("change", change => this.onChangeHandler(change, target));
+    const stream = this.feed
+      .watch(options.collection, {
+        operations: [options.type.toLowerCase() as ChangeOperation],
+        document: "current"
+      })
+      .subscribe(change => this.onChangeHandler(change, target));
 
     Object.defineProperty(stream, "target", {writable: false, value: target});
 
@@ -57,7 +58,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
           stream["target"].cwd == target.cwd &&
           stream["target"].handler == target.handler)
       ) {
-        stream.close();
+        stream.unsubscribe();
         this.streams.delete(stream);
       }
     }

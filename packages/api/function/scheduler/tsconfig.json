@@ -18,13 +18,19 @@
       "path": "../../../interface/function/scheduler"
     },
     {
-      "path": "../../../interface/function/builder"
-    },
-    {
       "path": "../../../interface/function/runtime"
     },
     {
       "path": "../../../interface/function/pkgmanager"
+    },
+    {
+      "path": "../../../interface/function/log"
+    },
+    {
+      "path": "../../../interface/function/builder"
+    },
+    {
+      "path": "../../../interface/data"
     },
     {
       "path": "../runtime/node"
@@ -54,16 +60,16 @@
       "path": "../enqueuer"
     },
     {
-      "path": "../builder/legacy"
+      "path": "../builder/rollup"
     },
     {
-      "path": "../builder/rollup"
+      "path": "../builder/legacy"
     },
     {
       "path": "../builder"
     },
     {
-      "path": "../../../database"
+      "path": "../../../data"
     },
     {
       "path": "../../../database/testing"
