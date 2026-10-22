@@ -441,7 +441,7 @@ export namespace secret {
   }
 
   async function reload(fn: Function, ss: SecretService, engine: FunctionEngine, secretId: Id) {
-    const secret = await ss.findOne({_id: secretId}, {projection: {key: 1}});
+    const secret = await ss.findById(secretId);
     const secretKeys = secret ? [secret.key] : [];
     return engine.applyChangePlan(secretRefreshPlan(fn, secretKeys));
   }

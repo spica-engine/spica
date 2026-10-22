@@ -4,12 +4,14 @@ import {DATA_ENGINE, DataModule, ids, PassthroughResultShaper} from "@spica-serv
 import {
   MongoCollectionQueryFacade,
   MongoDataAdapter,
+  MongoDataHealth,
   MongoIdTypes
 } from "@spica-server/data-mongodb";
 import {DatabaseModule, DatabaseService} from "@spica-server/database";
 import {
   COLLECTION_NAMES,
   COLLECTION_QUERY,
+  DATA_HEALTH,
   ID_TYPES,
   REPOSITORY_CLASSES,
   RESULT_SHAPER
@@ -37,7 +39,8 @@ describe("MongoDataAdapter", () => {
       BUCKET_QUERY,
       BUCKET_WRITE,
       REPOSITORY_CLASSES,
-      COLLECTION_NAMES
+      COLLECTION_NAMES,
+      DATA_HEALTH
     ]);
   });
 
@@ -68,5 +71,15 @@ describe("MongoDataAdapter", () => {
 
     expect(module.get(COLLECTION_QUERY)).toBeInstanceOf(MongoCollectionQueryFacade);
     expect(module.get(RESULT_SHAPER)).toBeInstanceOf(PassthroughResultShaper);
+  });
+
+  it("should ping the database to check its health", async () => {
+    const db = {command: jest.fn().mockResolvedValue({ok: 1})};
+
+    await new MongoDataHealth(db as any).ping();
+    db.command.mockRejectedValueOnce(new Error("down"));
+
+    expect(db.command).toHaveBeenCalledWith({ping: 1});
+    await expect(new MongoDataHealth(db as any).ping()).rejects.toThrow("down");
   });
 });

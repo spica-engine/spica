@@ -7,6 +7,21 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../interface/storage"
+    },
+    {
+      "path": "../../interface/status"
+    },
+    {
+      "path": "../../interface/secret"
+    },
+    {
+      "path": "../../interface/replication"
+    },
+    {
+      "path": "../../interface/preference"
+    },
+    {
       "path": "../../interface/passport/user"
     },
     {
@@ -37,13 +52,22 @@
       "path": "../../interface/function"
     },
     {
+      "path": "../../interface/env_var"
+    },
+    {
       "path": "../../interface/database"
     },
     {
       "path": "../../interface/data"
     },
     {
+      "path": "../../interface/dashboard"
+    },
+    {
       "path": "../../interface/core"
+    },
+    {
+      "path": "../../interface/config"
     },
     {
       "path": "../../interface/bucket/history"
@@ -53,6 +77,12 @@
     },
     {
       "path": "../../interface/bucket"
+    },
+    {
+      "path": "../../interface/asset"
+    },
+    {
+      "path": "../../interface/activity"
     },
     {
       "path": "../../filter"
