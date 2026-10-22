@@ -1,6 +1,7 @@
-import {Injectable, Logger, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
+import {Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {Subscription} from "rxjs";
-import {FunctionService, FunctionAssetService} from "@spica-server/function-services";
+import {FunctionAssetService} from "@spica-server/function-services";
+import {FUNCTION_REPOSITORY, FunctionRepository} from "@spica-server/interface-function";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
@@ -14,7 +15,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private readonly assetService: FunctionAssetService,
-    private readonly functionService: FunctionService,
+    @Inject(FUNCTION_REPOSITORY) private readonly functions: FunctionRepository,
     private readonly reconciler: FunctionAssetReconciler,
     private readonly tracker: SelfWriteTracker,
     private readonly preparationService: FunctionPreparationService,
@@ -73,7 +74,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
               return;
             }
 
-            const fn = await this.functionService.findOne({_id: functionId});
+            const fn = await this.functions.findById(functionId);
             if (!fn) {
               this.logger.warn(
                 `[asset-watcher] Change stream: no function found for id ${functionId}`

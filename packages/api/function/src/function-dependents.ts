@@ -1,11 +1,12 @@
 import {Inject, Injectable, Logger} from "@nestjs/common";
 import path from "path";
 import {Scheduler} from "@spica-server/function-scheduler";
-import {FunctionService} from "@spica-server/function-services";
 import {
   Function,
   FunctionChangePlan,
   FUNCTION_OPTIONS,
+  FUNCTION_REPOSITORY,
+  FunctionRepository,
   Options
 } from "@spica-server/interface-function";
 import {refreshPlan} from "./change.js";
@@ -19,7 +20,7 @@ export class FunctionDependents {
   private readonly logger = new Logger(FunctionDependents.name);
 
   constructor(
-    private readonly fs: FunctionService,
+    @Inject(FUNCTION_REPOSITORY) private readonly functions: FunctionRepository,
     private readonly scheduler: Scheduler,
     @Inject(FUNCTION_OPTIONS) private readonly options: Options,
     private readonly preparationService: FunctionPreparationService
@@ -35,7 +36,7 @@ export class FunctionDependents {
   }
 
   async find(fn: Function): Promise<Function[]> {
-    const fns = await this.fs.find({}, {projection: {_id: 1, name: 1, language: 1}});
+    const fns = await this.functions.findSummaries();
     const fnsByName = new Map(fns.map(f => [f.name, f]));
 
     const imports = await mapWithConcurrency(fns, PACKAGE_READ_CONCURRENCY, f =>

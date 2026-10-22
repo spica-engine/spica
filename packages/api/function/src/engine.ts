@@ -1,6 +1,5 @@
 import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
-import {DatabaseService} from "@spica-server/database";
-import {Id} from "@spica-server/interface-data";
+import {COLLECTION_NAMES, CollectionNames, Id} from "@spica-server/interface-data";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
 import fs from "fs";
@@ -19,6 +18,8 @@ import {
   COLL_SLUG,
   Function,
   FunctionChangePlan,
+  FUNCTION_REPOSITORY,
+  FunctionRepository,
   SCHEMA,
   SchemaWithName
 } from "@spica-server/interface-function";
@@ -62,7 +63,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private fs: FunctionService,
-    private db: DatabaseService,
+    @Inject(COLLECTION_NAMES) private collectionNames: CollectionNames,
     private scheduler: Scheduler,
     @Optional() private commander: ClassCommander,
     @Inject(FUNCTION_OPTIONS) private options: Options,
@@ -73,13 +74,14 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     private assetService: FunctionAssetService,
     private tracker: SelfWriteTracker,
     private preparationService: FunctionPreparationService,
-    private dependents: FunctionDependents
+    private dependents: FunctionDependents,
+    @Inject(FUNCTION_REPOSITORY) private functions: FunctionRepository
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
     }
 
-    this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
+    this.schemas.set("database", () => getDatabaseSchema(this.collectionNames, collSlug));
 
     this.watchEnvSubs = this.fs.watchFunctionsForEnvChanges().subscribe({
       next: change => this.onEnvVarChange(change),
@@ -101,7 +103,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   private onEnvVarChange({fns, envVarId, operationType}: EnvVarFunctionsChange) {
     return this.forEachFunction(fns, async fn => {
       if (operationType == "delete") {
-        await CRUD.environment.removeReference(this.fs, fn._id, envVarId);
+        await CRUD.environment.removeReference(this.functions, fn._id, envVarId);
       }
       await this.refreshLocally(fn._id.toString());
     });
@@ -110,7 +112,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   private onSecretChange({fns, secretId, secretKeys, operationType}: SecretFunctionsChange) {
     return this.forEachFunction(fns, async fn => {
       if (operationType == "delete") {
-        await CRUD.secret.removeReference(this.fs, fn._id, secretId);
+        await CRUD.secret.removeReference(this.functions, fn._id, secretId);
       }
       await this.applyLocally(secretRefreshPlan(fn, secretKeys));
     });
@@ -130,7 +132,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     const startupSequence = async () => {
-      const fns = await this.fs.find();
+      const fns = await this.functions.findAll();
       await this.reconciler.backfill(fns);
       await this.reconciler.reconcileAll(fns);
       await this.registerTriggers();
@@ -151,7 +153,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private updateTriggers(register: boolean) {
-    return this.fs.find().then(fns => {
+    return this.functions.findAll().then(fns => {
       const plan = mergePlans(
         fns.map(fn => (register ? createPlan(null, fn) : createPlan(fn, null)))
       );
@@ -315,14 +317,14 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 }
 
 export function getDatabaseSchema(
-  db: DatabaseService,
+  collectionNames: CollectionNames,
   collSlug: CollectionSlug = id => Promise.resolve(id)
 ): Promise<JSONSchema7> {
-  return db.collections().then(async collections => {
+  return collectionNames.list().then(async names => {
     const collSlugMap: Map<string, string> = new Map();
 
-    for (const collection of collections) {
-      collSlugMap.set(collection.collectionName, await collSlug(collection.collectionName));
+    for (const name of names) {
+      collSlugMap.set(name, await collSlug(name));
     }
 
     const schema: JSONSchema7 = {
