@@ -1,4 +1,4 @@
-import {UserService} from "./user.service.js";
+import {UserRepository} from "@spica-server/interface-passport-user";
 
 export function registerPolicyAttacher(policy: string | string[]) {
   policy = Array.isArray(policy) ? policy : [policy];
@@ -14,8 +14,6 @@ function isOwnselfAccess(req) {
   return req.params.id == req.user._id;
 }
 
-export function providePolicyFinalizer(userService: UserService) {
-  return (policyId: string) => {
-    return userService.updateMany({policies: {$in: [policyId]}}, {$pull: {policies: policyId}});
-  };
+export function providePolicyFinalizer(users: UserRepository) {
+  return (policyId: string) => users.removePolicyFromAll(policyId);
 }

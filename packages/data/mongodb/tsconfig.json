@@ -7,6 +7,27 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../interface/passport/user"
+    },
+    {
+      "path": "../../interface/passport/refresh_token"
+    },
+    {
+      "path": "../../interface/passport/policy"
+    },
+    {
+      "path": "../../interface/passport/identity"
+    },
+    {
+      "path": "../../interface/passport/authfactor"
+    },
+    {
+      "path": "../../interface/passport/apikey"
+    },
+    {
+      "path": "../../interface/passport"
+    },
+    {
       "path": "../../interface/database"
     },
     {

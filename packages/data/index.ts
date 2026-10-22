@@ -4,3 +4,4 @@ export * from "./src/errors.js";
 export * from "./src/ids.js";
 export * from "./src/pipes.js";
 export * from "./src/shaper.js";
+export * from "./src/repository.js";

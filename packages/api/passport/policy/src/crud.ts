@@ -12,7 +12,7 @@ export async function find(ps: PolicyService, filter: object, limit?: number, sk
 const policyIds = () => ids().forCollection("policies");
 
 export function findOne(ps: PolicyService, id: Id) {
-  return ps.findOne(id);
+  return ps.findById(id);
 }
 
 export async function insert(ps: PolicyService, body: Policy) {
@@ -25,7 +25,7 @@ export async function insert(ps: PolicyService, body: Policy) {
   if (body._id) {
     body._id = policyIds().parse(body._id);
   }
-  return ps.insertOne(body);
+  return ps.insert(body);
 }
 
 export async function replace(ps: PolicyService, policy: Policy) {
@@ -38,7 +38,7 @@ export async function replace(ps: PolicyService, policy: Policy) {
 
   const _id = policyIds().parse(policy._id);
   delete policy._id;
-  const res = await ps.replaceOne({_id}, policy);
+  const res = await ps.replaceById(_id, policy);
 
   if (!res) {
     throw new NotFoundException(`Policy with ID ${_id} not found`);
@@ -60,7 +60,7 @@ export async function remove(
     await identityFinalizer(id.toString());
   }
 
-  const res = await ps.deleteOne({_id: id as any});
+  const res = await ps.deleteById(id);
 
   if (!res) {
     throw new NotFoundException(`Policy with ID ${id} not found`);

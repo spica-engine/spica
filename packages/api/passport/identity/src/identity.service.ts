@@ -1,33 +1,32 @@
 import {Injectable, Inject, HttpException, HttpStatus} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {
   Identity,
   IDENTITY_OPTIONS,
-  IdentityOptions
+  IDENTITY_REPOSITORY,
+  IdentityOptions,
+  IdentityRepository
 } from "@spica-server/interface-passport-identity";
 import {Validator, hash as hashToken} from "@spica-server/core-schema";
 import {Default} from "@spica-server/interface-core";
 import {hash, compare} from "./hash.js";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
-import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";
+import {
+  REFRESH_TOKEN_REPOSITORY,
+  RefreshTokenRepository
+} from "@spica-server/interface-passport-refresh_token";
 import {v4 as uuidv4} from "uuid";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 
 @Injectable()
-export class IdentityService extends BaseCollection<Identity>("identity") {
+export class IdentityService {
   constructor(
-    database: DatabaseService,
+    @Inject(IDENTITY_REPOSITORY) private identities: IdentityRepository,
     private validator: Validator,
     private jwt: JwtService,
-    private refreshTokenService: RefreshTokenService,
+    @Inject(REFRESH_TOKEN_REPOSITORY) private refreshTokens: RefreshTokenRepository,
     @Inject(IDENTITY_OPTIONS) private identityOptions: IdentityOptions,
     private authFactor: AuthFactor
-  ) {
-    super(database, {
-      entryLimit: identityOptions.entryLimit,
-      afterInit: () => this._coll.createIndex({identifier: 1}, {unique: true})
-    });
-  }
+  ) {}
 
   getPredefinedDefaults(): Default[] {
     return this.validator.defaults;
@@ -89,7 +88,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       last_used_at: undefined
     };
 
-    await this.refreshTokenService.insertOne(tokenSchema);
+    await this.refreshTokens.insert(tokenSchema);
 
     return {...tokenSchema, token};
   }
@@ -116,12 +115,9 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     await this.verify(refreshToken);
   }
 
-  private async verifyTokenCanBeUsed(
-    accessToken: string,
-    refreshToken: string
-  ) {
+  private async verifyTokenCanBeUsed(accessToken: string, refreshToken: string) {
     const hashedToken = this.hashRefreshToken(refreshToken);
-    const refreshTokenData = await this.refreshTokenService.findOne({token: hashedToken});
+    const refreshTokenData = await this.refreshTokens.findByToken(hashedToken);
     if (!refreshTokenData) {
       return Promise.reject("Refresh token not found");
     }
@@ -143,7 +139,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     const decodedToken = this.decode(token);
     const identifier = decodedToken ? decodedToken.identifier : undefined;
 
-    const identity = await this.findOne({identifier});
+    const identity = await this.identities.findByIdentifier(identifier);
 
     if (!identity) {
       return Promise.reject("Identifier does not exist");
@@ -162,10 +158,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
 
   updateRefreshTokenLastUsedAt(token: string) {
     const hashedToken = this.hashRefreshToken(token);
-    return this.refreshTokenService.updateOne(
-      {token: hashedToken},
-      {$set: {last_used_at: new Date()}}
-    );
+    return this.refreshTokens.markUsed(hashedToken, new Date());
   }
 
   private hashRefreshToken(token: string): string {
@@ -196,7 +189,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     if (!password) {
       return null;
     }
-    const identity = await this.findOne({identifier});
+    const identity = await this.identities.findByIdentifier(identifier);
 
     if (!identity) {
       return null;
@@ -227,10 +220,10 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       result = null;
     }
 
-    await this.findOneAndUpdate(
-      {identifier},
-      {$set: {failedAttempts: identity.failedAttempts, lastLogin: identity.lastLogin}}
-    );
+    await this.identities.updateLoginState(identifier, {
+      failedAttempts: identity.failedAttempts,
+      lastLogin: identity.lastLogin
+    });
 
     this.checkIdentityIsBlocked(identity);
 
@@ -240,11 +233,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   // @internal
   async default(identity: Identity): Promise<void> {
     const hashedPassword = await hash(identity.password);
-    await this.updateOne(
-      {identifier: identity.identifier},
-      {$setOnInsert: {...identity, password: hashedPassword}},
-      {upsert: true}
-    );
+    await this.identities.insertIfMissing({...identity, password: hashedPassword});
   }
 
   isIdentityBlocked(identity: Identity) {
