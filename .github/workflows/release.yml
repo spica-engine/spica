@@ -85,6 +85,7 @@ jobs:
         with:
           context: ${{ matrix.dir }}
           file: ${{ matrix.dir }}/Dockerfile
+          pull: true
           push: true
           tags: spicaengine/${{ matrix.project }}:${{ env.VERSION }}
           target: runner
