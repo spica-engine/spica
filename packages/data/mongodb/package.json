@@ -31,6 +31,7 @@
     "@spica-server/interface-database": "workspace:*",
     "@spica-server/interface-env_var": "workspace:*",
     "@spica-server/interface-function": "workspace:*",
+    "@spica-server/interface-function-asset-storage": "workspace:*",
     "@spica-server/interface-function-log": "workspace:*",
     "@spica-server/interface-function-webhook": "workspace:*",
     "@spica-server/interface-passport": "workspace:*",

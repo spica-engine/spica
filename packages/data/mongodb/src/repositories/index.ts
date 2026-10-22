@@ -12,10 +12,10 @@ import {MongoIdentityRepository} from "./passport/identity.js";
 import {USER_REPOSITORY, VERIFICATION_REPOSITORY} from "@spica-server/interface-passport-user";
 import {MongoUserRepository, MongoVerificationRepository} from "./passport/user.js";
 import {FUNCTION_REPOSITORY} from "@spica-server/interface-function";
-import {FUNCTION_LOG_REPOSITORY} from "@spica-server/interface-function-log";
+import {FUNCTION_LOG_REPOSITORY, FUNCTION_LOG_SINK} from "@spica-server/interface-function-log";
 import {WEBHOOK_LOG_REPOSITORY, WEBHOOK_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {MongoFunctionRepository} from "./function/function.js";
-import {MongoFunctionLogRepository} from "./function/log.js";
+import {MongoFunctionLogRepository, MongoFunctionLogSink} from "./function/log.js";
 import {MongoWebhookLogRepository, MongoWebhookRepository} from "./function/webhook.js";
 import {BUCKET_DATA_REPOSITORY, BUCKET_REPOSITORY} from "@spica-server/interface-bucket";
 import {HISTORY_REPOSITORY} from "@spica-server/interface-bucket-history";
@@ -40,6 +40,10 @@ import {STATUS_REPOSITORY} from "@spica-server/interface-status";
 import {MongoStatusRepository} from "./status/status.js";
 import {JOB_REPOSITORY} from "@spica-server/interface-replication";
 import {MongoJobRepository} from "./replication/job.js";
+import {COMMAND_REPOSITORY} from "@spica-server/interface-replication";
+import {MongoCommandRepository} from "./replication/command.js";
+import {FUNCTION_ASSET_REPOSITORY} from "@spica-server/interface-function-asset-storage";
+import {MongoFunctionAssetRepository} from "./function/asset.js";
 import {STORAGE_REPOSITORY} from "@spica-server/interface-storage";
 import {MongoStorageRepository} from "./storage/storage.js";
 
@@ -53,6 +57,7 @@ export const repositoryClasses: RepositoryClasses = new Map<symbol, RepositoryCl
   [VERIFICATION_REPOSITORY, MongoVerificationRepository],
   [FUNCTION_REPOSITORY, MongoFunctionRepository],
   [FUNCTION_LOG_REPOSITORY, MongoFunctionLogRepository],
+  [FUNCTION_LOG_SINK, MongoFunctionLogSink],
   [WEBHOOK_REPOSITORY, MongoWebhookRepository],
   [WEBHOOK_LOG_REPOSITORY, MongoWebhookLogRepository],
   [BUCKET_REPOSITORY, MongoBucketRepository],
@@ -67,5 +72,7 @@ export const repositoryClasses: RepositoryClasses = new Map<symbol, RepositoryCl
   [PREFERENCE_REPOSITORY, MongoPreferenceRepository],
   [STATUS_REPOSITORY, MongoStatusRepository],
   [JOB_REPOSITORY, MongoJobRepository],
+  [COMMAND_REPOSITORY, MongoCommandRepository],
+  [FUNCTION_ASSET_REPOSITORY, MongoFunctionAssetRepository],
   [STORAGE_REPOSITORY, MongoStorageRepository]
 ]);
