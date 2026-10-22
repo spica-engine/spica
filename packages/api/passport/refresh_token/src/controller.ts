@@ -17,8 +17,12 @@ import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {ID} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
-import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";
-import {RefreshToken, PaginationResponse} from "@spica-server/interface-passport-refresh_token";
+import {
+  RefreshToken,
+  PaginationResponse,
+  REFRESH_TOKEN_REPOSITORY,
+  RefreshTokenRepository
+} from "@spica-server/interface-passport-refresh_token";
 import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options.js";
 import {replaceRefreshTokenFilter} from "./filter.js";
 
@@ -27,7 +31,7 @@ export class RefreshTokenController {
   private readonly HIDDEN_FIELDS = {token: 0} as const;
 
   constructor(
-    private service: RefreshTokenService,
+    @Inject(REFRESH_TOKEN_REPOSITORY) private refreshTokens: RefreshTokenRepository,
     @Inject(REFRESH_TOKEN_OPTIONS) private options: RefreshTokenOptions,
     @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
   ) {}
@@ -88,11 +92,7 @@ export class RefreshTokenController {
       throw new BadRequestException("Only disabled field can be updated and it must be a boolean");
     }
 
-    const updatedToken = await this.service.findOneAndUpdate(
-      {_id: id},
-      {$set: {disabled}},
-      {returnDocument: "after", projection: this.HIDDEN_FIELDS}
-    );
+    const updatedToken = await this.refreshTokens.setDisabled(id, disabled);
 
     if (!updatedToken) {
       throw new NotFoundException();
@@ -105,7 +105,7 @@ export class RefreshTokenController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteOne(@Param("id", ID("refresh_token")) id: Id) {
-    return this.service.deleteOne({_id: id}).then(r => {
+    return this.refreshTokens.deleteById(id).then(r => {
       if (!r) {
         throw new NotFoundException();
       }
