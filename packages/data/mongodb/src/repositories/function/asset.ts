@@ -1,12 +1,18 @@
 import {Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService, WithId} from "@spica-server/database";
 import {Id} from "@spica-server/interface-data";
-import {FunctionAsset, FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
-
-const collectionName = "function_assets";
+import {
+  FUNCTION_ASSET_COLLECTION,
+  FunctionAsset,
+  FunctionAssetFilename,
+  FunctionAssetRepository
+} from "@spica-server/interface-function-asset-storage";
 
 @Injectable()
-export class FunctionAssetService extends BaseCollection<FunctionAsset>(collectionName) {
+export class MongoFunctionAssetRepository
+  extends BaseCollection<FunctionAsset>(FUNCTION_ASSET_COLLECTION)
+  implements FunctionAssetRepository
+{
   constructor(database: DatabaseService) {
     super(database, {
       collectionOptions: {changeStreamPreAndPostImages: {enabled: true}},

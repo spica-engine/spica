@@ -1,8 +1,10 @@
 import {Logger} from "@nestjs/common";
 import {Id} from "@spica-server/interface-data";
 import {Function} from "@spica-server/interface-function";
-import {FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
-import {FunctionAssetService} from "@spica-server/function-services";
+import {
+  FunctionAssetFilename,
+  FunctionAssetRepository
+} from "@spica-server/interface-function-asset-storage";
 import {hashBuffer, assetKey, FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 
@@ -34,7 +36,7 @@ export async function applyAssetChange(
   filename: FunctionAssetFilename,
   op: () => Promise<Buffer>,
   reconciler: FunctionAssetReconciler,
-  assetService: FunctionAssetService,
+  assetService: FunctionAssetRepository,
   tracker: SelfWriteTracker | null
 ): Promise<void> {
   // Step 1: fetch previous metadata for this file only.

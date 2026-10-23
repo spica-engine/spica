@@ -27,3 +27,6 @@ export * from "./src/repositories/status/status.js";
 export * from "./src/repositories/replication/job.js";
 export * from "./src/repositories/storage/storage.js";
 export * from "./src/health.js";
+export * from "./src/change-feed.js";
+export * from "./src/repositories/replication/command.js";
+export * from "./src/repositories/function/asset.js";
