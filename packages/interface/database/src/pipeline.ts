@@ -1,4 +1,5 @@
-import {ObjectId} from "mongodb";
+// `bson`, not `mongodb` — the rationale is in `realtime.ts`.
+import {ObjectId} from "bson";
 
 export interface PaginationPlan {
   dataPipeline: object[];

@@ -429,6 +429,9 @@
     },
     {
       "path": "./packages/devkit/sync"
+    },
+    {
+      "path": "./packages/database/driver"
     }
   ]
 }

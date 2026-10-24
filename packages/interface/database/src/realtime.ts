@@ -1,4 +1,9 @@
-import {Filter, ObjectId} from "mongodb";
+/**
+ * `bson`, not `mongodb`: the neutral contract must not be written in the Mongo driver's types. An id
+ * is a BSON value and `bson` is where it comes from — importing it through `mongodb` also risks holding a
+ * second module instance of the class, which is the trap `isId()` exists for.
+ */
+import {ObjectId} from "bson";
 
 interface Document {
   _id: ObjectId;
@@ -36,7 +41,12 @@ export interface DatabaseChange<T extends Document> {
 }
 
 export interface FindOptions<T> {
-  filter?: Filter<T>;
+  /**
+   * The realtime subscription filter. Spelled structurally rather than as the Mongo driver's `Filter<T>`:
+   * the realtime layer evaluates it with `mingo`, so it is a plain query document either way, and the
+   * contract owes nothing to that driver's type. The same shape as the driver's `DocumentFilter`.
+   */
+  filter?: Record<string, any> | Partial<T>;
   sort?: {
     [index: string]: -1 | 1;
   };

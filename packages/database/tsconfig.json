@@ -4,10 +4,13 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": ["src/**/*.ts", "mongo/**/*.ts", "index.ts"],
   "references": [
     {
       "path": "../interface/database"
+    },
+    {
+      "path": "driver"
     }
   ]
 }
