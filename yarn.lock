@@ -9347,11 +9347,7 @@ __metadata:
     "@nestjs/testing": "npm:^10.4.22"
     "@spica-server/data": "workspace:*"
     "@spica-server/database": "workspace:*"
-    "@spica-server/database-pipeline": "workspace:*"
-    "@spica-server/database-testing": "workspace:*"
-    "@spica-server/filter": "workspace:*"
     "@spica-server/interface-data": "workspace:*"
-    "@spica-server/interface-database": "workspace:*"
   languageName: unknown
   linkType: soft
 

@@ -1,22 +1,15 @@
 import {Module} from "@nestjs/common";
-import {DataAdapter, PassthroughResultShaper} from "@spica-server/data";
+import {DataAdapter} from "@spica-server/data";
 import {DatabaseModule} from "@spica-server/database";
-import {COLLECTION_QUERY, ID_TYPES, RESULT_SHAPER} from "@spica-server/interface-data";
+import {ID_TYPES} from "@spica-server/interface-data";
 import {MongoIdTypes} from "./id.js";
-import {MongoCollectionQueryFacade} from "./query/collection-query.js";
 
 export const MONGODB_ENGINE = "mongodb";
 
 @Module({})
 export class MongoDataAdapterModule {}
 
-const providers = [
-  {provide: ID_TYPES, useClass: MongoIdTypes},
-  {provide: RESULT_SHAPER, useClass: PassthroughResultShaper},
-  {provide: COLLECTION_QUERY, useClass: MongoCollectionQueryFacade}
-];
-
-const exported = [ID_TYPES, RESULT_SHAPER, COLLECTION_QUERY];
+const providers = [{provide: ID_TYPES, useClass: MongoIdTypes}];
 
 export class MongoDataAdapter {
   static forRoot(...connection: Parameters<typeof DatabaseModule.withConnection>): DataAdapter {
@@ -26,7 +19,7 @@ export class MongoDataAdapter {
         module: MongoDataAdapterModule,
         imports: [DatabaseModule.withConnection(...connection)],
         providers,
-        exports: exported
+        exports: [ID_TYPES]
       }
     };
   }
@@ -37,7 +30,7 @@ export class MongoDataAdapter {
       module: {
         module: MongoDataAdapterModule,
         providers,
-        exports: exported
+        exports: [ID_TYPES]
       }
     };
   }
