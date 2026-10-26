@@ -1,51 +1,35 @@
-import {Injectable} from "@nestjs/common";
-import {
-  BaseCollection,
-  DatabaseService,
-  Filter,
-  FindOneAndReplaceOptions,
-  ReturnDocument,
-  UpdateFilter,
-  UpdateOptions,
-  WithId
-} from "@spica-server/database";
-import {BaseConfig} from "@spica-server/interface-config";
+import {Inject, Injectable} from "@nestjs/common";
+import {BaseConfig, CONFIG_REPOSITORY, ConfigRepository} from "@spica-server/interface-config";
 import {Observable} from "rxjs";
 import {ConfigChangeDispatcher} from "./config.change-dispatcher.js";
 
 @Injectable()
-export class ConfigService extends BaseCollection<BaseConfig>("config") {
+export class ConfigService {
   constructor(
-    db: DatabaseService,
+    @Inject(CONFIG_REPOSITORY) private readonly configs: ConfigRepository,
     private readonly changeDispatcher: ConfigChangeDispatcher
-  ) {
-    super(db);
+  ) {}
+
+  findByModule(module: string): Promise<BaseConfig | null> {
+    return this.configs.findByModule(module);
   }
 
-  async updateOne(
-    filter: Filter<BaseConfig>,
-    update: UpdateFilter<BaseConfig> | BaseConfig,
-    options?: UpdateOptions
-  ): Promise<number> {
-    const result = await super.updateOne(filter, update, options);
-    await this.dispatchChange(filter);
-    return result;
-  }
-
-  async findOneAndReplace(
-    filter: Filter<BaseConfig>,
-    doc: BaseConfig,
-    options?: FindOneAndReplaceOptions
-  ): Promise<WithId<BaseConfig>> {
-    const result = await super.findOneAndReplace(filter, doc, options);
-    // When the caller asks for the post-write document (the controller does), dispatch it
-    // directly; otherwise re-read. Avoids an extra round-trip on the common update path.
-    if (result && options?.returnDocument === ReturnDocument.AFTER) {
+  async replace(module: string, config: BaseConfig): Promise<BaseConfig> {
+    const result = await this.configs.replaceByModule(module, config);
+    if (result) {
       this.changeDispatcher.dispatch({module: result.module, options: result.options});
-    } else {
-      await this.dispatchChange(filter);
     }
     return result;
+  }
+
+  async setOptions(module: string, options: object): Promise<void> {
+    await this.configs.setOptions(module, options);
+    await this.dispatchChange(module);
+  }
+
+  async setOption(module: string, name: string, value: unknown): Promise<void> {
+    await this.configs.setOption(module, name, value);
+    await this.dispatchChange(module);
   }
 
   protected watchModule(module: string): Observable<BaseConfig> {
@@ -56,8 +40,8 @@ export class ConfigService extends BaseCollection<BaseConfig>("config") {
   // write to the same module could be reflected instead, but config writes are rare admin
   // actions where that race is acceptable, and reconstructing the payload from update operators
   // would be far more fragile.
-  private async dispatchChange(filter: Filter<BaseConfig>): Promise<void> {
-    const config = await this.findOne(filter);
+  private async dispatchChange(module: string): Promise<void> {
+    const config = await this.configs.findByModule(module);
     if (config) {
       this.changeDispatcher.dispatch({module: config.module, options: config.options});
     }

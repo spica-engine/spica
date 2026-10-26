@@ -7,12 +7,6 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../services"
-    },
-    {
-      "path": "../common"
-    },
-    {
       "path": "../../../realtime"
     },
     {
@@ -31,6 +25,12 @@
       "path": "../../../interface/bucket/realtime"
     },
     {
+      "path": "../../../interface/bucket/history"
+    },
+    {
+      "path": "../../../interface/bucket/common"
+    },
+    {
       "path": "../../../interface/bucket"
     },
     {
@@ -43,19 +43,25 @@
       "path": "../../../database"
     },
     {
+      "path": "../../../data"
+    },
+    {
       "path": "../../../core/schema"
     },
     {
       "path": "../../../core/patch"
     },
     {
+      "path": "../services"
+    },
+    {
       "path": "../hooks"
     },
     {
-      "path": "../history"
+      "path": "../expression"
     },
     {
-      "path": "../expression"
+      "path": "../common"
     },
     {
       "path": "../cache"

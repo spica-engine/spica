@@ -1,52 +1,42 @@
-import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {SecretService} from "@spica-server/secret-services";
 import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface-secret";
 import {encrypt} from "@spica-server/core-encryption";
-import {SecretPipelineBuilder} from "./pipeline.builder.js";
-import {executePaginationPlan} from "@spica-server/database-pipeline";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
+import {ids} from "@spica-server/data";
+import {CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
+
+const collection = "secret";
+
+const secretIds = () => ids().forCollection(collection);
+
+const HIDDEN_VALUE = {value: 0} as const;
 
 export async function find(
-  ss: SecretService,
+  queries: CollectionQueryFacade,
   options?: {
     resourceFilter?: object;
     limit: number;
     skip: number;
-    sort?: object;
+    sort?: {[path: string]: 1 | -1};
     paginate: boolean;
     filter?: object;
   }
 ): Promise<HiddenSecret[] | PaginationResponse<HiddenSecret>> {
   const {resourceFilter, limit, skip, sort, paginate, filter} = options;
-  let pipelineBuilder = new SecretPipelineBuilder().filterResources(resourceFilter);
-
-  pipelineBuilder = await pipelineBuilder.filterByUserRequest(filter);
-
-  const seekingPipeline = new SecretPipelineBuilder()
-    .sort(sort)
-    .skip(skip)
-    .limit(limit)
-    .hideSecrets()
-    .result();
-
-  const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
-    ss.estimatedDocumentCount()
-  );
+  const spec: ReadSpec = {resourceFilter, filter, sort, skip, limit, fields: HIDDEN_VALUE};
 
   if (paginate) {
-    return executePaginationPlan<HiddenSecret>(ss, plan) as Promise<
+    return queries.paginate<HiddenSecret>(collection, spec, "estimate-unless-filtered") as Promise<
       PaginationResponse<HiddenSecret>
     >;
   }
 
-  return ss.aggregate<HiddenSecret>(plan.dataPipeline).toArray();
+  return queries.find<HiddenSecret>(collection, spec);
 }
 
-export async function findOne(ss: SecretService, id: ObjectId): Promise<HiddenSecret> {
-  const pipeline = new SecretPipelineBuilder().findOneIfRequested(id).hideSecrets().result();
-
-  const res = await ss.aggregate<HiddenSecret>(pipeline).next();
+export async function findOne(queries: CollectionQueryFacade, id: Id): Promise<HiddenSecret> {
+  const res = await queries.findOne<HiddenSecret>(collection, {id, fields: HIDDEN_VALUE});
   if (!res) {
     throw new NotFoundException(`Secret with ID ${id} not found`);
   }
@@ -61,26 +51,27 @@ export async function insert(ss: SecretService, body: DecryptedSecret): Promise<
   };
 
   if (body._id) {
-    secret._id = new ObjectId(body._id);
+    secret._id = secretIds().parse(body._id);
   }
 
-  const insertedSecret = await ss.insertOne(secret);
+  const insertedSecret = await ss.insert(secret);
   delete insertedSecret.value;
   return insertedSecret as HiddenSecret;
 }
 
 export async function replace(
   ss: SecretService,
-  id: ObjectId,
+  id: Id,
   body: DecryptedSecret
 ): Promise<HiddenSecret> {
   const encrypted = encrypt(body.value, ss.encryptionSecret);
 
-  const result = await ss.findOneAndReplace(
-    {_id: id},
-    {_id: id, key: body.key, value: encrypted, updated_at: new Date()},
-    {returnDocument: ReturnDocument.AFTER}
-  );
+  const result = await ss.replaceById(id, {
+    _id: id,
+    key: body.key,
+    value: encrypted,
+    updated_at: new Date()
+  });
 
   if (!result) {
     throw new NotFoundException(`Secret with ID ${id} not found`);
@@ -90,8 +81,8 @@ export async function replace(
   return result;
 }
 
-export async function remove(ss: SecretService, id: string | ObjectId) {
-  const res = await ss.findOneAndDelete({_id: new ObjectId(id)});
+export async function remove(ss: SecretService, id: string | Id) {
+  const res = await ss.deleteById(secretIds().parse(id));
   if (!res) {
     throw new NotFoundException(`Secret with ID ${id} not found`);
   }

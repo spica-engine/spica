@@ -1,7 +1,8 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
-import {JobReducer, JobService} from "@spica-server/replication";
-import {REPLICATION_SERVICE_OPTIONS} from "@spica-server/interface-replication";
+import {JobReducer} from "@spica-server/replication";
+import {provideRepository} from "@spica-server/data";
+import {JOB_REPOSITORY, REPLICATION_SERVICE_OPTIONS} from "@spica-server/interface-replication";
 import {replicationServiceOptions} from "@spica-server/replication/testing";
 
 describe("Commander", () => {
@@ -15,7 +16,7 @@ describe("Commander", () => {
       imports: [DatabaseTestingModule.standalone()],
       providers: [
         {provide: REPLICATION_SERVICE_OPTIONS, useValue: replicationServiceOptions},
-        JobService,
+        provideRepository(JOB_REPOSITORY),
         JobReducer
       ]
     }).compile();
@@ -41,7 +42,7 @@ describe("Commander", () => {
   it("should set created_at on the stored job so the TTL index can expire it", async () => {
     await reducer.do(meta, job);
 
-    const stored = await module.get(JobService).findOne({_id: meta._id});
+    const stored = await module.get(JOB_REPOSITORY).findOne({_id: meta._id});
     expect(stored.created_at).toBeInstanceOf(Date);
   });
 });

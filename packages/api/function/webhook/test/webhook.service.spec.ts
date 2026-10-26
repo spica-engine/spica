@@ -1,3 +1,5 @@
+import {provideRepository} from "@spica-server/data";
+import {WEBHOOK_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {WebhookService, WebhookChangeDispatcher} from "@spica-server/function-webhook";
@@ -6,15 +8,17 @@ import {bufferCount, bufferTime, take} from "rxjs/operators";
 
 describe("Webhook Service", () => {
   let service: WebhookService;
+  let webhooks: any;
   let module: TestingModule;
   let webhook: Webhook;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()],
-      providers: [WebhookService, WebhookChangeDispatcher]
+      providers: [provideRepository(WEBHOOK_REPOSITORY), WebhookService, WebhookChangeDispatcher]
     }).compile();
     service = module.get(WebhookService);
+    webhooks = module.get(WEBHOOK_REPOSITORY);
     jest.restoreAllMocks();
 
     webhook = {
@@ -36,7 +40,7 @@ describe("Webhook Service", () => {
 
   it("should report send target which is not active", done => {
     webhook.trigger.active = false;
-    service.insertOne(webhook).then(() =>
+    service.insert(webhook).then(() =>
       service
         .targets()
         .pipe(bufferTime(1000), take(1))
@@ -48,7 +52,7 @@ describe("Webhook Service", () => {
   });
 
   it("should report target which is active", done => {
-    service.insertOne(webhook).then(hook =>
+    service.insert(webhook).then(hook =>
       service
         .targets()
         .pipe(take(1))
@@ -86,11 +90,11 @@ describe("Webhook Service", () => {
         });
         done();
       });
-    service.insertOne(webhook).then(_hook => (hook = _hook));
+    service.insert(webhook).then(_hook => (hook = _hook));
   });
 
   it("should report removed hook", done => {
-    service.insertOne(webhook).then(hook => {
+    service.insert(webhook).then(hook => {
       service
         .targets()
         .pipe(bufferCount(2), take(1))
@@ -114,12 +118,12 @@ describe("Webhook Service", () => {
           done();
         });
 
-      service.findOneAndDelete({_id: hook._id});
+      service.deleteById(hook._id);
     });
   });
 
   it("should report hook as removed when deactivated", done => {
-    service.insertOne(webhook).then(hook => {
+    service.insert(webhook).then(hook => {
       service
         .targets()
         .pipe(bufferCount(2), take(1))
@@ -142,15 +146,12 @@ describe("Webhook Service", () => {
           ]);
           done();
         });
-      service.findOneAndReplace(
-        {_id: hook._id},
-        {...webhook, trigger: {...webhook.trigger, active: false}}
-      );
+      service.replaceById(hook._id, {...webhook, trigger: {...webhook.trigger, active: false}});
     });
   });
 
   it("should keep reporting after a reload fails", done => {
-    const coll = (service as any)._coll;
+    const coll = webhooks._coll;
     const findOne = coll.findOne.bind(coll);
     let alreadyFailed = false;
 
@@ -176,8 +177,8 @@ describe("Webhook Service", () => {
     const second = {...webhook, title: "wh2"};
 
     service
-      .insertOne(webhook)
-      .then(() => service.insertOne(second))
+      .insert(webhook)
+      .then(() => service.insert(second))
       .catch();
   });
 });

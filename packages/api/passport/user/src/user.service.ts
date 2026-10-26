@@ -6,18 +6,23 @@ import {
   HttpException,
   HttpStatus
 } from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 import {
   User,
   USER_OPTIONS,
+  USER_REPOSITORY,
   UserOptions,
+  UserRepository,
   DecryptedUser
 } from "@spica-server/interface-passport-user";
 import {Validator} from "@spica-server/core-schema";
 import {Default} from "@spica-server/interface-core";
 import {hash, compare} from "./hash.js";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
-import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";
+import {
+  REFRESH_TOKEN_REPOSITORY,
+  RefreshTokenRepository
+} from "@spica-server/interface-passport-refresh_token";
 import {v4 as uuidv4} from "uuid";
 import {
   encrypt,
@@ -31,31 +36,15 @@ import {AuthFactor} from "@spica-server/passport-authfactor";
 const ENCRYPTED_ATTRIBUTES = ["email"];
 
 @Injectable()
-export class UserService extends BaseCollection<User>("user") {
+export class UserService {
   constructor(
-    database: DatabaseService,
+    @Inject(USER_REPOSITORY) private users: UserRepository,
     private validator: Validator,
     private jwt: JwtService,
-    private refreshTokenService: RefreshTokenService,
+    @Inject(REFRESH_TOKEN_REPOSITORY) private refreshTokens: RefreshTokenRepository,
     @Inject(USER_OPTIONS) private userOptions: UserOptions,
     private authFactor: AuthFactor
-  ) {
-    super(database, {
-      entryLimit: userOptions.entryLimit,
-      afterInit: () => {
-        this._coll.createIndex({username: 1}, {unique: true});
-        this._coll.createIndex(
-          {"email.hash": 1},
-          {unique: true, partialFilterExpression: {"email.hash": {$exists: true}}}
-        );
-
-        this._coll.createIndex(
-          {"phone.hash": 1},
-          {unique: true, partialFilterExpression: {"phone.hash": {$exists: true}}}
-        );
-      }
-    });
-  }
+  ) {}
 
   getPredefinedDefaults(): Default[] {
     return this.validator.defaults;
@@ -118,7 +107,7 @@ export class UserService extends BaseCollection<User>("user") {
       last_used_at: undefined
     };
 
-    await this.refreshTokenService.insertOne(tokenSchema);
+    await this.refreshTokens.insert(tokenSchema);
 
     return {...tokenSchema, token};
   }
@@ -145,12 +134,9 @@ export class UserService extends BaseCollection<User>("user") {
     await this.verify(refreshToken);
   }
 
-  private async verifyTokenCanBeUsed(
-    accessToken: string,
-    refreshToken: string
-  ) {
+  private async verifyTokenCanBeUsed(accessToken: string, refreshToken: string) {
     const hashedToken = this.hashRefreshToken(refreshToken);
-    const refreshTokenData = await this.refreshTokenService.findOne({token: hashedToken});
+    const refreshTokenData = await this.refreshTokens.findByToken(hashedToken);
     if (!refreshTokenData) {
       return Promise.reject("Refresh token not found");
     }
@@ -172,7 +158,7 @@ export class UserService extends BaseCollection<User>("user") {
     const decodedToken = this.decode(token);
     const username = decodedToken ? decodedToken.username : undefined;
 
-    const user = await this.findOne({username});
+    const user = await this.users.findByUsername(username);
 
     if (!user) {
       return Promise.reject("username does not exist");
@@ -191,10 +177,7 @@ export class UserService extends BaseCollection<User>("user") {
 
   updateRefreshTokenLastUsedAt(token: string) {
     const hashedToken = this.hashRefreshToken(token);
-    return this.refreshTokenService.updateOne(
-      {token: hashedToken},
-      {$set: {last_used_at: new Date()}}
-    );
+    return this.refreshTokens.markUsed(hashedToken, new Date());
   }
 
   private hashRefreshToken(token: string): string {
@@ -225,7 +208,7 @@ export class UserService extends BaseCollection<User>("user") {
     if (!password) {
       return null;
     }
-    const user = await this.findOne({username});
+    const user = await this.users.findByUsername(username);
 
     if (!user) {
       return null;
@@ -257,10 +240,10 @@ export class UserService extends BaseCollection<User>("user") {
       result = null;
     }
 
-    await this.findOneAndUpdate(
-      {username},
-      {$set: {failedAttempts: user.failedAttempts, lastLogin: user.lastLogin}}
-    );
+    await this.users.updateLoginState(username, {
+      failedAttempts: user.failedAttempts,
+      lastLogin: user.lastLogin
+    });
 
     this.checkUserIsBlocked(user);
 
@@ -270,11 +253,7 @@ export class UserService extends BaseCollection<User>("user") {
   // @internal
   async default(user: User): Promise<void> {
     const hashedPassword = await hash(user.password);
-    await this.updateOne(
-      {username: user.username},
-      {$setOnInsert: {...user, password: hashedPassword}},
-      {upsert: true}
-    );
+    await this.users.insertIfMissing({...user, password: hashedPassword});
   }
 
   isUserBlocked(user: User) {
@@ -435,11 +414,11 @@ export class UserService extends BaseCollection<User>("user") {
   }
 
   async handlePasswordUpdate(
-    id: ObjectId,
+    id: Id,
     newPassword: string,
     skipCurrentPasswordCheck: boolean = false
   ): Promise<{password: string; deactivateJwtsBefore?: number; lastPasswords?: string[]}> {
-    const user = await this.findOne({_id: id});
+    const user = await this.users.findById(id);
 
     if (!user) {
       throw new BadRequestException("User not found");

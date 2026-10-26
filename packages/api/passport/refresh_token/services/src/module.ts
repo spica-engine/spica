@@ -1,8 +1,9 @@
 import {Module} from "@nestjs/common";
-import {RefreshTokenService} from "./service.js";
+import {provideRepository} from "@spica-server/data";
+import {REFRESH_TOKEN_REPOSITORY} from "@spica-server/interface-passport-refresh_token";
 
 @Module({
-  providers: [RefreshTokenService],
-  exports: [RefreshTokenService]
+  providers: [provideRepository(REFRESH_TOKEN_REPOSITORY)],
+  exports: [REFRESH_TOKEN_REPOSITORY]
 })
 export class RefreshTokenServicesModule {}

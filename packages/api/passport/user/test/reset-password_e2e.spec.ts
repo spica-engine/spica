@@ -1,3 +1,4 @@
+import {USER_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
 import {INestApplication} from "@nestjs/common";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
@@ -20,6 +21,7 @@ describe("Password Reset E2E with MailHog", () => {
   let req: Request;
   let userConfigService: UserConfigService;
   let userService: UserService;
+  let users: any;
   let mailerService: MailerService;
   let container: any;
   let smtpPort: number;
@@ -128,6 +130,8 @@ describe("Password Reset E2E with MailHog", () => {
     }).compile();
 
     userService = module.get(UserService);
+
+    users = module.get(USER_REPOSITORY);
     mailerService = module.get(MailerService);
     userConfigService = module.get(UserConfigService);
 
@@ -151,7 +155,7 @@ describe("Password Reset E2E with MailHog", () => {
     await app.init();
 
     const encryptedEmail = userService.encryptField(email);
-    await userService.insertOne({
+    await users.insertOne({
       username: username,
       password: oldPassword,
       policies: [],

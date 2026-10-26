@@ -11,66 +11,43 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  Inject
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
+import {ID} from "@spica-server/data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createApikeyActivity} from "./activity.resource.js";
-import {ApiKeyService} from "./apikey.service.js";
-import {ApiKey} from "@spica-server/interface-passport-apikey";
+import {ApiKey, APIKEY_REPOSITORY, ApiKeyRepository} from "@spica-server/interface-passport-apikey";
 import {nanoid} from "nanoid";
+
+const APIKEY_COLLECTION = "apikey";
 
 @Controller("passport/apikey")
 export class ApiKeyController {
-  constructor(private apiKeyService: ApiKeyService) {}
+  constructor(
+    @Inject(APIKEY_REPOSITORY) private apiKeys: ApiKeyRepository,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:index"))
   find(
-    @ResourceFilter() resourceFilter: object,
+    @ResourceFilter({collection: APIKEY_COLLECTION}) resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit?: number,
     @Query("skip", DEFAULT(0), NUMBER) skip?: number,
-    @Query("sort", JSONP) sort?: {[k: string]: number}
+    @Query("sort", JSONP) sort?: {[path: string]: 1 | -1}
   ) {
-    const dataPipeline: object[] = [];
-
-    if (sort) {
-      dataPipeline.push({$sort: sort});
-    }
-
-    // sub-pipeline in $facet stage cannot be empty
-    dataPipeline.push({$skip: skip});
-
-    if (limit) {
-      dataPipeline.push({$limit: limit});
-    }
-
-    const pipeline = [
-      resourceFilter,
-      {
-        $facet: {
-          meta: [{$count: "total"}],
-          data: dataPipeline
-        }
-      },
-      {
-        $set: {
-          meta: {
-            $ifNull: [{$arrayElemAt: ["$meta", 0]}, {$const: {total: 0}}]
-          }
-        }
-      }
-    ];
-    return this.apiKeyService.aggregate(pipeline).next();
+    return this.queries.paginate(APIKEY_COLLECTION, {resourceFilter, sort, skip, limit}, "exact");
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:show"))
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.apiKeyService.findOne({_id: id}).then(r => {
+  findOne(@Param("id", ID(APIKEY_COLLECTION)) id: Id) {
+    return this.apiKeys.findById(id).then(r => {
       if (!r) {
         throw new NotFoundException();
       }
@@ -86,32 +63,30 @@ export class ApiKeyController {
       apiKey.key = nanoid(32);
     }
     apiKey.policies = [];
-    return this.apiKeyService.insertOne(apiKey);
+    return this.apiKeys.insert(apiKey);
   }
 
   @UseInterceptors(activity(createApikeyActivity))
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:update"))
   replaceOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(APIKEY_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey
   ) {
     delete apiKey.key;
     // We can't perform a replace operation on this endpoint because the "key" key is not present on this endpoint.
-    return this.apiKeyService
-      .findOneAndUpdate({_id: id}, {$set: apiKey}, {returnDocument: ReturnDocument.AFTER})
-      .then(result => {
-        if (!result) throw new NotFoundException();
-        return result;
-      });
+    return this.apiKeys.updateById(id, apiKey).then(result => {
+      if (!result) throw new NotFoundException();
+      return result;
+    });
   }
 
   @UseInterceptors(activity(createApikeyActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.apiKeyService.deleteOne({_id: id}).then(r => {
+  deleteOne(@Param("id", ID(APIKEY_COLLECTION)) id: Id) {
+    return this.apiKeys.deleteById(id).then(r => {
       if (!r) {
         throw new NotFoundException();
       }
@@ -126,25 +101,13 @@ export class ApiKeyController {
   @UseInterceptors(activity(createApikeyActivity))
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:policy:add"))
-  async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    return this.apiKeyService
-      .findOneAndUpdate(
-        {
-          _id: id
-        },
-        {
-          $addToSet: {policies: policyId}
-        },
-        {
-          returnDocument: ReturnDocument.AFTER
-        }
-      )
-      .then(res => {
-        if (!res) {
-          throw new NotFoundException();
-        }
-        return res;
-      });
+  async addPolicy(@Param("id", ID(APIKEY_COLLECTION)) id: Id, @Param("policyId") policyId: string) {
+    return this.apiKeys.addPolicy(id, policyId).then(res => {
+      if (!res) {
+        throw new NotFoundException();
+      }
+      return res;
+    });
   }
 
   /**
@@ -156,24 +119,15 @@ export class ApiKeyController {
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    return this.apiKeyService
-      .findOneAndUpdate(
-        {
-          _id: id
-        },
-        {
-          $pull: {policies: policyId}
-        },
-        {
-          returnDocument: ReturnDocument.AFTER
-        }
-      )
-      .then(res => {
-        if (!res) {
-          throw new NotFoundException();
-        }
-        return res;
-      });
+  async removePolicy(
+    @Param("id", ID(APIKEY_COLLECTION)) id: Id,
+    @Param("policyId") policyId: string
+  ) {
+    return this.apiKeys.removePolicy(id, policyId).then(res => {
+      if (!res) {
+        throw new NotFoundException();
+      }
+      return res;
+    });
   }
 }

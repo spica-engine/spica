@@ -8,7 +8,7 @@ import {FunctionDependents} from "@spica-server/function/src/function-dependents
 describe("FunctionDependents", () => {
   let root: string;
   let fns: {_id: string; name: string; language: string}[];
-  let functionService: {find: jest.Mock};
+  let functionService: {findSummaries: jest.Mock};
   let builders: Map<string, {bundlesDependencies: boolean}>;
   let preparationService: {build: jest.Mock};
   let dependents: FunctionDependents;
@@ -40,7 +40,7 @@ describe("FunctionDependents", () => {
   beforeEach(async () => {
     root = await fs.promises.mkdtemp(path.join(os.tmpdir(), "fn-dependents-"));
     fns = [];
-    functionService = {find: jest.fn().mockImplementation(async () => fns)};
+    functionService = {findSummaries: jest.fn().mockImplementation(async () => fns)};
     builders = new Map([["typescript", {bundlesDependencies: false}]]);
     preparationService = {build: jest.fn().mockResolvedValue(undefined)};
     const scheduler = {
@@ -60,10 +60,7 @@ describe("FunctionDependents", () => {
   it("should only read names and languages from the database", async () => {
     await addFunction("x");
     await find("x");
-    expect(functionService.find).toHaveBeenCalledWith(
-      {},
-      {projection: {_id: 1, name: 1, language: 1}}
-    );
+    expect(functionService.findSummaries).toHaveBeenCalledTimes(1);
   });
 
   it("should find direct and indirect importers", async () => {

@@ -1,19 +1,18 @@
 import {registrar} from "@spica-server/asset";
 import {Resource} from "@spica-server/interface-asset";
-import {HistoryService} from "@spica-server/bucket-history";
-import {BucketDataService, BucketService} from "@spica-server/bucket-services";
+import {HistoryRepository} from "@spica-server/interface-bucket-history";
+import {BucketService, bucketIds} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
 import * as CRUD from "./crud.js";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
-import {ObjectId} from "@spica-server/database";
-import {BucketAsset} from "@spica-server/interface-bucket";
+import {BucketAsset, BucketDataRepository} from "@spica-server/interface-bucket";
 
 const _module = "bucket";
 
 export function registerAssetHandlers(
   bs: BucketService,
-  bds: BucketDataService,
-  history: HistoryService,
+  bucketData: BucketDataRepository,
+  history: HistoryRepository,
   schemaValidator: Validator,
   assetRepManager: IRepresentativeManager
 ) {
@@ -28,18 +27,18 @@ export function registerAssetHandlers(
     insert: (resource: Resource<BucketAsset>) => CRUD.insert(bs, resource.contents.schema),
 
     update: (resource: Resource<BucketAsset>) =>
-      CRUD.replace(bs, bds, history, resource.contents.schema),
+      CRUD.replace(bs, bucketData, history, resource.contents.schema),
 
-    delete: (resource: Resource<BucketAsset>) => CRUD.remove(bs, bds, history, resource._id)
+    delete: (resource: Resource<BucketAsset>) => CRUD.remove(bs, bucketData, history, resource._id)
   };
 
   registrar.operator(_module, operator);
 
   const exporter = async (_id: string) => {
-    if (!ObjectId.isValid(_id)) {
+    if (!bucketIds().isValid(_id)) {
       return Promise.reject(`${_id} is not a valid object id`);
     }
-    const bucket = await bs.findOne({_id: new ObjectId(_id)});
+    const bucket = await bs.findById(bucketIds().parse(_id));
 
     if (!bucket) {
       return Promise.reject(`Bucket does not exist with _id ${_id}`);

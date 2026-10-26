@@ -1,7 +1,7 @@
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 
 export interface Policy {
-  _id: string | ObjectId;
+  _id: string | Id;
   name: string;
   description?: string;
   statement: Statement[];

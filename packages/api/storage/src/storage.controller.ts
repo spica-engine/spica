@@ -23,7 +23,8 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {BOOLEAN, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ID, idTransform, ids} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 import {
   ActionGuard,
   AuthGuard,
@@ -42,6 +43,11 @@ import {
 import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interface-storage";
 import {StorageService} from "./storage.service.js";
 import {GuardService} from "@spica-server/passport-guard-services";
+
+const STORAGE_COLLECTION = "storage";
+
+const storageIds = () => ids().forCollection(STORAGE_COLLECTION);
+const STORAGE_ID_OR_NAME = OR(v => storageIds().isValid(v), idTransform("storage"));
 
 /**
  * @name storage
@@ -63,7 +69,7 @@ export class StorageController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:index"))
   async find(
-    @ResourceFilter() resourceFilter: object,
+    @ResourceFilter({collection: STORAGE_COLLECTION}) resourceFilter: object,
     @Query("filter", JSONP) filter?: object,
     @Query("paginate", BOOLEAN) paginate?: boolean,
     @Query("limit", NUMBER) limit?: number,
@@ -92,7 +98,7 @@ export class StorageController {
   @Patch(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update", "storage/:id"))
   async patch(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(STORAGE_COLLECTION)) id: Id,
     @Body(
       Schema.validate({
         type: "object",
@@ -133,7 +139,7 @@ export class StorageController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update"))
   async updateOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(STORAGE_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/storage/body/single"))
     body: MultipartFormData | StorageObject<Buffer>
   ) {
@@ -194,9 +200,7 @@ export class StorageController {
   @Delete(":idOrName")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:delete"))
-  async deleteOne(
-    @Param("idOrName", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string
-  ) {
+  async deleteOne(@Param("idOrName", STORAGE_ID_OR_NAME) idOrName: Id | string) {
     return this.storage.delete(idOrName);
   }
 
@@ -219,11 +223,8 @@ export class StorageController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   async deleteMany(
-    @Body(
-      DEFAULT([]),
-      ARRAY((value: string) => OR(v => ObjectId.isValid(v), OBJECT_ID).transform(value, undefined))
-    )
-    elements: (ObjectId | string)[],
+    @Body(DEFAULT([]), ARRAY((value: string) => STORAGE_ID_OR_NAME.transform(value, undefined)))
+    elements: (Id | string)[],
     @Req() req
   ) {
     const resolvedIds = await this.resolveIdsFromElements(elements);
@@ -263,11 +264,7 @@ export class StorageController {
    */
   @Get(":id(*)/view")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
-  async view(
-    @Req() req,
-    @Res() res,
-    @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string
-  ) {
+  async view(@Req() req, @Res() res, @Param("id", STORAGE_ID_OR_NAME) idOrName: Id | string) {
     const FORWARDED_HEADERS = [
       "range",
       "if-match",
@@ -298,9 +295,9 @@ export class StorageController {
    */
   @Get(":id(*)")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
-  async findOne(@Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string) {
+  async findOne(@Param("id", STORAGE_ID_OR_NAME) idOrName: Id | string) {
     let object;
-    if (idOrName instanceof ObjectId) {
+    if (storageIds().is(idOrName)) {
       object = await this.storage.get(idOrName);
     } else {
       object = await this.storage.getByName(idOrName);
@@ -336,27 +333,27 @@ export class StorageController {
     await Promise.all(promises);
   }
 
-  private async resolveIdsFromElements(elements: (ObjectId | string)[]): Promise<ObjectId[]> {
+  private async resolveIdsFromElements(elements: (Id | string)[]): Promise<Id[]> {
     const names: string[] = [];
     for (const element of elements) {
-      if (!(element instanceof ObjectId)) {
+      if (!storageIds().is(element)) {
         names.push(element as string);
       }
     }
 
     if (names.length === 0) {
-      return elements as ObjectId[];
+      return elements as Id[];
     }
 
-    const objects = await this.storage.find({name: {$in: names}});
-    const nameToIdMap = new Map<string, ObjectId>();
+    const objects = await this.storage.findByNames(names);
+    const nameToIdMap = new Map<string, Id>();
 
     for (const object of objects) {
-      nameToIdMap.set(object.name, object._id as ObjectId);
+      nameToIdMap.set(object.name, object._id as Id);
     }
 
     return elements.map(element => {
-      if (element instanceof ObjectId) {
+      if (storageIds().is(element)) {
         return element;
       }
       const id = nameToIdMap.get(element as string);

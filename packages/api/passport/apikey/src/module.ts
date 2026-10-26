@@ -1,9 +1,10 @@
 import {DynamicModule, Global, Inject, Module, Optional} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core-schema";
 import {ApiKeyController} from "./apikey.controller.js";
-import {ApiKeyService} from "./apikey.service.js";
 import {ApiKeyStrategy} from "./apikey.strategy.js";
 import {APIKEY_POLICY_FINALIZER} from "@spica-server/interface-passport-policy";
+import {APIKEY_REPOSITORY, ApiKeyRepository} from "@spica-server/interface-passport-apikey";
+import {provideRepository} from "@spica-server/data";
 import {providePolicyFinalizer} from "./utility.js";
 import ApiKeySchema from "./schemas/apikey.json" with {type: "json"};
 import {ASSET_REP_MANAGER} from "@spica-server/interface-asset";
@@ -15,11 +16,11 @@ import {ApikeyRealtimeModule} from "@spica-server/passport-apikey-realtime";
 @Module({})
 export class ApiKeyModule {
   constructor(
-    as: ApiKeyService,
+    @Inject(APIKEY_REPOSITORY) apiKeys: ApiKeyRepository,
     validator: Validator,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
-    registerAssetHandlers(as, validator, assetRepManager);
+    registerAssetHandlers(apiKeys, validator, assetRepManager);
   }
   static forRoot({realtime}): DynamicModule {
     const module: DynamicModule = {
@@ -32,12 +33,12 @@ export class ApiKeyModule {
       exports: [APIKEY_POLICY_FINALIZER],
       controllers: [ApiKeyController],
       providers: [
-        ApiKeyService,
+        provideRepository(APIKEY_REPOSITORY),
         ApiKeyStrategy,
         {
           provide: APIKEY_POLICY_FINALIZER,
           useFactory: providePolicyFinalizer,
-          inject: [ApiKeyService]
+          inject: [APIKEY_REPOSITORY]
         }
       ]
     };
