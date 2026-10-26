@@ -27,6 +27,32 @@ describe("PostgreSQL connection", () => {
     await expect(module.get(DATA_HEALTH).ping()).resolves.toBeUndefined();
   });
 
+  it("survives an idle client failure instead of crashing the process", () => {
+    const pool = module.get(PG_POOL);
+    expect(pool.listenerCount("error")).toBeGreaterThan(0);
+    expect(() => pool.emit("error", new Error("terminating connection"))).not.toThrow();
+  });
+
+  it("recreates a database that is requested by name again", async () => {
+    const databaseOf = async () => {
+      const named = await Test.createTestingModule({
+        imports: [DatabaseTestingModule.postgres("fixed-name")]
+      }).compile();
+      await named.init();
+      return named;
+    };
+
+    const first = await databaseOf();
+    await first.get(PG_POOL).query("CREATE TABLE leftover (id int)");
+    await first.close();
+
+    const second = await databaseOf();
+    const {rows} = await second.get(PG_POOL).query("SELECT to_regclass('leftover') AS leftover");
+    await second.close();
+
+    expect(rows[0].leftover).toBeNull();
+  });
+
   it("gives each module its own database", async () => {
     const other = await Test.createTestingModule({
       imports: [DatabaseTestingModule.postgres()]

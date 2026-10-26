@@ -117,11 +117,6 @@ const args = yargsInstance
       string: true,
       description: "Name of the database. Required for MongoDB, ignored for PostgreSQL."
     },
-    "database-ssl": {
-      boolean: true,
-      description: "Require TLS for the PostgreSQL connection.",
-      default: false
-    },
     "database-replica-set": {
       string: true,
       alias: ["replica-set"],
@@ -900,8 +895,7 @@ if (args["database-type"] == "postgresql") {
 const dataAdapter =
   args["database-type"] == "postgresql"
     ? PostgresDataAdapter.forRoot(args["database-uri"], {
-        poolSize: args["database-pool-size"],
-        ssl: args["database-ssl"]
+        poolSize: args["database-pool-size"]
       })
     : MongoDataAdapter.forRoot(args["database-uri"], {
         database: args["database-name"],

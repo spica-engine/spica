@@ -57,7 +57,7 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 
 | Component               | Responsibility                                                                                              |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Engine argument         | `--database-type` picks the engine. Mongo-only arguments are ignored on PostgreSQL. PostgreSQL counterparts, such as SSL mode, are added only where needed. |
+| Engine argument         | `--database-type` picks the engine. Mongo-only arguments are ignored on PostgreSQL. PostgreSQL counterparts are added only where needed. |
 | Connection module       | Reads the engine and opens either today's MongoDB connection or the PostgreSQL driver.                     |
 | PostgreSQL driver       | Keeps a small set of open connections and reuses them across requests, sized by `--database-pool-size`. Spica only configures the size. |
 | PostgreSQL credentials  | Come from environment variables, like the MongoDB ones.                                                     |
@@ -109,13 +109,13 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 
 | Contract                     | As built                                                                                                                                                                  |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--database-type`            | `mongodb` (default) or `postgresql`, a yargs option in `apps/api/src/main.ts`. `--database-name` is required only for MongoDB. `--database-ssl` is PostgreSQL only.      |
-| PostgreSQL connection        | `@spica-server/data-postgresql` (`packages/data/postgresql`). `PostgresDataAdapter.forRoot(uri, {poolSize, ssl})` takes a string or a lazy `() => Promise<string>`. It provides a global `pg.Pool` under the `PG_POOL` token (`@spica-server/interface-data`), sized by `--database-pool-size`, and ends it on shutdown. |
+| `--database-type`            | `mongodb` (default) or `postgresql`, a yargs option in `apps/api/src/main.ts`. `--database-name` is required only for MongoDB.      |
+| PostgreSQL connection        | `@spica-server/data-postgresql` (`packages/data/postgresql`). `PostgresDataAdapter.forRoot(uri, {poolSize})` takes a string or a lazy `() => Promise<string>`. It provides a global `pg.Pool` under the `PG_POOL` token (`@spica-server/interface-data`), sized by `--database-pool-size`. Idle client errors are logged, not thrown, and the pool ends on shutdown. |
 | Credentials                  | `POSTGRES_USERNAME` and `POSTGRES_PASSWORD` are injected into the uri, like the MongoDB ones.                                                                             |
 | Version check                | Boot fails unless `server_version_num` is at least 180000. A missing `pg_cron` only logs a warning.                                                                       |
 | Engine in status             | Not reported. `/status/ready` is public, so it still answers `{status: "ok"}`. The engine name is available as `DATA_ENGINE`.                                              |
 | Testing module engine option | `DatabaseTestingModule.postgres(dbName?)`. One `postgres:18` Testcontainers container per process, or `POSTGRES_URL`, with a new database per module. The adapter is registered in the root `jest.setup.js` under `SPICA_TESTING_POSTGRES_ADAPTER`. |
-| PostgreSQL CI job            | `test_postgresql` in `ci.yml` runs every project tagged `engine:postgresql` against a `postgres:18` service. A suite opts in by adding that tag to its `project.json`.       |
+| PostgreSQL CI job            | `test_postgresql` in `ci.yml` runs every project tagged `engine:postgresql` against a `postgres:18` container started with `docker run`. A suite opts in by adding that tag to its `project.json`.       |
 | Contract test harness        | `contractSuite(name, engine => {...})` in `@spica-server/database-testing`. MongoDB always runs. PostgreSQL runs when `POSTGRES_URL` or `SPICA_CONTRACT_ENGINES` enables it. |
 
 ### Chart and CLI
