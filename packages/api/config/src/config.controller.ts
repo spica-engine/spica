@@ -14,8 +14,6 @@ import {ConfigSchemaRegistry} from "./config.schema.registry.js";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {BaseConfig} from "@spica-server/interface-config";
 
-const CONFIG_COLLECTION = "config";
-
 @Controller("config")
 export class ConfigController {
   constructor(
@@ -26,8 +24,8 @@ export class ConfigController {
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("config:index"))
-  async getAllConfigs(@ResourceFilter({collection: CONFIG_COLLECTION}) resourceFilter: object) {
-    return this.queries.find(CONFIG_COLLECTION, {resourceFilter});
+  async getAllConfigs(@ResourceFilter({collection: "config"}) resourceFilter: object) {
+    return this.queries.find("config", {resourceFilter});
   }
 
   @Get("schema")

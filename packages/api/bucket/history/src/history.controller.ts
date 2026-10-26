@@ -16,8 +16,6 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {applyPatch} from "./differ.js";
 import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
 
-const BUCKETS_COLLECTION = "buckets";
-
 @Controller("bucket/:bucketId/history")
 export class HistoryController {
   constructor(
@@ -31,7 +29,7 @@ export class HistoryController {
     ActionGuard("bucket:data:index", "bucket/:bucketId/data")
   )
   getHistories(
-    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucket_id: Id,
+    @Param("bucketId", ID("buckets")) bucket_id: Id,
     @DocumentId("documentId", "bucketId") document_id: Id
   ) {
     return this.history.findSummaries(bucket_id, document_id);
@@ -43,7 +41,7 @@ export class HistoryController {
     ActionGuard("bucket:data:index", "bucket/:bucketId/data")
   )
   async revertTo(
-    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
+    @Param("bucketId", ID("buckets")) bucketId: Id,
     @DocumentId("documentId", "bucketId") documentId: Id,
     @Param("historyId", ID("history")) historyId: Id
   ) {
@@ -64,7 +62,7 @@ export class HistoryController {
     ActionGuard("bucket:data:delete", "bucket/:bucketId/data")
   )
   @HttpCode(HttpStatus.NO_CONTENT)
-  async clearHistories(@Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id) {
+  async clearHistories(@Param("bucketId", ID("buckets")) bucketId: Id) {
     const deletedCount = await this.history.deleteByBucket(bucketId);
     if (!deletedCount) {
       throw new NotFoundException("No bucket history found with the provided IDs");

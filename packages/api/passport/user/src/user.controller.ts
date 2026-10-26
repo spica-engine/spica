@@ -53,8 +53,6 @@ import {PasswordResetService} from "./services/password-reset.service.js";
 import {replaceProviderFilter} from "./filter.js";
 import {RateLimitGuard} from "./rate-limit.guard.js";
 
-const USER_COLLECTION = "user";
-
 @Controller("passport/user")
 export class UserController {
   userFactors = new Map<string, Factor>();
@@ -155,7 +153,7 @@ export class UserController {
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
-    @ResourceFilter({collection: USER_COLLECTION}) resourceFilter: object
+    @ResourceFilter({collection: "user"}) resourceFilter: object
   ) {
     const spec: ReadSpec = {
       resourceFilter,
@@ -210,7 +208,7 @@ export class UserController {
       registerPolicyAttacher("UserFullAccess")
     )
   )
-  async deleteFactor(@Param("id", ID(USER_COLLECTION)) id: Id) {
+  async deleteFactor(@Param("id", ID("user")) id: Id) {
     // deleteUserFactor only clears any in-progress activation; an already-activated factor is
     // no longer in that transient map, so existence must be derived from the persisted record.
     this.deleteUserFactor(id.toString());
@@ -228,7 +226,7 @@ export class UserController {
     AuthGuard(),
     ActionGuard("passport:user:show", undefined, registerPolicyAttacher("UserReadOnlyAccess"))
   )
-  async findOne(@Param("id", ID(USER_COLLECTION)) id: Id) {
+  async findOne(@Param("id", ID("user")) id: Id) {
     const user = await this.queries.findOne<User>("user", {
       id,
       fields: this.hideSecretsExpression()
@@ -283,7 +281,7 @@ export class UserController {
     )
   )
   async completeFactorVerification(
-    @Param("id", ID(USER_COLLECTION)) id: Id,
+    @Param("id", ID("user")) id: Id,
     @Body(
       Schema.validate({
         type: "object",
@@ -378,7 +376,7 @@ export class UserController {
     )
   )
   async updateSelf(
-    @Param("id", ID(USER_COLLECTION)) id: Id,
+    @Param("id", ID("user")) id: Id,
     @Body(Schema.validate("http://spica.internal/passport/user-self-update"))
     user: UserSelfUpdate
   ) {
@@ -407,7 +405,7 @@ export class UserController {
     ActionGuard("passport:user:update", undefined, registerPolicyAttacher("UserFullAccess"))
   )
   async updateOne(
-    @Param("id", ID(USER_COLLECTION)) id: Id,
+    @Param("id", ID("user")) id: Id,
     @Body(Schema.validate("http://spica.internal/passport/user-update"))
     user: Pick<User, "username" | "password" | "bannedUntil" | "deactivateJwtsBefore">
   ) {
@@ -435,7 +433,7 @@ export class UserController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", ID(USER_COLLECTION)) id: Id) {
+  async deleteOne(@Param("id", ID("user")) id: Id) {
     return this.users.deleteById(id).then(res => {
       if (!res) {
         throw new NotFoundException(`User with ID ${id} not found`);
@@ -450,7 +448,7 @@ export class UserController {
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:policy:add"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async addPolicy(@Param("id", ID(USER_COLLECTION)) id: Id, @Param("policyId") policyId: string) {
+  async addPolicy(@Param("id", ID("user")) id: Id, @Param("policyId") policyId: string) {
     const res = await this.users.addPolicy(id, policyId);
     if (!res) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -462,10 +460,7 @@ export class UserController {
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removePolicy(
-    @Param("id", ID(USER_COLLECTION)) id: Id,
-    @Param("policyId") policyId: string
-  ) {
+  async removePolicy(@Param("id", ID("user")) id: Id, @Param("policyId") policyId: string) {
     const res = await this.users.removePolicy(id, policyId);
     if (!res) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -480,7 +475,7 @@ export class UserController {
     ActionGuard("passport:user:update", "passport/user/:id")
   )
   startAuthProviderVerification(
-    @Param("id", ID(USER_COLLECTION)) id: Id,
+    @Param("id", ID("user")) id: Id,
     @Body("value") value: string,
     @Body("provider") provider: string,
     @Body("strategy") strategy: "Otp" | "MagicLink",
@@ -502,7 +497,7 @@ export class UserController {
     ActionGuard("passport:user:update", "passport/user/:id")
   )
   async verifyProvider(
-    @Param("id", ID(USER_COLLECTION)) id: Id,
+    @Param("id", ID("user")) id: Id,
     @Body("code") code: string,
     @Body("provider") provider: string,
     @Body("strategy") strategy: string,

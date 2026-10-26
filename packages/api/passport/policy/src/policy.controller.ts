@@ -30,8 +30,6 @@ import {
 import {PolicyService} from "./policy.service.js";
 import * as CRUD from "./crud.js";
 
-const POLICIES_COLLECTION = "policies";
-
 @Controller("passport/policy")
 export class PolicyController {
   constructor(
@@ -44,7 +42,7 @@ export class PolicyController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:policy:index"))
   find(
     @Query("filter", DEFAULT({}), JSONP) filter: object,
-    @ResourceFilter({collection: POLICIES_COLLECTION}) resourceFilter?: object,
+    @ResourceFilter({collection: "policies"}) resourceFilter?: object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number
   ) {
@@ -53,7 +51,7 @@ export class PolicyController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:policy:show"))
-  findOne(@Param("id", ID(POLICIES_COLLECTION)) id: Id) {
+  findOne(@Param("id", ID("policies")) id: Id) {
     return CRUD.findOne(this.policy, id);
   }
 
@@ -68,7 +66,7 @@ export class PolicyController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:policy:update"))
   async replaceOne(
-    @Param("id", ID(POLICIES_COLLECTION)) id: Id,
+    @Param("id", ID("policies")) id: Id,
     @Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy
   ) {
     return CRUD.replace(this.policy, {_id: id, ...body});
@@ -78,7 +76,7 @@ export class PolicyController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:policy:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", ID(POLICIES_COLLECTION)) id: Id) {
+  async deleteOne(@Param("id", ID("policies")) id: Id) {
     return CRUD.remove(this.policy, id, this.apikeyFinalizer, this.identityFinalizer);
   }
 }

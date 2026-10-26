@@ -26,8 +26,6 @@ import {createEnvVarActivity} from "./activity.resource.js";
 import {ID} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 
-const ENV_VAR_COLLECTION = "env_var";
-
 @Controller("env-var")
 export class EnvVarController {
   constructor(
@@ -38,7 +36,7 @@ export class EnvVarController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:index"))
   async find(
-    @ResourceFilter({collection: ENV_VAR_COLLECTION}) resourceFilter: object,
+    @ResourceFilter({collection: "env_var"}) resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
@@ -50,7 +48,7 @@ export class EnvVarController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:show"))
-  findOne(@Param("id", ID(ENV_VAR_COLLECTION)) id: Id) {
+  findOne(@Param("id", ID("env_var")) id: Id) {
     return CRUD.findOne(this.evs, id);
   }
 
@@ -70,7 +68,7 @@ export class EnvVarController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:update"))
   async updateOne(
-    @Param("id", ID(ENV_VAR_COLLECTION)) id: Id,
+    @Param("id", ID("env_var")) id: Id,
     @Body(Schema.validate("http://spica.internal/env_var"))
     envVar: EnvVar
   ) {
@@ -83,7 +81,7 @@ export class EnvVarController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:delete"))
-  async deleteOne(@Param("id", ID(ENV_VAR_COLLECTION)) id: Id) {
+  async deleteOne(@Param("id", ID("env_var")) id: Id) {
     return CRUD.remove(this.evs, id);
   }
 }

@@ -26,8 +26,6 @@ import {
 import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options.js";
 import {replaceRefreshTokenFilter} from "./filter.js";
 
-const REFRESH_TOKEN_COLLECTION = "refresh_token";
-
 @Controller("passport/refresh-token")
 export class RefreshTokenController {
   private readonly HIDDEN_FIELDS = {token: 0} as const;
@@ -46,7 +44,7 @@ export class RefreshTokenController {
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
-    @ResourceFilter({collection: REFRESH_TOKEN_COLLECTION}) resourceFilter: object
+    @ResourceFilter({collection: "refresh_token"}) resourceFilter: object
   ) {
     const hashSecret = this.options.refreshTokenHashSecret;
     const spec: ReadSpec = {
@@ -74,7 +72,7 @@ export class RefreshTokenController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:show"))
-  findOne(@Param("id", ID(REFRESH_TOKEN_COLLECTION)) id: Id) {
+  findOne(@Param("id", ID("refresh_token")) id: Id) {
     return this.queries
       .findOne<RefreshToken>("refresh_token", {id, fields: {...this.HIDDEN_FIELDS}})
       .then(r => {
@@ -87,10 +85,7 @@ export class RefreshTokenController {
 
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:update"))
-  async update(
-    @Param("id", ID(REFRESH_TOKEN_COLLECTION)) id: Id,
-    @Body() body: Partial<RefreshToken>
-  ) {
+  async update(@Param("id", ID("refresh_token")) id: Id, @Body() body: Partial<RefreshToken>) {
     const disabled = body?.disabled;
 
     if (typeof disabled !== "boolean") {
@@ -109,7 +104,7 @@ export class RefreshTokenController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteOne(@Param("id", ID(REFRESH_TOKEN_COLLECTION)) id: Id) {
+  deleteOne(@Param("id", ID("refresh_token")) id: Id) {
     return this.refreshTokens.deleteById(id).then(r => {
       if (!r) {
         throw new NotFoundException();

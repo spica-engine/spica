@@ -28,12 +28,7 @@ function fakeIdType(collection: string): IdType {
 
 const fakeIdTypes: IdTypes = {
   forCollection: collection => fakeIdType(collection),
-  forBucket: async bucketId => {
-    if (bucketId === "missing") {
-      throw new Error("no bucket");
-    }
-    return fakeIdType(bucketId);
-  },
+  forBucket: async bucketId => fakeIdType(bucketId),
   unscoped: () => fakeIdType("unscoped")
 };
 
@@ -119,14 +114,6 @@ describe("ID pipe", () => {
 
     it("should reject an invalid document id the same way OBJECT_ID did", async () => {
       const res = await req.get("/bucket/books/data/nope");
-      expect(res.statusCode).toBe(HttpStatus.BAD_REQUEST);
-      expect(res.body).toEqual({statusCode: 400, message: "Invalid id."});
-    });
-  });
-
-  describe("DocumentId with an unresolvable bucket", () => {
-    it("should answer 400 when the engine cannot resolve the bucket's id type", async () => {
-      const res = await req.get(`/bucket/missing/data/${VALID}`);
       expect(res.statusCode).toBe(HttpStatus.BAD_REQUEST);
       expect(res.body).toEqual({statusCode: 400, message: "Invalid id."});
     });

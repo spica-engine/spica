@@ -49,13 +49,7 @@ export class BucketDocumentIdPipe implements PipeTransform<DocumentIdParams, Pro
   constructor(@Inject(ID_TYPES) private readonly idTypes: IdTypes) {}
 
   async transform({documentId, bucketId}: DocumentIdParams): Promise<Id> {
-    let idType: IdType;
-    try {
-      idType = await this.idTypes.forBucket(bucketId);
-    } catch {
-      throw new HttpException("Invalid id.", HttpStatus.BAD_REQUEST);
-    }
-    return parseOrReject(idType, documentId);
+    return parseOrReject(await this.idTypes.forBucket(bucketId), documentId);
   }
 }
 

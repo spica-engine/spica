@@ -105,7 +105,6 @@ It returns documents in today's shape.
 - Bucket reads with relations, locale, ACL, field rules, sort and paging return the same document shape on both engines, each with a filter in its own language.
 - A filter in the wrong language returns 404.
 - An SQL filter that reaches outside its table, or around ACL, is rejected.
-- The `legacyPlan` helper in `packages/data/mongodb/test/collection-query.spec.ts` is removed. It rebuilds the old `PipelineBuilder` plan only to prove Part 0 changed nothing, and it is redundant once every read goes through the facade.
 
 ## As built
 

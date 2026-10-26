@@ -20,9 +20,7 @@ import {
   WebhookLogRepository
 } from "@spica-server/interface-function-webhook";
 
-const WEBHOOK_LOGS_COLLECTION = "webhook_logs";
-
-const logIds = () => ids().forCollection(WEBHOOK_LOGS_COLLECTION);
+const logIds = () => ids().forCollection("webhook_logs");
 
 @Controller("webhook/logs")
 export class WebhookLogController {
@@ -53,7 +51,7 @@ export class WebhookLogController {
 
     const hasRange = !isNaN(begin.getTime()) && !isNaN(end.getTime());
 
-    return this.queries.find(WEBHOOK_LOGS_COLLECTION, {
+    return this.queries.find("webhook_logs", {
       createdBetween: hasRange ? {from: begin, to: end} : undefined,
       where,
       sort: {_id: -1},
@@ -65,7 +63,7 @@ export class WebhookLogController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:logs:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param("id", ID(WEBHOOK_LOGS_COLLECTION)) id: Id) {
+  async delete(@Param("id", ID("webhook_logs")) id: Id) {
     const deletedCount = await this.logs.deleteById(id);
     if (!deletedCount) {
       throw new NotFoundException(`Log with ID ${id} not found`);
