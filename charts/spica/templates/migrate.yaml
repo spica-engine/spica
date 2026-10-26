@@ -1,4 +1,4 @@
-{{- if and .Release.IsUpgrade (eq .Values.database.type "mongodb") }}
+{{- if and .Release.IsUpgrade (eq (include "database.engine" .) "mongodb") }}
 apiVersion: batch/v1
 kind: Job
 metadata:

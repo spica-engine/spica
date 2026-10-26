@@ -1,4 +1,4 @@
-{{- if and (eq .Values.database.type "postgresql") (not .Values.postgres.external.enabled) }}
+{{- if eq (include "database.engine" .) "postgresql" }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -28,10 +28,16 @@ spec:
         app.kubernetes.io/managed-by: helm
       annotations:
         checksum/secret: {{ include (print $.Template.BasePath "/postgressecrets.yaml") . | sha256sum }}
+        checksum/initdb: {{ include (print $.Template.BasePath "/postgresinitdb.yaml") . | sha256sum }}
     spec:
+      volumes:
+        - name: init-db
+          configMap:
+            name: {{ .Release.Name }}-database
+            defaultMode: 0755
       containers:
         - name: postgres
-          image: postgres:{{ .Values.postgres.version }}
+          image: postgres:{{ include "database.version" . }}
           ports:
             - containerPort: 5432
           startupProbe:
@@ -39,7 +45,7 @@ spec:
               command:
                 - "/bin/sh"
                 - "-c"
-                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+                - pg_isready -U "$POSTGRES_USER" -d postgres
             initialDelaySeconds: {{ .Values.database.startupProbeInitialDelaySeconds }}
             periodSeconds: {{ .Values.database.startupProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.database.startupProbeTimeoutSeconds }}
@@ -55,7 +61,7 @@ spec:
               command:
                 - "/bin/sh"
                 - "-c"
-                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+                - pg_isready -U "$POSTGRES_USER" -d postgres
             periodSeconds: {{ .Values.database.readinessProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.database.readinessProbeTimeoutSeconds }}
             failureThreshold: {{ .Values.database.readinessProbeFailureThreshold }}
@@ -64,18 +70,32 @@ spec:
           volumeMounts:
             - name: {{ .Release.Name }}-data
               mountPath: /var/lib/postgresql
+            - name: init-db
+              mountPath: /docker-entrypoint-initdb.d
           env:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-postgres-credentials
-                  key: username
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootUsername
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-postgres-credentials
-                  key: password
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootPassword
             - name: POSTGRES_DB
+              value: postgres
+            - name: SPICA_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-spica-credentials
+                  key: spicaUsername
+            - name: SPICA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-spica-credentials
+                  key: spicaPassword
+            - name: SPICA_DATABASE
               value: {{ .Values.database.name }}
       terminationGracePeriodSeconds: {{ .Values.database.terminationGracePeriodSeconds }}
       {{- if .Values.database.nodeSelector }}

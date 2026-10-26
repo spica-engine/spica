@@ -61,7 +61,7 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 | Connection module       | Reads the engine and opens either today's MongoDB connection or the PostgreSQL driver.                     |
 | PostgreSQL driver       | Keeps a small set of open connections and reuses them across requests, sized by `--database-pool-size`. Spica only configures the size. |
 | PostgreSQL credentials  | Come from environment variables, like the MongoDB ones.                                                     |
-| Chart engine switch     | A chart value renders either the MongoDB templates or new PostgreSQL templates. There is an option to point at an external PostgreSQL server instead. |
+| Chart engine switch     | A chart value renders either the MongoDB templates or new PostgreSQL templates. The database is only reachable inside the cluster, like MongoDB. |
 | CLI engine flag         | `project start` starts a MongoDB or a PostgreSQL container. `project ls` and `project remove` handle both.  |
 | Testing module          | Takes an engine option and starts a throwaway PostgreSQL per suite.                                         |
 | CI job                  | Runs the PostgreSQL-ready suites and the contract tests. Suites opt in as later parts make them work.      |
@@ -94,7 +94,6 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 ## Open questions
 
 - Throwaway PostgreSQL in tests: a container or an embedded server?
-- Should an external PostgreSQL server be required to have pg_cron? This affects the chart's external-server option.
 
 ## Done when
 
@@ -120,13 +119,16 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 
 ### Chart and CLI
 
-- Chart: `database.type` (`mongodb` default, `postgresql`). The MongoDB templates and the migrate job render only for `mongodb`, and the default render is byte-identical to before. PostgreSQL adds `postgres.yaml`, `postgressrv.yaml` and `postgressecrets.yaml`, driven by a `postgres` values block. `postgres.external.enabled` with `host` and `port` points the API at an existing server and requires `postgres.password`.
+- Chart: `database.type` (`mongodb` default, `postgresql`). A missing `database.type` counts as `mongodb`, so a release upgraded with `--reuse-values` from before this key existed keeps its MongoDB resources, and any other value fails the render. The MongoDB templates and the migrate job render only for MongoDB, and the default render is byte-identical to before. PostgreSQL adds `postgres.yaml`, `postgressrv.yaml`, `postgressecrets.yaml` and `postgresinitdb.yaml`, driven by the existing `database` values (`version`, `name`, the `spica*` and `root*` credentials, storage, resources, probes and scheduling). `database.version` defaults to 8.0.4 for MongoDB and 18 for PostgreSQL.
+- Chart users: like MongoDB, there is a root user and an unprivileged `spica` user. `root` is the PostgreSQL superuser. `spica` is a plain login role that owns the `database.name` database, has no other privileges, and is the only one the API uses. An init script in `/docker-entrypoint-initdb.d` creates it on first start, so changing the credentials later needs `ALTER ROLE` by hand. Both secrets keep the MongoDB names, `<release>-database-spica-credentials` and `<release>-database-root-credentials`.
+- Chart replicas: the PostgreSQL StatefulSet is hardcoded to one replica and ignores `database.replicas`. Replication will need custom scripts or an operator. The database is not reachable from outside the cluster and the chart has no external-server or SSL option.
 - CLI: `project start --database-type` and `--postgres-version`. `project ls` recognises `postgres` containers. `project remove` is label-based and needed no change.
 
 ### Answers to the open questions
 
 - Throwaway PostgreSQL in tests: a container (Testcontainers), with a `POSTGRES_URL` override for CI.
-- External server and `pg_cron`: optional. The API only warns.
+- `pg_cron`: optional. The API only warns when the server does not offer it.
+- External PostgreSQL server: dropped from the chart, to match MongoDB.
 
 ### Differs from the plan
 

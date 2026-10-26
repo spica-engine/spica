@@ -1,12 +1,18 @@
+{{- define "database.engine" -}}
+  {{- $engine := .Values.database.type | default "mongodb" -}}
+  {{- if not (has $engine (list "mongodb" "postgresql")) -}}
+    {{- fail (printf "database.type must be mongodb or postgresql, got %q" $engine) -}}
+  {{- end -}}
+  {{- $engine -}}
+{{- end -}}
+
+{{- define "database.version" -}}
+  {{- .Values.database.version | default (ternary "18" "8.0.4" (eq (include "database.engine" .) "postgresql")) -}}
+{{- end -}}
+
 {{- define "database.connection-uri" -}}
-  {{- if eq .Values.database.type "postgresql" -}}
-    {{- $host := printf "%s-database.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
-    {{- $port := 5432 -}}
-    {{- if .Values.postgres.external.enabled -}}
-      {{- $host = required "postgres.external.host is required when postgres.external.enabled is true" .Values.postgres.external.host -}}
-      {{- $port = .Values.postgres.external.port | int -}}
-    {{- end -}}
-    {{- printf "postgres://%s:%d/%s" $host $port .Values.database.name | quote -}}
+  {{- if eq (include "database.engine" .) "postgresql" -}}
+    {{- printf "postgres://%s-database.%s.svc.cluster.local:5432/%s" .Release.Name .Release.Namespace .Values.database.name | quote -}}
   {{- else -}}
     {{- $uri := "mongodb://" -}}
     {{- $namespace := printf "%s-database" .Release.Name -}}

@@ -1,4 +1,4 @@
-{{- if and (eq .Values.database.type "postgresql") (not .Values.postgres.external.enabled) }}
+{{- if eq (include "database.engine" .) "postgresql" }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -12,6 +12,7 @@ metadata:
     app.kubernetes.io/part-of: {{ .Chart.Name }}
     app.kubernetes.io/managed-by: helm
 spec:
+  publishNotReadyAddresses: true
   ports:
     - port: 5432
       targetPort: 5432
