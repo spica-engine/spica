@@ -1,5 +1,9 @@
 import {ExecutionContext} from "@nestjs/common";
-import {SimpleActionGuard, ResourceFilter} from "@spica-server/passport-guard";
+import {
+  SimpleActionGuard,
+  ResourceFilter,
+  resourceFilterFunction
+} from "@spica-server/passport-guard";
 import {PolicyResolver} from "@spica-server/interface-passport-guard";
 
 describe("SimpleActionGuard", () => {
@@ -570,6 +574,28 @@ describe("SimpleActionGuard", () => {
       expect(request.resourceFilter).toEqual({
         include: [],
         exclude: ["bucket1/row2"]
+      });
+    });
+  });
+
+  describe("resourceFilterFunction", () => {
+    const ctx = {
+      switchToHttp: () => ({
+        getRequest: () => ({resourceFilter: {include: ["a"], exclude: [["b"], ["c"]]}})
+      })
+    } as ExecutionContext;
+
+    it("should return the raw include and exclude lists when called without options", () => {
+      expect(resourceFilterFunction(undefined as any, ctx)).toEqual({
+        includeds: ["a"],
+        excludeds: ["b", "c"]
+      });
+    });
+
+    it("should return the same lists for pure", () => {
+      expect(resourceFilterFunction({pure: true}, ctx)).toEqual({
+        includeds: ["a"],
+        excludeds: ["b", "c"]
       });
     });
   });
