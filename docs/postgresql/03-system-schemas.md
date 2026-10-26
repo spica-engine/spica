@@ -5,7 +5,7 @@
 - Plan and implement only this part. Read the code from the parts under "Depends on" on master, along with their "As built" sections. Don't open the other documents in `docs/postgresql/`.
 - If this part needs something a merged part doesn't provide, stop and list it under "Requests to other parts" in your plan instead of building it.
 - Follow the PR breakdown. Each PR is either a behaviour-neutral refactor or new engine code, never both, and is small enough to review in one sitting.
-- Existing MongoDB suites stay green. New code brings its own tests in the PostgreSQL CI job.
+- Existing MongoDB suites stay green. New code brings its own tests, which run on PostgreSQL in CI. Shared behaviour uses contract suites.
 - After the last PR, fill in "As built".
 
 ## Purpose
@@ -23,7 +23,7 @@ Stores Spica's own records on PostgreSQL. Their shape is known at build time and
 ## Depends on
 
 - **Part 0 (merged):** repository interfaces, the repository provider, the engine-aware id type.
-- **Part 1 (merged):** the PostgreSQL connection, the testing module, the contract test harness.
+- **Part 1 (merged):** the PostgreSQL connection, the testing module, the contract test harness. The adapter binds only a placeholder `PostgresIdTypes` that throws, plus the pool and the health check. This part replaces the placeholder and binds the remaining contract tokens.
 - **Part 2 (merged):** the PostgreSQL migration track. Tables are created as SQL migrations there.
 
 ## Provides
@@ -80,7 +80,7 @@ System domains:
 
 - New ORM package.
 - New entities, repositories and migrations per domain.
-- Domain suites opt in to the PostgreSQL CI job as their domain is covered.
+- Domain suites move to `contractSuite`, or declare `mongoOnly("reason")`, as their domain is covered.
 
 ## PR breakdown
 
@@ -100,7 +100,8 @@ System domains:
 ## Done when
 
 - With `--database-type postgresql`, login, policies, API keys, functions, env vars, secrets and bucket definitions work end to end.
-- Every system domain's suite passes in the PostgreSQL CI job, except list endpoints that wait for Part 8.
+- Every system domain's suite passes on both engines in CI, except list endpoints that wait for Part 8.
+- `yarn check:engine-specs --strict --under=<domain path>/` lists nothing for each system domain.
 
 ## As built
 
