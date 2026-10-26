@@ -43,7 +43,7 @@ export function attachStatusTrackerFactory(service: StatusService): AttachStatus
       }
       statusSaved = true;
       service
-        .insertOne({
+        .record({
           request: {
             size: reqSize
           },

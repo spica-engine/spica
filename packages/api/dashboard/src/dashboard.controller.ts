@@ -9,36 +9,46 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  HttpException
+  HttpException,
+  Inject
 } from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
-import {DashboardService} from "./dashboard.service.js";
-import {Dashboard} from "@spica-server/interface-dashboard";
+import {
+  Dashboard,
+  DASHBOARD_REPOSITORY,
+  DashboardRepository
+} from "@spica-server/interface-dashboard";
 import {Schema} from "@spica-server/core-schema";
 import {ResourceFilter} from "@spica-server/passport-guard";
-import {OBJECT_ID, ObjectId} from "@spica-server/database";
 import * as CRUD from "./crud.js";
+import {ID} from "@spica-server/data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+
+const DASHBOARD_COLLECTION = "dashboard";
 
 @Controller("dashboard")
 export class DashboardController {
-  constructor(private dashboardService: DashboardService) {}
+  constructor(
+    @Inject(DASHBOARD_REPOSITORY) private dashboards: DashboardRepository,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:index"))
-  findAll(@ResourceFilter() resourceFilter: object) {
-    return CRUD.find(this.dashboardService, resourceFilter);
+  findAll(@ResourceFilter({collection: DASHBOARD_COLLECTION}) resourceFilter: object) {
+    return CRUD.find(this.queries, resourceFilter);
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:show"))
-  findById(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.findOne(this.dashboardService, id);
+  findById(@Param("id", ID(DASHBOARD_COLLECTION)) id: Id) {
+    return CRUD.findOne(this.dashboards, id);
   }
 
   @Post()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:create"))
   insert(@Body(Schema.validate("http://spica.internal/dashboard")) dashboard: Dashboard) {
-    return CRUD.insert(this.dashboardService, dashboard).catch(e => {
+    return CRUD.insert(this.dashboards, dashboard).catch(e => {
       throw new HttpException(e.message, e.status || 500);
     });
   }
@@ -46,11 +56,11 @@ export class DashboardController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:update"))
   async update(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(DASHBOARD_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/dashboard"))
     dashboard: Dashboard
   ) {
-    return CRUD.replace(this.dashboardService, {...dashboard, _id: id}).catch(e => {
+    return CRUD.replace(this.dashboards, {...dashboard, _id: id}).catch(e => {
       throw new HttpException(e.message, e.status || 500);
     });
   }
@@ -58,8 +68,8 @@ export class DashboardController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param("id", OBJECT_ID) id: ObjectId) {
-    await CRUD.remove(this.dashboardService, id).catch(e => {
+  async delete(@Param("id", ID(DASHBOARD_COLLECTION)) id: Id) {
+    await CRUD.remove(this.dashboards, id).catch(e => {
       throw new HttpException(e.message, e.status || 500);
     });
   }

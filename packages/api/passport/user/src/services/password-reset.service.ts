@@ -1,4 +1,5 @@
-import {Injectable, BadRequestException, Logger, NotFoundException} from "@nestjs/common";
+import {Inject, Injectable, BadRequestException, Logger, NotFoundException} from "@nestjs/common";
+import {USER_REPOSITORY, UserRepository} from "@spica-server/interface-passport-user";
 import {UserService} from "../user.service.js";
 import {VerificationService} from "../verification.service.js";
 import {UserConfigService} from "../config.service.js";
@@ -10,7 +11,8 @@ export class PasswordResetService {
   constructor(
     private readonly userService: UserService,
     private readonly userConfigService: UserConfigService,
-    private readonly verificationService: VerificationService
+    private readonly verificationService: VerificationService,
+    @Inject(USER_REPOSITORY) private readonly users: UserRepository
   ) {}
 
   async startForgotPasswordProcess(
@@ -65,7 +67,7 @@ export class PasswordResetService {
         newPassword,
         true
       );
-      await this.userService.findOneAndUpdate({_id: response.userId}, {$set: passwordUpdates});
+      await this.users.setFields(response.userId, passwordUpdates);
     } catch (error) {
       this.logger.error(
         "Error during password reset:",
@@ -84,7 +86,7 @@ export class PasswordResetService {
     provider: "email" | "phone"
   ): Promise<{user: any; strategy: string}> {
     const errorMessage = "Provider or Reset password is not configured properly.";
-    const user = await this.userService.findOne({username});
+    const user = await this.users.findByUsername(username);
     if (!user) {
       throw new NotFoundException("User not found");
     }

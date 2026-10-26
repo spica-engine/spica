@@ -1,4 +1,5 @@
-import {Injectable, NotFoundException, BadRequestException, Logger} from "@nestjs/common";
+import {Inject, Injectable, NotFoundException, BadRequestException, Logger} from "@nestjs/common";
+import {USER_REPOSITORY, UserRepository} from "@spica-server/interface-passport-user";
 import {UserService} from "../user.service.js";
 import {VerificationService} from "../verification.service.js";
 import {UserConfigService} from "../config.service.js";
@@ -10,7 +11,8 @@ export class PasswordlessLoginService {
   constructor(
     private readonly verificationService: VerificationService,
     private readonly userConfigService: UserConfigService,
-    private userService: UserService
+    private userService: UserService,
+    @Inject(USER_REPOSITORY) private users: UserRepository
   ) {}
 
   async start(username: string, provider: "email" | "phone") {
@@ -44,11 +46,7 @@ export class PasswordlessLoginService {
     }
   }
 
-  async verify(
-    username: string,
-    code: string,
-    provider: "email" | "phone"
-  ) {
+  async verify(username: string, code: string, provider: "email" | "phone") {
     const {providerConfig, user} = await this.validateAndGetUser(username, provider);
 
     this.userService.checkUserIsBlocked(user);
@@ -65,7 +63,7 @@ export class PasswordlessLoginService {
 
       const [refreshToken] = await Promise.all([
         this.userService.signRefreshToken(user),
-        this.userService.updateOne({_id: user._id}, {$set: {lastLogin: new Date()}})
+        this.users.setFields(user._id, {lastLogin: new Date()})
       ]);
 
       const accessToken = this.userService.sign(user);
@@ -111,6 +109,6 @@ export class PasswordlessLoginService {
   }
 
   private findUserByUsername(username: string) {
-    return this.userService.findOne({username: username});
+    return this.users.findByUsername(username);
   }
 }

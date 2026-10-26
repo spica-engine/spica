@@ -5,20 +5,31 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   NotFoundException,
   Param,
   Query,
   UseGuards
 } from "@nestjs/common";
 import {ARRAY, DATE, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {Filter, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ID, ids} from "@spica-server/data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
-import {Log} from "@spica-server/interface-function-webhook";
-import {WebhookLogService} from "./log.service.js";
+import {
+  WEBHOOK_LOG_REPOSITORY,
+  WebhookLogRepository
+} from "@spica-server/interface-function-webhook";
+
+const WEBHOOK_LOGS_COLLECTION = "webhook_logs";
+
+const logIds = () => ids().forCollection(WEBHOOK_LOGS_COLLECTION);
 
 @Controller("webhook/logs")
 export class WebhookLogController {
-  constructor(private logService: WebhookLogService) {}
+  constructor(
+    @Inject(WEBHOOK_LOG_REPOSITORY) private logs: WebhookLogRepository,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:logs:index"))
@@ -30,43 +41,32 @@ export class WebhookLogController {
     @Query("skip", NUMBER) skip: number,
     @Query("limit", NUMBER) limit: number
   ) {
-    let filter: Filter<Log> = {};
-
-    if (!isNaN(begin.getTime()) && !isNaN(end.getTime())) {
-      filter._id = {
-        $gte: ObjectId.createFromTime(begin.getTime() / 1000),
-        $lt: ObjectId.createFromTime(end.getTime() / 1000)
-      };
-    }
+    const where: ReadSpec["where"] = {};
 
     if (webhook.length) {
-      filter.webhook = {$in: webhook};
+      where.webhook = {in: webhook};
     }
 
     if (succeed != null) {
-      filter.succeed = {$eq: succeed};
+      where.succeed = {eq: succeed};
     }
 
-    const aggregation: object[] = [{$match: filter}];
+    const hasRange = !isNaN(begin.getTime()) && !isNaN(end.getTime());
 
-    aggregation.push({$sort: {_id: -1}});
-
-    if (skip) {
-      aggregation.push({$skip: skip});
-    }
-
-    if (limit) {
-      aggregation.push({$limit: limit});
-    }
-
-    return this.logService.aggregate(aggregation).toArray();
+    return this.queries.find(WEBHOOK_LOGS_COLLECTION, {
+      createdBetween: hasRange ? {from: begin, to: end} : undefined,
+      where,
+      sort: {_id: -1},
+      skip,
+      limit
+    });
   }
 
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:logs:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param("id", OBJECT_ID) id: ObjectId) {
-    const deletedCount = await this.logService.deleteOne({_id: id});
+  async delete(@Param("id", ID(WEBHOOK_LOGS_COLLECTION)) id: Id) {
+    const deletedCount = await this.logs.deleteById(id);
     if (!deletedCount) {
       throw new NotFoundException(`Log with ID ${id} not found`);
     }
@@ -75,8 +75,8 @@ export class WebhookLogController {
   @Delete()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:logs:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteMany(@Body(DEFAULT([]), ARRAY(value => new ObjectId(value))) ids: ObjectId[]) {
-    const deletedCount = await this.logService.deleteMany({_id: {$in: ids}});
+  async deleteMany(@Body(DEFAULT([]), ARRAY(value => logIds().parse(value))) ids: Id[]) {
+    const deletedCount = await this.logs.deleteByIds(ids);
     if (!deletedCount) {
       throw new NotFoundException("No logs found with the provided IDs");
     }

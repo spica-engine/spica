@@ -11,38 +11,45 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  Inject
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {SecretService} from "@spica-server/secret-services";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Schema} from "@spica-server/core-schema";
 import {AuthGuard, ActionGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {activity} from "@spica-server/activity-services";
 import {createSecretActivity} from "./activity.resource.js";
 import * as CRUD from "./crud.js";
+import {ID} from "@spica-server/data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+
+const SECRET_COLLECTION = "secret";
 
 @Controller("secret")
 export class SecretController {
-  constructor(private ss: SecretService) {}
+  constructor(
+    private ss: SecretService,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:index"))
   async find(
-    @ResourceFilter() resourceFilter: object,
+    @ResourceFilter({collection: SECRET_COLLECTION}) resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", JSONP) sort: object,
+    @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object
   ) {
-    return CRUD.find(this.ss, {resourceFilter, limit, skip, sort, paginate, filter});
+    return CRUD.find(this.queries, {resourceFilter, limit, skip, sort, paginate, filter});
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:show"))
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.findOne(this.ss, id);
+  findOne(@Param("id", ID(SECRET_COLLECTION)) id: Id) {
+    return CRUD.findOne(this.queries, id);
   }
 
   @UseInterceptors(activity(createSecretActivity))
@@ -64,7 +71,7 @@ export class SecretController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:update"))
   async updateOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(SECRET_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/secret"))
     body: {key: string; value: string}
   ) {
@@ -77,7 +84,7 @@ export class SecretController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:delete"))
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  async deleteOne(@Param("id", ID(SECRET_COLLECTION)) id: Id) {
     return CRUD.remove(this.ss, id);
   }
 }

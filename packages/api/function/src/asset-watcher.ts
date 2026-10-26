@@ -1,6 +1,8 @@
-import {Injectable, Logger, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
+import {Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {Subscription} from "rxjs";
-import {FunctionService, FunctionAssetService} from "@spica-server/function-services";
+import {CHANGE_FEED, ChangeFeed} from "@spica-server/interface-data";
+import {FUNCTION_ASSET_COLLECTION} from "@spica-server/interface-function-asset-storage";
+import {FUNCTION_REPOSITORY, FunctionRepository} from "@spica-server/interface-function";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
@@ -13,8 +15,8 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
   private subscription: Subscription;
 
   constructor(
-    private readonly assetService: FunctionAssetService,
-    private readonly functionService: FunctionService,
+    @Inject(CHANGE_FEED) private readonly feed: ChangeFeed,
+    @Inject(FUNCTION_REPOSITORY) private readonly functions: FunctionRepository,
     private readonly reconciler: FunctionAssetReconciler,
     private readonly tracker: SelfWriteTracker,
     private readonly preparationService: FunctionPreparationService,
@@ -23,18 +25,11 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
-    const pipeline = [
-      {
-        $match: {
-          operationType: {$in: ["insert", "update", "replace", "delete"]}
-        }
-      }
-    ];
-
-    this.subscription = this.assetService
-      .watch(pipeline, {
-        fullDocument: "updateLookup",
-        fullDocumentBeforeChange: "whenAvailable"
+    this.subscription = this.feed
+      .watch(FUNCTION_ASSET_COLLECTION, {
+        operations: ["insert", "update", "replace", "delete"],
+        document: "current",
+        beforeChange: "whenAvailable"
       })
       .subscribe({
         next: async change => {
@@ -66,14 +61,14 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
             if (!functionId) return;
 
             // Skip if this node originated the write.
-            if (this.tracker.isSelfWrite({functionId: functionId.toHexString(), filename, hash})) {
+            if (this.tracker.isSelfWrite({functionId: functionId.toString(), filename, hash})) {
               this.logger.debug(
                 `[asset-watcher] Suppressing self-write for ${functionId}/${filename}`
               );
               return;
             }
 
-            const fn = await this.functionService.findOne({_id: functionId});
+            const fn = await this.functions.findById(functionId);
             if (!fn) {
               this.logger.warn(
                 `[asset-watcher] Change stream: no function found for id ${functionId}`

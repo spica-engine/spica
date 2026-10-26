@@ -1,0 +1,155 @@
+import {Injectable} from "@nestjs/common";
+import {
+  Collection,
+  DatabaseService,
+  DeleteResult,
+  Filter,
+  InsertOneResult
+} from "@spica-server/database";
+import {ids} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
+import {diff, schemaDiff} from "@spica-server/core-differ";
+import {ChangePaths, ChangeKind} from "@spica-server/interface-core";
+import {History, HistoryRepository, HistorySummary} from "@spica-server/interface-bucket-history";
+import {Bucket, BucketDocument} from "@spica-server/interface-bucket";
+
+const historyIds = () => ids().forCollection("history");
+
+@Injectable()
+export class MongoHistoryRepository implements HistoryRepository {
+  readonly collection: Collection<History>;
+  constructor(private db: DatabaseService) {
+    this.collection = this.db.collection<History>("history");
+  }
+
+  updateHistories(previousSchema: Bucket, currentSchema: Bucket) {
+    const changes = schemaDiff(previousSchema, currentSchema).filter(
+      ({lastPath, path, kind}) =>
+        path.length > 0 &&
+        (kind == ChangeKind.Delete ||
+          (kind == ChangeKind.Edit &&
+            (lastPath[0] == "bucket" ||
+              lastPath[0] == "relationType" ||
+              lastPath[0] == "type" ||
+              (lastPath[0] == "options" && lastPath[1] == "translate"))))
+    );
+    return Promise.all(
+      changes.map(change => this.deleteHistoryAtPath(currentSchema._id, change.path))
+    );
+  }
+
+  createHistory(bucketId: Id, previousDocument: BucketDocument, currentDocument: BucketDocument) {
+    const changes = diff(currentDocument, previousDocument);
+    if (changes.length > 0) {
+      const history: History = {
+        bucket_id: bucketId,
+        document_id: currentDocument._id,
+        changes
+      };
+      return this.insertOne(history);
+    }
+  }
+
+  getDocument(bucketId: Id, documentId: Id) {
+    return this.db.collection<BucketDocument>(`bucket_${bucketId}`).findOne({_id: documentId});
+  }
+
+  findBetweenNow(bucketId: Id, documentId: Id, id: Id) {
+    return this.collection
+      .aggregate([
+        {
+          $match: {$and: [{bucket_id: bucketId}, {document_id: documentId}, {_id: {$gte: id}}]}
+        },
+        {
+          $sort: {_id: -1}
+        }
+      ])
+      .toArray();
+  }
+
+  find(filter: Filter<History>) {
+    return this.collection
+      .aggregate([
+        {
+          $match: filter
+        },
+        {
+          $project: {
+            date: {$convert: {input: "$_id", to: "date"}},
+            changes: {$size: "$changes"}
+          }
+        },
+        {
+          $sort: {
+            _id: -1
+          }
+        }
+      ])
+      .toArray();
+  }
+
+  getHistory(filter: Filter<History>): Promise<History> {
+    return this.collection.findOne(filter);
+  }
+
+  async deleteHistoryAtPath(bucketId: Id, path: ChangePaths) {
+    const paths = path.reduce((queries, path, index) => {
+      // We simply converting the positional path to match with any number
+      if ((path as any) instanceof RegExp) {
+        path = {$type: 16} as any;
+      }
+      queries[`path.${index}`] = path;
+      return queries;
+    }, {});
+    await this.collection.updateMany(
+      {bucket_id: bucketId, changes: {$elemMatch: paths}},
+      {
+        $pull: {
+          changes: paths
+        }
+      }
+    );
+    // Clear all the history that lost it's changes due to type changes.
+    return this.collection.deleteMany({changes: {$size: 0}});
+  }
+
+  deleteMany(filter: Filter<History>): Promise<DeleteResult> {
+    return this.collection.deleteMany(filter);
+  }
+
+  async insertOne(history: History): Promise<InsertOneResult> {
+    const recordCount = await this.collection.countDocuments({
+      bucket_id: history.bucket_id,
+      document_id: history.document_id
+    });
+
+    if (recordCount >= 10) {
+      await this.collection.deleteOne({
+        $and: [{bucket_id: history.bucket_id}, {document_id: history.document_id}]
+      });
+    }
+
+    return this.collection.insertOne({
+      ...history,
+      _id: history._id == null ? historyIds().generate() : historyIds().parse(history._id)
+    });
+  }
+
+  findSummaries(bucketId: Id, documentId: Id) {
+    return this.find({$and: [{bucket_id: bucketId}, {document_id: documentId}]}) as Promise<
+      HistorySummary[]
+    >;
+  }
+
+  findSince(bucketId: Id, documentId: Id, historyId: Id) {
+    return this.findBetweenNow(bucketId, documentId, historyId) as Promise<History[]>;
+  }
+
+  deleteByBucket(bucketId: Id) {
+    return this.deleteMany({bucket_id: bucketId}).then(result => result.deletedCount);
+  }
+
+  deleteByDocument(documentId: Id) {
+    return this.deleteMany({document_id: documentId}).then(result => result.deletedCount);
+  }
+}

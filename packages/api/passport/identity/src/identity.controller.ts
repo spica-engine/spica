@@ -24,7 +24,8 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
+import {DuplicateKeyError, ID} from "@spica-server/data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {Factor, FactorMeta} from "@spica-server/interface-passport-authfactor";
@@ -34,14 +35,17 @@ import {IdentityService} from "./identity.service.js";
 import {
   Identity,
   IDENTITY_OPTIONS,
+  IDENTITY_REPOSITORY,
   IdentityOptions,
+  IdentityRepository,
   PaginationResponse,
   POLICY_PROVIDER
 } from "@spica-server/interface-passport-identity";
 import {registerPolicyAttacher} from "./utility.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
-import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
+
+const IDENTITY_COLLECTION = "identity";
 
 @Controller("passport/identity")
 export class IdentityController {
@@ -65,10 +69,12 @@ export class IdentityController {
 
   constructor(
     private identityService: IdentityService,
+    @Inject(IDENTITY_REPOSITORY) private identities: IdentityRepository,
     @Inject(IDENTITY_OPTIONS) private options: IdentityOptions,
     @Inject(POLICY_PROVIDER)
     private identityPolicyResolver: (req: any) => Promise<[{statement: []}]>,
     private authFactor: AuthFactor,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
@@ -78,16 +84,14 @@ export class IdentityController {
         CommandType.SYNC
       );
     }
-    this.identityService
-      .find({
-        authFactor: {$exists: true, $ne: null}
-      })
+    this.identities
+      .findWithAuthFactor()
       .then(identities => {
         for (const identity of identities) {
           if (!identity.authFactor) {
             continue;
           }
-          this.authFactor.register(identity._id.toHexString(), identity.authFactor);
+          this.authFactor.register(identity._id.toString(), identity.authFactor);
         }
       })
       .catch(error => {
@@ -146,21 +150,7 @@ export class IdentityController {
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: {[key: string]: 1 | -1}
   ) {
-    const cursor = this.identityService.findOnProfiler(filter);
-
-    if (limit) {
-      cursor.limit(limit);
-    }
-
-    if (skip) {
-      cursor.skip(skip);
-    }
-
-    if (sort) {
-      cursor.sort(sort);
-    }
-
-    return cursor.toArray();
+    return this.identities.profilerEntries({filter, limit, skip, sort});
   }
 
   @Get()
@@ -168,33 +158,29 @@ export class IdentityController {
   async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", JSONP) sort: object,
+    @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
-    @ResourceFilter() resourceFilter: object
+    @ResourceFilter({collection: IDENTITY_COLLECTION}) resourceFilter: object
   ) {
-    const pipelineBuilder = await new PipelineBuilder()
-      .filterResources(resourceFilter)
-      .filterByUserRequest(filter);
-
-    const seekingPipeline = new PipelineBuilder()
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .setVisibilityOfFields(this.hideSecretsExpression())
-      .result();
-
-    const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
-      this.identityService.estimatedDocumentCount()
-    );
+    const spec = {
+      resourceFilter,
+      filter,
+      sort,
+      skip,
+      limit,
+      fields: this.hideSecretsExpression()
+    };
 
     if (paginate) {
-      return executePaginationPlan<Identity>(this.identityService, plan) as Promise<
-        PaginationResponse<Identity>
-      >;
+      return this.queries.paginate<Identity>(
+        "identity",
+        spec,
+        "estimate-unless-filtered"
+      ) as Promise<PaginationResponse<Identity>>;
     }
 
-    return this.identityService.aggregate<Identity[]>(plan.dataPipeline).toArray();
+    return this.queries.find<Identity>("identity", spec);
   }
   @Get("predefs")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
@@ -218,16 +204,13 @@ export class IdentityController {
       registerPolicyAttacher("IdentityFullAccess")
     )
   )
-  async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
+  async deleteFactor(@Param("id", ID(IDENTITY_COLLECTION)) id: Id) {
     // deleteIdentityFactor only clears any in-progress activation; an already-activated factor is
     // no longer in that transient map, so existence must be derived from the persisted record.
-    this.deleteIdentityFactor(id.toHexString());
-    this.authFactor.unregister(id.toHexString());
+    this.deleteIdentityFactor(id.toString());
+    this.authFactor.unregister(id.toString());
 
-    const identity = await this.identityService.findOneAndUpdate(
-      {_id: id},
-      {$unset: {authFactor: ""}}
-    );
+    const identity = await this.identities.removeAuthFactor(id);
 
     if (!identity) {
       throw new NotFoundException(`Identity with ID ${id} not found`);
@@ -243,11 +226,8 @@ export class IdentityController {
       registerPolicyAttacher("IdentityReadOnlyAccess")
     )
   )
-  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const identity = await this.identityService.findOne(
-      {_id: id},
-      {projection: this.hideSecretsExpression()}
-    );
+  async findOne(@Param("id", ID(IDENTITY_COLLECTION)) id: Id) {
+    const identity = await this.identities.findById(id, this.hideSecretsExpression());
     if (!identity) {
       throw new NotFoundException(`Identity with ID ${id} not found.`);
     }
@@ -296,7 +276,7 @@ export class IdentityController {
     )
   )
   async completeFactorVerification(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(IDENTITY_COLLECTION)) id: Id,
     @Body(
       Schema.validate({
         type: "object",
@@ -311,7 +291,7 @@ export class IdentityController {
     )
     {answer}: {answer: string}
   ) {
-    const factor = this.identityFactors.get(id.toHexString());
+    const factor = this.identityFactors.get(id.toString());
 
     if (!factor) {
       throw new BadRequestException("Start a factor verification before complete it.");
@@ -321,17 +301,17 @@ export class IdentityController {
       throw new BadRequestException(e);
     });
 
-    this.deleteIdentityFactor(id.toHexString());
+    this.deleteIdentityFactor(id.toString());
 
     if (!isVerified) {
       throw new UnauthorizedException("Verification has been failed.");
     }
 
-    this.authFactor.register(id.toHexString(), factor.getMeta());
+    this.authFactor.register(id.toString(), factor.getMeta());
 
     const meta = factor.getMeta();
-    return this.identityService
-      .findOneAndUpdate({_id: id}, {$set: {authFactor: meta}})
+    return this.identities
+      .setAuthFactor(id, meta)
       .then(() => {
         return {
           message: "Verification has been completed successfully."
@@ -353,12 +333,12 @@ export class IdentityController {
     identity.policies = [];
     identity.lastPasswords = [];
 
-    return this.identityService
-      .insertOne(identity)
+    return this.identities
+      .insert(identity)
       .then(insertedIdentity => this.afterIdentityUpsert(insertedIdentity))
       .catch(exception => {
         throw new BadRequestException(
-          exception.code === 11000 ? "Identity already exists." : exception.message
+          exception instanceof DuplicateKeyError ? "Identity already exists." : exception.message
         );
       });
   }
@@ -383,14 +363,14 @@ export class IdentityController {
     ActionGuard("passport:identity:update", undefined, registerPolicyAttacher("IdentityFullAccess"))
   )
   async updateOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(IDENTITY_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/passport/identity"))
     identity: Partial<Identity>
   ) {
     if (identity.password) {
-      const {password: currentPassword, lastPasswords} = await this.identityService.findOne({
-        identifier: identity.identifier
-      });
+      const {password: currentPassword, lastPasswords} = await this.identities.findByIdentifier(
+        identity.identifier
+      );
 
       const isEqual = await compare(identity.password, currentPassword);
       if (!isEqual) {
@@ -422,8 +402,8 @@ export class IdentityController {
 
     delete identity.authFactor;
 
-    return this.identityService
-      .findOneAndUpdate({_id: id}, {$set: identity}, {returnDocument: ReturnDocument.AFTER})
+    return this.identities
+      .updateById(id, identity)
       .then(updatedIdentity => {
         if (!updatedIdentity) {
           throw new NotFoundException(`Identity with ID ${id} not found`);
@@ -432,7 +412,7 @@ export class IdentityController {
       })
       .catch(exception => {
         throw new BadRequestException(
-          exception.code === 11000 ? "Identity already exists." : exception.message
+          exception instanceof DuplicateKeyError ? "Identity already exists." : exception.message
         );
       });
   }
@@ -441,19 +421,19 @@ export class IdentityController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  async deleteOne(@Param("id", ID(IDENTITY_COLLECTION)) id: Id) {
     // prevent to delete the last user
-    const userCount = await this.identityService.estimatedDocumentCount();
+    const userCount = await this.identities.estimatedCount();
     if (userCount == 1) {
       return;
     }
 
-    return this.identityService.deleteOne({_id: id}).then(res => {
+    return this.identities.deleteById(id).then(res => {
       if (!res) {
         throw new NotFoundException(`Identity with ID ${id} not found`);
       }
-      if (this.authFactor.hasFactor(id.toHexString())) {
-        this.authFactor.unregister(id.toHexString());
+      if (this.authFactor.hasFactor(id.toString())) {
+        this.authFactor.unregister(id.toString());
       }
     });
   }
@@ -462,19 +442,11 @@ export class IdentityController {
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:policy:add"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    const res = await this.identityService.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $addToSet: {policies: policyId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER,
-        projection: {password: 0, lastPasswords: 0}
-      }
-    );
+  async addPolicy(
+    @Param("id", ID(IDENTITY_COLLECTION)) id: Id,
+    @Param("policyId") policyId: string
+  ) {
+    const res = await this.identities.addPolicy(id, policyId);
     if (!res) {
       throw new NotFoundException(`Identity with ID ${id} not found`);
     }
@@ -485,19 +457,11 @@ export class IdentityController {
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    const res = await this.identityService.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $pull: {policies: policyId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER,
-        projection: {password: 0, lastPasswords: 0}
-      }
-    );
+  async removePolicy(
+    @Param("id", ID(IDENTITY_COLLECTION)) id: Id,
+    @Param("policyId") policyId: string
+  ) {
+    const res = await this.identities.removePolicy(id, policyId);
     if (!res) {
       throw new NotFoundException(`Identity with ID ${id} not found`);
     }
