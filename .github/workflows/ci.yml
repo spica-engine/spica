@@ -95,6 +95,8 @@ jobs:
         run: yarn nx sync:check
       - name: Verify data access boundary
         run: yarn check:data-boundary
+      - name: Test engine spec checker
+        run: yarn test:engine-specs
       - name: Build Affected
         run: yarn nx affected -t build
 
