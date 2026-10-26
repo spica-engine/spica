@@ -166,7 +166,8 @@
   },
   "scripts": {
     "format:check": "yarn nx format:check",
-    "check:engine-specs": "node scripts/check-engine-specs.mjs && node --test scripts/check-engine-specs.test.mjs",
+    "check:engine-specs": "node scripts/check-engine-specs.mjs",
+    "test:engine-specs": "node --test scripts/check-engine-specs.test.mjs",
     "check:data-boundary": "node scripts/check-data-boundary.mjs && node --test scripts/check-data-boundary.test.mjs",
     "format": "yarn nx format:write",
     "build:*": "yarn nx run-many -t build",
