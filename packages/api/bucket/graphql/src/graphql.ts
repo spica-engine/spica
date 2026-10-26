@@ -12,7 +12,7 @@ import {HistoryService} from "@spica-server/bucket-history";
 import {ChangeEmitter} from "@spica-server/bucket-hooks";
 import {BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ReturnDocument} from "@spica-server/database";
+import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {ids} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {GuardService} from "@spica-server/passport-guard-services";
@@ -103,15 +103,15 @@ export class GraphqlController implements OnModuleInit {
       description:
         "BSON ObjectId type. Can be a 24 byte hex string, 12 byte binary string or a Number.",
       parseValue(value: string) {
-        return ids().unscoped().parse(value);
+        return new ObjectId(value);
       },
       serialize(value) {
         return value.toString();
       },
       parseLiteral(ast: ValueNode) {
         const value = ast["value"];
-        if (ids().unscoped().isValid(value)) {
-          return ids().unscoped().parse(value);
+        if (ObjectId.isValid(value)) {
+          return new ObjectId(value);
         }
         return null;
       }

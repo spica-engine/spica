@@ -133,8 +133,4 @@ describe("MongoIdTypes", () => {
     const bucketIdType = await idTypes.forBucket("5f1e8b9c2a4d3e0012345678");
     expect(bucketIdType).toBe(idTypes.forCollection("buckets"));
   });
-
-  it("should use ObjectId for ids whose resource is not known", () => {
-    expect(idTypes.unscoped()).toBe(idTypes.forCollection("identity"));
-  });
 });

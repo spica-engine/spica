@@ -10,11 +10,6 @@
     }
   },
   "dependencies": {
-    "@spica-server/data": "workspace:*",
-    "@spica-server/interface-data": "workspace:*"
-  },
-  "devDependencies": {
-    "@spica-server/database-testing": "workspace:*",
     "mongodb": "^6.12.0"
   }
 }

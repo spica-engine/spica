@@ -1,4 +1,3 @@
-import "@spica-server/database-testing";
 import {
   DefaultExtractor,
   extractFilterPropertyMap,

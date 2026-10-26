@@ -8,15 +8,6 @@
   "references": [
     {
       "path": "../interface/filter"
-    },
-    {
-      "path": "../interface/data"
-    },
-    {
-      "path": "../data"
-    },
-    {
-      "path": "../database/testing"
     }
   ]
 }

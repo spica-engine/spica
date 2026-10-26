@@ -1,4 +1,4 @@
-import {ids} from "@spica-server/data";
+import {ObjectId} from "@spica-server/database";
 import * as Relation from "./relation.js";
 import {getPropertyByPath} from "./schema.js";
 import {
@@ -16,7 +16,7 @@ import {hash} from "@spica-server/core-encryption";
 export function filterReviver(k: string, v: string, hashSecret?: string) {
   const availableConstructors = {
     Date: v => new Date(v),
-    ObjectId: v => ids().unscoped().parse(v),
+    ObjectId: v => new ObjectId(v),
     ...(hashSecret && {Hash: v => hash(v, hashSecret)})
   };
   const ctr = /^([a-zA-Z]+)\((.*?)\)$/;

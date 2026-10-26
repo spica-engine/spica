@@ -9249,13 +9249,13 @@ __metadata:
     "@nestjs/common": "npm:^10.4.22"
     "@nestjs/core": "npm:^10.4.22"
     "@spica-server/core-encryption": "workspace:*"
-    "@spica-server/data": "workspace:*"
     "@spica-server/interface-config": "workspace:*"
     "@spica-server/interface-core": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
     ajv: "npm:^8.17.1"
     ajv-formats: "npm:^3.0.1"
     got: "npm:^14.4.9"
+    mongodb: "npm:^6.12.0"
     rxjs: "npm:^7.8.2"
   languageName: unknown
   linkType: soft
@@ -9485,9 +9485,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/filter@workspace:packages/filter"
   dependencies:
-    "@spica-server/data": "workspace:*"
-    "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface-data": "workspace:*"
     mongodb: "npm:^6.12.0"
   languageName: unknown
   linkType: soft
