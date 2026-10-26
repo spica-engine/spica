@@ -1,4 +1,19 @@
+{{- define "database.engine" -}}
+  {{- $engine := .Values.database.type | default "mongodb" -}}
+  {{- if not (has $engine (list "mongodb" "postgresql")) -}}
+    {{- fail (printf "database.type must be mongodb or postgresql, got %q" $engine) -}}
+  {{- end -}}
+  {{- $engine -}}
+{{- end -}}
+
+{{- define "database.version" -}}
+  {{- .Values.database.version | default (ternary "18" "8.0.4" (eq (include "database.engine" .) "postgresql")) -}}
+{{- end -}}
+
 {{- define "database.connection-uri" -}}
+  {{- if eq (include "database.engine" .) "postgresql" -}}
+    {{- printf "postgres://%s-database.%s.svc.cluster.local:5432/%s" .Release.Name .Release.Namespace .Values.database.name | quote -}}
+  {{- else -}}
     {{- $uri := "mongodb://" -}}
     {{- $namespace := printf "%s-database" .Release.Name -}}
     {{- $ns := .Release.Namespace -}}
@@ -7,6 +22,7 @@
         {{- $uri = printf "%s%s" $uri $node -}}
     {{- end -}}
     {{- printf $uri | trimSuffix "," | quote -}}
+  {{- end -}}
 {{- end -}}
 
 

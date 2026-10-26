@@ -1,6 +1,7 @@
 import {Command, CreateCommandParameters, Program} from "@caporal/core";
 import docker from "dockerode";
 import duration from "pretty-ms";
+import {isDatabaseImage} from "./database";
 
 async function list() {
   const machine = new docker();
@@ -64,10 +65,10 @@ async function list() {
       }
     }
 
-    const databaseContainers = containers.filter(container => container.Image.startsWith("mongo"));
+    const databaseContainers = containers.filter(container => isDatabaseImage(container.Image));
 
     const runningDatabaseContainers = containers.filter(
-      container => container.Image.startsWith("mongo") && container.State == "running"
+      container => isDatabaseImage(container.Image) && container.State == "running"
     );
 
     if (runningDatabaseContainers.length != databaseContainers.length) {

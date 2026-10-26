@@ -18,6 +18,7 @@
     "@spica-server/dashboard": "workspace:*",
     "@spica-server/data": "workspace:*",
     "@spica-server/data-mongodb": "workspace:*",
+    "@spica-server/data-postgresql": "workspace:*",
     "@spica-server/env_var": "workspace:*",
     "@spica-server/filter": "workspace:*",
     "@spica-server/function": "workspace:*",
