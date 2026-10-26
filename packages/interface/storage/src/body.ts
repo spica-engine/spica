@@ -1,7 +1,7 @@
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 
 export interface StorageObject<DataType> {
-  _id?: string | ObjectId;
+  _id?: string | Id;
   name: string;
   url?: string;
   created_at?: Date;

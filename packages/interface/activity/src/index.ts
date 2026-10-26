@@ -1,9 +1,9 @@
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 
 export interface PreActivity {
   action: Action;
-  identifier?: string | ObjectId;
-  username?: string | ObjectId;
+  identifier?: string | Id;
+  username?: string | Id;
 }
 
 export interface ModuleActivity extends PreActivity {
@@ -11,7 +11,7 @@ export interface ModuleActivity extends PreActivity {
 }
 
 export interface Activity extends ModuleActivity {
-  _id?: ObjectId;
+  _id?: Id;
   created_at: Date;
 }
 
@@ -31,3 +31,11 @@ export interface ActivityOptions {
 }
 
 export const ACTIVITY_OPTIONS = Symbol.for("ACTIVITY_OPTIONS");
+
+export interface ActivityRepository {
+  insertMany(activities: Activity[]): Promise<Id[]>;
+  deleteById(id: Id): Promise<number>;
+  deleteByIds(ids: Id[]): Promise<number>;
+}
+
+export const ACTIVITY_REPOSITORY = Symbol.for("ACTIVITY_REPOSITORY");

@@ -1,16 +1,17 @@
-import {LogService} from "@spica-server/function-log/src/log.service";
+import {provideRepository} from "@spica-server/data";
+import {FUNCTION_LOG_REPOSITORY} from "@spica-server/interface-function-log";
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {FUNCTION_LOG_OPTIONS} from "@spica-server/interface-function-log";
 
 describe("Function Log Service", () => {
   let module: TestingModule;
-  let logService: LogService;
+  let logService: any;
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.create()],
       providers: [
-        LogService,
+        provideRepository(FUNCTION_LOG_REPOSITORY),
         {
           provide: FUNCTION_LOG_OPTIONS,
           useValue: {
@@ -19,7 +20,7 @@ describe("Function Log Service", () => {
         }
       ]
     }).compile();
-    logService = module.get(LogService);
+    logService = module.get(FUNCTION_LOG_REPOSITORY);
     await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
   });
 

@@ -1,6 +1,6 @@
 import {RequestService} from "@spica-server/passport/src/options";
 import {PassportOptions} from "@spica-server/interface-passport";
-import {StrategyService} from "../strategy.service.js";
+import {StrategyRepository} from "@spica-server/interface-passport";
 import {CustomOAuthService} from "./custom.js";
 import {GoogleOAuthService} from "./google.js";
 import {GithubOAuthService} from "./github.js";
@@ -9,7 +9,7 @@ import {OktaOAuthService} from "./okta.js";
 import {Auth0OAuthService} from "./auth0.js";
 
 export function initializeOAuthServices(
-  strategyService: StrategyService,
+  strategyService: StrategyRepository,
   options: PassportOptions,
   req: RequestService
 ) {
