@@ -44,7 +44,9 @@ import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interfa
 import {StorageService} from "./storage.service.js";
 import {GuardService} from "@spica-server/passport-guard-services";
 
-const storageIds = () => ids().forCollection("storage");
+const STORAGE_COLLECTION = "storage";
+
+const storageIds = () => ids().forCollection(STORAGE_COLLECTION);
 const STORAGE_ID_OR_NAME = OR(v => storageIds().isValid(v), idTransform("storage"));
 
 /**
@@ -67,7 +69,7 @@ export class StorageController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:index"))
   async find(
-    @ResourceFilter({collection: "storage"}) resourceFilter: object,
+    @ResourceFilter({collection: STORAGE_COLLECTION}) resourceFilter: object,
     @Query("filter", JSONP) filter?: object,
     @Query("paginate", BOOLEAN) paginate?: boolean,
     @Query("limit", NUMBER) limit?: number,
@@ -96,7 +98,7 @@ export class StorageController {
   @Patch(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update", "storage/:id"))
   async patch(
-    @Param("id", ID("storage")) id: Id,
+    @Param("id", ID(STORAGE_COLLECTION)) id: Id,
     @Body(
       Schema.validate({
         type: "object",
@@ -137,7 +139,7 @@ export class StorageController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update"))
   async updateOne(
-    @Param("id", ID("storage")) id: Id,
+    @Param("id", ID(STORAGE_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/storage/body/single"))
     body: MultipartFormData | StorageObject<Buffer>
   ) {

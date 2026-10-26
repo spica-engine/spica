@@ -73,6 +73,8 @@ import {
   BUCKET_DATA_ENCRYPTION_SECRET
 } from "@spica-server/interface-bucket";
 
+const BUCKETS_COLLECTION = "buckets";
+
 /**
  * All APIs related to bucket documents.
  * @name data
@@ -117,7 +119,7 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", "bucket/:bucketId/data", authIdToString))
   async find(
     @StrategyType() strategyType: ReqAuthStrategy,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
@@ -169,7 +171,7 @@ export class BucketDataController {
     ActionGuard("bucket:data:profile", "bucket/:bucketId/data")
   )
   async findProfileEntries(
-    @Param("bucketId", ID("buckets")) bucketId: Id,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
     @Query("filter", JSONPR(filterReviver)) filter?: object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
@@ -205,7 +207,7 @@ export class BucketDataController {
     @StrategyType() strategyType: ReqAuthStrategy,
     @Headers("accept-language") acceptedLanguage: string,
     @Req() req: any,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
     @DocumentId("documentId", "bucketId") documentId: Id,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
@@ -277,7 +279,7 @@ export class BucketDataController {
   async insertOne(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
     @Body(Schema.validate(req => req.params.bucketId)) rawDocument: BucketDocument
   ) {
     const schema = await this.bs.findById(bucketId);
@@ -342,7 +344,7 @@ export class BucketDataController {
   async replace(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
     @DocumentId("documentId", "bucketId") documentId: Id,
     @Body(Schema.validate(req => req.params.bucketId)) document: BucketDocument
   ) {
@@ -419,7 +421,7 @@ export class BucketDataController {
   async patch(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
     @DocumentId("documentId", "bucketId") documentId: Id,
     @Body() patch: Partial<BucketDocument>
   ) {
@@ -489,7 +491,7 @@ export class BucketDataController {
   async deleteOne(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
     @DocumentId("documentId", "bucketId") documentId: Id
   ) {
     const schema = await this.bs.findById(bucketId);

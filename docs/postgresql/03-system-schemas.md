@@ -91,6 +91,7 @@ System domains:
 5. Env vars, secrets, preferences, config, dashboards, status.
 6. Bucket definitions and bucket history.
 7. Activity, replication, storage metadata, assets.
+8. Common repository base. With both engines implemented, extract the operations the repository interfaces repeat (`findById`, `insert`, `deleteById`, and so on) into one base interface. Each domain repository interface extends it, for example `ApiKeyRepository` and `UserRepository`. It is last so the shared shape comes from two real implementations.
 
 ## Open questions
 

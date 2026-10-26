@@ -45,6 +45,8 @@ import {AuthFactor} from "@spica-server/passport-authfactor";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
 
+const STRATEGY_COLLECTION = "strategy";
+
 /**
  * @name passport
  */
@@ -338,11 +340,11 @@ export class PassportIdentityController {
 
   @Get("identity/strategies")
   async strategies() {
-    return this.queries.find("strategy", {filter: {type: "saml"}, fields: {options: 0}});
+    return this.queries.find(STRATEGY_COLLECTION, {filter: {type: "saml"}, fields: {options: 0}});
   }
 
   @Get("identity/strategy/:id/url")
-  async getUrl(@Param("id", ID("strategy")) id: Id) {
+  async getUrl(@Param("id", ID(STRATEGY_COLLECTION)) id: Id) {
     const strategy = await this.strategyRepository.findById(id);
 
     if (!strategy) {
@@ -376,7 +378,7 @@ export class PassportIdentityController {
   @UseInterceptors(UrlEncodedBodyParser())
   @HttpCode(HttpStatus.NO_CONTENT)
   async complete(
-    @Param("id", ID("strategy")) id: Id,
+    @Param("id", ID(STRATEGY_COLLECTION)) id: Id,
     @Body() body: unknown,
     @Query("state") stateId: string,
     @Query("code") code: string
