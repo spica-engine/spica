@@ -37,6 +37,8 @@ import {createReadStream} from "fs";
 import {ID} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 
+const ASSET_COLLECTION = "asset";
+
 @Controller("asset")
 export class AssetController {
   constructor(
@@ -53,7 +55,7 @@ export class AssetController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:show", "asset"))
-  async findOne(@Param("id", ID("asset")) id: Id) {
+  async findOne(@Param("id", ID(ASSET_COLLECTION)) id: Id) {
     return this.assets.findById(id).then(r => {
       if (!r) {
         throw new NotFoundException();
@@ -113,7 +115,7 @@ export class AssetController {
   @Post(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:install", "asset"))
   async install(
-    @Param("id", ID("asset")) id: Id,
+    @Param("id", ID(ASSET_COLLECTION)) id: Id,
     @Body(
       Schema.validate({
         type: "object",
@@ -172,7 +174,10 @@ export class AssetController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:delete", "asset"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param("id", ID("asset")) id: Id, @Query("type") type: "soft" | "hard" = "soft") {
+  async delete(
+    @Param("id", ID(ASSET_COLLECTION)) id: Id,
+    @Query("type") type: "soft" | "hard" = "soft"
+  ) {
     const asset = await this.assets.findById(id);
 
     if (!asset) {

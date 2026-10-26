@@ -24,6 +24,8 @@ import * as CRUD from "./crud.js";
 import {ID} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 
+const DASHBOARD_COLLECTION = "dashboard";
+
 @Controller("dashboard")
 export class DashboardController {
   constructor(
@@ -33,13 +35,13 @@ export class DashboardController {
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:index"))
-  findAll(@ResourceFilter({collection: "dashboard"}) resourceFilter: object) {
+  findAll(@ResourceFilter({collection: DASHBOARD_COLLECTION}) resourceFilter: object) {
     return CRUD.find(this.queries, resourceFilter);
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:show"))
-  findById(@Param("id", ID("dashboard")) id: Id) {
+  findById(@Param("id", ID(DASHBOARD_COLLECTION)) id: Id) {
     return CRUD.findOne(this.dashboards, id);
   }
 
@@ -54,7 +56,7 @@ export class DashboardController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:update"))
   async update(
-    @Param("id", ID("dashboard")) id: Id,
+    @Param("id", ID(DASHBOARD_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/dashboard"))
     dashboard: Dashboard
   ) {
@@ -66,7 +68,7 @@ export class DashboardController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param("id", ID("dashboard")) id: Id) {
+  async delete(@Param("id", ID(DASHBOARD_COLLECTION)) id: Id) {
     await CRUD.remove(this.dashboards, id).catch(e => {
       throw new HttpException(e.message, e.status || 500);
     });

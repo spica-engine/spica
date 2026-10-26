@@ -31,6 +31,8 @@ import {WebhookInvoker} from "./invoker.js";
 import {WebhookService} from "./webhook.service.js";
 import {CollectionSlug, COLL_SLUG} from "@spica-server/interface-function";
 
+const WEBHOOK_COLLECTION = "webhook";
+
 @Controller("webhook")
 export class WebhookController {
   constructor(
@@ -69,17 +71,17 @@ export class WebhookController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:index"))
   find(
-    @ResourceFilter({collection: "webhook"}) resourceFilter: object,
+    @ResourceFilter({collection: WEBHOOK_COLLECTION}) resourceFilter: object,
     @Query("limit", DEFAULT(10), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", DEFAULT({_id: -1}), JSONP) sort: {[path: string]: 1 | -1}
   ) {
-    return this.queries.paginate("webhook", {resourceFilter, sort, skip, limit}, "exact");
+    return this.queries.paginate(WEBHOOK_COLLECTION, {resourceFilter, sort, skip, limit}, "exact");
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:show"))
-  findOne(@Param("id", ID("webhook")) id: Id) {
+  findOne(@Param("id", ID(WEBHOOK_COLLECTION)) id: Id) {
     return this.webhookService.findById(id);
   }
 
@@ -97,7 +99,7 @@ export class WebhookController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:update"))
   async replaceOne(
-    @Param("id", ID("webhook")) id: Id,
+    @Param("id", ID(WEBHOOK_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/webhook")) hook: Webhook
   ) {
     try {
@@ -115,7 +117,7 @@ export class WebhookController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", ID("webhook")) id: Id) {
+  async deleteOne(@Param("id", ID(WEBHOOK_COLLECTION)) id: Id) {
     const res = await this.webhookService.deleteById(id);
     if (!res) {
       throw new NotFoundException(`Webhook with ID ${id} not found`);

@@ -45,6 +45,8 @@ import {registerPolicyAttacher} from "./utility.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
 
+const IDENTITY_COLLECTION = "identity";
+
 @Controller("passport/identity")
 export class IdentityController {
   identityFactors = new Map<string, Factor>();
@@ -159,7 +161,7 @@ export class IdentityController {
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
-    @ResourceFilter({collection: "identity"}) resourceFilter: object
+    @ResourceFilter({collection: IDENTITY_COLLECTION}) resourceFilter: object
   ) {
     const spec = {
       resourceFilter,
@@ -202,7 +204,7 @@ export class IdentityController {
       registerPolicyAttacher("IdentityFullAccess")
     )
   )
-  async deleteFactor(@Param("id", ID("identity")) id: Id) {
+  async deleteFactor(@Param("id", ID(IDENTITY_COLLECTION)) id: Id) {
     // deleteIdentityFactor only clears any in-progress activation; an already-activated factor is
     // no longer in that transient map, so existence must be derived from the persisted record.
     this.deleteIdentityFactor(id.toString());
@@ -224,7 +226,7 @@ export class IdentityController {
       registerPolicyAttacher("IdentityReadOnlyAccess")
     )
   )
-  async findOne(@Param("id", ID("identity")) id: Id) {
+  async findOne(@Param("id", ID(IDENTITY_COLLECTION)) id: Id) {
     const identity = await this.identities.findById(id, this.hideSecretsExpression());
     if (!identity) {
       throw new NotFoundException(`Identity with ID ${id} not found.`);
@@ -274,7 +276,7 @@ export class IdentityController {
     )
   )
   async completeFactorVerification(
-    @Param("id", ID("identity")) id: Id,
+    @Param("id", ID(IDENTITY_COLLECTION)) id: Id,
     @Body(
       Schema.validate({
         type: "object",
@@ -361,7 +363,7 @@ export class IdentityController {
     ActionGuard("passport:identity:update", undefined, registerPolicyAttacher("IdentityFullAccess"))
   )
   async updateOne(
-    @Param("id", ID("identity")) id: Id,
+    @Param("id", ID(IDENTITY_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/passport/identity"))
     identity: Partial<Identity>
   ) {
@@ -419,7 +421,7 @@ export class IdentityController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", ID("identity")) id: Id) {
+  async deleteOne(@Param("id", ID(IDENTITY_COLLECTION)) id: Id) {
     // prevent to delete the last user
     const userCount = await this.identities.estimatedCount();
     if (userCount == 1) {
@@ -440,7 +442,10 @@ export class IdentityController {
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:policy:add"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async addPolicy(@Param("id", ID("identity")) id: Id, @Param("policyId") policyId: string) {
+  async addPolicy(
+    @Param("id", ID(IDENTITY_COLLECTION)) id: Id,
+    @Param("policyId") policyId: string
+  ) {
     const res = await this.identities.addPolicy(id, policyId);
     if (!res) {
       throw new NotFoundException(`Identity with ID ${id} not found`);
@@ -452,7 +457,10 @@ export class IdentityController {
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removePolicy(@Param("id", ID("identity")) id: Id, @Param("policyId") policyId: string) {
+  async removePolicy(
+    @Param("id", ID(IDENTITY_COLLECTION)) id: Id,
+    @Param("policyId") policyId: string
+  ) {
     const res = await this.identities.removePolicy(id, policyId);
     if (!res) {
       throw new NotFoundException(`Identity with ID ${id} not found`);

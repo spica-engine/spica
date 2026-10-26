@@ -17,7 +17,9 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {ID, ids} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
 
-const activityIds = () => ids().forCollection("activity");
+const ACTIVITY_COLLECTION = "activity";
+
+const activityIds = () => ids().forCollection(ACTIVITY_COLLECTION);
 
 @Controller("activity")
 export class ActivityController {
@@ -46,7 +48,7 @@ export class ActivityController {
     };
     const hasRange = begin?.getTime() && end?.getTime();
 
-    return this.queries.find("activity", {
+    return this.queries.find(ACTIVITY_COLLECTION, {
       relations: ["identifier", "username"],
       where: Object.keys(where).length ? where : undefined,
       createdBetween: hasRange ? {from: begin, to: end} : undefined,
@@ -59,7 +61,7 @@ export class ActivityController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("activity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param("id", ID("activity")) id: Id) {
+  async delete(@Param("id", ID(ACTIVITY_COLLECTION)) id: Id) {
     const deletedCount = await this.activityService.deleteById(id);
     if (!deletedCount) {
       throw new NotFoundException(`Activity with ID ${id} not found`);

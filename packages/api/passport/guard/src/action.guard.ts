@@ -36,7 +36,7 @@ export const resourceFilterFunction: ResourceFilterFunction = (
   const request = ctx.switchToHttp().getRequest();
   const {include, exclude: excluded} = request.resourceFilter;
 
-  if (!("collection" in data)) {
+  if (!data || !("collection" in data)) {
     return {
       includeds: include,
       excludeds: [].concat(...excluded)

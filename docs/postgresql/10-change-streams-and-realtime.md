@@ -86,7 +86,7 @@ Makes the change feed work on PostgreSQL. Every committed change reaches every l
 
 ## PR breakdown
 
-1. Listener and the PostgreSQL change source, with triggers on bucket tables.
+1. Listener and the PostgreSQL change source, with triggers on bucket tables. Before the source is written, review `ChangeEvent` (`packages/interface/data/src/change-feed.ts`). It carries MongoDB change stream fields: `_id._data`, `operationType`, `ns`, `documentKey`, `updateDescription` and `fullDocumentBeforeChange`. Move the contract to fields both engines can fill, and have the MongoDB source map to them. Consumers that read the old fields move at the same time.
 2. Triggers on system tables that have consumers. Caches and replication work on PostgreSQL.
 3. Function database triggers on PostgreSQL.
 4. Webhooks, the asset watcher and the asset service on PostgreSQL.
@@ -95,6 +95,7 @@ Makes the change feed work on PostgreSQL. Every committed change reaches every l
 ## Open questions
 
 - **Per-change filter checks on busy tables:** check against PostgreSQL for every change and subscriber, or batch them?
+- **Neutral event shape:** which `ChangeEvent` fields can PostgreSQL fill? The replica dedupe key `_id._data` and `updateDescription` have no direct equivalent, since the notification carries only the table, operation and key.
 - **Listener reconnect:** how does the listener reconnect, and what do subscribers see during the gap?
 
 ## Done when

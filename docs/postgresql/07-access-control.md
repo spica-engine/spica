@@ -69,7 +69,7 @@ Renders access control for PostgreSQL. Policies produce include and exclude list
 
 ## What changes
 
-- **`@ResourceFilter()`:** returns the neutral form.
+- **`@ResourceFilter()`:** returns the neutral form. Today `resourceFilterFunction` in `passport/guard/src/action.guard.ts` still builds `{_id: {$in}}` and `{_id: {$nin}}` itself. That construction moves behind the MongoDB adapter, so no MongoDB syntax is built in the guard.
 - **The expression package:** gets an SQL output alongside the Mongo one.
 - **Replacers:** read through the facade.
 
@@ -89,7 +89,7 @@ Renders access control for PostgreSQL. Policies produce include and exclude list
 ## Done when
 
 - The SQL compiler and renderer produce correct conditions for every rule in the existing expression test cases.
-- No MongoDB syntax for access control is built outside the MongoDB adapter.
+- No MongoDB syntax for access control is built outside the MongoDB adapter, including the `$in` and `$nin` stages in the action guard's resource filter.
 
 ## As built
 
