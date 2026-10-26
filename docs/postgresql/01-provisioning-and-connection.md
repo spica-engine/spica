@@ -114,7 +114,7 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 | Version check                | Boot fails unless `server_version_num` is at least 180000. A missing `pg_cron` only logs a warning.                                                                       |
 | Engine in status             | Not reported. `/status/ready` is public, so it still answers `{status: "ok"}`. The engine name is available as `DATA_ENGINE`.                                              |
 | Testing module engine option | `DatabaseTestingModule.postgres(dbName?)`. One `postgres:18` Testcontainers container per process, or `POSTGRES_URL`, with a new database per module. The adapter is registered in the root `jest.setup.js` under `SPICA_TESTING_POSTGRES_ADAPTER`. |
-| PostgreSQL CI job            | `test_postgresql` in `ci.yml` runs every project tagged `engine:postgresql` against a `postgres:18` container started with `docker run`. A suite opts in by adding that tag to its `project.json`. `test_affected` also starts PostgreSQL and sets `POSTGRES_URL`, so contract suites run on both engines in every affected project. `yarn check:engine-specs` (flags `--strict` and `--under=<path>`; its self-test is `yarn test:engine-specs`) lists specs that still use the MongoDB-only testing module without `contractSuite` or `mongoOnly`.       |
+| PostgreSQL CI job            | `test_affected` starts only the services each affected project needs. `scripts/ci-test-matrix.mjs` reads the project's specs: `database-testing` or `MONGODB_URL` means MongoDB, `contractSuite` or `POSTGRES_URL` means PostgreSQL, `RABBITMQ_*` means RabbitMQ, `MAILER_URL` means mailhog. A service URL is exported only when the service was started, so a spec the script missed starts its own container. Contract suites run on both engines in every affected project. `yarn check:engine-specs` (flags `--strict` and `--under=<path>`; self-test `yarn test:engine-specs`) lists specs that still use the MongoDB-only testing module without `contractSuite` or `mongoOnly`. |
 | Contract test harness        | `contractSuite(name, engine => {...})` in `@spica-server/database-testing`. MongoDB always runs. PostgreSQL runs when `POSTGRES_URL` or `SPICA_CONTRACT_ENGINES` enables it. With `CI=true` a disabled engine fails the suite instead of skipping. `mongoOnly(reason)` marks a spec that can not run on PostgreSQL. |
 
 ### Chart and CLI
@@ -134,6 +134,6 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 
 - `DataModule` needs `ID_TYPES` to boot, so the adapter binds a placeholder `PostgresIdTypes` that throws on use. Part 3 replaces it. No other contract token is bound yet.
 - The engine is not in the status response (see above). Reporting it on the authenticated `GET /status` is open.
-- The CI workflow only triggers on pull requests to `master`, so `test_postgresql` is not exercised on the stacked branches.
+- The CI workflow only triggers on pull requests to `master`, so the `test_affected` jobs are not exercised on the stacked branches.
 - `project upgrade` and the chart migrate job still assume MongoDB. Part 2 owns PostgreSQL migrations.
 - `FunctionModule.forRoot` still takes the MongoDB uri, name and replica set. Part 11 owns worker engine settings.
