@@ -134,6 +134,6 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 
 - `DataModule` needs `ID_TYPES` to boot, so the adapter binds a placeholder `PostgresIdTypes` that throws on use. Part 3 replaces it. No other contract token is bound yet.
 - The engine is not in the status response (see above). Reporting it on the authenticated `GET /status` is open.
-- The CI workflow only triggers on pull requests to `master`, so the `test_affected` jobs are not exercised on the stacked branches.
+- CI runs on pull requests to `master` and to any branch matching `postgresql*`, and it computes the affected projects against the pull request's own base branch.
 - `project upgrade` and the chart migrate job still assume MongoDB. Part 2 owns PostgreSQL migrations.
 - `FunctionModule.forRoot` still takes the MongoDB uri, name and replica set. Part 11 owns worker engine settings.

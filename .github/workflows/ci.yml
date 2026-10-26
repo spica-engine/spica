@@ -1,7 +1,8 @@
 name: Spica Continuous Integration
 
 env:
-  origin_branch: master
+  origin_branch: ${{ github.base_ref || 'master' }}
+  NX_BASE: ${{ github.base_ref || 'master' }}
   VERSION: ${{ github.sha }}
   MONGODB_URL: "mongodb://172.17.0.1:27017"
   POSTGRES_URL: "postgres://postgres:spica@172.17.0.1:5432/postgres"
@@ -13,7 +14,7 @@ env:
 
 on:
   pull_request:
-    branches: ["master"]
+    branches: ["master", "postgresql*"]
   merge_group:
     types: [checks_requested]
 
