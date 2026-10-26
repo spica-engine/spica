@@ -1,5 +1,6 @@
 {
   "name": "data/postgresql",
   "sourceRoot": "packages/data/postgresql/src",
-  "projectType": "library"
+  "projectType": "library",
+  "tags": ["engine:postgresql"]
 }

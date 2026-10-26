@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.22",
+    "@spica-server/database-testing": "workspace:*",
     "@types/pg": "^8.15.5"
   }
 }

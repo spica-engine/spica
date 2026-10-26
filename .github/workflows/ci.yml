@@ -243,6 +243,58 @@ jobs:
       - name: Stop MongoDB
         run: docker stop mongodb || true
 
+  test_postgresql:
+    name: Test PostgreSQL
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_URL: "postgres://postgres:spica@172.17.0.1:5432/postgres"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore Node Modules Cache
+        uses: actions/cache@v4
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+            ${{ runner.os }}-node-modules-
+      - name: Start PostgreSQL
+        run: |
+          docker run -d --rm --name postgres \
+            -p 5432:5432 \
+            -e POSTGRES_PASSWORD=spica \
+            postgres:18
+
+          echo "Waiting for PostgreSQL..."
+          for i in {1..30}; do
+            if docker exec postgres pg_isready -U postgres &> /dev/null; then
+              echo "PostgreSQL is ready."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "PostgreSQL did not become ready."
+          docker logs postgres || true
+          exit 1
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --network-timeout 600000
+      - name: Disable Nx Cloud
+        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+      - name: Run PostgreSQL Tests
+        run: yarn nx run-many -t test --projects=tag:engine:postgresql
+      - name: Stop PostgreSQL
+        if: always()
+        run: docker stop postgres || true
+
   ci_success:
     name: CI Success
     runs-on: ubuntu-latest
@@ -251,6 +303,7 @@ jobs:
       - helm_unittest
       - build_affected
       - test_affected
+      - test_postgresql
     if: always()
     steps:
       - name: Check all jobs
@@ -258,6 +311,7 @@ jobs:
           if [ "${{ needs.helm_lint.result }}" != "success" ] || \
              [ "${{ needs.helm_unittest.result }}" != "success" ] || \
              [ "${{ needs.build_affected.result }}" != "success" ] || \
+             [ "${{ needs.test_postgresql.result }}" != "success" ] || \
              ([ "${{ needs.test_affected.result }}" != "success" ] && [ "${{ needs.test_affected.result }}" != "skipped" ]); then
             echo "One or more jobs failed or were cancelled"
             exit 1
