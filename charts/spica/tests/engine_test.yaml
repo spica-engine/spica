@@ -1,0 +1,165 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: engine switch
+templates:
+  - templates/application.yaml
+  - templates/applicationsecrets.yaml
+  - templates/database.yaml
+  - templates/databasesecrets.yaml
+  - templates/databasesrv.yaml
+  - templates/databasereplication.yaml
+  - templates/initdb.yaml
+  - templates/migrate.yaml
+  - templates/postgressecrets.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.masterKey: test-master-key
+  application.publicHost: https://test.example.com
+
+tests:
+  - it: should not pass an engine to the api by default
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-type"
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-replica-set"
+
+  - it: should give the api mongodb credentials by default
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: MONGODB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-spica-credentials
+                key: spicaUsername
+
+  - it: should start the api against the in-cluster postgres service
+    template: templates/application.yaml
+    set:
+      database.type: postgresql
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: postgres://release-name-database.default.svc.cluster.local:5432/spica
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-type"
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: postgresql
+      - notContains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-replica-set"
+      - notContains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-ssl"
+
+  - it: should give the api postgres credentials
+    template: templates/application.yaml
+    set:
+      database.type: postgresql
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: release-name-postgres-credentials
+                key: password
+      - notContains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: MONGODB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-spica-credentials
+                key: spicaUsername
+
+  - it: should point the api at an external server and request tls
+    template: templates/application.yaml
+    set:
+      database.type: postgresql
+      postgres.external.enabled: true
+      postgres.external.host: pg.example.com
+      postgres.external.port: 6432
+      postgres.password: secret
+      postgres.ssl: true
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: postgres://pg.example.com:6432/spica
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-ssl"
+
+  - it: should require a host for an external server
+    template: templates/application.yaml
+    set:
+      database.type: postgresql
+      postgres.external.enabled: true
+      postgres.password: secret
+    asserts:
+      - failedTemplate:
+          errorMessage: "postgres.external.host is required when postgres.external.enabled is true"
+
+  - it: should render no mongodb resources for postgresql
+    set:
+      database.type: postgresql
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/database.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/databasesecrets.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/databasesrv.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/databasereplication.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/initdb.yaml
+
+  - it: should skip the mongodb migrate job on upgrade for postgresql
+    template: templates/migrate.yaml
+    release:
+      upgrade: true
+    set:
+      database.type: postgresql
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should still run the migrate job on upgrade for mongodb
+    template: templates/migrate.yaml
+    release:
+      upgrade: true
+    asserts:
+      - hasDocuments:
+          count: 1
