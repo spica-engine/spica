@@ -5,7 +5,7 @@
 - Plan and implement only this part. Read the code from the parts under "Depends on" on master, along with their "As built" sections. Don't open the other documents in `docs/postgresql/`.
 - If this part needs something a merged part doesn't provide, stop and list it under "Requests to other parts" in your plan instead of building it.
 - Follow the PR breakdown. Each PR is either a behaviour-neutral refactor or new engine code, never both, and is small enough to review in one sitting.
-- Existing MongoDB suites stay green. New code brings its own tests in the PostgreSQL CI job.
+- Existing MongoDB suites stay green. New code brings its own tests, which run on PostgreSQL in CI. Shared behaviour uses contract suites.
 - After the last PR, fill in "As built".
 
 ## Purpose
@@ -76,6 +76,7 @@ Gives PostgreSQL a versioned migration track for Spica's own tables. It runs at 
 ## Open questions
 
 - Should the API refuse to start when the PostgreSQL track is behind the release, or run pending migrations itself?
+- Which role runs the PostgreSQL track: `spica`, which owns the database, or `root`, the superuser? Part 1's chart creates both. Extensions such as `pg_cron` need `root`.
 
 ## Done when
 

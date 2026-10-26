@@ -17,7 +17,7 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 - One engine per instance, chosen at install time. MongoDB stays the default, so existing installs need no change.
 - PostgreSQL stays experimental. The API logs a warning when it starts with `--database-type postgresql`.
 - PostgreSQL 18 is the minimum version, because system tables rely on its built-in `uuidv7()`. The API refuses to start on an older server, and the chart, CLI and test images use 18.
-- Testing rule for all later parts: new PostgreSQL code adds tests that run in the PostgreSQL CI job. Shared behaviour gets contract cases that run on both engines.
+- Testing rule for all later parts: new PostgreSQL code adds tests that run on PostgreSQL in CI. Shared behaviour gets contract cases that run on both engines.
 
 ## Depends on
 
@@ -29,9 +29,9 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `--database-type`            | `mongodb` (default) or `postgresql`, readable by any module.                                                |
 | PostgreSQL connection        | A shared PostgreSQL driver with a bounded pool, available to adapters through the registration point.      |
-| Engine in status             | The status endpoint reports the running engine.                                                             |
+| Engine name                  | The `DATA_ENGINE` token names the running engine. Public endpoints do not report it.                        |
 | Testing module engine option | `DatabaseTestingModule` starts MongoDB or a throwaway PostgreSQL.                                           |
-| PostgreSQL CI job            | Runs only the suites marked as ready for PostgreSQL, plus contract tests.                                   |
+| PostgreSQL in CI             | The affected-project jobs start the services each project needs, and contract suites run on both engines.   |
 | Contract test harness        | A way to write one test case and run it against both adapters.                                              |
 
 ## Not this part
@@ -64,7 +64,7 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 | Chart engine switch     | A chart value renders either the MongoDB templates or new PostgreSQL templates. The database is only reachable inside the cluster, like MongoDB. |
 | CLI engine flag         | `project start` starts a MongoDB or a PostgreSQL container. `project ls` and `project remove` handle both.  |
 | Testing module          | Takes an engine option and starts a throwaway PostgreSQL per suite.                                         |
-| CI job                  | Runs the PostgreSQL-ready suites and the contract tests. Suites opt in as later parts make them work.      |
+| CI jobs                 | The affected-project jobs start only the services each project needs. Contract suites run on both engines, and specs are classified as contract or MongoDB-only as parts land. |
 
 ### Flow
 
@@ -72,21 +72,19 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 2. Only the chosen engine starts.
 3. The API starts with `--database-type` and its connection arguments.
 4. The connection module opens the engine and binds it through the adapter registration point.
-5. The status endpoint reports the engine.
 
 ## What changes
 
 - **`main.ts`:** gets the new argument and logs the experimental warning.
 - **Connection module:** grows a PostgreSQL branch.
-- **Status module:** reports the engine.
 - **Chart:** the MongoDB templates become conditional, and PostgreSQL templates are added.
 - **CLI:** `project` commands handle both engines.
-- **Test setup:** `DatabaseTestingModule` gets the engine option, there's a contract test harness, and CI gets the PostgreSQL job.
+- **Test setup:** `DatabaseTestingModule` gets the engine option, there's a contract test harness, and CI starts the services each project needs.
 
 ## PR breakdown
 
-1. `--database-type`, the connection module branch, the minimum version check, the experimental warning, and the engine in status.
-2. Testing module engine option and the PostgreSQL CI job, with only a connection smoke test enabled.
+1. `--database-type`, the connection module branch, the minimum version check, and the experimental warning.
+2. Testing module engine option and CI for PostgreSQL, with only a connection smoke test enabled.
 3. Contract test harness, with one example case.
 4. Helm chart PostgreSQL templates and the engine switch.
 5. CLI `project start`, `ls` and `remove` engine support.
@@ -97,10 +95,10 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 
 ## Done when
 
-- The API starts on either engine and reports which one.
+- The API starts on either engine.
 - A fresh chart install and a fresh `project start` work with either engine.
 - Existing MongoDB installs upgrade with no change to their values or arguments.
-- The PostgreSQL CI job runs and passes.
+- Contract suites run on both engines in the affected-project CI jobs and pass.
 
 ## As built
 
@@ -112,17 +110,37 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 | PostgreSQL connection        | `@spica-server/data-postgresql` (`packages/data/postgresql`). `PostgresDataAdapter.forRoot(uri, {poolSize})` takes a string or a lazy `() => Promise<string>`. It provides a global `pg.Pool` under the `PG_POOL` token (`@spica-server/interface-data`), sized by `--database-pool-size`. Idle client errors are logged, not thrown, and the pool ends on shutdown. |
 | Credentials                  | `POSTGRES_USERNAME` and `POSTGRES_PASSWORD` are injected into the uri, like the MongoDB ones.                                                                             |
 | Version check                | Boot fails unless `server_version_num` is at least 180000. A missing `pg_cron` only logs a warning.                                                                       |
-| Engine in status             | Not reported. `/status/ready` is public, so it still answers `{status: "ok"}`. The engine name is available as `DATA_ENGINE`.                                              |
+| Engine name                  | Not reported. `/status/ready` is public, so it still answers `{status: "ok"}`. The engine name is available as `DATA_ENGINE`.                                              |
 | Testing module engine option | `DatabaseTestingModule.postgres(dbName?)`. One `postgres:18` Testcontainers container per process, or `POSTGRES_URL`, with a new database per module. The adapter is registered in the root `jest.setup.js` under `SPICA_TESTING_POSTGRES_ADAPTER`. |
-| PostgreSQL CI job            | `test_affected` starts only the services each affected project needs. `scripts/ci-test-matrix.mjs` reads the project's specs: `database-testing` or `MONGODB_URL` means MongoDB, `contractSuite` or `POSTGRES_URL` means PostgreSQL, `RABBITMQ_*` means RabbitMQ, `MAILER_URL` means mailhog. A service URL is exported only when the service was started, so a spec the script missed starts its own container. Contract suites run on both engines in every affected project. `yarn check:engine-specs` (flags `--strict` and `--under=<path>`; self-test `yarn test:engine-specs`) lists specs that still use the MongoDB-only testing module without `contractSuite` or `mongoOnly`. |
+| PostgreSQL in CI             | `test_affected` starts only the services each affected project needs. `scripts/ci-test-matrix.mjs` reads the project's specs: `database-testing` or `MONGODB_URL` means MongoDB, `contractSuite` or `POSTGRES_URL` means PostgreSQL, `RABBITMQ_*` means RabbitMQ, `MAILER_URL` means mailhog. A service URL is exported only when the service was started, so a spec the script missed starts its own container. Contract suites run on both engines in every affected project. `yarn check:engine-specs` (flags `--strict` and `--under=<path>`; self-test `yarn test:engine-specs`) lists specs that still use the MongoDB-only testing module without `contractSuite` or `mongoOnly`. |
 | Contract test harness        | `contractSuite(name, engine => {...})` in `@spica-server/database-testing`. MongoDB always runs. PostgreSQL runs when `POSTGRES_URL` or `SPICA_CONTRACT_ENGINES` enables it. With `CI=true` a disabled engine fails the suite instead of skipping. `mongoOnly(reason)` marks a spec that can not run on PostgreSQL. |
+
+### PRs
+
+| PR    | What it did                                                                                                      |
+| ----- | ---------------------------------------------------------------------------------------------------------------- |
+| #2057 | `--database-type`, the PostgreSQL adapter, the version check, the experimental warning.                          |
+| #2058 | `DatabaseTestingModule.postgres()`, a PostgreSQL CI job and a connection smoke test.                             |
+| #2059 | The contract test harness.                                                                                       |
+| #2060 | Chart engine switch and PostgreSQL templates.                                                                    |
+| #2061 | CLI `project start` and `project ls`, and this section.                                                          |
+| #2064 | Pool error handler, safer test databases, `--database-ssl` removed.                                              |
+| #2065 | Chart: root and `spica` users, `database.*` values only, safe engine gating.                                     |
+| #2066 | Contract suites run on both engines in the affected job, `mongoOnly`, `check:engine-specs`.                      |
+| #2067 | CI starts only the services each project needs. The separate PostgreSQL job from #2058 was removed.             |
+| #2068 | CI runs on pull requests to `postgresql`.                                                                        |
 
 ### Chart and CLI
 
 - Chart: `database.type` (`mongodb` default, `postgresql`). A missing `database.type` counts as `mongodb`, so a release upgraded with `--reuse-values` from before this key existed keeps its MongoDB resources, and any other value fails the render. The MongoDB templates and the migrate job render only for MongoDB, and the default render is byte-identical to before. PostgreSQL adds `postgres.yaml`, `postgressrv.yaml`, `postgressecrets.yaml` and `postgresinitdb.yaml`, driven by the existing `database` values (`version`, `name`, the `spica*` and `root*` credentials, storage, resources, probes and scheduling). `database.version` defaults to 8.0.4 for MongoDB and 18 for PostgreSQL.
 - Chart users: like MongoDB, there is a root user and an unprivileged `spica` user. `root` is the PostgreSQL superuser. `spica` is a plain login role that owns the `database.name` database, has no other privileges, and is the only one the API uses. An init script in `/docker-entrypoint-initdb.d` creates it on first start, so changing the credentials later needs `ALTER ROLE` by hand. Both secrets keep the MongoDB names, `<release>-database-spica-credentials` and `<release>-database-root-credentials`.
 - Chart replicas: the PostgreSQL StatefulSet is hardcoded to one replica and ignores `database.replicas`. Replication will need custom scripts or an operator. The database is not reachable from outside the cluster and the chart has no external-server or SSL option.
+- Roles for later parts: `root` is a superuser, so it is the role that can create extensions that are not trusted, such as `pg_cron`. `spica` owns the database, so it can create schemas, tables and indexes in it. The chart's PostgreSQL image is the stock `postgres:18`, which does not include `pg_cron`.
 - CLI: `project start --database-type` and `--postgres-version`. `project ls` recognises `postgres` containers. `project remove` is label-based and needed no change.
+
+### Baseline
+
+`yarn check:engine-specs` lists 115 specs that use the MongoDB-only testing module without `contractSuite` or `mongoOnly`. Later parts bring their domains' specs to zero.
 
 ### Answers to the open questions
 
@@ -133,7 +151,7 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 ### Differs from the plan
 
 - `DataModule` needs `ID_TYPES` to boot, so the adapter binds a placeholder `PostgresIdTypes` that throws on use. Part 3 replaces it. No other contract token is bound yet.
-- The engine is not in the status response (see above). Reporting it on the authenticated `GET /status` is open.
+- The engine is not in the status response (see above). Part 8 adds an authenticated way for the admin panel to read it.
 - CI runs on pull requests to `master` and to `postgresql`, and it computes the affected projects against the pull request's own base branch. Pull requests into the stacked `postgresql-part*` branches do not trigger it.
 - `project upgrade` and the chart migrate job still assume MongoDB. Part 2 owns PostgreSQL migrations.
 - `FunctionModule.forRoot` still takes the MongoDB uri, name and replica set. Part 11 owns worker engine settings.
