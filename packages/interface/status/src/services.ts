@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 
 export interface StatusOptions {
   expireAfterSeconds: number;
@@ -9,7 +9,7 @@ export interface StatusOptions {
 export type AttachStatusTracker = (req: Request, res: Response) => void;
 
 export interface ApiStatus {
-  _id?: ObjectId;
+  _id?: Id;
   created_at?: Date;
   count: number;
   request: {
@@ -22,3 +22,19 @@ export interface ApiStatus {
 
 export const STATUS_OPTIONS = Symbol.for("STATUS_OPTIONS");
 export const ATTACH_STATUS_TRACKER = Symbol.for("ATTACH_STATUS_TRACKER");
+
+export interface ApiStatusSummary {
+  request: number;
+  uploaded: number;
+  downloaded: number;
+}
+
+export interface StatusRepository {
+  /**
+   * Counts one request with its payload sizes, adding it to the current minute's totals.
+   */
+  record(status: Omit<ApiStatus, "_id" | "count">): Promise<unknown>;
+  summarize(createdBetween?: {from: Date; to: Date}): Promise<ApiStatusSummary>;
+}
+
+export const STATUS_REPOSITORY = Symbol.for("STATUS_REPOSITORY");

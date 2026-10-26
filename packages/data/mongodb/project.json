@@ -1,0 +1,5 @@
+{
+  "name": "data/mongodb",
+  "sourceRoot": "packages/data/mongodb/src",
+  "projectType": "library"
+}

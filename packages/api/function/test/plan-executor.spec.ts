@@ -1,3 +1,9 @@
+import {
+  MongoEnvVarRepository,
+  MongoFunctionRepository,
+  MongoSecretRepository
+} from "@spica-server/data-mongodb";
+import {COLLECTION_QUERY} from "@spica-server/interface-data";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
@@ -20,6 +26,7 @@ describe("PlanExecutor", () => {
   let scheduler: Scheduler;
   let database: DatabaseService;
   let fs: FunctionService;
+  let functions: MongoFunctionRepository;
 
   let module: TestingModule;
   let app: INestApplication;
@@ -65,17 +72,25 @@ describe("PlanExecutor", () => {
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
 
-    const evs = new EnvVarService(database, new EnvVarChangeDispatcher());
-    const ss = new SecretService(database, "test-encryption-secret", new SecretChangeDispatcher());
-    fs = new FunctionService(database, evs, ss, {} as any);
+    const evs = new EnvVarService(
+      new MongoEnvVarRepository(database),
+      new EnvVarChangeDispatcher()
+    );
+    const ss = new SecretService(
+      new MongoSecretRepository(database),
+      "test-encryption-secret",
+      new SecretChangeDispatcher()
+    );
+    functions = new MongoFunctionRepository(database, {} as any);
+    fs = new FunctionService(functions, evs, ss);
 
     const options = {root: "test_root", timeout: 1, outDir: ".build"} as any;
     executor = new PlanExecutor(
-      fs,
+      module.get(COLLECTION_QUERY),
       scheduler,
       (val => val) as any,
       options,
-      new TriggerSecretResolver(fs, (val => val) as any),
+      new TriggerSecretResolver(module.get(COLLECTION_QUERY), (val => val) as any),
       new FunctionPreparationService(scheduler, options)
     );
 
@@ -180,7 +195,7 @@ describe("PlanExecutor", () => {
   });
 
   it("should reconcile warm workers per function, surviving a single-trigger removal", async () => {
-    await fs.insertOne({
+    await functions.insertOne({
       _id: new ObjectId(hexString),
       env_vars: [],
       language: "js",
@@ -211,7 +226,7 @@ describe("PlanExecutor", () => {
   });
 
   it("should roll active-trigger workers over via supersede and refill the reserve", async () => {
-    await fs.insertOne({
+    await functions.insertOne({
       _id: new ObjectId(hexString),
       env_vars: [],
       language: "js",
@@ -248,7 +263,7 @@ describe("PlanExecutor", () => {
   });
 
   it("should reconcile per-function concurrency from the function", async () => {
-    await fs.insertOne({
+    await functions.insertOne({
       _id: new ObjectId(hexString),
       env_vars: [],
       language: "js",
@@ -276,7 +291,7 @@ describe("PlanExecutor", () => {
   });
 
   it("should stamp the reconciled execution context into the scheduler", async () => {
-    await fs.insertOne({
+    await functions.insertOne({
       _id: new ObjectId(hexString),
       env_vars: [],
       language: "js",
@@ -294,7 +309,7 @@ describe("PlanExecutor", () => {
   });
 
   it("should not resolve apply() until the execution context is reconciled", async () => {
-    await fs.insertOne({
+    await functions.insertOne({
       _id: new ObjectId(hexString),
       env_vars: [],
       language: "js",

@@ -1,28 +1,45 @@
-import {FunctionService} from "@spica-server/function-services";
 import {SecretService} from "@spica-server/secret-services";
 import {
   Dependency,
   EnvRelation,
   Function,
+  FunctionRepository,
   FunctionWithDependencies,
   SecretRelation
 } from "@spica-server/interface-function";
 import {createPlan, refreshPlan, secretRefreshPlan} from "./change.js";
-import {ObjectId} from "@spica-server/database";
+import {DuplicateKeyError, ids} from "@spica-server/data";
+import {CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {FunctionEngine} from "./engine.js";
-import {LogService} from "@spica-server/function-log";
+import {LogRepository} from "@spica-server/interface-function-log";
 import {BadRequestException, InternalServerErrorException, NotFoundException} from "@nestjs/common";
-import {FunctionPipelineBuilder} from "./pipeline.builder.js";
 import fs from "fs";
 import * as readline from "readline";
 
-async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn: Function) {
+const collection = "function";
+
+export const functionIds = () => ids().forCollection(collection);
+
+const HIDDEN_SECRET_VALUES = {"secrets.value": 0} as const;
+
+function relations(env: EnvRelation, secret: SecretRelation): string[] {
+  return [
+    ...(env == EnvRelation.Resolved ? ["env_vars"] : []),
+    ...(secret == SecretRelation.Resolved ? ["secrets"] : [])
+  ];
+}
+
+async function insertWithChanges(
+  functions: FunctionRepository,
+  engine: FunctionEngine,
+  fn: Function
+) {
   if (fn._id) {
-    fn._id = new ObjectId(fn._id);
+    fn._id = functionIds().parse(fn._id);
   }
 
   try {
-    const r = await fs.insertOne(fn);
+    const r = await functions.insert(fn);
     fn._id = r._id;
   } catch (error: any) {
     throw toWriteException(error);
@@ -32,7 +49,7 @@ async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn
 }
 
 function toWriteException(error: any) {
-  if (error && error.code === 11000) {
+  if (error instanceof DuplicateKeyError) {
     return new BadRequestException(
       `Value of the property .${Object.keys(error.keyValue)[0]} should unique across all documents.`
     );
@@ -44,28 +61,22 @@ export async function find<
   ER extends EnvRelation = EnvRelation.NotResolved,
   SR extends SecretRelation = SecretRelation.NotResolved
 >(
-  fs: FunctionService,
+  queries: CollectionQueryFacade,
   engine: FunctionEngine,
   options?: {
     filter?: {
       resources?: object;
-      envVars?: ObjectId[];
       index?: string;
-      language?: string;
     };
     resolveEnvRelations?: ER;
     resolveSecretRelations?: SR;
   }
 ): Promise<Function<ER, SR>[]> {
-  const pipeline = new FunctionPipelineBuilder()
-    .filterResources(options?.filter?.resources)
-    .filterByEnvVars(options?.filter?.envVars)
-    .resolveEnvRelation(options?.resolveEnvRelations)
-    .resolveSecretRelation(options?.resolveSecretRelations)
-    .hideSecrets()
-    .filterByLanguage(options?.filter?.language)
-    .result();
-  let fns = await fs.aggregate<Function<ER, SR>>(pipeline).toArray();
+  let fns = await queries.find<Function<ER, SR>>(collection, {
+    resourceFilter: options?.filter?.resources,
+    relations: relations(options?.resolveEnvRelations, options?.resolveSecretRelations),
+    fields: HIDDEN_SECRET_VALUES
+  });
 
   if (options?.filter?.index) {
     fns = await index.filter(fns, options.filter.index, engine);
@@ -77,21 +88,18 @@ export async function findOne<
   ER extends EnvRelation = EnvRelation.NotResolved,
   SR extends SecretRelation = SecretRelation.NotResolved
 >(
-  fs: FunctionService,
-  id: ObjectId,
+  queries: CollectionQueryFacade,
+  id: Id,
   options: {
     resolveEnvRelations?: ER;
     resolveSecretRelations?: SR;
   }
 ): Promise<Function<ER, SR>> {
-  const pipeline = new FunctionPipelineBuilder()
-    .findOneIfRequested(id)
-    .resolveEnvRelation(options.resolveEnvRelations)
-    .resolveSecretRelation(options.resolveSecretRelations)
-    .hideSecrets()
-    .result();
-
-  const res = await fs.aggregate<Function<ER, SR>>(pipeline).next();
+  const res = await queries.findOne<Function<ER, SR>>(collection, {
+    id,
+    relations: relations(options.resolveEnvRelations, options.resolveSecretRelations),
+    fields: HIDDEN_SECRET_VALUES
+  });
   if (!res) {
     throw new NotFoundException(`Couldn't find the function with id ${id}`);
   }
@@ -103,17 +111,18 @@ export async function findByName<
   ER extends EnvRelation = EnvRelation.NotResolved,
   SR extends SecretRelation = SecretRelation.NotResolved
 >(
-  fs: FunctionService,
+  functions: FunctionRepository,
+  queries: CollectionQueryFacade,
   name: string,
   options?: {resolveEnvRelations?: ER; resolveSecretRelations?: SR}
 ): Promise<Function<ER, SR> | null> {
   if (typeof name != "string" || name.trim() == "") {
     throw new BadRequestException("Function name must be a non-empty string.");
   }
-  const fn = await fs.findOne({name});
+  const fn = await functions.findByName(name);
   if (!fn) return null;
   if (options?.resolveEnvRelations || options?.resolveSecretRelations) {
-    return findOne(fs, new ObjectId(fn._id), {
+    return findOne(queries, functionIds().parse(fn._id), {
       resolveEnvRelations: options?.resolveEnvRelations,
       resolveSecretRelations: options?.resolveSecretRelations
     }) as Promise<Function<ER, SR>>;
@@ -121,8 +130,8 @@ export async function findByName<
   return fn as Function<ER, SR>;
 }
 
-export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Function) {
-  await insertWithChanges(fs, engine, fn);
+export async function insert(functions: FunctionRepository, engine: FunctionEngine, fn: Function) {
+  await insertWithChanges(functions, engine, fn);
   await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
     await engine.createFunction(fn);
     const pkgContent = await engine.read(fn, "dependency");
@@ -132,14 +141,14 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
   return fn;
 }
 
-export async function replace(fs: FunctionService, engine: FunctionEngine, fn: Function) {
-  const _id = new ObjectId(fn._id);
+export async function replace(functions: FunctionRepository, engine: FunctionEngine, fn: Function) {
+  const _id = functionIds().parse(fn._id);
 
   // not sure that is necessary
   delete fn._id;
   delete fn.language;
 
-  const preFn = await fs.findOneAndUpdate({_id}, {$set: fn}).catch(error => {
+  const preFn = await functions.updateById(_id, fn).catch(error => {
     throw toWriteException(error);
   });
   if (!preFn) {
@@ -150,7 +159,7 @@ export async function replace(fs: FunctionService, engine: FunctionEngine, fn: F
 
   if (preFn.name != fn.name) {
     await engine.moveAssets(preFn, fn.name).catch(async error => {
-      await fs.replaceOne({_id}, preFn);
+      await functions.replaceById(_id, preFn);
       throw new InternalServerErrorException(
         `Failed to move the files of function ${preFn.name} to ${fn.name}: ${error?.message || error}`
       );
@@ -163,18 +172,18 @@ export async function replace(fs: FunctionService, engine: FunctionEngine, fn: F
 }
 
 export async function remove(
-  fs: FunctionService,
+  functions: FunctionRepository,
   engine: FunctionEngine,
-  logs: LogService,
-  id: ObjectId | string
+  logs: LogRepository,
+  id: Id | string
 ) {
-  const fn = await fs.findOneAndDelete({_id: new ObjectId(id)});
+  const fn = await functions.deleteById(functionIds().parse(id));
 
   if (!fn) {
     throw new NotFoundException("Couldn't find the function.");
   }
 
-  logs.deleteMany({function: fn._id.toString()});
+  logs.deleteByFunction(fn._id.toString());
 
   await engine.applyChangePlan(createPlan(fn, null));
 
@@ -183,8 +192,8 @@ export async function remove(
 }
 
 export namespace index {
-  export async function find(fs: FunctionService, engine: FunctionEngine, id: ObjectId) {
-    const fn = await fs.findOne({_id: id});
+  export async function find(functions: FunctionRepository, engine: FunctionEngine, id: Id) {
+    const fn = await functions.findById(id);
     if (!fn) {
       throw new NotFoundException("Can not find function.");
     }
@@ -198,14 +207,14 @@ export namespace index {
   }
 
   export async function write(
-    fs: FunctionService,
+    functions: FunctionRepository,
     engine: FunctionEngine,
-    id: string | ObjectId,
+    id: string | Id,
     index: string
   ) {
-    id = new ObjectId(id);
+    id = functionIds().parse(id);
 
-    const fn = await fs.findOne({_id: id});
+    const fn = await functions.findById(id);
 
     if (!fn) {
       throw new NotFoundException("Cannot find function.");
@@ -265,8 +274,8 @@ export namespace index {
 }
 
 export namespace dependencies {
-  export async function findOne(fs: FunctionService, engine: FunctionEngine, id: ObjectId) {
-    const fn = await fs.findOne({_id: id});
+  export async function findOne(functions: FunctionRepository, engine: FunctionEngine, id: Id) {
+    const fn = await functions.findById(id);
     if (!fn) {
       throw new NotFoundException("Could not find the function.");
     }
@@ -361,19 +370,12 @@ export namespace dependencies {
 
 export namespace environment {
   export async function inject(
-    fs: FunctionService,
-    fnId: ObjectId,
+    functions: FunctionRepository,
+    fnId: Id,
     engine: FunctionEngine,
-    envVarId: ObjectId
+    envVarId: Id
   ) {
-    const res = await fs.findOneAndUpdate(
-      {
-        _id: fnId
-      },
-      {
-        $addToSet: {env_vars: envVarId}
-      }
-    );
+    const res = await functions.addEnvVar(fnId, envVarId);
     if (!res) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
@@ -381,51 +383,37 @@ export namespace environment {
     return reload(fnId, engine);
   }
 
-  export async function removeReference(fs: FunctionService, fnId: ObjectId, envVarId: ObjectId) {
-    const res = await fs.findOneAndUpdate(
-      {
-        _id: fnId
-      },
-      {
-        $pull: {env_vars: envVarId}
-      }
-    );
+  export async function removeReference(functions: FunctionRepository, fnId: Id, envVarId: Id) {
+    const res = await functions.removeEnvVar(fnId, envVarId);
     if (!res) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
   }
 
   export async function eject(
-    fs: FunctionService,
-    fnId: ObjectId,
+    functions: FunctionRepository,
+    fnId: Id,
     engine: FunctionEngine,
-    envVarId: ObjectId
+    envVarId: Id
   ) {
-    await removeReference(fs, fnId, envVarId);
+    await removeReference(functions, fnId, envVarId);
     return reload(fnId, engine);
   }
 
-  export async function reload(fnId: ObjectId, engine: FunctionEngine) {
+  export async function reload(fnId: Id, engine: FunctionEngine) {
     return engine.applyChangePlan(refreshPlan(fnId.toString()));
   }
 }
 
 export namespace secret {
   export async function inject(
-    fs: FunctionService,
+    functions: FunctionRepository,
     ss: SecretService,
-    fnId: ObjectId,
+    fnId: Id,
     engine: FunctionEngine,
-    secretId: ObjectId
+    secretId: Id
   ) {
-    const fn = await fs.findOneAndUpdate(
-      {
-        _id: fnId
-      },
-      {
-        $addToSet: {secrets: secretId}
-      }
-    );
+    const fn = await functions.addSecret(fnId, secretId);
     if (!fn) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
@@ -433,15 +421,8 @@ export namespace secret {
     return reload(fn, ss, engine, secretId);
   }
 
-  export async function removeReference(fs: FunctionService, fnId: ObjectId, secretId: ObjectId) {
-    const fn = await fs.findOneAndUpdate(
-      {
-        _id: fnId
-      },
-      {
-        $pull: {secrets: secretId}
-      }
-    );
+  export async function removeReference(functions: FunctionRepository, fnId: Id, secretId: Id) {
+    const fn = await functions.removeSecret(fnId, secretId);
     if (!fn) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
@@ -449,41 +430,31 @@ export namespace secret {
   }
 
   export async function eject(
-    fs: FunctionService,
+    functions: FunctionRepository,
     ss: SecretService,
-    fnId: ObjectId,
+    fnId: Id,
     engine: FunctionEngine,
-    secretId: ObjectId
+    secretId: Id
   ) {
-    const fn = await removeReference(fs, fnId, secretId);
+    const fn = await removeReference(functions, fnId, secretId);
     return reload(fn, ss, engine, secretId);
   }
 
-  async function reload(
-    fn: Function,
-    ss: SecretService,
-    engine: FunctionEngine,
-    secretId: ObjectId
-  ) {
-    const secret = await ss.findOne({_id: secretId}, {projection: {key: 1}});
+  async function reload(fn: Function, ss: SecretService, engine: FunctionEngine, secretId: Id) {
+    const secret = await ss.findById(secretId);
     const secretKeys = secret ? [secret.key] : [];
     return engine.applyChangePlan(secretRefreshPlan(fn, secretKeys));
   }
 }
 
 export async function findOneForRuntime(
-  fs: FunctionService,
-  id: ObjectId
+  queries: CollectionQueryFacade,
+  id: Id
 ): Promise<Function<EnvRelation.Resolved, SecretRelation.Resolved>> {
-  const pipeline = new FunctionPipelineBuilder()
-    .findOneIfRequested(id)
-    .resolveEnvRelation(EnvRelation.Resolved)
-    .resolveSecretRelation(SecretRelation.Resolved)
-    .result();
-
-  const res = await fs
-    .aggregate<Function<EnvRelation.Resolved, SecretRelation.Resolved>>(pipeline)
-    .next();
+  const res = await queries.findOne<Function<EnvRelation.Resolved, SecretRelation.Resolved>>(
+    collection,
+    {id, relations: relations(EnvRelation.Resolved, SecretRelation.Resolved)}
+  );
   if (!res) {
     throw new NotFoundException(`Couldn't find the function with id ${id}`);
   }
@@ -492,15 +463,11 @@ export async function findOneForRuntime(
 }
 
 export function findWithSecrets(
-  fs: FunctionService,
-  ids: ObjectId[]
+  queries: CollectionQueryFacade,
+  ids: Id[]
 ): Promise<Function<EnvRelation.NotResolved, SecretRelation.Resolved>[]> {
-  const pipeline = new FunctionPipelineBuilder()
-    .filterByIds(ids)
-    .resolveSecretRelation(SecretRelation.Resolved)
-    .result();
-
-  return fs
-    .aggregate<Function<EnvRelation.NotResolved, SecretRelation.Resolved>>(pipeline)
-    .toArray();
+  return queries.find<Function<EnvRelation.NotResolved, SecretRelation.Resolved>>(collection, {
+    where: ids.length ? {_id: {in: ids}} : undefined,
+    relations: relations(EnvRelation.NotResolved, SecretRelation.Resolved)
+  });
 }

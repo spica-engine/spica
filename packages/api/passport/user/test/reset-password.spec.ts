@@ -1,3 +1,4 @@
+import {USER_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
 import {PasswordResetService} from "@spica-server/passport-user/src/services/password-reset.service";
@@ -21,6 +22,7 @@ describe("PasswordResetService", () => {
   let passwordResetService: PasswordResetService;
   let userConfigService: UserConfigService;
   let userService: UserService;
+  let users: any;
   let mailerService: MailerService;
   let smsService: SmsService;
   let db: DatabaseService;
@@ -92,6 +94,7 @@ describe("PasswordResetService", () => {
     passwordResetService = module.get(PasswordResetService);
     userConfigService = module.get(UserConfigService);
     userService = module.get(UserService);
+    users = module.get(USER_REPOSITORY);
     mailerService = module.get(MailerService);
     smsService = module.get(SmsService);
     db = module.get(DatabaseService);
@@ -113,7 +116,7 @@ describe("PasswordResetService", () => {
   });
 
   afterEach(async () => {
-    await userService.deleteMany({});
+    await users.deleteMany({});
     mockMailerService.sendMail.mockReset();
     mockSmsService.sendSms.mockReset();
     await userConfigService.updateProviderVerificationConfig(undefined);
@@ -125,7 +128,7 @@ describe("PasswordResetService", () => {
       const email = "test@example.com";
 
       const encryptedEmail = userService.encryptField(email);
-      await userService.insertOne({
+      await users.insertOne({
         username,
         password: "oldPassword123",
         email: encryptedEmail
@@ -169,7 +172,7 @@ describe("PasswordResetService", () => {
         {provider: PHONE_PROVIDER, strategy: STRATEGY}
       ]);
       const encryptedPhone = userService.encryptField(phoneNumber);
-      await userService.insertOne({
+      await users.insertOne({
         username,
         password: "oldPassword123",
         phone: encryptedPhone
@@ -208,7 +211,7 @@ describe("PasswordResetService", () => {
     it("should throw error when user does not have provider", async () => {
       const username = "userwithoutprovider";
 
-      await userService.insertOne({
+      await users.insertOne({
         username,
         password: "oldPassword123"
       } as any);
@@ -225,7 +228,7 @@ describe("PasswordResetService", () => {
       const email = "test@example.com";
 
       const encryptedEmail = userService.encryptField(email);
-      await userService.insertOne({
+      await users.insertOne({
         username,
         password: "oldPassword123",
         email: encryptedEmail
@@ -259,7 +262,7 @@ describe("PasswordResetService", () => {
       ]);
 
       const encryptedPhone = userService.encryptField(phoneNumber);
-      await userService.insertOne({
+      await users.insertOne({
         username,
         password: "oldPassword123",
         phone: encryptedPhone
@@ -284,7 +287,7 @@ describe("PasswordResetService", () => {
       const newPassword = "newPassword456";
 
       const encryptedEmail = userService.encryptField(email);
-      const user = await userService.insertOne({
+      const user = await users.insertOne({
         username,
         password: oldPassword,
         email: encryptedEmail
@@ -313,7 +316,7 @@ describe("PasswordResetService", () => {
         message: "Password has been reset successfully. You can now log in with your new password."
       });
 
-      const updatedUser = await userService.findOne({_id: user._id});
+      const updatedUser = await users.findOne({_id: user._id});
       const isMatch = await compare(newPassword, updatedUser.password);
       expect(isMatch).toBe(true);
     });
@@ -325,7 +328,7 @@ describe("PasswordResetService", () => {
       const wrongCode = "999999";
 
       const encryptedEmail = userService.encryptField(email);
-      await userService.insertOne({
+      await users.insertOne({
         username,
         password: "oldPassword123",
         email: encryptedEmail
@@ -378,7 +381,7 @@ describe("PasswordResetService", () => {
       const newPassword = "newPassword456";
 
       const encryptedEmail = userService.encryptField(email);
-      await userService.insertOne({
+      await users.insertOne({
         username,
         password: "oldPassword123",
         email: encryptedEmail
@@ -415,7 +418,7 @@ describe("PasswordResetService", () => {
       const newPassword = "newPassword456";
 
       const encryptedPhone = userService.encryptField(phoneNumber);
-      const user = await userService.insertOne({
+      const user = await users.insertOne({
         username,
         password: oldPassword,
         phone: encryptedPhone
@@ -456,7 +459,7 @@ describe("PasswordResetService", () => {
         message: "Password has been reset successfully. You can now log in with your new password."
       });
 
-      const updatedUser = await userService.findOne({_id: user._id});
+      const updatedUser = await users.findOne({_id: user._id});
       const isMatch = await compare(newPassword, updatedUser.password);
       expect(isMatch).toBe(true);
     });

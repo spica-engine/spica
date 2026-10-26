@@ -20,7 +20,7 @@ const makeChange = (overrides: Record<string, unknown> = {}) => ({
 let changeSubject: Subject<unknown>;
 
 let mockAssetService: {watch: jest.Mock};
-let mockFunctionService: {findOne: jest.Mock};
+let mockFunctionService: {findById: jest.Mock};
 let mockReconciler: {reconcileFunction: jest.Mock};
 let mockTracker: {isSelfWrite: jest.Mock};
 let mockPreparationService: {deleteFunctionDirectory: jest.Mock};
@@ -57,7 +57,7 @@ beforeEach(() => {
   };
 
   mockFunctionService = {
-    findOne: jest.fn().mockResolvedValue(makeFn())
+    findById: jest.fn().mockResolvedValue(makeFn())
   };
 
   mockReconciler = {
@@ -113,9 +113,9 @@ describe("FunctionAssetWatcher — happy path", () => {
     changeSubject.next(makeChange());
     await new Promise(r => setTimeout(r, 0));
 
-    expect(mockFunctionService.findOne).toHaveBeenCalledWith({
-      _id: expect.objectContaining({toHexString: expect.any(Function)})
-    });
+    expect(mockFunctionService.findById).toHaveBeenCalledWith(
+      expect.objectContaining({toHexString: expect.any(Function)})
+    );
 
     watcher.onModuleDestroy();
   });
@@ -208,14 +208,14 @@ describe("FunctionAssetWatcher — edge cases", () => {
     changeSubject.next({fullDocument: {filename: "index.ts", hash: "abc"}});
     await new Promise(r => setTimeout(r, 0));
 
-    expect(mockFunctionService.findOne).not.toHaveBeenCalled();
+    expect(mockFunctionService.findById).not.toHaveBeenCalled();
     expect(mockReconciler.reconcileFunction).not.toHaveBeenCalled();
 
     watcher.onModuleDestroy();
   });
 
   it("should warn and NOT call reconcileFunction when the function is not found", async () => {
-    mockFunctionService.findOne.mockResolvedValue(null);
+    mockFunctionService.findById.mockResolvedValue(null);
 
     const watcher = buildWatcher();
     watcher.onModuleInit();
@@ -304,22 +304,19 @@ describe("FunctionAssetWatcher — delete events", () => {
 // ---------------------------------------------------------------------------
 
 describe("FunctionAssetWatcher — lifecycle", () => {
-  it("should subscribe to assetService.watch on onModuleInit with correct pipeline and options", () => {
+  it("should watch the asset feed on onModuleInit with the relevant operations and options", () => {
     const watcher = buildWatcher();
     watcher.onModuleInit();
 
     expect(mockAssetService.watch).toHaveBeenCalledTimes(1);
-    const [pipeline, options] = mockAssetService.watch.mock.calls[0];
-    // Pipeline should filter on the relevant operationTypes
-    expect(pipeline).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          $match: expect.objectContaining({operationType: expect.anything()})
-        })
-      ])
-    );
+    const [collection, options] = mockAssetService.watch.mock.calls[0];
+    expect(collection).toEqual("function_assets");
+    expect(options).toMatchObject({
+      operations: expect.arrayContaining(["insert", "update", "replace", "delete"]),
+      document: "current"
+    });
     // Must request pre-change document so delete events carry fullDocumentBeforeChange
-    expect(options).toMatchObject({fullDocumentBeforeChange: "whenAvailable"});
+    expect(options).toMatchObject({beforeChange: "whenAvailable"});
 
     watcher.onModuleDestroy();
   });

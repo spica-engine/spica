@@ -1,10 +1,13 @@
 import {Injectable, NotFoundException, Inject, BadRequestException, Logger} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {ids} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 import {
-  UserVerification,
   UserOptions,
+  UserVerification,
   USER_OPTIONS,
-  VerificationMessage
+  VERIFICATION_REPOSITORY,
+  VerificationMessage,
+  VerificationRepository
 } from "@spica-server/interface-passport-user";
 import {hash, encrypt, decrypt, BaseEncryptedData} from "@spica-server/core-encryption";
 import {randomInt} from "crypto";
@@ -21,28 +24,23 @@ interface MagicLinkPayload {
 
 interface VerificationStrategyHandler {
   validatePreConditions(provider: string): Promise<void>;
-  generateCode(id: ObjectId, value: string, provider: string, purpose: string): string;
+  generateCode(id: Id, value: string, provider: string, purpose: string): string;
   buildSendPayload(rawCode: string, value: string, provider: string): Partial<VerificationMessage>;
 }
 
 @Injectable()
-export class VerificationService extends BaseCollection<UserVerification>("verification") {
+export class VerificationService {
   private readonly logger = new Logger(VerificationService.name);
   private readonly TTL_INDEX_EXPIRES_IN = 300;
   constructor(
-    db: DatabaseService,
+    @Inject(VERIFICATION_REPOSITORY) private readonly verifications: VerificationRepository,
     private readonly providerRegistry: VerificationProviderRegistry,
     @Inject(USER_OPTIONS) private userOptions: UserOptions,
     private readonly userConfigService: UserConfigService
-  ) {
-    super(db, {
-      afterInit: () =>
-        this.upsertTTLIndex(this.userOptions.verificationCodeExpiresIn || this.TTL_INDEX_EXPIRES_IN)
-    });
-  }
+  ) {}
 
   async startVerificationProcess(
-    id: ObjectId,
+    id: Id,
     value: string,
     strategy: string,
     provider: string,
@@ -80,30 +78,24 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   async confirmVerificationProcess(
-    id: ObjectId,
+    id: Id,
     code: string,
     strategy: string,
     provider: string,
     purpose: string
   ): Promise<{
-    userId: ObjectId;
+    userId: Id;
     destination: string;
     verifiedField: string;
     strategy: string;
     provider: string;
   }> {
-    const verification = await this.findOneAndUpdate(
-      {
-        userId: id,
-        strategy: strategy,
-        provider: provider,
-        purpose: purpose,
-        is_used: false
-      },
-      {
-        $set: {is_used: true}
-      }
-    );
+    const verification = await this.verifications.consume({
+      userId: id,
+      strategy,
+      provider,
+      purpose
+    });
 
     if (!verification) {
       throw new NotFoundException("No verification found");
@@ -134,7 +126,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   async confirmMagicLinkVerification(token: string): Promise<{
-    userId: ObjectId;
+    userId: Id;
     destination: string;
     verifiedField: string;
     strategy: string;
@@ -142,7 +134,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }> {
     const payload = this.decryptMagicLinkToken(token);
     return this.confirmVerificationProcess(
-      new ObjectId(payload.userId),
+      ids().forCollection("user").parse(payload.userId),
       token,
       "MagicLink",
       payload.provider,
@@ -192,40 +184,16 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   private async upsertVerificationRecord(
-    id: ObjectId,
+    id: Id,
     value: string,
     strategy: string,
     provider: string,
     purpose: string,
     hashedCode: string
   ) {
-    const result = await this.findOneAndUpdate(
-      {
-        userId: id,
-        strategy: strategy,
-        purpose: purpose,
-        is_used: false
-      },
-      {
-        $setOnInsert: {
-          userId: id,
-          destination: value,
-          provider: provider,
-          purpose: purpose,
-          strategy: strategy,
-          createdAt: new Date()
-        },
-        $inc: {
-          requestCount: 1
-        },
-        $set: {
-          code: hashedCode
-        }
-      },
-      {
-        upsert: true,
-        returnDocument: "after"
-      }
+    const result = await this.verifications.upsertPending(
+      {userId: id, strategy, purpose},
+      {destination: value, provider, code: hashedCode}
     );
 
     if (!result) {
@@ -249,7 +217,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     destination: string,
     provider: string,
     sendPayload: Partial<VerificationMessage>,
-    recordId: ObjectId
+    recordId: Id
   ) {
     try {
       const sendResult = await verificationProvider.send({
@@ -259,7 +227,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
       } as VerificationMessage);
 
       if (!sendResult.success) {
-        await this.findOneAndDelete({_id: recordId});
+        await this.verifications.deleteById(recordId);
         throw new Error(sendResult.message || "Failed to send verification");
       }
 
@@ -273,13 +241,13 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
         `Error sending verification via ${provider}:`,
         error instanceof Error ? error.stack : String(error)
       );
-      await this.findOneAndDelete({_id: recordId});
+      await this.verifications.deleteById(recordId);
       throw new BadRequestException(error.message || `Failed to send verification via ${provider}`);
     }
   }
 
   private generateMagicLinkToken(
-    userId: ObjectId,
+    userId: Id,
     value: string,
     provider: string,
     purpose: string
@@ -288,7 +256,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     const ttl = this.userOptions.verificationCodeExpiresIn || this.TTL_INDEX_EXPIRES_IN;
 
     const payload: MagicLinkPayload = {
-      userId: userId.toHexString(),
+      userId: userId.toString(),
       value,
       provider,
       purpose,

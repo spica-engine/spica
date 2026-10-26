@@ -22,13 +22,13 @@
       "path": "../../../interface/passport/refresh_token"
     },
     {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../../filter"
     },
     {
-      "path": "../../../database/pipeline"
-    },
-    {
-      "path": "../../../database"
+      "path": "../../../data"
     },
     {
       "path": "../../../core/schema"

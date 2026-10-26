@@ -1,4 +1,4 @@
-import {ObjectId} from "mongodb";
+import {ids} from "@spica-server/data";
 import {Format} from "@spica-server/interface-core";
 import {hash, encrypt} from "@spica-server/core-encryption";
 
@@ -6,10 +6,10 @@ export const OBJECT_ID: Format = {
   name: "objectid",
   type: "string",
   coerce: bucketId => {
-    return new ObjectId(bucketId);
+    return ids().unscoped().parse(bucketId);
   },
   validate: objectId => {
-    return ObjectId.isValid(objectId);
+    return ids().unscoped().isValid(objectId);
   }
 };
 
@@ -17,7 +17,7 @@ export const OBJECTID_STRING: Format = {
   name: "objectid-string",
   type: "string",
   validate: objectId => {
-    return ObjectId.isValid(objectId);
+    return ids().unscoped().isValid(objectId);
   }
 };
 
