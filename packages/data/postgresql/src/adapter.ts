@@ -8,6 +8,8 @@ import {assertSupportedServerVersion} from "./version.js";
 
 export const POSTGRESQL_ENGINE = "postgresql";
 
+export type PostgresUri = string | (() => Promise<string>);
+
 export interface PostgresConnectionOptions {
   poolSize?: number;
   ssl?: boolean;
@@ -47,13 +49,14 @@ export class PostgresDataAdapterModule implements OnApplicationShutdown {
 }
 
 export class PostgresDataAdapter {
-  static forRoot(uri: string, options: PostgresConnectionOptions = {}): DataAdapter {
+  static forRoot(uri: PostgresUri, options: PostgresConnectionOptions = {}): DataAdapter {
     return {
       engine: POSTGRESQL_ENGINE,
       module: {
         module: PostgresDataAdapterModule,
         providers: [
-          {provide: PG_POOL, useFactory: () => connect(uri, options)},
+          {provide: PG_POOL, useFactory: async () =>
+              connect(typeof uri == "function" ? await uri() : uri, options)},
           {provide: ID_TYPES, useClass: PostgresIdTypes},
           {provide: DATA_HEALTH, useClass: PostgresDataHealth}
         ],

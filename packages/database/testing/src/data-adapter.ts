@@ -11,3 +11,14 @@ export function testingDataAdapter(): DataAdapter {
   }
   return factory();
 }
+
+const TESTING_POSTGRES_ADAPTER = Symbol.for("SPICA_TESTING_POSTGRES_ADAPTER");
+
+export function testingPostgresAdapter(uri: () => Promise<string>): DataAdapter {
+  const factory: ((uri: () => Promise<string>) => DataAdapter) | undefined =
+    globalThis[TESTING_POSTGRES_ADAPTER];
+  if (!factory) {
+    throw new Error("No testing PostgreSQL adapter is registered. Register one in the jest setup.");
+  }
+  return factory(uri);
+}

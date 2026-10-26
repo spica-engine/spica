@@ -9390,6 +9390,7 @@ __metadata:
     "@nestjs/common": "npm:^10.4.22"
     "@nestjs/testing": "npm:^10.4.22"
     "@spica-server/data": "workspace:*"
+    "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-data": "workspace:*"
     "@types/pg": "npm:^8.15.5"
     pg: "npm:^8.16.3"
@@ -9444,8 +9445,10 @@ __metadata:
     "@nestjs/common": "npm:^10.4.22"
     "@spica-server/data": "workspace:*"
     "@spica-server/database": "workspace:*"
+    "@types/pg": "npm:^8.15.5"
     mongodb: "npm:^6.12.0"
     mongodb-memory-server: "npm:^10.1.4"
+    pg: "npm:^8.16.3"
     testcontainers: "npm:^10.0.2"
   languageName: unknown
   linkType: soft
