@@ -12,7 +12,6 @@ export type PostgresUri = string | (() => Promise<string>);
 
 export interface PostgresConnectionOptions {
   poolSize?: number;
-  ssl?: boolean;
 }
 
 const logger = new Logger("PostgresDataAdapter");
@@ -20,9 +19,9 @@ const logger = new Logger("PostgresDataAdapter");
 export async function connect(uri: string, options: PostgresConnectionOptions = {}) {
   const pool = new pg.Pool({
     connectionString: uri,
-    max: options.poolSize,
-    ssl: options.ssl ? {rejectUnauthorized: true} : undefined
+    max: options.poolSize
   });
+  pool.on("error", error => logger.error(`Idle PostgreSQL client failed: ${error.message}`));
   try {
     const {rows} = await pool.query("SHOW server_version_num");
     assertSupportedServerVersion(rows[0].server_version_num);

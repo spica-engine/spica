@@ -33,7 +33,11 @@ export async function createPostgresDatabase(name?: string) {
   const client = new pg.Client({connectionString: base});
   await client.connect();
   try {
-    await client.query(`CREATE DATABASE "${database}"`);
+    const identifier = pg.escapeIdentifier(database);
+    if (name) {
+      await client.query(`DROP DATABASE IF EXISTS ${identifier} WITH (FORCE)`);
+    }
+    await client.query(`CREATE DATABASE ${identifier}`);
   } finally {
     await client.end();
   }
