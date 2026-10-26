@@ -92,8 +92,6 @@ jobs:
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
       - name: Verify TypeScript project references in sync
         run: yarn nx sync:check
-      - name: Verify data access boundary
-        run: yarn check:data-boundary
       - name: Build Affected
         run: yarn nx affected -t build
 

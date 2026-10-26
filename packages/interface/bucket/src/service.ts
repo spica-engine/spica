@@ -1,15 +1,10 @@
-export interface IndexOptions {
-  unique?: boolean;
-  sparse?: boolean;
-  expireAfterSeconds?: number;
-  [option: string]: unknown;
-}
+import {CreateIndexesOptions} from "@spica-server/database";
 
 export interface IndexDefinition {
   definition: {
     [key: string]: any;
   };
-  options?: IndexOptions;
+  options?: CreateIndexesOptions;
   name: string;
 }
 

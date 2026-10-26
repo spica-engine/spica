@@ -1,5 +1,5 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {Collection, CreateIndexesOptions, DatabaseService} from "@spica-server/database";
+import {Collection, DatabaseService} from "@spica-server/database";
 import {Id, ProfilerQuery} from "@spica-server/interface-data";
 import {
   Bucket,
@@ -152,7 +152,7 @@ export class MongoBucketDataRepository implements BucketDataRepository {
     await Promise.all(
       indexes.map(idx =>
         collection
-          .createIndex(idx.definition, {...idx.options, name: idx.name} as CreateIndexesOptions)
+          .createIndex(idx.definition, {...idx.options, name: idx.name})
           .catch(err => errors.push(err))
       )
     );

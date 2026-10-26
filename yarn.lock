@@ -9962,6 +9962,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/interface-bucket@workspace:packages/interface/bucket"
   dependencies:
+    "@spica-server/database": "workspace:*"
     "@spica-server/interface-data": "workspace:*"
     "@spica-server/interface-preference": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
