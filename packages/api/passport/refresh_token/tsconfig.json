@@ -28,6 +28,9 @@
       "path": "../../../filter"
     },
     {
+      "path": "../../../database/pipeline"
+    },
+    {
       "path": "../../../data"
     },
     {

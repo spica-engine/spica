@@ -11,15 +11,14 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors,
-  Inject
+  UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createApikeyActivity} from "./activity.resource.js";
 import {ApiKeyService} from "./apikey.service.js";
@@ -28,10 +27,7 @@ import {nanoid} from "nanoid";
 
 @Controller("passport/apikey")
 export class ApiKeyController {
-  constructor(
-    private apiKeyService: ApiKeyService,
-    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
-  ) {}
+  constructor(private apiKeyService: ApiKeyService) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:index"))
@@ -39,9 +35,38 @@ export class ApiKeyController {
     @ResourceFilter({collection: "apikey"}) resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit?: number,
     @Query("skip", DEFAULT(0), NUMBER) skip?: number,
-    @Query("sort", JSONP) sort?: {[path: string]: 1 | -1}
+    @Query("sort", JSONP) sort?: {[k: string]: number}
   ) {
-    return this.queries.paginate("apikey", {resourceFilter, sort, skip, limit}, "exact");
+    const dataPipeline: object[] = [];
+
+    if (sort) {
+      dataPipeline.push({$sort: sort});
+    }
+
+    // sub-pipeline in $facet stage cannot be empty
+    dataPipeline.push({$skip: skip});
+
+    if (limit) {
+      dataPipeline.push({$limit: limit});
+    }
+
+    const pipeline = [
+      resourceFilter,
+      {
+        $facet: {
+          meta: [{$count: "total"}],
+          data: dataPipeline
+        }
+      },
+      {
+        $set: {
+          meta: {
+            $ifNull: [{$arrayElemAt: ["$meta", 0]}, {$const: {total: 0}}]
+          }
+        }
+      }
+    ];
+    return this.apiKeyService.aggregate(pipeline).next();
   }
 
   @Get(":id")

@@ -30,7 +30,7 @@ import {StrategyService} from "./strategy/services/strategy.service.js";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {Id} from "@spica-server/interface-data";
 import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface-passport";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {ClassCommander} from "@spica-server/replication";
@@ -85,7 +85,6 @@ export class PassportIdentityController {
     private strategyService: StrategyService,
     private authFactor: AuthFactor,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices,
-    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
@@ -328,7 +327,9 @@ export class PassportIdentityController {
 
   @Get("identity/strategies")
   async strategies() {
-    return this.queries.find("strategy", {filter: {type: "saml"}, fields: {options: 0}});
+    return this.strategyService
+      .aggregate([{$match: {type: "saml"}}, {$project: {options: 0}}])
+      .toArray();
   }
 
   @Get("identity/strategy/:id/url")
