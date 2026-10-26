@@ -1,9 +1,9 @@
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 
 export interface PreActivity {
   action: Action;
-  identifier?: string | Id;
-  username?: string | Id;
+  identifier?: string | ObjectId;
+  username?: string | ObjectId;
 }
 
 export interface ModuleActivity extends PreActivity {
@@ -11,7 +11,7 @@ export interface ModuleActivity extends PreActivity {
 }
 
 export interface Activity extends ModuleActivity {
-  _id?: Id;
+  _id?: ObjectId;
   created_at: Date;
 }
 

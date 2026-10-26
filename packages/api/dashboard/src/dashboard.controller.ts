@@ -16,9 +16,8 @@ import {DashboardService} from "./dashboard.service.js";
 import {Dashboard} from "@spica-server/interface-dashboard";
 import {Schema} from "@spica-server/core-schema";
 import {ResourceFilter} from "@spica-server/passport-guard";
+import {OBJECT_ID, ObjectId} from "@spica-server/database";
 import * as CRUD from "./crud.js";
-import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
 
 @Controller("dashboard")
 export class DashboardController {
@@ -32,7 +31,7 @@ export class DashboardController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:show"))
-  findById(@Param("id", ID("dashboard")) id: Id) {
+  findById(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.findOne(this.dashboardService, id);
   }
 
@@ -47,7 +46,7 @@ export class DashboardController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:update"))
   async update(
-    @Param("id", ID("dashboard")) id: Id,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/dashboard"))
     dashboard: Dashboard
   ) {
@@ -59,7 +58,7 @@ export class DashboardController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param("id", ID("dashboard")) id: Id) {
+  async delete(@Param("id", OBJECT_ID) id: ObjectId) {
     await CRUD.remove(this.dashboardService, id).catch(e => {
       throw new HttpException(e.message, e.status || 500);
     });

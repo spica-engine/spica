@@ -1,8 +1,8 @@
+import {ObjectId} from "@spica-server/database";
 import {EncryptedData} from "@spica-server/core-encryption";
-import {Id} from "@spica-server/interface-data";
 
 export interface Secret {
-  _id?: Id;
+  _id?: ObjectId;
   key: string;
   value: EncryptedData<false>;
   updated_at?: Date;

@@ -13,16 +13,10 @@
       "path": "../passport/guard"
     },
     {
-      "path": "../../interface/data"
-    },
-    {
       "path": "../../interface/asset"
     },
     {
       "path": "../../database"
-    },
-    {
-      "path": "../../data"
     },
     {
       "path": "../../core/schema"

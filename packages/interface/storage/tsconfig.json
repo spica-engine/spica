@@ -8,7 +8,7 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../data"
+      "path": "../../database"
     }
   ]
 }

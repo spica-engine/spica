@@ -1,13 +1,9 @@
-import {ReturnDocument} from "@spica-server/database";
+import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {EnvVarService} from "../services";
 import {EnvVar} from "@spica-server/interface-env_var";
 import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
-import {ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
-
-const envVarIds = () => ids().forCollection("env_var");
 
 export async function find(
   evs: EnvVarService,
@@ -38,7 +34,7 @@ export async function find(
   return evs.aggregate<EnvVar>(plan.dataPipeline).toArray();
 }
 
-export function findOne(evs: EnvVarService, id: Id): Promise<EnvVar> {
+export function findOne(evs: EnvVarService, id: ObjectId): Promise<EnvVar> {
   return evs.findOne({_id: id});
 }
 
@@ -50,7 +46,7 @@ export async function insert(evs: EnvVarService, body: EnvVar) {
   };
 
   if (body._id) {
-    envVar._id = envVarIds().parse(body._id);
+    envVar._id = new ObjectId(body._id);
   }
 
   await evs.insertOne(envVar);
@@ -58,7 +54,7 @@ export async function insert(evs: EnvVarService, body: EnvVar) {
 }
 
 export async function replace(evs: EnvVarService, body: EnvVar) {
-  const _id = envVarIds().parse(body._id);
+  const _id = new ObjectId(body._id);
 
   const envVar = {
     key: body.key,
@@ -76,8 +72,8 @@ export async function replace(evs: EnvVarService, body: EnvVar) {
   return currentSchema;
 }
 
-export async function remove(evs: EnvVarService, id: string | Id) {
-  const res = await evs.findOneAndDelete({_id: envVarIds().parse(id)});
+export async function remove(evs: EnvVarService, id: string | ObjectId) {
+  const res = await evs.findOneAndDelete({_id: new ObjectId(id)});
   if (!res) {
     throw new NotFoundException(`Environment Variable with ID ${id} not found`);
   }

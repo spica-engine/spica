@@ -4,10 +4,8 @@ import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {EnvVarService} from "@spica-server/env_var-services";
 import {EnvVar} from "@spica-server/interface-env_var";
+import {ObjectId} from "@spica-server/database";
 import * as CRUD from "./crud.js";
-import {ids} from "@spica-server/data";
-
-const envVarIds = () => ids().forCollection("env_var");
 
 const _module = "env_var";
 
@@ -34,10 +32,10 @@ export function registerAssetHandlers(
   registrar.operator(_module, operator);
 
   const exporter = async (_id: string) => {
-    if (!envVarIds().isValid(_id)) {
+    if (!ObjectId.isValid(_id)) {
       return Promise.reject(`${_id} is not a valid object id`);
     }
-    const envVar = await evs.findOne({_id: envVarIds().parse(_id)});
+    const envVar = await evs.findOne({_id: new ObjectId(_id)});
 
     if (!envVar) {
       return Promise.reject(`Environment variable does not exist with _id ${_id}`);

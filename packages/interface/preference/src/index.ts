@@ -1,7 +1,7 @@
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 
 export interface Preference {
-  _id?: Id;
+  _id?: ObjectId;
   scope: string;
   [key: string]: any;
 }

@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 
 export interface StatusOptions {
   expireAfterSeconds: number;
@@ -9,7 +9,7 @@ export interface StatusOptions {
 export type AttachStatusTracker = (req: Request, res: Response) => void;
 
 export interface ApiStatus {
-  _id?: Id;
+  _id?: ObjectId;
   created_at?: Date;
   count: number;
   request: {

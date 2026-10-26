@@ -6,7 +6,13 @@ import {
   Logger,
   NotFoundException
 } from "@nestjs/common";
-import {BaseCollection, DatabaseService, ReturnDocument, WithId} from "@spica-server/database";
+import {
+  BaseCollection,
+  DatabaseService,
+  ObjectId,
+  ReturnDocument,
+  WithId
+} from "@spica-server/database";
 import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 import {StoragePipelineBuilder} from "./storage-pipeline.builder.js";
 import {
@@ -21,10 +27,6 @@ import {Strategy, ProxyReadResult} from "./strategy/strategy.js";
 import {TransactionExecutor} from "@spica-server/transaction";
 
 import fs from "fs";
-import {ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
-
-const storageIds = () => ids().forCollection("storage");
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
@@ -172,8 +174,8 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     return Promise.all(urlPromises).then(() => objects);
   }
 
-  async get(id: Id): Promise<WithId<StorageObject<Buffer>>> {
-    const object = await this._coll.findOne({_id: storageIds().parse(id)});
+  async get(id: ObjectId): Promise<WithId<StorageObject<Buffer>>> {
+    const object = await this._coll.findOne({_id: new ObjectId(id)});
     if (!object) return null;
 
     const objectWithData = object as WithId<StorageObject<Buffer>>;
@@ -181,8 +183,8 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     return objectWithData;
   }
 
-  async delete(idOrName: Id | string): Promise<void> {
-    const query = storageIds().is(idOrName) ? {_id: idOrName} : {name: idOrName};
+  async delete(idOrName: ObjectId | string): Promise<void> {
+    const query = idOrName instanceof ObjectId ? {_id: idOrName} : {name: idOrName};
     const result = await this._coll.findOneAndDelete(query);
 
     if (!result) {
@@ -208,7 +210,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
   }
 
-  async deleteManyByIds(ids: Id[]): Promise<void> {
+  async deleteManyByIds(ids: ObjectId[]): Promise<void> {
     const objects = await this._coll.find({_id: {$in: ids}}).toArray();
     if (objects.length === 0) {
       return;
@@ -238,7 +240,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
   }
 
-  async updateMeta(_id: Id, name: string) {
+  async updateMeta(_id: ObjectId, name: string) {
     const existing = await this._coll.findOne({_id});
     if (!existing) {
       throw new NotFoundException(`Storage object ${_id} could not be found`);
@@ -308,7 +310,10 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     return existing;
   }
 
-  async update(_id: Id, object: StorageObject<fs.ReadStream | Buffer>): Promise<StorageObjectMeta> {
+  async update(
+    _id: ObjectId,
+    object: StorageObject<fs.ReadStream | Buffer>
+  ): Promise<StorageObjectMeta> {
     const existing = await this._coll.findOne({_id});
     if (!existing) {
       throw new NotFoundException(`Storage object ${_id} could not be found`);
@@ -420,15 +425,14 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     return objectWithData;
   }
 
-  private async getMeta(idOrName: Id | string): Promise<WithId<StorageObjectMeta> | null> {
-    const query = storageIds().is(idOrName)
-      ? {_id: storageIds().parse(idOrName)}
-      : {name: idOrName as string};
+  private async getMeta(idOrName: ObjectId | string): Promise<WithId<StorageObjectMeta> | null> {
+    const query =
+      idOrName instanceof ObjectId ? {_id: new ObjectId(idOrName)} : {name: idOrName as string};
     return this._coll.findOne(query);
   }
 
   async proxyRead(
-    idOrName: Id | string,
+    idOrName: ObjectId | string,
     requestHeaders: Record<string, string>
   ): Promise<ProxyReadResult> {
     const meta = await this.getMeta(idOrName);

@@ -3,11 +3,8 @@ import {DashboardService} from "@spica-server/dashboard";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {Resource} from "@spica-server/interface-asset";
 import {registrar} from "@spica-server/asset";
-import {ReturnDocument} from "@spica-server/database";
+import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {DashboardAsset} from "@spica-server/interface-dashboard";
-import {ids} from "@spica-server/data";
-
-const dashboardIds = () => ids().forCollection("dashboard");
 
 const _module = "dashboard";
 
@@ -25,31 +22,29 @@ export function registerAssetHandlers(
   const operator = {
     insert: (resource: Resource<DashboardAsset>) => {
       const dashboard = resource.contents.schema;
-      dashboard._id =
-        dashboard._id == null ? dashboardIds().generate() : dashboardIds().parse(dashboard._id);
+      dashboard._id = new ObjectId(dashboard._id);
 
       return ds.insertOne(dashboard);
     },
 
     update: (resource: Resource<DashboardAsset>) => {
       const dashboard = resource.contents.schema;
-      const _id = dashboardIds().parse(dashboard._id);
+      const _id = new ObjectId(dashboard._id);
       delete dashboard._id;
       return ds.findOneAndReplace({_id}, dashboard, {
         returnDocument: ReturnDocument.AFTER
       });
     },
 
-    delete: (resource: Resource<DashboardAsset>) =>
-      ds.deleteOne({_id: dashboardIds().parse(resource._id)})
+    delete: (resource: Resource<DashboardAsset>) => ds.deleteOne({_id: new ObjectId(resource._id)})
   };
   registrar.operator(_module, operator);
 
   const exporter = async (_id: string) => {
-    if (!dashboardIds().isValid(_id)) {
+    if (!ObjectId.isValid(_id)) {
       return Promise.reject(`${_id} is not a valid object id`);
     }
-    const dashboard = await ds.findOne({_id: dashboardIds().parse(_id)});
+    const dashboard = await ds.findOne({_id: new ObjectId(_id)});
 
     if (!dashboard) {
       return Promise.reject(`Dashboard does not exist with _id ${_id}`);
@@ -62,7 +57,7 @@ export function registerAssetHandlers(
     ds.find().then(dashboards => {
       return dashboards.map(d => {
         return {
-          _id: d._id.toString(),
+          _id: d._id.toHexString(),
           title: d.name
         };
       });
