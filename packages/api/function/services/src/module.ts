@@ -6,7 +6,7 @@ import {
 } from "@spica-server/interface-function";
 import {provideRepository} from "@spica-server/data";
 import {FunctionService} from "./service.js";
-import {FUNCTION_ASSET_REPOSITORY} from "@spica-server/interface-function-asset-storage";
+import {FunctionAssetService} from "./asset.service.js";
 import {
   EnvVarService,
   ServicesModule as EnvVarServicesModule
@@ -23,7 +23,7 @@ export class ServicesModule {
       providers: [
         provideRepository(FUNCTION_REPOSITORY),
         FunctionService,
-        provideRepository(FUNCTION_ASSET_REPOSITORY),
+        FunctionAssetService,
         {
           provide: FUNCTION_OPTIONS,
           useValue: options
@@ -31,7 +31,7 @@ export class ServicesModule {
         provideRepository(ENV_VAR_REPOSITORY),
         EnvVarService
       ],
-      exports: [FunctionService, FUNCTION_REPOSITORY, FUNCTION_ASSET_REPOSITORY]
+      exports: [FunctionService, FUNCTION_REPOSITORY, FunctionAssetService]
     };
   }
 }

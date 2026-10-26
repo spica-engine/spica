@@ -9365,7 +9365,6 @@ __metadata:
     "@spica-server/interface-database": "workspace:*"
     "@spica-server/interface-env_var": "workspace:*"
     "@spica-server/interface-function": "workspace:*"
-    "@spica-server/interface-function-asset-storage": "workspace:*"
     "@spica-server/interface-function-log": "workspace:*"
     "@spica-server/interface-function-webhook": "workspace:*"
     "@spica-server/interface-passport": "workspace:*"
@@ -9578,11 +9577,11 @@ __metadata:
     "@nestjs/common": "npm:^10.4.22"
     "@spica-server/core": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
+    "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/function-queue": "workspace:*"
     "@spica-server/function-queue-proto": "workspace:*"
     "@spica-server/interface-core": "workspace:*"
-    "@spica-server/interface-data": "workspace:*"
     "@spica-server/interface-function-enqueuer": "workspace:*"
     "@spica-server/interface-passport-guard": "workspace:*"
     "@spica-server/interface-replication": "workspace:*"
@@ -9703,8 +9702,8 @@ __metadata:
   resolution: "@spica-server/function-runtime-io@workspace:packages/api/function/runtime/io"
   dependencies:
     "@nestjs/common": "npm:^10.4.22"
+    "@spica-server/database": "workspace:*"
     "@spica-server/function-runtime-logger": "workspace:*"
-    "@spica-server/interface-function-log": "workspace:*"
     "@spica-server/interface-function-runtime": "workspace:*"
   languageName: unknown
   linkType: soft
@@ -9743,7 +9742,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/function-runtime@workspace:packages/api/function/runtime"
   dependencies:
-    "@spica-server/data-mongodb": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-function-builder": "workspace:*"
     "@spica-server/interface-function-runtime": "workspace:*"
@@ -9756,7 +9754,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.22"
     "@nestjs/core": "npm:^10.4.22"
-    "@spica-server/data": "workspace:*"
+    "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/function-builder": "workspace:*"
     "@spica-server/function-builder-legacy": "workspace:*"
@@ -9770,9 +9768,7 @@ __metadata:
     "@spica-server/function-runtime-io": "workspace:*"
     "@spica-server/function-runtime-logger": "workspace:*"
     "@spica-server/function-runtime-node": "workspace:*"
-    "@spica-server/interface-data": "workspace:*"
     "@spica-server/interface-function-builder": "workspace:*"
-    "@spica-server/interface-function-log": "workspace:*"
     "@spica-server/interface-function-pkgmanager": "workspace:*"
     "@spica-server/interface-function-runtime": "workspace:*"
     "@spica-server/interface-function-scheduler": "workspace:*"
@@ -9813,6 +9809,7 @@ __metadata:
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/data": "workspace:*"
+    "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-data": "workspace:*"
     "@spica-server/interface-function": "workspace:*"
@@ -9999,8 +9996,6 @@ __metadata:
 "@spica-server/interface-data@workspace:*, @spica-server/interface-data@workspace:packages/interface/data":
   version: 0.0.0-use.local
   resolution: "@spica-server/interface-data@workspace:packages/interface/data"
-  dependencies:
-    rxjs: "npm:^7.8.2"
   languageName: unknown
   linkType: soft
 
@@ -10689,6 +10684,7 @@ __metadata:
     "@nestjs/common": "npm:^10.4.22"
     "@nestjs/testing": "npm:^10.4.22"
     "@spica-server/data": "workspace:*"
+    "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-data": "workspace:*"
     "@spica-server/interface-replication": "workspace:*"

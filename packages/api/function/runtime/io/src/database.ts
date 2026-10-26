@@ -1,4 +1,4 @@
-import {LogSink} from "@spica-server/interface-function-log";
+import {Collection, DatabaseService} from "@spica-server/database";
 import {PassThrough, Transform, Writable} from "stream";
 import {StandartStream} from "./standart_stream.js";
 import {getLogs} from "@spica-server/function-runtime-logger";
@@ -6,10 +6,12 @@ import {StreamOptions, LogChannels} from "@spica-server/interface-function-runti
 import {Logger} from "@nestjs/common";
 
 export class DatabaseOutput extends StandartStream {
+  private collection: Collection;
   private readonly logger = new Logger(DatabaseOutput.name);
 
-  constructor(private logs: LogSink) {
+  constructor(private db: DatabaseService) {
     super();
+    this.collection = this.db.collection("function_logs");
   }
 
   create(options: StreamOptions): [Writable, Writable] {
@@ -21,8 +23,8 @@ export class DatabaseOutput extends StandartStream {
           const logs = getLogs(message, channel);
 
           for (const log of logs) {
-            this.logs
-              .insert({
+            this.collection
+              .insertOne({
                 function: options.functionId,
                 event_id: options.eventId,
                 channel,

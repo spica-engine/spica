@@ -1,11 +1,10 @@
 import {Inject, Injectable, Logger} from "@nestjs/common";
 import {createHash} from "crypto";
 import {Id} from "@spica-server/interface-data";
+import {FunctionAssetService} from "@spica-server/function-services";
 import {
-  FUNCTION_ASSET_REPOSITORY,
   FunctionAsset,
   FunctionAssetFilename,
-  FunctionAssetRepository,
   FunctionAssetStrategy,
   FUNCTION_ASSET_STORAGE_OPTIONS,
   FUNCTION_ASSET_STRATEGY,
@@ -60,7 +59,7 @@ export class FunctionAssetReconciler {
     @Inject(FUNCTION_ASSET_STRATEGY) private readonly strategy: FunctionAssetStrategy,
     @Inject(FUNCTION_ASSET_STORAGE_OPTIONS)
     private readonly storageOptions: FunctionAssetStorageOptions,
-    @Inject(FUNCTION_ASSET_REPOSITORY) private readonly assetService: FunctionAssetRepository,
+    private readonly assetService: FunctionAssetService,
     private readonly preparationService: FunctionPreparationService,
     private readonly tracker: SelfWriteTracker
   ) {}

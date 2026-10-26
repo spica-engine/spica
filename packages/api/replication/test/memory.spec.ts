@@ -1,10 +1,8 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database-testing";
-import {CommandMemory} from "@spica-server/replication";
-import {provideRepository} from "@spica-server/data";
+import {CommandMemory, CommandService} from "@spica-server/replication";
 import {
   COMMAND_MEMORY_OPTIONS,
-  COMMAND_REPOSITORY,
   REPLICATION_SERVICE_OPTIONS
 } from "@spica-server/interface-replication";
 
@@ -20,7 +18,7 @@ describe("Memory", () => {
           {provide: COMMAND_MEMORY_OPTIONS, useValue: {changeType: ["insert"]}},
           {provide: REPLICATION_SERVICE_OPTIONS, useValue: {expireAfterSeconds: 60}},
           CommandMemory,
-          provideRepository(COMMAND_REPOSITORY)
+          CommandService
         ]
       }).compile();
 

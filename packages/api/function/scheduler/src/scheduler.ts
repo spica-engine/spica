@@ -1,8 +1,7 @@
 import path from "path";
 import {Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {CHANGE_FEED, ChangeFeed} from "@spica-server/interface-data";
-import {FUNCTION_LOG_SINK, LogSink} from "@spica-server/interface-function-log";
+import {DatabaseService} from "@spica-server/database";
 import {Builder} from "@spica-server/function-builder";
 import {LegacyBuilder} from "@spica-server/function-builder-legacy";
 import {RollupBuilder} from "@spica-server/function-builder-rollup";
@@ -74,8 +73,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private http: HttpAdapterHost,
-    @Inject(CHANGE_FEED) private feed: ChangeFeed,
-    @Inject(FUNCTION_LOG_SINK) logSink: LogSink,
+    private database: DatabaseService,
     @Optional() private commander: ClassCommander,
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
@@ -83,7 +81,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker,
     private guardService: GuardService
   ) {
-    this.outputs = this.createOutputs(logSink);
+    this.outputs = this.createOutputs(database);
 
     for (const language of SUPPORTED_LANGUAGES) {
       this.builders.set(language, this.createBuilder(language));
@@ -137,7 +135,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       new DatabaseEnqueuer(
         this.queue,
         this.databaseQueue,
-        this.feed,
+        this.database,
         this.jobReducer,
         this.commander
       )
@@ -169,12 +167,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.scaleWorkers();
   }
 
-  private createOutputs(logSink: LogSink): StandartStream[] {
+  private createOutputs(database: DatabaseService): StandartStream[] {
     const workerLogOutput = this.options.workerLogOutput;
     const outputs: StandartStream[] = [];
 
     if (workerLogOutput?.includes("database")) {
-      outputs.push(new DatabaseOutput(logSink));
+      outputs.push(new DatabaseOutput(database));
     }
     if (workerLogOutput?.includes("stdout")) {
       outputs.push(new StandardStreamOutput());

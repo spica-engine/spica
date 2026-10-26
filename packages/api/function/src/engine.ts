@@ -1,16 +1,13 @@
 import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {COLLECTION_NAMES, CollectionNames, Id} from "@spica-server/interface-data";
 import {Scheduler} from "@spica-server/function-scheduler";
-import {
-  FUNCTION_ASSET_REPOSITORY,
-  FunctionAssetRepository
-} from "@spica-server/interface-function-asset-storage";
 import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
 import {
   FunctionService,
+  FunctionAssetService,
   EnvVarFunctionsChange,
   SecretFunctionsChange
 } from "@spica-server/function-services";
@@ -74,7 +71,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug,
     private executor: PlanExecutor,
     private reconciler: FunctionAssetReconciler,
-    @Inject(FUNCTION_ASSET_REPOSITORY) private assetService: FunctionAssetRepository,
+    private assetService: FunctionAssetService,
     private tracker: SelfWriteTracker,
     private preparationService: FunctionPreparationService,
     private dependents: FunctionDependents,

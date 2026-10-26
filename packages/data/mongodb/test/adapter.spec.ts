@@ -9,7 +9,6 @@ import {
 } from "@spica-server/data-mongodb";
 import {DatabaseModule, DatabaseService} from "@spica-server/database";
 import {
-  CHANGE_FEED,
   COLLECTION_NAMES,
   COLLECTION_QUERY,
   DATA_HEALTH,
@@ -41,8 +40,7 @@ describe("MongoDataAdapter", () => {
       BUCKET_WRITE,
       REPOSITORY_CLASSES,
       COLLECTION_NAMES,
-      DATA_HEALTH,
-      CHANGE_FEED
+      DATA_HEALTH
     ]);
   });
 

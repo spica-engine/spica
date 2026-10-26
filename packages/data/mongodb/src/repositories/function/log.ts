@@ -4,8 +4,7 @@ import {
   FUNCTION_LOG_OPTIONS,
   Log,
   LogOptions,
-  LogRepository,
-  LogSink
+  LogRepository
 } from "@spica-server/interface-function-log";
 
 @Injectable()
@@ -41,18 +40,5 @@ export class MongoFunctionLogRepository
     }
 
     return this.deleteMany(filter);
-  }
-}
-
-/**
- * Writes worker logs without the TTL index setup of the log repository, which the function
- * module's log repository owns.
- */
-@Injectable()
-export class MongoFunctionLogSink implements LogSink {
-  constructor(private readonly db: DatabaseService) {}
-
-  insert(log: Omit<Log, "_id">) {
-    return this.db.collection("function_logs").insertOne(log);
   }
 }
