@@ -4,6 +4,7 @@ env:
   origin_branch: master
   VERSION: ${{ github.sha }}
   MONGODB_URL: "mongodb://172.17.0.1:27017"
+  POSTGRES_URL: "postgres://postgres:spica@172.17.0.1:5432/postgres"
   MAILER_URL: "smtp://172.17.0.1:1025,api://172.17.0.1:8025"
   RABBITMQ_URL: "amqp://172.17.0.1:5672"
   RABBITMQ_STREAM_HOST: "172.17.0.1"
@@ -184,6 +185,24 @@ jobs:
             sleep 2
           done
 
+      - name: Start PostgreSQL
+        run: |
+          docker run -d --rm --name postgres \
+            -p 5432:5432 \
+            -e POSTGRES_PASSWORD=spica \
+            postgres:18
+
+          echo "Waiting for PostgreSQL..."
+          for i in {1..30}; do
+            if docker exec postgres pg_isready -U postgres &> /dev/null; then
+              echo "PostgreSQL is ready."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "PostgreSQL did not become ready."
+          docker logs postgres || true
+          exit 1
       - name: Start RabbitMQ
         run: |
           mkdir -p "$RUNNER_TEMP/rabbitmq"
@@ -232,7 +251,7 @@ jobs:
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
       - name: Run Tests
-        run: MONGODB_URL=$MONGODB_URL MAILER_URL=$MAILER_URL RABBITMQ_URL=$RABBITMQ_URL RABBITMQ_STREAM_HOST=$RABBITMQ_STREAM_HOST RABBITMQ_STREAM_PORT=$RABBITMQ_STREAM_PORT yarn nx test ${{ matrix.project }}
+        run: MONGODB_URL=$MONGODB_URL POSTGRES_URL=$POSTGRES_URL MAILER_URL=$MAILER_URL RABBITMQ_URL=$RABBITMQ_URL RABBITMQ_STREAM_HOST=$RABBITMQ_STREAM_HOST RABBITMQ_STREAM_PORT=$RABBITMQ_STREAM_PORT yarn nx test ${{ matrix.project }}
 
       - name: Stop RabbitMQ
         run: docker stop rabbitmq || true
@@ -243,11 +262,13 @@ jobs:
       - name: Stop MongoDB
         run: docker stop mongodb || true
 
+      - name: Stop PostgreSQL
+        if: always()
+        run: docker stop postgres || true
+
   test_postgresql:
     name: Test PostgreSQL
     runs-on: ubuntu-latest
-    env:
-      POSTGRES_URL: "postgres://postgres:spica@172.17.0.1:5432/postgres"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
