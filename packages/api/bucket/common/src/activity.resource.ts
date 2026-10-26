@@ -1,7 +1,6 @@
 import {createActivity, ActivityService} from "@spica-server/activity-services";
 import {deepCopy} from "@spica-server/core-patch";
 import {Action, PreActivity, ModuleActivity} from "@spica-server/interface-activity";
-import {Id} from "@spica-server/interface-data";
 
 export function createBucketActivity(
   preActivity: PreActivity,
@@ -35,7 +34,7 @@ export async function insertActivity(
   req: any,
   method: Action,
   bucketId: string,
-  documentId: string | Id,
+  documentId: string,
   service: ActivityService
 ) {
   const request: any = {

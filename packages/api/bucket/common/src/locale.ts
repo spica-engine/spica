@@ -6,6 +6,48 @@ import {BucketCacheService} from "@spica-server/bucket-cache";
 import {Locale} from "@spica-server/interface-bucket-common";
 import {Bucket, BucketPreferences} from "@spica-server/interface-bucket";
 
+export function buildI18nAggregation(property: any, locale: string, fallback: string) {
+  return {
+    $mergeObjects: [
+      property,
+      {
+        $arrayToObject: {
+          $map: {
+            input: {
+              $filter: {
+                input: {
+                  $objectToArray: property
+                },
+                as: "item",
+                cond: {
+                  $eq: [
+                    {
+                      $type: "$$item.v"
+                    },
+                    "object"
+                  ]
+                }
+              }
+            },
+            as: "prop",
+            in: {
+              k: "$$prop.k",
+              v: {
+                $ifNull: [
+                  `$$prop.v.${locale}`,
+                  {
+                    $ifNull: [`$$prop.v.${fallback}`, `$$prop.v`]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]
+  };
+}
+
 export function findLocale(language: string, preferences: BucketPreferences): Locale {
   const supportedLocales = new locale.Locales(Object.keys(preferences.language.available));
   const locales = new locale.Locales(language);

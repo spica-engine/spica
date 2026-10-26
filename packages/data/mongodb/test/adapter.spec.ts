@@ -8,7 +8,7 @@ import {
 } from "@spica-server/data-mongodb";
 import {DatabaseModule, DatabaseService} from "@spica-server/database";
 import {COLLECTION_QUERY, ID_TYPES, RESULT_SHAPER} from "@spica-server/interface-data";
-import {BUCKET_QUERY, BUCKET_WRITE} from "@spica-server/interface-bucket-common";
+import {BUCKET_QUERY} from "@spica-server/interface-bucket-common";
 
 @Global()
 @Module({providers: [{provide: DatabaseService, useValue: {}}], exports: [DatabaseService]})
@@ -28,8 +28,7 @@ describe("MongoDataAdapter", () => {
       ID_TYPES,
       RESULT_SHAPER,
       COLLECTION_QUERY,
-      BUCKET_QUERY,
-      BUCKET_WRITE
+      BUCKET_QUERY
     ]);
   });
 

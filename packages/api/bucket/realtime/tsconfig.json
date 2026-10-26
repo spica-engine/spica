@@ -7,6 +7,9 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../common"
+    },
+    {
       "path": "../../../realtime"
     },
     {
@@ -23,9 +26,6 @@
     },
     {
       "path": "../../../interface/bucket/realtime"
-    },
-    {
-      "path": "../../../interface/bucket/common"
     },
     {
       "path": "../../../interface/bucket"
@@ -59,9 +59,6 @@
     },
     {
       "path": "../expression"
-    },
-    {
-      "path": "../common"
     },
     {
       "path": "../cache"

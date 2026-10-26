@@ -5,7 +5,8 @@ import {
   buildExpressionReplacers,
   categorizePropertyMap,
   DatabaseException,
-  decryptDocumentFields
+  decryptDocumentFields,
+  resetNonOverlappingPathsInRelationMap
 } from "@spica-server/bucket-common";
 import {DatabaseService} from "@spica-server/database";
 import {executePaginationPlan, PipelineBuilder} from "@spica-server/database-pipeline";
@@ -22,7 +23,6 @@ import {Page, RESULT_SHAPER, ResultShaper} from "@spica-server/interface-data";
 import {PaginationPlan} from "@spica-server/interface-database";
 import {aggregatable, AGGREGATE_OPTIONS} from "../aggregate.js";
 import {BucketPipelineBuilder} from "./pipeline.builder.js";
-import {resetNonOverlappingPathsInRelationMap} from "./stages.js";
 
 interface BucketReadPlan {
   plan: PaginationPlan;
