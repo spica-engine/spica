@@ -29,7 +29,7 @@ describe("SimpleActionGuard", () => {
     };
 
     class TestingController {
-      testing(@ResourceFilter() resourceFilter: object) {}
+      testing(@ResourceFilter({pure: true}) resourceFilter: object) {}
     }
 
     Reflect.defineMetadata(

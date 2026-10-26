@@ -31,6 +31,8 @@ import * as CRUD from "./crud.js";
 import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core-patch";
 import {Bucket, BUCKET_DATA_REPOSITORY, BucketDataRepository} from "@spica-server/interface-bucket";
 
+const BUCKETS_COLLECTION = "buckets";
+
 /**
  * All APIs related to bucket schemas.
  * @name bucket
@@ -60,7 +62,7 @@ export class BucketController {
    */
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:index"))
-  index(@ResourceFilter({collection: "buckets"}) resourceFilter: object) {
+  index(@ResourceFilter({collection: BUCKETS_COLLECTION}) resourceFilter: object) {
     return CRUD.find(this.queries, {resourceFilter, sort: {order: 1}});
   }
 
@@ -70,7 +72,7 @@ export class BucketController {
    */
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:show"))
-  async show(@Param("id", ID("buckets")) id: Id) {
+  async show(@Param("id", ID(BUCKETS_COLLECTION)) id: Id) {
     return CRUD.findOne(this.bs, id);
   }
 
@@ -131,7 +133,7 @@ export class BucketController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:update"))
   async replaceOne(
-    @Param("id", ID("buckets")) id: Id,
+    @Param("id", ID(BUCKETS_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
     return CRUD.replace(this.bs, this.bucketData, this.history, {...bucket, _id: id}).catch(
@@ -155,7 +157,7 @@ export class BucketController {
   @Patch(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:update"))
   async updateOne(
-    @Param("id", ID("buckets")) id: Id,
+    @Param("id", ID(BUCKETS_COLLECTION)) id: Id,
     @Headers("content-type") contentType: string,
     @Body(
       Schema.validate({
@@ -204,7 +206,7 @@ export class BucketController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:delete"))
-  async deleteOne(@Param("id", ID("buckets")) id: Id) {
+  async deleteOne(@Param("id", ID(BUCKETS_COLLECTION)) id: Id) {
     return CRUD.remove(this.bs, this.bucketData, this.history, id);
   }
 }

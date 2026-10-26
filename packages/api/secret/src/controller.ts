@@ -24,6 +24,8 @@ import * as CRUD from "./crud.js";
 import {ID} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 
+const SECRET_COLLECTION = "secret";
+
 @Controller("secret")
 export class SecretController {
   constructor(
@@ -34,7 +36,7 @@ export class SecretController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:index"))
   async find(
-    @ResourceFilter({collection: "secret"}) resourceFilter: object,
+    @ResourceFilter({collection: SECRET_COLLECTION}) resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
@@ -46,7 +48,7 @@ export class SecretController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:show"))
-  findOne(@Param("id", ID("secret")) id: Id) {
+  findOne(@Param("id", ID(SECRET_COLLECTION)) id: Id) {
     return CRUD.findOne(this.queries, id);
   }
 
@@ -69,7 +71,7 @@ export class SecretController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:update"))
   async updateOne(
-    @Param("id", ID("secret")) id: Id,
+    @Param("id", ID(SECRET_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/secret"))
     body: {key: string; value: string}
   ) {
@@ -82,7 +84,7 @@ export class SecretController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:delete"))
-  async deleteOne(@Param("id", ID("secret")) id: Id) {
+  async deleteOne(@Param("id", ID(SECRET_COLLECTION)) id: Id) {
     return CRUD.remove(this.ss, id);
   }
 }

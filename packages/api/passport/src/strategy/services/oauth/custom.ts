@@ -15,6 +15,8 @@ import {StrategyRepository} from "@spica-server/interface-passport";
 import {RequestService} from "../../../options.js";
 import {v4 as uuidv4} from "uuid";
 
+const STRATEGY_COLLECTION = "strategy";
+
 @Injectable()
 export class CustomOAuthService implements OAuthStrategyService {
   readonly type = "oauth";
@@ -95,7 +97,7 @@ export class CustomOAuthService implements OAuthStrategyService {
 
   getStrategy(id: string): Promise<Strategy> {
     return this.strategies.findById(
-      ids().forCollection("strategy").parse(id)
+      ids().forCollection(STRATEGY_COLLECTION).parse(id)
     ) as Promise<OAuthStrategy>;
   }
 
@@ -106,7 +108,7 @@ export class CustomOAuthService implements OAuthStrategyService {
   afterInsert(strategy: OAuthStrategy): Promise<Strategy> {
     const redirectUri = `${this.options.publicUrl}/passport/user/strategy/${strategy._id}/complete`;
     return this.strategies.setOAuthRedirectUri(
-      ids().forCollection("strategy").parse(strategy._id),
+      ids().forCollection(STRATEGY_COLLECTION).parse(strategy._id),
       redirectUri
     );
   }

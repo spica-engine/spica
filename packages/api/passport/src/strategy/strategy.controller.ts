@@ -25,6 +25,8 @@ import {
   StrategyTypeServices
 } from "@spica-server/interface-passport";
 
+const STRATEGY_COLLECTION = "strategy";
+
 @Controller("passport/strategy")
 export class StrategyController {
   constructor(
@@ -37,13 +39,13 @@ export class StrategyController {
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:index"))
-  find(@ResourceFilter({collection: "strategy"}) resourceFilter: object) {
-    return this.queries.find("strategy", {resourceFilter});
+  find(@ResourceFilter({collection: STRATEGY_COLLECTION}) resourceFilter: object) {
+    return this.queries.find(STRATEGY_COLLECTION, {resourceFilter});
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:show"))
-  findOne(@Param("id", ID("strategy")) id: Id) {
+  findOne(@Param("id", ID(STRATEGY_COLLECTION)) id: Id) {
     return this.strategy.findById(id).then(strategy => {
       const scope = strategy.type === "oauth" ? "user" : "identity";
       strategy["callbackUrl"] =
@@ -55,7 +57,7 @@ export class StrategyController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteOne(@Param("id", ID("strategy")) id: Id) {
+  deleteOne(@Param("id", ID(STRATEGY_COLLECTION)) id: Id) {
     return this.strategy.deleteById(id);
   }
 
@@ -86,7 +88,7 @@ export class StrategyController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:update"))
   async replaceOne(
-    @Param("id", ID("strategy")) id: Id,
+    @Param("id", ID(STRATEGY_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy
   ) {
     delete strategy._id;
