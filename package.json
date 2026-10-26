@@ -23,6 +23,7 @@
       "packages/core/websocket",
       "packages/data",
       "packages/data/mongodb",
+      "packages/data/postgresql",
       "packages/database",
       "packages/database/pipeline",
       "packages/database/realtime",
@@ -165,6 +166,10 @@
   },
   "scripts": {
     "format:check": "yarn nx format:check",
+    "check:engine-specs": "node scripts/check-engine-specs.mjs",
+    "ci:test-matrix": "node scripts/ci-test-matrix.mjs",
+    "test:ci-matrix": "node --test scripts/ci-test-matrix.test.mjs",
+    "test:engine-specs": "node --test scripts/check-engine-specs.test.mjs",
     "check:data-boundary": "node scripts/check-data-boundary.mjs && node --test scripts/check-data-boundary.test.mjs",
     "format": "yarn nx format:write",
     "build:*": "yarn nx run-many -t build",
