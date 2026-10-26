@@ -2,7 +2,8 @@ import {DynamicModule, Global, Module} from "@nestjs/common";
 import {DataModule} from "@spica-server/data";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import {start, connect, getDatabaseName} from "./start";
-import {testingDataAdapter} from "./data-adapter";
+import {createPostgresDatabase} from "./start-postgres";
+import {testingDataAdapter, testingPostgresAdapter} from "./data-adapter";
 
 @Global()
 @Module({})
@@ -50,6 +51,13 @@ export class DatabaseTestingModule {
         }
       ],
       exports: [MongoClient, DatabaseService]
+    };
+  }
+
+  static postgres(dbName?: string): DynamicModule {
+    return {
+      module: DatabaseTestingModule,
+      imports: [DataModule.forRoot(testingPostgresAdapter(() => createPostgresDatabase(dbName)))]
     };
   }
 

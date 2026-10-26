@@ -437,6 +437,9 @@
       "path": "./packages/data/mongodb"
     },
     {
+      "path": "./packages/data/postgresql"
+    },
+    {
       "path": "./packages/data"
     }
   ]
