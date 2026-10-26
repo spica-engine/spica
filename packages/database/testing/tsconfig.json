@@ -3,12 +3,6 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../data/mongodb"
-    },
-    {
-      "path": "../../data"
-    },
-    {
       "path": ".."
     }
   ]
