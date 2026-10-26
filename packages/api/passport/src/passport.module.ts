@@ -16,8 +16,7 @@ import {PassportIdentityController} from "./passport.identity.controller.js";
 import {PassportUserController} from "./passport.user.controller.js";
 import {SamlService} from "./strategy/services/saml.service.js";
 import {StrategyController} from "./strategy/strategy.controller.js";
-import {STRATEGY_REPOSITORY} from "@spica-server/interface-passport";
-import {provideRepository} from "@spica-server/data";
+import {StrategyService} from "./strategy/services/strategy.service.js";
 import {SchemaModule} from "@spica-server/core-schema";
 import {initializeOAuthServices} from "./strategy/services/oauth/oauth.service.js";
 import {AuthFactorModule} from "@spica-server/passport-authfactor";
@@ -72,7 +71,7 @@ export class PassportModule {
           provide: REQUEST_SERVICE,
           useClass: RequestService
         },
-        provideRepository(STRATEGY_REPOSITORY),
+        StrategyService,
         {
           provide: STRATEGIES,
           useFactory: (ser, ops, req) => {
@@ -89,7 +88,7 @@ export class PassportModule {
                 })
             };
           },
-          inject: [STRATEGY_REPOSITORY, PASSPORT_OPTIONS, REQUEST_SERVICE]
+          inject: [StrategyService, PASSPORT_OPTIONS, REQUEST_SERVICE]
         },
         {provide: PASSPORT_OPTIONS, useValue: options}
       ]

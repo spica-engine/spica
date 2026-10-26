@@ -1,18 +1,29 @@
 import {providePolicyFinalizer} from "@spica-server/passport-apikey/src/utility";
 describe("Utilities", () => {
   it("should pull policy from apikey policies", async () => {
-    const apiKeys: any = {
-      removePolicyFromAll: (policyId: string) => {
-        return Promise.resolve(0);
+    const ApikeyService: any = {
+      updateMany: (filter: object, update: object) => {
+        return Promise.resolve();
       }
     };
 
-    const removePolicyFromAllSpy = jest.spyOn(apiKeys, "removePolicyFromAll");
+    const updateManySpy = jest.spyOn(ApikeyService, "updateMany");
 
-    const factoryFunction = providePolicyFinalizer(apiKeys);
+    const factoryFunction = providePolicyFinalizer(ApikeyService);
     await factoryFunction("my_policy");
 
-    expect(removePolicyFromAllSpy).toHaveBeenCalledTimes(1);
-    expect(removePolicyFromAllSpy).toHaveBeenCalledWith("my_policy");
+    expect(updateManySpy).toHaveBeenCalledTimes(1);
+    expect(updateManySpy).toHaveBeenCalledWith(
+      {
+        policies: {
+          $in: ["my_policy"]
+        }
+      },
+      {
+        $pull: {
+          policies: "my_policy"
+        }
+      }
+    );
   });
 });

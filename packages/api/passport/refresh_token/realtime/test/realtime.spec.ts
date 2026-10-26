@@ -11,7 +11,7 @@ import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
 import {ChunkKind} from "@spica-server/interface-realtime";
 import {RefreshTokenModule} from "../../src";
-import {REFRESH_TOKEN_REPOSITORY} from "@spica-server/interface-passport-refresh_token";
+import {RefreshTokenService} from "../../services";
 
 function url(path, query) {
   const u = new URL(path, "ws://insteadof");
@@ -28,7 +28,7 @@ describe("Realtime", () => {
   let wsc;
   let app;
   let req;
-  let service: any;
+  let service: RefreshTokenService;
 
   let refreshTokens = [];
 
@@ -93,7 +93,7 @@ describe("Realtime", () => {
     req = module.get(Request);
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
-    service = module.get(REFRESH_TOKEN_REPOSITORY);
+    service = module.get(RefreshTokenService);
 
     await app.listen(wsc.socket);
   });

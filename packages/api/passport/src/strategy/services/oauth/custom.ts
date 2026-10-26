@@ -1,4 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
+import {ReturnDocument} from "@spica-server/database";
 import {ids} from "@spica-server/data";
 import {
   IncomingCustomOAuth,
@@ -11,7 +12,7 @@ import {
   PASSPORT_OPTIONS,
   REQUEST_SERVICE
 } from "@spica-server/interface-passport";
-import {StrategyRepository} from "@spica-server/interface-passport";
+import {StrategyService} from "../strategy.service.js";
 import {RequestService} from "../../../options.js";
 import {v4 as uuidv4} from "uuid";
 
@@ -25,7 +26,7 @@ export class CustomOAuthService implements OAuthStrategyService {
   }
 
   constructor(
-    private strategies: StrategyRepository,
+    private strategyService: StrategyService,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions,
     @Inject(REQUEST_SERVICE) private req: RequestService
   ) {}
@@ -94,9 +95,9 @@ export class CustomOAuthService implements OAuthStrategyService {
   }
 
   getStrategy(id: string): Promise<Strategy> {
-    return this.strategies.findById(
-      ids().forCollection("strategy").parse(id)
-    ) as Promise<OAuthStrategy>;
+    return this.strategyService.findOne({
+      _id: ids().forCollection("strategy").parse(id)
+    }) as Promise<OAuthStrategy>;
   }
 
   prepareToInsert(strategy: IncomingCustomOAuth | IncomingOAuthPreset) {
@@ -105,9 +106,17 @@ export class CustomOAuthService implements OAuthStrategyService {
 
   afterInsert(strategy: OAuthStrategy): Promise<Strategy> {
     const redirectUri = `${this.options.publicUrl}/passport/user/strategy/${strategy._id}/complete`;
-    return this.strategies.setOAuthRedirectUri(
-      ids().forCollection("strategy").parse(strategy._id),
-      redirectUri
+    return this.strategyService.findOneAndUpdate(
+      {
+        _id: ids().forCollection("strategy").parse(strategy._id)
+      },
+      {
+        $set: {
+          "options.code.params.redirect_uri": redirectUri,
+          "options.access_token.params.redirect_uri": redirectUri
+        }
+      },
+      {returnDocument: ReturnDocument.AFTER}
     );
   }
 

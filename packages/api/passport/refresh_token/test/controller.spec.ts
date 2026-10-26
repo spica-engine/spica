@@ -6,7 +6,7 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 import {SchemaModule, hash} from "@spica-server/core-schema";
 import {OBJECT_ID} from "@spica-server/core-schema";
 import {RefreshTokenModule} from "@spica-server/passport-refresh_token";
-import {REFRESH_TOKEN_REPOSITORY} from "@spica-server/interface-passport-refresh_token";
+import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";
 import {RefreshToken} from "@spica-server/interface-passport-refresh_token";
 
 import {ObjectId} from "@spica-devkit/database";
@@ -16,7 +16,7 @@ const REFRESH_TOKEN_EXPIRES_IN = 1 * 24 * 60 * 60;
 describe("ApiKey", () => {
   let req: Request;
   let app: INestApplication;
-  let service: any;
+  let service: RefreshTokenService;
   let tokens: RefreshToken[] = [];
 
   beforeEach(async () => {
@@ -35,7 +35,7 @@ describe("ApiKey", () => {
     }).compile();
 
     req = module.get(Request);
-    service = module.get(REFRESH_TOKEN_REPOSITORY);
+    service = module.get(RefreshTokenService);
 
     app = module.createNestApplication();
 
@@ -562,7 +562,7 @@ describe("RefreshToken with hash secret", () => {
 
   let req: Request;
   let app: INestApplication;
-  let service: any;
+  let service: RefreshTokenService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -580,7 +580,7 @@ describe("RefreshToken with hash secret", () => {
     }).compile();
 
     req = module.get(Request);
-    service = module.get(REFRESH_TOKEN_REPOSITORY);
+    service = module.get(RefreshTokenService);
     app = module.createNestApplication();
     await app.listen(req.socket);
   });

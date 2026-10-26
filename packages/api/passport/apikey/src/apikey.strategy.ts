@@ -1,8 +1,8 @@
-import {Inject, Injectable} from "@nestjs/common";
+import {Injectable} from "@nestjs/common";
 import {PassportStrategy} from "@nestjs/passport";
 import passport from "passport";
 import {ExtractJwt} from "passport-jwt";
-import {APIKEY_REPOSITORY, ApiKeyRepository} from "@spica-server/interface-passport-apikey";
+import {ApiKeyService} from "./apikey.service.js";
 
 class _ApiKeyStrategy extends passport.Strategy {
   constructor(
@@ -32,10 +32,13 @@ class _ApiKeyStrategy extends passport.Strategy {
 
 @Injectable()
 export class ApiKeyStrategy extends PassportStrategy(_ApiKeyStrategy, "apikey") {
-  constructor(@Inject(APIKEY_REPOSITORY) private apiKeys: ApiKeyRepository) {
+  constructor(private apiKeyService: ApiKeyService) {
     super(ExtractJwt.fromAuthHeaderWithScheme("APIKEY"));
   }
   async validate(key: string) {
-    return this.apiKeys.findActiveByKey(key);
+    return this.apiKeyService.findOne({
+      key,
+      active: true
+    });
   }
 }

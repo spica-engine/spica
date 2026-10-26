@@ -8,15 +8,3 @@ export class InvalidIdError extends Error {
     super(message);
   }
 }
-
-export class DuplicateKeyError extends Error {
-  readonly name = "DuplicateKeyError";
-
-  constructor(
-    message: string,
-    readonly keyValue: Record<string, unknown> = {},
-    readonly cause?: unknown
-  ) {
-    super(message);
-  }
-}

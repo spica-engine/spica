@@ -40,9 +40,6 @@
       "path": "../../../interface/passport/user"
     },
     {
-      "path": "../../../interface/passport/refresh_token"
-    },
-    {
       "path": "../../../interface/passport/policy"
     },
     {

@@ -1,5 +1,7 @@
-import {ApiKeyRepository} from "@spica-server/interface-passport-apikey";
+import {ApiKeyService} from "./apikey.service.js";
 
-export function providePolicyFinalizer(apiKeys: ApiKeyRepository) {
-  return (policyId: string) => apiKeys.removePolicyFromAll(policyId);
+export function providePolicyFinalizer(apikeyService: ApiKeyService) {
+  return (policyId: string) => {
+    return apikeyService.updateMany({policies: {$in: [policyId]}}, {$pull: {policies: policyId}});
+  };
 }

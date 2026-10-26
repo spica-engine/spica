@@ -40,7 +40,6 @@
     "@spica-server/interface-passport-authfactor": "workspace:*",
     "@spica-server/interface-passport-identity": "workspace:*",
     "@spica-server/interface-passport-policy": "workspace:*",
-    "@spica-server/interface-passport-refresh_token": "workspace:*",
     "@spica-server/interface-replication": "workspace:*",
     "@spica-server/interface-representative": "workspace:*",
     "@spica-server/passport-authfactor": "workspace:*",

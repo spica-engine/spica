@@ -1,4 +1,3 @@
-import {USER_REPOSITORY, VERIFICATION_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
 import {INestApplication} from "@nestjs/common";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
@@ -23,10 +22,8 @@ describe("Provider Verification E2E with MailHog", () => {
   let app: INestApplication;
   let req: Request;
   let verificationService: VerificationService;
-  let verifications: any;
   let userConfigService: UserConfigService;
   let userService: UserService;
-  let users: any;
   let mailerService: MailerService;
   let db: DatabaseService;
   let container: any;
@@ -110,10 +107,7 @@ describe("Provider Verification E2E with MailHog", () => {
     }).compile();
 
     verificationService = module.get(VerificationService);
-
-    verifications = module.get(VERIFICATION_REPOSITORY);
     userService = module.get(UserService);
-    users = module.get(USER_REPOSITORY);
     mailerService = module.get(MailerService);
     db = module.get(DatabaseService);
     userConfigService = module.get(UserConfigService);
@@ -136,7 +130,7 @@ describe("Provider Verification E2E with MailHog", () => {
 
   beforeEach(async () => {
     testUserId = new ObjectId();
-    await users.insertOne({
+    await userService.insertOne({
       _id: testUserId,
       username: "testuser",
       password: "testpassword"
@@ -202,7 +196,7 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(codeMatch).toBeTruthy();
       const code = codeMatch[1];
 
-      const verification = await verifications.findOne({
+      const verification = await verificationService.findOne({
         userId: testUserId,
         provider: EMAIL_PROVIDER
       });
@@ -228,7 +222,7 @@ describe("Provider Verification E2E with MailHog", () => {
         provider: EMAIL_PROVIDER
       });
 
-      const updatedVerification = await verifications.findOne({_id: verification._id});
+      const updatedVerification = await verificationService.findOne({_id: verification._id});
 
       expect(updatedVerification.is_used).toBe(true);
 
@@ -262,7 +256,7 @@ describe("Provider Verification E2E with MailHog", () => {
 
       expect(body.total).toBeGreaterThan(0);
 
-      const verification = await verifications.findOne({
+      const verification = await verificationService.findOne({
         userId: testUserId,
         provider: EMAIL_PROVIDER
       });
@@ -284,7 +278,7 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(verifyResponse.statusCode).toBe(400);
       expect(verifyResponse.body.message).toBe("Invalid verification code");
 
-      const updatedVerification = await verifications.findOne({_id: verification._id});
+      const updatedVerification = await verificationService.findOne({_id: verification._id});
 
       expect(updatedVerification.is_used).toBe(true);
 
@@ -334,7 +328,7 @@ describe("Provider Verification E2E with MailHog", () => {
         value: email
       });
 
-      const verification = await verifications.findOne({
+      const verification = await verificationService.findOne({
         userId: testUserId,
         provider: EMAIL_PROVIDER
       });
@@ -356,7 +350,7 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(firstVerifyResponse.statusCode).toBe(400);
       expect(firstVerifyResponse.body.message).toBe("Invalid verification code");
 
-      const updatedVerification = await verifications.findOne({_id: verification._id});
+      const updatedVerification = await verificationService.findOne({_id: verification._id});
 
       expect(updatedVerification.is_used).toBe(true);
 
@@ -435,7 +429,7 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(tokenMatch).toBeTruthy();
       const token = tokenMatch[1];
 
-      const verification = await verifications.findOne({
+      const verification = await verificationService.findOne({
         userId: testUserId,
         provider: EMAIL_PROVIDER,
         strategy: MAGIC_LINK_STRATEGY
@@ -458,7 +452,7 @@ describe("Provider Verification E2E with MailHog", () => {
         provider: EMAIL_PROVIDER
       });
 
-      const updatedVerification = await verifications.findOne({_id: verification._id});
+      const updatedVerification = await verificationService.findOne({_id: verification._id});
       expect(updatedVerification.is_used).toBe(true);
 
       const userResponse = await req.get(`/passport/user/${testUserId}`);

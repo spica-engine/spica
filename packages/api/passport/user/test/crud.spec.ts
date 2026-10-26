@@ -1,4 +1,3 @@
-import {USER_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
@@ -16,7 +15,6 @@ describe("User Email Hashing and Encryption", () => {
   let app: INestApplication;
   let req: Request;
   let userService: UserService;
-  let users: any;
   let adminToken: string;
   let testUserId: string;
   let createdAt: Date;
@@ -79,7 +77,6 @@ describe("User Email Hashing and Encryption", () => {
     app = module.createNestApplication();
     req = module.get(Request);
     userService = module.get(UserService);
-    users = module.get(USER_REPOSITORY);
 
     await app.listen(req.socket);
 
@@ -97,7 +94,7 @@ describe("User Email Hashing and Encryption", () => {
     createdAt = new Date();
     const encryptedEmail = userService.encryptField("test@example.com");
 
-    await users.insertOne({
+    await userService.insertOne({
       _id: userId,
       username: "testuser",
       password: "password123",

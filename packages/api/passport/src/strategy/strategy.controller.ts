@@ -14,21 +14,18 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core-schema";
+import {ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "@spica-server/interface-passport";
-import {
-  Strategy,
-  STRATEGY_REPOSITORY,
-  StrategyRepository,
-  StrategyTypeServices
-} from "@spica-server/interface-passport";
+import {Strategy, StrategyTypeServices} from "@spica-server/interface-passport";
+import {StrategyService} from "./services/strategy.service.js";
 
 @Controller("passport/strategy")
 export class StrategyController {
   constructor(
-    @Inject(STRATEGY_REPOSITORY) private strategy: StrategyRepository,
+    private strategy: StrategyService,
     @Inject(STRATEGIES)
     private strategies: StrategyTypeServices,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions,
@@ -44,7 +41,7 @@ export class StrategyController {
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:show"))
   findOne(@Param("id", ID("strategy")) id: Id) {
-    return this.strategy.findById(id).then(strategy => {
+    return this.strategy.findOne({_id: id}).then(strategy => {
       const scope = strategy.type === "oauth" ? "user" : "identity";
       strategy["callbackUrl"] =
         `${this.options.publicUrl}/passport/${scope}/strategy/${strategy._id}/complete`;
@@ -56,7 +53,7 @@ export class StrategyController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteOne(@Param("id", ID("strategy")) id: Id) {
-    return this.strategy.deleteById(id);
+    return this.strategy.deleteOne({_id: id});
   }
 
   @Post()
@@ -74,7 +71,7 @@ export class StrategyController {
       throw new BadRequestException(error.message);
     }
 
-    let insertedStrategy = await this.strategy.insert(preparedStrategy);
+    let insertedStrategy = await this.strategy.insertOne(preparedStrategy);
 
     if (service.afterInsert) {
       insertedStrategy = await service.afterInsert(insertedStrategy);
@@ -91,7 +88,7 @@ export class StrategyController {
   ) {
     delete strategy._id;
 
-    const existingStrategy = await this.strategy.findById(id);
+    const existingStrategy = await this.strategy.findOne({_id: id});
 
     if (!existingStrategy) {
       throw new NotFoundException("Strategy does not exist.");
@@ -114,7 +111,9 @@ export class StrategyController {
       throw new BadRequestException(error.message);
     }
 
-    let updatedStrategy = await this.strategy.replaceById(id, preparedStrategy);
+    let updatedStrategy = await this.strategy.findOneAndReplace({_id: id}, preparedStrategy, {
+      returnDocument: ReturnDocument.AFTER
+    });
 
     if (service.afterInsert) {
       updatedStrategy = await service.afterInsert(updatedStrategy);

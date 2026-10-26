@@ -4,13 +4,9 @@ import {JwtModule} from "@nestjs/jwt";
 import {
   UserOptions,
   USER_OPTIONS,
-  USER_REPOSITORY,
-  UserRepository,
   POLICY_PROVIDER,
-  VERIFICATION_PROVIDERS_INITIALIZER,
-  VERIFICATION_REPOSITORY
+  VERIFICATION_PROVIDERS_INITIALIZER
 } from "@spica-server/interface-passport-user";
-import {provideRepository} from "@spica-server/data";
 import {UserController} from "./user.controller.js";
 import {UserService} from "./user.service.js";
 import {UserStrategy} from "./user.strategy.js";
@@ -50,12 +46,12 @@ import {RateLimitService} from "./rate-limit.service.js";
 export class UserModule {
   constructor(
     @Inject(USER_OPTIONS) options: UserOptions,
-    @Inject(USER_REPOSITORY) users: UserRepository,
+    private userService: UserService,
     @Optional()
     @Inject(REGISTER_CONFIG_SCHEMA)
     registerConfigSchema: RegisterConfigSchema
   ) {
-    registerStatusProvider(users);
+    registerStatusProvider(userService);
     if (registerConfigSchema) {
       registerConfigSchema("user", {
         description: "Configuration for the User module",
@@ -264,14 +260,7 @@ export class UserModule {
     const module: DynamicModule = {
       module: UserModule,
       controllers: [UserController],
-      exports: [
-        UserService,
-        USER_REPOSITORY,
-        UserStrategy,
-        USER_POLICY_FINALIZER,
-        USER_OPTIONS,
-        RateLimitService
-      ],
+      exports: [UserService, UserStrategy, USER_POLICY_FINALIZER, USER_OPTIONS, RateLimitService],
       imports: [
         RefreshTokenServicesModule,
         JwtModule.register({
@@ -303,8 +292,6 @@ export class UserModule {
         })
       ],
       providers: [
-        provideRepository(USER_REPOSITORY),
-        provideRepository(VERIFICATION_REPOSITORY),
         UserService,
         UserStrategy,
         VerificationService,
@@ -344,7 +331,7 @@ export class UserModule {
         {
           provide: USER_POLICY_FINALIZER,
           useFactory: providePolicyFinalizer,
-          inject: [USER_REPOSITORY]
+          inject: [UserService]
         },
         {
           provide: POLICY_PROVIDER,

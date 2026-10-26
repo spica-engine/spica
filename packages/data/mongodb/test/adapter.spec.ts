@@ -7,12 +7,7 @@ import {
   MongoIdTypes
 } from "@spica-server/data-mongodb";
 import {DatabaseModule, DatabaseService} from "@spica-server/database";
-import {
-  COLLECTION_QUERY,
-  ID_TYPES,
-  REPOSITORY_CLASSES,
-  RESULT_SHAPER
-} from "@spica-server/interface-data";
+import {COLLECTION_QUERY, ID_TYPES, RESULT_SHAPER} from "@spica-server/interface-data";
 import {BUCKET_QUERY, BUCKET_WRITE} from "@spica-server/interface-bucket-common";
 
 @Global()
@@ -34,8 +29,7 @@ describe("MongoDataAdapter", () => {
       RESULT_SHAPER,
       COLLECTION_QUERY,
       BUCKET_QUERY,
-      BUCKET_WRITE,
-      REPOSITORY_CLASSES
+      BUCKET_WRITE
     ]);
   });
 

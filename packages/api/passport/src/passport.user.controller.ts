@@ -23,25 +23,17 @@ import {
   Headers
 } from "@nestjs/common";
 import {UserService, RateLimitGuard} from "@spica-server/passport-user";
-import {
-  User,
-  LoginCredentials,
-  USER_REPOSITORY,
-  UserRepository
-} from "@spica-server/interface-passport-user";
+import {User, LoginCredentials} from "@spica-server/interface-passport-user";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body.js";
+import {StrategyService} from "./strategy/services/strategy.service.js";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
+import {ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
-import {
-  STRATEGIES,
-  STRATEGY_REPOSITORY,
-  StrategyRepository,
-  StrategyTypeServices
-} from "@spica-server/interface-passport";
+import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface-passport";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
@@ -92,8 +84,7 @@ export class PassportUserController {
 
   constructor(
     private userService: UserService,
-    @Inject(USER_REPOSITORY) private users: UserRepository,
-    @Inject(STRATEGY_REPOSITORY) private strategyRepository: StrategyRepository,
+    private strategyService: StrategyService,
     private authFactor: AuthFactor,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices,
     @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
@@ -167,10 +158,10 @@ export class PassportUserController {
 
     const attributeEntries = Object.entries(this.userService.encryptAttributes(attributes));
 
-    user = await this.users.findByUsername(username);
+    user = await this.userService.findOne({username: username});
 
     if (!user) {
-      user = await this.users.insert({
+      user = await this.userService.insertOne({
         username: username,
         password: undefined,
         policies: [],
@@ -181,7 +172,15 @@ export class PassportUserController {
         ...(attributeEntries.length ? {attributes: Object.fromEntries(attributeEntries)} : {})
       });
     } else if (attributeEntries.length) {
-      user = await this.users.setAttributes(user._id, Object.fromEntries(attributeEntries));
+      user = await this.userService.findOneAndUpdate(
+        {_id: user._id},
+        {
+          $set: Object.fromEntries(
+            attributeEntries.map(([key, value]) => [`attributes.${key}`, value])
+          )
+        },
+        {returnDocument: ReturnDocument.AFTER}
+      );
 
       if (!user) {
         throw new UnauthorizedException("User does not exist.");
@@ -365,7 +364,7 @@ export class PassportUserController {
 
   @Get("user/strategy/:id/url")
   async getUrl(@Param("id", ID("strategy")) id: Id) {
-    const strategy = await this.strategyRepository.findById(id);
+    const strategy = await this.strategyService.findOne({_id: id});
 
     if (!strategy) {
       throw new BadRequestException("Strategy does not exist.");
@@ -405,7 +404,7 @@ export class PassportUserController {
       throw new BadRequestException("Authentication has failed due to invalid state.");
     }
 
-    const strategy = await this.strategyRepository.findById(id);
+    const strategy = await this.strategyService.findOne({_id: id});
 
     if (!strategy) {
       throw new BadRequestException("Strategy does not exist.");

@@ -5,11 +5,8 @@ import {JwtModule} from "@nestjs/jwt";
 import {
   IdentityOptions,
   IDENTITY_OPTIONS,
-  IDENTITY_REPOSITORY,
-  IdentityRepository,
   POLICY_PROVIDER
 } from "@spica-server/interface-passport-identity";
-import {provideRepository} from "@spica-server/data";
 import {IdentityController} from "./identity.controller.js";
 import {IdentityService} from "./identity.service.js";
 import {IdentityStrategy} from "./identity.strategy.js";
@@ -35,7 +32,6 @@ export class IdentityModule {
   constructor(
     @Inject(IDENTITY_OPTIONS) options: IdentityOptions,
     private identityService: IdentityService,
-    @Inject(IDENTITY_REPOSITORY) identities: IdentityRepository,
     private prefService: PreferenceService,
     @Optional() @Inject(ASSET_REP_MANAGER) private repManager: IRepresentativeManager,
     @Optional()
@@ -52,7 +48,7 @@ export class IdentityModule {
         lastLogin: undefined
       });
     }
-    registerStatusProvider(identities);
+    registerStatusProvider(identityService);
     registerAssetHandlers(prefService, repManager);
     if (registerConfigSchema) {
       registerConfigSchema("identity", {
@@ -94,13 +90,7 @@ export class IdentityModule {
     const module: DynamicModule = {
       module: IdentityModule,
       controllers: [IdentityController],
-      exports: [
-        IdentityService,
-        IDENTITY_REPOSITORY,
-        IdentityStrategy,
-        IDENTITY_POLICY_FINALIZER,
-        IDENTITY_OPTIONS
-      ],
+      exports: [IdentityService, IdentityStrategy, IDENTITY_POLICY_FINALIZER, IDENTITY_OPTIONS],
       imports: [
         RefreshTokenServicesModule,
         JwtModule.register({
@@ -123,7 +113,6 @@ export class IdentityModule {
       ],
       providers: [
         IdentityConfigService,
-        provideRepository(IDENTITY_REPOSITORY),
         IdentityService,
         IdentityStrategy,
         {
@@ -133,7 +122,7 @@ export class IdentityModule {
         {
           provide: IDENTITY_POLICY_FINALIZER,
           useFactory: providePolicyFinalizer,
-          inject: [IDENTITY_REPOSITORY]
+          inject: [IdentityService]
         },
         {
           provide: POLICY_PROVIDER,

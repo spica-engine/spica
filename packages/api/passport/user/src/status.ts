@@ -1,12 +1,12 @@
 import {register} from "@spica-server/status";
-import {UserRepository} from "@spica-server/interface-passport-user";
+import {UserService} from "./user.service.js";
 
-export async function registerStatusProvider(users: UserRepository) {
+export async function registerStatusProvider(service: UserService) {
   const provide = async () => {
     return {
       module: "user",
       status: {
-        users: await users.status()
+        users: await service.getStatus()
       }
     };
   };

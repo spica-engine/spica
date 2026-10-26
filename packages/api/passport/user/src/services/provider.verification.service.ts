@@ -1,15 +1,13 @@
 import {Id} from "@spica-server/interface-data";
 import {VerificationService} from "../verification.service.js";
-import {Inject, Injectable} from "@nestjs/common";
-import {USER_REPOSITORY, UserRepository} from "@spica-server/interface-passport-user";
+import {Injectable} from "@nestjs/common";
 import {UserService} from "../user.service.js";
 
 @Injectable()
 export class ProviderVerificationService {
   constructor(
     private readonly verificationService: VerificationService,
-    private readonly userService: UserService,
-    @Inject(USER_REPOSITORY) private readonly users: UserRepository
+    private readonly userService: UserService
   ) {}
 
   async startCredentialsVerification(
@@ -62,10 +60,15 @@ export class ProviderVerificationService {
   ): Promise<{message: string; provider: string; destination: string}> {
     const encryptedData = this.userService.encryptField(destination);
 
-    await this.users.setFields(userId, {
-      [verifiedField]: encryptedData,
-      [`${verifiedField}_verified_at`]: new Date()
-    });
+    await this.userService.updateOne(
+      {_id: userId},
+      {
+        $set: {
+          [verifiedField]: encryptedData,
+          [`${verifiedField}_verified_at`]: new Date()
+        }
+      }
+    );
 
     return {
       message: "Verification completed successfully",
