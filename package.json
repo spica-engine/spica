@@ -23,6 +23,7 @@
       "packages/core/websocket",
       "packages/data",
       "packages/data/mongodb",
+      "packages/data/postgresql",
       "packages/database",
       "packages/database/pipeline",
       "packages/database/realtime",
