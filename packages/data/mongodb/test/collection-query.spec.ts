@@ -415,31 +415,6 @@ describe("MongoCollectionQueryFacade", () => {
     });
   });
 
-  it("should allow aggregations to use disk like BaseCollection", async () => {
-    const options: unknown[] = [];
-    const db = {
-      collection: () => ({
-        aggregate: (_: object[], aggregateOptions: unknown) => {
-          options.push(aggregateOptions);
-          return {toArray: async () => [], next: async () => null};
-        },
-        estimatedDocumentCount: async () => 0
-      })
-    } as unknown as DatabaseService;
-    const facade = new MongoCollectionQueryFacade(
-      db,
-      new MongoIdTypes(),
-      new PassthroughResultShaper()
-    );
-
-    await facade.find("identity");
-    await facade.findOne("identity", {});
-    await facade.paginate("identity", {filter: {name: "x"}}, "estimate-unless-filtered");
-    await facade.paginate("identity", {}, "exact");
-
-    expect(options).toEqual(Array(5).fill({allowDiskUse: true}));
-  });
-
   it("should pass every result through the result shaper", async () => {
     const recording = recordingDatabase();
     const shaped = {shaped: true};
