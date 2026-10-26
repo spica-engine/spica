@@ -10,6 +10,7 @@ import {WsAdapter} from "@spica-server/core-websocket";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DataModule} from "@spica-server/data";
 import {MongoDataAdapter} from "@spica-server/data-mongodb";
+import {PostgresDataAdapter} from "@spica-server/data-postgresql";
 import {FunctionModule} from "@spica-server/function";
 import {BuilderType} from "@spica-server/interface-function-builder";
 import {PassportModule} from "@spica-server/passport";
@@ -102,13 +103,19 @@ const args = yargsInstance
   })
   /* Database Options */
   .options({
+    "database-type": {
+      string: true,
+      description: "Database engine of this instance. PostgreSQL is experimental.",
+      default: "mongodb",
+      choices: ["mongodb", "postgresql"]
+    },
     "database-uri": {
       string: true,
-      description: "MongoDB connection url."
+      description: "Database connection url."
     },
     "database-name": {
       string: true,
-      description: "Name of the database."
+      description: "Name of the database. Required for MongoDB, ignored for PostgreSQL."
     },
     "database-replica-set": {
       string: true,
@@ -133,8 +140,13 @@ const args = yargsInstance
       default: 1000
     }
   })
-  .demandOption("database-name")
   .demandOption("database-uri")
+  .check(args => {
+    if (args["database-type"] == "mongodb" && !args["database-name"]) {
+      throw new Error("Missing required argument: database-name");
+    }
+    return true;
+  })
   /* Dashboard Options */
   /* Feature Toggling: Bucket and Activity Stream */
   .options({
@@ -665,8 +677,9 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     default: ".*"
   })
   .middleware(args => {
-    const username = process.env.MONGODB_USERNAME;
-    const password = process.env.MONGODB_PASSWORD;
+    const postgres = args["database-type"] == "postgresql";
+    const username = postgres ? process.env.POSTGRES_USERNAME : process.env.MONGODB_USERNAME;
+    const password = postgres ? process.env.POSTGRES_PASSWORD : process.env.MONGODB_PASSWORD;
 
     if (username && password) {
       const uri = new URL(args["database-uri"]);
@@ -875,6 +888,24 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .env()
   .parse() as any;
 
+if (args["database-type"] == "postgresql") {
+  new Logger("Bootstrap").warn("PostgreSQL support is experimental.");
+}
+
+const dataAdapter =
+  args["database-type"] == "postgresql"
+    ? PostgresDataAdapter.forRoot(args["database-uri"], {
+        poolSize: args["database-pool-size"]
+      })
+    : MongoDataAdapter.forRoot(args["database-uri"], {
+        database: args["database-name"],
+        replicaSet: args["database-replica-set"],
+        maxPoolSize: args["database-pool-size"],
+        appName: "spica",
+        readPreference: args["database-read-preference"],
+        changeStreamAwaitTimeMS: args["database-change-stream-await-time"]
+      });
+
 const modules = [
   BatchModule.forRoot({
     port: args["port"]
@@ -882,16 +913,7 @@ const modules = [
   DashboardModule.forRoot({realtime: true}),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),
-  DataModule.forRoot(
-    MongoDataAdapter.forRoot(args["database-uri"], {
-      database: args["database-name"],
-      replicaSet: args["database-replica-set"],
-      maxPoolSize: args["database-pool-size"],
-      appName: "spica",
-      readPreference: args["database-read-preference"],
-      changeStreamAwaitTimeMS: args["database-change-stream-await-time"]
-    })
-  ),
+  DataModule.forRoot(dataAdapter),
   EnvVarModule.forRoot({
     realtime: true
   }),

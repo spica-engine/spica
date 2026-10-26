@@ -57,11 +57,11 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 
 | Component               | Responsibility                                                                                              |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Engine argument         | `--database-type` picks the engine. Mongo-only arguments are ignored on PostgreSQL. PostgreSQL counterparts, such as SSL mode, are added only where needed. |
+| Engine argument         | `--database-type` picks the engine. Mongo-only arguments are ignored on PostgreSQL. PostgreSQL counterparts are added only where needed. |
 | Connection module       | Reads the engine and opens either today's MongoDB connection or the PostgreSQL driver.                     |
 | PostgreSQL driver       | Keeps a small set of open connections and reuses them across requests, sized by `--database-pool-size`. Spica only configures the size. |
 | PostgreSQL credentials  | Come from environment variables, like the MongoDB ones.                                                     |
-| Chart engine switch     | A chart value renders either the MongoDB templates or new PostgreSQL templates. There is an option to point at an external PostgreSQL server instead. |
+| Chart engine switch     | A chart value renders either the MongoDB templates or new PostgreSQL templates. The database is only reachable inside the cluster, like MongoDB. |
 | CLI engine flag         | `project start` starts a MongoDB or a PostgreSQL container. `project ls` and `project remove` handle both.  |
 | Testing module          | Takes an engine option and starts a throwaway PostgreSQL per suite.                                         |
 | CI job                  | Runs the PostgreSQL-ready suites and the contract tests. Suites opt in as later parts make them work.      |
@@ -94,7 +94,6 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 ## Open questions
 
 - Throwaway PostgreSQL in tests: a container or an embedded server?
-- Should an external PostgreSQL server be required to have pg_cron? This affects the chart's external-server option.
 
 ## Done when
 
@@ -105,4 +104,36 @@ Starts the chosen engine next to the API, gives the API its connection settings,
 
 ## As built
 
-_Fill in after the last PR merges._
+### Contracts
+
+| Contract                     | As built                                                                                                                                                                  |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--database-type`            | `mongodb` (default) or `postgresql`, a yargs option in `apps/api/src/main.ts`. `--database-name` is required only for MongoDB.      |
+| PostgreSQL connection        | `@spica-server/data-postgresql` (`packages/data/postgresql`). `PostgresDataAdapter.forRoot(uri, {poolSize})` takes a string or a lazy `() => Promise<string>`. It provides a global `pg.Pool` under the `PG_POOL` token (`@spica-server/interface-data`), sized by `--database-pool-size`. Idle client errors are logged, not thrown, and the pool ends on shutdown. |
+| Credentials                  | `POSTGRES_USERNAME` and `POSTGRES_PASSWORD` are injected into the uri, like the MongoDB ones.                                                                             |
+| Version check                | Boot fails unless `server_version_num` is at least 180000. A missing `pg_cron` only logs a warning.                                                                       |
+| Engine in status             | Not reported. `/status/ready` is public, so it still answers `{status: "ok"}`. The engine name is available as `DATA_ENGINE`.                                              |
+| Testing module engine option | `DatabaseTestingModule.postgres(dbName?)`. One `postgres:18` Testcontainers container per process, or `POSTGRES_URL`, with a new database per module. The adapter is registered in the root `jest.setup.js` under `SPICA_TESTING_POSTGRES_ADAPTER`. |
+| PostgreSQL CI job            | `test_affected` starts only the services each affected project needs. `scripts/ci-test-matrix.mjs` reads the project's specs: `database-testing` or `MONGODB_URL` means MongoDB, `contractSuite` or `POSTGRES_URL` means PostgreSQL, `RABBITMQ_*` means RabbitMQ, `MAILER_URL` means mailhog. A service URL is exported only when the service was started, so a spec the script missed starts its own container. Contract suites run on both engines in every affected project. `yarn check:engine-specs` (flags `--strict` and `--under=<path>`; self-test `yarn test:engine-specs`) lists specs that still use the MongoDB-only testing module without `contractSuite` or `mongoOnly`. |
+| Contract test harness        | `contractSuite(name, engine => {...})` in `@spica-server/database-testing`. MongoDB always runs. PostgreSQL runs when `POSTGRES_URL` or `SPICA_CONTRACT_ENGINES` enables it. With `CI=true` a disabled engine fails the suite instead of skipping. `mongoOnly(reason)` marks a spec that can not run on PostgreSQL. |
+
+### Chart and CLI
+
+- Chart: `database.type` (`mongodb` default, `postgresql`). A missing `database.type` counts as `mongodb`, so a release upgraded with `--reuse-values` from before this key existed keeps its MongoDB resources, and any other value fails the render. The MongoDB templates and the migrate job render only for MongoDB, and the default render is byte-identical to before. PostgreSQL adds `postgres.yaml`, `postgressrv.yaml`, `postgressecrets.yaml` and `postgresinitdb.yaml`, driven by the existing `database` values (`version`, `name`, the `spica*` and `root*` credentials, storage, resources, probes and scheduling). `database.version` defaults to 8.0.4 for MongoDB and 18 for PostgreSQL.
+- Chart users: like MongoDB, there is a root user and an unprivileged `spica` user. `root` is the PostgreSQL superuser. `spica` is a plain login role that owns the `database.name` database, has no other privileges, and is the only one the API uses. An init script in `/docker-entrypoint-initdb.d` creates it on first start, so changing the credentials later needs `ALTER ROLE` by hand. Both secrets keep the MongoDB names, `<release>-database-spica-credentials` and `<release>-database-root-credentials`.
+- Chart replicas: the PostgreSQL StatefulSet is hardcoded to one replica and ignores `database.replicas`. Replication will need custom scripts or an operator. The database is not reachable from outside the cluster and the chart has no external-server or SSL option.
+- CLI: `project start --database-type` and `--postgres-version`. `project ls` recognises `postgres` containers. `project remove` is label-based and needed no change.
+
+### Answers to the open questions
+
+- Throwaway PostgreSQL in tests: a container (Testcontainers), with a `POSTGRES_URL` override for CI.
+- `pg_cron`: optional. The API only warns when the server does not offer it.
+- External PostgreSQL server: dropped from the chart, to match MongoDB.
+
+### Differs from the plan
+
+- `DataModule` needs `ID_TYPES` to boot, so the adapter binds a placeholder `PostgresIdTypes` that throws on use. Part 3 replaces it. No other contract token is bound yet.
+- The engine is not in the status response (see above). Reporting it on the authenticated `GET /status` is open.
+- CI runs on pull requests to `master` and to `postgresql`, and it computes the affected projects against the pull request's own base branch. Pull requests into the stacked `postgresql-part*` branches do not trigger it.
+- `project upgrade` and the chart migrate job still assume MongoDB. Part 2 owns PostgreSQL migrations.
+- `FunctionModule.forRoot` still takes the MongoDB uri, name and replica set. Part 11 owns worker engine settings.
