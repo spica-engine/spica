@@ -11,10 +11,10 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors,
-  Inject
+  UseInterceptors
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
 import {EnvVarService} from "@spica-server/env_var-services";
 import {Schema} from "@spica-server/core-schema";
@@ -24,14 +24,11 @@ import * as CRUD from "./crud.js";
 import {activity} from "@spica-server/activity-services";
 import {createEnvVarActivity} from "./activity.resource.js";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {Id} from "@spica-server/interface-data";
 
 @Controller("env-var")
 export class EnvVarController {
-  constructor(
-    private evs: EnvVarService,
-    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
-  ) {}
+  constructor(private evs: EnvVarService) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:index"))
@@ -39,11 +36,11 @@ export class EnvVarController {
     @ResourceFilter({collection: "env_var"}) resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
+    @Query("sort", JSONP) sort: object,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object
   ) {
-    return CRUD.find(this.queries, {resourceFilter, limit, skip, sort, paginate, filter});
+    return CRUD.find(this.evs, {resourceFilter, limit, skip, sort, paginate, filter});
   }
 
   @Get(":id")

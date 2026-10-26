@@ -1,36 +1,41 @@
 import {ReturnDocument} from "@spica-server/database";
 import {EnvVarService} from "../services";
 import {EnvVar} from "@spica-server/interface-env_var";
+import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
 import {ids} from "@spica-server/data";
-import {CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
+import {Id} from "@spica-server/interface-data";
 
-const collection = "env_var";
-
-const envVarIds = () => ids().forCollection(collection);
+const envVarIds = () => ids().forCollection("env_var");
 
 export async function find(
-  queries: CollectionQueryFacade,
+  evs: EnvVarService,
   options?: {
     resourceFilter?: object;
     limit: number;
     skip: number;
-    sort?: {[path: string]: 1 | -1};
+    sort?: object;
     paginate: boolean;
     filter?: object;
   }
 ): Promise<EnvVar[] | PaginationResponse<EnvVar>> {
   const {resourceFilter, limit, skip, sort, paginate, filter} = options;
-  const spec: ReadSpec = {resourceFilter, filter, sort, skip, limit};
+  let pipelineBuilder = new PipelineBuilder().filterResources(resourceFilter);
+
+  pipelineBuilder = await pipelineBuilder.filterByUserRequest(filter);
+
+  const seekingPipeline = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
+
+  const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
+    evs.estimatedDocumentCount()
+  );
 
   if (paginate) {
-    return queries.paginate<EnvVar>(collection, spec, "estimate-unless-filtered") as Promise<
-      PaginationResponse<EnvVar>
-    >;
+    return executePaginationPlan<EnvVar>(evs, plan) as Promise<PaginationResponse<EnvVar>>;
   }
 
-  return queries.find<EnvVar>(collection, spec);
+  return evs.aggregate<EnvVar>(plan.dataPipeline).toArray();
 }
 
 export function findOne(evs: EnvVarService, id: Id): Promise<EnvVar> {

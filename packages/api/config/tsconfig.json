@@ -16,9 +16,6 @@
       "path": "../../interface/replication"
     },
     {
-      "path": "../../interface/data"
-    },
-    {
       "path": "../../interface/config"
     },
     {

@@ -2,42 +2,55 @@ import {ReturnDocument} from "@spica-server/database";
 import {SecretService} from "@spica-server/secret-services";
 import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface-secret";
 import {encrypt} from "@spica-server/core-encryption";
+import {SecretPipelineBuilder} from "./pipeline.builder.js";
+import {executePaginationPlan} from "@spica-server/database-pipeline";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
 import {ids} from "@spica-server/data";
-import {CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
+import {Id} from "@spica-server/interface-data";
 
-const collection = "secret";
-
-const secretIds = () => ids().forCollection(collection);
-
-const HIDDEN_VALUE = {value: 0} as const;
+const secretIds = () => ids().forCollection("secret");
 
 export async function find(
-  queries: CollectionQueryFacade,
+  ss: SecretService,
   options?: {
     resourceFilter?: object;
     limit: number;
     skip: number;
-    sort?: {[path: string]: 1 | -1};
+    sort?: object;
     paginate: boolean;
     filter?: object;
   }
 ): Promise<HiddenSecret[] | PaginationResponse<HiddenSecret>> {
   const {resourceFilter, limit, skip, sort, paginate, filter} = options;
-  const spec: ReadSpec = {resourceFilter, filter, sort, skip, limit, fields: HIDDEN_VALUE};
+  let pipelineBuilder = new SecretPipelineBuilder().filterResources(resourceFilter);
+
+  pipelineBuilder = await pipelineBuilder.filterByUserRequest(filter);
+
+  const seekingPipeline = new SecretPipelineBuilder()
+    .sort(sort)
+    .skip(skip)
+    .limit(limit)
+    .hideSecrets()
+    .result();
+
+  const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
+    ss.estimatedDocumentCount()
+  );
 
   if (paginate) {
-    return queries.paginate<HiddenSecret>(collection, spec, "estimate-unless-filtered") as Promise<
+    return executePaginationPlan<HiddenSecret>(ss, plan) as Promise<
       PaginationResponse<HiddenSecret>
     >;
   }
 
-  return queries.find<HiddenSecret>(collection, spec);
+  return ss.aggregate<HiddenSecret>(plan.dataPipeline).toArray();
 }
 
-export async function findOne(queries: CollectionQueryFacade, id: Id): Promise<HiddenSecret> {
-  const res = await queries.findOne<HiddenSecret>(collection, {id, fields: HIDDEN_VALUE});
+export async function findOne(ss: SecretService, id: Id): Promise<HiddenSecret> {
+  const pipeline = new SecretPipelineBuilder().findOneIfRequested(id).hideSecrets().result();
+
+  const res = await ss.aggregate<HiddenSecret>(pipeline).next();
   if (!res) {
     throw new NotFoundException(`Secret with ID ${id} not found`);
   }

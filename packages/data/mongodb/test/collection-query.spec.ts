@@ -337,56 +337,6 @@ describe("MongoCollectionQueryFacade", () => {
       ]);
     });
 
-    it("should resolve activity names before matching like ActivityPipelineBuilder", async () => {
-      const from = new Date("2024-01-01T00:00:00.000Z");
-      const to = new Date("2024-02-01T00:00:00.000Z");
-      const resolveName = (from: string, field: string) => [
-        {$lookup: {from, localField: field, foreignField: "_id", as: field}},
-        {$unwind: {path: `$${field}`, preserveNullAndEmptyArrays: true}},
-        {$set: {[field]: `$${field}.${field}`}}
-      ];
-
-      await facade.find("activity", {
-        relations: ["identifier", "username"],
-        where: {
-          identifier: {eq: "spica"},
-          resource: {eq: {name: "bucket", documentId: ["1"]}},
-          action: {in: [1, 3]}
-        },
-        createdBetween: {from, to},
-        sort: {_id: -1},
-        skip: 5,
-        limit: 10
-      });
-      await facade.find("activity", {relations: ["identifier", "username"], sort: {_id: -1}});
-
-      expect(calls.map(call => call.pipeline)).toEqual([
-        [
-          ...resolveName("identity", "identifier"),
-          ...resolveName("user", "username"),
-          {
-            $match: {
-              identifier: "spica",
-              resource: {name: "bucket", documentId: ["1"]},
-              action: {$in: [1, 3]},
-              _id: {
-                $gte: ObjectId.createFromTime(from.getTime() / 1000),
-                $lt: ObjectId.createFromTime(to.getTime() / 1000)
-              }
-            }
-          },
-          {$sort: {_id: -1}},
-          {$skip: 5},
-          {$limit: 10}
-        ],
-        [
-          ...resolveName("identity", "identifier"),
-          ...resolveName("user", "username"),
-          {$sort: {_id: -1}}
-        ]
-      ]);
-    });
-
     it("should keep the empty $match of the webhook logs pipeline", async () => {
       await facade.find("webhook_logs", {where: {}, sort: {_id: -1}});
 

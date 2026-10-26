@@ -13,19 +13,7 @@ const lookup = (from: string, field: string) => ({
   $lookup: {from, localField: field, foreignField: "_id", as: field}
 });
 
-const resolveName = (from: string, field: string) => [
-  lookup(from, field),
-  {$unwind: {path: `$${field}`, preserveNullAndEmptyArrays: true}},
-  {$set: {[field]: `$${field}.${field}`}}
-];
-
 const profiles: {[collection: string]: ReadProfile} = {
-  activity: {
-    relations: {
-      identifier: {placement: "before-filter", stages: resolveName("identity", "identifier")},
-      username: {placement: "before-filter", stages: resolveName("user", "username")}
-    }
-  },
   function: {
     relations: {
       env_vars: {placement: "after-filter", stages: [lookup("env_var", "env_vars")]},

@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Inject,
-  NotFoundException,
-  Param,
-  Put,
-  UseGuards
-} from "@nestjs/common";
-import {COLLECTION_QUERY, CollectionQueryFacade} from "@spica-server/interface-data";
+import {Controller, Put, Param, Body, Get, UseGuards, NotFoundException} from "@nestjs/common";
 import {ConfigService} from "./config.service.js";
 import {ConfigSchemaRegistry} from "./config.schema.registry.js";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
@@ -19,14 +9,13 @@ import {BaseConfig} from "@spica-server/interface-config";
 export class ConfigController {
   constructor(
     private readonly configService: ConfigService,
-    private readonly configSchemaRegistry: ConfigSchemaRegistry,
-    @Inject(COLLECTION_QUERY) private readonly queries: CollectionQueryFacade
+    private readonly configSchemaRegistry: ConfigSchemaRegistry
   ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("config:index"))
   async getAllConfigs(@ResourceFilter({collection: "config"}) resourceFilter: object) {
-    return this.queries.find("config", {resourceFilter});
+    return this.configService.aggregate([resourceFilter]).toArray();
   }
 
   @Get("schema")

@@ -1,5 +1,4 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {COLLECTION_QUERY, CollectionQueryFacade} from "@spica-server/interface-data";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {SecretService, ServicesModule} from "@spica-server/secret-services";
 import {isEncryptedData} from "@spica-server/core-encryption";
@@ -10,7 +9,6 @@ const ENCRYPTION_SECRET = "test-encryption-secret-32chars!!";
 
 describe("Secret CRUD", () => {
   let ss: SecretService;
-  let queries: CollectionQueryFacade;
   let app: INestApplication;
 
   beforeEach(async () => {
@@ -22,7 +20,6 @@ describe("Secret CRUD", () => {
     }).compile();
 
     ss = module.get(SecretService);
-    queries = module.get(COLLECTION_QUERY);
     app = module.createNestApplication();
     await app.init();
   });
@@ -91,7 +88,7 @@ describe("Secret CRUD", () => {
     it("should return a secret by id with value hidden", async () => {
       const inserted = await CRUD.insert(ss, {key: "SECRET_KEY", value: "secret123"});
 
-      const found = await CRUD.findOne(queries, inserted._id);
+      const found = await CRUD.findOne(ss, inserted._id);
 
       expect(found._id).toEqual(inserted._id);
       expect(found.key).toBe("SECRET_KEY");
@@ -101,7 +98,7 @@ describe("Secret CRUD", () => {
     it("should throw NotFoundException for non-existent id", async () => {
       const nonExistentId = new ObjectId();
 
-      await expect(CRUD.findOne(queries, nonExistentId)).rejects.toThrow(NotFoundException);
+      await expect(CRUD.findOne(ss, nonExistentId)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -113,7 +110,7 @@ describe("Secret CRUD", () => {
     });
 
     it("should return all secrets with values hidden", async () => {
-      const results = (await CRUD.find(queries, {
+      const results = (await CRUD.find(ss, {
         limit: 0,
         skip: 0,
         paginate: false
@@ -128,7 +125,7 @@ describe("Secret CRUD", () => {
     });
 
     it("should support limit and skip", async () => {
-      const results = (await CRUD.find(queries, {
+      const results = (await CRUD.find(ss, {
         limit: 1,
         skip: 1,
         sort: {key: 1},
@@ -141,7 +138,7 @@ describe("Secret CRUD", () => {
     });
 
     it("should support pagination", async () => {
-      const result = (await CRUD.find(queries, {
+      const result = (await CRUD.find(ss, {
         limit: 0,
         skip: 0,
         sort: {_id: -1},
@@ -156,7 +153,7 @@ describe("Secret CRUD", () => {
     });
 
     it("should filter by key", async () => {
-      const results = (await CRUD.find(queries, {
+      const results = (await CRUD.find(ss, {
         limit: 0,
         skip: 0,
         paginate: false,
@@ -219,7 +216,7 @@ describe("Secret CRUD", () => {
 
       await CRUD.remove(ss, inserted._id);
 
-      const all = (await CRUD.find(queries, {
+      const all = (await CRUD.find(ss, {
         limit: 0,
         skip: 0,
         paginate: false
