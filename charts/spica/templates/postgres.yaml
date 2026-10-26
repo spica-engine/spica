@@ -1,0 +1,99 @@
+{{- if and (eq .Values.database.type "postgresql") (not .Values.postgres.external.enabled) }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: {{.Release.Namespace}}
+  name: {{ .Release.Name }}-database
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}-database
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: helm
+spec:
+  serviceName: {{ .Release.Name }}-database
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Release.Name }}-database
+      app.kubernetes.io/component: database
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Release.Name }}-database
+        app.kubernetes.io/component: database
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/part-of: {{ .Chart.Name }}
+        app.kubernetes.io/managed-by: helm
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/postgressecrets.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:{{ .Values.postgres.version }}
+          ports:
+            - containerPort: 5432
+          startupProbe:
+            exec:
+              command:
+                - "/bin/sh"
+                - "-c"
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: {{ .Values.database.startupProbeInitialDelaySeconds }}
+            periodSeconds: {{ .Values.database.startupProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.startupProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.startupProbeFailureThreshold }}
+          livenessProbe:
+            tcpSocket:
+              port: 5432
+            periodSeconds: {{ .Values.database.livenessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.livenessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.livenessProbeFailureThreshold }}
+          readinessProbe:
+            exec:
+              command:
+                - "/bin/sh"
+                - "-c"
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            periodSeconds: {{ .Values.database.readinessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.readinessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.readinessProbeFailureThreshold }}
+          resources:
+{{ toYaml .Values.database.resources | indent 12 }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-data
+              mountPath: /var/lib/postgresql
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-postgres-credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-postgres-credentials
+                  key: password
+            - name: POSTGRES_DB
+              value: {{ .Values.database.name }}
+      terminationGracePeriodSeconds: {{ .Values.database.terminationGracePeriodSeconds }}
+      {{- if .Values.database.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.database.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.database.tolerations }}
+      tolerations:
+{{ toYaml .Values.database.tolerations | indent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ .Release.Name }}-data
+      spec:
+        storageClassName: {{.Values.database.storageClass}}
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{.Values.database.storageSize}}
+{{- end }}

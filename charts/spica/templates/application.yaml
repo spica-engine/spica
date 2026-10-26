@@ -109,8 +109,15 @@ spec:
 {{- end }}
             --port, "4300", 
             --database-uri, {{ template "database.connection-uri" . }},
+{{- if eq .Values.database.type "postgresql" }}
+            --database-type, postgresql,
+{{- if .Values.postgres.ssl }}
+            --database-ssl,
+{{- end }}
+{{- else }}
             --database-replica-set,  {{ .Values.database.replicaSetName }},
             --database-name,  {{ .Values.database.name }},
+{{- end }}
             --passport-default-identity-password,  {{ .Values.application.defaultPassword }},
             --public-url, {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}},
             --persistent-path, /data,
@@ -165,6 +172,18 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
                   key: refreshTokenHashSecret
+            {{- if eq .Values.database.type "postgresql" }}
+            - name: POSTGRES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-postgres-credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-postgres-credentials
+                  key: password
+            {{- else }}
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -175,6 +194,7 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-database-spica-credentials
                   key: spicaPassword
+            {{- end }}
             - name: TWILIO_ACCOUNT_SID
               valueFrom:
                 secretKeyRef:

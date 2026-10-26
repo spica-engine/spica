@@ -2,6 +2,8 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 database:
+  # mongodb | postgresql. The engine is fixed for the life of the instance. PostgreSQL is experimental.
+  type: mongodb
   replicas: 1
   replicaSetName: 'rs0'
   name: spica
@@ -33,6 +35,20 @@ database:
   readinessProbePeriodSeconds: 10
   readinessProbeTimeoutSeconds: 15
   readinessProbeFailureThreshold: 3
+
+# Used only when database.type is postgresql. Storage, resources, probes, scheduling and
+# database.name are shared with the database block above.
+postgres:
+  version: '18'
+  username: spica
+  password:
+  ssl: false
+  # Point the API at a PostgreSQL 18+ server you run yourself instead of starting one.
+  # pg_cron is optional; the API only warns when it is missing.
+  external:
+    enabled: false
+    host:
+    port: 5432
 
 images:
   api: spicaengine/api

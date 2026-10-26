@@ -1,3 +1,4 @@
+{{- if eq .Values.database.type "mongodb" -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -123,3 +124,4 @@ data:
       db.setProfilingLevel($PROFILING_LEVEL,{ slowms: $PROFILING_SLOWMS})
     EOF
     echo "Set Profiling level!"
+{{ end }}

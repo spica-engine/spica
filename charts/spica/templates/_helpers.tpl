@@ -1,4 +1,13 @@
 {{- define "database.connection-uri" -}}
+  {{- if eq .Values.database.type "postgresql" -}}
+    {{- $host := printf "%s-database.%s.svc.cluster.local" .Release.Name .Release.Namespace -}}
+    {{- $port := 5432 -}}
+    {{- if .Values.postgres.external.enabled -}}
+      {{- $host = required "postgres.external.host is required when postgres.external.enabled is true" .Values.postgres.external.host -}}
+      {{- $port = .Values.postgres.external.port | int -}}
+    {{- end -}}
+    {{- printf "postgres://%s:%d/%s" $host $port .Values.database.name | quote -}}
+  {{- else -}}
     {{- $uri := "mongodb://" -}}
     {{- $namespace := printf "%s-database" .Release.Name -}}
     {{- $ns := .Release.Namespace -}}
@@ -7,6 +16,7 @@
         {{- $uri = printf "%s%s" $uri $node -}}
     {{- end -}}
     {{- printf $uri | trimSuffix "," | quote -}}
+  {{- end -}}
 {{- end -}}
 
 

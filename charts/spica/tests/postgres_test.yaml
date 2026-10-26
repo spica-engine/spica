@@ -1,0 +1,140 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: postgresql engine
+templates:
+  - templates/postgres.yaml
+  - templates/postgressecrets.yaml
+  - templates/postgressrv.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.masterKey: test-master-key
+  application.publicHost: https://test.example.com
+  database.type: postgresql
+
+tests:
+  - it: should render a single-replica StatefulSet running postgres 18
+    template: templates/postgres.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: metadata.name
+          value: release-name-database
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: postgres:18
+
+  - it: should keep the data on a volume claim
+    template: templates/postgres.yaml
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 2Gi
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /var/lib/postgresql
+
+  - it: should create the database named by database.name
+    template: templates/postgres.yaml
+    set:
+      database.name: custom
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: POSTGRES_DB
+            value: custom
+
+  - it: should take the postgres version from postgres.version
+    template: templates/postgres.yaml
+    set:
+      postgres.version: "18.1"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: postgres:18.1
+
+  - it: should expose a headless service on 5432
+    template: templates/postgressrv.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-database
+      - equal:
+          path: spec.clusterIP
+          value: None
+      - contains:
+          path: spec.ports
+          content:
+            port: 5432
+            targetPort: 5432
+
+  - it: should store the credentials in a hook secret
+    template: templates/postgressecrets.yaml
+    set:
+      postgres.username: app
+      postgres.password: secret
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-postgres-credentials
+      - equal:
+          path: data.username
+          decodeBase64: true
+          value: app
+      - equal:
+          path: data.password
+          decodeBase64: true
+          value: secret
+
+  - it: should generate a password when none is set
+    template: templates/postgressecrets.yaml
+    asserts:
+      - matchRegex:
+          path: data.password
+          pattern: ^\S+\s*$
+
+  - it: should not start a server or service for an external server
+    set:
+      postgres.external.enabled: true
+      postgres.external.host: pg.example.com
+      postgres.password: secret
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/postgres.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/postgressrv.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/postgressecrets.yaml
+
+  - it: should require a password for an external server
+    template: templates/postgressecrets.yaml
+    set:
+      postgres.external.enabled: true
+      postgres.external.host: pg.example.com
+    asserts:
+      - failedTemplate: {}
+
+  - it: should render nothing for the default mongodb engine
+    set:
+      database.type: mongodb
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/postgres.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/postgressrv.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/postgressecrets.yaml

@@ -1,0 +1,22 @@
+{{- if and (eq .Values.database.type "postgresql") (not .Values.postgres.external.enabled) }}
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{.Release.Namespace}}
+  name: {{ .Release.Name }}-database
+  labels:
+    app.kubernetes.io/name: database-srv
+    app.kubernetes.io/component: service
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: helm
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: {{ .Release.Name }}-database
+    app.kubernetes.io/component: database
+{{- end }}
