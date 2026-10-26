@@ -5,11 +5,13 @@ import {workspaceRoot} from "@nx/devkit";
 import {jest} from "@jest/globals";
 import {bindIdTypes} from "@spica-server/data";
 import {MongoDataAdapter, MongoIdTypes} from "@spica-server/data-mongodb";
+import {PostgresDataAdapter} from "@spica-server/data-postgresql";
 
 global.jest = jest;
 
 globalThis[Symbol.for("SPICA_TESTING_DATA_ADAPTER")] = () =>
   MongoDataAdapter.forExistingConnection();
+globalThis[Symbol.for("SPICA_TESTING_POSTGRES_ADAPTER")] = uri => PostgresDataAdapter.forRoot(uri);
 bindIdTypes(new MongoIdTypes());
 jest.setTimeout(30_000);
 

@@ -1,3 +1,4 @@
+{{- if eq (include "database.engine" .) "mongodb" -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -41,7 +42,7 @@ spec:
           defaultMode: 0400
       initContainers:
         - name: init-users
-          image: mongo:{{ .Values.database.version }}
+          image: mongo:{{ include "database.version" . }}
           command:
             - "/bin/sh"
             - "-c"
@@ -79,7 +80,7 @@ spec:
                   key: rootPassword
       containers:
         - name: mongo
-          image: mongo:{{ .Values.database.version }}
+          image: mongo:{{ include "database.version" . }}
           command:
             - "/bin/sh"
             - "-c"
@@ -183,3 +184,4 @@ spec:
         resources:
           requests:
             storage: {{.Values.database.storageSize}}
+{{ end }}

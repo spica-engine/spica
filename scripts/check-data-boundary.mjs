@@ -10,6 +10,7 @@ const SCANNED_ROOTS = ["packages", "apps"];
 
 const EXEMPT_PREFIXES = [
   "packages/data/mongodb/",
+  "packages/data/postgresql/",
   "packages/database/",
   "packages/interface/database/",
   "packages/devkit/",
@@ -115,7 +116,10 @@ function checkFile(root, file) {
       }
     } else if (specifier.startsWith("@spica-server/database")) {
       report(index, specifier, `imports "${specifier}"`);
-    } else if (specifier == "@spica-server/data-mongodb" && relative != ADAPTER_REGISTRATION) {
+    } else if (
+      (specifier == "@spica-server/data-mongodb" || specifier == "@spica-server/data-postgresql") &&
+      relative != ADAPTER_REGISTRATION
+    ) {
       report(index, specifier, `imports "${specifier}" outside ${ADAPTER_REGISTRATION}`);
     }
   }
@@ -133,7 +137,7 @@ function checkFile(root, file) {
 }
 
 function isMongoDriver(specifier) {
-  return ["mongodb", "bson"].some(name => specifier == name || specifier.startsWith(name + "/"));
+  return ["mongodb", "bson", "pg"].some(name => specifier == name || specifier.startsWith(name + "/"));
 }
 
 const IMPORT_PATTERNS = [
