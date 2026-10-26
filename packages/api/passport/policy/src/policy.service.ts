@@ -1,10 +1,10 @@
-import {Injectable} from "@nestjs/common";
-import {Collection, DatabaseService, ObjectId, BaseCollection} from "@spica-server/database";
-import {Policy} from "@spica-server/interface-passport-policy";
+import {Inject, Injectable} from "@nestjs/common";
+import {Id} from "@spica-server/interface-data";
+import {Policy, POLICY_REPOSITORY, PolicyRepository} from "@spica-server/interface-passport-policy";
 import managedPolicies from "./policies/index.js";
 
 @Injectable()
-export class PolicyService extends BaseCollection<Policy>("policies") {
+export class PolicyService {
   managedPolicies: Array<PolicyWithType>;
   customerManagedPolicies: Array<PolicyWithType>;
 
@@ -12,22 +12,34 @@ export class PolicyService extends BaseCollection<Policy>("policies") {
     return [...this.managedPolicies, ...this.customerManagedPolicies];
   }
 
-  constructor(db: DatabaseService) {
-    super(db);
+  constructor(@Inject(POLICY_REPOSITORY) private readonly repository: PolicyRepository) {
     this.managedPolicies = managedPolicies.map(p => ({...p, system: true}) as PolicyWithType);
   }
 
   _findAll(): Promise<Policy[]> {
-    return this._coll
-      .find()
-      .toArray()
-      .then(policies => {
-        this.customerManagedPolicies = policies.map(p => {
-          const policy = {...p, system: false};
-          return policy as PolicyWithType;
-        });
-        return this.policies;
+    return this.repository.findAll().then(policies => {
+      this.customerManagedPolicies = policies.map(p => {
+        const policy = {...p, system: false};
+        return policy as PolicyWithType;
       });
+      return this.policies;
+    });
+  }
+
+  findById(id: Id) {
+    return this.repository.findById(id);
+  }
+
+  insert(policy: Policy) {
+    return this.repository.insert(policy);
+  }
+
+  replaceById(id: Id, policy: Policy) {
+    return this.repository.replaceById(id, policy);
+  }
+
+  deleteById(id: Id) {
+    return this.repository.deleteById(id);
   }
 
   paginate(filter: object, limit: number, skip: number = 0) {

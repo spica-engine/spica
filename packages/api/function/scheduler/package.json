@@ -12,7 +12,7 @@
   "dependencies": {
     "@nestjs/common": "^10.4.22",
     "@nestjs/core": "^10.4.22",
-    "@spica-server/database": "workspace:*",
+    "@spica-server/data": "workspace:*",
     "@spica-server/function-builder": "workspace:*",
     "@spica-server/function-builder-legacy": "workspace:*",
     "@spica-server/function-builder-rollup": "workspace:*",
@@ -25,7 +25,9 @@
     "@spica-server/function-runtime-io": "workspace:*",
     "@spica-server/function-runtime-logger": "workspace:*",
     "@spica-server/function-runtime-node": "workspace:*",
+    "@spica-server/interface-data": "workspace:*",
     "@spica-server/interface-function-builder": "workspace:*",
+    "@spica-server/interface-function-log": "workspace:*",
     "@spica-server/interface-function-pkgmanager": "workspace:*",
     "@spica-server/interface-function-runtime": "workspace:*",
     "@spica-server/interface-function-scheduler": "workspace:*",

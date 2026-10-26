@@ -16,7 +16,7 @@ describe("Password Policy - User", () => {
   let adminToken: string;
 
   function setConfig(module: string, options: object) {
-    return configService.findOneAndReplace({module}, {module, options}, {upsert: true});
+    return configService.replace(module, {module, options});
   }
 
   beforeAll(async () => {

@@ -1,16 +1,17 @@
-import {WebhookLogService} from "@spica-server/function-webhook/src/log.service";
+import {provideRepository} from "@spica-server/data";
+import {WEBHOOK_LOG_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
 
 describe("Webhook Log Service", () => {
   let module: TestingModule;
-  let logService: WebhookLogService;
+  let logService: any;
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.standalone()],
       providers: [
-        WebhookLogService,
+        provideRepository(WEBHOOK_LOG_REPOSITORY),
         {
           provide: WEBHOOK_OPTIONS,
           useValue: {
@@ -19,7 +20,7 @@ describe("Webhook Log Service", () => {
         }
       ]
     }).compile();
-    logService = module.get(WebhookLogService);
+    logService = module.get(WEBHOOK_LOG_REPOSITORY);
     await new Promise(resolve => setTimeout(() => resolve(""), 2000));
   });
 

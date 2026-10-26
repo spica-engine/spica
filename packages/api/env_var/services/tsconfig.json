@@ -9,7 +9,7 @@
       "path": "../../../interface/env_var"
     },
     {
-      "path": "../../../database"
+      "path": "../../../interface/data"
     }
   ],
   "compilerOptions": {

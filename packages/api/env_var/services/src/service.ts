@@ -1,66 +1,45 @@
-import {Injectable} from "@nestjs/common";
-import {
-  BaseCollection,
-  DatabaseService,
-  Filter,
-  FindOneAndDeleteOptions,
-  FindOneAndReplaceOptions,
-  FindOneAndUpdateOptions,
-  OptionalUnlessRequiredId,
-  UpdateFilter,
-  WithId
-} from "@spica-server/database";
-import {EnvVar} from "@spica-server/interface-env_var";
+import {Inject, Injectable} from "@nestjs/common";
+import {EnvVar, ENV_VAR_REPOSITORY, EnvVarRepository} from "@spica-server/interface-env_var";
+import {Id} from "@spica-server/interface-data";
 import {CollectionChangeEvent} from "@spica-server/replication";
 import {Observable} from "rxjs";
 import {EnvVarChangeDispatcher} from "./change-dispatcher.js";
 
 @Injectable()
-export class EnvVarService extends BaseCollection<EnvVar>("env_var") {
+export class EnvVarService {
   constructor(
-    db: DatabaseService,
+    @Inject(ENV_VAR_REPOSITORY) private readonly envVars: EnvVarRepository,
     private readonly changeDispatcher: EnvVarChangeDispatcher
-  ) {
-    super(db, {
-      afterInit: () => this._coll.createIndex({key: 1}, {unique: true})
-    });
+  ) {}
+
+  findById(id: Id): Promise<EnvVar | null> {
+    return this.envVars.findById(id);
   }
 
-  async insertOne(doc: OptionalUnlessRequiredId<EnvVar>): Promise<WithId<EnvVar>> {
-    const result = await super.insertOne(doc);
+  async insert(envVar: EnvVar): Promise<EnvVar> {
+    const result = await this.envVars.insert(envVar);
     this.changeDispatcher.dispatch({operationType: "insert", documentKey: {_id: result._id}});
     return result;
   }
 
-  async findOneAndUpdate(
-    filter: Filter<EnvVar>,
-    update: UpdateFilter<EnvVar> | EnvVar,
-    options?: FindOneAndUpdateOptions
-  ): Promise<WithId<EnvVar>> {
-    const result = await super.findOneAndUpdate(filter, update, options);
-    if (result) {
-      this.changeDispatcher.dispatch({operationType: "update", documentKey: {_id: result._id}});
-    }
-    return result;
-  }
-
-  async findOneAndReplace(
-    filter: Filter<EnvVar>,
-    doc: EnvVar,
-    options?: FindOneAndReplaceOptions
-  ): Promise<WithId<EnvVar>> {
-    const result = await super.findOneAndReplace(filter, doc, options);
+  async replaceById(id: Id, envVar: EnvVar): Promise<EnvVar | null> {
+    const result = await this.envVars.replaceById(id, envVar);
     if (result) {
       this.changeDispatcher.dispatch({operationType: "replace", documentKey: {_id: result._id}});
     }
     return result;
   }
 
-  async findOneAndDelete(
-    filter: Filter<EnvVar>,
-    options?: FindOneAndDeleteOptions
-  ): Promise<WithId<EnvVar>> {
-    const result = await super.findOneAndDelete(filter, options);
+  async updateById(id: Id, fields: Partial<EnvVar>): Promise<EnvVar | null> {
+    const result = await this.envVars.updateById(id, fields);
+    if (result) {
+      this.changeDispatcher.dispatch({operationType: "update", documentKey: {_id: result._id}});
+    }
+    return result;
+  }
+
+  async deleteById(id: Id): Promise<EnvVar | null> {
+    const result = await this.envVars.deleteById(id);
     if (result) {
       this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: result._id}});
     }

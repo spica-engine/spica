@@ -1,4 +1,6 @@
 import {ObjectId} from "@spica-server/database";
+import {bucketIds} from "@spica-server/bucket-services";
+import {Id} from "@spica-server/interface-data";
 import {GraphQLResolveInfo} from "graphql";
 import {Prefix, Suffix, SchemaWarning} from "@spica-server/interface-bucket-graphql";
 import {Bucket} from "@spica-server/interface-bucket";
@@ -404,7 +406,7 @@ function isLocationTypeValid(locationType: string) {
   return locationTypes.includes(locationType);
 }
 
-export function getBucketName(id: string | ObjectId): string {
+export function getBucketName(id: string | Id): string {
   return `Bucket_${id.toString()}`;
 }
 
@@ -449,7 +451,7 @@ function mergeNodes(node: any, rootKey: string) {
 
 export function extractAggregationFromQuery(bucket: any, query: object, buckets: Bucket[]): object {
   const bucketProperties = bucket.properties;
-  if (ObjectId.isValid(bucket._id)) {
+  if (bucketIds().isValid(bucket._id)) {
     bucketProperties._id = {
       type: "objectid"
     };

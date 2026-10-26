@@ -25,7 +25,7 @@ export class ApikeyRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
       message: error.message || "Unexpected error"
     }),
     this.realtime,
-    resourceFilterFunction,
+    ctx => resourceFilterFunction({collection: this.COLLECTION}, ctx),
     "passport:apikey:stream"
   );
 

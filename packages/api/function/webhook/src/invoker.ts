@@ -1,21 +1,25 @@
-import {Injectable, OnModuleDestroy} from "@nestjs/common";
-import {ChangeStream, DatabaseService} from "@spica-server/database";
+import {Inject, Injectable, OnModuleDestroy} from "@nestjs/common";
 import fetch from "node-fetch";
-import {Webhook, ChangeKind} from "@spica-server/interface-function-webhook";
-import {WebhookLogService} from "./log.service.js";
+import {
+  Webhook,
+  ChangeKind,
+  WEBHOOK_LOG_REPOSITORY,
+  WebhookLogRepository
+} from "@spica-server/interface-function-webhook";
 import {WebhookService} from "./webhook.service.js";
 import handlebars from "handlebars";
-import {Subject, takeUntil} from "rxjs";
+import {Subject, Subscription, takeUntil} from "rxjs";
+import {CHANGE_FEED, ChangeFeed, ChangeOperation} from "@spica-server/interface-data";
 
 @Injectable()
 export class WebhookInvoker implements OnModuleDestroy {
-  private targets = new Map<string, ChangeStream>();
+  private targets = new Map<string, Subscription>();
   private onDestroySubject = new Subject();
 
   constructor(
     private webhookService: WebhookService,
-    private db: DatabaseService,
-    private logService: WebhookLogService
+    @Inject(CHANGE_FEED) private feed: ChangeFeed,
+    @Inject(WEBHOOK_LOG_REPOSITORY) private logs: WebhookLogRepository
   ) {
     this.webhookService
       .targets()
@@ -49,78 +53,80 @@ export class WebhookInvoker implements OnModuleDestroy {
       body = "{{{ toJSON this }}}";
     }
     const bodyTemplate = handlebars.compile(body, {strict: true});
-    const stream = this.db.collection(trigger.options.collection).watch(
-      [{$match: {operationType: trigger.options.type.toLowerCase()}}],
-      {fullDocument: "updateLookup", maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS}
-    );
-    stream.on("change", (rawChange: any) => {
-      const change = {
-        type: rawChange.operationType,
-        document: rawChange.fullDocument || rawChange.fullDocumentBeforeChange,
-        documentKey: rawChange.documentKey._id.toString()
-      };
+    const subscription = this.feed
+      .watch(trigger.options.collection, {
+        operations: [trigger.options.type.toLowerCase() as ChangeOperation],
+        document: "current"
+      })
+      .subscribe((rawChange: any) => {
+        const change = {
+          type: rawChange.operationType,
+          document: rawChange.fullDocument || rawChange.fullDocumentBeforeChange,
+          documentKey: rawChange.documentKey._id.toString()
+        };
 
-      let body;
+        let body;
 
-      try {
-        body = bodyTemplate(change, {
-          allowProtoPropertiesByDefault: false,
-          allowProtoMethodsByDefault: false,
-          helpers: {
-            toJSON: (object: unknown) => JSON.stringify(object)
-          }
-        });
-      } catch (error) {
-        this.logService.insertOne({
-          succeed: false,
-          content: {
-            error: error.message
-          },
-          webhook: target,
-          created_at: new Date()
-        });
-        return;
-      }
-
-      let request = {
-        method: "post",
-        body: body,
-        headers: {
-          "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
-          "Content-type": "application/json"
-        }
-      };
-
-      fetch(url, request)
-        .then(async response => {
-          return {
-            headers: response.headers.raw(),
-            status: response.status,
-            statusText: response.statusText,
-            body: await response.text()
-          };
-        })
-        .then(response => {
-          this.logService.insertOne({
-            succeed: response.status < 400,
+        try {
+          body = bodyTemplate(change, {
+            allowProtoPropertiesByDefault: false,
+            allowProtoMethodsByDefault: false,
+            helpers: {
+              toJSON: (object: unknown) => JSON.stringify(object)
+            }
+          });
+        } catch (error) {
+          this.logs.insert({
+            succeed: false,
             content: {
-              request: {body: request.body, headers: request.headers, url: url},
-              response: response
+              error: error.message
             },
             webhook: target,
             created_at: new Date()
           });
-        })
-        .catch(() => {});
-    });
+          return;
+        }
 
-    this.targets.set(target, stream);
+        let request = {
+          method: "post",
+          body: body,
+          headers: {
+            "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
+            "Content-type": "application/json"
+          }
+        };
+
+        fetch(url, request)
+          .then(async response => {
+            return {
+              headers: response.headers.raw(),
+              status: response.status,
+              statusText: response.statusText,
+              body: await response.text()
+            };
+          })
+          .then(response => {
+            this.logs.insert({
+              succeed: response.status < 400,
+              content: {
+                request: {body: request.body, headers: request.headers, url: url},
+                response: response
+              },
+              webhook: target,
+              created_at: new Date()
+            });
+          })
+          .catch(() => {});
+      });
+
+    this.targets.set(target, subscription);
   }
 
   private unsubscribe(target: string) {
-    const stream = this.targets.get(target);
-    if (stream) {
-      return stream.close().then(() => this.targets.delete(target));
+    const subscription = this.targets.get(target);
+    if (subscription) {
+      subscription.unsubscribe();
+      this.targets.delete(target);
     }
   }
 

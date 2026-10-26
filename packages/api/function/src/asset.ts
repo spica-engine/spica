@@ -4,14 +4,13 @@ import {Schema, Validator} from "@spica-server/core-schema";
 import {
   Function,
   FunctionContents,
+  FunctionRepository,
   FunctionWithDependencies
 } from "@spica-server/interface-function";
 import {generate} from "./schema/enqueuer.resolver.js";
 import * as CRUD from "./crud.js";
-import {FunctionService} from "@spica-server/function-services";
 import {FunctionEngine} from "./engine.js";
-import {LogService} from "@spica-server/function-log";
-import {ObjectId} from "@spica-server/database";
+import {LogRepository} from "@spica-server/interface-function-log";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 
 const _module = "function";
@@ -29,9 +28,9 @@ function omitRemovedFields<T extends object>(schema: T): T {
 }
 
 export function registerAssetHandlers(
-  fs: FunctionService,
+  functions: FunctionRepository,
   engine: FunctionEngine,
-  logs: LogService,
+  logs: LogRepository,
   schemaValidator: Validator,
   manager: IRepresentativeManager
 ) {
@@ -50,36 +49,38 @@ export function registerAssetHandlers(
   const operator = {
     insert: async (resource: Resource<FunctionContents>) => {
       const schema = omitRemovedFields(resource.contents.schema);
-      const fn: any = await CRUD.insert(fs, engine, schema);
+      const fn: any = await CRUD.insert(functions, engine, schema);
 
-      await CRUD.index.write(fs, engine, fn._id, resource.contents.index);
+      await CRUD.index.write(functions, engine, fn._id, resource.contents.index);
 
       await CRUD.dependencies.install(engine, fn, resource.contents.package.dependencies);
     },
 
     update: async (resource: Resource<FunctionContents>) => {
       const schema = omitRemovedFields(resource.contents.schema);
-      const fn: any = await CRUD.replace(fs, engine, schema);
+      const fn: any = await CRUD.replace(functions, engine, schema);
 
-      await CRUD.index.write(fs, engine, fn._id, resource.contents.index);
+      await CRUD.index.write(functions, engine, fn._id, resource.contents.index);
 
       fn.dependencies = resource.contents.package.dependencies;
       await CRUD.dependencies.update(engine, fn);
     },
 
     delete: async (resource: Resource<FunctionContents>) => {
-      await CRUD.remove(fs, engine, logs, resource._id);
+      await CRUD.remove(functions, engine, logs, resource._id);
     }
   };
 
   registrar.operator(_module, operator);
 
   const exporter = async (_id: string) => {
-    if (!ObjectId.isValid(_id)) {
+    if (!CRUD.functionIds().isValid(_id)) {
       return Promise.reject(`${_id} is not a valid id.`);
     }
 
-    const fn = (await fs.findOne({_id: new ObjectId(_id)})) as FunctionWithDependencies;
+    const fn = (await functions.findById(
+      CRUD.functionIds().parse(_id)
+    )) as FunctionWithDependencies;
 
     if (!fn) {
       return Promise.reject(`Function does not exist with _id ${_id}`);

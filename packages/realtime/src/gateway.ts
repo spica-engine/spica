@@ -9,7 +9,9 @@ export function getConnectionHandlers(
   getFindOptions: (client: any, req: any) => Promise<any>,
   buildErrorMessage: (error: any) => any,
   realtime: RealtimeDatabaseService,
-  resourceFilterFunction?: ResourceFilterFunction,
+  resourceFilter?: (
+    ctx: Parameters<ResourceFilterFunction>[1]
+  ) => ReturnType<ResourceFilterFunction>,
   authAction?: string,
   documentTransformFactories?: ((
     client: any,
@@ -30,11 +32,11 @@ export function getConnectionHandlers(
           request: req,
           response: client,
           actions: authAction,
-          options: {resourceFilter: !!resourceFilterFunction}
+          options: {resourceFilter: !!resourceFilter}
         });
 
-        if (resourceFilterFunction) {
-          req.resourceFilter = resourceFilterFunction({}, {
+        if (resourceFilter) {
+          req.resourceFilter = resourceFilter({
             switchToHttp: () => ({
               getRequest: () => req
             })

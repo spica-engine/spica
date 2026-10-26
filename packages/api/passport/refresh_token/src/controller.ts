@@ -14,21 +14,28 @@ import {
   BadRequestException
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ID} from "@spica-server/data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
-import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";
-import {RefreshToken, PaginationResponse} from "@spica-server/interface-passport-refresh_token";
-import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
+import {
+  RefreshToken,
+  PaginationResponse,
+  REFRESH_TOKEN_REPOSITORY,
+  RefreshTokenRepository
+} from "@spica-server/interface-passport-refresh_token";
 import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options.js";
-import {RefreshTokenPipelineBuilder} from "./pipeline.builder.js";
+import {replaceRefreshTokenFilter} from "./filter.js";
+
+const REFRESH_TOKEN_COLLECTION = "refresh_token";
 
 @Controller("passport/refresh-token")
 export class RefreshTokenController {
   private readonly HIDDEN_FIELDS = {token: 0} as const;
 
   constructor(
-    private service: RefreshTokenService,
-    @Inject(REFRESH_TOKEN_OPTIONS) private options: RefreshTokenOptions
+    @Inject(REFRESH_TOKEN_REPOSITORY) private refreshTokens: RefreshTokenRepository,
+    @Inject(REFRESH_TOKEN_OPTIONS) private options: RefreshTokenOptions,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
   ) {}
 
   @Get()
@@ -36,48 +43,40 @@ export class RefreshTokenController {
   async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", JSONP) sort: object,
+    @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
-    @ResourceFilter() resourceFilter: object
+    @ResourceFilter({collection: REFRESH_TOKEN_COLLECTION}) resourceFilter: object
   ) {
-    const pipelineBuilder = await new RefreshTokenPipelineBuilder(
-      this.options.refreshTokenHashSecret
-    )
-      .filterResources(resourceFilter)
-      .filterByUserRequest(filter);
-
-    const seekingPipeline = new PipelineBuilder()
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .setVisibilityOfFields({...this.HIDDEN_FIELDS})
-      .result();
-
-    const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
-      this.service.estimatedDocumentCount()
-    );
+    const hashSecret = this.options.refreshTokenHashSecret;
+    const spec: ReadSpec = {
+      resourceFilter,
+      filter,
+      filterReplacers: hashSecret
+        ? [async filter => replaceRefreshTokenFilter(filter, hashSecret)]
+        : [],
+      sort,
+      skip,
+      limit,
+      fields: {...this.HIDDEN_FIELDS}
+    };
 
     if (paginate) {
-      return executePaginationPlan<RefreshToken>(this.service, plan) as Promise<
-        PaginationResponse<RefreshToken>
-      >;
+      return this.queries.paginate<RefreshToken>(
+        "refresh_token",
+        spec,
+        "estimate-unless-filtered"
+      ) as Promise<PaginationResponse<RefreshToken>>;
     }
 
-    return this.service.aggregate<RefreshToken[]>(plan.dataPipeline).toArray();
+    return this.queries.find<RefreshToken>("refresh_token", spec);
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:show"))
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const pipeline = new PipelineBuilder()
-      .findOneIfRequested(id)
-      .setVisibilityOfFields({...this.HIDDEN_FIELDS})
-      .result();
-
-    return this.service
-      .aggregate<RefreshToken>(pipeline)
-      .next()
+  findOne(@Param("id", ID(REFRESH_TOKEN_COLLECTION)) id: Id) {
+    return this.queries
+      .findOne<RefreshToken>("refresh_token", {id, fields: {...this.HIDDEN_FIELDS}})
       .then(r => {
         if (!r) {
           throw new NotFoundException();
@@ -88,18 +87,17 @@ export class RefreshTokenController {
 
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:update"))
-  async update(@Param("id", OBJECT_ID) id: ObjectId, @Body() body: Partial<RefreshToken>) {
+  async update(
+    @Param("id", ID(REFRESH_TOKEN_COLLECTION)) id: Id,
+    @Body() body: Partial<RefreshToken>
+  ) {
     const disabled = body?.disabled;
 
     if (typeof disabled !== "boolean") {
       throw new BadRequestException("Only disabled field can be updated and it must be a boolean");
     }
 
-    const updatedToken = await this.service.findOneAndUpdate(
-      {_id: id},
-      {$set: {disabled}},
-      {returnDocument: "after", projection: this.HIDDEN_FIELDS}
-    );
+    const updatedToken = await this.refreshTokens.setDisabled(id, disabled);
 
     if (!updatedToken) {
       throw new NotFoundException();
@@ -111,8 +109,8 @@ export class RefreshTokenController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.service.deleteOne({_id: id}).then(r => {
+  deleteOne(@Param("id", ID(REFRESH_TOKEN_COLLECTION)) id: Id) {
+    return this.refreshTokens.deleteById(id).then(r => {
       if (!r) {
         throw new NotFoundException();
       }
