@@ -8,7 +8,6 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
-  Inject,
   NotFoundException,
   Optional,
   Param,
@@ -24,7 +23,7 @@ import {BucketDataService, BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createBucketActivity} from "@spica-server/bucket-common";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket-cache";
@@ -42,7 +41,6 @@ export class BucketController {
     private bs: BucketService,
     private bds: BucketDataService,
     private validator: Validator,
-    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Optional() private history: HistoryService,
     @Optional() private bucketCacheService: BucketCacheService
   ) {}
@@ -62,7 +60,7 @@ export class BucketController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:index"))
   index(@ResourceFilter({collection: "buckets"}) resourceFilter: object) {
-    return CRUD.find(this.queries, {resourceFilter, sort: {order: 1}});
+    return CRUD.find(this.bs, {resourceFilter, sort: {order: 1}});
   }
 
   /**

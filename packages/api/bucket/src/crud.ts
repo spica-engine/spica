@@ -3,20 +3,20 @@ import {ChangeKind} from "@spica-server/interface-core";
 import {findRelations} from "@spica-server/bucket-common";
 import {BucketDataService, BucketService, bucketIds} from "@spica-server/bucket-services";
 import {ReturnDocument} from "@spica-server/database";
-import {CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {Id} from "@spica-server/interface-data";
 import {HistoryService} from "@spica-server/bucket-history";
 import * as expression from "@spica-server/bucket-expression";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {Bucket} from "@spica-server/interface-bucket";
 
 export async function find(
-  queries: CollectionQueryFacade,
+  bs: BucketService,
   options: {
     resourceFilter: object;
-    sort: {[path: string]: 1 | -1};
+    sort: object;
   }
 ): Promise<Bucket[]> {
-  return queries.find<Bucket>("buckets", options);
+  return bs.aggregate<Bucket>([options.resourceFilter, {$sort: options.sort}]).toArray();
 }
 
 export function findOne(bs: BucketService, id: Id): Promise<Bucket> {

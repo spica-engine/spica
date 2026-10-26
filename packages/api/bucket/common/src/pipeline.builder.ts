@@ -1,43 +1,43 @@
 import * as expression from "@spica-server/bucket-expression";
-import {
-  buildExpressionReplacers,
-  buildI18nAggregation,
-  categorizePropertyMap,
-  compareAndUpdateRelations,
-  constructFilterValues,
-  createRelationMap,
-  findLocale,
-  getRelationPipeline,
-  hasTranslatedProperties
-} from "@spica-server/bucket-common";
+import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale.js";
 import {deepCopy} from "@spica-server/core-patch";
+import {compareAndUpdateRelations, createRelationMap, getRelationPipeline} from "./relation.js";
+import {buildExpressionReplacers, constructFilterValues} from "@spica-server/bucket-common";
+import {categorizePropertyMap} from "./helpers.js";
 import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {extractFilterPropertyMap} from "@spica-server/filter";
-import {BucketReadContext, Locale, RelationMap} from "@spica-server/interface-bucket-common";
+import {CrudFactories, Locale, RelationMap} from "@spica-server/interface-bucket-common";
 import {Bucket} from "@spica-server/interface-bucket";
 
 export class BucketPipelineBuilder extends PipelineBuilder {
   private schema: Bucket;
-  private context: BucketReadContext;
+  private factories: CrudFactories<any>;
   private usedRelationPaths: string[] = [];
   private locale: Locale;
   private hashSecret?: string;
+  private encryptionSecret?: string;
 
   private defaultRule = "true==true";
   private isRuleFilteringDocuments: boolean;
 
-  constructor(schema: Bucket, context: BucketReadContext) {
+  constructor(
+    schema: Bucket,
+    factories: CrudFactories<any>,
+    hashSecret?: string,
+    encryptionSecret?: string
+  ) {
     super();
     this.schema = schema;
-    this.context = context;
-    this.hashSecret = context.hashSecret;
+    this.factories = factories;
+    this.hashSecret = hashSecret;
+    this.encryptionSecret = encryptionSecret;
   }
 
   private buildRelationMap(propertyMap: string[][]): Promise<RelationMap[]> {
     return createRelationMap({
       paths: propertyMap,
       properties: this.schema.properties,
-      resolve: this.context.resolveSchema
+      resolve: this.factories.schema
     });
   }
 
@@ -47,7 +47,7 @@ export class BucketPipelineBuilder extends PipelineBuilder {
     callBack: (value: Locale) => void
   ): Promise<this> {
     if (isLocalizationRequested && hasTranslatedProperties(this.schema)) {
-      this.locale = findLocale(language, await this.context.preferences());
+      this.locale = findLocale(language, await this.factories.preference());
       this.pipeline.push({
         $replaceWith: buildI18nAggregation("$$ROOT", this.locale.best, this.locale.fallback)
       });
@@ -76,7 +76,7 @@ export class BucketPipelineBuilder extends PipelineBuilder {
     const expressionReplacers = await buildExpressionReplacers(
       this.schema,
       documentPropertyMap,
-      this.context.resolveSchema,
+      this.factories.schema,
       this.hashSecret
     );
     const ruleExpression = expression.aggregateWithReplacers(
@@ -108,7 +108,7 @@ export class BucketPipelineBuilder extends PipelineBuilder {
         filterByUserRequest = await constructFilterValues(
           filterByUserRequest,
           this.schema,
-          this.context.resolveSchema,
+          this.factories.schema,
           this.hashSecret
         );
 
@@ -122,7 +122,7 @@ export class BucketPipelineBuilder extends PipelineBuilder {
         const expressionReplacers = await buildExpressionReplacers(
           this.schema,
           filterPropertyMap,
-          this.context.resolveSchema,
+          this.factories.schema,
           this.hashSecret
         );
 

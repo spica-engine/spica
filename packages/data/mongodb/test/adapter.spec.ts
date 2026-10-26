@@ -8,7 +8,6 @@ import {
 } from "@spica-server/data-mongodb";
 import {DatabaseModule, DatabaseService} from "@spica-server/database";
 import {COLLECTION_QUERY, ID_TYPES, RESULT_SHAPER} from "@spica-server/interface-data";
-import {BUCKET_QUERY} from "@spica-server/interface-bucket-common";
 
 @Global()
 @Module({providers: [{provide: DatabaseService, useValue: {}}], exports: [DatabaseService]})
@@ -24,12 +23,7 @@ describe("MongoDataAdapter", () => {
     expect(adapter.engine).toBe("mongodb");
     expect(adapter.module.imports).toHaveLength(1);
     expect(adapter.module.imports[0]).toMatchObject({module: DatabaseModule});
-    expect(adapter.module.exports).toEqual([
-      ID_TYPES,
-      RESULT_SHAPER,
-      COLLECTION_QUERY,
-      BUCKET_QUERY
-    ]);
+    expect(adapter.module.exports).toEqual([ID_TYPES, RESULT_SHAPER, COLLECTION_QUERY]);
   });
 
   it("should not open a connection of its own for an existing connection", () => {

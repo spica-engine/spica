@@ -34,9 +34,6 @@
       "path": "../../interface/core"
     },
     {
-      "path": "../../interface/bucket/common"
-    },
-    {
       "path": "../../interface/bucket"
     },
     {
