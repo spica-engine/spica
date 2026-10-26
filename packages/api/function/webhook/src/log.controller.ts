@@ -11,14 +11,10 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {ARRAY, DATE, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {Filter, ObjectId} from "@spica-server/database";
-import {ID, ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {Filter, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {Log} from "@spica-server/interface-function-webhook";
 import {WebhookLogService} from "./log.service.js";
-
-const logIds = () => ids().forCollection("webhook_logs");
 
 @Controller("webhook/logs")
 export class WebhookLogController {
@@ -69,7 +65,7 @@ export class WebhookLogController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:logs:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param("id", ID("webhook_logs")) id: Id) {
+  async delete(@Param("id", OBJECT_ID) id: ObjectId) {
     const deletedCount = await this.logService.deleteOne({_id: id});
     if (!deletedCount) {
       throw new NotFoundException(`Log with ID ${id} not found`);
@@ -79,7 +75,7 @@ export class WebhookLogController {
   @Delete()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:logs:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteMany(@Body(DEFAULT([]), ARRAY(value => logIds().parse(value))) ids: Id[]) {
+  async deleteMany(@Body(DEFAULT([]), ARRAY(value => new ObjectId(value))) ids: ObjectId[]) {
     const deletedCount = await this.logService.deleteMany({_id: {$in: ids}});
     if (!deletedCount) {
       throw new NotFoundException("No logs found with the provided IDs");

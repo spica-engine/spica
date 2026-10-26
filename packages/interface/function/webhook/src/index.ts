@@ -1,7 +1,7 @@
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 
 export interface Webhook {
-  _id?: Id;
+  _id?: ObjectId;
   title: string;
   url: string;
   body: string;
@@ -22,7 +22,7 @@ export interface Trigger {
 }
 
 export interface Log {
-  _id?: Id;
+  _id?: ObjectId;
   webhook: string;
   succeed: boolean;
   content: {

@@ -1,4 +1,4 @@
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {EnvRelation, SecretRelation} from "@spica-server/interface-function";
 
@@ -36,11 +36,11 @@ export class FunctionPipelineBuilder extends PipelineBuilder {
     return this;
   }
 
-  filterByIds(ids: Id[]) {
+  filterByIds(ids: ObjectId[]) {
     return this.attachToPipeline(ids && ids.length, {$match: {_id: {$in: ids}}});
   }
 
-  filterByEnvVars(envVars: Id[]) {
+  filterByEnvVars(envVars: ObjectId[]) {
     const filter = {
       $match: {
         env_vars: {

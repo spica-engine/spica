@@ -8,8 +8,7 @@ import {
   SecretRelation
 } from "@spica-server/interface-function";
 import {createPlan, refreshPlan, secretRefreshPlan} from "./change.js";
-import {ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "./engine.js";
 import {LogService} from "@spica-server/function-log";
 import {BadRequestException, InternalServerErrorException, NotFoundException} from "@nestjs/common";
@@ -17,11 +16,9 @@ import {FunctionPipelineBuilder} from "./pipeline.builder.js";
 import fs from "fs";
 import * as readline from "readline";
 
-export const functionIds = () => ids().forCollection("function");
-
 async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   if (fn._id) {
-    fn._id = functionIds().parse(fn._id);
+    fn._id = new ObjectId(fn._id);
   }
 
   try {
@@ -52,7 +49,7 @@ export async function find<
   options?: {
     filter?: {
       resources?: object;
-      envVars?: Id[];
+      envVars?: ObjectId[];
       index?: string;
       language?: string;
     };
@@ -81,7 +78,7 @@ export async function findOne<
   SR extends SecretRelation = SecretRelation.NotResolved
 >(
   fs: FunctionService,
-  id: Id,
+  id: ObjectId,
   options: {
     resolveEnvRelations?: ER;
     resolveSecretRelations?: SR;
@@ -116,7 +113,7 @@ export async function findByName<
   const fn = await fs.findOne({name});
   if (!fn) return null;
   if (options?.resolveEnvRelations || options?.resolveSecretRelations) {
-    return findOne(fs, functionIds().parse(fn._id), {
+    return findOne(fs, new ObjectId(fn._id), {
       resolveEnvRelations: options?.resolveEnvRelations,
       resolveSecretRelations: options?.resolveSecretRelations
     }) as Promise<Function<ER, SR>>;
@@ -136,7 +133,7 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
 }
 
 export async function replace(fs: FunctionService, engine: FunctionEngine, fn: Function) {
-  const _id = functionIds().parse(fn._id);
+  const _id = new ObjectId(fn._id);
 
   // not sure that is necessary
   delete fn._id;
@@ -169,9 +166,9 @@ export async function remove(
   fs: FunctionService,
   engine: FunctionEngine,
   logs: LogService,
-  id: Id | string
+  id: ObjectId | string
 ) {
-  const fn = await fs.findOneAndDelete({_id: functionIds().parse(id)});
+  const fn = await fs.findOneAndDelete({_id: new ObjectId(id)});
 
   if (!fn) {
     throw new NotFoundException("Couldn't find the function.");
@@ -186,7 +183,7 @@ export async function remove(
 }
 
 export namespace index {
-  export async function find(fs: FunctionService, engine: FunctionEngine, id: Id) {
+  export async function find(fs: FunctionService, engine: FunctionEngine, id: ObjectId) {
     const fn = await fs.findOne({_id: id});
     if (!fn) {
       throw new NotFoundException("Can not find function.");
@@ -203,10 +200,10 @@ export namespace index {
   export async function write(
     fs: FunctionService,
     engine: FunctionEngine,
-    id: string | Id,
+    id: string | ObjectId,
     index: string
   ) {
-    id = functionIds().parse(id);
+    id = new ObjectId(id);
 
     const fn = await fs.findOne({_id: id});
 
@@ -268,7 +265,7 @@ export namespace index {
 }
 
 export namespace dependencies {
-  export async function findOne(fs: FunctionService, engine: FunctionEngine, id: Id) {
+  export async function findOne(fs: FunctionService, engine: FunctionEngine, id: ObjectId) {
     const fn = await fs.findOne({_id: id});
     if (!fn) {
       throw new NotFoundException("Could not find the function.");
@@ -365,9 +362,9 @@ export namespace dependencies {
 export namespace environment {
   export async function inject(
     fs: FunctionService,
-    fnId: Id,
+    fnId: ObjectId,
     engine: FunctionEngine,
-    envVarId: Id
+    envVarId: ObjectId
   ) {
     const res = await fs.findOneAndUpdate(
       {
@@ -384,7 +381,7 @@ export namespace environment {
     return reload(fnId, engine);
   }
 
-  export async function removeReference(fs: FunctionService, fnId: Id, envVarId: Id) {
+  export async function removeReference(fs: FunctionService, fnId: ObjectId, envVarId: ObjectId) {
     const res = await fs.findOneAndUpdate(
       {
         _id: fnId
@@ -398,12 +395,17 @@ export namespace environment {
     }
   }
 
-  export async function eject(fs: FunctionService, fnId: Id, engine: FunctionEngine, envVarId: Id) {
+  export async function eject(
+    fs: FunctionService,
+    fnId: ObjectId,
+    engine: FunctionEngine,
+    envVarId: ObjectId
+  ) {
     await removeReference(fs, fnId, envVarId);
     return reload(fnId, engine);
   }
 
-  export async function reload(fnId: Id, engine: FunctionEngine) {
+  export async function reload(fnId: ObjectId, engine: FunctionEngine) {
     return engine.applyChangePlan(refreshPlan(fnId.toString()));
   }
 }
@@ -412,9 +414,9 @@ export namespace secret {
   export async function inject(
     fs: FunctionService,
     ss: SecretService,
-    fnId: Id,
+    fnId: ObjectId,
     engine: FunctionEngine,
-    secretId: Id
+    secretId: ObjectId
   ) {
     const fn = await fs.findOneAndUpdate(
       {
@@ -431,7 +433,7 @@ export namespace secret {
     return reload(fn, ss, engine, secretId);
   }
 
-  export async function removeReference(fs: FunctionService, fnId: Id, secretId: Id) {
+  export async function removeReference(fs: FunctionService, fnId: ObjectId, secretId: ObjectId) {
     const fn = await fs.findOneAndUpdate(
       {
         _id: fnId
@@ -449,15 +451,20 @@ export namespace secret {
   export async function eject(
     fs: FunctionService,
     ss: SecretService,
-    fnId: Id,
+    fnId: ObjectId,
     engine: FunctionEngine,
-    secretId: Id
+    secretId: ObjectId
   ) {
     const fn = await removeReference(fs, fnId, secretId);
     return reload(fn, ss, engine, secretId);
   }
 
-  async function reload(fn: Function, ss: SecretService, engine: FunctionEngine, secretId: Id) {
+  async function reload(
+    fn: Function,
+    ss: SecretService,
+    engine: FunctionEngine,
+    secretId: ObjectId
+  ) {
     const secret = await ss.findOne({_id: secretId}, {projection: {key: 1}});
     const secretKeys = secret ? [secret.key] : [];
     return engine.applyChangePlan(secretRefreshPlan(fn, secretKeys));
@@ -466,7 +473,7 @@ export namespace secret {
 
 export async function findOneForRuntime(
   fs: FunctionService,
-  id: Id
+  id: ObjectId
 ): Promise<Function<EnvRelation.Resolved, SecretRelation.Resolved>> {
   const pipeline = new FunctionPipelineBuilder()
     .findOneIfRequested(id)
@@ -486,7 +493,7 @@ export async function findOneForRuntime(
 
 export function findWithSecrets(
   fs: FunctionService,
-  ids: Id[]
+  ids: ObjectId[]
 ): Promise<Function<EnvRelation.NotResolved, SecretRelation.Resolved>[]> {
   const pipeline = new FunctionPipelineBuilder()
     .filterByIds(ids)

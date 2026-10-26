@@ -1,6 +1,6 @@
 import {Inject, Injectable, Logger} from "@nestjs/common";
 import {createHash} from "crypto";
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 import {FunctionAssetService} from "@spica-server/function-services";
 import {
   FunctionAsset,
@@ -156,7 +156,7 @@ export class FunctionAssetReconciler {
     await this.rollbackDisk(fn, prevAsset);
   }
 
-  async deleteAll(fn: Function & {_id: Id}): Promise<void> {
+  async deleteAll(fn: Function & {_id: ObjectId}): Promise<void> {
     const prevAssets = await this.assetService.findByFunction(fn._id);
     await Promise.all(
       prevAssets.map(asset =>
@@ -168,7 +168,7 @@ export class FunctionAssetReconciler {
     await this.assetService.deleteByFunction(fn._id);
   }
 
-  async moveAssets(fn: Function & {_id: Id}, toName: string): Promise<void> {
+  async moveAssets(fn: Function & {_id: ObjectId}, toName: string): Promise<void> {
     const records = await this.assetService.findByFunction(fn._id);
     const moves: AssetMove[] = records
       .map(({filename, hash, key}) => ({filename, hash, from: key, to: assetKey(toName, filename)}))
@@ -179,7 +179,7 @@ export class FunctionAssetReconciler {
       for (const move of moves) {
         await this.strategy.write(move.to, await this.strategy.read(move.from));
         this.tracker.stamp({
-          functionId: fn._id.toString(),
+          functionId: fn._id.toHexString(),
           filename: move.filename,
           hash: move.hash
         });
@@ -202,7 +202,7 @@ export class FunctionAssetReconciler {
   }
 
   private async revertMoves(
-    fn: Function & {_id: Id},
+    fn: Function & {_id: ObjectId},
     moves: AssetMove[],
     repointed: AssetMove[]
   ): Promise<void> {
@@ -220,7 +220,7 @@ export class FunctionAssetReconciler {
     );
   }
 
-  async backfill(fns: Array<Function & {_id: Id}>): Promise<void> {
+  async backfill(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
     if (this.storageOptions.strategy == "default") return;
 
     const unrecoverable: string[] = [];
@@ -242,7 +242,7 @@ export class FunctionAssetReconciler {
     }
   }
 
-  private async backfillFunction(fn: Function & {_id: Id}): Promise<FunctionAssetFilename[]> {
+  private async backfillFunction(fn: Function & {_id: ObjectId}): Promise<FunctionAssetFilename[]> {
     const records = await this.assetService.findByFunction(fn._id);
     const stored = new Set(records.map(({filename}) => filename));
     const candidates: FunctionAssetFilename[] = [
@@ -264,7 +264,7 @@ export class FunctionAssetReconciler {
         filename,
         data
       );
-      this.tracker.stamp({functionId: fn._id.toString(), filename, hash});
+      this.tracker.stamp({functionId: fn._id.toHexString(), filename, hash});
       await this.assetService.upsertAsset(fn._id, filename, {
         key,
         hash,
@@ -283,7 +283,7 @@ export class FunctionAssetReconciler {
     return missing;
   }
 
-  async reconcileFunction(fn: Function & {_id: Id}): Promise<void> {
+  async reconcileFunction(fn: Function & {_id: ObjectId}): Promise<void> {
     const storedAssets = await this.assetService.findByFunction(fn._id);
     if (storedAssets.length === 0) {
       return;
@@ -333,7 +333,7 @@ export class FunctionAssetReconciler {
     }
   }
 
-  async reconcileAll(fns: Array<Function & {_id: Id}>): Promise<void> {
+  async reconcileAll(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
     await Promise.all(
       fns.map(async fn => {
         try {

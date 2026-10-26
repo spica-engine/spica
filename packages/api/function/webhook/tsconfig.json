@@ -15,13 +15,7 @@
       "path": "../../../interface/function"
     },
     {
-      "path": "../../../interface/data"
-    },
-    {
       "path": "../../../database"
-    },
-    {
-      "path": "../../../data"
     },
     {
       "path": "../../../core/schema"

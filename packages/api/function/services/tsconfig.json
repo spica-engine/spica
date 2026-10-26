@@ -18,9 +18,6 @@
       "path": "../../../interface/function"
     },
     {
-      "path": "../../../interface/data"
-    },
-    {
       "path": "../../env_var/services"
     }
   ],

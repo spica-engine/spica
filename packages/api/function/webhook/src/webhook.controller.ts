@@ -17,9 +17,7 @@ import {
 } from "@nestjs/common";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {DatabaseService, ReturnDocument} from "@spica-server/database";
-import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {DatabaseService, ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {Webhook} from "@spica-server/interface-function-webhook";
 import {WebhookInvoker} from "./invoker.js";
@@ -89,7 +87,7 @@ export class WebhookController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:show"))
-  findOne(@Param("id", ID("webhook")) id: Id) {
+  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.webhookService.findOne({_id: id});
   }
 
@@ -107,7 +105,7 @@ export class WebhookController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:update"))
   async replaceOne(
-    @Param("id", ID("webhook")) id: Id,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/webhook")) hook: Webhook
   ) {
     try {
@@ -127,7 +125,7 @@ export class WebhookController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", ID("webhook")) id: Id) {
+  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     const res = await this.webhookService.findOneAndDelete({_id: id});
     if (!res) {
       throw new NotFoundException(`Webhook with ID ${id} not found`);

@@ -1,12 +1,12 @@
 import {Injectable, OnModuleDestroy, Optional} from "@nestjs/common";
 import {Observable, Subject} from "rxjs";
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 import {CommandType} from "@spica-server/interface-replication";
 import {ClassCommander} from "./commander.js";
 
 export interface CollectionChangeEvent {
   operationType: "insert" | "update" | "replace" | "delete";
-  documentKey: {_id: Id};
+  documentKey: {_id: ObjectId};
 }
 
 // In-process pub/sub for collection writes that replaces a MongoDB change-stream watch.

@@ -11,6 +11,7 @@ import * as CRUD from "./crud.js";
 import {FunctionService} from "@spica-server/function-services";
 import {FunctionEngine} from "./engine.js";
 import {LogService} from "@spica-server/function-log";
+import {ObjectId} from "@spica-server/database";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 
 const _module = "function";
@@ -74,11 +75,11 @@ export function registerAssetHandlers(
   registrar.operator(_module, operator);
 
   const exporter = async (_id: string) => {
-    if (!CRUD.functionIds().isValid(_id)) {
+    if (!ObjectId.isValid(_id)) {
       return Promise.reject(`${_id} is not a valid id.`);
     }
 
-    const fn = (await fs.findOne({_id: CRUD.functionIds().parse(_id)})) as FunctionWithDependencies;
+    const fn = (await fs.findOne({_id: new ObjectId(_id)})) as FunctionWithDependencies;
 
     if (!fn) {
       return Promise.reject(`Function does not exist with _id ${_id}`);

@@ -1,6 +1,5 @@
 import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
-import {DatabaseService} from "@spica-server/database";
-import {Id} from "@spica-server/interface-data";
+import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
 import fs from "fs";
@@ -116,7 +115,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  private forEachFunction<F extends {_id: Id}>(fns: F[], handle: (fn: F) => Promise<void>) {
+  private forEachFunction<F extends {_id: ObjectId}>(fns: F[], handle: (fn: F) => Promise<void>) {
     return Promise.all(
       fns.map(fn =>
         handle(fn).catch(err =>
@@ -199,7 +198,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   async storeAssets(
-    fn: Function & {_id: Id},
+    fn: Function & {_id: ObjectId},
     filename: FunctionAssetFilename,
     op: () => Promise<Buffer>
   ): Promise<void> {
@@ -210,11 +209,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return this.getFunctionBuilder(fn).description.entrypoints.build as FunctionAssetFilename;
   }
 
-  async removeAssets(fn: Function & {_id: Id}): Promise<void> {
+  async removeAssets(fn: Function & {_id: ObjectId}): Promise<void> {
     return this.reconciler.deleteAll(fn);
   }
 
-  moveAssets(fn: Function & {_id: Id}, toName: string): Promise<void> {
+  moveAssets(fn: Function & {_id: ObjectId}, toName: string): Promise<void> {
     return this.reconciler.moveAssets(fn, toName);
   }
 

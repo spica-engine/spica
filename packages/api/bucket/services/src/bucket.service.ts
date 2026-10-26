@@ -22,7 +22,6 @@ import {
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference-services";
 import {deepCopy} from "@spica-server/core-patch";
-import {ids} from "@spica-server/data";
 import {BehaviorSubject, Observable, Subscription} from "rxjs";
 import {filter, switchMap} from "rxjs/operators";
 import {BucketChangeDispatcher} from "./change-dispatcher.js";
@@ -210,9 +209,7 @@ export class BucketService
         .watch()
         .pipe(
           filter(
-            change =>
-              ids().forCollection("buckets").equals(change.documentKey._id, _id) &&
-              change.operationType !== "delete"
+            change => change.documentKey._id.equals(_id) && change.operationType !== "delete"
           ),
           switchMap(change => super.findOne({_id: change.documentKey._id}))
         )

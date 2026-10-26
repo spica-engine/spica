@@ -1,4 +1,5 @@
 import {Inject, Injectable, Logger} from "@nestjs/common";
+import {ObjectId} from "@spica-server/database";
 import {FunctionService} from "@spica-server/function-services";
 import {ChangeKind, TargetChange} from "@spica-server/interface-function";
 import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
@@ -46,8 +47,7 @@ export class TriggerSecretResolver {
   private async findDecryptedSecrets(
     functionIds: string[]
   ): Promise<Map<string, Map<string, string>>> {
-    const idType = CRUD.functionIds();
-    const ids = functionIds.filter(id => idType.isValid(id)).map(id => idType.parse(id));
+    const ids = functionIds.filter(id => ObjectId.isValid(id)).map(id => new ObjectId(id));
     const fns = await CRUD.findWithSecrets(this.fs, ids);
 
     return new Map(

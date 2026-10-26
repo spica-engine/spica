@@ -12,7 +12,6 @@
   "dependencies": {
     "@nestjs/common": "^10.4.22",
     "@spica-server/env_var-services": "workspace:*",
-    "@spica-server/interface-data": "workspace:*",
     "@spica-server/interface-function": "workspace:*",
     "@spica-server/interface-function-asset-storage": "workspace:*",
     "@spica-server/replication": "workspace:*",

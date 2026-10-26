@@ -22,9 +22,6 @@
       "path": "../../../database"
     },
     {
-      "path": "../../../data"
-    },
-    {
       "path": "../../../core/schema"
     },
     {

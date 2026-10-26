@@ -1,4 +1,5 @@
 import {Inject, Injectable, Logger} from "@nestjs/common";
+import {ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {DEFAULT_EVENT_CONCURRENCY} from "@spica-server/interface-function-scheduler";
 import {event} from "@spica-server/function-queue-proto";
@@ -173,7 +174,7 @@ export class PlanExecutor {
 
   private async findFunctionForRuntime(functionId: string) {
     try {
-      return await CRUD.findOneForRuntime(this.fs, CRUD.functionIds().parse(functionId));
+      return await CRUD.findOneForRuntime(this.fs, new ObjectId(functionId));
     } catch {
       return null;
     }

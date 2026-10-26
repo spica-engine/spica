@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database-testing";
+import {ObjectId} from "@spica-server/database";
 import * as CRUD from "@spica-server/function/src/crud";
 
 describe("CRUD worker refresh", () => {
