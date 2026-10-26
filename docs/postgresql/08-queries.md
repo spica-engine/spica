@@ -5,7 +5,7 @@
 - Plan and implement only this part. Read the code from the parts under "Depends on" on master, along with their "As built" sections. Don't open the other documents in `docs/postgresql/`.
 - If this part needs something a merged part doesn't provide, stop and list it under "Requests to other parts" in your plan instead of building it.
 - Follow the PR breakdown. Each PR is either a behaviour-neutral refactor or new engine code, never both, and is small enough to review in one sitting.
-- Existing MongoDB suites stay green. New code brings its own tests in the PostgreSQL CI job.
+- Existing MongoDB suites stay green. New code brings its own tests, which run on PostgreSQL in CI. Shared behaviour uses contract suites.
 - After the last PR, fill in "As built".
 
 ## Purpose
@@ -80,9 +80,9 @@ It returns documents in today's shape.
 ## What changes
 
 - **Facade:** a new PostgreSQL implementation.
-- **Admin panel:** the filter builder writes the running engine's language. It reads the engine from the status endpoint.
+- **Admin panel:** the filter builder writes the running engine's language. It needs the engine from the API. `GET /status/ready` is public and does not report it, so this part adds an authenticated place for it, for example the authenticated `GET /status`.
 - **GraphQL:** passes its filter argument through the facade.
-- **Suites:** list-endpoint suites for every domain opt in to the PostgreSQL CI job.
+- **Suites:** list-endpoint suites for every domain move to `contractSuite`, or declare `mongoOnly("reason")`.
 
 ## PR breakdown
 

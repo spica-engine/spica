@@ -28,8 +28,8 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 - **One concern per PR.** A PR is either a behaviour-neutral refactor or new engine code, never both.
 - **Reviewable in one sitting.** Split large moves (for example moving callers to a facade) into batches by domain.
 - **MongoDB stays green.** Existing MongoDB test suites pass unchanged in every PR.
-- **New code brings its own tests.** PostgreSQL code adds tests that run in the PostgreSQL CI job. Shared behaviour gets contract cases that run on both engines.
-- **Specs of a part's domain are classified.** When a part makes a domain work on PostgreSQL, every spec in that domain either runs through `contractSuite` on both engines or declares `mongoOnly("reason")`. `yarn check:engine-specs --strict --under=<path>` must list nothing for the domain before the part's last PR merges.
+- **New code brings its own tests.** PostgreSQL code adds tests that run on PostgreSQL in CI. Shared behaviour gets contract cases that run on both engines.
+- **Specs of a part's domain are classified.** When a part makes a domain work on PostgreSQL, every spec in that domain either runs through `contractSuite` on both engines or declares `mongoOnly("reason")`. `yarn check:engine-specs --strict --under=<path>/` must list nothing for the domain before the part's last PR merges. Keep the trailing slash, or the prefix also matches sibling directories.
 - **PostgreSQL stays experimental** until Parts 0 to 10 have merged. The API logs a warning when it starts with `--database-type postgresql`.
 - **Keep the docs true.** The last PR of a part fills in that part's "As built" section. If a decision changes during review, update it in the part document and in the decisions table below.
 
@@ -65,6 +65,10 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 | Minimum PostgreSQL version    | 18. System tables use its built-in `uuidv7()`.                                                                  |
 | Key name in responses         | `_id` on MongoDB, `id` on PostgreSQL. The panel will adapt later, outside this plan.                            |
 | Bucket data primary keys      | Each bucket's owner picks the primary key field, its type and whether it is generated.                          |
+| Chart database roles          | Like MongoDB, two roles: `root`, a superuser, and `spica`, an unprivileged role that owns the database. The API uses `spica`. |
+| External database in the chart | Not offered, to match MongoDB. The chart also has no SSL option. The API can still be pointed at any server with `--database-uri`. |
+| Engine in public responses    | Not reported. `GET /status/ready` is public and stays `{status: "ok"}`.                                         |
+| CI services                   | Each affected project's CI job starts only the services its specs need, read from the specs by `scripts/ci-test-matrix.mjs`. |
 
 ## Stays the same
 

@@ -5,7 +5,7 @@
 - Plan and implement only this part. Read the code from the parts under "Depends on" on master, along with their "As built" sections. Don't open the other documents in `docs/postgresql/`.
 - If this part needs something a merged part doesn't provide, stop and list it under "Requests to other parts" in your plan instead of building it.
 - Follow the PR breakdown. Each PR is either a behaviour-neutral refactor or new engine code, never both, and is small enough to review in one sitting.
-- Existing MongoDB suites stay green. New code brings its own tests in the PostgreSQL CI job.
+- Existing MongoDB suites stay green. New code brings its own tests, which run on PostgreSQL in CI. Shared behaviour uses contract suites.
 - After the last PR, fill in "As built".
 
 ## Purpose
@@ -27,7 +27,7 @@ Removes records that only matter for a while. MongoDB does this with TTL indexes
 | Contract           | What later parts expect                                                                      |
 | ------------------ | -------------------------------------------------------------------------------------------- |
 | Expiry API         | A repository-level way to say "expire records older than N". A TTL index on MongoDB, a pg_cron job on PostgreSQL. |
-| pg_cron available  | Enabled in the chart's PostgreSQL image and in the testing module.                          |
+| pg_cron available  | Enabled in the chart's PostgreSQL image and in the testing module. Both use the stock `postgres:18` today, which has no `pg_cron`, so this part picks or builds an image that does. Creating the extension needs the `root` superuser, because `pg_cron` is not a trusted extension. |
 
 ## Not this part
 
@@ -59,7 +59,7 @@ Records with TTL today:
 | Expiry API      | Part of the repository contract. Each repository declares its retention at startup.                         |
 | MongoDB side    | Upserts the TTL index, as today.                                                                             |
 | pg_cron jobs    | One job per table, created or updated at startup, deleting rows older than the retention.                   |
-| Fallback purge  | If pg_cron isn't available on an external server, the API runs the same deletes on a schedule.              |
+| Fallback purge  | If pg_cron isn't available on the server, for example a managed service the API reaches through `--database-uri` (the chart has no external-server option), the API runs the same deletes on a schedule. |
 
 ### Flow
 
