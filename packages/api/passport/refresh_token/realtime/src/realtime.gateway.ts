@@ -23,7 +23,7 @@ export class RefreshTokenRealtimeGateway implements OnGatewayConnection, OnGatew
       message: error.message || "Unexpected error"
     }),
     this.realtime,
-    resourceFilterFunction,
+    ctx => resourceFilterFunction({collection: this.COLLECTION}, ctx),
     "passport:refresh-token:stream"
   );
 

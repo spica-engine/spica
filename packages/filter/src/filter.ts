@@ -1,4 +1,5 @@
-import {ObjectId} from "mongodb";
+import {ids} from "@spica-server/data";
+import {IdType} from "@spica-server/interface-data";
 import {
   Expression,
   Extractor,
@@ -68,9 +69,9 @@ export function extractFilterPropertyMap(filter: object) {
   return maps;
 }
 
-export function replaceFilterObjectIds(filter: object) {
+export function replaceFilterObjectIds(filter: object, idType: IdType = ids().unscoped()) {
   const keyValidators = [key => key == "_id" || key.endsWith("._id")];
-  return Promise.resolve(replaceFilter(filter, keyValidators, ObjectIdIfValid));
+  return Promise.resolve(replaceFilter(filter, keyValidators, val => idIfValid(val, idType)));
 }
 
 export function replaceFilterDates(filter: object) {
@@ -124,8 +125,8 @@ export function constructValue(value: object, ctor: ValueConstructor) {
   return value;
 }
 
-function ObjectIdIfValid(val): ObjectId | typeof val {
-  return ObjectId.isValid(val) ? new ObjectId(val) : val;
+function idIfValid(val, idType: IdType) {
+  return idType.isValid(val) ? idType.parse(val) : val;
 }
 
 function DateIfValid(val): any {

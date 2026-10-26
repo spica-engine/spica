@@ -39,29 +39,18 @@ describe("Utilities", () => {
   });
 
   it("should pull policy from user policies", async () => {
-    const userService: any = {
-      updateMany: (filter: object, update: object) => {
-        return Promise.resolve();
+    const users: any = {
+      removePolicyFromAll: (policyId: string) => {
+        return Promise.resolve(0);
       }
     };
 
-    const updateManySpy = jest.spyOn(userService, "updateMany");
+    const removePolicyFromAllSpy = jest.spyOn(users, "removePolicyFromAll");
 
-    const factoryFunction = providePolicyFinalizer(userService);
+    const factoryFunction = providePolicyFinalizer(users);
     await factoryFunction("my_policy");
 
-    expect(updateManySpy).toHaveBeenCalledTimes(1);
-    expect(updateManySpy).toHaveBeenCalledWith(
-      {
-        policies: {
-          $in: ["my_policy"]
-        }
-      },
-      {
-        $pull: {
-          policies: "my_policy"
-        }
-      }
-    );
+    expect(removePolicyFromAllSpy).toHaveBeenCalledTimes(1);
+    expect(removePolicyFromAllSpy).toHaveBeenCalledWith("my_policy");
   });
 });

@@ -12,7 +12,7 @@ describe("Bucket Schema Resolver", () => {
     onLanguageUpdated = new Subject();
     onBucketUpdated = new Subject();
     constructor() {}
-    findOne() {}
+    findById() {}
     getPreferences() {}
     watchBucket(bucketId: string, propagateOnStart: boolean) {
       return new Observable(observer => {
@@ -93,7 +93,7 @@ describe("Bucket Schema Resolver", () => {
     }).compile();
     bs = module.get(BucketService);
     schemaResolver = new BucketSchemaResolver(bs);
-    jest.spyOn(bs, "findOne").mockReturnValue(Promise.resolve({...bucket}) as any);
+    jest.spyOn(bs, "findById").mockReturnValue(Promise.resolve({...bucket}) as any);
     jest.spyOn(bs, "getPreferences").mockReturnValue(Promise.resolve(preference) as any);
   });
 

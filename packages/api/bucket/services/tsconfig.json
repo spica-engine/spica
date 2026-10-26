@@ -13,13 +13,16 @@
       "path": "../../preference/services"
     },
     {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../../interface/core"
     },
     {
       "path": "../../../interface/bucket"
     },
     {
-      "path": "../../../database"
+      "path": "../../../data"
     },
     {
       "path": "../../../core/schema"

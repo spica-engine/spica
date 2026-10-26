@@ -23,7 +23,7 @@ export class UserRealtimeGateway implements OnGatewayConnection, OnGatewayDiscon
       message: error.message || "Unexpected error"
     }),
     this.realtime,
-    resourceFilterFunction,
+    ctx => resourceFilterFunction({collection: this.COLLECTION}, ctx),
     "passport:user:stream"
   );
 

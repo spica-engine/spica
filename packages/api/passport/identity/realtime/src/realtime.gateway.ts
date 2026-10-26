@@ -23,7 +23,7 @@ export class IdentityRealtimeGateway implements OnGatewayConnection, OnGatewayDi
       message: error.message || "Unexpected error"
     }),
     this.realtime,
-    resourceFilterFunction,
+    ctx => resourceFilterFunction({collection: this.COLLECTION}, ctx),
     "passport:identity:stream"
   );
 

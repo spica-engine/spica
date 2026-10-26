@@ -1,3 +1,5 @@
+import {provideRepository} from "@spica-server/data";
+import {WEBHOOK_LOG_REPOSITORY, WEBHOOK_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core-schema";
@@ -9,7 +11,6 @@ import {SchemaResolver} from "@spica-server/function-webhook/src/schema";
 import {WebhookController} from "@spica-server/function-webhook/src/webhook.controller";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {WebhookInvoker} from "@spica-server/function-webhook/src/invoker";
-import {WebhookLogService} from "@spica-server/function-webhook/src/log.service";
 import {WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
 
 describe("Webhook Controller", () => {
@@ -28,11 +29,12 @@ describe("Webhook Controller", () => {
       ],
       controllers: [WebhookController],
       providers: [
+        provideRepository(WEBHOOK_REPOSITORY),
         WebhookService,
         WebhookChangeDispatcher,
         SchemaResolver,
         WebhookInvoker,
-        WebhookLogService,
+        provideRepository(WEBHOOK_LOG_REPOSITORY),
         {provide: WEBHOOK_OPTIONS, useValue: {expireAfterSeconds: 60}}
       ]
     }).compile();

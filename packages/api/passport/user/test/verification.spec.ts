@@ -1,3 +1,4 @@
+import {USER_REPOSITORY, VERIFICATION_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {VerificationService} from "@spica-server/passport-user/src/verification.service";
@@ -19,9 +20,11 @@ import {ConfigModule} from "@spica-server/config";
 describe("VerificationService", () => {
   let module: TestingModule;
   let verificationService: VerificationService;
+  let verifications: any;
   let providerVerificationService: ProviderVerificationService;
   let userConfigService: UserConfigService;
   let userService: UserService;
+  let users: any;
   let mailerService: MailerService;
   let smsService: SmsService;
   let db: DatabaseService;
@@ -93,9 +96,12 @@ describe("VerificationService", () => {
       .compile();
 
     verificationService = module.get(VerificationService);
+
+    verifications = module.get(VERIFICATION_REPOSITORY);
     providerVerificationService = module.get(ProviderVerificationService);
     userConfigService = module.get(UserConfigService);
     userService = module.get(UserService);
+    users = module.get(USER_REPOSITORY);
     mailerService = module.get(MailerService);
     smsService = module.get(SmsService);
     db = module.get(DatabaseService);
@@ -106,7 +112,7 @@ describe("VerificationService", () => {
   });
 
   afterEach(async () => {
-    await Promise.all([verificationService.deleteMany({}), userService.deleteMany({})]);
+    await Promise.all([verifications.deleteMany({}), users.deleteMany({})]);
     mockMailerService.sendMail.mockReset();
     mockSmsService.sendSms.mockReset();
   });
@@ -152,7 +158,7 @@ describe("VerificationService", () => {
         text: expect.stringContaining(`Your verification code for ${EMAIL_PROVIDER} is:`)
       });
 
-      const updatedVerification = await verificationService.findOne({
+      const updatedVerification = await verifications.findOne({
         userId: userId,
         destination: email
       });
@@ -194,7 +200,7 @@ describe("VerificationService", () => {
         body: expect.stringContaining(`Your verification code for ${PHONE_PROVIDER} is:`)
       });
 
-      const updatedVerification = await verificationService.findOne({
+      const updatedVerification = await verifications.findOne({
         userId: userId,
         destination: phoneNumber
       });
@@ -225,7 +231,7 @@ describe("VerificationService", () => {
 
       const [mailCalls, verificationRecord] = await Promise.all([
         Promise.resolve(mockMailerService.sendMail.mock.calls.length),
-        verificationService.findOne({userId, destination: invalidEmail})
+        verifications.findOne({userId, destination: invalidEmail})
       ]);
 
       expect(mailCalls).toBe(0);
@@ -248,7 +254,7 @@ describe("VerificationService", () => {
 
       const [smsCalls, verificationRecord] = await Promise.all([
         Promise.resolve(mockSmsService.sendSms.mock.calls.length),
-        verificationService.findOne({userId, destination: invalidPhone})
+        verifications.findOne({userId, destination: invalidPhone})
       ]);
 
       expect(smsCalls).toBe(0);
@@ -272,7 +278,7 @@ describe("VerificationService", () => {
 
       const [mailCalls, verificationRecord] = await Promise.all([
         Promise.resolve(mockMailerService.sendMail.mock.calls.length),
-        verificationService.findOne({userId, destination: email})
+        verifications.findOne({userId, destination: email})
       ]);
 
       expect(mailCalls).toBe(0);
@@ -298,7 +304,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      const verificationRecord = await verificationService.findOne({userId, destination: email});
+      const verificationRecord = await verifications.findOne({userId, destination: email});
       expect(verificationRecord).toBeNull();
     });
 
@@ -321,7 +327,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      const verificationRecord = await verificationService.findOne({
+      const verificationRecord = await verifications.findOne({
         userId,
         destination: phoneNumber
       });
@@ -417,7 +423,7 @@ describe("VerificationService", () => {
         provider: EMAIL_PROVIDER
       });
 
-      const finalVerification = await verificationService.findOne({
+      const finalVerification = await verifications.findOne({
         userId,
         destination: email
       });
@@ -453,7 +459,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      const updatedVerification = await verificationService.findOne({userId, destination: email});
+      const updatedVerification = await verifications.findOne({userId, destination: email});
       expect(updatedVerification.is_used).toBe(true);
     });
 
@@ -494,7 +500,7 @@ describe("VerificationService", () => {
         provider: EMAIL_PROVIDER
       });
 
-      const updatedVerification = await verificationService.findOne({userId, destination: email});
+      const updatedVerification = await verifications.findOne({userId, destination: email});
 
       expect(updatedVerification.is_used).toBe(true);
 
@@ -508,7 +514,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(NotFoundException);
 
-      const finalVerification = await verificationService.findOne({userId, destination: email});
+      const finalVerification = await verifications.findOne({userId, destination: email});
       expect(finalVerification.is_used).toBe(true);
     });
 
@@ -545,7 +551,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(NotFoundException);
 
-      const updatedVerification = await verificationService.findOne({userId, destination: email});
+      const updatedVerification = await verifications.findOne({userId, destination: email});
       expect(updatedVerification.is_used).toBe(false);
     });
 
@@ -581,7 +587,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(NotFoundException);
 
-      const updatedVerification = await verificationService.findOne({userId, destination: email});
+      const updatedVerification = await verifications.findOne({userId, destination: email});
       expect(updatedVerification.is_used).toBe(false);
     });
 
@@ -618,7 +624,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(NotFoundException);
 
-      const updatedVerification = await verificationService.findOne({userId, destination: email});
+      const updatedVerification = await verifications.findOne({userId, destination: email});
       expect(updatedVerification.is_used).toBe(false);
     });
 
@@ -659,7 +665,7 @@ describe("VerificationService", () => {
         provider: PHONE_PROVIDER
       });
 
-      const finalVerification = await verificationService.findOne({
+      const finalVerification = await verifications.findOne({
         userId,
         destination: phoneNumber
       });
@@ -694,7 +700,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      const updatedVerification = await verificationService.findOne({
+      const updatedVerification = await verifications.findOne({
         userId,
         destination: phoneNumber
       });
@@ -706,7 +712,7 @@ describe("VerificationService", () => {
     let userId: ObjectId;
     beforeEach(async () => {
       userId = new ObjectId();
-      await userService.insertOne({
+      await users.insertOne({
         _id: userId,
         username: "testphoneuser",
         password: "testpassword"
@@ -758,13 +764,13 @@ describe("VerificationService", () => {
         destination: email
       });
 
-      const finalVerification = await verificationService.findOne({
+      const finalVerification = await verifications.findOne({
         userId,
         destination: email
       });
       expect(finalVerification.is_used).toBe(true);
 
-      const user = await userService.findOne({_id: userId});
+      const user = await users.findOne({_id: userId});
 
       const UserWithEmail = userService.decryptProviderFields(user);
 
@@ -815,7 +821,7 @@ describe("VerificationService", () => {
         text: expect.stringContaining("verify-magic-link?token=")
       });
 
-      const verification = await verificationService.findOne({
+      const verification = await verifications.findOne({
         userId,
         destination: email
       });
@@ -857,7 +863,7 @@ describe("VerificationService", () => {
         body: expect.stringContaining("verify-magic-link?token=")
       });
 
-      const verification = await verificationService.findOne({
+      const verification = await verifications.findOne({
         userId,
         destination: phone
       });
@@ -905,7 +911,7 @@ describe("VerificationService", () => {
         provider: EMAIL_PROVIDER
       });
 
-      const verification = await verificationService.findOne({
+      const verification = await verifications.findOne({
         userId,
         destination: email
       });
@@ -1071,7 +1077,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      const verification = await verificationService.findOne({
+      const verification = await verifications.findOne({
         userId,
         destination: email
       });
@@ -1085,7 +1091,7 @@ describe("VerificationService", () => {
 
     beforeEach(async () => {
       userId = new ObjectId();
-      await userService.insertOne({
+      await users.insertOne({
         _id: userId,
         username: "magiclink-user",
         password: "testpassword"
@@ -1133,7 +1139,7 @@ describe("VerificationService", () => {
         destination: email
       });
 
-      const user = await userService.findOne({_id: userId});
+      const user = await users.findOne({_id: userId});
       const decrypted = userService.decryptProviderFields(user);
       expect(decrypted.email).toBe(email);
     });
@@ -1169,7 +1175,7 @@ describe("VerificationService", () => {
         destination: phone
       });
 
-      const user = await userService.findOne({_id: userId});
+      const user = await users.findOne({_id: userId});
       const decrypted = userService.decryptProviderFields(user);
       expect(decrypted.phone).toBe(phone);
     });

@@ -4,13 +4,14 @@ import {replicaIdProvider, replicationServiceOptions, commandMemoryOptions} from
 import {
   REPLICA_ID,
   COMMAND_MEMORY_OPTIONS,
-  REPLICATION_SERVICE_OPTIONS
+  REPLICATION_SERVICE_OPTIONS,
+  JOB_REPOSITORY,
+  COMMAND_REPOSITORY
 } from "@spica-server/interface-replication";
-import {CommandService} from "./database/index.js";
 import {CommandMemory} from "./memory/index.js";
 import {ClassCommander} from "./commander.js";
 import {JobReducer} from "./reducer.js";
-import {JobService} from "./database/job.js";
+import {provideRepository} from "@spica-server/data";
 
 @Global()
 @Module({})
@@ -32,12 +33,12 @@ export class ReplicationModule {
           useFactory: replicaIdProvider
         },
 
-        CommandService,
+        provideRepository(COMMAND_REPOSITORY),
         CommandMemory,
         CommandMessenger,
         ClassCommander,
 
-        JobService,
+        provideRepository(JOB_REPOSITORY),
         JobReducer
       ],
       exports: [CommandMessenger, ClassCommander, JobReducer]

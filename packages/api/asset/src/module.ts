@@ -1,11 +1,12 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core-schema";
 import {AssetController} from "./controller.js";
-import {AssetService} from "./service.js";
+import {provideRepository} from "@spica-server/data";
 
 import {
   AssetOptions,
   ASSET_REP_MANAGER,
+  ASSET_REPOSITORY,
   ASSET_WORKING_DIRECTORY,
   INSTALLATION_STRATEGIES
 } from "@spica-server/interface-asset";
@@ -30,7 +31,7 @@ export class AssetModule {
       ],
       controllers: [AssetController],
       providers: [
-        AssetService,
+        provideRepository(ASSET_REPOSITORY),
         {
           provide: ASSET_WORKING_DIRECTORY,
           useFactory: () => {

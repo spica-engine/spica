@@ -42,6 +42,9 @@
       "path": "../../interface/function/pkgmanager"
     },
     {
+      "path": "../../interface/function/log"
+    },
+    {
       "path": "../../interface/function/asset-storage"
     },
     {
@@ -49,6 +52,9 @@
     },
     {
       "path": "../../interface/env_var"
+    },
+    {
+      "path": "../../interface/data"
     },
     {
       "path": "../../interface/asset"
@@ -81,10 +87,10 @@
       "path": "../env_var/services"
     },
     {
-      "path": "../../database/pipeline"
+      "path": "../../database"
     },
     {
-      "path": "../../database"
+      "path": "../../data"
     },
     {
       "path": "../../core/schema"
@@ -118,6 +124,9 @@
     },
     {
       "path": "../../database/testing"
+    },
+    {
+      "path": "../../data/mongodb"
     },
     {
       "path": "../../core/websocket"

@@ -1,6 +1,6 @@
-import {Injectable} from "@nestjs/common";
+import {Inject, Injectable} from "@nestjs/common";
 import {ConfigChangeDispatcher, ConfigService} from "@spica-server/config";
-import {DatabaseService} from "@spica-server/database";
+import {CONFIG_REPOSITORY, ConfigRepository} from "@spica-server/interface-config";
 import {IdentityConfigSettings} from "@spica-server/interface-passport-identity";
 import {map} from "rxjs/operators";
 
@@ -8,29 +8,19 @@ import {map} from "rxjs/operators";
 export class IdentityConfigService extends ConfigService {
   private readonly MODULE_NAME = "identity";
 
-  constructor(db: DatabaseService, changeDispatcher: ConfigChangeDispatcher) {
-    super(db, changeDispatcher);
+  constructor(
+    @Inject(CONFIG_REPOSITORY) configs: ConfigRepository,
+    changeDispatcher: ConfigChangeDispatcher
+  ) {
+    super(configs, changeDispatcher);
   }
 
   async set(config: IdentityConfigSettings): Promise<void> {
-    await this.updateOne(
-      {module: this.MODULE_NAME},
-      {
-        $set: {
-          module: this.MODULE_NAME,
-          options: {
-            ...config
-          }
-        }
-      },
-      {upsert: true}
-    );
+    await this.setOptions(this.MODULE_NAME, {...config});
   }
 
   get() {
-    return this.findOne({
-      module: this.MODULE_NAME
-    });
+    return this.findByModule(this.MODULE_NAME);
   }
 
   watchConfig() {

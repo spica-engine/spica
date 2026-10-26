@@ -1,3 +1,4 @@
+import {USER_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {PasswordlessLoginService} from "@spica-server/passport-user/src/services/passwordless-login.service";
@@ -21,6 +22,7 @@ describe("Passwordless Login", () => {
   let module: TestingModule;
   let passwordlessService: PasswordlessLoginService;
   let userService: UserService;
+  let users: any;
   let userConfigService: UserConfigService;
   let mailerService: MailerService;
   let smsService: SmsService;
@@ -94,6 +96,7 @@ describe("Passwordless Login", () => {
 
     passwordlessService = module.get(PasswordlessLoginService);
     userService = module.get(UserService);
+    users = module.get(USER_REPOSITORY);
     userConfigService = module.get(UserConfigService);
     mailerService = module.get(MailerService);
     smsService = module.get(SmsService);
@@ -113,7 +116,7 @@ describe("Passwordless Login", () => {
       const encryptedEmail = userService.encryptField(testEmail);
       const encryptedPhone = userService.encryptField(testPhone);
 
-      user = await userService.insertOne({
+      user = await users.insertOne({
         username: "testuser",
         password: "hashedpassword",
         policies: [],
@@ -231,7 +234,7 @@ describe("Passwordless Login", () => {
       const encryptedEmail = userService.encryptField(testEmail);
       const encryptedPhone = userService.encryptField(testPhone);
 
-      user = await userService.insertOne({
+      user = await users.insertOne({
         username: "testuser",
         password: "hashedpassword",
         policies: [],
@@ -336,7 +339,7 @@ describe("Passwordless Login", () => {
 
       await passwordlessService.verify(username, verificationCode, "email");
 
-      const updatedUser = await userService.findOne({_id: user._id});
+      const updatedUser = await users.findOne({_id: user._id});
       expect(updatedUser.lastLogin).toBeDefined();
       expect(updatedUser.lastLogin.getTime()).toBeGreaterThanOrEqual(beforeLogin.getTime());
     });
