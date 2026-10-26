@@ -1,5 +1,5 @@
 import {BucketService, getBucketDataCollection} from "@spica-server/bucket-services";
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 import {buildI18nAggregation} from "./locale.js";
 import {deepCopy} from "@spica-server/core-patch";
 import {setPropertyByPath} from "./schema.js";
@@ -371,7 +371,11 @@ export function buildRelationAggregation(
   return aggregations;
 }
 
-export async function clearRelations(bucketService: BucketService, bucketId: Id, documentId: Id) {
+export async function clearRelations(
+  bucketService: BucketService,
+  bucketId: ObjectId,
+  documentId: ObjectId
+) {
   const buckets = await bucketService.find({_id: {$ne: bucketId}});
 
   for (const bucket of buckets) {

@@ -4,16 +4,13 @@ import {
   DatabaseService,
   DeleteResult,
   Filter,
-  InsertOneResult
+  InsertOneResult,
+  ObjectId
 } from "@spica-server/database";
-import {ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
 import {diff, schemaDiff} from "@spica-server/core-differ";
 import {ChangePaths, ChangeKind} from "@spica-server/interface-core";
 import {History} from "@spica-server/interface-bucket-history";
 import {Bucket, BucketDocument} from "@spica-server/interface-bucket";
-
-const historyIds = () => ids().forCollection("history");
 
 @Injectable()
 export class HistoryService {
@@ -38,7 +35,11 @@ export class HistoryService {
     );
   }
 
-  createHistory(bucketId: Id, previousDocument: BucketDocument, currentDocument: BucketDocument) {
+  createHistory(
+    bucketId: ObjectId,
+    previousDocument: BucketDocument,
+    currentDocument: BucketDocument
+  ) {
     const changes = diff(currentDocument, previousDocument);
     if (changes.length > 0) {
       const history: History = {
@@ -51,11 +52,11 @@ export class HistoryService {
   }
 
   // We can not use BucketDataService as a direct dependency
-  getDocument(bucketId: Id, documentId: Id) {
+  getDocument(bucketId: ObjectId, documentId: ObjectId) {
     return this.db.collection<BucketDocument>(`bucket_${bucketId}`).findOne({_id: documentId});
   }
 
-  findBetweenNow(bucketId: Id, documentId: Id, id: Id) {
+  findBetweenNow(bucketId: ObjectId, documentId: ObjectId, id: ObjectId) {
     return this.collection
       .aggregate([
         {
@@ -93,7 +94,7 @@ export class HistoryService {
     return this.collection.findOne(filter);
   }
 
-  async deleteHistoryAtPath(bucketId: Id, path: ChangePaths) {
+  async deleteHistoryAtPath(bucketId: ObjectId, path: ChangePaths) {
     const paths = path.reduce((queries, path, index) => {
       // We simply converting the positional path to match with any number
       if ((path as any) instanceof RegExp) {
@@ -130,9 +131,6 @@ export class HistoryService {
       });
     }
 
-    return this.collection.insertOne({
-      ...history,
-      _id: history._id == null ? historyIds().generate() : historyIds().parse(history._id)
-    });
+    return this.collection.insertOne({...history, _id: new ObjectId(history._id)});
   }
 }

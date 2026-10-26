@@ -1,7 +1,7 @@
 import {Controller, Get, HttpStatus, INestApplication, Param} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DataModule, DocumentId, ID} from "@spica-server/data";
+import {DataModule, ID} from "@spica-server/data";
 import {Id, ID_TYPES, IdType, IdTypes} from "@spica-server/interface-data";
 
 const VALID = "valid-id";
@@ -41,11 +41,6 @@ class TestController {
   @Get("apikey/:id")
   apikey(@Param("id", ID("apikey")) id: Id) {
     return {id: id.toString()};
-  }
-
-  @Get("bucket/:bucketId/data/:documentId")
-  document(@DocumentId("documentId", "bucketId") documentId: Id) {
-    return {id: documentId.toString()};
   }
 }
 
@@ -94,27 +89,5 @@ describe("ID pipe", () => {
     const res = await req.get("/identity/nope");
     expect(res.statusCode).toBe(HttpStatus.BAD_REQUEST);
     expect(res.body).toEqual({statusCode: 400, message: "Invalid id."});
-  });
-
-  describe("DocumentId", () => {
-    it("should parse the document id with its bucket's id type", async () => {
-      const res = await req.get(`/bucket/books/data/${VALID}`);
-      expect(res.statusCode).toBe(HttpStatus.OK);
-      expect(res.body).toEqual({id: `books:${VALID}`});
-      expect(parsedIds.get("books")).toEqual([VALID]);
-    });
-
-    it("should resolve the id type from the bucket in the route", async () => {
-      await req.get(`/bucket/books/data/${VALID}`);
-      await req.get(`/bucket/authors/data/${VALID}`);
-      expect(parsedIds.get("books")).toEqual([VALID]);
-      expect(parsedIds.get("authors")).toEqual([VALID]);
-    });
-
-    it("should reject an invalid document id the same way OBJECT_ID did", async () => {
-      const res = await req.get("/bucket/books/data/nope");
-      expect(res.statusCode).toBe(HttpStatus.BAD_REQUEST);
-      expect(res.body).toEqual({statusCode: 400, message: "Invalid id."});
-    });
   });
 });

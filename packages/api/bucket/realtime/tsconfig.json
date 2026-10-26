@@ -7,6 +7,9 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../services"
+    },
+    {
       "path": "../common"
     },
     {
@@ -40,16 +43,10 @@
       "path": "../../../database"
     },
     {
-      "path": "../../../data"
-    },
-    {
       "path": "../../../core/schema"
     },
     {
       "path": "../../../core/patch"
-    },
-    {
-      "path": "../services"
     },
     {
       "path": "../hooks"

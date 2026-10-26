@@ -1,4 +1,3 @@
-import "@spica-server/database-testing";
 import {format as _format} from "prettier";
 import {
   createSchema,

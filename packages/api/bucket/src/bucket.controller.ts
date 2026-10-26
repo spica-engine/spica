@@ -21,9 +21,7 @@ import {activity} from "@spica-server/activity-services";
 import {HistoryService} from "@spica-server/bucket-history";
 import {BucketDataService, BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ReturnDocument} from "@spica-server/database";
-import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createBucketActivity} from "@spica-server/bucket-common";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket-cache";
@@ -69,7 +67,7 @@ export class BucketController {
    */
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:show"))
-  async show(@Param("id", ID("buckets")) id: Id) {
+  async show(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.findOne(this.bs, id);
   }
 
@@ -130,7 +128,7 @@ export class BucketController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:update"))
   async replaceOne(
-    @Param("id", ID("buckets")) id: Id,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
     return CRUD.replace(this.bs, this.bds, this.history, {...bucket, _id: id}).catch(error => {
@@ -152,7 +150,7 @@ export class BucketController {
   @Patch(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:update"))
   async updateOne(
-    @Param("id", ID("buckets")) id: Id,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Headers("content-type") contentType: string,
     @Body(
       Schema.validate({
@@ -203,7 +201,7 @@ export class BucketController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:delete"))
-  async deleteOne(@Param("id", ID("buckets")) id: Id) {
+  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.remove(this.bs, this.bds, this.history, id);
   }
 }

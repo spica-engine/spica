@@ -13,9 +13,6 @@
       "path": "../../preference/services"
     },
     {
-      "path": "../../../interface/data"
-    },
-    {
       "path": "../../../interface/core"
     },
     {

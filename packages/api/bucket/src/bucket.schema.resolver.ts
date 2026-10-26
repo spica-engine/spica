@@ -1,6 +1,7 @@
 import {Injectable, OnModuleDestroy} from "@nestjs/common";
-import {BucketService, bucketIds, compile} from "@spica-server/bucket-services";
+import {BucketService, compile} from "@spica-server/bucket-services";
 import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/core-schema";
+import {ObjectId} from "@spica-server/database";
 import {combineLatest, Observable, Subject} from "rxjs";
 import {map, shareReplay, takeUntil} from "rxjs/operators";
 import {Bucket, BucketPreferences} from "@spica-server/interface-bucket";
@@ -20,7 +21,7 @@ export class BucketSchemaResolver implements OnModuleDestroy {
   }
 
   resolve(uri: string): Observable<object> {
-    if (bucketIds().isValid(uri)) {
+    if (ObjectId.isValid(uri)) {
       let bucketWatcher = this.bucketWatchers.get(uri);
       if (!bucketWatcher) {
         bucketWatcher = this.bucketService.watchBucket(uri, true);

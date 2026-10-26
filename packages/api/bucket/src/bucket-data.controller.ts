@@ -22,7 +22,7 @@ import {
 import {activity, ActivityService, createActivity} from "@spica-server/activity-services";
 import {HistoryService} from "@spica-server/bucket-history";
 import {ChangeEmitter} from "@spica-server/bucket-hooks";
-import {BucketDataService, BucketService, bucketIds} from "@spica-server/bucket-services";
+import {BucketDataService, BucketService} from "@spica-server/bucket-services";
 import {
   ARRAY,
   BOOLEAN,
@@ -35,9 +35,7 @@ import {
   EXPRESSION
 } from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ReturnDocument} from "@spica-server/database";
-import {DocumentId, ID, ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, StrategyType} from "@spica-server/passport-guard";
 import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket-cache";
@@ -108,7 +106,7 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", "bucket/:bucketId/data", authIdToString))
   async find(
     @StrategyType() strategyType: ReqAuthStrategy,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
@@ -164,7 +162,7 @@ export class BucketDataController {
     ActionGuard("bucket:data:profile", "bucket/:bucketId/data")
   )
   async findProfileEntries(
-    @Param("bucketId", ID("buckets")) bucketId: Id,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Query("filter", JSONPR(filterReviver)) filter?: object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
@@ -214,8 +212,8 @@ export class BucketDataController {
     @StrategyType() strategyType: ReqAuthStrategy,
     @Headers("accept-language") acceptedLanguage: string,
     @Req() req: any,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
-    @DocumentId("documentId", "bucketId") documentId: Id,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
     relation?: boolean | string[]
@@ -291,7 +289,7 @@ export class BucketDataController {
   async insertOne(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Body(Schema.validate(req => req.params.bucketId)) rawDocument: BucketDocument
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
@@ -320,10 +318,10 @@ export class BucketDataController {
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
         {
-          bucket: bucketId.toString(),
+          bucket: bucketId.toHexString(),
           type: "insert"
         },
-        document._id.toString(),
+        document._id.toHexString(),
         undefined,
         document
       );
@@ -357,8 +355,8 @@ export class BucketDataController {
   async replace(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
-    @DocumentId("documentId", "bucketId") documentId: Id,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Body(Schema.validate(req => req.params.bucketId)) document: BucketDocument
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
@@ -394,10 +392,10 @@ export class BucketDataController {
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
         {
-          bucket: bucketId.toString(),
+          bucket: bucketId.toHexString(),
           type: "update"
         },
-        documentId.toString(),
+        documentId.toHexString(),
         previousDocument,
         currentDocument
       );
@@ -434,8 +432,8 @@ export class BucketDataController {
   async patch(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
-    @DocumentId("documentId", "bucketId") documentId: Id,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Body() patch: Partial<BucketDocument>
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
@@ -481,10 +479,10 @@ export class BucketDataController {
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
         {
-          bucket: bucketId.toString(),
+          bucket: bucketId.toHexString(),
           type: "update"
         },
-        documentId.toString(),
+        documentId.toHexString(),
         previousDocument,
         currentDocument
       );
@@ -510,8 +508,8 @@ export class BucketDataController {
   async deleteOne(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", ID("buckets")) bucketId: Id,
-    @DocumentId("documentId", "bucketId") documentId: Id
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
@@ -538,10 +536,10 @@ export class BucketDataController {
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
         {
-          bucket: bucketId.toString(),
+          bucket: bucketId.toHexString(),
           type: "delete"
         },
-        documentId.toString(),
+        documentId.toHexString(),
         deletedDocument,
         undefined
       );
@@ -562,8 +560,8 @@ export class BucketDataController {
         await this.deleteOne(
           strategyType,
           req,
-          bucketIds().parse(targetBucketId),
-          (await ids().forBucket(targetBucketId)).parse(targetDocId)
+          new ObjectId(targetBucketId),
+          new ObjectId(targetDocId)
         );
 
         if (this.activityService) {
@@ -581,8 +579,8 @@ export class BucketDataController {
     throw new HttpException(error.message, error.status || 500);
   }
 
-  validateDocument(bucketId: Id, document: BucketDocument): Promise<void> {
-    const validatorMixin = Schema.validate(bucketId.toString());
+  validateDocument(bucketId: ObjectId, document: BucketDocument): Promise<void> {
+    const validatorMixin = Schema.validate(bucketId.toHexString());
     const pipe: any = new validatorMixin(this.validator);
     return pipe.transform(document);
   }

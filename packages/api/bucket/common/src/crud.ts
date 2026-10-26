@@ -1,6 +1,4 @@
-import {BaseCollection, ReturnDocument} from "@spica-server/database";
-import {ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {BaseCollection, ObjectId, ReturnDocument} from "@spica-server/database";
 import * as expression from "@spica-server/bucket-expression";
 import {
   createRelationMap,
@@ -165,7 +163,7 @@ export async function findDocuments<T>(
 async function buildAclProjection(
   schema: Bucket,
   user: any,
-  schemaResolver: (id: string | Id) => Promise<Bucket> | Bucket,
+  schemaResolver: (id: string | ObjectId) => Promise<Bucket> | Bucket,
   hashSecret?: string
 ) {
   const properties = schema.properties as Record<string, {acl?: string}>;
@@ -215,8 +213,8 @@ export async function insertDocument(
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
-    schema: (id: string | Id) => Promise<Bucket> | Bucket;
-    deleteOne: (documentId: Id) => Promise<void>;
+    schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
+    deleteOne: (documentId: ObjectId) => Promise<void>;
   },
   hashSecret?: string,
   encryptionSecret?: string
@@ -267,7 +265,7 @@ export async function replaceDocument(
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
-    schema: (id: string | Id) => Promise<Bucket> | Bucket;
+    schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
   },
   options: {
     returnDocument: ReturnDocument;
@@ -314,7 +312,7 @@ export async function patchDocument(
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
-    schema: (id: string | Id) => Promise<Bucket> | Bucket;
+    schema: (id: string | ObjectId) => Promise<Bucket> | Bucket;
   },
   options: {
     returnDocument: ReturnDocument;
@@ -353,22 +351,21 @@ export async function patchDocument(
 
 export async function deleteDocument(
   schema: Bucket,
-  documentId: string | Id,
+  documentId: string | ObjectId,
   params: {
     req: any;
     applyAcl?: boolean;
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<BucketDocument>;
-    schema: (schema: string | Id) => Promise<Bucket> | Bucket;
+    schema: (schema: string | ObjectId) => Promise<Bucket> | Bucket;
   },
   hashSecret?: string,
   encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 
-  const documentIdType = await ids().forBucket(schema._id.toString());
-  const document = await collection.findOne({_id: documentIdType.parse(documentId)});
+  const document = await collection.findOne({_id: new ObjectId(documentId)});
 
   if (!document) {
     return;

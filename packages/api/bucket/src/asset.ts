@@ -1,10 +1,11 @@
 import {registrar} from "@spica-server/asset";
 import {Resource} from "@spica-server/interface-asset";
 import {HistoryService} from "@spica-server/bucket-history";
-import {BucketDataService, BucketService, bucketIds} from "@spica-server/bucket-services";
+import {BucketDataService, BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
 import * as CRUD from "./crud.js";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
+import {ObjectId} from "@spica-server/database";
 import {BucketAsset} from "@spica-server/interface-bucket";
 
 const _module = "bucket";
@@ -35,10 +36,10 @@ export function registerAssetHandlers(
   registrar.operator(_module, operator);
 
   const exporter = async (_id: string) => {
-    if (!bucketIds().isValid(_id)) {
+    if (!ObjectId.isValid(_id)) {
       return Promise.reject(`${_id} is not a valid object id`);
     }
-    const bucket = await bs.findOne({_id: bucketIds().parse(_id)});
+    const bucket = await bs.findOne({_id: new ObjectId(_id)});
 
     if (!bucket) {
       return Promise.reject(`Bucket does not exist with _id ${_id}`);

@@ -13,8 +13,6 @@ import {ChangeEmitter} from "@spica-server/bucket-hooks";
 import {BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {resourceFilterFunction, extractStrategyType} from "@spica-server/passport-guard";
 import {graphqlHTTP} from "express-graphql";
@@ -312,7 +310,7 @@ export class GraphqlController implements OnModuleInit {
           req: context,
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          documentId: (await ids().forBucket(bucket._id.toString())).parse(documentId),
+          documentId: new ObjectId(documentId),
           applyAcl: this.shouldApplyAcl(context)
         },
         {localize: true, paginate: false},
@@ -400,10 +398,10 @@ export class GraphqlController implements OnModuleInit {
       if (this.hookChangeEmitter) {
         this.hookChangeEmitter.emitChange(
           {
-            bucket: bucket._id.toString(),
+            bucket: bucket._id.toHexString(),
             type: "insert"
           },
-          document._id.toString(),
+          document._id.toHexString(),
           undefined,
           document
         );
@@ -470,7 +468,7 @@ export class GraphqlController implements OnModuleInit {
         {
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          documentId: (await ids().forBucket(bucket._id.toString())).parse(documentId),
+          documentId: new ObjectId(documentId),
           req: context,
           applyAcl: this.shouldApplyAcl(context)
         },
@@ -487,7 +485,7 @@ export class GraphqlController implements OnModuleInit {
       if (this.hookChangeEmitter) {
         this.hookChangeEmitter.emitChange(
           {
-            bucket: bucket._id.toString(),
+            bucket: bucket._id.toHexString(),
             type: "update"
           },
           documentId,
@@ -587,7 +585,7 @@ export class GraphqlController implements OnModuleInit {
       if (this.hookChangeEmitter) {
         this.hookChangeEmitter.emitChange(
           {
-            bucket: bucket._id.toString(),
+            bucket: bucket._id.toHexString(),
             type: "update"
           },
           documentId,
@@ -654,7 +652,7 @@ export class GraphqlController implements OnModuleInit {
       if (this.hookChangeEmitter) {
         this.hookChangeEmitter.emitChange(
           {
-            bucket: bucket._id.toString(),
+            bucket: bucket._id.toHexString(),
             type: "delete"
           },
           documentId,
@@ -692,8 +690,8 @@ export class GraphqlController implements OnModuleInit {
     };
   }
 
-  validateInput(bucketId: Id, input: BucketDocument): Promise<any> {
-    const validatorMixin = Schema.validate(bucketId.toString());
+  validateInput(bucketId: ObjectId, input: BucketDocument): Promise<any> {
+    const validatorMixin = Schema.validate(bucketId.toHexString());
     const pipe: any = new validatorMixin(this.validator);
 
     return pipe.transform(input);
