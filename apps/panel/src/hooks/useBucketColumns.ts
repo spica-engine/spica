@@ -34,13 +34,13 @@ export function useBucketColumns(
   const [fieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, []);
 
   const formattedColumns: ColumnType[] = useMemo(() => {
-    const columns = Object.values(bucket?.properties ?? {});
-
-    const orderedColumns = fieldsOrder.length
-      ? (fieldsOrder
-          .map(orderKey => columns.find(c => c.title === orderKey))
-          .filter(Boolean) as ColumnType[] as typeof columns)
-      : columns;
+    const entries = Object.entries(bucket?.properties ?? {});
+    const propertyByKey = new Map(entries);
+    const orderedKeys = [
+      ...fieldsOrder.filter(orderKey => propertyByKey.has(orderKey)),
+      ...entries.map(([key]) => key).filter(key => !fieldsOrder.includes(key))
+    ];
+    const orderedColumns = orderedKeys.map(key => propertyByKey.get(key)!);
 
     return [
       {
