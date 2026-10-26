@@ -9,7 +9,3 @@ export * from "./src/repositories/passport/policy.js";
 export * from "./src/repositories/passport/refresh-token.js";
 export * from "./src/repositories/passport/strategy.js";
 export * from "./src/repositories/passport/user.js";
-export * from "./src/collection-names.js";
-export * from "./src/repositories/function/function.js";
-export * from "./src/repositories/function/log.js";
-export * from "./src/repositories/function/webhook.js";

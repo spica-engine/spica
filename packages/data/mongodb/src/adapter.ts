@@ -2,14 +2,12 @@ import {Module} from "@nestjs/common";
 import {DataAdapter, PassthroughResultShaper} from "@spica-server/data";
 import {DatabaseModule} from "@spica-server/database";
 import {
-  COLLECTION_NAMES,
   COLLECTION_QUERY,
   ID_TYPES,
   REPOSITORY_CLASSES,
   RESULT_SHAPER
 } from "@spica-server/interface-data";
 import {repositoryClasses} from "./repositories/index.js";
-import {MongoCollectionNames} from "./collection-names.js";
 import {MongoIdTypes} from "./id.js";
 import {MongoCollectionQueryFacade} from "./query/collection-query.js";
 import {MongoBucketQueryFacade} from "./bucket/query.js";
@@ -27,8 +25,7 @@ const providers = [
   {provide: COLLECTION_QUERY, useClass: MongoCollectionQueryFacade},
   {provide: BUCKET_QUERY, useClass: MongoBucketQueryFacade},
   {provide: BUCKET_WRITE, useClass: MongoBucketWriteFacade},
-  {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
-  {provide: COLLECTION_NAMES, useClass: MongoCollectionNames}
+  {provide: REPOSITORY_CLASSES, useValue: repositoryClasses}
 ];
 
 const exported = [
@@ -37,8 +34,7 @@ const exported = [
   COLLECTION_QUERY,
   BUCKET_QUERY,
   BUCKET_WRITE,
-  REPOSITORY_CLASSES,
-  COLLECTION_NAMES
+  REPOSITORY_CLASSES
 ];
 
 export class MongoDataAdapter {

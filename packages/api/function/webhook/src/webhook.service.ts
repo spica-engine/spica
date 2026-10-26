@@ -1,44 +1,51 @@
-import {Inject, Injectable, Logger} from "@nestjs/common";
-import {Id} from "@spica-server/interface-data";
-import {Observable} from "rxjs";
+import {Injectable, Logger} from "@nestjs/common";
 import {
-  Webhook,
-  TargetChange,
-  ChangeKind,
-  WEBHOOK_REPOSITORY,
-  WebhookRepository
-} from "@spica-server/interface-function-webhook";
+  BaseCollection,
+  DatabaseService,
+  Filter,
+  FindOneAndDeleteOptions,
+  FindOneAndReplaceOptions,
+  OptionalUnlessRequiredId,
+  WithId
+} from "@spica-server/database";
+import {Observable} from "rxjs";
+import {Webhook, TargetChange, ChangeKind} from "@spica-server/interface-function-webhook";
 import {WebhookChangeDispatcher} from "./change-dispatcher.js";
 
 @Injectable()
-export class WebhookService {
+export class WebhookService extends BaseCollection<Webhook>("webhook") {
   private readonly logger = new Logger(WebhookService.name);
 
   constructor(
-    @Inject(WEBHOOK_REPOSITORY) private readonly webhooks: WebhookRepository,
+    database: DatabaseService,
     private readonly changeDispatcher: WebhookChangeDispatcher
-  ) {}
-
-  findById(id: Id) {
-    return this.webhooks.findById(id);
+  ) {
+    super(database);
   }
 
-  async insert(webhook: Webhook): Promise<Webhook> {
-    const result = await this.webhooks.insert(webhook);
+  async insertOne(doc: OptionalUnlessRequiredId<Webhook>): Promise<WithId<Webhook>> {
+    const result = await super.insertOne(doc);
     this.changeDispatcher.dispatch({operationType: "insert", documentKey: {_id: result._id}});
     return result;
   }
 
-  async replaceById(id: Id, webhook: Webhook): Promise<Webhook | null> {
-    const result = await this.webhooks.replaceById(id, webhook);
+  async findOneAndReplace(
+    filter: Filter<Webhook>,
+    doc: Webhook,
+    options?: FindOneAndReplaceOptions
+  ): Promise<WithId<Webhook>> {
+    const result = await super.findOneAndReplace(filter, doc, options);
     if (result) {
       this.changeDispatcher.dispatch({operationType: "replace", documentKey: {_id: result._id}});
     }
     return result;
   }
 
-  async deleteById(id: Id): Promise<Webhook | null> {
-    const result = await this.webhooks.deleteById(id);
+  async findOneAndDelete(
+    filter: Filter<Webhook>,
+    options?: FindOneAndDeleteOptions
+  ): Promise<WithId<Webhook>> {
+    const result = await super.findOneAndDelete(filter, options);
     if (result) {
       this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: result._id}});
     }
@@ -67,8 +74,8 @@ export class WebhookService {
           `webhook target watch failed: ${error instanceof Error ? error.message : error}`
         );
 
-      let chain: Promise<unknown> = this.webhooks
-        .findAll()
+      let chain: Promise<unknown> = super
+        .find()
         .then(hooks => {
           for (const hook of hooks) {
             if (!hook.trigger.active) {
@@ -92,7 +99,7 @@ export class WebhookService {
               observer.next({kind: ChangeKind.Removed, target: _id.toString()});
               return;
             }
-            const hook = await this.webhooks.findById(_id);
+            const hook = await super.findOne({_id});
             if (!hook) {
               observer.next({kind: ChangeKind.Removed, target: _id.toString()});
               return;

@@ -24,6 +24,7 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
+import {ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {Scheduler} from "@spica-server/function-scheduler";
@@ -39,19 +40,18 @@ import {
   createFunctionSecretActivity
 } from "./activity.resource.js";
 import {FunctionEngine} from "./engine.js";
+import {FunctionService} from "@spica-server/function-services";
 import {SecretService} from "@spica-server/secret-services";
 import {
   Options,
   FUNCTION_OPTIONS,
-  FUNCTION_REPOSITORY,
   EnvRelation,
   Function,
-  FunctionRepository,
   SecretRelation
 } from "@spica-server/interface-function";
-import {FUNCTION_LOG_REPOSITORY, LogRepository} from "@spica-server/interface-function-log";
+import {LogService} from "@spica-server/function-log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver.js";
-import {applyPatch} from "@spica-server/core-patch";
+import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core-patch";
 import * as CRUD from "./crud.js";
 
 /**
@@ -61,10 +61,10 @@ import * as CRUD from "./crud.js";
 @Controller("function")
 export class FunctionController {
   constructor(
-    @Inject(FUNCTION_REPOSITORY) private functions: FunctionRepository,
+    private fs: FunctionService,
     private engine: FunctionEngine,
     private scheduler: Scheduler,
-    @Inject(FUNCTION_LOG_REPOSITORY) private logs: LogRepository,
+    private log: LogService,
     private ss: SecretService,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
@@ -140,7 +140,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", ID("function")) id: Id) {
-    return CRUD.remove(this.functions, this.engine, this.logs, id);
+    return CRUD.remove(this.fs, this.engine, this.log, id);
   }
 
   /**
@@ -155,7 +155,7 @@ export class FunctionController {
     @Param("id", ID("function")) id: Id,
     @Body(Schema.validate(generate)) fn: Function
   ) {
-    return CRUD.replace(this.functions, this.engine, {...fn, _id: id}).catch(error => {
+    return CRUD.replace(this.fs, this.engine, {...fn, _id: id}).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -197,7 +197,7 @@ export class FunctionController {
       throw new BadRequestException(`Content type '${contentType}' is not supported.`);
     }
 
-    const previousFn = await this.functions.findById(id);
+    const previousFn = await this.fs.findOne({_id: id});
     if (!previousFn) {
       throw new NotFoundException(`Function with id ${id} does not exist.`);
     }
@@ -205,9 +205,15 @@ export class FunctionController {
     const patchedFn = applyPatch(previousFn, patch);
     delete patchedFn._id;
 
-    const updatedFn = await this.functions.applyMergePatch(id, patch, patchedFn);
+    const updateQuery = getUpdateQueryForPatch(patch, patchedFn);
 
-    return updatedFn === undefined ? previousFn : updatedFn;
+    if (!updateQuery) {
+      return previousFn;
+    }
+
+    return this.fs.findOneAndUpdate({_id: id}, updateQuery, {
+      returnDocument: ReturnDocument.AFTER
+    });
   }
 
   /**
@@ -218,7 +224,7 @@ export class FunctionController {
   @Post()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
-    return CRUD.insert(this.functions, this.engine, fn).catch(error => {
+    return CRUD.insert(this.fs, this.engine, fn).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -234,7 +240,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
   async updateIndex(@Param("id", ID("function")) id: Id, @Body("index") index: string) {
     return CRUD.index
-      .write(this.functions, this.engine, id, index)
+      .write(this.fs, this.engine, id, index)
       .catch(diagnostics => Promise.reject(new HttpException(diagnostics, 422)));
   }
 
@@ -245,7 +251,7 @@ export class FunctionController {
   @Get(":id/index")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:show", "function/:id"))
   async showIndex(@Param("id", ID("function")) id: Id) {
-    return CRUD.index.find(this.functions, this.engine, id).catch(error => {
+    return CRUD.index.find(this.fs, this.engine, id).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -257,7 +263,7 @@ export class FunctionController {
   @Get(":id/dependencies")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:show", "function/:id"))
   async getDependencies(@Param("id", ID("function")) id: Id) {
-    return CRUD.dependencies.findOne(this.functions, this.engine, id).catch(error => {
+    return CRUD.dependencies.findOne(this.fs, this.engine, id).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -275,7 +281,7 @@ export class FunctionController {
     @Param("id", ID("function")) id: Id,
     @Body("name", DEFAULT([]), ARRAY(String)) name: string[]
   ) {
-    const fn = await this.functions.findById(id);
+    const fn = await this.fs.findOne({_id: id});
 
     return CRUD.dependencies.install(this.engine, fn, name).catch(error => {
       throw new HttpException(error.message, error.status || 500);
@@ -292,7 +298,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDependency(@Param("id", ID("function")) id: Id, @Param("name") name: string) {
-    const fn = await this.functions.findById(id);
+    const fn = await this.fs.findOne({_id: id});
 
     return CRUD.dependencies.uninstall(this.engine, fn, [name]).catch(error => {
       throw new HttpException(error.message, error.status || 500);
@@ -311,7 +317,7 @@ export class FunctionController {
     @Param("id", ID("function")) id: Id,
     @Param("envVarId", ID("env_var")) envVarId: Id
   ) {
-    return CRUD.environment.inject(this.functions, id, this.engine, envVarId);
+    return CRUD.environment.inject(this.fs, id, this.engine, envVarId);
   }
 
   /**
@@ -327,7 +333,7 @@ export class FunctionController {
     @Param("id", ID("function")) id: Id,
     @Param("envVarId", ID("env_var")) envVarId: Id
   ) {
-    return CRUD.environment.eject(this.functions, id, this.engine, envVarId);
+    return CRUD.environment.eject(this.fs, id, this.engine, envVarId);
   }
 
   /**
@@ -342,7 +348,7 @@ export class FunctionController {
     @Param("id", ID("function")) id: Id,
     @Param("secretId", ID("secret")) secretId: Id
   ) {
-    return CRUD.secret.inject(this.functions, this.ss, id, this.engine, secretId);
+    return CRUD.secret.inject(this.fs, this.ss, id, this.engine, secretId);
   }
 
   /**
@@ -358,6 +364,6 @@ export class FunctionController {
     @Param("id", ID("function")) id: Id,
     @Param("secretId", ID("secret")) secretId: Id
   ) {
-    return CRUD.secret.eject(this.functions, this.ss, id, this.engine, secretId);
+    return CRUD.secret.eject(this.fs, this.ss, id, this.engine, secretId);
   }
 }

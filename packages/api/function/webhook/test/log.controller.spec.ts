@@ -1,17 +1,16 @@
-import {provideRepository} from "@spica-server/data";
-import {WEBHOOK_LOG_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {WebhookLogController} from "@spica-server/function-webhook/src/log.controller";
+import {WebhookLogService} from "@spica-server/function-webhook/src/log.service";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
 
 describe("Activity Controller", () => {
   let request: Request;
   let app: INestApplication;
-  let service: any;
+  let service: WebhookLogService;
   let today: Date;
   let yesterday: Date;
   let logIds: ObjectId[];
@@ -27,7 +26,7 @@ describe("Activity Controller", () => {
       ],
       controllers: [WebhookLogController],
       providers: [
-        provideRepository(WEBHOOK_LOG_REPOSITORY),
+        WebhookLogService,
         {
           provide: WEBHOOK_OPTIONS,
           useValue: {
@@ -43,7 +42,7 @@ describe("Activity Controller", () => {
 
     await app.listen(request.socket);
 
-    service = module.get(WEBHOOK_LOG_REPOSITORY);
+    service = module.get(WebhookLogService);
 
     await new Promise(resolve => setTimeout(() => resolve(""), 2000));
   });

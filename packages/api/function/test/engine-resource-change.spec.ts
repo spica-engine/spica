@@ -10,7 +10,7 @@ describe("FunctionEngine resource change refresh", () => {
   let secretChanges: Subject<any>;
   let executor: {apply: jest.Mock};
   let dependents: {refreshPlan: jest.Mock};
-  let fs: {removeReference: jest.Mock};
+  let fs: {findOneAndUpdate: jest.Mock};
   let engine: any;
 
   const flush = () => new Promise(resolve => setImmediate(resolve));
@@ -25,9 +25,10 @@ describe("FunctionEngine resource change refresh", () => {
     secretChanges = new Subject();
     executor = {apply: jest.fn().mockResolvedValue(undefined)};
     dependents = {refreshPlan: jest.fn()};
-    fs = {removeReference: jest.fn().mockResolvedValue({})};
+    fs = {findOneAndUpdate: jest.fn().mockResolvedValue({})};
     engine = new FunctionEngine(
       {
+        ...fs,
         watchFunctionsForEnvChanges: () => envChanges,
         watchFunctionsForSecretChanges: () => secretChanges
       } as any,
@@ -42,8 +43,7 @@ describe("FunctionEngine resource change refresh", () => {
       {} as any,
       {} as any,
       {} as any,
-      dependents as any,
-      {removeEnvVar: fs.removeReference, removeSecret: fs.removeReference} as any
+      dependents as any
     );
     engine.applyChangePlan = jest.fn();
     engine.logger = {error: jest.fn()};
@@ -63,7 +63,7 @@ describe("FunctionEngine resource change refresh", () => {
       expect(executor.apply).toHaveBeenCalledTimes(1);
       expect(executor.apply.mock.calls[0][0].reconcile).toEqual([fnId.toString()]);
       expect(engine.applyChangePlan).not.toHaveBeenCalled();
-      expect(fs.removeReference).not.toHaveBeenCalled();
+      expect(fs.findOneAndUpdate).not.toHaveBeenCalled();
       // env vars and secrets belong to the importing worker's own process, so importers are unaffected
       expect(dependents.refreshPlan).not.toHaveBeenCalled();
     }
@@ -75,8 +75,8 @@ describe("FunctionEngine resource change refresh", () => {
       source().next({fns: [{_id: fnId}], ...ids, operationType: "delete"});
       await flush();
 
-      expect(fs.removeReference).toHaveBeenCalledWith(fnId, expect.anything());
-      expect(fs.removeReference.mock.invocationCallOrder[0]).toBeLessThan(
+      expect(fs.findOneAndUpdate).toHaveBeenCalledWith({_id: fnId}, expect.anything());
+      expect(fs.findOneAndUpdate.mock.invocationCallOrder[0]).toBeLessThan(
         executor.apply.mock.invocationCallOrder[0]
       );
       expect(engine.applyChangePlan).not.toHaveBeenCalled();

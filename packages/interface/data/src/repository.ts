@@ -16,9 +16,3 @@ export interface ProfilerQuery {
   skip?: number;
   sort?: {[key: string]: 1 | -1};
 }
-
-export interface CollectionNames {
-  list(): Promise<string[]>;
-}
-
-export const COLLECTION_NAMES = Symbol.for("SPICA_DATA_COLLECTION_NAMES");

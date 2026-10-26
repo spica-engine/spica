@@ -17,7 +17,6 @@
     "@nestjs/common": "^10.4.22",
     "@nestjs/websockets": "^10.4.22",
     "@spica-server/core": "workspace:*",
-    "@spica-server/data": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/database-realtime": "workspace:*",
     "@spica-server/interface-data": "workspace:*",

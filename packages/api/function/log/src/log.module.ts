@@ -1,13 +1,9 @@
 import {Module, DynamicModule} from "@nestjs/common";
 import {LogController} from "./log.controller.js";
-import {
-  FUNCTION_LOG_OPTIONS,
-  FUNCTION_LOG_REPOSITORY,
-  LogOptions
-} from "@spica-server/interface-function-log";
-import {provideRepository} from "@spica-server/data";
+import {FUNCTION_LOG_OPTIONS, LogOptions} from "@spica-server/interface-function-log";
 import {LogGateway} from "./realtime.gateway.js";
 import {RealtimeDatabaseModule} from "@spica-server/database-realtime";
+import {LogService} from "./log.service.js";
 
 @Module({})
 export class LogModule {
@@ -17,13 +13,13 @@ export class LogModule {
       imports: [],
       controllers: [LogController],
       providers: [
-        provideRepository(FUNCTION_LOG_REPOSITORY),
+        LogService,
         {
           provide: FUNCTION_LOG_OPTIONS,
           useValue: options
         }
       ],
-      exports: [FUNCTION_LOG_REPOSITORY]
+      exports: [LogService]
     };
 
     if (options.realtime) {

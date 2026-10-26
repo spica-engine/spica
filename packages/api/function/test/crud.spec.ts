@@ -1,4 +1,3 @@
-import {DuplicateKeyError} from "@spica-server/data";
 import {ObjectId} from "@spica-server/database-testing";
 import * as CRUD from "@spica-server/function/src/crud";
 
@@ -6,11 +5,11 @@ describe("CRUD worker refresh", () => {
   const fnId = new ObjectId();
   const fn = {_id: fnId, name: "my-function", language: "typescript"} as any;
 
-  let fs: {findById: jest.Mock};
+  let fs: {findOne: jest.Mock};
   let engine: Record<string, jest.Mock>;
 
   beforeEach(() => {
-    fs = {findById: jest.fn().mockResolvedValue(fn)};
+    fs = {findOne: jest.fn().mockResolvedValue(fn)};
     engine = {
       storeAssets: jest.fn((_fn, _filename, op) => op()),
       getIndexFilename: jest.fn().mockReturnValue("index.ts"),
@@ -112,14 +111,11 @@ describe("CRUD resource reference removal", () => {
   const fnId = new ObjectId();
   const resourceId = new ObjectId();
 
-  let fs: {removeEnvVar: jest.Mock; removeSecret: jest.Mock};
+  let fs: {findOneAndUpdate: jest.Mock};
   let engine: Record<string, jest.Mock>;
 
   beforeEach(() => {
-    fs = {
-      removeEnvVar: jest.fn().mockResolvedValue({_id: fnId}),
-      removeSecret: jest.fn().mockResolvedValue({_id: fnId})
-    };
+    fs = {findOneAndUpdate: jest.fn().mockResolvedValue({_id: fnId})};
     engine = {
       applyChangePlan: jest.fn().mockResolvedValue(undefined),
       refreshLocally: jest.fn().mockResolvedValue(undefined)
@@ -129,19 +125,19 @@ describe("CRUD resource reference removal", () => {
   it("should pull the env var without refreshing workers", async () => {
     await CRUD.environment.removeReference(fs as any, fnId, resourceId);
 
-    expect(fs.removeEnvVar).toHaveBeenCalledWith(fnId, resourceId);
+    expect(fs.findOneAndUpdate).toHaveBeenCalledWith({_id: fnId}, {$pull: {env_vars: resourceId}});
     expect(engine.applyChangePlan).not.toHaveBeenCalled();
   });
 
   it("should pull the secret without refreshing workers", async () => {
     await CRUD.secret.removeReference(fs as any, fnId, resourceId);
 
-    expect(fs.removeSecret).toHaveBeenCalledWith(fnId, resourceId);
+    expect(fs.findOneAndUpdate).toHaveBeenCalledWith({_id: fnId}, {$pull: {secrets: resourceId}});
     expect(engine.applyChangePlan).not.toHaveBeenCalled();
   });
 
   it("should throw when the function does not exist", async () => {
-    fs.removeEnvVar.mockResolvedValue(null);
+    fs.findOneAndUpdate.mockResolvedValue(null);
 
     await expect(CRUD.environment.removeReference(fs as any, fnId, resourceId)).rejects.toThrow(
       "not found"
@@ -162,13 +158,13 @@ describe("CRUD replace rename", () => {
   const _id = new ObjectId();
   const previous = {_id, name: "before", language: "javascript", timeout: 10, triggers: {}};
 
-  let fs: {updateById: jest.Mock; replaceById: jest.Mock};
+  let fs: {findOneAndUpdate: jest.Mock; replaceOne: jest.Mock};
   let engine: {moveAssets: jest.Mock; applyChangePlan: jest.Mock};
 
   beforeEach(() => {
     fs = {
-      updateById: jest.fn().mockResolvedValue({...previous}),
-      replaceById: jest.fn().mockResolvedValue(1)
+      findOneAndUpdate: jest.fn().mockResolvedValue({...previous}),
+      replaceOne: jest.fn().mockResolvedValue(1)
     };
     engine = {
       moveAssets: jest.fn().mockResolvedValue(undefined),
@@ -207,12 +203,12 @@ describe("CRUD replace rename", () => {
       "Failed to move the files of function before to after: bucket unavailable"
     );
 
-    expect(fs.replaceById).toHaveBeenCalledWith(_id, expect.objectContaining({name: "before"}));
+    expect(fs.replaceOne).toHaveBeenCalledWith({_id}, expect.objectContaining({name: "before"}));
     expect(engine.applyChangePlan).not.toHaveBeenCalled();
   });
 
   it("should reject a name that is already taken as a bad request", async () => {
-    fs.updateById.mockRejectedValue(new DuplicateKeyError("duplicate", {name: "after"}));
+    fs.findOneAndUpdate.mockRejectedValue({code: 11000, keyValue: {name: "after"}});
 
     await expect(replace({name: "after"})).rejects.toMatchObject({
       status: 400,

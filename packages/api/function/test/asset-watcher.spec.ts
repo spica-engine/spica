@@ -20,7 +20,7 @@ const makeChange = (overrides: Record<string, unknown> = {}) => ({
 let changeSubject: Subject<unknown>;
 
 let mockAssetService: {watch: jest.Mock};
-let mockFunctionService: {findById: jest.Mock};
+let mockFunctionService: {findOne: jest.Mock};
 let mockReconciler: {reconcileFunction: jest.Mock};
 let mockTracker: {isSelfWrite: jest.Mock};
 let mockPreparationService: {deleteFunctionDirectory: jest.Mock};
@@ -57,7 +57,7 @@ beforeEach(() => {
   };
 
   mockFunctionService = {
-    findById: jest.fn().mockResolvedValue(makeFn())
+    findOne: jest.fn().mockResolvedValue(makeFn())
   };
 
   mockReconciler = {
@@ -113,9 +113,9 @@ describe("FunctionAssetWatcher — happy path", () => {
     changeSubject.next(makeChange());
     await new Promise(r => setTimeout(r, 0));
 
-    expect(mockFunctionService.findById).toHaveBeenCalledWith(
-      expect.objectContaining({toHexString: expect.any(Function)})
-    );
+    expect(mockFunctionService.findOne).toHaveBeenCalledWith({
+      _id: expect.objectContaining({toHexString: expect.any(Function)})
+    });
 
     watcher.onModuleDestroy();
   });
@@ -208,14 +208,14 @@ describe("FunctionAssetWatcher — edge cases", () => {
     changeSubject.next({fullDocument: {filename: "index.ts", hash: "abc"}});
     await new Promise(r => setTimeout(r, 0));
 
-    expect(mockFunctionService.findById).not.toHaveBeenCalled();
+    expect(mockFunctionService.findOne).not.toHaveBeenCalled();
     expect(mockReconciler.reconcileFunction).not.toHaveBeenCalled();
 
     watcher.onModuleDestroy();
   });
 
   it("should warn and NOT call reconcileFunction when the function is not found", async () => {
-    mockFunctionService.findById.mockResolvedValue(null);
+    mockFunctionService.findOne.mockResolvedValue(null);
 
     const watcher = buildWatcher();
     watcher.onModuleInit();

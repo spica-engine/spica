@@ -1,17 +1,17 @@
+import {FunctionService} from "@spica-server/function-services";
 import {SecretService} from "@spica-server/secret-services";
 import {
   Dependency,
   EnvRelation,
   Function,
-  FunctionRepository,
   FunctionWithDependencies,
   SecretRelation
 } from "@spica-server/interface-function";
 import {createPlan, refreshPlan, secretRefreshPlan} from "./change.js";
-import {DuplicateKeyError, ids} from "@spica-server/data";
+import {ids} from "@spica-server/data";
 import {CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {FunctionEngine} from "./engine.js";
-import {LogRepository} from "@spica-server/interface-function-log";
+import {LogService} from "@spica-server/function-log";
 import {BadRequestException, InternalServerErrorException, NotFoundException} from "@nestjs/common";
 import fs from "fs";
 import * as readline from "readline";
@@ -29,17 +29,13 @@ function relations(env: EnvRelation, secret: SecretRelation): string[] {
   ];
 }
 
-async function insertWithChanges(
-  functions: FunctionRepository,
-  engine: FunctionEngine,
-  fn: Function
-) {
+async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   if (fn._id) {
     fn._id = functionIds().parse(fn._id);
   }
 
   try {
-    const r = await functions.insert(fn);
+    const r = await fs.insertOne(fn);
     fn._id = r._id;
   } catch (error: any) {
     throw toWriteException(error);
@@ -49,7 +45,7 @@ async function insertWithChanges(
 }
 
 function toWriteException(error: any) {
-  if (error instanceof DuplicateKeyError) {
+  if (error && error.code === 11000) {
     return new BadRequestException(
       `Value of the property .${Object.keys(error.keyValue)[0]} should unique across all documents.`
     );
@@ -111,7 +107,7 @@ export async function findByName<
   ER extends EnvRelation = EnvRelation.NotResolved,
   SR extends SecretRelation = SecretRelation.NotResolved
 >(
-  functions: FunctionRepository,
+  fs: FunctionService,
   queries: CollectionQueryFacade,
   name: string,
   options?: {resolveEnvRelations?: ER; resolveSecretRelations?: SR}
@@ -119,7 +115,7 @@ export async function findByName<
   if (typeof name != "string" || name.trim() == "") {
     throw new BadRequestException("Function name must be a non-empty string.");
   }
-  const fn = await functions.findByName(name);
+  const fn = await fs.findOne({name});
   if (!fn) return null;
   if (options?.resolveEnvRelations || options?.resolveSecretRelations) {
     return findOne(queries, functionIds().parse(fn._id), {
@@ -130,8 +126,8 @@ export async function findByName<
   return fn as Function<ER, SR>;
 }
 
-export async function insert(functions: FunctionRepository, engine: FunctionEngine, fn: Function) {
-  await insertWithChanges(functions, engine, fn);
+export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Function) {
+  await insertWithChanges(fs, engine, fn);
   await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
     await engine.createFunction(fn);
     const pkgContent = await engine.read(fn, "dependency");
@@ -141,14 +137,14 @@ export async function insert(functions: FunctionRepository, engine: FunctionEngi
   return fn;
 }
 
-export async function replace(functions: FunctionRepository, engine: FunctionEngine, fn: Function) {
+export async function replace(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   const _id = functionIds().parse(fn._id);
 
   // not sure that is necessary
   delete fn._id;
   delete fn.language;
 
-  const preFn = await functions.updateById(_id, fn).catch(error => {
+  const preFn = await fs.findOneAndUpdate({_id}, {$set: fn}).catch(error => {
     throw toWriteException(error);
   });
   if (!preFn) {
@@ -159,7 +155,7 @@ export async function replace(functions: FunctionRepository, engine: FunctionEng
 
   if (preFn.name != fn.name) {
     await engine.moveAssets(preFn, fn.name).catch(async error => {
-      await functions.replaceById(_id, preFn);
+      await fs.replaceOne({_id}, preFn);
       throw new InternalServerErrorException(
         `Failed to move the files of function ${preFn.name} to ${fn.name}: ${error?.message || error}`
       );
@@ -172,18 +168,18 @@ export async function replace(functions: FunctionRepository, engine: FunctionEng
 }
 
 export async function remove(
-  functions: FunctionRepository,
+  fs: FunctionService,
   engine: FunctionEngine,
-  logs: LogRepository,
+  logs: LogService,
   id: Id | string
 ) {
-  const fn = await functions.deleteById(functionIds().parse(id));
+  const fn = await fs.findOneAndDelete({_id: functionIds().parse(id)});
 
   if (!fn) {
     throw new NotFoundException("Couldn't find the function.");
   }
 
-  logs.deleteByFunction(fn._id.toString());
+  logs.deleteMany({function: fn._id.toString()});
 
   await engine.applyChangePlan(createPlan(fn, null));
 
@@ -192,8 +188,8 @@ export async function remove(
 }
 
 export namespace index {
-  export async function find(functions: FunctionRepository, engine: FunctionEngine, id: Id) {
-    const fn = await functions.findById(id);
+  export async function find(fs: FunctionService, engine: FunctionEngine, id: Id) {
+    const fn = await fs.findOne({_id: id});
     if (!fn) {
       throw new NotFoundException("Can not find function.");
     }
@@ -207,14 +203,14 @@ export namespace index {
   }
 
   export async function write(
-    functions: FunctionRepository,
+    fs: FunctionService,
     engine: FunctionEngine,
     id: string | Id,
     index: string
   ) {
     id = functionIds().parse(id);
 
-    const fn = await functions.findById(id);
+    const fn = await fs.findOne({_id: id});
 
     if (!fn) {
       throw new NotFoundException("Cannot find function.");
@@ -274,8 +270,8 @@ export namespace index {
 }
 
 export namespace dependencies {
-  export async function findOne(functions: FunctionRepository, engine: FunctionEngine, id: Id) {
-    const fn = await functions.findById(id);
+  export async function findOne(fs: FunctionService, engine: FunctionEngine, id: Id) {
+    const fn = await fs.findOne({_id: id});
     if (!fn) {
       throw new NotFoundException("Could not find the function.");
     }
@@ -370,12 +366,19 @@ export namespace dependencies {
 
 export namespace environment {
   export async function inject(
-    functions: FunctionRepository,
+    fs: FunctionService,
     fnId: Id,
     engine: FunctionEngine,
     envVarId: Id
   ) {
-    const res = await functions.addEnvVar(fnId, envVarId);
+    const res = await fs.findOneAndUpdate(
+      {
+        _id: fnId
+      },
+      {
+        $addToSet: {env_vars: envVarId}
+      }
+    );
     if (!res) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
@@ -383,20 +386,22 @@ export namespace environment {
     return reload(fnId, engine);
   }
 
-  export async function removeReference(functions: FunctionRepository, fnId: Id, envVarId: Id) {
-    const res = await functions.removeEnvVar(fnId, envVarId);
+  export async function removeReference(fs: FunctionService, fnId: Id, envVarId: Id) {
+    const res = await fs.findOneAndUpdate(
+      {
+        _id: fnId
+      },
+      {
+        $pull: {env_vars: envVarId}
+      }
+    );
     if (!res) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
   }
 
-  export async function eject(
-    functions: FunctionRepository,
-    fnId: Id,
-    engine: FunctionEngine,
-    envVarId: Id
-  ) {
-    await removeReference(functions, fnId, envVarId);
+  export async function eject(fs: FunctionService, fnId: Id, engine: FunctionEngine, envVarId: Id) {
+    await removeReference(fs, fnId, envVarId);
     return reload(fnId, engine);
   }
 
@@ -407,13 +412,20 @@ export namespace environment {
 
 export namespace secret {
   export async function inject(
-    functions: FunctionRepository,
+    fs: FunctionService,
     ss: SecretService,
     fnId: Id,
     engine: FunctionEngine,
     secretId: Id
   ) {
-    const fn = await functions.addSecret(fnId, secretId);
+    const fn = await fs.findOneAndUpdate(
+      {
+        _id: fnId
+      },
+      {
+        $addToSet: {secrets: secretId}
+      }
+    );
     if (!fn) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
@@ -421,8 +433,15 @@ export namespace secret {
     return reload(fn, ss, engine, secretId);
   }
 
-  export async function removeReference(functions: FunctionRepository, fnId: Id, secretId: Id) {
-    const fn = await functions.removeSecret(fnId, secretId);
+  export async function removeReference(fs: FunctionService, fnId: Id, secretId: Id) {
+    const fn = await fs.findOneAndUpdate(
+      {
+        _id: fnId
+      },
+      {
+        $pull: {secrets: secretId}
+      }
+    );
     if (!fn) {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
@@ -430,13 +449,13 @@ export namespace secret {
   }
 
   export async function eject(
-    functions: FunctionRepository,
+    fs: FunctionService,
     ss: SecretService,
     fnId: Id,
     engine: FunctionEngine,
     secretId: Id
   ) {
-    const fn = await removeReference(functions, fnId, secretId);
+    const fn = await removeReference(fs, fnId, secretId);
     return reload(fn, ss, engine, secretId);
   }
 
