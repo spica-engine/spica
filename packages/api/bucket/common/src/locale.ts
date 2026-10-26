@@ -1,14 +1,10 @@
+import {BucketDataService, BucketService} from "@spica-server/bucket-services";
 import locale from "locale";
 import {diff} from "@spica-server/core-differ";
 import {ChangeKind} from "@spica-server/interface-core";
 import {BucketCacheService} from "@spica-server/bucket-cache";
 import {Locale} from "@spica-server/interface-bucket-common";
-import {
-  Bucket,
-  BucketDataRepository,
-  BucketPreferences,
-  BucketRepository
-} from "@spica-server/interface-bucket";
+import {Bucket, BucketPreferences} from "@spica-server/interface-bucket";
 
 export function findLocale(language: string, preferences: BucketPreferences): Locale {
   const supportedLocales = new locale.Locales(Object.keys(preferences.language.available));
@@ -40,8 +36,8 @@ export function hasTranslatedProperties(schema: Bucket) {
 }
 
 export function provideLanguageFinalizer(
-  buckets: BucketRepository,
-  bucketData: BucketDataRepository,
+  bucketService: BucketService,
+  bucketDataService: BucketDataService,
   bucketCacheService?: BucketCacheService
 ) {
   return async (previousSchema: object, currentSchema: object) => {
@@ -52,30 +48,64 @@ export function provideLanguageFinalizer(
           change.path[0] == "language" &&
           change.path[1] == "available"
       )
-      .map(change => String(change.path[2]));
+      .map(change => change.path[2]);
 
     if (!deletedLanguages.length) {
       return Promise.resolve();
     }
 
-    const translatableBuckets = await buckets.findTranslatable();
+    const buckets = await bucketService
+      .aggregate<Bucket>([
+        {
+          $project: {
+            properties: {
+              $objectToArray: "$properties"
+            }
+          }
+        },
+        {
+          $match: {
+            "properties.v.options.translate": true
+          }
+        },
+        {
+          $project: {
+            properties: {
+              $filter: {
+                input: "$properties",
+                as: "property",
+                cond: {$eq: ["$$property.v.options.translate", true]}
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            properties: {
+              $arrayToObject: "$properties"
+            }
+          }
+        }
+      ])
+      .toArray();
 
     const promises = [];
 
-    for (const bucket of translatableBuckets) {
+    for (const bucket of buckets) {
       if (bucketCacheService) {
         await bucketCacheService.invalidate(bucket._id.toString());
       }
 
-      const targets: string[][] = [];
+      const targets = {};
 
       for (const fieldName of Object.keys(bucket.properties)) {
         for (const language of deletedLanguages) {
-          targets.push([fieldName, language]);
+          const target = fieldName + "." + language;
+          targets[target] = "";
         }
       }
 
-      promises.push(bucketData.unsetFields(bucket, targets));
+      promises.push(bucketDataService.children(bucket).updateMany({}, {$unset: targets}));
     }
 
     return Promise.all(promises);

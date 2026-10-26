@@ -1,21 +1,21 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {createSchema} from "@spica-server/bucket-hooks/src/module";
 import {BucketService, ServicesModule} from "@spica-server/bucket-services";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
-import {provideRepository} from "@spica-server/data";
-import {BUCKET_REPOSITORY} from "@spica-server/interface-bucket";
 import {collectionSlugFactory} from "@spica-server/bucket-hooks/src/module";
 
 describe("hook module", () => {
   describe("schema", () => {
     let module: TestingModule;
+    let database: DatabaseService;
 
     beforeEach(async () => {
       module = await Test.createTestingModule({
-        imports: [DatabaseTestingModule.standalone()],
-        providers: [provideRepository(BUCKET_REPOSITORY)]
+        imports: [DatabaseTestingModule.standalone()]
       }).compile();
+
+      database = module.get(DatabaseService);
     });
 
     afterEach(async () => {
@@ -45,7 +45,7 @@ describe("hook module", () => {
         additionalProperties: false
       };
 
-      const schema = await createSchema(module.get(BUCKET_REPOSITORY));
+      const schema = await createSchema(database);
       expect(schema).toEqual(expectedSchema);
     });
   });
@@ -69,19 +69,19 @@ describe("hook module", () => {
     });
     it("should return title of bucket", async () => {
       const factory = collectionSlugFactory(bs);
-      const bucket = await bs.insert(bucketSchema);
+      const bucket = await bs.insertOne(bucketSchema);
       const title = await factory(`bucket_${bucket._id.toHexString()}`);
       expect(title).toEqual("bucket title");
     });
     it("should return the given collection name as is if it's not a bucket collection", async () => {
       const factory = collectionSlugFactory(bs);
-      await bs.insert(bucketSchema);
+      await bs.insertOne(bucketSchema);
       const title = await factory("not_collection_name");
       expect(title).toEqual("not_collection_name");
     });
     it("should return the given collection name as is if bucket not found", async () => {
       const factory = collectionSlugFactory(bs);
-      await bs.insert(bucketSchema);
+      await bs.insertOne(bucketSchema);
       const collName = `bucket_${new ObjectId()}`;
       const title = await factory(collName);
       expect(title).toEqual(collName);

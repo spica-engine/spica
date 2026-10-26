@@ -6,19 +6,19 @@ import {
   DeleteResult,
   InsertOneResult
 } from "@spica-server/database-testing";
-import {MongoHistoryRepository} from "@spica-server/data-mongodb";
+import {HistoryService} from "@spica-server/bucket-history";
 import {diff} from "@spica-server/core-differ";
 
 describe("History Service", () => {
   let module: TestingModule;
-  let historyService: MongoHistoryRepository;
+  let historyService: HistoryService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.create()],
-      providers: [MongoHistoryRepository]
+      providers: [HistoryService]
     }).compile();
-    historyService = module.get(MongoHistoryRepository);
+    historyService = module.get(HistoryService);
 
     //insert bucket and document
     await module.get(DatabaseService).collection("buckets").insertOne(bucket);

@@ -1,6 +1,7 @@
 import {Global, Module} from "@nestjs/common";
 import {BucketService, ServicesModule, bucketIds} from "@spica-server/bucket-services";
-import {BUCKET_REPOSITORY, BucketRepository} from "@spica-server/interface-bucket";
+import {DatabaseService, Filter} from "@spica-server/database";
+import {Bucket} from "@spica-server/interface-bucket";
 import {SCHEMA, COLL_SLUG} from "@spica-server/interface-function";
 import {EventQueue} from "@spica-server/function-queue";
 import {ENQUEUER} from "@spica-server/interface-function-scheduler";
@@ -10,39 +11,43 @@ import {ChangeEnqueuer} from "./enqueuer.js";
 import {ChangeQueue} from "./queue.js";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 
-export function createSchema(bucketRepository: BucketRepository): Promise<JSONSchema7> {
+export function createSchema(db: DatabaseService): Promise<JSONSchema7> {
   const slugs = new Map<string, string>();
-  return bucketRepository.findAll().then(buckets => {
-    for (const bucket of buckets) {
-      slugs.set(bucket._id.toString(), bucket.title);
-    }
+  return db
+    .collection("buckets")
+    .find({})
+    .toArray()
+    .then(buckets => {
+      for (const bucket of buckets) {
+        slugs.set(bucket._id.toString(), bucket.title);
+      }
 
-    const schema: JSONSchema7 = {
-      $id: "http://spica.internal/function/enqueuer/bucket",
-      type: "object",
-      required: ["bucket", "type"],
-      properties: {
-        bucket: {
-          // empty enums are not allowed on schema but the client will be able to send any value if enums are empty, it's a bit weird solution to solve this problem
-          enum: slugs.size ? Array.from(slugs.keys()) : [null],
-          // @ts-ignore
-          viewEnum: slugs.size ? Array.from(slugs.values()) : [null],
-          title: "Bucket",
-          type: "string",
-          description: "Bucket id that the event will be tracked on"
+      const schema: JSONSchema7 = {
+        $id: "http://spica.internal/function/enqueuer/bucket",
+        type: "object",
+        required: ["bucket", "type"],
+        properties: {
+          bucket: {
+            // empty enums are not allowed on schema but the client will be able to send any value if enums are empty, it's a bit weird solution to solve this problem
+            enum: slugs.size ? Array.from(slugs.keys()) : [null],
+            // @ts-ignore
+            viewEnum: slugs.size ? Array.from(slugs.values()) : [null],
+            title: "Bucket",
+            type: "string",
+            description: "Bucket id that the event will be tracked on"
+          },
+          type: {
+            title: "Operation type",
+            type: "string",
+            enum: ["ALL", "INSERT", "UPDATE", "DELETE"],
+            description: "Operation type that must be performed in the specified bucket"
+          }
         },
-        type: {
-          title: "Operation type",
-          type: "string",
-          enum: ["ALL", "INSERT", "UPDATE", "DELETE"],
-          description: "Operation type that must be performed in the specified bucket"
-        }
-      },
-      additionalProperties: false
-    };
+        additionalProperties: false
+      };
 
-    return schema;
-  });
+      return schema;
+    });
 }
 
 export const collectionSlugFactory = (bs: BucketService) => {
@@ -51,7 +56,7 @@ export const collectionSlugFactory = (bs: BucketService) => {
     if (!id) {
       return Promise.resolve(collName);
     }
-    return bs.findById(bucketIds().parse(id)).then(b => (b ? b.title : collName));
+    return bs.findOne(bucketIds().parse(id) as Filter<Bucket>).then(b => (b ? b.title : collName));
   };
 };
 
@@ -83,10 +88,10 @@ export const collectionSlugFactory = (bs: BucketService) => {
     },
     {
       provide: SCHEMA,
-      useFactory: (bucketRepository: BucketRepository) => {
-        return {name: "bucket", schema: () => createSchema(bucketRepository)};
+      useFactory: (db: DatabaseService) => {
+        return {name: "bucket", schema: () => createSchema(db)};
       },
-      inject: [BUCKET_REPOSITORY]
+      inject: [DatabaseService]
     },
     {
       provide: COLL_SLUG,

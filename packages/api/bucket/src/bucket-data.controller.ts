@@ -20,9 +20,9 @@ import {
   HttpException
 } from "@nestjs/common";
 import {activity, ActivityService, createActivity} from "@spica-server/activity-services";
-import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
+import {HistoryService} from "@spica-server/bucket-history";
 import {ChangeEmitter} from "@spica-server/bucket-hooks";
-import {BucketService, bucketIds} from "@spica-server/bucket-services";
+import {BucketDataService, BucketService, bucketIds} from "@spica-server/bucket-services";
 import {
   ARRAY,
   BOOLEAN,
@@ -63,11 +63,7 @@ import {
   createBucketDataActivity
 } from "@spica-server/bucket-common";
 import {applyPatch} from "@spica-server/core-patch";
-import {
-  BUCKET_DATA_REPOSITORY,
-  BucketDataRepository,
-  BucketDocument
-} from "@spica-server/interface-bucket";
+import {BucketDocument} from "@spica-server/interface-bucket";
 import {
   BUCKET_DATA_HASH_SECRET,
   BUCKET_DATA_ENCRYPTION_SECRET
@@ -81,12 +77,12 @@ import {
 export class BucketDataController {
   constructor(
     private bs: BucketService,
-    @Inject(BUCKET_DATA_REPOSITORY) private bucketData: BucketDataRepository,
+    private bds: BucketDataService,
     private validator: Validator,
     @Inject(BUCKET_QUERY) private queries: BucketQueryFacade,
     @Inject(BUCKET_WRITE) private writes: BucketWriteFacade,
     @Optional() private changeEmitter: ChangeEmitter,
-    @Optional() @Inject(HISTORY_REPOSITORY) private history: HistoryRepository,
+    @Optional() private history: HistoryService,
     @Optional() @Inject() private activityService: ActivityService,
     @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
     @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
@@ -130,7 +126,7 @@ export class BucketDataController {
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
   ) {
-    const schema = await this.bs.findById(bucketId);
+    const schema = await this.bs.findOne({_id: bucketId});
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
@@ -175,12 +171,26 @@ export class BucketDataController {
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: {[key: string]: 1 | -1}
   ) {
-    const schema = await this.bs.findById(bucketId);
+    const schema = await this.bs.findOne({_id: bucketId});
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
-    return this.bucketData.profilerEntries(schema, {filter, limit, skip, sort});
+    const cursor = this.bds.children(schema).findOnProfiler(filter);
+
+    if (limit) {
+      cursor.limit(limit);
+    }
+
+    if (skip) {
+      cursor.skip(skip);
+    }
+
+    if (sort) {
+      cursor.sort(sort);
+    }
+
+    return cursor.toArray();
   }
 
   /**
@@ -211,7 +221,7 @@ export class BucketDataController {
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
     relation?: boolean | string[]
   ) {
-    const schema = await this.bs.findById(bucketId);
+    const schema = await this.bs.findOne({_id: bucketId});
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
@@ -280,7 +290,7 @@ export class BucketDataController {
     @Param("bucketId", ID("buckets")) bucketId: Id,
     @Body(Schema.validate(req => req.params.bucketId)) rawDocument: BucketDocument
   ) {
-    const schema = await this.bs.findById(bucketId);
+    const schema = await this.bs.findOne({_id: bucketId});
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
@@ -346,7 +356,7 @@ export class BucketDataController {
     @DocumentId("documentId", "bucketId") documentId: Id,
     @Body(Schema.validate(req => req.params.bucketId)) document: BucketDocument
   ) {
-    const schema = await this.bs.findById(bucketId);
+    const schema = await this.bs.findOne({_id: bucketId});
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
@@ -423,13 +433,15 @@ export class BucketDataController {
     @DocumentId("documentId", "bucketId") documentId: Id,
     @Body() patch: Partial<BucketDocument>
   ) {
-    const schema = await this.bs.findById(bucketId);
+    const schema = await this.bs.findOne({_id: bucketId});
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
-    const previousDocument = await this.bucketData.findById(schema, documentId);
+    const bkt = this.bds.children(schema);
+
+    const previousDocument = await bkt.findOne({_id: documentId});
 
     if (!previousDocument) {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
@@ -492,7 +504,7 @@ export class BucketDataController {
     @Param("bucketId", ID("buckets")) bucketId: Id,
     @DocumentId("documentId", "bucketId") documentId: Id
   ) {
-    const schema = await this.bs.findById(bucketId);
+    const schema = await this.bs.findOne({_id: bucketId});
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
@@ -524,10 +536,12 @@ export class BucketDataController {
     }
 
     if (this.history) {
-      await this.history.deleteByDocument(documentId);
+      await this.history.deleteMany({
+        document_id: documentId
+      });
     }
 
-    await clearRelations(this.bs, this.bucketData, bucketId, documentId);
+    await clearRelations(this.bs, bucketId, documentId);
 
     const dependents = getDependents(schema, deletedDocument);
 

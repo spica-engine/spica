@@ -1,4 +1,4 @@
-import {BucketService, bucketIds} from "@spica-server/bucket-services";
+import {BucketService} from "@spica-server/bucket-services";
 import {Id} from "@spica-server/interface-data";
 import {deepCopy} from "@spica-server/core-patch";
 import {setPropertyByPath} from "./schema.js";
@@ -9,7 +9,7 @@ import {
   RelationDefinition,
   RelationResolver
 } from "@spica-server/interface-bucket-common";
-import {Bucket, BucketDataRepository, BucketDocument} from "@spica-server/interface-bucket";
+import {Bucket, BucketDocument} from "@spica-server/interface-bucket";
 
 export function findRelations(
   schema: any,
@@ -169,6 +169,29 @@ function createRelationPaths(relationMap: RelationMap): string[] {
   return paths;
 }
 
+function assertRelationType(type: RelationType) {
+  if (type != RelationType.One && type != RelationType.Many) {
+    throw new Error(`unknown relation type ${type}`);
+  }
+}
+
+export function getUpdateParams(
+  target: string,
+  type: RelationType,
+  documentId: string
+): {filter: object; update: object} {
+  assertRelationType(type);
+
+  if (type == RelationType.One) {
+    return {filter: {[target]: documentId}, update: {$unset: {[target]: ""}}};
+  } else if (type == RelationType.Many) {
+    return {
+      filter: {[target]: {$in: [documentId]}},
+      update: {$pull: {[target]: documentId}}
+    };
+  }
+}
+
 export function isObject(schema: any) {
   return schema.type == "object";
 }
@@ -196,21 +219,17 @@ export function hasRelationChanges(previousSchema: any, currentSchema: any) {
   return false;
 }
 
-export async function clearRelations(
-  bucketService: BucketService,
-  bucketData: BucketDataRepository,
-  bucketId: Id,
-  documentId: Id
-) {
-  const buckets = (await bucketService.findAll()).filter(
-    bucket => !bucketIds().equals(bucket._id, bucketId)
-  );
+export async function clearRelations(bucketService: BucketService, bucketId: Id, documentId: Id) {
+  const buckets = await bucketService.find({_id: {$ne: bucketId}});
 
   for (const bucket of buckets) {
     const targets = findRelations(bucket.properties, bucketId.toString(), "", new Map());
 
     for (const [target, type] of targets.entries()) {
-      await bucketData.clearRelation(bucket, target, type, documentId.toString());
+      const updateParams = getUpdateParams(target, type, documentId.toString());
+      await bucketService
+        .collection(`bucket_${bucket._id.toString()}`)
+        .updateMany(updateParams.filter, updateParams.update);
     }
   }
 }

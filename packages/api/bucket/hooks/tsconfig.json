@@ -37,6 +37,9 @@
       "path": "../../function/enqueuer"
     },
     {
+      "path": "../../../database"
+    },
+    {
       "path": "../services"
     },
     {
@@ -44,9 +47,6 @@
     },
     {
       "path": "../../../database/testing"
-    },
-    {
-      "path": "../../../data"
     }
   ]
 }

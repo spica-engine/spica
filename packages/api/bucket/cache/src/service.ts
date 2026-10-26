@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {BUCKET_REPOSITORY, BucketRepository} from "@spica-server/interface-bucket";
+import {DatabaseService} from "@spica-server/database";
 import cron from "cron";
 import {CACHE_MANAGER} from "@nestjs/cache-manager";
 import {Cache} from "cache-manager";
@@ -13,7 +13,7 @@ export class BucketCacheService {
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    @Inject(BUCKET_REPOSITORY) private buckets: BucketRepository
+    private db: DatabaseService
   ) {
     if (!this.invalidateJob) {
       this.invalidateJob = cron.CronJob.from({
@@ -24,8 +24,25 @@ export class BucketCacheService {
     }
   }
 
-  private getRelatedBucketIds(bucketId: string): Promise<string[]> {
-    return this.buckets.findReferencing(bucketId);
+  private async getRelatedBucketIds(bucketId: string): Promise<string[]> {
+    return this.db
+      .collection("buckets")
+      .aggregate([
+        {
+          $project: {
+            properties: {
+              $objectToArray: "$properties"
+            }
+          }
+        },
+        {
+          $match: {
+            "properties.v.bucketId": bucketId
+          }
+        }
+      ])
+      .toArray()
+      .then(buckets => buckets.map(bucket => bucket._id.toString()));
   }
 
   reset() {

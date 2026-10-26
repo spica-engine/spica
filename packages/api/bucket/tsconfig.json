@@ -34,9 +34,6 @@
       "path": "../../interface/core"
     },
     {
-      "path": "../../interface/bucket/history"
-    },
-    {
       "path": "../../interface/bucket/common"
     },
     {
@@ -47,6 +44,9 @@
     },
     {
       "path": "../../interface/activity"
+    },
+    {
+      "path": "../../database"
     },
     {
       "path": "../../data"

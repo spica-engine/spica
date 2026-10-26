@@ -8,7 +8,7 @@ import {
 } from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {ActivityService} from "@spica-server/activity-services";
-import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
+import {HistoryService} from "@spica-server/bucket-history";
 import {ChangeEmitter} from "@spica-server/bucket-hooks";
 import {BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
@@ -26,6 +26,7 @@ import {
 } from "graphql";
 import {makeExecutableSchema} from "@graphql-tools/schema";
 import {mergeResolvers, mergeTypeDefs} from "@graphql-tools/merge";
+import {BucketDataService} from "@spica-server/bucket-services";
 import {
   clearRelations,
   getDependents,
@@ -42,13 +43,7 @@ import {
   BucketWriteFacade
 } from "@spica-server/interface-bucket-common";
 import {FindResponse} from "@spica-server/interface-bucket-graphql";
-import {
-  Bucket,
-  BUCKET_DATA_HASH_SECRET,
-  BUCKET_DATA_REPOSITORY,
-  BucketDataRepository,
-  BucketDocument
-} from "@spica-server/interface-bucket";
+import {Bucket, BUCKET_DATA_HASH_SECRET, BucketDocument} from "@spica-server/interface-bucket";
 import {BUCKET_DATA_ENCRYPTION_SECRET} from "@spica-server/interface-bucket";
 import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
 
@@ -148,19 +143,19 @@ export class GraphqlController implements OnModuleInit {
   constructor(
     private adapterHost: HttpAdapterHost,
     private bs: BucketService,
-    @Inject(BUCKET_DATA_REPOSITORY) private bucketData: BucketDataRepository,
+    private bds: BucketDataService,
     private guardService: GuardService,
     private validator: Validator,
     @Inject(BUCKET_QUERY) private queries: BucketQueryFacade,
     @Inject(BUCKET_WRITE) private writes: BucketWriteFacade,
     @Optional() private activity: ActivityService,
-    @Optional() @Inject(HISTORY_REPOSITORY) private history: HistoryRepository,
+    @Optional() private history: HistoryService,
     @Optional() private hookChangeEmitter: ChangeEmitter,
     @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
     @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
   ) {
     this.bs.schemaChangeEmitter.subscribe(() => {
-      this.bs.findAll().then(buckets => {
+      this.bs.find().then(buckets => {
         this.schemaWarnings = [];
 
         if (!buckets.length) {
@@ -508,7 +503,7 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
-      let previousDocument = await this.bucketData.findById(bucket, documentId);
+      let previousDocument = await this.bds.children(bucket).findOne({_id: documentId});
       if (this.encryptionSecret) {
         previousDocument = decryptDocumentFields(
           previousDocument,
@@ -614,10 +609,12 @@ export class GraphqlController implements OnModuleInit {
         return;
       }
 
-      await clearRelations(this.bs, this.bucketData, bucket._id, documentId);
+      await clearRelations(this.bs, bucket._id, documentId);
 
       if (this.history) {
-        await this.history.deleteByDocument(documentId);
+        await this.history.deleteMany({
+          document_id: documentId
+        });
       }
 
       if (this.activity) {

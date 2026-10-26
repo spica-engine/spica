@@ -1,19 +1,19 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {MongoBucketDataRepository} from "@spica-server/data-mongodb";
+import {BucketDataService} from "@spica-server/bucket-services";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {BUCKET_DATA_LIMIT} from "@spica-server/interface-bucket";
 
 describe("Bucket Data Service", () => {
   describe("basics", () => {
     let module: TestingModule;
-    let bds: MongoBucketDataRepository;
+    let bds: BucketDataService;
 
     beforeEach(async () => {
       module = await Test.createTestingModule({
         imports: [DatabaseTestingModule.standalone()],
-        providers: [MongoBucketDataRepository]
+        providers: [BucketDataService]
       }).compile();
-      bds = module.get(MongoBucketDataRepository);
+      bds = module.get(BucketDataService);
     });
 
     afterEach(() => module.close());
@@ -45,15 +45,15 @@ describe("Bucket Data Service", () => {
   describe("with bucket-data limits", () => {
     let module: TestingModule;
     let db: DatabaseService;
-    let bds: MongoBucketDataRepository;
+    let bds: BucketDataService;
 
     beforeEach(async () => {
       module = await Test.createTestingModule({
         imports: [DatabaseTestingModule.standalone()],
-        providers: [{provide: BUCKET_DATA_LIMIT, useValue: 2}, MongoBucketDataRepository]
+        providers: [{provide: BUCKET_DATA_LIMIT, useValue: 2}, BucketDataService]
       }).compile();
       db = module.get(DatabaseService);
-      bds = module.get(MongoBucketDataRepository);
+      bds = module.get(BucketDataService);
     });
 
     afterEach(() => module.close());

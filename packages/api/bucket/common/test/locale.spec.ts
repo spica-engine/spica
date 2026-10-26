@@ -1,20 +1,32 @@
 import {provideLanguageFinalizer} from "@spica-server/bucket-common";
 
 describe("provideLanguageChangeUpdater", () => {
+  let childrenSpy: jest.SpyInstance;
   const translatableBuckets = [
     {_id: "bucket1", properties: {title: {}, description: {}}},
     {_id: "bucket2", properties: {name: {}}}
   ];
 
-  const bucketData: any = {
-    unsetFields: jest.fn(() => Promise.resolve())
+  const bucketDataService: any = {
+    updateMany: jest.fn(() => Promise.resolve()),
+    children: schema => bucketDataService
   };
 
-  const buckets: any = {
-    findTranslatable: jest.fn(() => Promise.resolve(translatableBuckets))
+  const bucketService: any = {
+    aggregate: jest.fn(() => ({
+      toArray: () => Promise.resolve(translatableBuckets)
+    }))
   };
 
-  const updaterFactory = provideLanguageFinalizer(buckets, bucketData);
+  const updaterFactory = provideLanguageFinalizer(bucketService, bucketDataService);
+
+  beforeAll(() => {
+    childrenSpy = jest.spyOn(bucketDataService, "children");
+  });
+
+  afterEach(() => {
+    childrenSpy.mockClear();
+  });
 
   it("should return updater function", () => {
     expect(typeof updaterFactory == "function").toBe(true);
@@ -62,26 +74,47 @@ describe("provideLanguageChangeUpdater", () => {
       }
     );
 
-    expect(buckets.findTranslatable).toHaveBeenCalledTimes(1);
+    expect(bucketService.aggregate).toHaveBeenCalledTimes(1);
+    expect(bucketService.aggregate).toHaveBeenCalledWith([
+      {
+        $project: {
+          properties: {
+            $objectToArray: "$properties"
+          }
+        }
+      },
+      {
+        $match: {
+          "properties.v.options.translate": true
+        }
+      },
+      {
+        $project: {
+          properties: {
+            $filter: {
+              input: "$properties",
+              as: "property",
+              cond: {$eq: ["$$property.v.options.translate", true]}
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          properties: {
+            $arrayToObject: "$properties"
+          }
+        }
+      }
+    ]);
 
-    expect(bucketData.unsetFields).toHaveBeenCalledTimes(2);
-    expect(bucketData.unsetFields.mock.calls).toEqual([
-      [
-        translatableBuckets[0],
-        [
-          ["title", "fr"],
-          ["title", "de"],
-          ["description", "fr"],
-          ["description", "de"]
-        ]
-      ],
-      [
-        translatableBuckets[1],
-        [
-          ["name", "fr"],
-          ["name", "de"]
-        ]
-      ]
+    expect(childrenSpy).toHaveBeenCalledTimes(2);
+    expect(childrenSpy.mock.calls).toEqual([[translatableBuckets[0]], [translatableBuckets[1]]]);
+
+    expect(bucketDataService.updateMany).toHaveBeenCalledTimes(2);
+    expect(bucketDataService.updateMany.mock.calls).toEqual([
+      [{}, {$unset: {"title.fr": "", "title.de": "", "description.fr": "", "description.de": ""}}],
+      [{}, {$unset: {"name.fr": "", "name.de": ""}}]
     ]);
   });
 });

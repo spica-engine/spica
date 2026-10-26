@@ -43,12 +43,6 @@
       "path": "../../interface/data"
     },
     {
-      "path": "../../interface/core"
-    },
-    {
-      "path": "../../interface/bucket/history"
-    },
-    {
       "path": "../../interface/bucket/common"
     },
     {
@@ -68,9 +62,6 @@
     },
     {
       "path": "../../core/patch"
-    },
-    {
-      "path": "../../core/differ"
     },
     {
       "path": "../../api/bucket/expression"

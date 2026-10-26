@@ -1,12 +1,13 @@
 import {schemaDiff} from "@spica-server/core-differ";
 import {ChangeKind} from "@spica-server/interface-core";
 import {findRelations} from "@spica-server/bucket-common";
-import {BucketService, bucketIds} from "@spica-server/bucket-services";
+import {BucketDataService, BucketService, bucketIds} from "@spica-server/bucket-services";
+import {ReturnDocument} from "@spica-server/database";
 import {CollectionQueryFacade, Id} from "@spica-server/interface-data";
-import {HistoryRepository} from "@spica-server/interface-bucket-history";
+import {HistoryService} from "@spica-server/bucket-history";
 import * as expression from "@spica-server/bucket-expression";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
-import {Bucket, BucketDataRepository} from "@spica-server/interface-bucket";
+import {Bucket} from "@spica-server/interface-bucket";
 
 export async function find(
   queries: CollectionQueryFacade,
@@ -19,7 +20,7 @@ export async function find(
 }
 
 export function findOne(bs: BucketService, id: Id): Promise<Bucket> {
-  return bs.findById(id);
+  return bs.findOne({_id: id});
 }
 
 export async function insert(bs: BucketService, bucket: Bucket) {
@@ -29,7 +30,7 @@ export async function insert(bs: BucketService, bucket: Bucket) {
     bucket._id = bucketIds().parse(bucket._id);
   }
 
-  await bs.insert(bucket);
+  await bs.insertOne(bucket);
 
   bs.emitSchemaChanges();
 
@@ -38,8 +39,8 @@ export async function insert(bs: BucketService, bucket: Bucket) {
 
 export async function replace(
   bs: BucketService,
-  bucketData: BucketDataRepository,
-  history: HistoryRepository,
+  bds: BucketDataService,
+  history: HistoryService,
   bucket: Bucket
 ) {
   ruleValidation(bucket);
@@ -48,14 +49,16 @@ export async function replace(
   const _id = bucketIds().parse(bucket._id);
   delete bucket._id;
 
-  const previousSchema = await bs.findById(_id);
+  const previousSchema = await bs.findOne({_id});
   if (!previousSchema) {
     throw new NotFoundException(`Bucket with ID ${_id} does not exist.`);
   }
 
-  const currentSchema = await bs.replaceById(_id, bucket);
+  const currentSchema = await bs.findOneAndReplace({_id}, bucket, {
+    returnDocument: ReturnDocument.AFTER
+  });
 
-  await updateDocumentsOnChange(bucketData, previousSchema, currentSchema);
+  await updateDocumentsOnChange(bds, previousSchema, currentSchema);
 
   bs.emitSchemaChanges();
 
@@ -68,8 +71,8 @@ export async function replace(
 
 export async function remove(
   bs: BucketService,
-  bucketData: BucketDataRepository,
-  history: HistoryRepository,
+  bds: BucketDataService,
+  history: HistoryService,
   id: string | Id
 ) {
   const schema = await bs.drop(bucketIds().parse(id));
@@ -77,9 +80,9 @@ export async function remove(
   if (schema) {
     const promises = [];
 
-    promises.push(clearRelationsOnDrop(bs, bucketData, schema._id));
+    promises.push(clearRelationsOnDrop(bs, bds, schema._id));
     if (history) {
-      promises.push(history.deleteByBucket(schema._id));
+      promises.push(history.deleteMany({bucket_id: schema._id}));
     }
 
     await Promise.all(promises);
@@ -125,7 +128,7 @@ function ruleValidation(schema: Bucket) {
 }
 
 async function updateDocumentsOnChange(
-  bucketData: BucketDataRepository,
+  bucketDataService: BucketDataService,
   previousSchema: Bucket,
   currentSchema: Bucket
 ) {
@@ -146,21 +149,28 @@ async function updateDocumentsOnChange(
 
       return true;
     })
-    .map(change => change.path);
+    // for array targets
+    .map(change => change.path.join(".").replace(/\/\[0-9]\*\//g, "$[]"));
 
-  if (!targets.length) {
+  const unsetFields = {};
+
+  for (const target of targets) {
+    unsetFields[target] = "";
+  }
+
+  if (!Object.keys(unsetFields).length) {
     return;
   }
 
-  await bucketData.unsetFields(previousSchema, targets);
+  await bucketDataService.children(previousSchema).updateMany({}, {$unset: unsetFields});
 }
 
 async function clearRelationsOnDrop(
   bucketService: BucketService,
-  bucketData: BucketDataRepository,
+  bucketDataService: BucketDataService,
   bucketId: Id
 ) {
-  const buckets = await bucketService.findAll();
+  const buckets = await bucketService.find();
 
   const updatePromises = [];
 
@@ -169,18 +179,24 @@ async function clearRelationsOnDrop(
       findRelations(bucket.properties, bucketId.toString(), "", new Map()).keys()
     );
 
-    if (targets.length) {
+    const unsetFieldsBucket = targets.reduce((acc, current) => {
+      current = "properties." + current.replace(/\./g, ".properties.");
+      acc = {...acc, [current]: ""};
+      return acc;
+    }, {});
+
+    if (Object.keys(unsetFieldsBucket).length) {
+      updatePromises.push(bucketService.updateMany({_id: bucket._id}, {$unset: unsetFieldsBucket}));
+    }
+
+    const unsetFieldsBucketData = targets.reduce((acc, current) => {
+      acc = {...acc, [current]: ""};
+      return acc;
+    }, {});
+
+    if (Object.keys(unsetFieldsBucketData).length) {
       updatePromises.push(
-        bucketService.unsetProperties(
-          bucket._id,
-          targets.map(target => "properties." + target.replace(/\./g, ".properties."))
-        )
-      );
-      updatePromises.push(
-        bucketData.unsetFields(
-          bucket,
-          targets.map(target => target.split("."))
-        )
+        bucketDataService.children(bucket).updateMany({}, {$unset: unsetFieldsBucketData})
       );
     }
   }

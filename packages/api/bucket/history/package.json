@@ -16,7 +16,9 @@
   "dependencies": {
     "@nestjs/common": "^10.4.22",
     "@spica-server/bucket-services": "workspace:*",
+    "@spica-server/core-differ": "workspace:*",
     "@spica-server/data": "workspace:*",
+    "@spica-server/database": "workspace:*",
     "@spica-server/interface-bucket": "workspace:*",
     "@spica-server/interface-bucket-history": "workspace:*",
     "@spica-server/interface-core": "workspace:*",

@@ -25,7 +25,13 @@
       "path": "../../../interface/bucket"
     },
     {
+      "path": "../../../database"
+    },
+    {
       "path": "../../../data"
+    },
+    {
+      "path": "../../../core/differ"
     },
     {
       "path": "../services"

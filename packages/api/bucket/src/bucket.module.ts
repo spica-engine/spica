@@ -1,16 +1,9 @@
 import {DynamicModule, Global, Inject, Module, Optional, Type} from "@nestjs/common";
-import {HistoryModule} from "@spica-server/bucket-history";
-import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
+import {HistoryModule, HistoryService} from "@spica-server/bucket-history";
 import {HookModule} from "@spica-server/bucket-hooks";
 import {RealtimeModule} from "@spica-server/bucket-realtime";
 import {SchemasRealtimeModule} from "@spica-server/bucket-schemas-realtime";
-import {BucketService, ServicesModule} from "@spica-server/bucket-services";
-import {
-  BUCKET_DATA_REPOSITORY,
-  BUCKET_REPOSITORY,
-  BucketDataRepository,
-  BucketRepository
-} from "@spica-server/interface-bucket";
+import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket-services";
 import {SchemaModule, Validator} from "@spica-server/core-schema";
 import {createHashFormat, createEncryptedFormat} from "@spica-server/core-schema";
 import {PreferenceService} from "@spica-server/preference-services";
@@ -125,10 +118,9 @@ export class BucketModule {
   constructor(
     preference: PreferenceService,
     bs: BucketService,
-    @Inject(BUCKET_REPOSITORY) buckets: BucketRepository,
-    @Inject(BUCKET_DATA_REPOSITORY) bucketData: BucketDataRepository,
+    bds: BucketDataService,
     validator: Validator,
-    @Optional() @Inject(HISTORY_REPOSITORY) private history: HistoryRepository,
+    @Optional() private history: HistoryService,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
     preference.default({
@@ -142,8 +134,8 @@ export class BucketModule {
       }
     });
 
-    registerStatusProvider(bs, buckets, bucketData);
-    registerAssetHandlers(bs, bucketData, history, validator, this.assetRepManager);
+    registerStatusProvider(bs, bds);
+    registerAssetHandlers(bs, bds, history, validator, this.assetRepManager);
   }
 }
 
@@ -164,7 +156,7 @@ export class BucketCoreModule {
         {
           provide: BUCKET_LANGUAGE_FINALIZER,
           useFactory: provideLanguageFinalizer,
-          inject: [BUCKET_REPOSITORY, BUCKET_DATA_REPOSITORY]
+          inject: [BucketService, BucketDataService]
         }
       ],
       exports: [BUCKET_LANGUAGE_FINALIZER]

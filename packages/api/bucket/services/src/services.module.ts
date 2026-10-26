@@ -2,14 +2,12 @@ import {Module, Global, DynamicModule} from "@nestjs/common";
 import {BucketService} from "./bucket.service.js";
 import {BucketChangeDispatcher} from "./change-dispatcher.js";
 import {SchemaModule} from "@spica-server/core-schema";
+import {BucketDataService} from "./bucket-data.service.js";
 import {
   BUCKET_DATA_LIMIT,
   BUCKET_DATA_HASH_SECRET,
-  BUCKET_DATA_ENCRYPTION_SECRET,
-  BUCKET_DATA_REPOSITORY,
-  BUCKET_REPOSITORY
+  BUCKET_DATA_ENCRYPTION_SECRET
 } from "@spica-server/interface-bucket";
-import {provideRepository} from "@spica-server/data";
 
 @Global()
 @Module({})
@@ -27,15 +25,13 @@ export class ServicesModule {
         {provide: BUCKET_DATA_HASH_SECRET, useValue: hashSecret},
         {provide: BUCKET_DATA_ENCRYPTION_SECRET, useValue: encryptionSecret},
         BucketChangeDispatcher,
-        provideRepository(BUCKET_REPOSITORY),
-        provideRepository(BUCKET_DATA_REPOSITORY),
-        BucketService
+        BucketService,
+        BucketDataService
       ],
       exports: [
         BucketChangeDispatcher,
         BucketService,
-        BUCKET_REPOSITORY,
-        BUCKET_DATA_REPOSITORY,
+        BucketDataService,
         BUCKET_DATA_LIMIT,
         BUCKET_DATA_HASH_SECRET,
         BUCKET_DATA_ENCRYPTION_SECRET

@@ -1,5 +1,6 @@
 import {
   findRelations,
+  getUpdateParams,
   isArray,
   isObject,
   isDesiredRelation,
@@ -72,6 +73,22 @@ describe("Relation", () => {
         ["root_relation", "onetoone"]
       ])
     );
+  });
+
+  it("should get update operation params for one to one relation", () => {
+    const updateParams = getUpdateParams("test_key", RelationType.One, "document_id");
+    expect(updateParams).toEqual({
+      filter: {test_key: "document_id"},
+      update: {$unset: {test_key: ""}}
+    });
+  });
+
+  it("should get update operation params for one to many relation", () => {
+    const updateParams = getUpdateParams("test_key", RelationType.Many, "document_id");
+    expect(updateParams).toEqual({
+      filter: {test_key: {$in: ["document_id"]}},
+      update: {$pull: {test_key: "document_id"}}
+    });
   });
 
   describe("relationMap and resolving relation of bucket schema", () => {

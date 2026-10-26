@@ -19,9 +19,6 @@
       "path": "../../../interface/data"
     },
     {
-      "path": "../../../interface/bucket/history"
-    },
-    {
       "path": "../../../interface/bucket/graphql"
     },
     {
@@ -50,6 +47,9 @@
     },
     {
       "path": "../hooks"
+    },
+    {
+      "path": "../history"
     },
     {
       "path": "../common"
