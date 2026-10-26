@@ -119,7 +119,7 @@ Later parts build on these. Keep them stable once merged, and record their final
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Adapter registration | `DataModule.forRoot(adapter)` with `DataAdapter = {engine, module}`; `MongoDataAdapter.forRoot(uri, options)` and `MongoDataAdapter.forExistingConnection()`. `DATA_ENGINE` names the bound engine. |
 | Id type              | `Id`, `IdType` (`parse`, `isValid`, `generate`, `is`, `equals`, `serialize`), `IdTypes` (`forCollection(name)`, `forBucket(bucketId)` (async), `unscoped()`), token `ID_TYPES`. Static code uses `ids()`. |
-| Id param pipe        | `ID(collection)` for `@Param`, `idTransform(collection)` for composed pipes, `@DocumentId(documentParam, bucketParam)` for bucket documents. Invalid ids answer `400 Invalid id.` as before. |
+| Id param pipe        | `ID(collection)` for `@Param`, `idTransform(collection)` for composed pipes, `@DocumentId(documentParam, bucketParam)` for bucket documents. Invalid ids answer `400 Invalid id.` as before, and so does a `forBucket` that rejects, so an adapter that looks the bucket up can throw. |
 | Query facade         | `COLLECTION_QUERY` (`CollectionQueryFacade.find/findOne/paginate(collection, ReadSpec, CountStrategy)`) and `BUCKET_QUERY` (`BucketQueryFacade`, in `interface-bucket-common`). `ReadSpec`: `id, resourceFilter, filter, filterReplacers, where, createdBetween, relations, fields, sort, skip, limit`. `CountStrategy`: `"estimate-unless-filtered" \| "exact"`. Relations resolve through per-collection read profiles in the adapter. |
 | Write facade         | `BUCKET_WRITE` (`BucketWriteFacade.insert/replace/patch/delete`, in `interface-bucket-common`), with `returnDocument: "before" \| "after"`. |
 | Repository pattern   | One `XRepository` interface and `X_REPOSITORY` token per domain in `packages/interface/<domain>`, bound with `provideRepository(X_REPOSITORY)` through the adapter's `REPOSITORY_CLASSES`. Tokens: refresh token, apikey, strategy, policy, identity, user, verification, function, function log, function log sink, function asset, webhook, webhook log, bucket, bucket data, history, dashboard, asset, activity, config, env var, secret, preference, status, storage, replication job and command. Unique index violations surface as `DuplicateKeyError`. |
@@ -144,10 +144,15 @@ Also added: `COLLECTION_NAMES` (lists collections for the function trigger schem
   - `bucket/expression` builtins and converter: ACL rules render to MongoDB filters with ObjectIds (Part 7).
   - `bucket/graphql/src/schema.ts`: GraphQL where arguments render to MongoDB filters (Part 8).
   - `storage/src/body.ts`: `application/bson` is a request body format, not database access.
+- `resourceFilterFunction` in the action guard still builds `{_id: {$in}}` and `{_id: {$nin}}` itself. The import rule doesn't catch it because ids are parsed through `ids()` and nothing is imported from MongoDB. Part 7 moves it behind the adapter.
+- `ChangeEvent` keeps MongoDB's change stream field names on purpose. Part 10 reworks the shape before the PostgreSQL source.
+- The repository interfaces repeat operations such as `findById`, `insert` and `deleteById`. The shared base interface is the last PR of Part 3.
+- `legacyPlan` in `packages/data/mongodb/test/collection-query.spec.ts` rebuilds the old `PipelineBuilder` plan to prove the facade changed nothing. Part 8 removes it.
 - Behaviour edges:
   - apikey and webhook lists with `sort={}` or `limit=0` used to answer 500 and now succeed.
   - `Content-language` is no longer sent when a bucket read fails.
   - Webhook log `succeed` filters match by plain equality instead of `$eq`.
   - Asset `find` passes the client filter through unchanged; it does not gain the facade's id and date coercion.
   - Closing a change feed subscription closes its change stream without waiting for the close to finish.
+  - `@ResourceFilter()` without an argument is tolerated and means the same as `{pure: true}`: the raw include and exclude lists.
 
