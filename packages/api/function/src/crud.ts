@@ -9,25 +9,15 @@ import {
 } from "@spica-server/interface-function";
 import {createPlan, refreshPlan, secretRefreshPlan} from "./change.js";
 import {ids} from "@spica-server/data";
-import {CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {Id} from "@spica-server/interface-data";
 import {FunctionEngine} from "./engine.js";
 import {LogService} from "@spica-server/function-log";
 import {BadRequestException, InternalServerErrorException, NotFoundException} from "@nestjs/common";
+import {FunctionPipelineBuilder} from "./pipeline.builder.js";
 import fs from "fs";
 import * as readline from "readline";
 
-const collection = "function";
-
-export const functionIds = () => ids().forCollection(collection);
-
-const HIDDEN_SECRET_VALUES = {"secrets.value": 0} as const;
-
-function relations(env: EnvRelation, secret: SecretRelation): string[] {
-  return [
-    ...(env == EnvRelation.Resolved ? ["env_vars"] : []),
-    ...(secret == SecretRelation.Resolved ? ["secrets"] : [])
-  ];
-}
+export const functionIds = () => ids().forCollection("function");
 
 async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   if (fn._id) {
@@ -57,22 +47,28 @@ export async function find<
   ER extends EnvRelation = EnvRelation.NotResolved,
   SR extends SecretRelation = SecretRelation.NotResolved
 >(
-  queries: CollectionQueryFacade,
+  fs: FunctionService,
   engine: FunctionEngine,
   options?: {
     filter?: {
       resources?: object;
+      envVars?: Id[];
       index?: string;
+      language?: string;
     };
     resolveEnvRelations?: ER;
     resolveSecretRelations?: SR;
   }
 ): Promise<Function<ER, SR>[]> {
-  let fns = await queries.find<Function<ER, SR>>(collection, {
-    resourceFilter: options?.filter?.resources,
-    relations: relations(options?.resolveEnvRelations, options?.resolveSecretRelations),
-    fields: HIDDEN_SECRET_VALUES
-  });
+  const pipeline = new FunctionPipelineBuilder()
+    .filterResources(options?.filter?.resources)
+    .filterByEnvVars(options?.filter?.envVars)
+    .resolveEnvRelation(options?.resolveEnvRelations)
+    .resolveSecretRelation(options?.resolveSecretRelations)
+    .hideSecrets()
+    .filterByLanguage(options?.filter?.language)
+    .result();
+  let fns = await fs.aggregate<Function<ER, SR>>(pipeline).toArray();
 
   if (options?.filter?.index) {
     fns = await index.filter(fns, options.filter.index, engine);
@@ -84,18 +80,21 @@ export async function findOne<
   ER extends EnvRelation = EnvRelation.NotResolved,
   SR extends SecretRelation = SecretRelation.NotResolved
 >(
-  queries: CollectionQueryFacade,
+  fs: FunctionService,
   id: Id,
   options: {
     resolveEnvRelations?: ER;
     resolveSecretRelations?: SR;
   }
 ): Promise<Function<ER, SR>> {
-  const res = await queries.findOne<Function<ER, SR>>(collection, {
-    id,
-    relations: relations(options.resolveEnvRelations, options.resolveSecretRelations),
-    fields: HIDDEN_SECRET_VALUES
-  });
+  const pipeline = new FunctionPipelineBuilder()
+    .findOneIfRequested(id)
+    .resolveEnvRelation(options.resolveEnvRelations)
+    .resolveSecretRelation(options.resolveSecretRelations)
+    .hideSecrets()
+    .result();
+
+  const res = await fs.aggregate<Function<ER, SR>>(pipeline).next();
   if (!res) {
     throw new NotFoundException(`Couldn't find the function with id ${id}`);
   }
@@ -108,7 +107,6 @@ export async function findByName<
   SR extends SecretRelation = SecretRelation.NotResolved
 >(
   fs: FunctionService,
-  queries: CollectionQueryFacade,
   name: string,
   options?: {resolveEnvRelations?: ER; resolveSecretRelations?: SR}
 ): Promise<Function<ER, SR> | null> {
@@ -118,7 +116,7 @@ export async function findByName<
   const fn = await fs.findOne({name});
   if (!fn) return null;
   if (options?.resolveEnvRelations || options?.resolveSecretRelations) {
-    return findOne(queries, functionIds().parse(fn._id), {
+    return findOne(fs, functionIds().parse(fn._id), {
       resolveEnvRelations: options?.resolveEnvRelations,
       resolveSecretRelations: options?.resolveSecretRelations
     }) as Promise<Function<ER, SR>>;
@@ -467,13 +465,18 @@ export namespace secret {
 }
 
 export async function findOneForRuntime(
-  queries: CollectionQueryFacade,
+  fs: FunctionService,
   id: Id
 ): Promise<Function<EnvRelation.Resolved, SecretRelation.Resolved>> {
-  const res = await queries.findOne<Function<EnvRelation.Resolved, SecretRelation.Resolved>>(
-    collection,
-    {id, relations: relations(EnvRelation.Resolved, SecretRelation.Resolved)}
-  );
+  const pipeline = new FunctionPipelineBuilder()
+    .findOneIfRequested(id)
+    .resolveEnvRelation(EnvRelation.Resolved)
+    .resolveSecretRelation(SecretRelation.Resolved)
+    .result();
+
+  const res = await fs
+    .aggregate<Function<EnvRelation.Resolved, SecretRelation.Resolved>>(pipeline)
+    .next();
   if (!res) {
     throw new NotFoundException(`Couldn't find the function with id ${id}`);
   }
@@ -482,11 +485,15 @@ export async function findOneForRuntime(
 }
 
 export function findWithSecrets(
-  queries: CollectionQueryFacade,
+  fs: FunctionService,
   ids: Id[]
 ): Promise<Function<EnvRelation.NotResolved, SecretRelation.Resolved>[]> {
-  return queries.find<Function<EnvRelation.NotResolved, SecretRelation.Resolved>>(collection, {
-    where: ids.length ? {_id: {in: ids}} : undefined,
-    relations: relations(EnvRelation.NotResolved, SecretRelation.Resolved)
-  });
+  const pipeline = new FunctionPipelineBuilder()
+    .filterByIds(ids)
+    .resolveSecretRelation(SecretRelation.Resolved)
+    .result();
+
+  return fs
+    .aggregate<Function<EnvRelation.NotResolved, SecretRelation.Resolved>>(pipeline)
+    .toArray();
 }

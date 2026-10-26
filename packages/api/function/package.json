@@ -95,6 +95,7 @@
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/data": "workspace:*",
     "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/env_var-services": "workspace:*",
     "@spica-server/function-asset-storage": "workspace:*",
     "@spica-server/function-log": "workspace:*",

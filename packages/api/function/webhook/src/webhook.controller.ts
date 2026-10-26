@@ -19,7 +19,7 @@ import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {DatabaseService, ReturnDocument} from "@spica-server/database";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {Webhook} from "@spica-server/interface-function-webhook";
 import {WebhookInvoker} from "./invoker.js";
@@ -32,7 +32,6 @@ export class WebhookController {
     private webhookService: WebhookService,
     private invoker: WebhookInvoker,
     private database: DatabaseService,
-    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Optional() @Inject(COLL_SLUG) private collSlug: CollectionSlug
   ) {}
 
@@ -69,9 +68,23 @@ export class WebhookController {
     @ResourceFilter({collection: "webhook"}) resourceFilter: object,
     @Query("limit", DEFAULT(10), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", DEFAULT({_id: -1}), JSONP) sort: {[path: string]: 1 | -1}
+    @Query("sort", DEFAULT({_id: -1}), JSONP) sort: {[k: string]: number}
   ) {
-    return this.queries.paginate("webhook", {resourceFilter, sort, skip, limit}, "exact");
+    const aggregate = [
+      resourceFilter,
+      {
+        $facet: {
+          meta: [{$count: "total"}],
+          data: [{$sort: sort}, {$skip: skip}, {$limit: limit}]
+        }
+      },
+      {
+        $set: {
+          meta: {$ifNull: [{$arrayElemAt: ["$meta", 0]}, {total: 0}]}
+        }
+      }
+    ];
+    return this.webhookService.aggregate(aggregate).next();
   }
 
   @Get(":id")

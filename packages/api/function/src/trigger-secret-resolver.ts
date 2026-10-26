@@ -1,5 +1,5 @@
 import {Inject, Injectable, Logger} from "@nestjs/common";
-import {COLLECTION_QUERY, CollectionQueryFacade} from "@spica-server/interface-data";
+import {FunctionService} from "@spica-server/function-services";
 import {ChangeKind, TargetChange} from "@spica-server/interface-function";
 import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
 import * as CRUD from "./crud.js";
@@ -12,7 +12,7 @@ export class TriggerSecretResolver {
   private readonly logger = new Logger(TriggerSecretResolver.name);
 
   constructor(
-    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
+    private fs: FunctionService,
     @Inject(SECRET_DECRYPTOR) private secretDecryptor: SecretDecryptor
   ) {}
 
@@ -48,7 +48,7 @@ export class TriggerSecretResolver {
   ): Promise<Map<string, Map<string, string>>> {
     const idType = CRUD.functionIds();
     const ids = functionIds.filter(id => idType.isValid(id)).map(id => idType.parse(id));
-    const fns = await CRUD.findWithSecrets(this.queries, ids);
+    const fns = await CRUD.findWithSecrets(this.fs, ids);
 
     return new Map(
       fns.map(fn => [

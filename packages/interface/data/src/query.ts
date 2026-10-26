@@ -4,11 +4,6 @@ export type ResourceRef = {kind: "collection"; name: string} | {kind: "bucket"; 
 
 export type FilterReplacer = (filter: object) => Promise<object>;
 
-export type WhereCondition =
-  | {eq: unknown}
-  | {in: unknown[]}
-  | {matches: string; caseInsensitive?: boolean};
-
 export interface ReadSpec {
   id?: Id;
   resourceFilter?: object;
@@ -17,15 +12,6 @@ export interface ReadSpec {
    * Run on the caller filter before the engine's own id and date replacers.
    */
   filterReplacers?: FilterReplacer[];
-  /**
-   * Conditions the caller builds itself, unlike filter which comes from client input.
-   */
-  where?: {[field: string]: WhereCondition};
-  createdBetween?: {from: Date; to: Date};
-  /**
-   * Names the engine resolves per collection. Each engine places them where today's reads do.
-   */
-  relations?: string[];
   fields?: {[path: string]: 0 | 1};
   sort?: {[path: string]: 1 | -1};
   skip?: number;
