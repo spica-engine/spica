@@ -16,9 +16,7 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ReturnDocument} from "@spica-server/database";
-import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createApikeyActivity} from "./activity.resource.js";
 import {ApiKeyService} from "./apikey.service.js";
@@ -32,7 +30,7 @@ export class ApiKeyController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:index"))
   find(
-    @ResourceFilter({collection: "apikey"}) resourceFilter: object,
+    @ResourceFilter() resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit?: number,
     @Query("skip", DEFAULT(0), NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: {[k: string]: number}
@@ -71,7 +69,7 @@ export class ApiKeyController {
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:show"))
-  findOne(@Param("id", ID("apikey")) id: Id) {
+  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.apiKeyService.findOne({_id: id}).then(r => {
       if (!r) {
         throw new NotFoundException();
@@ -95,7 +93,7 @@ export class ApiKeyController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:update"))
   replaceOne(
-    @Param("id", ID("apikey")) id: Id,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey
   ) {
     delete apiKey.key;
@@ -112,7 +110,7 @@ export class ApiKeyController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteOne(@Param("id", ID("apikey")) id: Id) {
+  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.apiKeyService.deleteOne({_id: id}).then(r => {
       if (!r) {
         throw new NotFoundException();
@@ -128,7 +126,7 @@ export class ApiKeyController {
   @UseInterceptors(activity(createApikeyActivity))
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:policy:add"))
-  async addPolicy(@Param("id", ID("apikey")) id: Id, @Param("policyId") policyId: string) {
+  async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.apiKeyService
       .findOneAndUpdate(
         {
@@ -158,7 +156,7 @@ export class ApiKeyController {
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removePolicy(@Param("id", ID("apikey")) id: Id, @Param("policyId") policyId: string) {
+  async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.apiKeyService
       .findOneAndUpdate(
         {

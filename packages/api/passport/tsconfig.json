@@ -49,13 +49,7 @@
       "path": "../../interface/passport"
     },
     {
-      "path": "../../interface/data"
-    },
-    {
       "path": "../../database"
-    },
-    {
-      "path": "../../data"
     },
     {
       "path": "../../core/schema"

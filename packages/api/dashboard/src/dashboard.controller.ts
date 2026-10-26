@@ -25,7 +25,7 @@ export class DashboardController {
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:index"))
-  findAll(@ResourceFilter({collection: "dashboard"}) resourceFilter: object) {
+  findAll(@ResourceFilter() resourceFilter: object) {
     return CRUD.find(this.dashboardService, resourceFilter);
   }
 

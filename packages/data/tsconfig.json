@@ -8,9 +8,6 @@
   "references": [
     {
       "path": "../interface/data"
-    },
-    {
-      "path": "../core/testing"
     }
   ]
 }

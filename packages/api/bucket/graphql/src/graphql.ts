@@ -730,7 +730,7 @@ export class GraphqlController implements OnModuleInit {
         throwError(error.message, 403);
       });
     if (options.resourceFilter) {
-      return resourceFilterFunction({collection: "buckets"}, {
+      return resourceFilterFunction({}, {
         switchToHttp: () => {
           return {
             getRequest: () => req

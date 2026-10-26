@@ -1,5 +1,4 @@
-import {ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {PolicyService} from "./policy.service.js";
 import {changeFactory, Policy} from "@spica-server/interface-passport-policy";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
@@ -9,9 +8,7 @@ export async function find(ps: PolicyService, filter: object, limit?: number, sk
   return ps.paginate(filter, limit, skip);
 }
 
-const policyIds = () => ids().forCollection("policies");
-
-export function findOne(ps: PolicyService, id: Id) {
+export function findOne(ps: PolicyService, id: ObjectId) {
   return ps.findOne(id);
 }
 
@@ -23,7 +20,7 @@ export async function insert(ps: PolicyService, body: Policy) {
     throw new BadRequestException(message);
   }
   if (body._id) {
-    body._id = policyIds().parse(body._id);
+    body._id = new ObjectId(body._id);
   }
   return ps.insertOne(body);
 }
@@ -36,7 +33,7 @@ export async function replace(ps: PolicyService, policy: Policy) {
     throw new BadRequestException(message);
   }
 
-  const _id = policyIds().parse(policy._id);
+  const _id = new ObjectId(policy._id);
   delete policy._id;
   const res = await ps.replaceOne({_id}, policy);
 
@@ -48,16 +45,16 @@ export async function replace(ps: PolicyService, policy: Policy) {
 
 export async function remove(
   ps: PolicyService,
-  id: Id,
+  id: ObjectId,
   apikeyFinalizer: changeFactory,
   identityFinalizer: changeFactory
 ) {
   if (apikeyFinalizer) {
-    await apikeyFinalizer(id.toString());
+    await apikeyFinalizer(id.toHexString());
   }
 
   if (identityFinalizer) {
-    await identityFinalizer(id.toString());
+    await identityFinalizer(id.toHexString());
   }
 
   const res = await ps.deleteOne({_id: id as any});

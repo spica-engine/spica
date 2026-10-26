@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@spica-server/core-encryption": "workspace:*",
+    "@spica-server/database": "workspace:*",
     "@spica-server/interface-config": "workspace:*",
-    "@spica-server/interface-data": "workspace:*",
     "@spica-server/interface-passport-authfactor": "workspace:*"
   }
 }

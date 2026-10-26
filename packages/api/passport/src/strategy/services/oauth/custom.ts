@@ -1,6 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {ReturnDocument} from "@spica-server/database";
-import {ids} from "@spica-server/data";
+import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {
   IncomingCustomOAuth,
   IncomingOAuthPreset,
@@ -95,9 +94,7 @@ export class CustomOAuthService implements OAuthStrategyService {
   }
 
   getStrategy(id: string): Promise<Strategy> {
-    return this.strategyService.findOne({
-      _id: ids().forCollection("strategy").parse(id)
-    }) as Promise<OAuthStrategy>;
+    return this.strategyService.findOne({_id: new ObjectId(id)}) as Promise<OAuthStrategy>;
   }
 
   prepareToInsert(strategy: IncomingCustomOAuth | IncomingOAuthPreset) {
@@ -108,7 +105,7 @@ export class CustomOAuthService implements OAuthStrategyService {
     const redirectUri = `${this.options.publicUrl}/passport/user/strategy/${strategy._id}/complete`;
     return this.strategyService.findOneAndUpdate(
       {
-        _id: ids().forCollection("strategy").parse(strategy._id)
+        _id: new ObjectId(strategy._id)
       },
       {
         $set: {

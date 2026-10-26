@@ -23,7 +23,7 @@ export class SchemasRealtimeGateway implements OnGatewayConnection, OnGatewayDis
       message: error.message || "Unexpected error"
     }),
     this.realtime,
-    ctx => resourceFilterFunction({collection: this.COLLECTION}, ctx),
+    resourceFilterFunction,
     "bucket:stream"
   );
 

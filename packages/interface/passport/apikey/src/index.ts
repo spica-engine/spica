@@ -1,11 +1,11 @@
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 
 export interface ApikeyAsset {
   schema: ApiKey;
 }
 
 export interface ApiKey {
-  _id?: Id;
+  _id?: ObjectId;
   key?: string;
   name: string;
   description?: string;

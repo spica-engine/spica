@@ -25,9 +25,6 @@
       "path": "../../../interface/passport/apikey"
     },
     {
-      "path": "../../../interface/data"
-    },
-    {
       "path": "../../../interface/asset"
     },
     {
@@ -35,9 +32,6 @@
     },
     {
       "path": "../../../database"
-    },
-    {
-      "path": "../../../data"
     },
     {
       "path": "../../../core/schema"

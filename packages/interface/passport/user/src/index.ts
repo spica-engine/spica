@@ -1,15 +1,15 @@
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 import {EncryptedData} from "@spica-server/core-encryption";
 import {FactorMeta} from "@spica-server/interface-passport-authfactor";
 
 export interface SignUpStrategy {
-  _id: Id;
+  _id: ObjectId;
   title: string;
   type: string;
 }
 
 export interface User {
-  _id?: Id;
+  _id?: ObjectId;
   username: string;
   password: string;
   deactivateJwtsBefore?: number;
@@ -69,7 +69,7 @@ export interface UserOptions {
 }
 
 export interface UserVerification {
-  userId: Id;
+  userId: ObjectId;
   destination: string;
   attempts: number;
   code: string;

@@ -7,13 +7,13 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../filter"
+    },
+    {
       "path": "../../interface/database"
     },
     {
-      "path": "../../interface/data"
-    },
-    {
-      "path": "../../filter"
+      "path": ".."
     }
   ]
 }

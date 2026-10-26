@@ -4,10 +4,8 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["src/**/*.ts", "index.ts"],
-  "references": [
-    {
-      "path": "../data"
-    }
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
   ]
 }

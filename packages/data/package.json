@@ -14,7 +14,6 @@
     "@spica-server/interface-data": "workspace:*"
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.4.22",
-    "@spica-server/core-testing": "workspace:*"
+    "@nestjs/testing": "^10.4.22"
   }
 }

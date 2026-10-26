@@ -6,8 +6,7 @@ import {
   HttpException,
   HttpStatus
 } from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
-import {Id} from "@spica-server/interface-data";
+import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 import {
   User,
   USER_OPTIONS,
@@ -436,7 +435,7 @@ export class UserService extends BaseCollection<User>("user") {
   }
 
   async handlePasswordUpdate(
-    id: Id,
+    id: ObjectId,
     newPassword: string,
     skipCurrentPasswordCheck: boolean = false
   ): Promise<{password: string; deactivateJwtsBefore?: number; lastPasswords?: string[]}> {

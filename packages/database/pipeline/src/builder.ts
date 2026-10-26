@@ -1,4 +1,4 @@
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 import {IPipelineBuilder, PaginationPlan} from "@spica-server/interface-database";
 import {
   FilterReplaceManager,
@@ -25,7 +25,7 @@ export class PipelineBuilder implements IPipelineBuilder {
     return this;
   }
 
-  findOneIfRequested(entryId: Id): this {
+  findOneIfRequested(entryId: ObjectId): this {
     this.attachToPipeline(entryId, {$match: {_id: entryId}});
     return this;
   }

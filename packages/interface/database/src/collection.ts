@@ -1,5 +1,4 @@
-import {CreateCollectionOptions} from "mongodb";
-import {Id} from "@spica-server/interface-data";
+import {CreateCollectionOptions, ObjectId} from "mongodb";
 
 export interface InitializeOptions {
   entryLimit?: number;
@@ -7,7 +6,7 @@ export interface InitializeOptions {
   afterInit?: (...args: any[]) => any;
 }
 
-export type OptionalId<T> = Omit<T, "_id"> & {_id?: Id | string | number};
+export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
 
 export interface Document {
   _id: any;

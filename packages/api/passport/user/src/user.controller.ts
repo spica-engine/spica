@@ -24,9 +24,7 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ReturnDocument} from "@spica-server/database";
-import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {Factor, FactorMeta} from "@spica-server/interface-passport-authfactor";
@@ -95,7 +93,7 @@ export class UserController {
           if (!user.authFactor) {
             continue;
           }
-          this.authFactor.register(user._id.toString(), user.authFactor);
+          this.authFactor.register(user._id.toHexString(), user.authFactor);
         }
       })
       .catch(error => {
@@ -164,7 +162,7 @@ export class UserController {
     @Query("sort", JSONP) sort: object,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
-    @ResourceFilter({collection: "user"}) resourceFilter: object
+    @ResourceFilter() resourceFilter: object
   ) {
     const pipelineBuilder = await new UserPipelineBuilder(this.userService)
       .filterResources(resourceFilter)
@@ -220,11 +218,11 @@ export class UserController {
       registerPolicyAttacher("UserFullAccess")
     )
   )
-  async deleteFactor(@Param("id", ID("user")) id: Id) {
+  async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
     // deleteUserFactor only clears any in-progress activation; an already-activated factor is
     // no longer in that transient map, so existence must be derived from the persisted record.
-    this.deleteUserFactor(id.toString());
-    this.authFactor.unregister(id.toString());
+    this.deleteUserFactor(id.toHexString());
+    this.authFactor.unregister(id.toHexString());
 
     const user = await this.userService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
 
@@ -238,7 +236,7 @@ export class UserController {
     AuthGuard(),
     ActionGuard("passport:user:show", undefined, registerPolicyAttacher("UserReadOnlyAccess"))
   )
-  async findOne(@Param("id", ID("user")) id: Id) {
+  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     const pipelineBuilder = new UserPipelineBuilder(this.userService)
       .findOneIfRequested(id)
       .setVisibilityOfFields(this.hideSecretsExpression());
@@ -298,7 +296,7 @@ export class UserController {
     )
   )
   async completeFactorVerification(
-    @Param("id", ID("user")) id: Id,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body(
       Schema.validate({
         type: "object",
@@ -313,7 +311,7 @@ export class UserController {
     )
     {answer}: {answer: string}
   ) {
-    const factor = this.userFactors.get(id.toString());
+    const factor = this.userFactors.get(id.toHexString());
 
     if (!factor) {
       throw new BadRequestException("Start a factor verification before complete it.");
@@ -323,13 +321,13 @@ export class UserController {
       throw new BadRequestException(e);
     });
 
-    this.deleteUserFactor(id.toString());
+    this.deleteUserFactor(id.toHexString());
 
     if (!isVerified) {
       throw new UnauthorizedException("Verification has been failed.");
     }
 
-    this.authFactor.register(id.toString(), factor.getMeta());
+    this.authFactor.register(id.toHexString(), factor.getMeta());
 
     const meta = factor.getMeta();
     return this.userService
@@ -393,7 +391,7 @@ export class UserController {
     )
   )
   async updateSelf(
-    @Param("id", ID("user")) id: Id,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/user-self-update"))
     user: UserSelfUpdate
   ) {
@@ -422,7 +420,7 @@ export class UserController {
     ActionGuard("passport:user:update", undefined, registerPolicyAttacher("UserFullAccess"))
   )
   async updateOne(
-    @Param("id", ID("user")) id: Id,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/user-update"))
     user: Pick<User, "username" | "password" | "bannedUntil" | "deactivateJwtsBefore">
   ) {
@@ -450,13 +448,13 @@ export class UserController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", ID("user")) id: Id) {
+  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.userService.deleteOne({_id: id}).then(res => {
       if (!res) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
-      if (this.authFactor.hasFactor(id.toString())) {
-        this.authFactor.unregister(id.toString());
+      if (this.authFactor.hasFactor(id.toHexString())) {
+        this.authFactor.unregister(id.toHexString());
       }
     });
   }
@@ -465,7 +463,7 @@ export class UserController {
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:policy:add"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async addPolicy(@Param("id", ID("user")) id: Id, @Param("policyId") policyId: string) {
+  async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     const res = await this.userService.findOneAndUpdate(
       {
         _id: id
@@ -488,7 +486,7 @@ export class UserController {
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removePolicy(@Param("id", ID("user")) id: Id, @Param("policyId") policyId: string) {
+  async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     const res = await this.userService.findOneAndUpdate(
       {
         _id: id
@@ -514,7 +512,7 @@ export class UserController {
     ActionGuard("passport:user:update", "passport/user/:id")
   )
   startAuthProviderVerification(
-    @Param("id", ID("user")) id: Id,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body("value") value: string,
     @Body("provider") provider: string,
     @Body("strategy") strategy: "Otp" | "MagicLink",
@@ -536,7 +534,7 @@ export class UserController {
     ActionGuard("passport:user:update", "passport/user/:id")
   )
   async verifyProvider(
-    @Param("id", ID("user")) id: Id,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body("code") code: string,
     @Body("provider") provider: string,
     @Body("strategy") strategy: string,

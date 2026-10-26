@@ -23,7 +23,7 @@ export class EnvVarRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
       message: error.message || "Unexpected error"
     }),
     this.realtime,
-    ctx => resourceFilterFunction({collection: this.COLLECTION}, ctx),
+    resourceFilterFunction,
     "env-var:stream"
   );
 

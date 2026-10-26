@@ -9,7 +9,7 @@ import {
   Optional,
   Type
 } from "@nestjs/common";
-import {ids} from "@spica-server/data";
+import {ObjectId} from "@spica-server/database";
 import {isMatch} from "matcher";
 import {Text, Parameter, parse} from "path-to-regexp";
 import {
@@ -17,8 +17,7 @@ import {
   PrepareUser,
   PolicyResolver,
   POLICY_RESOLVER,
-  ResourceFilterFunction,
-  ResourceFilterOptions
+  ResourceFilterFunction
 } from "@spica-server/interface-passport-guard";
 
 export function wrapArray(val: string | string[]) {
@@ -30,28 +29,25 @@ export function wrapArrayFlexible<T>(val: T | T[] | undefined): T[] {
 }
 
 export const resourceFilterFunction: ResourceFilterFunction = (
-  data: ResourceFilterOptions,
+  data: {pure?: boolean} = {pure: false},
   ctx: ExecutionContext
 ) => {
   const request = ctx.switchToHttp().getRequest();
   const {include, exclude: excluded} = request.resourceFilter;
 
-  if (!("collection" in data)) {
+  if (data && data.pure) {
     return {
       includeds: include,
       excludeds: [].concat(...excluded)
     };
   }
 
-  const {collection} = data;
-  const parseId = (id: string) => ids().forCollection(collection).parse(id);
-
   let aggregation = [];
 
   for (const exclude of excluded) {
     aggregation.push({
       _id: {
-        $nin: Array.from<string>(new Set(exclude)).map(parseId)
+        $nin: Array.from<string>(new Set(exclude)).map(id => new ObjectId(id))
       }
     });
   }
@@ -59,7 +55,7 @@ export const resourceFilterFunction: ResourceFilterFunction = (
   if (include.length) {
     aggregation.push({
       _id: {
-        $in: Array.from<string>(new Set(include)).map(parseId)
+        $in: Array.from<string>(new Set(include)).map(id => new ObjectId(id))
       }
     });
   }
@@ -77,8 +73,8 @@ export const resourceFilterFunction: ResourceFilterFunction = (
   };
 };
 
-export const ResourceFilter = (data: ResourceFilterOptions) => {
-  return createParamDecorator<ResourceFilterOptions>(resourceFilterFunction, [
+export const ResourceFilter = (data = {pure: false}) => {
+  return createParamDecorator<{pure: boolean}>(resourceFilterFunction, [
     (target, key, index) => {
       Reflect.defineMetadata("resourceFilter", {key, index}, target.constructor, key);
     }

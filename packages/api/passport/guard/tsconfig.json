@@ -10,7 +10,7 @@
       "path": "../../../interface/passport/guard"
     },
     {
-      "path": "../../../data"
+      "path": "../../../database"
     },
     {
       "path": "../../../core/testing"

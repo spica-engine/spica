@@ -1,4 +1,4 @@
-import {Id} from "@spica-server/interface-data";
+import {ObjectId} from "@spica-server/database";
 import {FactorMeta} from "@spica-server/interface-passport-authfactor";
 
 export interface IdentitySettingsContents {
@@ -12,7 +12,7 @@ export interface IdentitySchema {
 }
 
 export interface Identity {
-  _id?: Id;
+  _id?: ObjectId;
   identifier: string;
   password: string;
   deactivateJwtsBefore?: number;

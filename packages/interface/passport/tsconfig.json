@@ -4,7 +4,10 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
   "references": [
     {
       "path": "user"
@@ -13,7 +16,7 @@
       "path": "identity"
     },
     {
-      "path": "../data"
+      "path": "../../database"
     }
   ]
 }

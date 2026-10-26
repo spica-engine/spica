@@ -98,7 +98,7 @@ export class FunctionController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:index"))
   index(
-    @ResourceFilter({collection: "function"}) resourceFilter,
+    @ResourceFilter() resourceFilter,
     @Query("filter", DEFAULT({}), JSONP) filter: {index?: string}
   ) {
     return CRUD.find(this.fs, this.engine, {
