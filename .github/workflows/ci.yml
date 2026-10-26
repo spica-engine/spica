@@ -14,7 +14,7 @@ env:
 
 on:
   pull_request:
-    branches: ["master", "postgresql*"]
+    branches: ["master", "postgresql"]
   merge_group:
     types: [checks_requested]
 
