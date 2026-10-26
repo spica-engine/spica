@@ -343,7 +343,7 @@ export class StorageController {
       return elements as Id[];
     }
 
-    const objects = await this.storage.findByNames(names);
+    const objects = await this.storage.find({name: {$in: names}});
     const nameToIdMap = new Map<string, Id>();
 
     for (const object of objects) {

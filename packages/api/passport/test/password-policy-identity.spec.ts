@@ -16,7 +16,11 @@ describe("Password Policy - Identity", () => {
   let adminToken: string;
 
   function setIdentityConfig(options: object) {
-    return configService.replace("identity", {module: "identity", options});
+    return configService.findOneAndReplace(
+      {module: "identity"},
+      {module: "identity", options},
+      {upsert: true}
+    );
   }
 
   beforeAll(async () => {

@@ -1,5 +1,17 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {Secret, SECRET_REPOSITORY, SecretRepository} from "@spica-server/interface-secret";
+import {
+  BaseCollection,
+  DatabaseService,
+  Filter,
+  FindOneAndDeleteOptions,
+  FindOneAndReplaceOptions,
+  FindOneAndUpdateOptions,
+  OptionalUnlessRequiredId,
+  ReturnDocument,
+  UpdateFilter,
+  WithId
+} from "@spica-server/database";
+import {Secret} from "@spica-server/interface-secret";
 import {Observable} from "rxjs";
 import {SecretChangeDispatcher, SecretChangeEvent} from "./change-dispatcher.js";
 import {Id} from "@spica-server/interface-data";
@@ -7,45 +19,62 @@ import {Id} from "@spica-server/interface-data";
 export const SECRET_ENCRYPTION_SECRET = Symbol.for("SECRET_ENCRYPTION_SECRET");
 
 @Injectable()
-export class SecretService {
+export class SecretService extends BaseCollection<Secret>("secret") {
   constructor(
-    @Inject(SECRET_REPOSITORY) private readonly secrets: SecretRepository,
+    db: DatabaseService,
     @Inject(SECRET_ENCRYPTION_SECRET) public readonly encryptionSecret: string,
     private readonly changeDispatcher: SecretChangeDispatcher
-  ) {}
-
-  findById(id: Id): Promise<Secret | null> {
-    return this.secrets.findById(id);
+  ) {
+    super(db, {
+      afterInit: () => this._coll.createIndex({key: 1}, {unique: true})
+    });
   }
 
-  async insert(secret: Secret): Promise<Secret> {
-    const result = await this.secrets.insert(secret);
-    this.dispatchChange("insert", result._id, [secret]);
+  async insertOne(doc: OptionalUnlessRequiredId<Secret>): Promise<WithId<Secret>> {
+    const result = await super.insertOne(doc);
+    this.dispatchChange("insert", result._id, [doc]);
     return result;
   }
 
-  async replaceById(id: Id, secret: Secret): Promise<Secret | null> {
-    const previous = await this.secrets.replaceById(id, secret);
+  async findOneAndUpdate(
+    filter: Filter<Secret>,
+    update: UpdateFilter<Secret> | Secret,
+    options?: FindOneAndUpdateOptions
+  ): Promise<WithId<Secret>> {
+    const previous = await super.findOneAndUpdate(filter, update, {
+      ...options,
+      returnDocument: ReturnDocument.BEFORE
+    });
     if (!previous) {
       return previous;
     }
-    const current = {...secret, _id: previous._id};
-    this.dispatchChange("replace", previous._id, [previous, current]);
-    return current;
-  }
-
-  async updateById(id: Id, fields: Partial<Secret>): Promise<Secret | null> {
-    const previous = await this.secrets.updateById(id, fields);
-    if (!previous) {
-      return previous;
-    }
-    const current = await this.secrets.findById(previous._id);
+    const current = await this.findOne({_id: previous._id});
     this.dispatchChange("update", previous._id, [previous, current]);
-    return current;
+    return options?.returnDocument == ReturnDocument.AFTER ? current : previous;
   }
 
-  async deleteById(id: Id): Promise<Secret | null> {
-    const result = await this.secrets.deleteById(id);
+  async findOneAndReplace(
+    filter: Filter<Secret>,
+    doc: Secret,
+    options?: FindOneAndReplaceOptions
+  ): Promise<WithId<Secret>> {
+    const previous = await super.findOneAndReplace(filter, doc, {
+      ...options,
+      returnDocument: ReturnDocument.BEFORE
+    });
+    if (!previous) {
+      return previous;
+    }
+    const current = {...doc, _id: previous._id};
+    this.dispatchChange("replace", previous._id, [previous, current]);
+    return options?.returnDocument == ReturnDocument.AFTER ? current : previous;
+  }
+
+  async findOneAndDelete(
+    filter: Filter<Secret>,
+    options?: FindOneAndDeleteOptions
+  ): Promise<WithId<Secret>> {
+    const result = await super.findOneAndDelete(filter, options);
     if (result) {
       this.dispatchChange("delete", result._id, [result]);
     }

@@ -1,6 +1,5 @@
 import {Global, Module} from "@nestjs/common";
-import {provideRepository} from "@spica-server/data";
-import {PREFERENCE_REPOSITORY} from "@spica-server/interface-preference";
+import {DatabaseModule} from "@spica-server/database";
 import {PreferenceService, PreferenceChangeDispatcher} from "@spica-server/preference-services";
 import {PreferenceController} from "./preference.controller.js";
 
@@ -10,12 +9,9 @@ export class PreferenceModule {
   static forRoot() {
     return {
       module: PreferenceModule,
+      imports: [DatabaseModule],
       controllers: [PreferenceController],
-      providers: [
-        provideRepository(PREFERENCE_REPOSITORY),
-        PreferenceService,
-        PreferenceChangeDispatcher
-      ],
+      providers: [PreferenceService, PreferenceChangeDispatcher],
       exports: [PreferenceService, PreferenceChangeDispatcher]
     };
   }

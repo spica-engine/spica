@@ -1,16 +1,16 @@
-import {MongoActivityRepository} from "@spica-server/data-mongodb";
+import {ActivityService} from "@spica-server/activity-services";
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {ACTIVITY_OPTIONS} from "@spica-server/interface-activity";
 
 describe("Activity Service", () => {
   let module: TestingModule;
-  let service: MongoActivityRepository;
+  let service: ActivityService;
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.create()],
       providers: [
-        MongoActivityRepository,
+        ActivityService,
         {
           provide: ACTIVITY_OPTIONS,
           useValue: {
@@ -19,7 +19,7 @@ describe("Activity Service", () => {
         }
       ]
     }).compile();
-    service = module.get(MongoActivityRepository);
+    service = module.get(ActivityService);
     await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
   });
 

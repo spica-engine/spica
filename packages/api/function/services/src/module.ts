@@ -12,7 +12,6 @@ import {
   ServicesModule as EnvVarServicesModule
 } from "@spica-server/env_var-services";
 import {SecretService} from "@spica-server/secret-services";
-import {ENV_VAR_REPOSITORY} from "@spica-server/interface-env_var";
 
 @Module({})
 export class ServicesModule {
@@ -28,7 +27,6 @@ export class ServicesModule {
           provide: FUNCTION_OPTIONS,
           useValue: options
         },
-        provideRepository(ENV_VAR_REPOSITORY),
         EnvVarService
       ],
       exports: [FunctionService, FUNCTION_REPOSITORY, FunctionAssetService]

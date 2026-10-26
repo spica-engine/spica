@@ -18,6 +18,7 @@ import {
   changeFactory
 } from "@spica-server/interface-preference";
 import {createPreferenceActivity} from "./activity.resource.js";
+import {ReturnDocument} from "@spica-server/database";
 
 @Controller("preference")
 export class PreferenceController {
@@ -47,6 +48,9 @@ export class PreferenceController {
     delete preference._id;
     preference.scope = scope;
 
-    return this.preference.replace(scope, preference);
+    return this.preference.replace({scope}, preference, {
+      upsert: true,
+      returnDocument: ReturnDocument.AFTER
+    });
   }
 }

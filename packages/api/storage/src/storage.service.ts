@@ -6,13 +6,14 @@ import {
   Logger,
   NotFoundException
 } from "@nestjs/common";
+import {BaseCollection, DatabaseService, ReturnDocument, WithId} from "@spica-server/database";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
+import {StoragePipelineBuilder} from "./storage-pipeline.builder.js";
 import {
   StorageOptions,
   StorageObject,
   StorageObjectMeta,
   STORAGE_OPTIONS,
-  STORAGE_REPOSITORY,
-  StorageRepository,
   StorageResponse,
   PaginatedStorageResponse
 } from "@spica-server/interface-storage";
@@ -20,29 +21,33 @@ import {Strategy, ProxyReadResult} from "./strategy/strategy.js";
 import {TransactionExecutor} from "@spica-server/transaction";
 
 import fs from "fs";
-import {DuplicateKeyError, ids} from "@spica-server/data";
+import {ids} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 
 const storageIds = () => ids().forCollection("storage");
 
 @Injectable()
-export class StorageService {
+export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
   private readonly logger = new Logger(StorageService.name);
 
   constructor(
-    @Inject(STORAGE_REPOSITORY) private objects: StorageRepository,
+    database: DatabaseService,
     private service: Strategy,
     @Inject(STORAGE_OPTIONS) private storageOptions: StorageOptions,
     @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
   ) {
+    super(database, {
+      afterInit: () => this._coll.createIndex({name: 1}, {unique: true})
+    });
+
     this.service.resumableUploadFinished.subscribe({
       next: async (document: StorageObjectMeta) => {
         try {
-          await this.objects.insert(document);
+          await this._coll.insertOne(document);
         } catch (exception) {
           this.service.delete(document.name);
           throw new BadRequestException(
-            exception instanceof DuplicateKeyError
+            exception.code === 11000
               ? "An object with this name already exists."
               : exception.message
           );
@@ -52,7 +57,20 @@ export class StorageService {
   }
 
   private existingSize(): Promise<number> {
-    return this.objects.totalSize();
+    return this._coll
+      .aggregate([
+        {
+          $group: {
+            _id: "",
+            total: {$sum: "$content.size"}
+          }
+        },
+        {
+          $project: {total: 1}
+        }
+      ])
+      .toArray()
+      .then((d: any) => (d.length ? d[0].total : 0));
   }
 
   async getStatus() {
@@ -85,8 +103,27 @@ export class StorageService {
     skip: number = 0,
     sort?: any
   ): Promise<StorageResponse[]> {
-    return this.objects
-      .browse({resourceFilter, path, filter, sort, skip, limit})
+    const convertedResourceFilter = StoragePipelineBuilder.createResourceFilter(
+      resourceFilter as {
+        include?: string[];
+        exclude?: string[];
+      }
+    );
+
+    const pathFilter = StoragePipelineBuilder.createPathFilter(path);
+
+    const pipelineBuilder = (
+      await new PipelineBuilder()
+        .filterResources(convertedResourceFilter)
+        .attachToPipeline(true, {$match: pathFilter})
+        .filterByUserRequest(filter)
+    ).result();
+
+    const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
+
+    return this._coll
+      .aggregate<StorageResponse>([...pipelineBuilder, ...seeking])
+      .toArray()
       .then(r => this.putUrls(r));
   }
 
@@ -129,19 +166,18 @@ export class StorageService {
     return Promise.all(urlPromises).then(() => objects);
   }
 
-  async get(id: Id): Promise<StorageObject<Buffer>> {
-    const object = await this.objects.findById(storageIds().parse(id));
+  async get(id: Id): Promise<WithId<StorageObject<Buffer>>> {
+    const object = await this._coll.findOne({_id: storageIds().parse(id)});
     if (!object) return null;
 
-    const objectWithData = object as StorageObject<Buffer>;
+    const objectWithData = object as WithId<StorageObject<Buffer>>;
     objectWithData.content.data = await this.service.read(object.name);
     return objectWithData;
   }
 
   async delete(idOrName: Id | string): Promise<void> {
-    const result = storageIds().is(idOrName)
-      ? await this.objects.deleteById(idOrName)
-      : await this.objects.deleteByName(idOrName as string);
+    const query = storageIds().is(idOrName) ? {_id: idOrName} : {name: idOrName};
+    const result = await this._coll.findOneAndDelete(query);
 
     if (!result) {
       throw new NotFoundException(`Storage object could not be found`);
@@ -151,10 +187,13 @@ export class StorageService {
     try {
       await this.service.delete(result.name);
 
-      const children = await this.objects.findByNamePrefix(result.name);
+      const escapedName = this.escapeRegex(result.name);
+      const childFilter = {name: {$regex: new RegExp(`^${escapedName}`)}};
+
+      const children = await this._coll.find(childFilter).toArray();
       await Promise.allSettled(children.map(child => this.service.delete(child.name)));
 
-      await this.objects.deleteByNamePrefix(result.name);
+      await this._coll.deleteMany(childFilter);
     } catch (error) {
       this.logger.error(
         `Failed to delete storage object ${result.name} from storage:`,
@@ -164,7 +203,7 @@ export class StorageService {
   }
 
   async deleteManyByIds(ids: Id[]): Promise<void> {
-    const objects = await this.objects.findByIds(ids);
+    const objects = await this._coll.find({_id: {$in: ids}}).toArray();
     if (objects.length === 0) {
       return;
     }
@@ -175,10 +214,13 @@ export class StorageService {
       await Promise.all(deletePromises);
 
       const folderDeletionPromises = objects.map(async object => {
-        const children = await this.objects.findByNamePrefix(object.name);
+        const escapedName = this.escapeRegex(object.name);
+        const childFilter = {name: {$regex: new RegExp(`^${escapedName}`)}};
+
+        const children = await this._coll.find(childFilter).toArray();
         await Promise.allSettled(children.map(child => this.service.delete(child.name)));
 
-        await this.objects.deleteByNamePrefix(object.name);
+        await this._coll.deleteMany(childFilter);
       });
 
       await Promise.all(folderDeletionPromises);
@@ -191,7 +233,7 @@ export class StorageService {
   }
 
   async updateMeta(_id: Id, name: string) {
-    const existing = await this.objects.findById(_id);
+    const existing = await this._coll.findOne({_id});
     if (!existing) {
       throw new NotFoundException(`Storage object ${_id} could not be found`);
     }
@@ -210,12 +252,47 @@ export class StorageService {
         }
       });
 
+      const getUpdateFilterForRename = name => {
+        const escapedName = this.escapeRegex(name);
+        return {
+          $or: [{name: name}, {name: {$regex: new RegExp(`^${escapedName}`)}}]
+        };
+      };
+
+      const getUpdatePipelineForRename = (oldName, newName) => {
+        return [
+          {
+            $set: {
+              name: {
+                $cond: [
+                  {$eq: ["$name", oldName]},
+                  newName,
+                  {
+                    $replaceOne: {
+                      input: "$name",
+                      find: oldName,
+                      replacement: newName
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ];
+      };
+
       tx.add({
         execute: async () => {
-          await this.objects.renamePrefix(oldName, name);
+          await this._coll.updateMany(
+            getUpdateFilterForRename(oldName),
+            getUpdatePipelineForRename(oldName, name)
+          );
         },
         rollback: async () => {
-          await this.objects.renamePrefix(name, oldName);
+          await this._coll.updateMany(
+            getUpdateFilterForRename(name),
+            getUpdatePipelineForRename(name, oldName)
+          );
         }
       });
 
@@ -226,7 +303,7 @@ export class StorageService {
   }
 
   async update(_id: Id, object: StorageObject<fs.ReadStream | Buffer>): Promise<StorageObjectMeta> {
-    const existing = await this.objects.findById(_id);
+    const existing = await this._coll.findOne({_id});
     if (!existing) {
       throw new NotFoundException(`Storage object ${_id} could not be found`);
     }
@@ -249,7 +326,7 @@ export class StorageService {
       delete object._id;
       object.updated_at = new Date();
 
-      return this.objects.updateById(_id, object).then(() => {
+      return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
         return {...object, _id: _id};
       });
     } catch (error) {
@@ -279,10 +356,12 @@ export class StorageService {
     tx.add({
       execute: async () => {
         try {
-          insertedObjects = await this.objects.insertAll(schemas);
+          insertedObjects = await this._coll
+            .insertMany(schemas)
+            .then(result => schemas.map((s, i) => ({...s, _id: result.insertedIds[i]})));
         } catch (exception) {
           throw new BadRequestException(
-            exception instanceof DuplicateKeyError
+            exception.code === 11000
               ? "An object with this name already exists."
               : exception.message
           );
@@ -290,8 +369,8 @@ export class StorageService {
       },
       rollback: async () => {
         if (insertedObjects) {
-          const idsToDelete = insertedObjects.map(o => o._id as Id);
-          await this.objects.deleteByIds(idsToDelete);
+          const idsToDelete = insertedObjects.map(o => o._id);
+          await this._coll.deleteMany({_id: {$in: idsToDelete}});
         }
       }
     });
@@ -326,19 +405,20 @@ export class StorageService {
     }
   }
 
-  async getByName(name: string): Promise<StorageObject<Buffer>> {
-    const object = await this.objects.findByName(name);
+  async getByName(name: string): Promise<WithId<StorageObject<Buffer>>> {
+    const object = await this._coll.findOne({name});
     if (!object) return null;
 
-    const objectWithData = object as StorageObject<Buffer>;
+    const objectWithData = object as WithId<StorageObject<Buffer>>;
     objectWithData.content.data = await this.service.read(object.name);
     return objectWithData;
   }
 
-  private getMeta(idOrName: Id | string): Promise<StorageObjectMeta | null> {
-    return storageIds().is(idOrName)
-      ? this.objects.findById(storageIds().parse(idOrName))
-      : this.objects.findByName(idOrName as string);
+  private async getMeta(idOrName: Id | string): Promise<WithId<StorageObjectMeta> | null> {
+    const query = storageIds().is(idOrName)
+      ? {_id: storageIds().parse(idOrName)}
+      : {name: idOrName as string};
+    return this._coll.findOne(query);
   }
 
   async proxyRead(
@@ -375,7 +455,7 @@ export class StorageService {
     return size;
   }
 
-  findByNames(names: string[]): Promise<StorageObjectMeta[]> {
-    return this.objects.findByNames(names);
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 }

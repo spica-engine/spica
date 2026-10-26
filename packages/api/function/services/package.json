@@ -14,7 +14,6 @@
     "@spica-server/data": "workspace:*",
     "@spica-server/env_var-services": "workspace:*",
     "@spica-server/interface-data": "workspace:*",
-    "@spica-server/interface-env_var": "workspace:*",
     "@spica-server/interface-function": "workspace:*",
     "@spica-server/interface-function-asset-storage": "workspace:*",
     "@spica-server/replication": "workspace:*",

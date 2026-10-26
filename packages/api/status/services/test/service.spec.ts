@@ -1,17 +1,17 @@
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule, DatabaseService} from "@spica-server/database-testing";
-import {MongoStatusRepository} from "@spica-server/data-mongodb";
+import {StatusService} from "../src/service";
 import {STATUS_OPTIONS} from "@spica-server/interface-status";
 
-describe("MongoStatusRepository", () => {
-  let service: MongoStatusRepository;
+describe("StatusService", () => {
+  let service: StatusService;
   let db: DatabaseService;
   let statusCollection;
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.standalone()],
       providers: [
-        MongoStatusRepository,
+        StatusService,
         {
           provide: STATUS_OPTIONS,
           useValue: {expireAfterSeconds: 60 * 60}
@@ -19,7 +19,7 @@ describe("MongoStatusRepository", () => {
       ]
     }).compile();
 
-    service = module.get(MongoStatusRepository);
+    service = module.get(StatusService);
     db = module.get(DatabaseService);
     statusCollection = db.collection("status");
   });

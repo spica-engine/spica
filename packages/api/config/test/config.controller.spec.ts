@@ -5,7 +5,7 @@ import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {ConfigModule} from "../src/config.module";
-import {CONFIG_REPOSITORY} from "@spica-server/interface-config";
+import {ConfigService} from "../src/config.service";
 import {ConfigSchemaRegistry} from "../src/config.schema.registry";
 
 describe("ConfigSchemaRegistry", () => {
@@ -168,7 +168,7 @@ describe("ConfigSchemaRegistry", () => {
 describe("ConfigController", () => {
   let request: Request;
   let app: INestApplication;
-  let configs: any;
+  let configService: ConfigService;
   let registry: ConfigSchemaRegistry;
 
   beforeEach(async () => {
@@ -182,7 +182,7 @@ describe("ConfigController", () => {
     }).compile();
 
     request = module.get(Request);
-    configs = module.get(CONFIG_REPOSITORY);
+    configService = module.get(ConfigService);
     registry = module.get(ConfigSchemaRegistry);
 
     registry.register("bucket", {
@@ -217,11 +217,11 @@ describe("ConfigController", () => {
     });
 
     it("should return all configurations", async () => {
-      await configs.insertOne({
+      await configService.insertOne({
         module: "bucket",
         options: {maxLimit: 100, enableCache: true}
       });
-      await configs.insertOne({
+      await configService.insertOne({
         module: "function",
         options: {timeout: 30000, maxMemory: 512}
       });
@@ -248,8 +248,8 @@ describe("ConfigController", () => {
     });
 
     it("should get the correct config when multiple configs exist", async () => {
-      await configs.insertOne({module: "bucket", options: {maxLimit: 100}});
-      await configs.insertOne({module: "function", options: {timeout: 30000}});
+      await configService.insertOne({module: "bucket", options: {maxLimit: 100}});
+      await configService.insertOne({module: "function", options: {timeout: 30000}});
 
       const response = await request.get("/config/function");
       expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
@@ -268,7 +268,7 @@ describe("ConfigController", () => {
     });
 
     it("should update an existing config", async () => {
-      await configs.insertOne({
+      await configService.insertOne({
         module: "bucket",
         options: {maxLimit: 100, enableCache: true}
       });
@@ -280,7 +280,7 @@ describe("ConfigController", () => {
     });
 
     it("should replace entire config on update", async () => {
-      await configs.insertOne({
+      await configService.insertOne({
         module: "bucket",
         options: {maxLimit: 100, enableCache: true}
       });

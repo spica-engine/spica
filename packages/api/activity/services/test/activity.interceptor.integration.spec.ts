@@ -3,14 +3,7 @@ import {Test} from "@nestjs/testing";
 import {activity, ActivityService} from "@spica-server/activity-services";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
-import {
-  Predict,
-  ModuleActivity,
-  ACTIVITY_OPTIONS,
-  ACTIVITY_REPOSITORY,
-  ActivityRepository
-} from "@spica-server/interface-activity";
-import {provideRepository} from "@spica-server/data";
+import {Predict, ModuleActivity, ACTIVITY_OPTIONS} from "@spica-server/interface-activity";
 
 const TestPredict: Predict = (): ModuleActivity[] => {
   return [
@@ -45,7 +38,7 @@ export class TestController {
 describe("Interceptor with a proper activity handler", () => {
   let request: Request;
   let app: INestApplication;
-  let repository: ActivityRepository;
+  let service: ActivityService;
   let insertSpy: jest.SpyInstance;
 
   beforeAll(async () => {
@@ -53,7 +46,6 @@ describe("Interceptor with a proper activity handler", () => {
       imports: [DatabaseTestingModule.create(), CoreTestingModule],
       controllers: [TestController],
       providers: [
-        provideRepository(ACTIVITY_REPOSITORY),
         ActivityService,
         {
           provide: ACTIVITY_OPTIONS,
@@ -64,11 +56,11 @@ describe("Interceptor with a proper activity handler", () => {
       ]
     }).compile();
 
-    repository = module.get(ACTIVITY_REPOSITORY);
+    service = module.get(ActivityService);
     request = module.get(Request);
     app = module.createNestApplication();
     await app.listen(request.socket);
-    insertSpy = jest.spyOn(repository, "insertMany");
+    insertSpy = jest.spyOn(service, "insertMany");
   });
 
   beforeEach(() => {

@@ -10,7 +10,7 @@
       "path": "../../../interface/status"
     },
     {
-      "path": "../../../data"
+      "path": "../../../database"
     },
     {
       "path": "../../../database/testing"

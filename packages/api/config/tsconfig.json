@@ -22,7 +22,7 @@
       "path": "../../interface/config"
     },
     {
-      "path": "../../data"
+      "path": "../../database"
     },
     {
       "path": "../../core/schema"

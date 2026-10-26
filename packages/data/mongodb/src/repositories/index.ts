@@ -22,26 +22,6 @@ import {HISTORY_REPOSITORY} from "@spica-server/interface-bucket-history";
 import {MongoBucketRepository} from "./bucket/bucket.js";
 import {MongoBucketDataRepository} from "./bucket/bucket-data.js";
 import {MongoHistoryRepository} from "./bucket/history.js";
-import {DASHBOARD_REPOSITORY} from "@spica-server/interface-dashboard";
-import {MongoDashboardRepository} from "./dashboard/dashboard.js";
-import {ASSET_REPOSITORY} from "@spica-server/interface-asset";
-import {MongoAssetRepository} from "./asset/asset.js";
-import {ACTIVITY_REPOSITORY} from "@spica-server/interface-activity";
-import {MongoActivityRepository} from "./activity/activity.js";
-import {CONFIG_REPOSITORY} from "@spica-server/interface-config";
-import {MongoConfigRepository} from "./config/config.js";
-import {ENV_VAR_REPOSITORY} from "@spica-server/interface-env_var";
-import {MongoEnvVarRepository} from "./env_var/env-var.js";
-import {SECRET_REPOSITORY} from "@spica-server/interface-secret";
-import {MongoSecretRepository} from "./secret/secret.js";
-import {PREFERENCE_REPOSITORY} from "@spica-server/interface-preference";
-import {MongoPreferenceRepository} from "./preference/preference.js";
-import {STATUS_REPOSITORY} from "@spica-server/interface-status";
-import {MongoStatusRepository} from "./status/status.js";
-import {JOB_REPOSITORY} from "@spica-server/interface-replication";
-import {MongoJobRepository} from "./replication/job.js";
-import {STORAGE_REPOSITORY} from "@spica-server/interface-storage";
-import {MongoStorageRepository} from "./storage/storage.js";
 
 export const repositoryClasses: RepositoryClasses = new Map<symbol, RepositoryClass>([
   [REFRESH_TOKEN_REPOSITORY, MongoRefreshTokenRepository],
@@ -57,15 +37,5 @@ export const repositoryClasses: RepositoryClasses = new Map<symbol, RepositoryCl
   [WEBHOOK_LOG_REPOSITORY, MongoWebhookLogRepository],
   [BUCKET_REPOSITORY, MongoBucketRepository],
   [BUCKET_DATA_REPOSITORY, MongoBucketDataRepository],
-  [HISTORY_REPOSITORY, MongoHistoryRepository],
-  [DASHBOARD_REPOSITORY, MongoDashboardRepository],
-  [ASSET_REPOSITORY, MongoAssetRepository],
-  [ACTIVITY_REPOSITORY, MongoActivityRepository],
-  [CONFIG_REPOSITORY, MongoConfigRepository],
-  [ENV_VAR_REPOSITORY, MongoEnvVarRepository],
-  [SECRET_REPOSITORY, MongoSecretRepository],
-  [PREFERENCE_REPOSITORY, MongoPreferenceRepository],
-  [STATUS_REPOSITORY, MongoStatusRepository],
-  [JOB_REPOSITORY, MongoJobRepository],
-  [STORAGE_REPOSITORY, MongoStorageRepository]
+  [HISTORY_REPOSITORY, MongoHistoryRepository]
 ]);

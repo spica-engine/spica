@@ -19,7 +19,7 @@
       "path": "../../interface/activity"
     },
     {
-      "path": "../../data"
+      "path": "../../database"
     },
     {
       "path": "../../core/schema"

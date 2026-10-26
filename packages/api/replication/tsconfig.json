@@ -16,9 +16,6 @@
       "path": "../../database"
     },
     {
-      "path": "../../data"
-    },
-    {
       "path": "../../database/testing"
     }
   ]

@@ -3,8 +3,7 @@ import {ConfigService} from "./config.service.js";
 import {ConfigChangeDispatcher} from "./config.change-dispatcher.js";
 import {ConfigController} from "./config.controller.js";
 import {ConfigSchemaRegistry} from "./config.schema.registry.js";
-import {CONFIG_REPOSITORY, REGISTER_CONFIG_SCHEMA} from "@spica-server/interface-config";
-import {provideRepository} from "@spica-server/data";
+import {REGISTER_CONFIG_SCHEMA} from "@spica-server/interface-config";
 import {SchemaModule} from "@spica-server/core-schema";
 
 @Global()
@@ -17,7 +16,6 @@ export class ConfigModule {
       controllers: [ConfigController],
       providers: [
         ConfigChangeDispatcher,
-        provideRepository(CONFIG_REPOSITORY),
         ConfigService,
         ConfigSchemaRegistry,
         {
@@ -30,13 +28,7 @@ export class ConfigModule {
           inject: [ConfigSchemaRegistry]
         }
       ],
-      exports: [
-        ConfigChangeDispatcher,
-        CONFIG_REPOSITORY,
-        ConfigService,
-        ConfigSchemaRegistry,
-        REGISTER_CONFIG_SCHEMA
-      ]
+      exports: [ConfigChangeDispatcher, ConfigService, ConfigSchemaRegistry, REGISTER_CONFIG_SCHEMA]
     };
   }
 }

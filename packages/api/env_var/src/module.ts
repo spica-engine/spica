@@ -7,8 +7,6 @@ import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {registerAssetHandlers} from "./asset.js";
 import {ASSET_REP_MANAGER} from "@spica-server/interface-asset";
 import {EnvVarRealtimeModule} from "@spica-server/env_var-realtime";
-import {provideRepository} from "@spica-server/data";
-import {ENV_VAR_REPOSITORY} from "@spica-server/interface-env_var";
 
 @Module({})
 export class EnvVarModule {
@@ -28,7 +26,7 @@ export class EnvVarModule {
       module: EnvVarModule,
       imports,
       controllers: [EnvVarController],
-      providers: [provideRepository(ENV_VAR_REPOSITORY), EnvVarService],
+      providers: [EnvVarService],
       exports: []
     };
   }

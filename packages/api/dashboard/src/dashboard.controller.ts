@@ -13,11 +13,8 @@ import {
   Inject
 } from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
-import {
-  Dashboard,
-  DASHBOARD_REPOSITORY,
-  DashboardRepository
-} from "@spica-server/interface-dashboard";
+import {DashboardService} from "./dashboard.service.js";
+import {Dashboard} from "@spica-server/interface-dashboard";
 import {Schema} from "@spica-server/core-schema";
 import {ResourceFilter} from "@spica-server/passport-guard";
 import * as CRUD from "./crud.js";
@@ -27,7 +24,7 @@ import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interfa
 @Controller("dashboard")
 export class DashboardController {
   constructor(
-    @Inject(DASHBOARD_REPOSITORY) private dashboards: DashboardRepository,
+    private dashboardService: DashboardService,
     @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
   ) {}
 
@@ -40,13 +37,13 @@ export class DashboardController {
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:show"))
   findById(@Param("id", ID("dashboard")) id: Id) {
-    return CRUD.findOne(this.dashboards, id);
+    return CRUD.findOne(this.dashboardService, id);
   }
 
   @Post()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:create"))
   insert(@Body(Schema.validate("http://spica.internal/dashboard")) dashboard: Dashboard) {
-    return CRUD.insert(this.dashboards, dashboard).catch(e => {
+    return CRUD.insert(this.dashboardService, dashboard).catch(e => {
       throw new HttpException(e.message, e.status || 500);
     });
   }
@@ -58,7 +55,7 @@ export class DashboardController {
     @Body(Schema.validate("http://spica.internal/dashboard"))
     dashboard: Dashboard
   ) {
-    return CRUD.replace(this.dashboards, {...dashboard, _id: id}).catch(e => {
+    return CRUD.replace(this.dashboardService, {...dashboard, _id: id}).catch(e => {
       throw new HttpException(e.message, e.status || 500);
     });
   }
@@ -67,7 +64,7 @@ export class DashboardController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param("id", ID("dashboard")) id: Id) {
-    await CRUD.remove(this.dashboards, id).catch(e => {
+    await CRUD.remove(this.dashboardService, id).catch(e => {
       throw new HttpException(e.message, e.status || 500);
     });
   }

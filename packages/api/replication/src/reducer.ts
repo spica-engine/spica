@@ -1,25 +1,34 @@
-import {Inject, Injectable} from "@nestjs/common";
-import {
-  IJobReducer,
-  JOB_REPOSITORY,
-  JobMeta,
-  JobRepository
-} from "@spica-server/interface-replication";
+import {Injectable} from "@nestjs/common";
+import {JobService} from "./database/job.js";
+import {IJobReducer, JobMeta} from "@spica-server/interface-replication";
+import {Filter} from "mongodb";
 
 @Injectable()
 export class JobReducer implements IJobReducer {
-  constructor(@Inject(JOB_REPOSITORY) private jobs: JobRepository) {}
+  constructor(private service: JobService) {}
 
-  async do(meta: JobMeta, job: Function) {
-    if (!(await this.jobs.claim(meta))) {
-      return false;
-    }
+  do(meta: JobMeta, job: Function) {
+    return this.service._coll
+      .updateOne({_id: meta._id}, {$setOnInsert: {...meta, created_at: new Date()}}, {upsert: true})
+      .catch(e => {
+        // If replicas are triggered at the same time(before upsert completion), this error occurs.
+        // for this case, we can ignore the error since we know one of replicas already took the job
+        if (e.code == 11000) {
+          return {upsertedCount: 0};
+        }
+        throw Error(e);
+      })
+      .then(({upsertedCount}) => {
+        if (!upsertedCount) {
+          return false;
+        }
 
-    job();
-    return true;
+        job();
+        return true;
+      });
   }
 
-  takeByEventId(eventId: string) {
-    return this.jobs.takeByEventId(eventId);
+  findOneAndDelete(filter: Filter<JobMeta>) {
+    return this.service._coll.findOneAndDelete(filter);
   }
 }

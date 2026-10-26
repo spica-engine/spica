@@ -1,4 +1,6 @@
-import {Dashboard, DashboardRepository} from "@spica-server/interface-dashboard";
+import {ReturnDocument} from "@spica-server/database";
+import {DashboardService} from "./dashboard.service.js";
+import {Dashboard} from "@spica-server/interface-dashboard";
 import {NotFoundException} from "@nestjs/common";
 import {ids} from "@spica-server/data";
 import {CollectionQueryFacade, Id} from "@spica-server/interface-data";
@@ -9,23 +11,25 @@ export function find(queries: CollectionQueryFacade, resourceFilter: object): Pr
   return queries.find<Dashboard>("dashboard", {resourceFilter});
 }
 
-export function findOne(dashboards: DashboardRepository, id: Id): Promise<Dashboard> {
-  return dashboards.findById(id);
+export function findOne(ds: DashboardService, id: Id): Promise<Dashboard> {
+  return ds.findOne({_id: id});
 }
 
-export async function insert(dashboards: DashboardRepository, dashboard: Dashboard) {
+export async function insert(ds: DashboardService, dashboard: Dashboard) {
   if (dashboard._id) {
     dashboard._id = dashboardIds().parse(dashboard._id);
   }
-  await dashboards.insert(dashboard);
+  await ds.insertOne(dashboard);
   return dashboard;
 }
 
-export async function replace(dashboards: DashboardRepository, dashboard: Dashboard) {
+export async function replace(ds: DashboardService, dashboard: Dashboard) {
   const _id = dashboardIds().parse(dashboard._id);
   const {_id: _, ...dashboardWithoutId} = dashboard;
 
-  const currentDashboard = await dashboards.replaceById(_id, dashboardWithoutId);
+  const currentDashboard = await ds.findOneAndReplace({_id}, dashboardWithoutId, {
+    returnDocument: ReturnDocument.AFTER
+  });
 
   if (!currentDashboard) {
     throw new NotFoundException(`Dashboard with ID ${_id} not found`);
@@ -33,8 +37,8 @@ export async function replace(dashboards: DashboardRepository, dashboard: Dashbo
   return currentDashboard;
 }
 
-export async function remove(dashboards: DashboardRepository, id: string | Id) {
-  const res = await dashboards.deleteById(dashboardIds().parse(id));
+export async function remove(ds: DashboardService, id: string | Id) {
+  const res = await ds.findOneAndDelete({_id: dashboardIds().parse(id)});
   if (!res) {
     throw new NotFoundException(`Dashboard with ID ${id} not found`);
   }

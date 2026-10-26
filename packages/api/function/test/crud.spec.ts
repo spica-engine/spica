@@ -149,7 +149,7 @@ describe("CRUD resource reference removal", () => {
   });
 
   it("should still broadcast the refresh when ejecting through the endpoint", async () => {
-    const ss = {findById: jest.fn().mockResolvedValue({_id: resourceId, key: "API_KEY"})};
+    const ss = {findOne: jest.fn().mockResolvedValue({_id: resourceId, key: "API_KEY"})};
 
     await CRUD.secret.eject(fs as any, ss as any, fnId, engine as any, resourceId);
 

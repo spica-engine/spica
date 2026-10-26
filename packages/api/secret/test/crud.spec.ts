@@ -41,7 +41,7 @@ describe("Secret CRUD", () => {
     it("should store the value as encrypted in the database", async () => {
       const result = await CRUD.insert(ss, {key: "DB_PASS", value: "plaintext-password"});
 
-      const raw = await ss.findById(result._id);
+      const raw = await ss.findOne({_id: result._id});
 
       expect(raw.value).toBeDefined();
       expect(raw.value).not.toBe("plaintext-password");
@@ -67,7 +67,7 @@ describe("Secret CRUD", () => {
     it("should set updated_at as a Date on insert", async () => {
       const result = await CRUD.insert(ss, {key: "TS_KEY", value: "val"});
 
-      const raw = await ss.findById(result._id);
+      const raw = await ss.findOne({_id: result._id});
       expect(raw.updated_at).toBeInstanceOf(Date);
     });
 
@@ -80,7 +80,7 @@ describe("Secret CRUD", () => {
         injected: "nope"
       } as any);
 
-      const raw = await ss.findById(result._id);
+      const raw = await ss.findOne({_id: result._id});
       expect(raw.updated_at).not.toEqual(clientTimestamp);
       expect((raw as any).injected).toBeUndefined();
       expect(Object.keys(raw).sort()).toEqual(["_id", "key", "updated_at", "value"]);
@@ -187,7 +187,7 @@ describe("Secret CRUD", () => {
 
       await CRUD.replace(ss, inserted._id, {key: "REPLACE_KEY", value: "updated_value"});
 
-      const raw = await ss.findById(inserted._id);
+      const raw = await ss.findOne({_id: inserted._id});
 
       expect(raw.value).not.toBe("updated_value");
       expect(isEncryptedData(raw.value)).toBe(true);
@@ -203,10 +203,10 @@ describe("Secret CRUD", () => {
 
     it("should refresh updated_at on replace", async () => {
       const inserted = await CRUD.insert(ss, {key: "TS_KEY", value: "old"});
-      const before = await ss.findById(inserted._id);
+      const before = await ss.findOne({_id: inserted._id});
 
       await CRUD.replace(ss, inserted._id, {key: "TS_KEY", value: "new"});
-      const after = await ss.findById(inserted._id);
+      const after = await ss.findOne({_id: inserted._id});
 
       expect(after.updated_at).toBeInstanceOf(Date);
       expect(after.updated_at.getTime()).toBeGreaterThanOrEqual(before.updated_at.getTime());

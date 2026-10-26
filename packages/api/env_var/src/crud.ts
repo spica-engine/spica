@@ -1,3 +1,4 @@
+import {ReturnDocument} from "@spica-server/database";
 import {EnvVarService} from "../services";
 import {EnvVar} from "@spica-server/interface-env_var";
 import {NotFoundException} from "@nestjs/common";
@@ -33,7 +34,7 @@ export async function find(
 }
 
 export function findOne(evs: EnvVarService, id: Id): Promise<EnvVar> {
-  return evs.findById(id);
+  return evs.findOne({_id: id});
 }
 
 export async function insert(evs: EnvVarService, body: EnvVar) {
@@ -47,7 +48,7 @@ export async function insert(evs: EnvVarService, body: EnvVar) {
     envVar._id = envVarIds().parse(body._id);
   }
 
-  await evs.insert(envVar);
+  await evs.insertOne(envVar);
   return envVar;
 }
 
@@ -60,7 +61,9 @@ export async function replace(evs: EnvVarService, body: EnvVar) {
     updated_at: new Date()
   };
 
-  const currentSchema = await evs.replaceById(_id, envVar);
+  const currentSchema = await evs.findOneAndReplace({_id}, envVar, {
+    returnDocument: ReturnDocument.AFTER
+  });
 
   if (!currentSchema) {
     throw new NotFoundException(`Environment Variable with ID ${_id} not found`);
@@ -69,7 +72,7 @@ export async function replace(evs: EnvVarService, body: EnvVar) {
 }
 
 export async function remove(evs: EnvVarService, id: string | Id) {
-  const res = await evs.deleteById(envVarIds().parse(id));
+  const res = await evs.findOneAndDelete({_id: envVarIds().parse(id)});
   if (!res) {
     throw new NotFoundException(`Environment Variable with ID ${id} not found`);
   }

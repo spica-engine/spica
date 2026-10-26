@@ -7,10 +7,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../interface/data"
+      "path": "../../../interface/activity"
     },
     {
-      "path": "../../../interface/activity"
+      "path": "../../../database"
     },
     {
       "path": "../../../data"
