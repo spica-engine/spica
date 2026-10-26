@@ -12,7 +12,9 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
     }
   };
 
-  const [storedValue, setStoredValue] = useState<T>(readValue);
+  const [stored, setStored] = useState<{key: string; value: T}>(() => ({key, value: readValue()}));
+  const storedValue = stored.key === key ? stored.value : readValue();
+  const setStoredValue = useCallback((value: T) => setStored({key, value}), [key]);
 
   const storedValueRef = useRef(storedValue);
   useEffect(() => {
