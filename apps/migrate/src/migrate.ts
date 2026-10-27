@@ -50,6 +50,15 @@ export function getMigrations(version: string): string[] {
 }
 
 export async function migrate(options: Options) {
+  switch (options.databaseType ?? "mongodb") {
+    case "mongodb":
+      return migrateMongoDB(options);
+    case "postgresql":
+      throw new Error("PostgreSQL migrations are not supported yet.");
+  }
+}
+
+async function migrateMongoDB(options: Options) {
   const versions = migrationVersions(options.from, options.to);
   console.log(`${color.green("VERSIONS:")} ${versions.join(", ") || "None"}`);
 
@@ -123,7 +132,10 @@ export async function migrate(options: Options) {
   }
 }
 
+export type DatabaseType = "mongodb" | "postgresql";
+
 export interface Options {
+  databaseType?: DatabaseType;
   from: string;
   to: string;
   dryRun?: boolean;
