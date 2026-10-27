@@ -162,7 +162,7 @@ tests:
           count: 0
         template: templates/initdb.yaml
 
-  - it: should skip the mongodb migrate job on upgrade for postgresql
+  - it: should run the migrate job on upgrade for postgresql
     template: templates/migrate.yaml
     release:
       upgrade: true
@@ -170,7 +170,7 @@ tests:
       database.type: postgresql
     asserts:
       - hasDocuments:
-          count: 0
+          count: 1
 
   - it: should still run the migrate job on upgrade for mongodb
     template: templates/migrate.yaml
