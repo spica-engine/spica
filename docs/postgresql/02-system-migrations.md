@@ -85,4 +85,13 @@ Gives PostgreSQL a versioned migration track for Spica's own tables. It runs at 
 
 ## As built
 
-_Fill in after the last PR merges._
+- **Engine switch:** `apps/migrate` takes `--database-type` (`mongodb` default, or `postgresql`). `--database-name` is required only for MongoDB. The MongoDB track is unchanged.
+- **Shared runner:** the PostgreSQL runner, manifest and SQL live in `@spica-server/data-postgresql-migrations` (`packages/data/postgresql-migrations`), not in `apps/migrate`. `apps/migrate` already references `database-testing`, so the testing module importing the runner from the app would have been a circular project reference. `apps/migrate` only adds credential handling (`POSTGRES_USERNAME`/`POSTGRES_PASSWORD`) and the test lookup override.
+- **Adding a migration:** add `src/migrations/<version>/<name>.sql` in that package and list it in `src/migrations/index.json` (version to relative paths). The `copy-assets` target copies the SQL into `dist`.
+- **Selection:** same model as the MongoDB track. The runner gets `--from` and `--to` release versions and applies the versions in `(from, to]`; with none in range it does nothing. Because of this, the API neither checks nor runs migrations at startup (the first open question is closed that way).
+- **Version record:** table `spica_migrations(version text primary key, scripts text[], applied_at timestamptz)`, created by the runner. A recorded version is skipped, so re-running on a migrated database is a no-op.
+- **Transaction:** one transaction for the whole run (all or nothing), so `--dry-run` rolls back across versions. A transaction-level advisory lock serialises concurrent runs. Statements that cannot run in a transaction (for example `CREATE INDEX CONCURRENTLY`) are not supported on this track.
+- **Baseline:** an empty `0.21.0` (`SELECT 1;`). The version is the next minor after the latest tag at the time (0.20.2) and should be confirmed at release.
+- **Testing module:** `createPostgresDatabase` (and `DatabaseTestingModule.postgres`) applies the track to every throwaway database. `createPostgresDatabase(name, {migrate: false})` returns an empty database; the migrate runner's own tests use it.
+- **Chart:** the pre-upgrade migrate job renders for both engines. For PostgreSQL it passes `--database-type postgresql`, no `--database-name`, and the `root` role's credentials (second open question: `root`, because `pg_cron` needs it). Objects created by `root` migrations must be owned by or granted to `spica`; Part 3 must follow this.
+- **Not done:** `apps/cli` `project upgrade` still assumes MongoDB. Docker image contents (`pg` and the SQL inside the migrate image) were not built or checked.
