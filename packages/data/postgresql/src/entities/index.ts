@@ -8,11 +8,13 @@ import {
   users,
   verifications
 } from "./passport.js";
+import {buckets, histories} from "./bucket.js";
 import {configs} from "./config.js";
 import {dashboards, envVars, secrets, statuses} from "./system.js";
 import {functionAssets, functionLogs, functions, webhookLogs, webhooks} from "./function.js";
 import {preferences} from "./preference.js";
 
+export * from "./bucket.js";
 export * from "./config.js";
 export * from "./function.js";
 export * from "./passport.js";
@@ -37,5 +39,7 @@ export const systemEntities: readonly Entity[] = [
   envVars,
   secrets,
   dashboards,
-  statuses
+  statuses,
+  buckets,
+  histories
 ];
