@@ -1,29 +1,31 @@
 import {InvalidIdError} from "@spica-server/data";
-import {IdType, IdTypes} from "@spica-server/interface-data";
+import {Id, IdType, IdTypes} from "@spica-server/interface-data";
 import {v7, validate} from "uuid";
 
-export class UuidV7Type implements IdType<string> {
+export type UuidId = string & Id;
+
+export class UuidV7Type implements IdType<UuidId> {
   readonly name = "uuid";
 
-  parse(value: unknown): string {
+  parse(value: unknown): UuidId {
     if (value == null) {
       throw new InvalidIdError("Id must not be null or undefined.");
     }
     if (typeof value != "string" || !validate(value)) {
       throw new InvalidIdError(`"${String(value)}" is not a valid uuid.`);
     }
-    return value.toLowerCase();
+    return value.toLowerCase() as UuidId;
   }
 
   isValid(value: unknown): boolean {
     return typeof value == "string" && validate(value);
   }
 
-  generate(): string {
-    return v7();
+  generate(): UuidId {
+    return v7() as UuidId;
   }
 
-  is(value: unknown): value is string {
+  is(value: unknown): value is UuidId {
     return this.isValid(value);
   }
 
@@ -31,7 +33,7 @@ export class UuidV7Type implements IdType<string> {
     return this.isValid(a) && this.isValid(b) && this.parse(a) == this.parse(b);
   }
 
-  serialize(id: string): string {
+  serialize(id: UuidId): string {
     return id.toLowerCase();
   }
 }
