@@ -9,6 +9,7 @@ import {
   verifications
 } from "./passport.js";
 import {configs} from "./config.js";
+import {dashboards, envVars, secrets, statuses} from "./system.js";
 import {functionAssets, functionLogs, functions, webhookLogs, webhooks} from "./function.js";
 import {preferences} from "./preference.js";
 
@@ -16,6 +17,7 @@ export * from "./config.js";
 export * from "./function.js";
 export * from "./passport.js";
 export * from "./preference.js";
+export * from "./system.js";
 
 export const systemEntities: readonly Entity[] = [
   identities,
@@ -31,5 +33,9 @@ export const systemEntities: readonly Entity[] = [
   functionLogs,
   functionAssets,
   webhooks,
-  webhookLogs
+  webhookLogs,
+  envVars,
+  secrets,
+  dashboards,
+  statuses
 ];
