@@ -4,23 +4,12 @@ import path from "path";
 import fs from "fs";
 import semver from "semver";
 import MigrationsIndex from "./migrations/index.json" with {type: "json"};
-import {fileURLToPath} from "url";
+import {getManifestDir} from "./manifest-dir.js";
+import {migratePostgreSQL} from "./postgresql/migrate.js";
 
 export type MigrationManifest = {
   [k: string]: string[];
 };
-
-function getManifestDir() {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-
-  let manifestDir = __dirname;
-  const isTestEnv = process.env.NODE_ENV == "test";
-  if (isTestEnv) {
-    manifestDir = process.env.TESTONLY_MIGRATION_LOOKUP_DIR;
-  }
-  return manifestDir;
-}
 
 export function loadMigrations(): MigrationManifest {
   const manifestDir = getManifestDir();
@@ -54,7 +43,7 @@ export async function migrate(options: Options) {
     case "mongodb":
       return migrateMongoDB(options);
     case "postgresql":
-      throw new Error("PostgreSQL migrations are not supported yet.");
+      return migratePostgreSQL(options);
   }
 }
 
