@@ -440,6 +440,9 @@
       "path": "./packages/data/postgresql"
     },
     {
+      "path": "./packages/data/postgresql-migrations"
+    },
+    {
       "path": "./packages/data"
     }
   ]

@@ -1,0 +1,17 @@
+{
+  "name": "data/postgresql-migrations",
+  "sourceRoot": "packages/data/postgresql-migrations/src",
+  "projectType": "library",
+  "targets": {
+    "copy-assets": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "packages/data/postgresql-migrations",
+        "command": "node -e \"require('fs').cpSync('src/migrations','dist/src/migrations',{recursive:true,filter:p=>!p.endsWith('.json')})\""
+      },
+      "inputs": ["{projectRoot}/src/migrations/**/*.sql"],
+      "outputs": ["{projectRoot}/dist/src/migrations"]
+    }
+  }
+}
