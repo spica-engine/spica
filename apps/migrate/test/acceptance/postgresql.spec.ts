@@ -85,11 +85,19 @@ describe("PostgreSQL track", () => {
   });
 
   it("should be a no-op on an already migrated database", async () => {
-    writeMigrations({"1.0.0": {"a.sql": "CREATE TABLE once (id int);"}});
+    writeMigrations({
+      "1.0.0": {"a.sql": "CREATE TABLE once (id int); INSERT INTO once VALUES (1);"}
+    });
     await run([...args, "--from", "0.1.0", "--to", "1.0.0"]);
+    const {rows: before} = await client.query("SELECT applied_at FROM spica_migrations");
+
+    writeMigrations({"1.0.0": {"a.sql": "INSERT INTO once VALUES (2);"}});
     await run([...args, "--from", "0.1.0", "--to", "1.0.0"]);
 
-    expect(await appliedVersions()).toEqual(["1.0.0"]);
+    const {rows: once} = await client.query("SELECT id FROM once");
+    expect(once).toEqual([{id: 1}]);
+    const {rows: after} = await client.query("SELECT applied_at FROM spica_migrations");
+    expect(after).toEqual(before);
   });
 
   it("should only apply versions after --from up to --to", async () => {
@@ -100,6 +108,10 @@ describe("PostgreSQL track", () => {
     });
     await run([...args, "--from", "1.0.0", "--to", "2.0.0"]);
 
+    const {rows} = await client.query(
+      "SELECT to_regclass('v1') AS v1, to_regclass('v2') AS v2, to_regclass('v3') AS v3"
+    );
+    expect(rows[0]).toEqual({v1: null, v2: "v2", v3: null});
     expect(await appliedVersions()).toEqual(["2.0.0"]);
   });
 
