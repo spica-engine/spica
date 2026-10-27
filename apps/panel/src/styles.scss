@@ -178,6 +178,13 @@ code {
   z-index: var(--z-index-portal);
 }
 
+// Workaround for https://github.com/spica-engine/ui-kit/issues/267: the ui-kit's antd
+// pickers render their popup into <body> at antd's default z-index (1050), below the
+// Portal layer, so it is hidden behind any popover/drawer/modal containing the picker.
+.ant-picker-dropdown {
+  z-index: calc(var(--z-index-portal) + 100);
+}
+
 *,
 *::before,
 *::after {
