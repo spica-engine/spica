@@ -32,9 +32,11 @@ describe("PostgreSQL track", () => {
     fs.writeFileSync(indexJsonPath, JSON.stringify(manifest));
   }
 
-  async function appliedVersions() {
-    const {rows} = await client.query("SELECT version FROM spica_migrations ORDER BY version");
-    return rows.map(row => row.version);
+  async function userTables() {
+    const {rows} = await client.query(
+      "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name"
+    );
+    return rows.map(row => row.table_name);
   }
 
   beforeAll(() => {
@@ -69,10 +71,10 @@ describe("PostgreSQL track", () => {
 
     await run([...args, "--from", "0.0.0", "--to", "99.0.0"]);
 
-    expect(await appliedVersions()).toEqual(Object.keys(packaged));
+    expect(await userTables()).toEqual([]);
   });
 
-  it("should apply pending versions in order and record them", async () => {
+  it("should apply pending versions in order", async () => {
     writeMigrations({
       "1.0.0": {"a.sql": "CREATE TABLE first (id int); INSERT INTO first VALUES (1);"},
       "2.0.0": {"b.sql": "ALTER TABLE first ADD COLUMN name text; UPDATE first SET name = 'x';"}
@@ -81,15 +83,7 @@ describe("PostgreSQL track", () => {
 
     const {rows} = await client.query("SELECT * FROM first");
     expect(rows).toEqual([{id: 1, name: "x"}]);
-    expect(await appliedVersions()).toEqual(["1.0.0", "2.0.0"]);
-  });
-
-  it("should be a no-op on an already migrated database", async () => {
-    writeMigrations({"1.0.0": {"a.sql": "CREATE TABLE once (id int);"}});
-    await run([...args, "--from", "0.1.0", "--to", "1.0.0"]);
-    await run([...args, "--from", "0.1.0", "--to", "1.0.0"]);
-
-    expect(await appliedVersions()).toEqual(["1.0.0"]);
+    expect(await userTables()).toEqual(["first"]);
   });
 
   it("should only apply versions after --from up to --to", async () => {
@@ -100,7 +94,11 @@ describe("PostgreSQL track", () => {
     });
     await run([...args, "--from", "1.0.0", "--to", "2.0.0"]);
 
-    expect(await appliedVersions()).toEqual(["2.0.0"]);
+    const {rows} = await client.query(
+      "SELECT to_regclass('v1') AS v1, to_regclass('v2') AS v2, to_regclass('v3') AS v3"
+    );
+    expect(rows[0]).toEqual({v1: null, v2: "v2", v3: null});
+    expect(await userTables()).toEqual(["v2"]);
   });
 
   it("should roll back every version when one fails", async () => {
@@ -111,19 +109,15 @@ describe("PostgreSQL track", () => {
     const error = await run([...args, "--from", "0.1.0", "--to", "2.0.0"]).catch(e => e);
 
     expect(error).toBeInstanceOf(Error);
-    const {rows} = await client.query(
-      "SELECT to_regclass('good') AS good, to_regclass('spica_migrations') AS record"
-    );
-    expect(rows[0]).toEqual({good: null, record: null});
+    const {rows} = await client.query("SELECT to_regclass('good') AS good");
+    expect(rows[0]).toEqual({good: null});
   });
 
   it("should not write anything when --dry-run is set", async () => {
     writeMigrations({"1.0.0": {"a.sql": "CREATE TABLE dry (id int);"}});
     await run([...args, "--from", "0.1.0", "--to", "1.0.0", "--dry-run"]);
 
-    const {rows} = await client.query(
-      "SELECT to_regclass('dry') AS dry, to_regclass('spica_migrations') AS record"
-    );
-    expect(rows[0]).toEqual({dry: null, record: null});
+    const {rows} = await client.query("SELECT to_regclass('dry') AS dry");
+    expect(rows[0]).toEqual({dry: null});
   });
 });

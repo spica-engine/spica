@@ -20,6 +20,7 @@ Gives PostgreSQL a versioned migration track that changes Spica's own tables on 
 - The API creates each system table at startup with `CREATE TABLE IF NOT EXISTS` (Part 3). A new install therefore runs no migrations, and tests start from empty databases that the API fills.
 - A migration brings the tables of an existing install to the shape the API's `CREATE TABLE IF NOT EXISTS` describes. The two must end up identical, and the migration's own test is what proves it (see below).
 - Every migration ships with a test that runs it against a database shaped like the previous release and checks the schema and the data afterwards. Writing it is part of the change that needs the migration.
+- The track keeps no record of what ran. Selection comes only from `--from` and `--to`, as on the MongoDB track, so a migration must be safe to run again: after a rollback and a second upgrade, `(from, to]` can run over a database that already has those changes. Use `IF NOT EXISTS` and `IF EXISTS` on DDL, and guard data changes so a second run changes nothing.
 - Migrations run as `root`. A table a migration creates is owned by `root`, so it must be altered to belong to `spica` or granted to it. Altering tables the API created needs nothing more.
 
 ## Depends on
@@ -31,7 +32,6 @@ Gives PostgreSQL a versioned migration track that changes Spica's own tables on 
 | Contract                 | What later parts expect                                                                               |
 | ------------------------ | ----------------------------------------------------------------------------------------------------- |
 | PostgreSQL track         | A place to add a numbered SQL migration that the runner applies in order.                             |
-| Version record           | The track records which versions have been applied.                                                   |
 | Migration test pattern   | A migration test starts from an empty database, builds the previous release's table shape, runs the track and asserts the result. |
 | Deploy integration       | The chart's migrate job runs the right track for the engine on upgrades.                              |
 
@@ -55,13 +55,13 @@ Gives PostgreSQL a versioned migration track that changes Spica's own tables on 
 | ----------------- | -------------------------------------------------------------------------------------------------- |
 | Migrate runner    | Same entry point. It reads the engine and picks a track.                                           |
 | MongoDB track     | Today's scripts, unchanged.                                                                         |
-| PostgreSQL track  | Numbered SQL files, starting with an empty baseline. It's applied in order inside transactions, and each version is recorded. |
+| PostgreSQL track  | Numbered SQL files, starting with an empty baseline. It's applied in order inside one transaction. |
 
 ### Flow
 
 1. A deploy or a test suite starts the runner with the engine settings.
 2. The runner picks the track.
-3. The PostgreSQL track applies pending versions in order and records them.
+3. The PostgreSQL track applies the versions between `--from` and `--to` in order.
 4. The API starts against the migrated database.
 
 ## What changes
@@ -73,7 +73,7 @@ Gives PostgreSQL a versioned migration track that changes Spica's own tables on 
 ## PR breakdown
 
 1. Engine switch in `apps/migrate`, as a behaviour-neutral refactor: MongoDB runs exactly as today.
-2. PostgreSQL track runner, version record and empty baseline.
+2. PostgreSQL track runner and empty baseline.
 3. Chart migrate job gets the engine settings.
 
 A PR that applied the track to every test database was written and dropped, because tests start empty.
@@ -94,7 +94,7 @@ A PR that applied the track to every test database was written and dropped, beca
 - **Runner:** the PostgreSQL runner lives in `apps/migrate/src/postgresql/`, next to the MongoDB track. It handles credentials (`POSTGRES_USERNAME`/`POSTGRES_PASSWORD`) and the test lookup override. A move into a shared package was merged and reverted, because it only served applying the track to test databases, which was dropped.
 - **Adding a migration:** add `src/postgresql/migrations/<version>/<name>.sql` in `apps/migrate` and list it in `src/postgresql/migrations/index.json` (version to relative paths). The `copy-assets` target in `apps/migrate/project.json` copies the SQL into `dist`.
 - **Selection:** same model as the MongoDB track. The runner gets `--from` and `--to` release versions and applies the versions in `(from, to]`; with none in range it does nothing. The API neither checks nor runs migrations at startup, which closes the first open question.
-- **Version record:** table `spica_migrations(version text primary key, scripts text[], applied_at timestamptz)`, created by the runner. A recorded version is skipped, so re-running on a migrated database is a no-op. A new install has an empty record, which is fine because selection works from `--from` and `--to`.
+- **No version record:** the runner creates no table of its own and tracks nothing. A version recorded in the database would be empty on new installs (the API creates their tables), so it could not tell what ran. Migrations are written to be safe to run again instead (see Rules).
 - **Transaction:** one transaction for the whole run (all or nothing), so `--dry-run` rolls back across versions. A transaction-level advisory lock serialises concurrent runs. Statements that cannot run in a transaction (for example `CREATE INDEX CONCURRENTLY`) are not supported on this track.
 - **Baseline:** an empty `0.21.0` (`SELECT 1;`). The version is the next minor after the latest tag at the time (0.20.2) and should be confirmed at release.
 - **Test databases:** not migrated. The API creates system tables at startup, so `createPostgresDatabase` returns an empty database as before. The runner's own tests use `createPostgresDatabase` and check the track directly.
