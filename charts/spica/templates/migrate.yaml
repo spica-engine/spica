@@ -1,4 +1,5 @@
-{{- if and .Release.IsUpgrade (eq (include "database.engine" .) "mongodb") }}
+{{- if .Release.IsUpgrade }}
+{{- $postgres := eq (include "database.engine" .) "postgresql" }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -22,6 +23,15 @@ spec:
         - name: migrate
           image: {{ .Values.images.migrate }}:{{ $.Chart.AppVersion }}
           imagePullPolicy: Always
+          {{- if $postgres }}
+          args: [
+            --from, "$(FROM)",
+            --to, {{ .Chart.Version }},
+            --database-type, postgresql,
+            --database-uri, {{ template "database.connection-uri" . }},
+            --continue-if-versions-are-equal
+          ]
+          {{- else }}
           args: [
             --from, "$(FROM)",
             --to, {{ .Chart.Version }},
@@ -29,12 +39,25 @@ spec:
             --database-name,  {{ .Values.database.name }},
             --continue-if-versions-are-equal
           ]
+          {{- end }}
           env:
             - name: FROM
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Release.Name }}-version
                   key: VERSION
+            {{- if $postgres }}
+            - name: POSTGRES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootUsername
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootPassword
+            {{- else }}
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -45,6 +68,7 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-database-root-credentials
                   key: rootPassword
+            {{- end }}
       {{- if .Values.database.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.database.nodeSelector | indent 8 }}
