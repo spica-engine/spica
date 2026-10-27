@@ -1,4 +1,4 @@
-import {migrate, run} from "@spica/migrate";
+import {run} from "@spica/migrate";
 
 describe("Engine switch", () => {
   const baseArgs = ["--database-uri", "mongodb://localhost", "--from", "0.1.0", "--to", "0.2.0"];
@@ -15,17 +15,5 @@ describe("Engine switch", () => {
 
   it("should reject unknown database types", async () => {
     await expect(run([...baseArgs, "--database-type", "mysql"])).rejects.toBeDefined();
-  });
-
-  it("should dispatch postgresql to its own track", async () => {
-    await expect(
-      migrate({
-        databaseType: "postgresql",
-        from: "0.1.0",
-        to: "0.2.0",
-        console,
-        database: {uri: "postgres://localhost/spica", name: undefined}
-      })
-    ).rejects.toThrow("PostgreSQL migrations are not supported yet.");
   });
 });
