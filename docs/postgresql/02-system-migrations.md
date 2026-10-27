@@ -76,7 +76,7 @@ Gives PostgreSQL a versioned migration track that changes Spica's own tables on 
 2. PostgreSQL track runner, version record and empty baseline.
 3. Chart migrate job gets the engine settings.
 
-The runner was moved into a shared package as its own refactor (see "As built"). A PR that applied the track to every test database was written and dropped, because tests start empty.
+A PR that applied the track to every test database was written and dropped, because tests start empty.
 
 ## Open questions
 
@@ -91,8 +91,8 @@ The runner was moved into a shared package as its own refactor (see "As built").
 ## As built
 
 - **Engine switch:** `apps/migrate` takes `--database-type` (`mongodb` default, or `postgresql`). `--database-name` is required only for MongoDB. The MongoDB track is unchanged.
-- **Shared runner:** the PostgreSQL runner, manifest and SQL live in `@spica-server/data-postgresql-migrations` (`packages/data/postgresql-migrations`). It was extracted to let the testing module run the track without a circular project reference with `apps/migrate`. That use was dropped (see below), so the package is now only used by `apps/migrate`. `apps/migrate` adds credential handling (`POSTGRES_USERNAME`/`POSTGRES_PASSWORD`) and the test lookup override.
-- **Adding a migration:** add `src/migrations/<version>/<name>.sql` in that package and list it in `src/migrations/index.json` (version to relative paths). The `copy-assets` target copies the SQL into `dist`.
+- **Runner:** the PostgreSQL runner lives in `apps/migrate/src/postgresql/`, next to the MongoDB track. It handles credentials (`POSTGRES_USERNAME`/`POSTGRES_PASSWORD`) and the test lookup override. A move into a shared package was merged and reverted, because it only served applying the track to test databases, which was dropped.
+- **Adding a migration:** add `src/postgresql/migrations/<version>/<name>.sql` in `apps/migrate` and list it in `src/postgresql/migrations/index.json` (version to relative paths). The `copy-assets` target in `apps/migrate/project.json` copies the SQL into `dist`.
 - **Selection:** same model as the MongoDB track. The runner gets `--from` and `--to` release versions and applies the versions in `(from, to]`; with none in range it does nothing. The API neither checks nor runs migrations at startup, which closes the first open question.
 - **Version record:** table `spica_migrations(version text primary key, scripts text[], applied_at timestamptz)`, created by the runner. A recorded version is skipped, so re-running on a migrated database is a no-op. A new install has an empty record, which is fine because selection works from `--from` and `--to`.
 - **Transaction:** one transaction for the whole run (all or nothing), so `--dry-run` rolls back across versions. A transaction-level advisory lock serialises concurrent runs. Statements that cannot run in a transaction (for example `CREATE INDEX CONCURRENTLY`) are not supported on this track.
