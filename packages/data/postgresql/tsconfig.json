@@ -31,6 +31,18 @@
       "path": "../../interface/passport"
     },
     {
+      "path": "../../interface/function/webhook"
+    },
+    {
+      "path": "../../interface/function/log"
+    },
+    {
+      "path": "../../interface/function/asset-storage"
+    },
+    {
+      "path": "../../interface/function"
+    },
+    {
       "path": "../../interface/data"
     },
     {
@@ -41,6 +53,9 @@
     },
     {
       "path": ".."
+    },
+    {
+      "path": "../../core/patch"
     },
     {
       "path": "../../database/testing"
