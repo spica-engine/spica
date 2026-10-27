@@ -4,23 +4,12 @@ import path from "path";
 import fs from "fs";
 import semver from "semver";
 import MigrationsIndex from "./migrations/index.json" with {type: "json"};
-import {fileURLToPath} from "url";
+import {getManifestDir} from "./manifest-dir.js";
+import {migratePostgreSQL} from "./postgresql/migrate.js";
 
 export type MigrationManifest = {
   [k: string]: string[];
 };
-
-function getManifestDir() {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-
-  let manifestDir = __dirname;
-  const isTestEnv = process.env.NODE_ENV == "test";
-  if (isTestEnv) {
-    manifestDir = process.env.TESTONLY_MIGRATION_LOOKUP_DIR;
-  }
-  return manifestDir;
-}
 
 export function loadMigrations(): MigrationManifest {
   const manifestDir = getManifestDir();
@@ -50,6 +39,15 @@ export function getMigrations(version: string): string[] {
 }
 
 export async function migrate(options: Options) {
+  switch (options.databaseType ?? "mongodb") {
+    case "mongodb":
+      return migrateMongoDB(options);
+    case "postgresql":
+      return migratePostgreSQL(options);
+  }
+}
+
+async function migrateMongoDB(options: Options) {
   const versions = migrationVersions(options.from, options.to);
   console.log(`${color.green("VERSIONS:")} ${versions.join(", ") || "None"}`);
 
@@ -123,7 +121,10 @@ export async function migrate(options: Options) {
   }
 }
 
+export type DatabaseType = "mongodb" | "postgresql";
+
 export interface Options {
+  databaseType?: DatabaseType;
   from: string;
   to: string;
   dryRun?: boolean;

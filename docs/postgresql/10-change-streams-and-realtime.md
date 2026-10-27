@@ -59,7 +59,7 @@ Makes the change feed work on PostgreSQL. Every committed change reaches every l
 
 | Component             | Responsibility                                                                                              |
 | --------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Row triggers          | On bucket tables, added by the schema manager's DDL plan. On system tables that have consumers, added by migrations. They notify on commit. |
+| Row triggers          | On bucket tables, added by the schema manager's DDL plan. On system tables that have consumers, created together with the table at API startup, and added by a migration on installs that already have the table. They notify on commit. |
 | NOTIFY payload        | Only the table, operation and primary key, because notifications have a size limit. The key is the table's own: `id` or the bucket's chosen key. |
 | Listener              | A dedicated connection with LISTEN, outside the request pool. It loads the changed row by key and publishes the shaped document on the feed. A deleted row sends its key. |
 | Realtime SQL filter   | The first result comes from an SQL query through the query path. Each change is checked against the same filter, and ACL, in PostgreSQL before it goes to the socket. |
@@ -79,7 +79,7 @@ Makes the change feed work on PostgreSQL. Every committed change reaches every l
 ## What changes
 
 - **Schema manager:** adds triggers to bucket tables.
-- **Migrations:** add triggers to system tables that have consumers.
+- **System table creation:** creates the triggers of system tables that have consumers, with the table. A migration adds them on existing installs.
 - **Change feed:** a new PostgreSQL source.
 - **Realtime:** a PostgreSQL filter path.
 - **Function database trigger:** option mapping.
