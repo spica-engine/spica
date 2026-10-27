@@ -19,7 +19,7 @@ Removes records that only matter for a while. MongoDB does this with TTL indexes
 
 ## Depends on
 
-- **Part 2 (merged):** the PostgreSQL migration track, if the extension or job tables need setup there.
+- **Part 2 (merged):** the PostgreSQL migration track. It runs as `root`, but only on upgrades and not on new installs. The API creates tables at startup as `spica`, which cannot create `pg_cron`.
 - **Part 3 (merged):** the system tables and their repositories.
 
 ## Provides
@@ -84,6 +84,7 @@ Records with TTL today:
 ## Open questions
 
 - Does the fallback purge need a leader so only one replica runs it, or are repeated deletes harmless enough?
+- Who creates the `pg_cron` extension? It needs `root`. New installs run no migration, and the API runs as `spica`, so a migration alone cannot do it. The chart's init script (which runs as `root` when the database is created) is the likely place, with a Part 2 migration for upgraded installs that predate it. The `spica` role also needs permission to schedule jobs.
 - Should large log tables be partitioned by time, so expiry drops whole partitions instead of deleting rows?
 
 ## Done when

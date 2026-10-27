@@ -21,9 +21,13 @@ export async function run(arg?: string | readonly string[]) {
       type: "string",
       demandOption: true
     })
-    .option("database-name", {
+    .option("database-type", {
       type: "string",
-      demandOption: true
+      choices: ["mongodb", "postgresql"] as const,
+      default: "mongodb" as const
+    })
+    .option("database-name", {
+      type: "string"
     })
     .option("dry-run", {
       type: "boolean",
@@ -52,6 +56,10 @@ export async function run(arg?: string | readonly string[]) {
       if (semver.gt(args.from, args.to)) {
         throw new TypeError("--from must not be greater than --to.");
       }
+
+      if (args["database-type"] == "mongodb" && !args["database-name"]) {
+        throw new TypeError("--database-name is required when --database-type is mongodb.");
+      }
       return true;
     })
     // Prevent from exiting when testing
@@ -61,6 +69,7 @@ export async function run(arg?: string | readonly string[]) {
   const resolvedArgs = await args;
 
   return migrate({
+    databaseType: resolvedArgs["database-type"],
     from: resolvedArgs.from.toString(),
     to: resolvedArgs.to.toString(),
     dryRun: resolvedArgs["dry-run"],

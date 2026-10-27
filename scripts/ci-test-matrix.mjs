@@ -10,7 +10,7 @@ const SERVICES = ["mongodb", "postgresql", "rabbitmq", "mailer"];
 
 const RULES = {
   mongodb: /database-testing|MONGODB_URL/,
-  postgresql: /contractSuite\s*\(|DatabaseTestingModule\s*\.\s*postgres\s*\(|POSTGRES_URL/,
+  postgresql: /contractSuite\s*\(|DatabaseTestingModule\s*\.\s*postgres\s*\(|createPostgresDatabase\s*\(|POSTGRES_URL/,
   rabbitmq: /RABBITMQ_(URL|STREAM_HOST|STREAM_PORT)/,
   mailer: /MAILER_URL/
 };
