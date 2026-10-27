@@ -10926,10 +10926,12 @@ __metadata:
     "@spica-server/database-testing": "workspace:*"
     "@types/cli-color": "npm:^2.0.6"
     "@types/node": "npm:^22.10.10"
+    "@types/pg": "npm:^8.15.5"
     "@types/semver": "npm:^7.5.8"
     "@types/yargs": "npm:^17.0.35"
     cli-color: "npm:^2.0.4"
     mongodb: "npm:^6.12.0"
+    pg: "npm:^8.16.3"
     semver: "npm:^7.7.4"
     yargs: "npm:^17.7.3"
   languageName: unknown
