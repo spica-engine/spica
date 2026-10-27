@@ -56,10 +56,7 @@ describe("PostgreSQL track", () => {
   });
 
   it("should apply the packaged baseline on a fresh database", async () => {
-    const packagedDir = path.join(
-      process.cwd(),
-      "../../packages/data/postgresql-migrations/src/migrations"
-    );
+    const packagedDir = path.join(process.cwd(), "dist/src/postgresql/migrations");
     const packaged = JSON.parse(fs.readFileSync(path.join(packagedDir, "index.json")).toString());
     const manifest = Object.fromEntries(
       Object.entries<string[]>(packaged).map(([version, scripts]) => [

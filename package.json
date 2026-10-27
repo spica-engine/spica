@@ -24,7 +24,6 @@
       "packages/data",
       "packages/data/mongodb",
       "packages/data/postgresql",
-      "packages/data/postgresql-migrations",
       "packages/database",
       "packages/database/pipeline",
       "packages/database/realtime",

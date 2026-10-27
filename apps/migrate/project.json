@@ -14,8 +14,18 @@
         }
       }
     },
-    "build-test": {
+    "copy-assets": {
       "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/migrate",
+        "command": "node -e \"require('fs').cpSync('src/postgresql/migrations','dist/src/postgresql/migrations',{recursive:true,filter:p=>!p.endsWith('.json')})\""
+      },
+      "inputs": ["{projectRoot}/src/postgresql/migrations/**/*.sql"],
+      "outputs": ["{projectRoot}/dist/src/postgresql/migrations"]
+    },
+    "build-test": {
+      "dependsOn": ["copy-assets"],
       "executor": "nx:run-commands",
       "options": {
         "cwd": "apps/migrate",
@@ -35,7 +45,7 @@
       }
     },
     "prune": {
-      "dependsOn": ["build", "^copy-assets"],
+      "dependsOn": ["copy-assets"],
       "command": "yarn prune:migrate"
     },
     "docker:build": {

@@ -9,9 +9,6 @@
   "references": [
     {
       "path": "../../packages/database/testing"
-    },
-    {
-      "path": "../../packages/data/postgresql-migrations"
     }
   ]
 }
