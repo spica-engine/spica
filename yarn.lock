@@ -9383,6 +9383,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/data-postgresql-orm@workspace:packages/data/postgresql/orm":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/data-postgresql-orm@workspace:packages/data/postgresql/orm"
+  dependencies:
+    "@spica-server/data": "workspace:*"
+    "@spica-server/database-testing": "workspace:*"
+    "@types/pg": "npm:^8.15.5"
+    pg: "npm:^8.16.3"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/data-postgresql@workspace:*, @spica-server/data-postgresql@workspace:packages/data/postgresql":
   version: 0.0.0-use.local
   resolution: "@spica-server/data-postgresql@workspace:packages/data/postgresql"
