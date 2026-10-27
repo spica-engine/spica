@@ -12,7 +12,17 @@
   "dependencies": {
     "@nestjs/common": "^10.4.22",
     "@spica-server/data": "workspace:*",
+    "@spica-server/data-postgresql-orm": "workspace:*",
+    "@spica-server/interface-config": "workspace:*",
     "@spica-server/interface-data": "workspace:*",
+    "@spica-server/interface-passport": "workspace:*",
+    "@spica-server/interface-passport-apikey": "workspace:*",
+    "@spica-server/interface-passport-authfactor": "workspace:*",
+    "@spica-server/interface-passport-identity": "workspace:*",
+    "@spica-server/interface-passport-policy": "workspace:*",
+    "@spica-server/interface-passport-refresh_token": "workspace:*",
+    "@spica-server/interface-passport-user": "workspace:*",
+    "@spica-server/interface-preference": "workspace:*",
     "pg": "^8.16.3",
     "uuid": "^11.0.5"
   },

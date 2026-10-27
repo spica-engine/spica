@@ -1,5 +1,6 @@
 import {defineEntity} from "../src/entity.js";
 import {
+  assertIdUnchanged,
   changedColumns,
   countSql,
   aggregateSql,
@@ -153,7 +154,9 @@ describe("sql builders", () => {
     it("rejects undefined values instead of comparing with NULL", () => {
       expect(() => selectSql(widgets, {name: undefined})).toThrow(/undefined "name"/);
       expect(() => countSql(widgets, {name: undefined})).toThrow(/undefined "name"/);
-      expect(() => updateSql(widgets, undefined, {name: "b"}, "after")).toThrow(/undefined "id"/);
+      expect(() => updateSql(widgets, {id: undefined}, {name: "b"}, "after")).toThrow(
+        /undefined "id"/
+      );
       expect(() => replaceSql(widgets, undefined, {name: "b"}, "after")).toThrow(/undefined "id"/);
     });
 
@@ -162,34 +165,38 @@ describe("sql builders", () => {
     });
   });
 
-  describe("changedColumns", () => {
+  describe("id changes", () => {
     it("ignores a repeated id and refuses a different one", () => {
-      expect(changedColumns(widgets, "1", {id: "1", name: "a"}).map(c => c.property)).toEqual([
-        "name"
-      ]);
-      expect(changedColumns(widgets, "1", {id: "1"})).toEqual([]);
-      expect(() => changedColumns(widgets, "1", {id: "2"})).toThrow(/cannot be changed/);
+      expect(() => assertIdUnchanged(widgets, "1", {id: "1", name: "a"})).not.toThrow();
+      expect(() => assertIdUnchanged(widgets, "1", {name: "a"})).not.toThrow();
+      expect(() => assertIdUnchanged(widgets, "1", {id: "2"})).toThrow(/cannot be changed/);
+    });
+
+    it("leaves an id-only change without columns to update", () => {
+      expect(changedColumns(widgets, {id: "1"})).toEqual([]);
     });
   });
 
   describe("updateSql", () => {
     it("returns the new row by default and the old row on request", () => {
-      expect(updateSql(widgets, "1", {name: "b"}, "after")).toEqual({
+      expect(updateSql(widgets, {id: "1"}, {name: "b"}, "after")).toEqual({
         text: 'UPDATE "widgets" SET "name" = $1 WHERE "id" = $2 RETURNING *',
         values: ["b", "1"]
       });
-      expect(updateSql(widgets, "1", {name: "b"}, "before").text).toMatch(/RETURNING old\.\*$/);
+      expect(updateSql(widgets, {id: "1"}, {name: "b"}, "before").text).toMatch(
+        /RETURNING old\.\*$/
+      );
     });
 
     it("sets null explicitly and skips undefined", () => {
-      expect(updateSql(widgets, "1", {tags: null, name: undefined}, "after").values).toEqual([
+      expect(updateSql(widgets, {id: "1"}, {tags: null, name: undefined}, "after").values).toEqual([
         null,
         "1"
       ]);
     });
 
     it("refuses an update that changes nothing", () => {
-      expect(() => updateSql(widgets, "1", {name: undefined}, "after")).toThrow(
+      expect(() => updateSql(widgets, {id: "1"}, {name: undefined}, "after")).toThrow(
         /Nothing to update/
       );
     });

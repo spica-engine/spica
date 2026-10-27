@@ -16,10 +16,12 @@ export interface ColumnDefinition {
   column?: string;
   notNull?: boolean;
   default?: string | number | boolean | readonly unknown[] | Record<string, unknown>;
+  keepNull?: boolean;
 }
 
 export interface IndexDefinition {
   name?: string;
+  keys?: string[];
   columns?: string[];
   expression?: string;
   unique?: boolean;
@@ -29,6 +31,7 @@ export interface IndexDefinition {
 
 export interface EntityDefinition {
   table: string;
+  idProperty?: string;
   columns: Record<string, ColumnDefinition>;
   indexes?: IndexDefinition[];
 }
@@ -40,6 +43,7 @@ export interface ResolvedColumn extends ColumnDefinition {
 
 export interface ResolvedIndex {
   name: string;
+  keys?: string[];
   columns?: string[];
   expression?: string;
   unique: boolean;
@@ -49,6 +53,7 @@ export interface ResolvedIndex {
 
 export interface Entity<R = unknown> {
   readonly table: string;
+  readonly idProperty: string;
   readonly columns: readonly ResolvedColumn[];
   readonly indexes: readonly ResolvedIndex[];
   readonly byProperty: ReadonlyMap<string, ResolvedColumn>;
@@ -64,14 +69,15 @@ const snakeCase = (property: string) =>
   property.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 
 export function defineEntity<R = Record<string, unknown>>(definition: EntityDefinition): Entity<R> {
-  if (ID_PROPERTY in definition.columns) {
+  const idProperty = definition.idProperty ?? ID_PROPERTY;
+  if (idProperty in definition.columns) {
     throw new Error(
-      `Entity "${definition.table}" must not define "${ID_PROPERTY}"; it is implicit.`
+      `Entity "${definition.table}" must not define "${idProperty}"; it is implicit.`
     );
   }
 
   const columns: ResolvedColumn[] = [
-    {property: ID_PROPERTY, column: "id", type: "uuid", notNull: true, default: "uuidv7()"},
+    {property: idProperty, column: "id", type: "uuid", notNull: true, default: "uuidv7()"},
     ...Object.entries(definition.columns).map(([property, column]) => ({
       ...column,
       property,
@@ -94,7 +100,14 @@ export function defineEntity<R = Record<string, unknown>>(definition: EntityDefi
     resolveIndex(definition.table, index, byProperty)
   );
 
-  return {table: definition.table, columns, indexes, byProperty, byColumn};
+  return {
+    table: definition.table,
+    idProperty,
+    columns,
+    indexes,
+    byProperty,
+    byColumn
+  };
 }
 
 function resolveIndex(
@@ -125,6 +138,7 @@ function resolveIndex(
 
   return {
     name,
+    keys: index.keys ?? index.columns,
     columns,
     expression: index.expression,
     unique,
