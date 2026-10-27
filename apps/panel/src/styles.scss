@@ -136,6 +136,10 @@
   // render into a body-level Portal container. This sits above every in-app
   // layer (highest in-app z-index is ~1100) so overlays are always front-most.
   --z-index-portal: 2000;
+
+  // Referenced by the ui-kit's relation input dropdown but never defined there, which
+  // left it at z-index: auto and painted behind the next field (spica-engine/ui-kit#268).
+  --z-index-dropdown: 10;
 }
 
 @font-face {
