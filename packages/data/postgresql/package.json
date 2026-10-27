@@ -13,7 +13,8 @@
     "@nestjs/common": "^10.4.22",
     "@spica-server/data": "workspace:*",
     "@spica-server/interface-data": "workspace:*",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.22",

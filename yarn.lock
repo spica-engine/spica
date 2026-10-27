@@ -9405,6 +9405,7 @@ __metadata:
     "@spica-server/interface-data": "workspace:*"
     "@types/pg": "npm:^8.15.5"
     pg: "npm:^8.16.3"
+    uuid: "npm:^11.0.5"
   languageName: unknown
   linkType: soft
 
