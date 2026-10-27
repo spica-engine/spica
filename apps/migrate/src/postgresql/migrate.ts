@@ -7,8 +7,7 @@ import PostgreSQLMigrationsIndex from "./migrations/index.json" with {type: "jso
 import {getManifestDir} from "../manifest-dir.js";
 import type {MigrationManifest, Options} from "../migrate.js";
 
-const VERSION_TABLE = "spica_migrations";
-const LOCK_KEY = "spica_migrations";
+const LOCK_KEY = "spica_migrate";
 
 function migrationsDir() {
   return path.join(getManifestDir(), "postgresql", "migrations");
@@ -57,26 +56,10 @@ export async function migratePostgreSQL(options: Options) {
   try {
     await client.query("BEGIN");
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [LOCK_KEY]);
-    await client.query(
-      `CREATE TABLE IF NOT EXISTS ${VERSION_TABLE} (
-        version text PRIMARY KEY,
-        scripts text[] NOT NULL,
-        applied_at timestamptz NOT NULL DEFAULT now()
-      )`
-    );
-
-    const {rows} = await client.query<{version: string}>(`SELECT version FROM ${VERSION_TABLE}`);
-    const applied = new Set(rows.map(row => row.version));
 
     for (const version of versions) {
-      if (applied.has(version)) {
-        options.console.info(`${color.yellow("SKIPPING:")} ${version} was already applied`);
-        continue;
-      }
-
       options.console.info(`${color.yellow("VERSION:")} ${version}`);
-      const scripts = getPostgreSQLMigrations(version);
-      for (const script of scripts) {
+      for (const script of getPostgreSQLMigrations(version)) {
         options.console.log(`${color.green("APPLYING:")} ${script}`);
         try {
           await client.query(fs.readFileSync(script).toString());
@@ -86,11 +69,6 @@ export async function migratePostgreSQL(options: Options) {
         }
         options.console.log(`${color.green("SUCCESS:")} ${script}`);
       }
-
-      await client.query(`INSERT INTO ${VERSION_TABLE} (version, scripts) VALUES ($1, $2)`, [
-        version,
-        scripts.map(script => path.basename(script))
-      ]);
     }
 
     if (options.dryRun) {
