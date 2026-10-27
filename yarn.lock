@@ -9457,6 +9457,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.22"
     "@spica-server/data": "workspace:*"
+    "@spica-server/data-postgresql-migrations": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@types/pg": "npm:^8.15.5"
     mongodb: "npm:^6.12.0"

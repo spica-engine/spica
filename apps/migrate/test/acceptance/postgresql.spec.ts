@@ -43,7 +43,7 @@ describe("PostgreSQL track", () => {
 
   beforeEach(async () => {
     scriptsDir = fs.mkdtempSync(path.join(os.tmpdir(), "spica-pg-migrations-"));
-    uri = await createPostgresDatabase();
+    uri = await createPostgresDatabase(undefined, {migrate: false});
     args = ["--database-type", "postgresql", "--database-uri", uri];
     client = new pg.Client({connectionString: uri});
     await client.connect();

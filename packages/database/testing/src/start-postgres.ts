@@ -1,5 +1,7 @@
 import {randomBytes} from "crypto";
+import {Writable} from "stream";
 import pg from "pg";
+import {migratePostgreSQL} from "@spica-server/data-postgresql-migrations";
 import {GenericContainer, Wait} from "testcontainers";
 
 const POSTGRES_IMAGE = "postgres:18";
@@ -26,7 +28,12 @@ function getBaseUri() {
   return baseUri;
 }
 
-export async function createPostgresDatabase(name?: string) {
+const LATEST_VERSION = "999999.0.0";
+const silentConsole = new console.Console(
+  new Writable({write: (_chunk, _encoding, done) => done()})
+);
+
+export async function createPostgresDatabase(name?: string, options: {migrate?: boolean} = {}) {
   const base = await getBaseUri();
   const database = name || `test_${randomBytes(4).toString("hex")}`;
 
@@ -44,6 +51,16 @@ export async function createPostgresDatabase(name?: string) {
 
   const uri = new URL(base);
   uri.pathname = `/${database}`;
+
+  if (options.migrate ?? true) {
+    await migratePostgreSQL({
+      uri: uri.toString(),
+      from: "0.0.0",
+      to: LATEST_VERSION,
+      console: silentConsole
+    });
+  }
+
   return uri.toString();
 }
 
