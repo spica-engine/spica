@@ -1,16 +1,17 @@
 import {Entity, ID_PROPERTY, ResolvedColumn, ResolvedIndex} from "./entity.js";
+import {Aggregation, Assignment, Condition, Where, WhereGroup} from "./expressions.js";
 
 export interface Statement {
   text: string;
   values: unknown[];
 }
 
-export type Where = Record<string, unknown>;
-
 export interface FindOptions {
+  select?: string[];
   orderBy?: Record<string, "asc" | "desc">;
   limit?: number;
   offset?: number;
+  lock?: "update" | "update skip locked";
 }
 
 export type Returning = "before" | "after";
@@ -19,6 +20,7 @@ export interface UpsertOptions {
   conflict: string[];
   conflictWhere?: string;
   update?: string[];
+  set?: Record<string, Assignment>;
 }
 
 export const quote = (identifier: string) => `"${identifier.replace(/"/g, '""')}"`;
@@ -32,12 +34,31 @@ export function createTableSql(entity: Entity): string {
     if (column.notNull) {
       parts.push("NOT NULL");
     }
-    if (column.default) {
-      parts.push(`DEFAULT ${column.default}`);
+    if (column.default !== undefined) {
+      parts.push(`DEFAULT ${defaultSql(column)}`);
     }
     return parts.join(" ");
   });
   return `CREATE TABLE IF NOT EXISTS ${quote(entity.table)} (${columns.join(", ")})`;
+}
+
+const literal = (text: string) => `'${text.replace(/'/g, "''")}'`;
+
+function defaultSql(column: ResolvedColumn) {
+  const value = column.default;
+  if (typeof value == "string") {
+    return value;
+  }
+  if (typeof value == "number" || typeof value == "boolean") {
+    return String(value);
+  }
+  if (column.type == "jsonb") {
+    return `${literal(JSON.stringify(value))}::jsonb`;
+  }
+  if (Array.isArray(value) && column.type.endsWith("[]") && !value.length) {
+    return "'{}'";
+  }
+  throw new Error(`"${column.property}" cannot default to ${JSON.stringify(value)}.`);
 }
 
 export function createIndexSql(entity: Entity, index: ResolvedIndex): string {
@@ -59,6 +80,9 @@ export function createIndexSql(entity: Entity, index: ResolvedIndex): string {
 export function toDbValue(column: ResolvedColumn, value: unknown) {
   if (value === null || value === undefined) {
     return value;
+  }
+  if (value instanceof Condition || value instanceof Assignment || value instanceof WhereGroup) {
+    throw new Error(`"${column.property}" cannot store an expression.`);
   }
   return column.type == "jsonb" ? JSON.stringify(value) : value;
 }
@@ -88,13 +112,23 @@ function presentColumns(entity: Entity, record: Record<string, unknown>) {
     .map(property => columnOf(entity, property));
 }
 
-function whereSql(entity: Entity, where: Where, values: unknown[]) {
+function predicate(entity: Entity, where: Where, values: unknown[]): string {
+  if (where instanceof WhereGroup) {
+    if (!where.parts.length) {
+      return where.operator == "AND" ? "TRUE" : "FALSE";
+    }
+    return `(${where.parts.map(part => `(${predicate(entity, part, values)})`).join(` ${where.operator} `)})`;
+  }
+
   const conditions = Object.entries(where).map(([property, value]) => {
     const column = columnOf(entity, property);
     if (value === undefined) {
       throw new Error(
         `"${entity.table}" was queried with an undefined "${property}"; use null to match NULL.`
       );
+    }
+    if (value instanceof Condition) {
+      return value.sql(quote(column.column), column, values);
     }
     if (value === null) {
       return `${quote(column.column)} IS NULL`;
@@ -109,7 +143,25 @@ function whereSql(entity: Entity, where: Where, values: unknown[]) {
     values.push(toDbValue(column, value));
     return `${quote(column.column)} = $${values.length}`;
   });
-  return conditions.length ? ` WHERE ${conditions.join(" AND ")}` : "";
+  return conditions.length ? conditions.join(" AND ") : "TRUE";
+}
+
+function whereSql(entity: Entity, where: Where, values: unknown[]) {
+  const text = predicate(entity, where, values);
+  return text == "TRUE" ? "" : ` WHERE ${text}`;
+}
+
+function jsonPath(entity: Entity, property: string, values: unknown[]) {
+  const [root, ...path] = property.split(".");
+  const column = columnOf(entity, root);
+  if (!path.length) {
+    return {column, expression: quote(column.column)};
+  }
+  if (column.type != "jsonb") {
+    throw new Error(`"${entity.table}.${root}" is not a jsonb column.`);
+  }
+  values.push(path);
+  return {column, expression: `(${quote(column.column)} #> $${values.length}::text[])`};
 }
 
 function returningSql(returning: Returning) {
@@ -171,8 +223,16 @@ export function updateSql(
   if (!columns.length) {
     throw new Error(`Nothing to update on "${entity.table}".`);
   }
-  const values = columns.map(column => toDbValue(column, changes[column.property]));
-  const assignments = columns.map((column, index) => `${quote(column.column)} = $${index + 1}`);
+  const values: unknown[] = [];
+  const assignments = columns.map(column => {
+    const value = changes[column.property];
+    const target = `${quote(entity.table)}.${quote(column.column)}`;
+    if (value instanceof Assignment) {
+      return `${quote(column.column)} = ${value.sql(target, column, values)}`;
+    }
+    values.push(toDbValue(column, value));
+    return `${quote(column.column)} = $${values.length}`;
+  });
   const condition = whereSql(entity, {[ID_PROPERTY]: id}, values);
   return {
     text: `UPDATE ${quote(entity.table)} SET ${assignments.join(", ")}${condition} ${returningSql(returning)}`,
@@ -204,19 +264,25 @@ export function replaceSql(
   };
 }
 
-export function deleteSql(entity: Entity, where: Where): Statement {
+export function deleteSql(entity: Entity, where: Where, returning = true): Statement {
   const values: unknown[] = [];
   const condition = whereSql(entity, where, values);
-  return {text: `DELETE FROM ${quote(entity.table)}${condition} RETURNING *`, values};
+  return {
+    text: `DELETE FROM ${quote(entity.table)}${condition}${returning ? " RETURNING *" : ""}`,
+    values
+  };
 }
 
 export function selectSql(entity: Entity, where: Where, options: FindOptions = {}): Statement {
   const values: unknown[] = [];
-  let text = `SELECT * FROM ${quote(entity.table)}${whereSql(entity, where, values)}`;
+  const projection = options.select
+    ? options.select.map(property => quote(columnOf(entity, property).column)).join(", ")
+    : "*";
+  let text = `SELECT ${projection} FROM ${quote(entity.table)}${whereSql(entity, where, values)}`;
   if (options.orderBy) {
     const order = Object.entries(options.orderBy).map(
       ([property, direction]) =>
-        `${quote(columnOf(entity, property).column)} ${direction == "desc" ? "DESC" : "ASC"}`
+        `${jsonPath(entity, property, values).expression} ${direction == "desc" ? "DESC" : "ASC"}`
     );
     text += ` ORDER BY ${order.join(", ")}`;
   }
@@ -228,7 +294,32 @@ export function selectSql(entity: Entity, where: Where, options: FindOptions = {
     values.push(options.offset);
     text += ` OFFSET $${values.length}`;
   }
+  if (options.lock) {
+    text += options.lock == "update" ? " FOR UPDATE" : " FOR UPDATE SKIP LOCKED";
+  }
   return {text, values};
+}
+
+export function aggregateSql(
+  entity: Entity,
+  aggregations: Record<string, Aggregation>,
+  where: Where
+): Statement {
+  const values: unknown[] = [];
+  const columns = Object.entries(aggregations).map(([alias, {property}]) => {
+    const [root, ...path] = property.split(".");
+    const column = columnOf(entity, root);
+    let source = quote(column.column);
+    if (path.length) {
+      values.push(path);
+      source = `(${source} #>> $${values.length}::text[])`;
+    }
+    return `COALESCE(SUM(${source}::float8), 0) AS ${quote(alias)}`;
+  });
+  return {
+    text: `SELECT ${columns.join(", ")} FROM ${quote(entity.table)}${whereSql(entity, where, values)}`,
+    values
+  };
 }
 
 export function countSql(entity: Entity, where: Where): Statement {
@@ -253,17 +344,31 @@ export function upsertSql(
   }
   const insert = insertSql(entity, record);
   const conflict = options.conflict.map(property => quote(columnOf(entity, property).column));
+  const set = Object.entries(options.set ?? {});
+  const setProperties = set.map(([property]) => property);
   const updated = (options.update ?? presentColumns(entity, record).map(c => c.property))
-    .filter(property => property != ID_PROPERTY && !options.conflict.includes(property))
+    .filter(
+      property =>
+        property != ID_PROPERTY &&
+        !options.conflict.includes(property) &&
+        !setProperties.includes(property)
+    )
     .map(property => quote(columnOf(entity, property).column));
+  const values = [...insert.values];
+  const assignments = [
+    ...updated.map(column => `${column} = EXCLUDED.${column}`),
+    ...set.map(([property, assignment]) => {
+      const column = columnOf(entity, property);
+      const target = `${quote(entity.table)}.${quote(column.column)}`;
+      return `${quote(column.column)} = ${assignment.sql(target, column, values)}`;
+    })
+  ];
 
   const target = `ON CONFLICT (${conflict.join(", ")})${options.conflictWhere ? ` WHERE ${options.conflictWhere}` : ""}`;
-  const action = updated.length
-    ? `DO UPDATE SET ${updated.map(column => `${column} = EXCLUDED.${column}`).join(", ")}`
-    : "DO NOTHING";
+  const action = assignments.length ? `DO UPDATE SET ${assignments.join(", ")}` : "DO NOTHING";
 
   return {
     text: insert.text.replace(/ RETURNING \*$/, ` ${target} ${action} RETURNING *`),
-    values: insert.values
+    values
   };
 }

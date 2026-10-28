@@ -1,7 +1,9 @@
 import pg from "pg";
 import {Entity} from "./entity.js";
 import {translateError} from "./errors.js";
+import {Aggregation, isUnconditional, Where} from "./expressions.js";
 import {
+  aggregateSql,
   countSql,
   deleteSql,
   changedColumns,
@@ -15,8 +17,7 @@ import {
   Statement,
   updateSql,
   upsertSql,
-  UpsertOptions,
-  Where
+  UpsertOptions
 } from "./sql.js";
 
 export interface Queryable {
@@ -52,8 +53,12 @@ export class Session {
     return this.findOne(entity, {id});
   }
 
-  async findOne<R>(entity: Entity<R>, where: Where): Promise<R | null> {
-    const [row] = await this.run(entity, selectSql(entity, where, {limit: 1}));
+  async findOne<R>(
+    entity: Entity<R>,
+    where: Where,
+    options: Omit<FindOptions, "limit" | "offset"> = {}
+  ): Promise<R | null> {
+    const [row] = await this.run(entity, selectSql(entity, where, {...options, limit: 1}));
     return row ?? null;
   }
 
@@ -95,14 +100,37 @@ export class Session {
   }
 
   async deleteMany<R>(entity: Entity<R>, where: Where): Promise<R[]> {
-    if (!Object.keys(where).length) {
+    if (isUnconditional(where)) {
       throw new Error(`deleteMany on "${entity.table}" needs a condition; use deleteAll.`);
     }
     return this.run(entity, deleteSql(entity, where));
   }
 
+  async deleteWhere(entity: Entity, where: Where): Promise<number> {
+    if (isUnconditional(where)) {
+      throw new Error(`deleteWhere on "${entity.table}" needs a condition; use deleteAll.`);
+    }
+    const {rowCount} = await this.query(entity, deleteSql(entity, where, false));
+    return rowCount ?? 0;
+  }
+
   async deleteAll<R>(entity: Entity<R>): Promise<R[]> {
     return this.run(entity, deleteSql(entity, {}));
+  }
+
+  async aggregate<K extends string>(
+    entity: Entity,
+    aggregations: Record<K, Aggregation>,
+    where: Where = {}
+  ): Promise<Record<K, number>> {
+    const {rows} = await this.query(entity, aggregateSql(entity, aggregations, where));
+    return Object.fromEntries(
+      Object.entries(rows[0]).map(([alias, value]) => [alias, Number(value)])
+    ) as Record<K, number>;
+  }
+
+  async lockTransaction(name: string): Promise<void> {
+    await this.db.query("SELECT pg_advisory_xact_lock(hashtext($1))", [name]);
   }
 
   async upsert<R>(
@@ -135,6 +163,10 @@ export class Session {
 export class Orm extends Session {
   constructor(private readonly pool: pg.Pool) {
     super(pool);
+  }
+
+  override async lockTransaction(): Promise<void> {
+    throw new Error("A transaction lock needs a transaction.");
   }
 
   override async transaction<T>(work: (session: Session) => Promise<T>): Promise<T> {
