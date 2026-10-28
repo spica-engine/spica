@@ -1,7 +1,9 @@
 import pg from "pg";
 import {Entity} from "./entity.js";
 import {translateError} from "./errors.js";
+import {Aggregation, Assignment, isUnconditional, Where} from "./expressions.js";
 import {
+  aggregateSql,
   countSql,
   deleteSql,
   changedColumns,
@@ -15,8 +17,7 @@ import {
   Statement,
   updateSql,
   upsertSql,
-  UpsertOptions,
-  Where
+  UpsertOptions
 } from "./sql.js";
 
 export interface Queryable {
@@ -27,7 +28,7 @@ export interface ReturningOption {
   returning?: Returning;
 }
 
-type Changes<R> = Partial<Omit<R, "id">> & Record<string, unknown>;
+type Changes<R> = {[K in keyof Omit<R, "id">]?: R[K] | Assignment | null} & Record<string, unknown>;
 
 export class Session {
   constructor(readonly db: Queryable) {}
@@ -49,15 +50,23 @@ export class Session {
   }
 
   async findById<R>(entity: Entity<R>, id: unknown): Promise<R | null> {
-    return this.findOne(entity, {id});
+    return this.findOne(entity, {id}) as Promise<R | null>;
   }
 
-  async findOne<R>(entity: Entity<R>, where: Where): Promise<R | null> {
-    const [row] = await this.run(entity, selectSql(entity, where, {limit: 1}));
+  async findOne<R, K extends keyof R & string = keyof R & string>(
+    entity: Entity<R>,
+    where: Where,
+    options: Omit<FindOptions<K>, "limit" | "offset"> = {}
+  ): Promise<Pick<R, K> | null> {
+    const [row] = await this.run(entity, selectSql(entity, where, {...options, limit: 1}));
     return row ?? null;
   }
 
-  async findMany<R>(entity: Entity<R>, where: Where = {}, options?: FindOptions): Promise<R[]> {
+  async findMany<R, K extends keyof R & string = keyof R & string>(
+    entity: Entity<R>,
+    where: Where = {},
+    options?: FindOptions<K>
+  ): Promise<Pick<R, K>[]> {
     return this.run(entity, selectSql(entity, where, options));
   }
 
@@ -95,14 +104,37 @@ export class Session {
   }
 
   async deleteMany<R>(entity: Entity<R>, where: Where): Promise<R[]> {
-    if (!Object.keys(where).length) {
+    if (isUnconditional(where)) {
       throw new Error(`deleteMany on "${entity.table}" needs a condition; use deleteAll.`);
     }
     return this.run(entity, deleteSql(entity, where));
   }
 
+  async deleteWhere(entity: Entity, where: Where): Promise<number> {
+    if (isUnconditional(where)) {
+      throw new Error(`deleteWhere on "${entity.table}" needs a condition; use deleteAll.`);
+    }
+    const {rowCount} = await this.query(entity, deleteSql(entity, where, false));
+    return rowCount ?? 0;
+  }
+
   async deleteAll<R>(entity: Entity<R>): Promise<R[]> {
     return this.run(entity, deleteSql(entity, {}));
+  }
+
+  async aggregate<K extends string>(
+    entity: Entity,
+    aggregations: Record<K, Aggregation>,
+    where: Where = {}
+  ): Promise<Record<K, number>> {
+    const {rows} = await this.query(entity, aggregateSql(entity, aggregations, where));
+    return Object.fromEntries(
+      Object.entries(rows[0]).map(([alias, value]) => [alias, Number(value)])
+    ) as Record<K, number>;
+  }
+
+  async lockTransaction(name: string): Promise<void> {
+    await this.db.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [name]);
   }
 
   async upsert<R>(
@@ -135,6 +167,10 @@ export class Session {
 export class Orm extends Session {
   constructor(private readonly pool: pg.Pool) {
     super(pool);
+  }
+
+  override async lockTransaction(_name: string): Promise<void> {
+    throw new Error("A transaction lock needs a transaction.");
   }
 
   override async transaction<T>(work: (session: Session) => Promise<T>): Promise<T> {

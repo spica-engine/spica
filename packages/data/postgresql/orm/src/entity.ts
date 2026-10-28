@@ -2,6 +2,7 @@ export type ColumnType =
   | "uuid"
   | "text"
   | "integer"
+  | "double precision"
   | "bigint"
   | "boolean"
   | "timestamptz"
@@ -14,7 +15,7 @@ export interface ColumnDefinition {
   type: ColumnType;
   column?: string;
   notNull?: boolean;
-  default?: string;
+  default?: string | number | boolean | readonly unknown[] | Record<string, unknown>;
 }
 
 export interface IndexDefinition {
