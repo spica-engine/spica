@@ -1,23 +1,25 @@
-import {EntryStatus, Id, ProfilerQuery} from "@spica-server/interface-data";
+import {
+  DeletableById,
+  EntryStatus,
+  Id,
+  ProfilerQuery,
+  Repository,
+  UpdatableById
+} from "@spica-server/interface-data";
 import {FactorMeta} from "@spica-server/interface-passport-authfactor";
 import {User, UserVerification} from "./index.js";
 
 /**
  * Inserts and updates reject with DuplicateKeyError when the username, email or phone is taken.
  */
-export interface UserRepository {
+export interface UserRepository extends Repository<User>, UpdatableById<User>, DeletableById {
   findById(id: Id): Promise<User | null>;
   findByUsername(username: string): Promise<User | null>;
   findWithAuthFactor(): Promise<User[]>;
-  insert(user: User): Promise<User>;
   /**
    * Inserts the user unless one with the same username exists.
    */
   insertIfMissing(user: User): Promise<number>;
-  /**
-   * Resolves to the updated user, or null when it does not exist.
-   */
-  updateById(id: Id, changes: Partial<User>): Promise<User | null>;
   /**
    * Sets the given fields, which may be dotted paths into the user, without reading the user.
    */
@@ -41,7 +43,6 @@ export interface UserRepository {
   addPolicy(id: Id, policyId: string): Promise<User | null>;
   removePolicy(id: Id, policyId: string): Promise<User | null>;
   removePolicyFromAll(policyId: string): Promise<number>;
-  deleteById(id: Id): Promise<number>;
   status(): Promise<EntryStatus>;
   profilerEntries(query: ProfilerQuery): Promise<unknown[]>;
 }

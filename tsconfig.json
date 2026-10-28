@@ -441,6 +441,9 @@
     },
     {
       "path": "./packages/data"
+    },
+    {
+      "path": "./packages/data/postgresql/orm"
     }
   ]
 }

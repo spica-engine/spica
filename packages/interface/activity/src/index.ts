@@ -1,4 +1,4 @@
-import {Id} from "@spica-server/interface-data";
+import {DeletableById, Id} from "@spica-server/interface-data";
 
 export interface PreActivity {
   action: Action;
@@ -32,9 +32,8 @@ export interface ActivityOptions {
 
 export const ACTIVITY_OPTIONS = Symbol.for("ACTIVITY_OPTIONS");
 
-export interface ActivityRepository {
+export interface ActivityRepository extends DeletableById {
   insertMany(activities: Activity[]): Promise<Id[]>;
-  deleteById(id: Id): Promise<number>;
   deleteByIds(ids: Id[]): Promise<number>;
 }
 
