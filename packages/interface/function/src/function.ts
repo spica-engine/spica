@@ -28,6 +28,8 @@ export interface Function<
   language: string;
   warmWorkers?: number;
   concurrencyPerWorker?: number;
+  order?: number;
+  category?: string;
 }
 
 export interface Triggers {

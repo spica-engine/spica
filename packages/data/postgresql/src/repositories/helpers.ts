@@ -43,3 +43,21 @@ export async function removePolicyFromAll(orm: Orm, entity: Entity, policyId: st
   return (await orm.updateMany(entity, {policies: has(policyId)}, {policies: pull(policyId)}))
     .length;
 }
+
+export function setPath(target: Record<string, any>, path: string[], value: unknown) {
+  const last = path[path.length - 1];
+  const parent = path.slice(0, -1).reduce((node, key) => {
+    if (node[key] === null || typeof node[key] != "object") {
+      node[key] = {};
+    }
+    return node[key];
+  }, target);
+  parent[last] = value;
+}
+
+export function unsetPath(target: Record<string, any>, path: string[]) {
+  const parent = path.slice(0, -1).reduce((node, key) => node?.[key], target);
+  if (parent && typeof parent == "object") {
+    delete parent[path[path.length - 1]];
+  }
+}
