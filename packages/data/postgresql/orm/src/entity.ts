@@ -14,7 +14,7 @@ export interface ColumnDefinition {
   type: ColumnType;
   column?: string;
   notNull?: boolean;
-  default?: string | number | boolean | unknown[] | Record<string, unknown>;
+  default?: string | number | boolean | readonly unknown[] | Record<string, unknown>;
 }
 
 export interface IndexDefinition {

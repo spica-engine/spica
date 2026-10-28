@@ -1,7 +1,7 @@
 import pg from "pg";
 import {Entity} from "./entity.js";
 import {translateError} from "./errors.js";
-import {Aggregation, isUnconditional, Where} from "./expressions.js";
+import {Aggregation, Assignment, isUnconditional, Where} from "./expressions.js";
 import {
   aggregateSql,
   countSql,
@@ -28,7 +28,7 @@ export interface ReturningOption {
   returning?: Returning;
 }
 
-type Changes<R> = Partial<Omit<R, "id">> & Record<string, unknown>;
+type Changes<R> = {[K in keyof Omit<R, "id">]?: R[K] | Assignment | null} & Record<string, unknown>;
 
 export class Session {
   constructor(readonly db: Queryable) {}
