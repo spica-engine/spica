@@ -14,6 +14,14 @@ import {PostgresFunctionAssetRepository} from "./function/asset.js";
 import {PostgresFunctionRepository} from "./function/function.js";
 import {PostgresFunctionLogRepository, PostgresFunctionLogSink} from "./function/log.js";
 import {PostgresWebhookLogRepository, PostgresWebhookRepository} from "./function/webhook.js";
+import {DASHBOARD_REPOSITORY} from "@spica-server/interface-dashboard";
+import {ENV_VAR_REPOSITORY} from "@spica-server/interface-env_var";
+import {SECRET_REPOSITORY} from "@spica-server/interface-secret";
+import {STATUS_REPOSITORY} from "@spica-server/interface-status";
+import {PostgresDashboardRepository} from "./dashboard/dashboard.js";
+import {PostgresEnvVarRepository} from "./env_var/env-var.js";
+import {PostgresSecretRepository} from "./secret/secret.js";
+import {PostgresStatusRepository} from "./status/status.js";
 import {CONFIG_REPOSITORY} from "@spica-server/interface-config";
 import {PostgresConfigRepository} from "./config/config.js";
 import {PostgresApiKeyRepository} from "./passport/apikey.js";
@@ -39,5 +47,9 @@ export const repositoryClasses: RepositoryClasses = new Map<symbol, RepositoryCl
   [FUNCTION_LOG_SINK, PostgresFunctionLogSink],
   [WEBHOOK_REPOSITORY, PostgresWebhookRepository],
   [WEBHOOK_LOG_REPOSITORY, PostgresWebhookLogRepository],
-  [FUNCTION_ASSET_REPOSITORY, PostgresFunctionAssetRepository]
+  [FUNCTION_ASSET_REPOSITORY, PostgresFunctionAssetRepository],
+  [ENV_VAR_REPOSITORY, PostgresEnvVarRepository],
+  [SECRET_REPOSITORY, PostgresSecretRepository],
+  [DASHBOARD_REPOSITORY, PostgresDashboardRepository],
+  [STATUS_REPOSITORY, PostgresStatusRepository]
 ]);
