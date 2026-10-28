@@ -5,8 +5,9 @@ import {Aggregation, Assignment, isUnconditional, Where} from "./expressions.js"
 import {
   aggregateSql,
   countSql,
-  deleteSql,
+  assertIdUnchanged,
   changedColumns,
+  deleteSql,
   FindOptions,
   fromRow,
   insertManySql,
@@ -50,7 +51,7 @@ export class Session {
   }
 
   async findById<R>(entity: Entity<R>, id: unknown): Promise<R | null> {
-    return this.findOne(entity, {id}) as Promise<R | null>;
+    return this.findOne(entity, {[entity.idProperty]: id}) as Promise<R | null>;
   }
 
   async findOne<R, K extends keyof R & string = keyof R & string>(
@@ -81,11 +82,27 @@ export class Session {
     changes: Changes<R>,
     {returning = "after"}: ReturningOption = {}
   ): Promise<R | null> {
-    if (!changedColumns(entity, id, changes).length) {
+    assertIdUnchanged(entity, id, changes);
+    if (!changedColumns(entity, changes).length) {
       return this.findById(entity, id);
     }
-    const [row] = await this.run(entity, updateSql(entity, id, changes, returning));
+    const [row] = await this.run(
+      entity,
+      updateSql(entity, {[entity.idProperty]: id}, changes, returning)
+    );
     return row ?? null;
+  }
+
+  async updateMany<R>(
+    entity: Entity<R>,
+    where: Where,
+    changes: Changes<R>,
+    {returning = "after"}: ReturningOption = {}
+  ): Promise<R[]> {
+    if (changes[entity.idProperty] !== undefined) {
+      throw new Error(`The id of a "${entity.table}" record cannot be changed.`);
+    }
+    return this.run(entity, updateSql(entity, where, changes, returning));
   }
 
   async replaceById<R>(
@@ -99,7 +116,7 @@ export class Session {
   }
 
   async deleteById<R>(entity: Entity<R>, id: unknown): Promise<R | null> {
-    const [row] = await this.run(entity, deleteSql(entity, {id}));
+    const [row] = await this.run(entity, deleteSql(entity, {[entity.idProperty]: id}));
     return row ?? null;
   }
 

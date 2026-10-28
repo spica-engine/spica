@@ -1,4 +1,4 @@
-import {Entity, ID_PROPERTY, ResolvedColumn, ResolvedIndex} from "./entity.js";
+import {Entity, ResolvedColumn, ResolvedIndex} from "./entity.js";
 import {Aggregation, Assignment, Condition, Where, WhereGroup} from "./expressions.js";
 
 export interface Statement {
@@ -23,12 +23,14 @@ export interface UpsertOptions {
   set?: Record<string, Assignment>;
 }
 
+type Record_ = Record<string, unknown>;
+
 export const quote = (identifier: string) => `"${identifier.replace(/"/g, '""')}"`;
 
 export function createTableSql(entity: Entity): string {
   const columns = entity.columns.map(column => {
     const parts = [quote(column.column), column.type];
-    if (column.property == ID_PROPERTY) {
+    if (column.property == entity.idProperty) {
       parts.push("PRIMARY KEY");
     }
     if (column.notNull) {
@@ -92,11 +94,13 @@ export function toDbValue(column: ResolvedColumn, value: unknown) {
   return column.type == "jsonb" ? JSON.stringify(value) : value;
 }
 
-export function fromRow<R>(entity: Entity<R>, row: Record<string, unknown>): R {
-  const record: Record<string, unknown> = {};
+export function fromRow<R>(entity: Entity<R>, row: Record_): R {
+  const record: Record_ = {};
   for (const column of entity.columns) {
     const value = row[column.column];
-    if (value !== null && value !== undefined) {
+    if (value === null && column.keepNull) {
+      record[column.property] = null;
+    } else if (value !== null && value !== undefined) {
       record[column.property] = value;
     }
   }
@@ -111,7 +115,7 @@ function columnOf(entity: Entity, property: string) {
   return column;
 }
 
-function presentColumns(entity: Entity, record: Record<string, unknown>) {
+function presentColumns(entity: Entity, record: Record_) {
   return Object.keys(record)
     .filter(property => record[property] !== undefined)
     .map(property => columnOf(entity, property));
@@ -178,14 +182,18 @@ function returningSql(returning: Returning) {
   return returning == "before" ? "RETURNING old.*" : "RETURNING *";
 }
 
-export function changedColumns(entity: Entity, id: unknown, changes: Record<string, unknown>) {
-  if (changes[ID_PROPERTY] !== undefined && String(changes[ID_PROPERTY]) != String(id)) {
-    throw new Error(`The id of a "${entity.table}" record cannot be changed.`);
-  }
-  return presentColumns(entity, changes).filter(column => column.property != ID_PROPERTY);
+export function changedColumns(entity: Entity, changes: Record_) {
+  return presentColumns(entity, changes).filter(column => column.property != entity.idProperty);
 }
 
-export function insertSql(entity: Entity, record: Record<string, unknown>): Statement {
+export function assertIdUnchanged(entity: Entity, id: unknown, changes: Record_) {
+  const changed = changes[entity.idProperty];
+  if (changed !== undefined && String(changed) != String(id)) {
+    throw new Error(`The id of a "${entity.table}" record cannot be changed.`);
+  }
+}
+
+export function insertSql(entity: Entity, record: Record_): Statement {
   const columns = presentColumns(entity, record);
   if (!columns.length) {
     return {text: `INSERT INTO ${quote(entity.table)} DEFAULT VALUES RETURNING *`, values: []};
@@ -196,13 +204,13 @@ export function insertSql(entity: Entity, record: Record<string, unknown>): Stat
   };
 }
 
-export function insertManySql(entity: Entity, records: Record<string, unknown>[]): Statement {
+export function insertManySql(entity: Entity, records: Record_[]): Statement {
   const properties = new Set(
     records.flatMap(record => presentColumns(entity, record).map(c => c.property))
   );
   const columns = properties.size
     ? [...properties].map(property => columnOf(entity, property))
-    : [columnOf(entity, ID_PROPERTY)];
+    : [columnOf(entity, entity.idProperty)];
 
   const values: unknown[] = [];
   const rows = records.map(record => {
@@ -225,14 +233,11 @@ export function insertManySql(entity: Entity, records: Record<string, unknown>[]
 
 export function updateSql(
   entity: Entity,
-  id: unknown,
-  changes: Record<string, unknown>,
+  where: Where,
+  changes: Record_,
   returning: Returning
 ): Statement {
-  const columns = changedColumns(entity, id, changes);
-  if (!columns.length) {
-    throw new Error(`Nothing to update on "${entity.table}".`);
-  }
+  const columns = changedColumns(entity, changes);
   const values: unknown[] = [];
   const assignments = columns.map(column => {
     const value = changes[column.property];
@@ -243,7 +248,12 @@ export function updateSql(
     values.push(toDbValue(column, value));
     return `${quote(column.column)} = $${values.length}`;
   });
-  const condition = whereSql(entity, {[ID_PROPERTY]: id}, values);
+
+  if (!assignments.length) {
+    throw new Error(`Nothing to update on "${entity.table}".`);
+  }
+
+  const condition = whereSql(entity, where, values);
   return {
     text: `UPDATE ${quote(entity.table)} SET ${assignments.join(", ")}${condition} ${returningSql(returning)}`,
     values
@@ -253,12 +263,12 @@ export function updateSql(
 export function replaceSql(
   entity: Entity,
   id: unknown,
-  record: Record<string, unknown>,
+  record: Record_,
   returning: Returning
 ): Statement {
   const values: unknown[] = [];
   const assignments = entity.columns
-    .filter(column => column.property != ID_PROPERTY)
+    .filter(column => column.property != entity.idProperty)
     .map(column => {
       const value = record[column.property];
       if (value === undefined) {
@@ -267,7 +277,7 @@ export function replaceSql(
       values.push(toDbValue(column, value));
       return `${quote(column.column)} = $${values.length}`;
     });
-  const condition = whereSql(entity, {[ID_PROPERTY]: id}, values);
+  const condition = whereSql(entity, {[entity.idProperty]: id}, values);
   return {
     text: `UPDATE ${quote(entity.table)} SET ${assignments.join(", ")}${condition} ${returningSql(returning)}`,
     values
@@ -343,11 +353,7 @@ export function countSql(entity: Entity, where: Where): Statement {
   };
 }
 
-export function upsertSql(
-  entity: Entity,
-  record: Record<string, unknown>,
-  options: UpsertOptions
-): Statement {
+export function upsertSql(entity: Entity, record: Record_, options: UpsertOptions): Statement {
   if (!options.conflict.length) {
     throw new Error(`An upsert on "${entity.table}" needs at least one conflict property.`);
   }
@@ -362,7 +368,7 @@ export function upsertSql(
   const updated = (options.update ?? presentColumns(entity, record).map(c => c.property))
     .filter(
       property =>
-        property != ID_PROPERTY &&
+        property != entity.idProperty &&
         !options.conflict.includes(property) &&
         !setProperties.includes(property)
     )
