@@ -6,6 +6,7 @@ export const TABLES_LOCK_NAME = "spica_system_tables";
 
 export async function createTables(pool: pg.Pool, entities: readonly Entity[]) {
   const client = await pool.connect();
+  let unlockFailed = false;
   try {
     await client.query("SELECT pg_advisory_lock(hashtext($1))", [TABLES_LOCK_NAME]);
     try {
@@ -16,9 +17,14 @@ export async function createTables(pool: pg.Pool, entities: readonly Entity[]) {
         }
       }
     } finally {
-      await client.query("SELECT pg_advisory_unlock(hashtext($1))", [TABLES_LOCK_NAME]);
+      await client
+        .query("SELECT pg_advisory_unlock(hashtext($1))", [TABLES_LOCK_NAME])
+        .catch(error => {
+          unlockFailed = true;
+          throw error;
+        });
     }
   } finally {
-    client.release();
+    client.release(unlockFailed);
   }
 }

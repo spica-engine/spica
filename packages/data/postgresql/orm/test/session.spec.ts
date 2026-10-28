@@ -15,6 +15,8 @@ interface Widget {
   createdAt: Date;
 }
 
+const NOT_NULL_VIOLATION = "23502";
+
 const widgets = defineEntity<Widget>({
   table: "widgets",
   columns: {
@@ -92,16 +94,6 @@ describe("Orm", () => {
       expect(widget.createdAt).toBeInstanceOf(Date);
     });
 
-    it("applies column conversion hooks in both directions", async () => {
-      const upper = defineEntity<{id: string; name: string}>({
-        table: "widgets",
-        columns: {
-          name: {type: "text", toDb: v => String(v).toUpperCase(), fromDb: v => `${v}!`}
-        }
-      });
-      expect(await orm.insert(upper, {name: "abc"})).toMatchObject({name: "ABC!"});
-    });
-
     it("rejects unknown properties", async () => {
       await expect(orm.insert(widgets, {nope: 1} as any)).rejects.toThrow(/no property "nope"/);
     });
@@ -143,6 +135,22 @@ describe("Orm", () => {
 
     it("counts matching rows", async () => {
       expect(await orm.count(widgets, {tags: null})).toBe(1);
+      expect(typeof (await orm.count(widgets))).toBe("number");
+    });
+
+    it("refuses undefined conditions instead of matching nothing", async () => {
+      await expect(orm.findOne(widgets, {name: undefined})).rejects.toThrow(/undefined "name"/);
+      await expect(orm.findMany(widgets, {name: undefined})).rejects.toThrow(/undefined "name"/);
+      await expect(orm.count(widgets, {name: undefined})).rejects.toThrow(/undefined "name"/);
+      await expect(orm.findById(widgets, undefined)).rejects.toThrow(/undefined "id"/);
+      await expect(orm.deleteById(widgets, undefined)).rejects.toThrow(/undefined "id"/);
+      await expect(orm.updateById(widgets, undefined, {note: "x"})).rejects.toThrow(
+        /undefined "id"/
+      );
+      await expect(orm.replaceById(widgets, undefined, {name: "x"})).rejects.toThrow(
+        /undefined "id"/
+      );
+      expect(await orm.count(widgets)).toBe(3);
     });
   });
 
@@ -173,6 +181,21 @@ describe("Orm", () => {
     it("treats an update with no changes as a read", async () => {
       const widget = await orm.insert(widgets, {name: "a"});
       expect(await orm.updateById(widgets, widget.id, {})).toEqual(widget);
+    });
+
+    it("refuses to change the id", async () => {
+      const widget = await orm.insert(widgets, {name: "a"});
+      await expect(
+        orm.updateById(widgets, widget.id, {id: "01890a5d-ac96-774b-bcce-b302099a8057", note: "x"})
+      ).rejects.toThrow(/id of a "widgets" record cannot be changed/);
+      await expect(
+        orm.updateById(widgets, widget.id, {id: "01890a5d-ac96-774b-bcce-b302099a8057"})
+      ).rejects.toThrow(/cannot be changed/);
+    });
+
+    it("treats an update that only repeats the id as a read", async () => {
+      const widget = await orm.insert(widgets, {name: "a"});
+      expect(await orm.updateById(widgets, widget.id, {id: widget.id})).toEqual(widget);
     });
 
     it("returns null when the row does not exist", async () => {
@@ -211,6 +234,18 @@ describe("Orm", () => {
       expect(deleted).toHaveLength(2);
       expect(await orm.count(widgets)).toBe(1);
     });
+
+    it("refuses to delete many rows without a condition", async () => {
+      await orm.insertMany(widgets, [{name: "a"}, {name: "b"}]);
+      await expect(orm.deleteMany(widgets, {})).rejects.toThrow(/needs a condition/);
+      expect(await orm.count(widgets)).toBe(2);
+    });
+
+    it("deletes every row on request", async () => {
+      await orm.insertMany(widgets, [{name: "a"}, {name: "b"}]);
+      expect(await orm.deleteAll(widgets)).toHaveLength(2);
+      expect(await orm.count(widgets)).toBe(0);
+    });
   });
 
   describe("upsert", () => {
@@ -219,6 +254,49 @@ describe("Orm", () => {
       const second = await orm.upsert(widgets, {name: "a", note: "two"}, {conflict: ["name"]});
       expect(second).toMatchObject({id: first.id, note: "two"});
       expect(await orm.count(widgets)).toBe(1);
+    });
+
+    it("keeps the stored id and conflict columns when the record carries others", async () => {
+      const first = await orm.upsert(widgets, {name: "a", note: "one"}, {conflict: ["name"]});
+      const second = await orm.upsert(
+        widgets,
+        {id: "01890a5d-ac96-774b-bcce-b302099a8057", name: "a", note: "two"},
+        {conflict: ["name"]}
+      );
+      expect(second).toMatchObject({id: first.id, name: "a", note: "two"});
+      expect(await orm.count(widgets)).toBe(1);
+    });
+
+    it("does not resolve a primary key collision that the conflict target omits", async () => {
+      const taken = await orm.insert(widgets, {name: "a"});
+      await expect(
+        orm.upsert(widgets, {id: taken.id, name: "b"}, {conflict: ["name"]})
+      ).rejects.toBeInstanceOf(DuplicateKeyError);
+      expect(await orm.count(widgets)).toBe(1);
+    });
+
+    it("updates the row matched through the primary key when it is the conflict", async () => {
+      const taken = await orm.insert(widgets, {name: "a", note: "one"});
+      const upserted = await orm.upsert(
+        widgets,
+        {id: taken.id, name: "a", note: "two"},
+        {conflict: ["id"]}
+      );
+      expect(upserted).toMatchObject({id: taken.id, note: "two"});
+    });
+
+    it("refuses an upsert without a conflict property", async () => {
+      await expect(orm.upsert(widgets, {name: "a"}, {conflict: []})).rejects.toThrow(
+        /needs at least one conflict property/
+      );
+    });
+
+    it("refuses to update a property the record omits", async () => {
+      await orm.insert(widgets, {name: "a", note: "keep"});
+      await expect(
+        orm.upsert(widgets, {name: "a"}, {conflict: ["name"], update: ["note"]})
+      ).rejects.toThrow(/updates "note" but the record omits it/);
+      expect((await orm.findOne(widgets, {name: "a"})).note).toBe("keep");
     });
 
     it("returns null when the conflict is ignored", async () => {
@@ -235,6 +313,12 @@ describe("Orm", () => {
       expect(error.keyValue).toEqual({name: "a"});
     });
 
+    it("keeps values that contain commas intact", async () => {
+      await orm.insert(widgets, {name: "a, b"});
+      const error = await orm.insert(widgets, {name: "a, b"}).catch(e => e);
+      expect(error.keyValue).toEqual({name: "a, b"});
+    });
+
     it("maps violations raised by updates", async () => {
       await orm.insert(widgets, {name: "a"});
       const {id} = await orm.insert(widgets, {name: "b"});
@@ -244,7 +328,9 @@ describe("Orm", () => {
     });
 
     it("rethrows other errors untouched", async () => {
-      await expect(orm.insert(widgets, {note: "no name"})).rejects.toMatchObject({code: "23502"});
+      await expect(orm.insert(widgets, {note: "no name"})).rejects.toMatchObject({
+        code: NOT_NULL_VIOLATION
+      });
     });
   });
 
@@ -328,10 +414,49 @@ describe("Orm", () => {
             throw new Error("x");
           })
         ).rejects.toThrow("x");
+        expect(small.idleCount).toBe(1);
+        expect(small.waitingCount).toBe(0);
+
         await scoped.transaction(async session => session.count(widgets));
+        expect(small.idleCount).toBe(1);
+        expect(small.waitingCount).toBe(0);
       } finally {
         await small.end();
       }
+    });
+
+    it("destroys the connection when the rollback fails", async () => {
+      const release = jest.fn();
+      const client = {
+        query: jest.fn(async (text: string) => {
+          if (text == "ROLLBACK") {
+            throw new Error("connection lost");
+          }
+          return {rows: []};
+        }),
+        release
+      };
+      const broken = new Orm({connect: async () => client} as unknown as pg.Pool);
+
+      await expect(
+        broken.transaction(async () => {
+          throw new Error("x");
+        })
+      ).rejects.toThrow("x");
+      expect(release).toHaveBeenCalledWith(true);
+    });
+
+    it("keeps healthy connections after a rollback", async () => {
+      const release = jest.fn();
+      const client = {query: jest.fn(async () => ({rows: []})), release};
+      const healthy = new Orm({connect: async () => client} as unknown as pg.Pool);
+
+      await expect(
+        healthy.transaction(async () => {
+          throw new Error("x");
+        })
+      ).rejects.toThrow("x");
+      expect(release).toHaveBeenCalledWith(false);
     });
   });
 });

@@ -1,5 +1,7 @@
 import {defineEntity} from "../src/entity.js";
 import {
+  changedColumns,
+  countSql,
   createIndexSql,
   createTableSql,
   insertManySql,
@@ -27,6 +29,21 @@ const widgets = defineEntity({
 
 describe("sql builders", () => {
   describe("defineEntity", () => {
+    it("rejects two properties that share a column", () => {
+      expect(() =>
+        defineEntity({
+          table: "clashes",
+          columns: {
+            createdAt: {type: "timestamptz"},
+            created: {type: "timestamptz", column: "created_at"}
+          }
+        })
+      ).toThrow(/more than one property to column "created_at"/);
+      expect(() =>
+        defineEntity({table: "clashes", columns: {key: {type: "text", column: "id"}}})
+      ).toThrow(/more than one property to column "id"/);
+    });
+
     it("adds a uuidv7 id primary key and snake_cases property names", () => {
       expect(createTableSql(widgets)).toBe(
         'CREATE TABLE IF NOT EXISTS "widgets" ("id" uuid PRIMARY KEY NOT NULL DEFAULT uuidv7(), "name" text NOT NULL, "failed_attempts" timestamptz[], "settings" jsonb, "tags" text[])'
@@ -107,6 +124,29 @@ describe("sql builders", () => {
     });
   });
 
+  describe("conditions", () => {
+    it("rejects undefined values instead of comparing with NULL", () => {
+      expect(() => selectSql(widgets, {name: undefined})).toThrow(/undefined "name"/);
+      expect(() => countSql(widgets, {name: undefined})).toThrow(/undefined "name"/);
+      expect(() => updateSql(widgets, undefined, {name: "b"}, "after")).toThrow(/undefined "id"/);
+      expect(() => replaceSql(widgets, undefined, {name: "b"}, "after")).toThrow(/undefined "id"/);
+    });
+
+    it("counts without narrowing the type", () => {
+      expect(countSql(widgets, {}).text).toBe('SELECT count(*) AS count FROM "widgets"');
+    });
+  });
+
+  describe("changedColumns", () => {
+    it("ignores a repeated id and refuses a different one", () => {
+      expect(changedColumns(widgets, "1", {id: "1", name: "a"}).map(c => c.property)).toEqual([
+        "name"
+      ]);
+      expect(changedColumns(widgets, "1", {id: "1"})).toEqual([]);
+      expect(() => changedColumns(widgets, "1", {id: "2"})).toThrow(/cannot be changed/);
+    });
+  });
+
   describe("updateSql", () => {
     it("returns the new row by default and the old row on request", () => {
       expect(updateSql(widgets, "1", {name: "b"}, "after")).toEqual({
@@ -160,6 +200,18 @@ describe("sql builders", () => {
   });
 
   describe("upsertSql", () => {
+    it("needs a conflict property", () => {
+      expect(() => upsertSql(widgets, {name: "a"}, {conflict: []})).toThrow(
+        /at least one conflict property/
+      );
+    });
+
+    it("refuses to update a property the record omits", () => {
+      expect(() => upsertSql(widgets, {name: "a"}, {conflict: ["name"], update: ["tags"]})).toThrow(
+        /updates "tags" but the record omits it/
+      );
+    });
+
     it("updates provided non-key columns on conflict", () => {
       expect(upsertSql(widgets, {name: "a", tags: ["x"]}, {conflict: ["name"]})).toEqual({
         text: 'INSERT INTO "widgets" ("name", "tags") VALUES ($1, $2) ON CONFLICT ("name") DO UPDATE SET "tags" = EXCLUDED."tags" RETURNING *',
@@ -177,7 +229,7 @@ describe("sql builders", () => {
       expect(
         upsertSql(
           widgets,
-          {name: "a"},
+          {name: "a", tags: ["x"]},
           {conflict: ["name"], conflictWhere: "tags IS NULL", update: ["tags"]}
         ).text
       ).toMatch(/ON CONFLICT \("name"\) WHERE tags IS NULL DO UPDATE SET "tags" = EXCLUDED."tags"/);

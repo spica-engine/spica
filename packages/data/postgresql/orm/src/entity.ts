@@ -15,8 +15,6 @@ export interface ColumnDefinition {
   column?: string;
   notNull?: boolean;
   default?: string;
-  toDb?(value: unknown): unknown;
-  fromDb?(value: unknown): unknown;
 }
 
 export interface IndexDefinition {
@@ -82,6 +80,14 @@ export function defineEntity<R = Record<string, unknown>>(definition: EntityDefi
 
   const byProperty = new Map(columns.map(column => [column.property, column]));
   const byColumn = new Map(columns.map(column => [column.column, column]));
+  if (byColumn.size != columns.length) {
+    const duplicate = columns.find(
+      ({property, column}) => byColumn.get(column)!.property != property
+    )!;
+    throw new Error(
+      `Entity "${definition.table}" maps more than one property to column "${duplicate.column}".`
+    );
+  }
 
   const indexes = (definition.indexes ?? []).map(index =>
     resolveIndex(definition.table, index, byProperty)
