@@ -10,7 +10,7 @@ export const storageObjects = defineEntity<StorageObjectMeta>({
     url: {type: "text"},
     created_at: {type: "timestamptz"},
     updated_at: {type: "timestamptz"},
-    content: {type: "jsonb", notNull: true}
+    content: {embedded: {type: {type: "text"}, size: {type: "double precision"}}}
   },
   indexes: [{columns: ["name"], unique: true}]
 });

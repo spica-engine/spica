@@ -37,7 +37,43 @@ export class Aggregation {
   constructor(readonly property: string) {}
 }
 
-const bind = (values: unknown[], value: unknown) => `$${values.push(value)}`;
+export class InlineValues extends Array<unknown> {}
+
+export class SqlDefault {
+  constructor(readonly sql: string) {}
+}
+
+export const now = () => new SqlDefault("now()");
+
+export const uuidv7 = () => new SqlDefault("uuidv7()");
+
+export function literalOf(value: unknown): string {
+  if (value === null || value === undefined) {
+    return "NULL";
+  }
+  if (typeof value == "boolean") {
+    return value ? "TRUE" : "FALSE";
+  }
+  if (typeof value == "number" || typeof value == "bigint") {
+    if (typeof value == "number" && !Number.isFinite(value)) {
+      throw new Error(`${value} cannot be written as a literal.`);
+    }
+    return String(value);
+  }
+  if (typeof value == "string") {
+    return `'${value.replace(/'/g, "''")}'`;
+  }
+  if (value instanceof Date) {
+    return `'${value.toISOString()}'::timestamptz`;
+  }
+  if (typeof value == "object") {
+    return `'${JSON.stringify(value).replace(/'/g, "''")}'::jsonb`;
+  }
+  throw new Error(`${typeof value} cannot be written as a literal.`);
+}
+
+export const bind = (values: unknown[], value: unknown) =>
+  values instanceof InlineValues ? literalOf(value) : `$${values.push(value)}`;
 
 function elementType(spec: ResolvedColumn) {
   if (!spec.type.endsWith("[]")) {

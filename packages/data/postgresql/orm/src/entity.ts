@@ -1,3 +1,6 @@
+import type {SqlDefault, Where} from "./expressions.js";
+import {uuidv7} from "./expressions.js";
+
 export type ColumnType =
   | "uuid"
   | "text"
@@ -11,22 +14,40 @@ export type ColumnType =
   | "uuid[]"
   | "timestamptz[]";
 
-export interface ColumnDefinition {
+export type ColumnDefault =
+  | string
+  | number
+  | boolean
+  | readonly unknown[]
+  | Record<string, unknown>
+  | SqlDefault;
+
+export interface ScalarColumn {
   type: ColumnType;
   column?: string;
   notNull?: boolean;
-  default?: string | number | boolean | readonly unknown[] | Record<string, unknown>;
+  default?: ColumnDefault;
   keepNull?: boolean;
+}
+
+export interface EmbeddedColumns {
+  embedded: Record<string, ScalarColumn | EmbeddedColumns>;
+  column?: string;
+}
+
+export type ColumnDefinition = ScalarColumn | EmbeddedColumns;
+
+export interface IndexColumn {
+  property: string;
+  order?: "asc" | "desc";
 }
 
 export interface IndexDefinition {
   name?: string;
-  keys?: string[];
-  columns?: string[];
-  expression?: string;
+  columns: (string | IndexColumn)[];
   unique?: boolean;
   using?: "btree" | "gin";
-  where?: string;
+  where?: Where;
 }
 
 export interface EntityDefinition {
@@ -36,19 +57,25 @@ export interface EntityDefinition {
   indexes?: IndexDefinition[];
 }
 
-export interface ResolvedColumn extends ColumnDefinition {
+export interface ResolvedColumn extends ScalarColumn {
   property: string;
   column: string;
+  path: string[];
+}
+
+export interface ResolvedIndexColumn {
+  property: string;
+  column: string;
+  order: "asc" | "desc";
 }
 
 export interface ResolvedIndex {
   name: string;
-  keys?: string[];
-  columns?: string[];
-  expression?: string;
+  keys: string[];
+  columns: ResolvedIndexColumn[];
   unique: boolean;
   using: "btree" | "gin";
-  where?: string;
+  where?: Where;
 }
 
 export interface Entity<R = unknown> {
@@ -58,6 +85,7 @@ export interface Entity<R = unknown> {
   readonly indexes: readonly ResolvedIndex[];
   readonly byProperty: ReadonlyMap<string, ResolvedColumn>;
   readonly byColumn: ReadonlyMap<string, ResolvedColumn>;
+  readonly groups: ReadonlyMap<string, readonly ResolvedColumn[]>;
   readonly record?: R;
 }
 
@@ -68,6 +96,36 @@ const MAX_IDENTIFIER_LENGTH = 63;
 const snakeCase = (property: string) =>
   property.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 
+const isEmbedded = (definition: ColumnDefinition): definition is EmbeddedColumns =>
+  "embedded" in definition;
+
+function resolveColumns(
+  table: string,
+  definitions: Record<string, ColumnDefinition>,
+  path: string[],
+  columnPrefix: string,
+  groups: Map<string, ResolvedColumn[]>
+): ResolvedColumn[] {
+  return Object.entries(definitions).flatMap(([key, definition]) => {
+    const keyPath = [...path, key];
+    const property = keyPath.join(".");
+    const name = definition.column ?? snakeCase(key);
+    const column = columnPrefix ? `${columnPrefix}_${name}` : name;
+
+    if (isEmbedded(definition)) {
+      const nested = resolveColumns(table, definition.embedded, keyPath, column, groups);
+      groups.set(property, nested);
+      return nested;
+    }
+    if (path.length && (definition.notNull || definition.default !== undefined)) {
+      throw new Error(
+        `Embedded column "${table}.${property}" must be nullable and cannot have a default.`
+      );
+    }
+    return [{...definition, property, column, path: keyPath}];
+  });
+}
+
 export function defineEntity<R = Record<string, unknown>>(definition: EntityDefinition): Entity<R> {
   const idProperty = definition.idProperty ?? ID_PROPERTY;
   if (idProperty in definition.columns) {
@@ -76,13 +134,17 @@ export function defineEntity<R = Record<string, unknown>>(definition: EntityDefi
     );
   }
 
+  const groups = new Map<string, ResolvedColumn[]>();
   const columns: ResolvedColumn[] = [
-    {property: idProperty, column: "id", type: "uuid", notNull: true, default: "uuidv7()"},
-    ...Object.entries(definition.columns).map(([property, column]) => ({
-      ...column,
-      property,
-      column: column.column ?? snakeCase(property)
-    }))
+    {
+      property: idProperty,
+      column: "id",
+      path: [idProperty],
+      type: "uuid",
+      notNull: true,
+      default: uuidv7()
+    },
+    ...resolveColumns(definition.table, definition.columns, [], "", groups)
   ];
 
   const byProperty = new Map(columns.map(column => [column.property, column]));
@@ -106,7 +168,8 @@ export function defineEntity<R = Record<string, unknown>>(definition: EntityDefi
     columns,
     indexes,
     byProperty,
-    byColumn
+    byColumn,
+    groups
   };
 }
 
@@ -115,32 +178,30 @@ function resolveIndex(
   index: IndexDefinition,
   byProperty: Map<string, ResolvedColumn>
 ): ResolvedIndex {
-  if (!index.columns?.length && !index.expression) {
-    throw new Error(`An index on "${table}" needs columns or an expression.`);
+  if (!index.columns.length) {
+    throw new Error(`An index on "${table}" needs columns.`);
   }
 
-  const columns = index.columns?.map(property => {
+  const columns = index.columns.map(entry => {
+    const {property, order = "asc"} = typeof entry == "string" ? {property: entry} : entry;
     const column = byProperty.get(property);
     if (!column) {
       throw new Error(`Index on "${table}" references unknown property "${property}".`);
     }
-    return column.column;
+    return {property, column: column.column, order};
   });
 
   const unique = index.unique ?? false;
-  const name = index.name ?? (columns && `${table}_${columns.join("_")}_${unique ? "key" : "idx"}`);
-  if (!name) {
-    throw new Error(`An expression index on "${table}" needs a name.`);
-  }
+  const name =
+    index.name ?? `${table}_${columns.map(c => c.column).join("_")}_${unique ? "key" : "idx"}`;
   if (name.length > MAX_IDENTIFIER_LENGTH) {
     throw new Error(`Index name "${name}" is longer than ${MAX_IDENTIFIER_LENGTH} characters.`);
   }
 
   return {
     name,
-    keys: index.keys ?? index.columns,
+    keys: columns.map(c => c.property),
     columns,
-    expression: index.expression,
     unique,
     using: index.using ?? "btree",
     where: index.where

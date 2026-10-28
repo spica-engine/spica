@@ -1,4 +1,4 @@
-import {defineEntity} from "@spica-server/data-postgresql-orm";
+import {defineEntity, now} from "@spica-server/data-postgresql-orm";
 import {Function} from "@spica-server/interface-function";
 import {FunctionAsset} from "@spica-server/interface-function-asset-storage";
 import {Log} from "@spica-server/interface-function-log";
@@ -34,14 +34,14 @@ export const functionLogs = defineEntity<Log>({
     function: {type: "uuid", column: "function_id", notNull: true},
     event_id: {type: "text"},
     content: {type: "text"},
-    created_at: {type: "timestamptz", notNull: true, default: "now()"},
+    created_at: {type: "timestamptz", notNull: true, default: now()},
     channel: {type: "text"},
     level: {type: "integer"}
   },
   indexes: [
     {
       name: "function_logs_function_created_idx",
-      expression: '"function_id", "created_at" DESC'
+      columns: ["function", {property: "created_at", order: "desc"}]
     },
     {columns: ["created_at"]}
   ]
@@ -69,7 +69,13 @@ export const webhooks = defineEntity<Webhook>({
     title: {type: "text"},
     url: {type: "text"},
     body: {type: "text"},
-    trigger: {type: "jsonb"}
+    trigger: {
+      embedded: {
+        name: {type: "text"},
+        active: {type: "boolean"},
+        options: {embedded: {collection: {type: "text"}, type: {type: "text"}}}
+      }
+    }
   }
 });
 
@@ -80,7 +86,7 @@ export const webhookLogs = defineEntity<WebhookLog>({
     webhook: {type: "uuid", column: "webhook_id", notNull: true},
     succeed: {type: "boolean"},
     content: {type: "jsonb"},
-    created_at: {type: "timestamptz", notNull: true, default: "now()"}
+    created_at: {type: "timestamptz", notNull: true, default: now()}
   },
   indexes: [{columns: ["webhook"]}, {columns: ["created_at"]}]
 });

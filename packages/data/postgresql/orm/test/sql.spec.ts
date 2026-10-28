@@ -1,4 +1,5 @@
 import {defineEntity} from "../src/entity.js";
+import {and, isNotNull, notEquals, now, uuidv7} from "../src/expressions.js";
 import {
   assertIdUnchanged,
   changedColumns,
@@ -25,7 +26,11 @@ const widgets = defineEntity({
   indexes: [
     {columns: ["name"], unique: true},
     {columns: ["tags"], using: "gin"},
-    {name: "widgets_lower_name_idx", expression: "lower(name)", where: "name IS NOT NULL"}
+    {
+      name: "widgets_recent_idx",
+      columns: ["tags", {property: "name", order: "desc"}],
+      where: and({tags: isNotNull()}, {name: notEquals("it's")})
+    }
   ]
 });
 
@@ -62,29 +67,29 @@ describe("sql builders", () => {
       ).toThrow(/unknown property/);
     });
 
-    it("requires a name for expression indexes", () => {
-      expect(() =>
-        defineEntity({table: "x", columns: {}, indexes: [{expression: "lower(a)"}]})
-      ).toThrow(/needs a name/);
+    it("rejects an index without columns", () => {
+      expect(() => defineEntity({table: "x", columns: {}, indexes: [{columns: []}]})).toThrow(
+        /needs columns/
+      );
     });
 
     it("rejects index names longer than PostgreSQL allows", () => {
       expect(() =>
         defineEntity({
           table: "x",
-          columns: {},
-          indexes: [{name: "a".repeat(64), expression: "1"}]
+          columns: {a: {type: "text"}},
+          indexes: [{name: "a".repeat(64), columns: ["a"]}]
         })
       ).toThrow(/longer than 63/);
     });
   });
 
   describe("createIndexSql", () => {
-    it("renders unique, gin and partial expression indexes", () => {
+    it("renders unique, gin and partial ordered indexes with escaped literals", () => {
       expect(widgets.indexes.map(index => createIndexSql(widgets, index))).toEqual([
         'CREATE UNIQUE INDEX IF NOT EXISTS "widgets_name_key" ON "widgets" USING btree ("name")',
         'CREATE INDEX IF NOT EXISTS "widgets_tags_idx" ON "widgets" USING gin ("tags")',
-        'CREATE INDEX IF NOT EXISTS "widgets_lower_name_idx" ON "widgets" USING btree (lower(name)) WHERE name IS NOT NULL'
+        `CREATE INDEX IF NOT EXISTS "widgets_recent_idx" ON "widgets" USING btree ("tags", "name" DESC) WHERE (("tags" IS NOT NULL) AND ("name" <> 'it''s'))`
       ]);
     });
   });
@@ -127,20 +132,28 @@ describe("sql builders", () => {
   });
 
   describe("defaults", () => {
-    it("refuses an empty string, which would render invalid DDL", () => {
-      const entity = defineEntity({
-        table: "t",
-        columns: {a: {type: "text", default: ""}}
-      });
-      expect(() => createTableSql(entity)).toThrow(/cannot default to an empty string/);
+    const render = (definition: object) =>
+      createTableSql(defineEntity({table: "t", columns: {a: definition as any}}));
+
+    it("renders text as an escaped literal, including the empty string", () => {
+      expect(render({type: "text", default: ""})).toContain(`"a" text DEFAULT ''`);
+      expect(render({type: "text", default: "it's"})).toContain(`"a" text DEFAULT 'it''s'`);
     });
 
-    it("renders an empty text literal", () => {
-      const entity = defineEntity({
-        table: "t",
-        columns: {a: {type: "text", default: "''"}}
-      });
-      expect(createTableSql(entity)).toContain(`"a" text DEFAULT ''`);
+    it("renders numbers, booleans, empty arrays and json", () => {
+      expect(render({type: "integer", default: 0})).toContain(`"a" integer DEFAULT 0`);
+      expect(render({type: "boolean", default: false})).toContain(`"a" boolean DEFAULT FALSE`);
+      expect(render({type: "text[]", default: []})).toContain(`"a" text[] DEFAULT '{}'`);
+      expect(render({type: "jsonb", default: {k: "it's"}})).toContain(
+        `"a" jsonb DEFAULT '{"k":"it''s"}'::jsonb`
+      );
+    });
+
+    it("renders SQL defaults only through the helpers", () => {
+      expect(render({type: "timestamptz", default: now()})).toContain(
+        `"a" timestamptz DEFAULT now()`
+      );
+      expect(render({type: "uuid", default: uuidv7()})).toContain(`"a" uuid DEFAULT uuidv7()`);
     });
   });
 
@@ -262,9 +275,11 @@ describe("sql builders", () => {
         upsertSql(
           widgets,
           {name: "a", tags: ["x"]},
-          {conflict: ["name"], conflictWhere: "tags IS NULL", update: ["tags"]}
+          {conflict: ["name"], conflictWhere: {tags: null}, update: ["tags"]}
         ).text
-      ).toMatch(/ON CONFLICT \("name"\) WHERE tags IS NULL DO UPDATE SET "tags" = EXCLUDED."tags"/);
+      ).toMatch(
+        /ON CONFLICT \("name"\) WHERE "tags" IS NULL DO UPDATE SET "tags" = EXCLUDED."tags"/
+      );
     });
   });
 });

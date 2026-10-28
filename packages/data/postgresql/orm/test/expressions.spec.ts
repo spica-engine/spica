@@ -68,7 +68,7 @@ const defaults = defineEntity<{
     list: {type: "jsonb", notNull: true, default: [{key: "it's"}]},
     count: {type: "double precision", notNull: true, default: 0},
     flag: {type: "boolean", notNull: true, default: true},
-    title: {type: "text", notNull: true, default: "'untitled'"}
+    title: {type: "text", notNull: true, default: "untitled"}
   }
 });
 

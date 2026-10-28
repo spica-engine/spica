@@ -40,12 +40,16 @@ export class PostgresBucketRepository implements BucketRepository {
       return 0;
     }
 
-    const changes = Object.fromEntries(
-      [...subpathsByRoot].map(([root, subpaths]) => [
-        root,
-        subpaths.includes("") ? null : jsonbRemove(subpaths)
-      ])
-    );
+    const changes: Record<string, unknown> = {};
+    for (const [root, subpaths] of subpathsByRoot) {
+      if (subpaths.includes("")) {
+        changes[root] = null;
+      } else if (buckets.groups.has(root)) {
+        subpaths.forEach(subpath => (changes[`${root}.${subpath}`] = null));
+      } else {
+        changes[root] = jsonbRemove(subpaths);
+      }
+    }
     return (await this.orm.updateById(buckets, id, changes)) ? 1 : 0;
   }
 

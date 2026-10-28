@@ -40,7 +40,7 @@ export class PostgresUserRepository implements UserRepository {
   }
 
   findWithAuthFactor() {
-    return this.orm.findMany(users, {authFactor: isNotNull()});
+    return this.orm.findMany(users, {"authFactor.type": isNotNull()});
   }
 
   async insert(user: User) {
@@ -62,10 +62,10 @@ export class PostgresUserRepository implements UserRepository {
     const nested: Record<string, Record<string, unknown>> = {};
     for (const [path, value] of Object.entries(fields)) {
       const [root, ...rest] = path.split(".");
-      if (rest.length) {
-        (nested[root] ??= {})[rest.join(".")] = value;
+      if (!rest.length || users.byProperty.has(path) || users.groups.has(path)) {
+        changes[path] = value;
       } else {
-        changes[root] = value;
+        (nested[root] ??= {})[rest.join(".")] = value;
       }
     }
     for (const [root, entries] of Object.entries(nested)) {
@@ -148,7 +148,7 @@ export class PostgresVerificationRepository implements VerificationRepository {
       {...target, ...pending, requestCount: 1},
       {
         conflict: ["userId", "strategy", "purpose"],
-        conflictWhere: "NOT is_used",
+        conflictWhere: {is_used: false},
         update: ["code"],
         set: {requestCount: increment(1)}
       }
