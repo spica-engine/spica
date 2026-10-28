@@ -6,8 +6,8 @@ export interface Statement {
   values: unknown[];
 }
 
-export interface FindOptions {
-  select?: string[];
+export interface FindOptions<K extends string = string> {
+  select?: K[];
   orderBy?: Record<string, "asc" | "desc">;
   limit?: number;
   offset?: number;
@@ -46,6 +46,11 @@ const literal = (text: string) => `'${text.replace(/'/g, "''")}'`;
 
 function defaultSql(column: ResolvedColumn) {
   const value = column.default;
+  if (value === "") {
+    throw new Error(
+      `"${column.property}" cannot default to an empty string; write "''" for an empty text.`
+    );
+  }
   if (typeof value == "string") {
     return value;
   }
@@ -125,6 +130,11 @@ function predicate(entity: Entity, where: Where, values: unknown[]): string {
     if (value === undefined) {
       throw new Error(
         `"${entity.table}" was queried with an undefined "${property}"; use null to match NULL.`
+      );
+    }
+    if (value instanceof WhereGroup) {
+      throw new Error(
+        `"${entity.table}.${property}" was given a group; put the property inside and(...) or or(...) instead.`
       );
     }
     if (value instanceof Condition) {
@@ -305,6 +315,9 @@ export function aggregateSql(
   aggregations: Record<string, Aggregation>,
   where: Where
 ): Statement {
+  if (!Object.keys(aggregations).length) {
+    throw new Error(`An aggregate on "${entity.table}" needs at least one aggregation.`);
+  }
   const values: unknown[] = [];
   const columns = Object.entries(aggregations).map(([alias, {property}]) => {
     const [root, ...path] = property.split(".");

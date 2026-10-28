@@ -2,6 +2,7 @@ export type ColumnType =
   | "uuid"
   | "text"
   | "integer"
+  | "double precision"
   | "bigint"
   | "boolean"
   | "timestamptz"

@@ -103,7 +103,7 @@ export const increment = (amount: number) =>
 export const replacePrefix = (from: string, to: string) =>
   new Assignment((column, _, values) => {
     const fromPlaceholder = bind(values, from);
-    return `${bind(values, to)} || substr(${column}, char_length(${fromPlaceholder}) + 1)`;
+    return `CASE WHEN starts_with(${column}, ${fromPlaceholder}) THEN ${bind(values, to)} || substr(${column}, char_length(${fromPlaceholder}) + 1) ELSE ${column} END`;
   });
 
 export const jsonbSet = (entries: Record<string, unknown>) =>

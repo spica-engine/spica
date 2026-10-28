@@ -2,6 +2,7 @@ import {defineEntity} from "../src/entity.js";
 import {
   changedColumns,
   countSql,
+  aggregateSql,
   createIndexSql,
   createTableSql,
   insertManySql,
@@ -121,6 +122,30 @@ describe("sql builders", () => {
       expect(insertManySql(widgets, [{}, {}]).text).toBe(
         'INSERT INTO "widgets" ("id") VALUES (DEFAULT), (DEFAULT) RETURNING *'
       );
+    });
+  });
+
+  describe("defaults", () => {
+    it("refuses an empty string, which would render invalid DDL", () => {
+      const entity = defineEntity({
+        table: "t",
+        columns: {a: {type: "text", default: ""}}
+      });
+      expect(() => createTableSql(entity)).toThrow(/cannot default to an empty string/);
+    });
+
+    it("renders an empty text literal", () => {
+      const entity = defineEntity({
+        table: "t",
+        columns: {a: {type: "text", default: "''"}}
+      });
+      expect(createTableSql(entity)).toContain(`"a" text DEFAULT ''`);
+    });
+  });
+
+  describe("aggregates", () => {
+    it("needs at least one aggregation", () => {
+      expect(() => aggregateSql(widgets, {}, {})).toThrow(/at least one aggregation/);
     });
   });
 

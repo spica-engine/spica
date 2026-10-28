@@ -50,19 +50,23 @@ export class Session {
   }
 
   async findById<R>(entity: Entity<R>, id: unknown): Promise<R | null> {
-    return this.findOne(entity, {id});
+    return this.findOne(entity, {id}) as Promise<R | null>;
   }
 
-  async findOne<R>(
+  async findOne<R, K extends keyof R & string = keyof R & string>(
     entity: Entity<R>,
     where: Where,
-    options: Omit<FindOptions, "limit" | "offset"> = {}
-  ): Promise<R | null> {
+    options: Omit<FindOptions<K>, "limit" | "offset"> = {}
+  ): Promise<Pick<R, K> | null> {
     const [row] = await this.run(entity, selectSql(entity, where, {...options, limit: 1}));
     return row ?? null;
   }
 
-  async findMany<R>(entity: Entity<R>, where: Where = {}, options?: FindOptions): Promise<R[]> {
+  async findMany<R, K extends keyof R & string = keyof R & string>(
+    entity: Entity<R>,
+    where: Where = {},
+    options?: FindOptions<K>
+  ): Promise<Pick<R, K>[]> {
     return this.run(entity, selectSql(entity, where, options));
   }
 
@@ -130,7 +134,7 @@ export class Session {
   }
 
   async lockTransaction(name: string): Promise<void> {
-    await this.db.query("SELECT pg_advisory_xact_lock(hashtext($1))", [name]);
+    await this.db.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [name]);
   }
 
   async upsert<R>(
@@ -165,7 +169,7 @@ export class Orm extends Session {
     super(pool);
   }
 
-  override async lockTransaction(): Promise<void> {
+  override async lockTransaction(_name: string): Promise<void> {
     throw new Error("A transaction lock needs a transaction.");
   }
 

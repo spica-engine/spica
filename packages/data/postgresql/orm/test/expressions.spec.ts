@@ -22,7 +22,7 @@ import {
   startsWith,
   sum
 } from "../src/expressions.js";
-import {Orm} from "../src/session.js";
+import {Orm, Session} from "../src/session.js";
 import {createTables} from "../src/tables.js";
 
 interface Thing {
@@ -154,6 +154,12 @@ describe("expressions", () => {
       expect(await orm.count(things, or({name: "e"}, and()))).toBe(3);
     });
 
+    it("explains a group given as a property value", async () => {
+      await expect(orm.findMany(things, {name: and({name: "e"})})).rejects.toThrow(
+        /put the property inside and\(\.\.\.\) or or\(\.\.\.\)/
+      );
+    });
+
     it("refuses expressions as stored values", async () => {
       await expect(orm.insert(things, {name: "x", note: isNotNull() as any})).rejects.toThrow(
         /cannot store an expression/
@@ -194,6 +200,13 @@ describe("expressions", () => {
       const {id} = await orm.insert(things, {name: "old/file"});
       expect((await orm.updateById(things, id, {name: replacePrefix("old/", "new/")})).name).toBe(
         "new/file"
+      );
+    });
+
+    it("leaves names without the prefix untouched", async () => {
+      const {id} = await orm.insert(things, {name: "other/file"});
+      expect((await orm.updateById(things, id, {name: replacePrefix("old/", "new/")})).name).toBe(
+        "other/file"
       );
     });
 
@@ -273,7 +286,9 @@ describe("expressions", () => {
       await orm.insert(things, {name: "a", note: "n", size: 3});
       const [row] = await orm.findMany(things, {}, {select: ["name", "size"]});
       expect(row).toEqual({name: "a", size: 3});
-      await expect(orm.findMany(things, {}, {select: ["nope"]})).rejects.toThrow(/no property/);
+      await expect(orm.findMany(things, {}, {select: ["nope"] as any})).rejects.toThrow(
+        /no property/
+      );
     });
 
     it("orders by a json path using the json ordering", async () => {
@@ -287,6 +302,23 @@ describe("expressions", () => {
       await expect(orm.findMany(things, {}, {orderBy: {"name.size": "asc"}})).rejects.toThrow(
         /not a jsonb column/
       );
+    });
+
+    it("refuses an aggregate without aggregations", async () => {
+      await expect(orm.aggregate(things, {})).rejects.toThrow(/at least one aggregation/);
+    });
+
+    it("types selected rows by the selected properties", async () => {
+      await orm.insert(things, {name: "a", note: "n"});
+      const row = await orm.findOne(things, {}, {select: ["name"]});
+      const name: string = row.name;
+      // @ts-expect-error the note was not selected
+      const note = row.note;
+      const rows = await orm.findMany(things, {}, {select: ["name", "size"]});
+      const size: number | undefined = rows[0].size;
+      const whole = await orm.findOne(things, {});
+      const wholeNote: string | undefined = whole.note;
+      expect([name, note, size, wholeNote]).toEqual(["a", undefined, undefined, "n"]);
     });
 
     it("sums columns and json paths, counting nothing as zero", async () => {
@@ -398,6 +430,18 @@ describe("expressions", () => {
       release();
       await Promise.all([first, second]);
       expect(order).toEqual(["first", "unrelated", "second"]);
+    });
+
+    it("takes a 64-bit hash of the lock name", async () => {
+      const queries: string[] = [];
+      const session = new Session({
+        query: async (text: string) => {
+          queries.push(text);
+          return {rows: []} as any;
+        }
+      });
+      await session.lockTransaction("key");
+      expect(queries).toEqual(["SELECT pg_advisory_xact_lock(hashtextextended($1, 0))"]);
     });
 
     it("refuses transaction locks outside a transaction", async () => {
