@@ -1,20 +1,24 @@
-import {EntryStatus, Id, ProfilerQuery} from "@spica-server/interface-data";
+import {
+  DeletableById,
+  EntryStatus,
+  FindableAll,
+  FindableById,
+  Id,
+  Insertable,
+  ProfilerQuery,
+  ReplaceableById
+} from "@spica-server/interface-data";
 import {Bucket, BucketDocument} from "./bucket.js";
 
 export type StoredBucket = Bucket & {_id: Id};
 
-export interface BucketRepository {
-  findAll(): Promise<StoredBucket[]>;
-  findById(id: Id): Promise<StoredBucket | null>;
-  insert(bucket: Bucket): Promise<StoredBucket>;
-  /**
-   * Resolves to the replaced bucket, or null when it does not exist.
-   */
-  replaceById(id: Id, bucket: Bucket): Promise<StoredBucket | null>;
-  /**
-   * Resolves to the deleted bucket, or null when it does not exist.
-   */
-  deleteById(id: Id): Promise<StoredBucket | null>;
+export interface BucketRepository
+  extends
+    FindableAll<StoredBucket>,
+    FindableById<StoredBucket>,
+    Insertable<Bucket, StoredBucket>,
+    ReplaceableById<Bucket, StoredBucket | null>,
+    DeletableById<StoredBucket | null> {
   /**
    * Removes schema properties given as dotted paths such as "properties.a.properties.b".
    */
