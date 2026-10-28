@@ -1,4 +1,11 @@
-import {EntryStatus, Id} from "@spica-server/interface-data";
+import {
+  DeletableById,
+  EntryStatus,
+  FindableAll,
+  FindableById,
+  Id,
+  Insertable
+} from "@spica-server/interface-data";
 import {Function} from "./function.js";
 
 export type StoredFunction = Function & {_id: Id};
@@ -6,16 +13,18 @@ export type StoredFunction = Function & {_id: Id};
 /**
  * Inserts and updates reject with DuplicateKeyError when the function name is taken.
  */
-export interface FunctionRepository {
-  findAll(): Promise<StoredFunction[]>;
+export interface FunctionRepository
+  extends
+    FindableAll<StoredFunction>,
+    FindableById<StoredFunction>,
+    Insertable<Function, StoredFunction>,
+    DeletableById<StoredFunction | null> {
   /**
    * Resolves to every function with only its _id, name and language set.
    */
   findSummaries(): Promise<StoredFunction[]>;
-  findById(id: Id): Promise<StoredFunction | null>;
   findByName(name: string): Promise<StoredFunction | null>;
   findReferencing(field: "env_vars" | "secrets", resourceId: Id): Promise<StoredFunction[]>;
-  insert(fn: Function): Promise<StoredFunction>;
   /**
    * Sets the given fields and resolves to the function as it was before, or null when it does not
    * exist.
@@ -31,10 +40,6 @@ export interface FunctionRepository {
     patched: Function
   ): Promise<StoredFunction | null | undefined>;
   replaceById(id: Id, fn: Function): Promise<number>;
-  /**
-   * Resolves to the deleted function, or null when it does not exist.
-   */
-  deleteById(id: Id): Promise<StoredFunction | null>;
   /**
    * The reference updates resolve to the function as it was before, or null when it does not exist.
    */
