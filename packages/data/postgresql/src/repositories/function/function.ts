@@ -11,7 +11,7 @@ import {
 } from "@spica-server/interface-function";
 import {functions} from "../../entities/index.js";
 import {ORM} from "../../orm.js";
-import {assertCapacity, entryStatus, setPath, unsetPath} from "../helpers.js";
+import {assertCapacity, entryStatus, hasOwn, setPath, unsetPath} from "../helpers.js";
 
 type ReferenceField = "env_vars" | "secrets";
 
@@ -86,7 +86,9 @@ export class PostgresFunctionRepository implements FunctionRepository {
         roots.add(keys[0]);
       }
 
-      const changes = Object.fromEntries([...roots].map(root => [root, next[root] ?? null]));
+      const changes = Object.fromEntries(
+        [...roots].map(root => [root, (hasOwn(next, root) ? next[root] : null) ?? null])
+      );
       return (await session.updateById(functions, id, changes)) as StoredFunction;
     });
   }

@@ -44,20 +44,36 @@ export async function removePolicyFromAll(orm: Orm, entity: Entity, policyId: st
     .length;
 }
 
+export const hasOwn = (node: object, key: string) =>
+  Object.prototype.hasOwnProperty.call(node, key);
+
+function defineOwn(node: Record<string, any>, key: string, value: unknown) {
+  Object.defineProperty(node, key, {value, writable: true, enumerable: true, configurable: true});
+}
+
+const isObject = (value: unknown): value is Record<string, any> =>
+  value !== null && typeof value == "object";
+
 export function setPath(target: Record<string, any>, path: string[], value: unknown) {
   const last = path[path.length - 1];
   const parent = path.slice(0, -1).reduce((node, key) => {
-    if (node[key] === null || typeof node[key] != "object") {
-      node[key] = {};
+    if (!hasOwn(node, key) || !isObject(node[key])) {
+      defineOwn(node, key, {});
     }
     return node[key];
   }, target);
-  parent[last] = value;
+  defineOwn(parent, last, value);
 }
 
 export function unsetPath(target: Record<string, any>, path: string[]) {
-  const parent = path.slice(0, -1).reduce((node, key) => node?.[key], target);
-  if (parent && typeof parent == "object") {
-    delete parent[path[path.length - 1]];
+  const last = path[path.length - 1];
+  const parent = path
+    .slice(0, -1)
+    .reduce<unknown>(
+      (node, key) => (isObject(node) && hasOwn(node, key) ? node[key] : undefined),
+      target
+    );
+  if (isObject(parent) && hasOwn(parent, last)) {
+    delete parent[last];
   }
 }

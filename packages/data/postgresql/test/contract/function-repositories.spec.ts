@@ -189,6 +189,20 @@ contractSuite("function repositories", engine => {
         expect(updated.triggers).toEqual({http: triggers(true).http});
       });
 
+      it("treats prototype keys in a patch as plain field names", async () => {
+        const stored = await functions.insert(fn("hello", {triggers: triggers(true)}));
+        const patch = JSON.parse(
+          '{"description":"safe","triggers":{"__proto__":{"toString":null}}}'
+        );
+        const patched = {...stored, description: "safe"};
+
+        const updated = await functions.applyMergePatch(stored._id, patch, patched);
+
+        expect(updated).toMatchObject({name: "hello", description: "safe"});
+        expect(typeof ({} as any).toString).toBe("function");
+        expect(Object.getPrototypeOf({})).toBe(Object.prototype);
+      });
+
       it("resolves to undefined when the patch changes nothing and null for a missing function", async () => {
         const stored = await functions.insert(fn("hello"));
 
