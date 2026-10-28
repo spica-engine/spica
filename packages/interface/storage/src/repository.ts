@@ -1,4 +1,4 @@
-import {Id} from "@spica-server/interface-data";
+import {DeletableById, FindableById, Id} from "@spica-server/interface-data";
 import {StorageObjectMeta} from "./body.js";
 
 export interface StorageBrowseSpec {
@@ -13,7 +13,8 @@ export interface StorageBrowseSpec {
   limit?: number;
 }
 
-export interface StorageRepository {
+export interface StorageRepository
+  extends FindableById<StorageObjectMeta>, DeletableById<StorageObjectMeta | null> {
   /**
    * Rejects with DuplicateKeyError when an object with the name exists.
    */
@@ -22,7 +23,6 @@ export interface StorageRepository {
    * Resolves to the objects with their ids; rejects with DuplicateKeyError when a name exists.
    */
   insertAll(objects: StorageObjectMeta[]): Promise<StorageObjectMeta[]>;
-  findById(id: Id): Promise<StorageObjectMeta | null>;
   findByName(name: string): Promise<StorageObjectMeta | null>;
   findByIds(ids: Id[]): Promise<StorageObjectMeta[]>;
   findByNames(names: string[]): Promise<StorageObjectMeta[]>;
@@ -40,7 +40,6 @@ export interface StorageRepository {
    * Replaces the prefix in the names of the object with that name and of the objects under it.
    */
   renamePrefix(oldName: string, newName: string): Promise<void>;
-  deleteById(id: Id): Promise<StorageObjectMeta | null>;
   deleteByName(name: string): Promise<StorageObjectMeta | null>;
   deleteByIds(ids: Id[]): Promise<number>;
   deleteByNamePrefix(prefix: string): Promise<number>;
