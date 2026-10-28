@@ -1,11 +1,8 @@
-import {Id} from "@spica-server/interface-data";
+import {DeletableById, Id, ReplaceableById, Repository} from "@spica-server/interface-data";
 import {Strategy} from "./interface.js";
 
-export interface StrategyRepository {
-  findById(id: Id): Promise<Strategy | null>;
-  insert(strategy: Strategy): Promise<Strategy>;
-  replaceById(id: Id, strategy: Strategy): Promise<Strategy | null>;
-  deleteById(id: Id): Promise<number>;
+export interface StrategyRepository
+  extends Repository<Strategy>, ReplaceableById<Strategy>, DeletableById {
   /**
    * Points both OAuth token requests of the strategy at the redirect uri and resolves to the
    * updated strategy.

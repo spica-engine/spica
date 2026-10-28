@@ -1,23 +1,26 @@
-import {EntryStatus, Id, ProfilerQuery} from "@spica-server/interface-data";
+import {
+  DeletableById,
+  EntryStatus,
+  Id,
+  ProfilerQuery,
+  Repository,
+  UpdatableById
+} from "@spica-server/interface-data";
 import {FactorMeta} from "@spica-server/interface-passport-authfactor";
 import {Identity} from "./index.js";
 
 /**
  * Inserts and updates reject with DuplicateKeyError when the identifier is taken.
  */
-export interface IdentityRepository {
+export interface IdentityRepository
+  extends Repository<Identity>, UpdatableById<Identity>, DeletableById {
   findById(id: Id, hiddenFields?: {[path: string]: 0}): Promise<Identity | null>;
   findByIdentifier(identifier: string): Promise<Identity | null>;
   findWithAuthFactor(): Promise<Identity[]>;
-  insert(identity: Identity): Promise<Identity>;
   /**
    * Inserts the identity unless one with the same identifier exists.
    */
   insertIfMissing(identity: Identity): Promise<number>;
-  /**
-   * Resolves to the updated identity, or null when it does not exist.
-   */
-  updateById(id: Id, changes: Partial<Identity>): Promise<Identity | null>;
   updateLoginState(
     identifier: string,
     state: Pick<Identity, "failedAttempts" | "lastLogin">
@@ -33,7 +36,6 @@ export interface IdentityRepository {
   addPolicy(id: Id, policyId: string): Promise<Identity | null>;
   removePolicy(id: Id, policyId: string): Promise<Identity | null>;
   removePolicyFromAll(policyId: string): Promise<number>;
-  deleteById(id: Id): Promise<number>;
   estimatedCount(): Promise<number>;
   status(): Promise<EntryStatus>;
   profilerEntries(query: ProfilerQuery): Promise<unknown[]>;
