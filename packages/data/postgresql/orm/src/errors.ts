@@ -15,8 +15,11 @@ function keyValueOf(detail: string | undefined, entity?: Entity) {
   if (!match) {
     return {};
   }
-  const names = match[1].split(", ");
-  const values = match[2].split(", ");
+  const names = match[1].split(", ").map(name => name.replace(/^"(.*)"$/, "$1"));
+  const values = names.length == 1 ? [match[2]] : match[2].split(", ");
+  if (values.length != names.length) {
+    return {};
+  }
   return Object.fromEntries(
     names.map((name, index) => [entity?.byColumn.get(name)?.property ?? name, values[index]])
   );

@@ -4,6 +4,7 @@ import {translateError} from "./errors.js";
 import {
   countSql,
   deleteSql,
+  changedColumns,
   FindOptions,
   fromRow,
   insertManySql,
@@ -62,7 +63,7 @@ export class Session {
 
   async count(entity: Entity, where: Where = {}): Promise<number> {
     const {rows} = await this.query(entity, countSql(entity, where));
-    return rows[0].count;
+    return Number(rows[0].count);
   }
 
   async updateById<R>(
@@ -71,8 +72,7 @@ export class Session {
     changes: Changes<R>,
     {returning = "after"}: ReturningOption = {}
   ): Promise<R | null> {
-    const hasChanges = Object.values(changes).some(value => value !== undefined);
-    if (!hasChanges) {
+    if (!changedColumns(entity, id, changes).length) {
       return this.findById(entity, id);
     }
     const [row] = await this.run(entity, updateSql(entity, id, changes, returning));
@@ -95,7 +95,14 @@ export class Session {
   }
 
   async deleteMany<R>(entity: Entity<R>, where: Where): Promise<R[]> {
+    if (!Object.keys(where).length) {
+      throw new Error(`deleteMany on "${entity.table}" needs a condition; use deleteAll.`);
+    }
     return this.run(entity, deleteSql(entity, where));
+  }
+
+  async deleteAll<R>(entity: Entity<R>): Promise<R[]> {
+    return this.run(entity, deleteSql(entity, {}));
   }
 
   async upsert<R>(
@@ -132,16 +139,17 @@ export class Orm extends Session {
 
   override async transaction<T>(work: (session: Session) => Promise<T>): Promise<T> {
     const client = await this.pool.connect();
+    let rollbackFailed = false;
     try {
       await client.query("BEGIN");
       const result = await work(new Session(client));
       await client.query("COMMIT");
       return result;
     } catch (error) {
-      await client.query("ROLLBACK").catch(() => undefined);
+      await client.query("ROLLBACK").catch(() => (rollbackFailed = true));
       throw error;
     } finally {
-      client.release();
+      client.release(rollbackFailed);
     }
   }
 }

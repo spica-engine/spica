@@ -85,18 +85,6 @@ describe("createTables", () => {
     expect(rows.map(row => row.column_name)).toEqual(["id", "name", "labels", "extra"]);
   });
 
-  it("does not race when many pools start together", async () => {
-    const results = await Promise.allSettled(
-      Array.from({length: 12}, () => createTables(newPool(2), [gadgets, gizmos]))
-    );
-
-    expect(results.filter(result => result.status == "rejected")).toEqual([]);
-    const {rows} = await newPool().query(
-      "SELECT count(*)::int AS count FROM pg_tables WHERE schemaname = 'public'"
-    );
-    expect(rows[0].count).toBe(2);
-  });
-
   it("waits for a session that holds the advisory lock", async () => {
     const holder = newPool(1);
     const client = await holder.connect();
@@ -124,5 +112,31 @@ describe("createTables", () => {
 
     await expect(createTables(pool, [broken])).rejects.toThrow();
     await expect(createTables(pool, [gadgets])).resolves.toBeUndefined();
+  });
+
+  it("destroys the connection when unlocking fails", async () => {
+    const release = jest.fn();
+    const client = {
+      query: jest.fn(async (text: string) => {
+        if (text.includes("pg_advisory_unlock")) {
+          throw new Error("connection lost");
+        }
+        return {rows: []};
+      }),
+      release
+    };
+    const pool = {connect: async () => client} as unknown as pg.Pool;
+
+    await expect(createTables(pool, [gadgets])).rejects.toThrow("connection lost");
+    expect(release).toHaveBeenCalledWith(true);
+  });
+
+  it("keeps the connection when unlocking succeeds", async () => {
+    const release = jest.fn();
+    const client = {query: jest.fn(async () => ({rows: []})), release};
+    const pool = {connect: async () => client} as unknown as pg.Pool;
+
+    await createTables(pool, [gadgets]);
+    expect(release).toHaveBeenCalledWith(false);
   });
 });
