@@ -4,6 +4,8 @@ import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 
 export interface Bucket {
   _id?: Id;
+  type?: "object";
+  category?: string;
   title?: string;
   icon?: string;
   description?: string;

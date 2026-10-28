@@ -1,4 +1,4 @@
-import {Id} from "@spica-server/interface-data";
+import {DeletableById, Id, ReplaceableById, Repository} from "@spica-server/interface-data";
 
 export interface Asset {
   _id?: any;
@@ -82,20 +82,17 @@ export const ASSET_WORKING_DIRECTORY = Symbol.for("ASSET_WORKING_DIRECTORY");
 
 export const INSTALLATION_STRATEGIES = Symbol.for("INSTALLATION_STRATEGIES");
 
-export interface AssetRepository {
+export interface AssetRepository
+  extends Repository<Asset>, ReplaceableById<Asset>, DeletableById<Asset | null> {
   /**
    * The filter is the client-supplied filter, passed through unchanged.
    */
   find(filter?: object): Promise<Asset[]>;
-  findById(id: Id): Promise<Asset | null>;
   findVersions(url: string): Promise<Asset[]>;
-  insert(asset: Asset): Promise<Asset>;
-  replaceById(id: Id, asset: Asset): Promise<Asset | null>;
   /**
    * Resolves to the asset as it was before the update, or null when there is none with the id.
    */
   updateById(id: Id, fields: Partial<Asset>): Promise<Asset | null>;
-  deleteById(id: Id): Promise<Asset | null>;
 }
 
 export const ASSET_REPOSITORY = Symbol.for("ASSET_REPOSITORY");

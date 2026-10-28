@@ -1,9 +1,23 @@
 import {Logger, Module, OnApplicationShutdown, Inject} from "@nestjs/common";
-import {DataAdapter} from "@spica-server/data";
-import {DATA_HEALTH, ID_TYPES, PG_POOL} from "@spica-server/interface-data";
+import {DataAdapter, PassthroughResultShaper} from "@spica-server/data";
+import {createTables, Orm} from "@spica-server/data-postgresql-orm";
+import {
+  COLLECTION_NAMES,
+  COLLECTION_QUERY,
+  DATA_HEALTH,
+  ID_TYPES,
+  PG_POOL,
+  REPOSITORY_CLASSES,
+  RESULT_SHAPER
+} from "@spica-server/interface-data";
 import pg from "pg";
+import {PostgresCollectionNames} from "./collection-names.js";
+import {systemEntities} from "./entities/index.js";
 import {PostgresDataHealth} from "./health.js";
 import {PostgresIdTypes} from "./id.js";
+import {ORM} from "./orm.js";
+import {UnsupportedCollectionQueryFacade} from "./query.js";
+import {repositoryClasses} from "./repositories/index.js";
 import {assertSupportedServerVersion} from "./version.js";
 
 export const POSTGRESQL_ENGINE = "postgresql";
@@ -25,12 +39,21 @@ export async function connect(uri: string, options: PostgresConnectionOptions = 
   try {
     const {rows} = await pool.query("SHOW server_version_num");
     assertSupportedServerVersion(rows[0].server_version_num);
-    const cron = await pool.query(
-      "SELECT 1 FROM pg_available_extensions WHERE name = 'pg_cron'"
-    );
+    const cron = await pool.query("SELECT 1 FROM pg_available_extensions WHERE name = 'pg_cron'");
     if (!cron.rowCount) {
       logger.warn("The pg_cron extension is not available on this PostgreSQL server.");
     }
+  } catch (error) {
+    await pool.end();
+    throw error;
+  }
+  return pool;
+}
+
+async function connectWithSystemTables(uri: string, options: PostgresConnectionOptions) {
+  const pool = await connect(uri, options);
+  try {
+    await createTables(pool, systemEntities);
   } catch (error) {
     await pool.end();
     throw error;
@@ -54,12 +77,29 @@ export class PostgresDataAdapter {
       module: {
         module: PostgresDataAdapterModule,
         providers: [
-          {provide: PG_POOL, useFactory: async () =>
-              connect(typeof uri == "function" ? await uri() : uri, options)},
+          {
+            provide: PG_POOL,
+            useFactory: async () =>
+              connectWithSystemTables(typeof uri == "function" ? await uri() : uri, options)
+          },
+          {provide: ORM, useFactory: (pool: pg.Pool) => new Orm(pool), inject: [PG_POOL]},
           {provide: ID_TYPES, useClass: PostgresIdTypes},
+          {provide: RESULT_SHAPER, useClass: PassthroughResultShaper},
+          {provide: COLLECTION_QUERY, useClass: UnsupportedCollectionQueryFacade},
+          {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
+          {provide: COLLECTION_NAMES, useClass: PostgresCollectionNames},
           {provide: DATA_HEALTH, useClass: PostgresDataHealth}
         ],
-        exports: [PG_POOL, ID_TYPES, DATA_HEALTH]
+        exports: [
+          PG_POOL,
+          ORM,
+          ID_TYPES,
+          RESULT_SHAPER,
+          COLLECTION_QUERY,
+          REPOSITORY_CLASSES,
+          COLLECTION_NAMES,
+          DATA_HEALTH
+        ]
       }
     };
   }

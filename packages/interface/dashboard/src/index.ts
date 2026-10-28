@@ -1,4 +1,10 @@
-import {Id} from "@spica-server/interface-data";
+import {
+  DeletableById,
+  FindableAll,
+  Id,
+  ReplaceableById,
+  Repository
+} from "@spica-server/interface-data";
 
 export interface DashboardAsset {
   schema: Dashboard;
@@ -18,18 +24,11 @@ interface Component {
   ratio: string;
 }
 
-export interface DashboardRepository {
-  findAll(): Promise<Dashboard[]>;
-  findById(id: Id): Promise<Dashboard | null>;
-  insert(dashboard: Dashboard): Promise<Dashboard>;
-  /**
-   * Resolves to the replaced dashboard, or null when there is none with the id.
-   */
-  replaceById(id: Id, dashboard: Dashboard): Promise<Dashboard | null>;
-  /**
-   * Resolves to the deleted dashboard, or null when there is none with the id.
-   */
-  deleteById(id: Id): Promise<Dashboard | null>;
-}
+export interface DashboardRepository
+  extends
+    FindableAll<Dashboard>,
+    Repository<Dashboard>,
+    ReplaceableById<Dashboard>,
+    DeletableById<Dashboard | null> {}
 
 export const DASHBOARD_REPOSITORY = Symbol.for("DASHBOARD_REPOSITORY");

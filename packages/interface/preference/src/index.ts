@@ -1,4 +1,4 @@
-import {Id} from "@spica-server/interface-data";
+import {Id, Repository} from "@spica-server/interface-data";
 
 export interface Preference {
   _id?: Id;
@@ -10,10 +10,8 @@ export type changeFactory = (previousSchema: object, currentSchema: Object) => P
 
 export const BUCKET_LANGUAGE_FINALIZER = Symbol.for("BUCKET_LANGUAGE_FINALIZER");
 
-export interface PreferenceRepository {
-  findById(id: Id): Promise<Preference | null>;
+export interface PreferenceRepository extends Repository<Preference> {
   findByScope(scope: string): Promise<Preference | null>;
-  insert(preference: Preference): Promise<Preference>;
   /**
    * Replaces the scope's preference, inserting it when missing, and resolves to the stored one.
    */
