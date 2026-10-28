@@ -26,6 +26,15 @@ import {BUCKET_REPOSITORY} from "@spica-server/interface-bucket";
 import {HISTORY_REPOSITORY} from "@spica-server/interface-bucket-history";
 import {PostgresBucketRepository} from "./bucket/bucket.js";
 import {PostgresHistoryRepository} from "./bucket/history.js";
+import {ACTIVITY_REPOSITORY} from "@spica-server/interface-activity";
+import {ASSET_REPOSITORY} from "@spica-server/interface-asset";
+import {COMMAND_REPOSITORY, JOB_REPOSITORY} from "@spica-server/interface-replication";
+import {STORAGE_REPOSITORY} from "@spica-server/interface-storage";
+import {PostgresActivityRepository} from "./activity/activity.js";
+import {PostgresAssetRepository} from "./asset/asset.js";
+import {PostgresCommandRepository} from "./replication/command.js";
+import {PostgresJobRepository} from "./replication/job.js";
+import {PostgresStorageRepository} from "./storage/storage.js";
 import {CONFIG_REPOSITORY} from "@spica-server/interface-config";
 import {PostgresConfigRepository} from "./config/config.js";
 import {PostgresApiKeyRepository} from "./passport/apikey.js";
@@ -57,5 +66,10 @@ export const repositoryClasses: RepositoryClasses = new Map<symbol, RepositoryCl
   [DASHBOARD_REPOSITORY, PostgresDashboardRepository],
   [STATUS_REPOSITORY, PostgresStatusRepository],
   [BUCKET_REPOSITORY, PostgresBucketRepository],
-  [HISTORY_REPOSITORY, PostgresHistoryRepository]
+  [HISTORY_REPOSITORY, PostgresHistoryRepository],
+  [ACTIVITY_REPOSITORY, PostgresActivityRepository],
+  [COMMAND_REPOSITORY, PostgresCommandRepository],
+  [JOB_REPOSITORY, PostgresJobRepository],
+  [STORAGE_REPOSITORY, PostgresStorageRepository],
+  [ASSET_REPOSITORY, PostgresAssetRepository]
 ]);

@@ -8,17 +8,23 @@ import {
   users,
   verifications
 } from "./passport.js";
+import {activities} from "./activity.js";
 import {buckets, histories} from "./bucket.js";
 import {configs} from "./config.js";
+import {commands, jobs} from "./replication.js";
+import {assets, storageObjects} from "./storage.js";
 import {dashboards, envVars, secrets, statuses} from "./system.js";
 import {functionAssets, functionLogs, functions, webhookLogs, webhooks} from "./function.js";
 import {preferences} from "./preference.js";
 
+export * from "./activity.js";
 export * from "./bucket.js";
 export * from "./config.js";
 export * from "./function.js";
 export * from "./passport.js";
 export * from "./preference.js";
+export * from "./replication.js";
+export * from "./storage.js";
 export * from "./system.js";
 
 export const systemEntities: readonly Entity[] = [
@@ -41,5 +47,10 @@ export const systemEntities: readonly Entity[] = [
   dashboards,
   statuses,
   buckets,
-  histories
+  histories,
+  activities,
+  commands,
+  jobs,
+  storageObjects,
+  assets
 ];
