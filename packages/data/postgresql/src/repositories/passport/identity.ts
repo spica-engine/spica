@@ -38,7 +38,7 @@ export class PostgresIdentityRepository implements IdentityRepository {
   }
 
   findWithAuthFactor() {
-    return this.orm.findMany(identities, {authFactor: isNotNull()});
+    return this.orm.findMany(identities, {"authFactor.type": isNotNull()});
   }
 
   async insert(identity: Identity) {

@@ -1,4 +1,4 @@
-import {defineEntity} from "@spica-server/data-postgresql-orm";
+import {defineEntity, now} from "@spica-server/data-postgresql-orm";
 import {ApiKey} from "@spica-server/interface-passport-apikey";
 import {Identity} from "@spica-server/interface-passport-identity";
 import {Policy} from "@spica-server/interface-passport-policy";
@@ -9,11 +9,26 @@ import {User, UserVerification} from "@spica-server/interface-passport-user";
 
 export type StoredVerification = UserVerification & {_id?: Id; provider?: string};
 
+const encryptedWithHash = {
+  encrypted: {type: "text"},
+  iv: {type: "text"},
+  authTag: {type: "text"},
+  hash: {type: "text"}
+} as const;
+
 const credentials = {
   password: {type: "text"},
   deactivateJwtsBefore: {type: "double precision"},
   policies: {type: "text[]", notNull: true, default: []},
-  authFactor: {type: "jsonb"},
+  authFactor: {
+    embedded: {
+      type: {type: "text"},
+      title: {type: "text"},
+      description: {type: "text"},
+      secret: {type: "text"},
+      config: {type: "jsonb"}
+    }
+  },
   lastPasswords: {type: "text[]", notNull: true, default: []},
   lastLogin: {type: "timestamptz", keepNull: true},
   failedAttempts: {type: "timestamptz[]", notNull: true, default: []}
@@ -39,30 +54,20 @@ export const users = defineEntity<User>({
     username: {type: "text", notNull: true},
     ...credentials,
     bannedUntil: {type: "timestamptz"},
-    email: {type: "jsonb"},
+    email: {embedded: encryptedWithHash},
     email_verified_at: {type: "timestamptz"},
-    phone: {type: "jsonb"},
+    phone: {embedded: encryptedWithHash},
     phone_verified_at: {type: "timestamptz"},
     attributes: {type: "jsonb"},
-    signUpStrategy: {type: "jsonb"}
+    signUpStrategy: {
+      embedded: {_id: {type: "text", column: "id"}, title: {type: "text"}, type: {type: "text"}}
+    }
   },
   indexes: [
     {columns: ["username"], unique: true},
     {columns: ["policies"], using: "gin"},
-    {
-      name: "users_email_hash_key",
-      keys: ["email.hash"],
-      expression: "(email->>'hash')",
-      unique: true,
-      where: "(email->>'hash') IS NOT NULL"
-    },
-    {
-      name: "users_phone_hash_key",
-      keys: ["phone.hash"],
-      expression: "(phone->>'hash')",
-      unique: true,
-      where: "(phone->>'hash') IS NOT NULL"
-    }
+    {columns: ["email.hash"], unique: true},
+    {columns: ["phone.hash"], unique: true}
   ]
 });
 
@@ -79,14 +84,14 @@ export const verifications = defineEntity<StoredVerification>({
     provider: {type: "text"},
     is_used: {type: "boolean", notNull: true, default: false},
     requestCount: {type: "integer"},
-    createdAt: {type: "timestamptz", notNull: true, default: "now()"}
+    createdAt: {type: "timestamptz", notNull: true, default: now()}
   },
   indexes: [
     {
       name: "verifications_pending_key",
       columns: ["userId", "strategy", "purpose"],
       unique: true,
-      where: "NOT is_used"
+      where: {is_used: false}
     }
   ]
 });

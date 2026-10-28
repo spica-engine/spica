@@ -11,7 +11,8 @@ interface Doc {
   scope: string;
   hash?: string;
   count?: number;
-  payload?: Record<string, unknown>;
+  seen?: Date | null;
+  nested?: {token?: string};
 }
 
 const docs = defineEntity<Doc>({
@@ -22,17 +23,11 @@ const docs = defineEntity<Doc>({
     hash: {type: "text"},
     count: {type: "double precision"},
     seen: {type: "timestamptz", keepNull: true},
-    payload: {type: "jsonb"}
+    nested: {embedded: {token: {type: "text"}}}
   },
   indexes: [
     {columns: ["scope"], unique: true},
-    {
-      name: "docs_token_key",
-      keys: ["nested.token"],
-      expression: "(payload->>'token')",
-      unique: true,
-      where: "(payload->>'token') IS NOT NULL"
-    }
+    {name: "docs_token_key", columns: ["nested.token"], unique: true}
   ]
 });
 
@@ -108,9 +103,9 @@ describe("document entities", () => {
       expect(await orm.count(docs, {hash: "z"})).toBe(2);
     });
 
-    it("reports the configured key names for violations of expression indexes", async () => {
-      await orm.insert(docs, {scope: "a", payload: {token: "t"}});
-      const error = await orm.insert(docs, {scope: "b", payload: {token: "t"}}).catch(e => e);
+    it("reports the dotted property of an embedded column in unique violations", async () => {
+      await orm.insert(docs, {scope: "a", nested: {token: "t"}});
+      const error = await orm.insert(docs, {scope: "b", nested: {token: "t"}}).catch(e => e);
       expect(error).toBeInstanceOf(DuplicateKeyError);
       expect(error.keyValue).toEqual({"nested.token": "t"});
     });
