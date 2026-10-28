@@ -22,6 +22,10 @@ import {PostgresDashboardRepository} from "./dashboard/dashboard.js";
 import {PostgresEnvVarRepository} from "./env_var/env-var.js";
 import {PostgresSecretRepository} from "./secret/secret.js";
 import {PostgresStatusRepository} from "./status/status.js";
+import {BUCKET_REPOSITORY} from "@spica-server/interface-bucket";
+import {HISTORY_REPOSITORY} from "@spica-server/interface-bucket-history";
+import {PostgresBucketRepository} from "./bucket/bucket.js";
+import {PostgresHistoryRepository} from "./bucket/history.js";
 import {CONFIG_REPOSITORY} from "@spica-server/interface-config";
 import {PostgresConfigRepository} from "./config/config.js";
 import {PostgresApiKeyRepository} from "./passport/apikey.js";
@@ -51,5 +55,7 @@ export const repositoryClasses: RepositoryClasses = new Map<symbol, RepositoryCl
   [ENV_VAR_REPOSITORY, PostgresEnvVarRepository],
   [SECRET_REPOSITORY, PostgresSecretRepository],
   [DASHBOARD_REPOSITORY, PostgresDashboardRepository],
-  [STATUS_REPOSITORY, PostgresStatusRepository]
+  [STATUS_REPOSITORY, PostgresStatusRepository],
+  [BUCKET_REPOSITORY, PostgresBucketRepository],
+  [HISTORY_REPOSITORY, PostgresHistoryRepository]
 ]);

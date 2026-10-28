@@ -1,0 +1,88 @@
+import {Inject, Injectable} from "@nestjs/common";
+import {isNotNull, jsonbRemove, Orm, sum} from "@spica-server/data-postgresql-orm";
+import {Id} from "@spica-server/interface-data";
+import {Bucket, BucketRepository, StoredBucket} from "@spica-server/interface-bucket";
+import {buckets} from "../../entities/index.js";
+import {ORM} from "../../orm.js";
+import {entryStatus} from "../helpers.js";
+
+@Injectable()
+export class PostgresBucketRepository implements BucketRepository {
+  constructor(@Inject(ORM) private readonly orm: Orm) {}
+
+  findAll() {
+    return this.orm.findMany(buckets, {}, {orderBy: {_id: "asc"}}) as Promise<StoredBucket[]>;
+  }
+
+  findById(id: Id) {
+    return this.orm.findById(buckets, id) as Promise<StoredBucket | null>;
+  }
+
+  insert(bucket: Bucket) {
+    return this.orm.insert(buckets, bucket) as Promise<StoredBucket>;
+  }
+
+  replaceById(id: Id, bucket: Bucket) {
+    return this.orm.replaceById(buckets, id, bucket) as Promise<StoredBucket | null>;
+  }
+
+  deleteById(id: Id) {
+    return this.orm.deleteById(buckets, id) as Promise<StoredBucket | null>;
+  }
+
+  async unsetProperties(id: Id, paths: string[]) {
+    const subpathsByRoot = new Map<string, string[]>();
+    for (const path of paths) {
+      const [root, ...rest] = path.split(".");
+      subpathsByRoot.set(root, [...(subpathsByRoot.get(root) ?? []), rest.join(".")]);
+    }
+    if (!subpathsByRoot.size) {
+      return 0;
+    }
+
+    const changes = Object.fromEntries(
+      [...subpathsByRoot].map(([root, subpaths]) => [
+        root,
+        subpaths.includes("") ? null : jsonbRemove(subpaths)
+      ])
+    );
+    return (await this.orm.updateById(buckets, id, changes)) ? 1 : 0;
+  }
+
+  async sumOfCountLimits() {
+    const {total} = await this.orm.aggregate(buckets, {total: sum("documentSettings.countLimit")});
+    return total;
+  }
+
+  async findTranslatable() {
+    const withProperties = await this.findWithProperties();
+    return withProperties.flatMap(({_id, properties}) => {
+      const translatable = Object.fromEntries(
+        Object.entries(properties).filter(([, property]) => property.options?.translate === true)
+      );
+      return Object.keys(translatable).length ? [{_id, properties: translatable}] : [];
+    }) as StoredBucket[];
+  }
+
+  async findReferencing(bucketId: string) {
+    const withProperties = await this.findWithProperties();
+    return withProperties
+      .filter(({properties}) =>
+        Object.values(properties).some(property => (property as any).bucketId == bucketId)
+      )
+      .map(({_id}) => String(_id));
+  }
+
+  private async findWithProperties() {
+    const found = await this.orm.findMany(
+      buckets,
+      {properties: isNotNull()},
+      {select: ["_id", "properties"], orderBy: {_id: "asc"}}
+    );
+    return found as {_id: Id; properties: NonNullable<Bucket["properties"]>}[];
+  }
+
+  status() {
+    return entryStatus(this.orm, buckets, undefined);
+  }
+}
