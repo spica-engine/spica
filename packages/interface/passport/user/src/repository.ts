@@ -1,6 +1,7 @@
 import {
   DeletableById,
   EntryStatus,
+  ExpiringRepository,
   Id,
   ProfilerQuery,
   Repository,
@@ -55,7 +56,7 @@ export interface VerificationTarget {
   purpose: string;
 }
 
-export interface VerificationRepository {
+export interface VerificationRepository extends ExpiringRepository {
   /**
    * Marks the unused verification of the target as used and resolves to it as it was before.
    */

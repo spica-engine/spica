@@ -1,7 +1,13 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {Orm} from "@spica-server/data-postgresql-orm";
-import {JobMeta, JobRepository} from "@spica-server/interface-replication";
+import {
+  JobMeta,
+  JobRepository,
+  REPLICATION_SERVICE_OPTIONS,
+  ReplicationServiceOptions
+} from "@spica-server/interface-replication";
 import {jobs, StoredJob} from "../../entities/index.js";
+import {PostgresExpiry} from "../../expiry/index.js";
 import {ORM} from "../../orm.js";
 
 const toStored = ({_id, event_id, created_at, ...payload}: JobMeta): StoredJob => ({
@@ -20,7 +26,15 @@ const toMeta = ({key, event_id, created_at, payload}: StoredJob): JobMeta => ({
 
 @Injectable()
 export class PostgresJobRepository implements JobRepository {
-  constructor(@Inject(ORM) private readonly orm: Orm) {}
+  constructor(
+    @Inject(ORM) private readonly orm: Orm,
+    @Inject(PostgresExpiry) private readonly expiry: PostgresExpiry,
+    @Inject(REPLICATION_SERVICE_OPTIONS) private readonly retention: ReplicationServiceOptions
+  ) {}
+
+  async applyExpiry() {
+    await this.expiry.expire(jobs, "created_at", this.retention.expireAfterSeconds);
+  }
 
   async claim(meta: JobMeta) {
     const claimed = await this.orm.upsert(jobs, toStored({...meta, created_at: new Date()}), {

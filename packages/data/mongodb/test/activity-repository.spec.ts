@@ -20,6 +20,7 @@ describe("Activity Service", () => {
       ]
     }).compile();
     service = module.get(MongoActivityRepository);
+    await service.applyExpiry();
     await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
   });
 

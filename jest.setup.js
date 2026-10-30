@@ -25,6 +25,9 @@ process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(
   "apps/migrate/dist/test/acceptance"
 );
 
+// build context of the PostgreSQL image with pg_cron
+process.env.TESTONLY_POSTGRES_IMAGE_CONTEXT = path.join(workspaceRoot, "docker", "postgres");
+
 // directory for function spawned worker entrypoints
 process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH = path.join(
   workspaceRoot,

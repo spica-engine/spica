@@ -7,6 +7,7 @@ import {
   aggregateSql,
   createIndexSql,
   createTableSql,
+  expireSql,
   insertManySql,
   insertSql,
   replaceSql,
@@ -281,5 +282,29 @@ describe("sql builders", () => {
         /ON CONFLICT \("name"\) WHERE "tags" IS NULL DO UPDATE SET "tags" = EXCLUDED."tags"/
       );
     });
+  });
+});
+
+describe("expireSql", () => {
+  const events = defineEntity({
+    table: "events",
+    columns: {createdAt: {type: "timestamptz", notNull: true}, expiredAt: {type: "timestamptz"}}
+  });
+
+  it("should delete the rows older than the retention by the column of the property", () => {
+    expect(expireSql(events, "createdAt", 3600)).toBe(
+      'DELETE FROM "events" WHERE "created_at" < now() - make_interval(secs => 3600)'
+    );
+    expect(expireSql(events, "expiredAt", 0)).toBe(
+      'DELETE FROM "events" WHERE "expired_at" < now() - make_interval(secs => 0)'
+    );
+  });
+
+  it.each([-1, 1.5, NaN, Infinity])("should reject a retention of %s", seconds => {
+    expect(() => expireSql(events, "createdAt", seconds)).toThrow(/non-negative integer/);
+  });
+
+  it("should reject an unknown property", () => {
+    expect(() => expireSql(events, "missing", 60)).toThrow();
   });
 });

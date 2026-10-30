@@ -10265,6 +10265,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/interface-replication@workspace:packages/interface/replication"
   dependencies:
+    "@spica-server/interface-data": "workspace:*"
     rxjs: "npm:^7.8.2"
   languageName: unknown
   linkType: soft
