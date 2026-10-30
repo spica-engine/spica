@@ -135,11 +135,17 @@ export class MongoVerificationRepository
   extends BaseCollection<UserVerification>("verification")
   implements VerificationRepository
 {
-  constructor(db: DatabaseService, @Inject(USER_OPTIONS) userOptions: UserOptions) {
-    super(db, {
-      afterInit: () =>
-        this.upsertTTLIndex(userOptions.verificationCodeExpiresIn || VERIFICATION_TTL_SECONDS)
-    });
+  constructor(
+    db: DatabaseService,
+    @Inject(USER_OPTIONS) private readonly userOptions: UserOptions
+  ) {
+    super(db);
+  }
+
+  async applyExpiry() {
+    await this.upsertTTLIndex(
+      this.userOptions.verificationCodeExpiresIn || VERIFICATION_TTL_SECONDS
+    );
   }
 
   consume(target: VerificationTarget & {provider: string}) {

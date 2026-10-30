@@ -1,6 +1,6 @@
 import {FactoryProvider} from "@nestjs/common";
 import {ModuleRef} from "@nestjs/core";
-import {REPOSITORY_CLASSES, RepositoryClasses} from "@spica-server/interface-data";
+import {isExpiring, REPOSITORY_CLASSES, RepositoryClasses} from "@spica-server/interface-data";
 
 /**
  * Creates the bound engine's repository within the calling module, so it receives that module's
@@ -9,12 +9,16 @@ import {REPOSITORY_CLASSES, RepositoryClasses} from "@spica-server/interface-dat
 export function provideRepository(token: symbol): FactoryProvider {
   return {
     provide: token,
-    useFactory: (classes: RepositoryClasses, moduleRef: ModuleRef) => {
+    useFactory: async (classes: RepositoryClasses, moduleRef: ModuleRef) => {
       const repository = classes.get(token);
       if (!repository) {
         throw new Error(`The data adapter does not provide ${token.description}.`);
       }
-      return moduleRef.create(repository);
+      const instance = await moduleRef.create(repository);
+      if (isExpiring(instance)) {
+        await instance.applyExpiry();
+      }
+      return instance;
     },
     inject: [REPOSITORY_CLASSES, ModuleRef]
   };

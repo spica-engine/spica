@@ -12,6 +12,7 @@ import {
   VerificationTarget
 } from "@spica-server/interface-passport-user";
 import {StoredVerification, users, verifications} from "../../entities/index.js";
+import {PostgresExpiry} from "../../expiry/index.js";
 import {ORM} from "../../orm.js";
 import {
   addPolicy,
@@ -23,6 +24,7 @@ import {
 } from "../helpers.js";
 
 const PASSWORD_FIELDS = ["password", "lastPasswords"];
+const VERIFICATION_TTL_SECONDS = 300;
 
 @Injectable()
 export class PostgresUserRepository implements UserRepository {
@@ -121,7 +123,19 @@ export class PostgresUserRepository implements UserRepository {
 
 @Injectable()
 export class PostgresVerificationRepository implements VerificationRepository {
-  constructor(@Inject(ORM) private readonly orm: Orm) {}
+  constructor(
+    @Inject(ORM) private readonly orm: Orm,
+    @Inject(PostgresExpiry) private readonly expiry: PostgresExpiry,
+    @Inject(USER_OPTIONS) private readonly userOptions: UserOptions
+  ) {}
+
+  async applyExpiry() {
+    await this.expiry.expire(
+      verifications,
+      "createdAt",
+      this.userOptions.verificationCodeExpiresIn || VERIFICATION_TTL_SECONDS
+    );
+  }
 
   async consume(target: VerificationTarget & {provider: string}) {
     const [verification] = await this.orm.updateMany(

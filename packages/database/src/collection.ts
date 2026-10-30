@@ -160,9 +160,8 @@ export class _MixinCollection<T> {
 
   // Time to live index
   upsertTTLIndex(expireAfterSeconds: number) {
-    return this._coll
-      .listIndexes()
-      .toArray()
+    return this.initCollection()
+      .then(() => this._coll.listIndexes().toArray())
       .then<string | Document>(indexes => {
         const ttlIndex = indexes.find(index => index.name == "created_at_1");
 
