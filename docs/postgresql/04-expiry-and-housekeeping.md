@@ -113,12 +113,11 @@ Three PRs landed. The fallback purge (PR 4 above) was dropped on purpose: pg_cro
 
 - `docker/postgres` is `postgres:18` plus `postgresql-18-cron`, with `shared_preload_libraries=pg_cron` and `cron.use_background_workers=on`. It creates the extension in `$POSTGRES_DB` at initdb. `release.yml` publishes it as `spicaengine/postgres:18` and `18-<version>`.
 - By default only a superuser may call `cron.schedule_in_database`. The chart's init script creates the extension and grants the `spica` role `USAGE` on schema `cron` and `EXECUTE` on that function. The ConfigMap mounted at `/docker-entrypoint-initdb.d` hides the image's own initdb script, which is why the chart repeats `CREATE EXTENSION`.
-- Upgraded installs get the same statements from `templates/postgrescron.yaml`, a `post-upgrade` hook Job running as `root`. A Part 2 migration cannot do it: the pre-upgrade migrate Job runs before the database pod has the new image and the preloaded library. The Job waits for `pg_cron` in `shared_preload_libraries`.
 - `database.postgresImage` sets the image. The CLI starts `spicaengine/postgres` with `cron.database_name` set to the project database. The testing module builds `docker/postgres` through testcontainers; `TESTONLY_POSTGRES_IMAGE_CONTEXT` is set in `jest.setup.js`. CI builds the same image for the PostgreSQL matrix.
 
 ### Open questions
 
 - Leader for the fallback purge: not applicable, there is no fallback.
-- Who creates `pg_cron`: the image's initdb script for plain containers, the chart's init script for new installs and the post-upgrade hook Job for upgrades.
+- Who creates `pg_cron`: the image's initdb script for plain containers and the chart's init script. There is no upgrade path, because PostgreSQL support was unreleased.
 - Partitioning of large log tables: not done. The purge is one `DELETE` per minute per table, which stays cheap in the steady state because every timestamp column is indexed. A large retention cut deletes its backlog in one statement.
 
