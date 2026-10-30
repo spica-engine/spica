@@ -270,14 +270,17 @@ describe("PostgreSQL bucket schema", () => {
   });
 
   describe("indexes", () => {
-    const withIndex = (index: object) => bucket({indexes: [index]});
+    const withIndex = (index: object, properties: object = {}) =>
+      bucket({indexes: [index]}, properties);
+    const place = {place: {type: "location"}};
 
     it("should allow ascending, descending and 2dsphere indexes with the stored options", async () => {
       await accepted(withIndex({definition: {title: 1}, options: {unique: true}}));
       await accepted(
         withIndex({definition: {title: -1, id: 1}, options: {sparse: true, background: true}})
       );
-      await accepted(withIndex({definition: {place: "2dsphere"}}));
+      await accepted(withIndex({definition: {place: "2dsphere"}}, place));
+      await accepted(withIndex({definition: {place: "2dsphere"}, options: {unique: false}}, place));
     });
 
     it("should reject the mongodb index types and options", async () => {
@@ -288,5 +291,114 @@ describe("PostgreSQL bucket schema", () => {
     });
 
     it("should reject an empty definition", () => rejected(withIndex({definition: {}})));
+
+    it("should reject a 2dsphere index that mixes in other fields", () =>
+      rejected(withIndex({definition: {place: "2dsphere", title: 1}}, place), "more than 1"));
+
+    it("should reject a unique 2dsphere index", () =>
+      rejected(withIndex({definition: {place: "2dsphere"}, options: {unique: true}}, place)));
+
+    it("should reject the same index twice", () =>
+      rejected(
+        bucket({
+          indexes: [
+            {definition: {title: 1}, options: {}},
+            {definition: {title: 1}, options: {}}
+          ]
+        })
+      ));
+
+    describe("fields", () => {
+      const nested = {
+        address: {
+          type: "object",
+          properties: {
+            city: {type: "string"},
+            geo: {type: "object", properties: {lat: {type: "number"}}}
+          }
+        },
+        lines: {type: "array", items: {type: "object", properties: {sku: {type: "string"}}}},
+        tags: {type: "array", items: {type: "string"}},
+        friends: {type: "relation", bucketId: other, relationType: "onetomany"},
+        name: {type: "string", options: {translate: true}},
+        loose: {type: "array"}
+      };
+
+      it.each([
+        "title",
+        "address.city",
+        "address.geo.lat",
+        "lines.sku",
+        "tags",
+        "friends",
+        "loose"
+      ])("should index %s", field => accepted(withIndex({definition: {[field]: 1}}, nested)));
+
+      it.each(["missing", "address.zip", "title.x", "constructor", "toString.x", "_id"])(
+        "should reject %s, which is not a property",
+        field =>
+          rejected(
+            withIndex({definition: {[field]: 1}}, nested),
+            "which is not a property of the bucket"
+          )
+      );
+
+      it.each(["address", "address.geo", "lines"])(
+        "should reject %s, which only holds other fields",
+        field =>
+          rejected(
+            withIndex({definition: {[field]: 1}}, nested),
+            "which is not a property of the bucket"
+          )
+      );
+
+      it.each(["name", "name.en_US"])("should reject the translated %s", field =>
+        rejected(
+          withIndex({definition: {[field]: 1}}, nested),
+          "indexes on translated properties are not supported"
+        )
+      );
+
+      it("should reject a translated property inside an object", () =>
+        rejected(
+          withIndex(
+            {definition: {"seo.title": 1}},
+            {
+              seo: {
+                type: "object",
+                properties: {title: {type: "string", options: {translate: true}}}
+              }
+            }
+          ),
+          "translated"
+        ));
+
+      it("should only allow 2dsphere on a location", async () => {
+        await rejected(withIndex({definition: {title: "2dsphere"}}), "which is not a location");
+        await rejected(
+          withIndex({definition: {place: 1}}, place),
+          'can only index the location "place"'
+        );
+        await accepted(
+          withIndex(
+            {definition: {"lines.where": "2dsphere"}},
+            {
+              lines: {
+                type: "array",
+                items: {type: "object", properties: {where: {type: "location"}}}
+              }
+            }
+          )
+        );
+      });
+
+      it("should name every field that has a problem", async () => {
+        const problems = await check(withIndex({definition: {nope: 1, title: "2dsphere"}}, nested));
+
+        expect(problems.filter(problem => problem.includes("bucketIndexes"))).toHaveLength(0);
+        expect(problems.join("\n")).toContain('"nope"');
+        expect(problems.join("\n")).toContain('cannot use 2dsphere on "title"');
+      });
+    });
   });
 });

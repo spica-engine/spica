@@ -97,8 +97,6 @@ const COLUMN_TYPE_OF_PROPERTY: Record<string, ColumnType> = {
   bigint: "bigint"
 };
 
-const SUPPORTED_INDEX_OPTIONS = new Set(["unique", "sparse", "background"]);
-
 const keyOf = (path: string[]) => path.join("\0");
 
 const relationTypeOf = (property: Property) => (property as {relationType?: string}).relationType;
@@ -214,7 +212,7 @@ function describeTables(
   bucket: Bucket,
   primaryKey: PrimaryKeyMetadata,
   targets: RelationTargets
-): {tables: TableMetadata[]; translated: Set<string>} {
+): TableMetadata[] {
   const mainName = mainTableName(bucketId);
   const targetOf = (path: string[], targetId: string): RelationTarget => {
     const target = targetId == bucketId ? {table: mainName, primaryKey} : targets(targetId);
@@ -227,7 +225,6 @@ function describeTables(
   };
   const main = new TableBuilder(mainName, []);
   const children: TableBuilder[] = [];
-  const translated = new Set<string>();
   const requiredAtTop = new Set(bucket.required ?? []);
 
   const collect = (
@@ -256,7 +253,6 @@ function describeTables(
     if (property.options?.translate) {
       const translations = new TableBuilder(fieldTableName(bucketId, path), path, "locale");
       children.push(translations);
-      translated.add(keyOf(path));
       translations.add({name: SYSTEM_COLUMNS.locale, path, type: "text", notNull: true});
       translations.add({
         name: SYSTEM_COLUMNS.value,
@@ -388,67 +384,32 @@ function describeTables(
     };
   };
 
-  return {
-    tables: [toMetadata(main, true), ...children.map(child => toMetadata(child, false))],
-    translated
-  };
+  return [toMetadata(main, true), ...children.map(child => toMetadata(child, false))];
 }
 
 function describeIndex(
   columnOf: (path: string[]) => ColumnMetadata | undefined,
-  isTranslated: (path: string[]) => boolean,
   index: IndexDefinition
 ): {metadata?: IndexMetadata; problems: string[]} {
   const problems: string[] = [];
   const columns: (IndexMetadata["columns"][number] & {table: string})[] = [];
   const label = JSON.stringify(index.definition);
 
-  const spatial = Object.values(index.definition).includes("2dsphere");
   for (const [field, direction] of Object.entries(index.definition)) {
     const column = columnOf(field.split("."));
-    if (isTranslated(field.split("."))) {
-      problems.push(
-        `Index ${label} refers to "${field}", and indexes on translated properties are not supported on PostgreSQL yet.`
-      );
-    } else if (!column) {
-      problems.push(`Index ${label} refers to "${field}", which is not a property of the bucket.`);
-    } else if (direction === "2dsphere") {
-      if (column.type != "point") {
-        problems.push(`Index ${label} cannot use 2dsphere on "${field}", which is not a location.`);
-      }
-      columns.push({table: column.table, name: column.name, order: "asc"});
-    } else if (direction !== 1 && direction !== -1) {
-      problems.push(
-        `Index ${label} uses "${direction}", only 1, -1 and 2dsphere are supported on PostgreSQL.`
-      );
-    } else if (column.type == "point") {
-      problems.push(`Index ${label} can only index the location "${field}" with 2dsphere.`);
+    if (!column) {
+      problems.push(`Index ${label} refers to "${field}", which has no column.`);
     } else {
       columns.push({
         table: column.table,
         name: column.name,
-        order: direction == 1 ? "asc" : "desc"
+        order: direction == -1 ? "desc" : "asc"
       });
     }
   }
 
-  if (spatial && Object.keys(index.definition).length > 1) {
-    problems.push(`Index ${label} cannot combine 2dsphere with other fields on PostgreSQL.`);
-  }
-
   if (new Set(columns.map(column => column.table)).size > 1) {
     problems.push(`Index ${label} spans more than one table, which PostgreSQL cannot index.`);
-  }
-
-  const options = index.options ?? {};
-  for (const option of Object.keys(options).filter(name => !SUPPORTED_INDEX_OPTIONS.has(name))) {
-    problems.push(
-      `Index ${label} uses the "${option}" option, which PostgreSQL does not support yet.`
-    );
-  }
-
-  if (!columns.length && !problems.length) {
-    problems.push(`Index ${label} has no fields.`);
   }
 
   if (problems.length) {
@@ -456,11 +417,7 @@ function describeIndex(
   }
 
   const [{table}] = columns;
-  const unique = Boolean(options.unique);
-  if (spatial && unique) {
-    problems.push(`Index ${label} cannot be unique and 2dsphere at the same time.`);
-    return {problems};
-  }
+  const unique = Boolean(index.options?.unique);
   const name = constraintName(
     table,
     columns.map(column => (column.order == "desc" ? `${column.name}_desc` : column.name)),
@@ -470,7 +427,7 @@ function describeIndex(
     metadata: {
       table,
       name,
-      method: spatial ? "gist" : "btree",
+      method: Object.values(index.definition).includes("2dsphere") ? "gist" : "btree",
       unique,
       columns: columns.map(({name, order}) => ({name, order}))
     },
@@ -489,10 +446,7 @@ export function describeBucket(
   }
 
   const primaryKey = primaryKeyMetadata(bucket);
-  const {
-    tables: [main, ...children],
-    translated
-  } = describeTables(bucketId, bucket, primaryKey, targets);
+  const [main, ...children] = describeTables(bucketId, bucket, primaryKey, targets);
 
   const byPath = new Map(
     [main, ...children].flatMap(table =>
@@ -503,12 +457,9 @@ export function describeBucket(
   );
   const columnOf = (path: string[]) => byPath.get(keyOf(path.filter(s => s != ITEMS_SEGMENT)));
 
-  const isTranslated = (path: string[]) =>
-    path.some((_, length) => translated.has(keyOf(path.slice(0, length + 1))));
-
   const indexProblems: string[] = [];
   for (const index of bucket.indexes ?? []) {
-    const described = describeIndex(columnOf, isTranslated, index);
+    const described = describeIndex(columnOf, index);
     indexProblems.push(...described.problems);
     if (described.metadata) {
       [main, ...children]
@@ -563,7 +514,7 @@ export function describeBucket(
     tables,
     columnOf,
     indexOf: index => {
-      const {metadata, problems} = describeIndex(columnOf, isTranslated, index);
+      const {metadata, problems} = describeIndex(columnOf, index);
       if (!metadata) {
         throw new BucketSchemaError(problems);
       }
