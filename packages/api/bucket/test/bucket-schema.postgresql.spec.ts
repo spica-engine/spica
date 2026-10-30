@@ -168,6 +168,16 @@ describe("PostgreSQL bucket schema", () => {
       name => rejected(bucket({}, {[name]: {type: "string"}}))
     );
 
+    it("should reserve the names inside objects and array items too", async () => {
+      await rejected(bucket({}, {o: {type: "object", properties: {_parent: {type: "string"}}}}));
+      await rejected(
+        bucket(
+          {},
+          {a: {type: "array", items: {type: "object", properties: {_value: {type: "string"}}}}}
+        )
+      );
+    });
+
     it("should allow other names, including id", () =>
       accepted(bucket({}, {parent: {type: "string"}, _x: {type: "string"}})));
   });
