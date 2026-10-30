@@ -10,6 +10,8 @@ import {omitPaths} from "../helpers.js";
 export class PostgresRefreshTokenRepository implements RefreshTokenRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
+  async applyExpiry() {}
+
   insert(token: RefreshToken) {
     return this.orm.insert(refreshTokens, token);
   }

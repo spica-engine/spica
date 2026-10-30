@@ -9,6 +9,8 @@ import {ORM} from "../../orm.js";
 export class PostgresActivityRepository implements ActivityRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
+  async applyExpiry() {}
+
   async insertMany(items: Activity[]) {
     const inserted = await this.orm.insertMany(activities, items);
     return inserted.map(activity => activity._id);

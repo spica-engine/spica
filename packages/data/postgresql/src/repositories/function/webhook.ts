@@ -39,6 +39,8 @@ export class PostgresWebhookRepository implements WebhookRepository {
 export class PostgresWebhookLogRepository implements WebhookLogRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
+  async applyExpiry() {}
+
   insert(log: Log) {
     return this.orm.insert(webhookLogs, log);
   }

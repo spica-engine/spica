@@ -1,7 +1,8 @@
-import {DeletableById, Id, Insertable} from "@spica-server/interface-data";
+import {DeletableById, ExpiringRepository, Id, Insertable} from "@spica-server/interface-data";
 import {RefreshToken} from "./index.js";
 
-export interface RefreshTokenRepository extends Insertable<RefreshToken>, DeletableById {
+export interface RefreshTokenRepository
+  extends Insertable<RefreshToken>, DeletableById, ExpiringRepository {
   findByToken(token: string): Promise<RefreshToken | null>;
   markUsed(token: string, at: Date): Promise<number>;
   /**

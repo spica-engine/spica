@@ -11,9 +11,13 @@ import {
 export class MongoJobRepository extends BaseCollection<JobMeta>("jobs") implements JobRepository {
   constructor(
     db: DatabaseService,
-    @Inject(REPLICATION_SERVICE_OPTIONS) options: ReplicationServiceOptions
+    @Inject(REPLICATION_SERVICE_OPTIONS) private readonly retention: ReplicationServiceOptions
   ) {
-    super(db, {afterInit: () => this.upsertTTLIndex(options.expireAfterSeconds)});
+    super(db);
+  }
+
+  async applyExpiry() {
+    await this.upsertTTLIndex(this.retention.expireAfterSeconds);
   }
 
   claim(meta: JobMeta) {

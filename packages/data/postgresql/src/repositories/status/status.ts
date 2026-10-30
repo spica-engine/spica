@@ -8,6 +8,8 @@ import {ORM} from "../../orm.js";
 export class PostgresStatusRepository implements StatusRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
+  async applyExpiry() {}
+
   async record(status: Omit<ApiStatus, "_id" | "count">) {
     const minute = new Date();
     minute.setSeconds(0, 0);

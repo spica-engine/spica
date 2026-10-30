@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import {Id} from "@spica-server/interface-data";
+import {ExpiringRepository, Id} from "@spica-server/interface-data";
 
 export interface StatusOptions {
   expireAfterSeconds: number;
@@ -29,7 +29,7 @@ export interface ApiStatusSummary {
   downloaded: number;
 }
 
-export interface StatusRepository {
+export interface StatusRepository extends ExpiringRepository {
   /**
    * Counts one request with its payload sizes, adding it to the current minute's totals.
    */
