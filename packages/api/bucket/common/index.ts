@@ -8,3 +8,4 @@ export * from "./src/expression.filter.js";
 export * from "./src/schema.js";
 export * from "./src/decrypt.js";
 export * from "./src/helpers.js";
+export * from "./src/schema-diff.js";
