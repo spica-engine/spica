@@ -128,7 +128,6 @@ describe("bucket metadata", () => {
     it("should reject properties that need structures this part does not build yet", () => {
       const properties = {
         id: {type: "uuid"},
-        where: {type: "location"},
         title: {type: "object", options: {translate: true}, properties: {a: {type: "string"}}},
         rows: {
           type: "array",
@@ -138,8 +137,64 @@ describe("bucket metadata", () => {
       };
 
       expect(() => describeBucket(bucketId, bucket({properties}))).toThrow(
-        "Properties are not supported on PostgreSQL yet: where (location), title (translated object), rows (translated string inside an array), matrix (array of nested array)."
+        "Properties are not supported on PostgreSQL yet: title (translated object), rows (translated string inside an array), matrix (array of nested array)."
       );
+    });
+
+    describe("locations", () => {
+      const properties = {
+        id: {type: "uuid"},
+        title: {type: "string"},
+        place: {type: "location"},
+        stops: {type: "array", items: {type: "location"}}
+      };
+
+      it("should store a location in a point column, also as array items", () => {
+        const metadata = describeBucket(bucketId, bucket({properties}));
+
+        expect(metadata.columnOf(["place"])).toMatchObject({name: "place", type: "point"});
+        expect(metadata.columnOf(["stops"])).toMatchObject({name: "_value", type: "point"});
+      });
+
+      it("should index a location with a gist index", () => {
+        const metadata = describeBucket(
+          bucketId,
+          bucket({properties, indexes: [{definition: {place: "2dsphere"}, options: {}}]})
+        );
+
+        expect(metadata.main.indexes).toEqual([
+          {
+            table: metadata.main.name,
+            name: `bucket_${bucketId}_place_ix`,
+            method: "gist",
+            unique: false,
+            columns: [{name: "place", order: "asc"}]
+          }
+        ]);
+      });
+
+      it.each([
+        [{place: 1}, 'can only index the location "place" with 2dsphere'],
+        [{title: "2dsphere"}, 'cannot use 2dsphere on "title", which is not a location'],
+        [{place: "2dsphere", title: 1}, "cannot combine 2dsphere with other fields"],
+        [{}, "has no fields"]
+      ])("should refuse the index %j", (definition, message) => {
+        expect(() =>
+          describeBucket(bucketId, bucket({properties, indexes: [{definition, options: {}}]}))
+        ).toThrow(message);
+      });
+
+      it("should refuse a unique 2dsphere index", () => {
+        expect(() =>
+          describeBucket(
+            bucketId,
+            bucket({
+              properties,
+              indexes: [{definition: {place: "2dsphere"}, options: {unique: true}}]
+            })
+          )
+        ).toThrow("cannot be unique and 2dsphere at the same time");
+      });
     });
 
     describe("translated properties", () => {
@@ -529,6 +584,7 @@ describe("bucket metadata", () => {
           {
             table: metadata.children[0].name,
             name: `${metadata.children[0].name}__value_ix`,
+            method: "btree",
             unique: false,
             columns: [{name: "_value", order: "asc"}]
           }

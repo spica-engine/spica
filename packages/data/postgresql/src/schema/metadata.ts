@@ -20,7 +20,8 @@ export type ColumnType =
   | "double precision"
   | "boolean"
   | "timestamptz"
-  | "jsonb";
+  | "jsonb"
+  | "point";
 
 export interface ColumnMetadata {
   table: string;
@@ -35,6 +36,7 @@ export interface ColumnMetadata {
 export interface IndexMetadata {
   table: string;
   name: string;
+  method: "btree" | "gist";
   unique: boolean;
   columns: {name: string; order: "asc" | "desc"}[];
 }
@@ -89,6 +91,7 @@ const COLUMN_TYPE_OF_PROPERTY: Record<string, ColumnType> = {
   boolean: "boolean",
   date: "timestamptz",
   json: "jsonb",
+  location: "point",
   uuid: "uuid",
   integer: "integer",
   bigint: "bigint"
@@ -400,6 +403,7 @@ function describeIndex(
   const columns: (IndexMetadata["columns"][number] & {table: string})[] = [];
   const label = JSON.stringify(index.definition);
 
+  const spatial = Object.values(index.definition).includes("2dsphere");
   for (const [field, direction] of Object.entries(index.definition)) {
     const column = columnOf(field.split("."));
     if (isTranslated(field.split("."))) {
@@ -408,10 +412,17 @@ function describeIndex(
       );
     } else if (!column) {
       problems.push(`Index ${label} refers to "${field}", which is not a property of the bucket.`);
+    } else if (direction === "2dsphere") {
+      if (column.type != "point") {
+        problems.push(`Index ${label} cannot use 2dsphere on "${field}", which is not a location.`);
+      }
+      columns.push({table: column.table, name: column.name, order: "asc"});
     } else if (direction !== 1 && direction !== -1) {
       problems.push(
-        `Index ${label} uses "${direction}", only 1 and -1 are supported on PostgreSQL.`
+        `Index ${label} uses "${direction}", only 1, -1 and 2dsphere are supported on PostgreSQL.`
       );
+    } else if (column.type == "point") {
+      problems.push(`Index ${label} can only index the location "${field}" with 2dsphere.`);
     } else {
       columns.push({
         table: column.table,
@@ -419,6 +430,10 @@ function describeIndex(
         order: direction == 1 ? "asc" : "desc"
       });
     }
+  }
+
+  if (spatial && Object.keys(index.definition).length > 1) {
+    problems.push(`Index ${label} cannot combine 2dsphere with other fields on PostgreSQL.`);
   }
 
   if (new Set(columns.map(column => column.table)).size > 1) {
@@ -432,12 +447,20 @@ function describeIndex(
     );
   }
 
+  if (!columns.length && !problems.length) {
+    problems.push(`Index ${label} has no fields.`);
+  }
+
   if (problems.length) {
     return {problems};
   }
 
   const [{table}] = columns;
   const unique = Boolean(options.unique);
+  if (spatial && unique) {
+    problems.push(`Index ${label} cannot be unique and 2dsphere at the same time.`);
+    return {problems};
+  }
   const name = constraintName(
     table,
     columns.map(column => (column.order == "desc" ? `${column.name}_desc` : column.name)),
@@ -447,6 +470,7 @@ function describeIndex(
     metadata: {
       table,
       name,
+      method: spatial ? "gist" : "btree",
       unique,
       columns: columns.map(({name, order}) => ({name, order}))
     },

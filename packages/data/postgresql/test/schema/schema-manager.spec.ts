@@ -915,6 +915,57 @@ describe("PostgreSQL schema manager", () => {
     });
   });
 
+  describe("locations", () => {
+    const withShape = (properties: object = {}, extra: object = {}) =>
+      bucket({
+        properties: {id: {type: "uuid", options: {generated: true}}, ...properties},
+        ...extra
+      });
+
+    it("should store locations in point columns and index them with gist", async () => {
+      const created = await manager.create(
+        withShape(
+          {place: {type: "location"}, stops: {type: "array", items: {type: "location"}}},
+          {indexes: [{definition: {place: "2dsphere"}, options: {}}]}
+        ),
+        () => {}
+      );
+      const table = tableOf(created._id);
+
+      expect((await columns(table)).find(c => c.column_name == "place").data_type).toBe("point");
+      expect(
+        (await columns(`${table}__stops`)).find(c => c.column_name == "_value").data_type
+      ).toBe("point");
+      expect((await indexes(table)).map(index => index.indexdef)).toEqual([
+        expect.stringContaining("USING gist (place)")
+      ]);
+
+      await pool.query(`INSERT INTO "${table}" (place) VALUES (point(29.0, 41.0))`);
+      const {rows} = await pool.query(
+        `SELECT place[0] AS lng, place[1] AS lat FROM "${table}" WHERE place <@ box(point(28, 40), point(30, 42))`
+      );
+      expect(rows).toEqual([{lng: 29, lat: 41}]);
+    });
+
+    it("should add and drop a spatial index on edit", async () => {
+      const created = await manager.create(withShape({place: {type: "location"}}), () => {});
+      const table = tableOf(created._id);
+
+      await manager.replace(
+        created._id,
+        withShape(
+          {place: {type: "location"}},
+          {indexes: [{definition: {place: "2dsphere"}, options: {}}]}
+        ),
+        () => {}
+      );
+      expect(await indexes(table)).toHaveLength(1);
+
+      await manager.replace(created._id, withShape({place: {type: "location"}}), () => {});
+      expect(await indexes(table)).toEqual([]);
+    });
+  });
+
   describe("drop", () => {
     it("should delete the definition and drop the table", async () => {
       const created = await manager.create(bucket(), () => {});
