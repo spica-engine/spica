@@ -11,7 +11,12 @@ import {
   createStatements,
   describeBucket,
   mainTableName,
-  updateStatements
+  PrimaryKeyMetadata,
+  tryPrimaryKeyMetadata,
+  relationTargets,
+  RelationTargets,
+  updateStatements,
+  withoutRelationsTo
 } from "../../schema/index.js";
 
 const SCHEMA_LOCK = "bucket-schema";
@@ -25,7 +30,11 @@ export class PostgresBucketSchemaManager implements BucketSchemaManager {
       const stored = decodeBucket(
         await session.insert(buckets, encodeBucket(bucket))
       ) as StoredBucket;
-      await this.execute(session, createStatements(describeBucket(String(stored._id), stored)));
+      const targets = await this.targetsOf(session, stored);
+      await this.execute(
+        session,
+        createStatements(describeBucket(String(stored._id), stored, targets))
+      );
       return stored;
     });
     onSaved(inserted);
@@ -51,18 +60,58 @@ export class PostgresBucketSchemaManager implements BucketSchemaManager {
     return replaced;
   }
 
-  async drop(id: Id, onSaved: (dropped: StoredBucket) => void) {
-    const dropped = await this.inTransaction(async session => {
-      const deleted = decodeBucket(await session.deleteById(buckets, id)) as StoredBucket | null;
-      if (deleted) {
-        await this.execute(session, await this.dropStatements(session, String(id)));
+  async drop(
+    id: Id,
+    onSaved: (dropped: StoredBucket) => void,
+    onRelatedChanged: (changed: StoredBucket) => void = () => {}
+  ) {
+    const result = await this.inTransaction(async session => {
+      const existing = await session.findById(buckets, id);
+      if (!existing) {
+        return null;
       }
-      return deleted;
+      const changed = await this.dropRelationsTo(session, String(id));
+      const dropped = decodeBucket(await session.deleteById(buckets, id)) as StoredBucket;
+      await this.execute(session, await this.dropStatements(session, String(id)));
+      return {dropped, changed};
     });
-    if (dropped) {
-      onSaved(dropped);
+    if (!result) {
+      return null;
     }
-    return dropped;
+    onSaved(result.dropped);
+    result.changed.forEach(bucket => onRelatedChanged(bucket));
+    return result.dropped;
+  }
+
+  private async dropRelationsTo(session: Session, bucketId: string) {
+    const all = (await session.findMany(buckets, {})).map(decodeBucket) as StoredBucket[];
+    const changed: StoredBucket[] = [];
+    for (const other of all) {
+      const pruned = String(other._id) == bucketId ? null : withoutRelationsTo(other, bucketId);
+      if (!pruned) {
+        continue;
+      }
+      const next = {...pruned, _id: other._id} as StoredBucket;
+      await session.replaceById(buckets, other._id, encodeBucket(pruned));
+      await this.execute(session, await this.statementsToReplace(session, other, next));
+      changed.push(next);
+    }
+    return changed;
+  }
+
+  private async targetsOf(session: Session, bucket: Bucket): Promise<RelationTargets> {
+    const resolved = new Map<string, {table: string; primaryKey: PrimaryKeyMetadata}>();
+    for (const targetId of relationTargets(bucket.properties)) {
+      if (targetId == String(bucket._id)) {
+        continue;
+      }
+      const target = decodeBucket(await session.findById(buckets, targetId)) as StoredBucket | null;
+      const primaryKey = target && tryPrimaryKeyMetadata(target);
+      if (primaryKey) {
+        resolved.set(targetId, {table: mainTableName(targetId), primaryKey});
+      }
+    }
+    return targetId => resolved.get(targetId);
   }
 
   private async statementsToReplace(session: Session, previous: StoredBucket, next: StoredBucket) {
@@ -70,12 +119,13 @@ export class PostgresBucketSchemaManager implements BucketSchemaManager {
     const {rows} = await session.raw("SELECT to_regclass($1) AS main", [
       quote(mainTableName(bucketId))
     ]);
+    const nextMetadata = describeBucket(bucketId, next, await this.targetsOf(session, next));
     if (!rows[0].main) {
-      return createStatements(describeBucket(bucketId, next));
+      return createStatements(nextMetadata);
     }
     return updateStatements(
-      describeBucket(bucketId, previous),
-      describeBucket(bucketId, next),
+      describeBucket(bucketId, previous, await this.targetsOf(session, previous)),
+      nextMetadata,
       diffBuckets(previous, next)
     );
   }

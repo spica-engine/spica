@@ -14,7 +14,11 @@ export interface BucketSchemaManager {
     bucket: Bucket,
     onSaved: (saved: StoredBucket) => void
   ): Promise<StoredBucket | null>;
-  drop(id: Id, onSaved: (dropped: StoredBucket) => void): Promise<StoredBucket | null>;
+  drop(
+    id: Id,
+    onSaved: (dropped: StoredBucket) => void,
+    onRelatedChanged?: (changed: StoredBucket) => void
+  ): Promise<StoredBucket | null>;
 }
 
 export const BUCKET_SCHEMA_MANAGER = Symbol.for("BUCKET_SCHEMA_MANAGER");
