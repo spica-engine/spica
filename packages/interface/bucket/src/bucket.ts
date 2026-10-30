@@ -41,6 +41,7 @@ interface PropertyOptions {
   options: {
     translate?: boolean;
     history?: boolean;
+    generated?: boolean;
   };
   acl?: string;
 }
