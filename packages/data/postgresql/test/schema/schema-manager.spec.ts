@@ -321,7 +321,9 @@ describe("PostgreSQL schema manager", () => {
           }),
           () => {}
         )
-      ).rejects.toThrow("Changing the type of a property is not supported yet: n.");
+      ).rejects.toThrow(
+        "Changing the type or the translation of a property is not supported yet: n."
+      );
     });
 
     it("should accept a retype that keeps the column type", async () => {
@@ -540,7 +542,9 @@ describe("PostgreSQL schema manager", () => {
 
       await expect(
         manager.replace(created._id, withShape({address: {type: "string"}}), () => {})
-      ).rejects.toThrow("Changing the type of a property is not supported yet: address.");
+      ).rejects.toThrow(
+        "Changing the type or the translation of a property is not supported yet: address."
+      );
       await expect(
         manager.replace(
           created._id,
@@ -757,7 +761,9 @@ describe("PostgreSQL schema manager", () => {
 
       await expect(
         manager.replace(created._id, keyed({link: relation(target._id, "onetomany")}), () => {})
-      ).rejects.toThrow("Changing the type of a property is not supported yet: link.");
+      ).rejects.toThrow(
+        "Changing the type or the translation of a property is not supported yet: link."
+      );
     });
 
     it("should remove the relations that point at a bucket when it is dropped", async () => {
@@ -845,6 +851,67 @@ describe("PostgreSQL schema manager", () => {
       expect(await buckets.findById(target._id)).toBeTruthy();
       expect((await buckets.findById(referencing._id)).properties).toHaveProperty("one");
       expect((await columns(tableOf(referencing._id))).map(c => c.column_name)).toContain("one");
+    });
+  });
+
+  describe("translated properties", () => {
+    const withShape = (properties: object = {}) =>
+      bucket({properties: {id: {type: "uuid", options: {generated: true}}, ...properties}});
+
+    const translated = {type: "string", options: {translate: true}};
+
+    it("should create a table keyed by locale for a translated property", async () => {
+      const created = await manager.create(
+        withShape({name: translated, note: {type: "string"}}),
+        () => {}
+      );
+      const table = tableOf(created._id);
+
+      expect((await columns(table)).map(c => c.column_name)).toEqual(["id", "note"]);
+      expect(await columns(`${table}__name`)).toEqual([
+        expect.objectContaining({column_name: "_locale", data_type: "text", is_nullable: "NO"}),
+        expect.objectContaining({column_name: "_parent", data_type: "uuid", is_nullable: "NO"}),
+        expect.objectContaining({column_name: "_value", data_type: "text", is_nullable: "NO"})
+      ]);
+
+      const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
+      await pool.query(
+        `INSERT INTO "${table}__name" VALUES ($1, 'en_US', 'Book'), ($1, 'tr_TR', 'Kitap')`,
+        [rows[0].id]
+      );
+      await expect(
+        pool.query(`INSERT INTO "${table}__name" VALUES ($1, 'en_US', 'Again')`, [rows[0].id])
+      ).rejects.toMatchObject({code: "23505"});
+      await pool.query(`DELETE FROM "${table}" WHERE id = $1`, [rows[0].id]);
+      expect((await pool.query(`SELECT 1 FROM "${table}__name"`)).rowCount).toBe(0);
+    });
+
+    it("should add and drop the table as the translated property comes and goes", async () => {
+      const created = await manager.create(withShape({}), () => {});
+      const table = tableOf(created._id);
+
+      await manager.replace(created._id, withShape({name: translated}), () => {});
+      expect(await tablesOfBucket(table)).toEqual([table, `${table}__name`]);
+
+      await manager.replace(created._id, withShape({}), () => {});
+      expect(await tablesOfBucket(table)).toEqual([table]);
+    });
+
+    it("should refuse to translate or untranslate an existing property for now", async () => {
+      const created = await manager.create(withShape({name: {type: "string"}}), () => {});
+
+      await expect(
+        manager.replace(created._id, withShape({name: translated}), () => {})
+      ).rejects.toThrow(
+        "Changing the type or the translation of a property is not supported yet: name."
+      );
+
+      const translatedBucket = await manager.create(withShape({name: translated}), () => {});
+      await expect(
+        manager.replace(translatedBucket._id, withShape({name: {type: "string"}}), () => {})
+      ).rejects.toThrow(
+        "Changing the type or the translation of a property is not supported yet: name."
+      );
     });
   });
 
