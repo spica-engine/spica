@@ -35,8 +35,10 @@ function checkSql(table: string, column: ColumnMetadata) {
 }
 
 function createIndexSql(index: IndexMetadata) {
-  const columns = index.columns.map(column => `${quote(column.name)} ${column.order}`);
-  return `CREATE ${index.unique ? "UNIQUE " : ""}INDEX ${quote(index.name)} ON ${quote(index.table)} (${columns.join(", ")})`;
+  const columns = index.columns.map(column =>
+    index.method == "gist" ? quote(column.name) : `${quote(column.name)} ${column.order}`
+  );
+  return `CREATE ${index.unique ? "UNIQUE " : ""}INDEX ${quote(index.name)} ON ${quote(index.table)} USING ${index.method} (${columns.join(", ")})`;
 }
 
 function foreignKeySql(key: ForeignKeyMetadata) {
