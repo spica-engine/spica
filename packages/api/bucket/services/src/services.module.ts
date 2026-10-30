@@ -7,7 +7,8 @@ import {
   BUCKET_DATA_HASH_SECRET,
   BUCKET_DATA_ENCRYPTION_SECRET,
   BUCKET_DATA_REPOSITORY,
-  BUCKET_REPOSITORY
+  BUCKET_REPOSITORY,
+  BUCKET_SCHEMA_MANAGER
 } from "@spica-server/interface-bucket";
 import {provideRepository} from "@spica-server/data";
 
@@ -29,6 +30,7 @@ export class ServicesModule {
         BucketChangeDispatcher,
         provideRepository(BUCKET_REPOSITORY),
         provideRepository(BUCKET_DATA_REPOSITORY),
+        provideRepository(BUCKET_SCHEMA_MANAGER),
         BucketService
       ],
       exports: [
