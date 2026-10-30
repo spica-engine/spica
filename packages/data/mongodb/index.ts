@@ -31,3 +31,4 @@ export * from "./src/health.js";
 export * from "./src/change-feed.js";
 export * from "./src/repositories/replication/command.js";
 export * from "./src/repositories/function/asset.js";
+export * from "./src/schemas/index.js";

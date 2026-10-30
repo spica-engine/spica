@@ -2,13 +2,16 @@ import {Test} from "@nestjs/testing";
 import {DATA_ENGINE} from "@spica-server/data";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {DATA_HEALTH, PG_POOL} from "@spica-server/interface-data";
-import {MINIMUM_SERVER_VERSION_NUM} from "@spica-server/data-postgresql";
+import {MINIMUM_SERVER_VERSION_NUM, postgresBucketSchema} from "@spica-server/data-postgresql";
+import {BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
 
 describe("PostgreSQL connection", () => {
   let module;
 
   beforeAll(async () => {
-    module = await Test.createTestingModule({imports: [DatabaseTestingModule.postgres()]}).compile();
+    module = await Test.createTestingModule({
+      imports: [DatabaseTestingModule.postgres()]
+    }).compile();
     await module.init();
   });
 
@@ -16,6 +19,10 @@ describe("PostgreSQL connection", () => {
 
   it("binds the postgresql engine", () => {
     expect(module.get(DATA_ENGINE)).toBe("postgresql");
+  });
+
+  it("provides the postgresql bucket schema extension", () => {
+    expect(module.get(BUCKET_SCHEMA_EXTENSION)).toBe(postgresBucketSchema);
   });
 
   it("connects to a server of the minimum version or newer", async () => {

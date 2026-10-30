@@ -4,3 +4,4 @@ export * from "./schema.js";
 export * from "./service.js";
 export * from "./repository.js";
 export * from "./schema-manager.js";
+export * from "./schema-extension.js";

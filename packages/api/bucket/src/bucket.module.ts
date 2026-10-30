@@ -8,11 +8,13 @@ import {BucketService, ServicesModule} from "@spica-server/bucket-services";
 import {
   BUCKET_DATA_REPOSITORY,
   BUCKET_REPOSITORY,
+  BUCKET_SCHEMA_EXTENSION,
   BucketDataRepository,
-  BucketRepository
+  BucketRepository,
+  BucketSchemaExtension
 } from "@spica-server/interface-bucket";
 import {SchemaModule, Validator} from "@spica-server/core-schema";
-import {createHashFormat, createEncryptedFormat} from "@spica-server/core-schema";
+import {createHashFormat, createEncryptedFormat, UUID} from "@spica-server/core-schema";
 import {PreferenceService} from "@spica-server/preference-services";
 import {BUCKET_LANGUAGE_FINALIZER} from "@spica-server/interface-preference";
 import {BucketCacheModule} from "@spica-server/bucket-cache";
@@ -24,7 +26,7 @@ import {
   provideBucketSchemaResolver
 } from "./bucket.schema.resolver.js";
 import {GraphQLModule} from "@spica-server/bucket-graphql";
-import {provideLanguageFinalizer} from "@spica-server/bucket-common";
+import {composeBucketSchema, provideLanguageFinalizer} from "@spica-server/bucket-common";
 import {registerStatusProvider} from "./status.js";
 import BucketSchema from "./schemas/bucket.schema.json" with {type: "json"};
 import BucketsSchema from "./schemas/buckets.schema.json" with {type: "json"};
@@ -33,10 +35,20 @@ import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface-asset";
 import {BucketOptions} from "@spica-server/interface-bucket";
 
+const BUCKET_DEFINITION_SCHEMA = Symbol.for("BUCKET_DEFINITION_SCHEMA");
+
+function provideBucketDefinitionSchema(validator: Validator, extension: BucketSchemaExtension) {
+  extension.keywords?.forEach(keyword => validator.registerKeyword(keyword));
+  const schema = composeBucketSchema(BucketSchema, extension.schema);
+  validator.registerSchema(schema as {$id: string});
+  return schema;
+}
+
 @Module({})
 export class BucketModule {
   static forRoot(options: BucketOptions): DynamicModule {
     const formats = [
+      UUID,
       ...(options.hashSecret ? [createHashFormat(options.hashSecret)] : []),
       ...(options.hashSecret && options.encryptionSecret
         ? [createEncryptedFormat(options.encryptionSecret, options.hashSecret)]
@@ -44,7 +56,7 @@ export class BucketModule {
     ];
 
     const schemaModule = SchemaModule.forChild({
-      schemas: [BucketSchema, BucketsSchema],
+      schemas: [BucketsSchema],
       formats,
       keywords: [bucketSpecificDefault],
       customFields: [
@@ -116,6 +128,11 @@ export class BucketModule {
           provide: BucketSchemaResolver,
           useFactory: provideBucketSchemaResolver,
           inject: [Validator, BucketService]
+        },
+        {
+          provide: BUCKET_DEFINITION_SCHEMA,
+          useFactory: provideBucketDefinitionSchema,
+          inject: [Validator, BUCKET_SCHEMA_EXTENSION]
         }
       ],
       exports: [ServicesModule]

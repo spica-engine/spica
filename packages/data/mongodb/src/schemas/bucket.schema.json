@@ -1,0 +1,84 @@
+{
+  "definitions": {
+    "id": {
+      "type": "string",
+      "format": "objectid",
+      "description": "Unique objectid id of schema."
+    },
+    "propertyName": {
+      "type": "string",
+      "pattern": "^(?!_id$)[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "propertyType": {
+      "enum": [
+        "array",
+        "multiselect",
+        "boolean",
+        "number",
+        "object",
+        "string",
+        "storage",
+        "richtext",
+        "date",
+        "textarea",
+        "color",
+        "relation",
+        "location",
+        "json",
+        "hash",
+        "encrypted"
+      ]
+    },
+    "bucketReference": {
+      "type": "string",
+      "format": "objectid-string"
+    },
+    "propertyOptions": {
+      "type": "object",
+      "properties": {
+        "translate": {
+          "type": "boolean",
+          "description": "Allows keeping bucket data in different languages"
+        },
+        "history": {
+          "type": "boolean",
+          "description": "Allows keeping history for each bucket-data"
+        }
+      },
+      "additionalProperties": false
+    },
+    "propertyRules": true,
+    "itemSchema": {
+      "$ref": "#/definitions/schema"
+    },
+    "indexes": {
+      "type": "array",
+      "title": "Database Indexes",
+      "description": "Explicit list of indexes to apply on the bucket collection",
+      "items": {
+        "type": "object",
+        "required": ["definition"],
+        "properties": {
+          "definition": {
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": ["integer", "string"]
+            },
+            "description": "Field paths and direction of the index"
+          },
+          "options": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Additional index options, such as TTL, uniqueness, or sparse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    }
+  }
+}

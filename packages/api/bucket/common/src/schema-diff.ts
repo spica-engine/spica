@@ -29,6 +29,8 @@ const TYPE_KEYWORDS = ["type", "relationType", "bucketId"];
 const isTyped = (a: SchemaNode, b: SchemaNode) =>
   TYPE_KEYWORDS.every(keyword => same(a[keyword], b[keyword]));
 
+const hasOwn = (object: object, key: string) => Object.prototype.hasOwnProperty.call(object, key);
+
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 function indexKey(index: IndexChange["index"]) {
@@ -126,14 +128,14 @@ function diffProperties(
   const nextRequired = new Set(next.required ?? []);
 
   for (const name of Object.keys(previousProperties)) {
-    if (!Object.hasOwn(nextProperties, name)) {
+    if (!hasOwn(nextProperties, name)) {
       changes.push({kind: "removed", path: [...path, name], property: previousProperties[name]});
     }
   }
 
   for (const name of Object.keys(nextProperties)) {
     const fieldPath = [...path, name];
-    if (!Object.hasOwn(previousProperties, name)) {
+    if (!hasOwn(previousProperties, name)) {
       changes.push({kind: "added", path: fieldPath, property: nextProperties[name]});
       continue;
     }
