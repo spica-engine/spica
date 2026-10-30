@@ -347,6 +347,13 @@ export function deleteSql(entity: Entity, where: Where, returning = true): State
   };
 }
 
+export function expireSql(entity: Entity, property: string, afterSeconds: number): string {
+  if (!Number.isInteger(afterSeconds) || afterSeconds < 0) {
+    throw new Error(`Expiry of ${entity.table} must be a non-negative integer of seconds.`);
+  }
+  return `DELETE FROM ${quote(entity.table)} WHERE ${quote(columnOf(entity, property).column)} < now() - make_interval(secs => ${afterSeconds})`;
+}
+
 export function selectSql(entity: Entity, where: Where, options: FindOptions = {}): Statement {
   const values: unknown[] = [];
   const projection = options.select

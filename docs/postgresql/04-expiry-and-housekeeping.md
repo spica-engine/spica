@@ -94,4 +94,31 @@ Records with TTL today:
 
 ## As built
 
-_Fill in after the last PR merges._
+Three PRs landed. The fallback purge (PR 4 above) was dropped on purpose: pg_cron is required, and the API fails to start with a clear error when it is missing.
+
+### Expiry API
+
+- `ExpiringRepository.applyExpiry()` in `@spica-server/interface-data`. The eight repository interfaces that expire records extend it: activities, status, function logs, webhook logs, refresh tokens, verifications, replication commands and jobs.
+- `provideRepository` awaits `applyExpiry()` right after creating a repository, so a failure stops startup instead of becoming an unhandled promise.
+- MongoDB repositories moved their `upsertTTLIndex` and `createIndex` calls from the collection constructor into `applyExpiry()`. `upsertTTLIndex` now creates the collection first, because the constructor used to.
+- PostgreSQL repositories call `PostgresExpiry.expire(entity, property, afterSeconds)` with the same option the Mongo twin reads, so changing a retention argument and restarting updates the job. Refresh tokens expire at `expired_at` with 0 seconds, and verifications fall back to 300 seconds like Mongo.
+
+### pg_cron jobs
+
+- `PostgresExpiry` (`packages/data/postgresql/src/expiry`) schedules one job per table, named `spica:<database>:<table>`, running every minute. Scheduling the same name again updates the job in place. An advisory lock in the cron database serializes replicas that start together.
+- The job command comes from `expireSql` in the ORM: `DELETE FROM "<table>" WHERE "<column>" < now() - make_interval(secs => N)`. The retention is validated as a non-negative integer because it is written into the SQL text.
+- The cron database is read from `cron.database_name`. `PostgresExpiry` opens a short-lived connection to it and calls `cron.schedule_in_database(name, schedule, command, current database)`. The job runs as the role that scheduled it. Passing a `username` argument is rejected for non-superusers, so it is left out.
+
+### Image, chart, testing module
+
+- `docker/postgres` is `postgres:18` plus `postgresql-18-cron`, with `shared_preload_libraries=pg_cron` and `cron.use_background_workers=on`. It creates the extension in `$POSTGRES_DB` at initdb. `release.yml` publishes it as `spicaengine/postgres:18` and `18-<version>`.
+- By default only a superuser may call `cron.schedule_in_database`. The chart's init script creates the extension and grants the `spica` role `USAGE` on schema `cron` and `EXECUTE` on that function. The ConfigMap mounted at `/docker-entrypoint-initdb.d` hides the image's own initdb script, which is why the chart repeats `CREATE EXTENSION`.
+- Upgraded installs get the same statements from `templates/postgrescron.yaml`, a `post-upgrade` hook Job running as `root`. A Part 2 migration cannot do it: the pre-upgrade migrate Job runs before the database pod has the new image and the preloaded library. The Job waits for `pg_cron` in `shared_preload_libraries`.
+- `database.postgresImage` sets the image. The CLI starts `spicaengine/postgres` with `cron.database_name` set to the project database. The testing module builds `docker/postgres` through testcontainers; `TESTONLY_POSTGRES_IMAGE_CONTEXT` is set in `jest.setup.js`. CI builds the same image for the PostgreSQL matrix.
+
+### Open questions
+
+- Leader for the fallback purge: not applicable, there is no fallback.
+- Who creates `pg_cron`: the image's initdb script for plain containers, the chart's init script for new installs and the post-upgrade hook Job for upgrades.
+- Partitioning of large log tables: not done. The purge is one `DELETE` per minute per table, which stays cheap in the steady state because every timestamp column is indexed. A large retention cut deletes its backlog in one statement.
+

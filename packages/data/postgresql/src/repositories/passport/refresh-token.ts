@@ -3,14 +3,20 @@ import {Orm} from "@spica-server/data-postgresql-orm";
 import {Id} from "@spica-server/interface-data";
 import {RefreshToken, RefreshTokenRepository} from "@spica-server/interface-passport-refresh_token";
 import {refreshTokens} from "../../entities/index.js";
+import {PostgresExpiry} from "../../expiry/index.js";
 import {ORM} from "../../orm.js";
 import {omitPaths} from "../helpers.js";
 
 @Injectable()
 export class PostgresRefreshTokenRepository implements RefreshTokenRepository {
-  constructor(@Inject(ORM) private readonly orm: Orm) {}
+  constructor(
+    @Inject(ORM) private readonly orm: Orm,
+    @Inject(PostgresExpiry) private readonly expiry: PostgresExpiry
+  ) {}
 
-  async applyExpiry() {}
+  async applyExpiry() {
+    await this.expiry.expire(refreshTokens, "expired_at", 0);
+  }
 
   insert(token: RefreshToken) {
     return this.orm.insert(refreshTokens, token);

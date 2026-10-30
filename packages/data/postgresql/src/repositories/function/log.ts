@@ -1,14 +1,27 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {Orm, range, Where} from "@spica-server/data-postgresql-orm";
-import {Log, LogRepository, LogSink} from "@spica-server/interface-function-log";
+import {
+  FUNCTION_LOG_OPTIONS,
+  Log,
+  LogOptions,
+  LogRepository,
+  LogSink
+} from "@spica-server/interface-function-log";
 import {functionLogs} from "../../entities/index.js";
+import {PostgresExpiry} from "../../expiry/index.js";
 import {ORM} from "../../orm.js";
 
 @Injectable()
 export class PostgresFunctionLogRepository implements LogRepository {
-  constructor(@Inject(ORM) private readonly orm: Orm) {}
+  constructor(
+    @Inject(ORM) private readonly orm: Orm,
+    @Inject(PostgresExpiry) private readonly expiry: PostgresExpiry,
+    @Inject(FUNCTION_LOG_OPTIONS) private readonly retention: LogOptions
+  ) {}
 
-  async applyExpiry() {}
+  async applyExpiry() {
+    await this.expiry.expire(functionLogs, "created_at", this.retention.expireAfterSeconds);
+  }
 
   async deleteByFunction(
     functionId: string,

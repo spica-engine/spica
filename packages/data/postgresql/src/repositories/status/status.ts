@@ -1,14 +1,27 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {increment, Orm, range, sum} from "@spica-server/data-postgresql-orm";
-import {ApiStatus, ApiStatusSummary, StatusRepository} from "@spica-server/interface-status";
+import {
+  ApiStatus,
+  ApiStatusSummary,
+  STATUS_OPTIONS,
+  StatusOptions,
+  StatusRepository
+} from "@spica-server/interface-status";
 import {statuses} from "../../entities/index.js";
+import {PostgresExpiry} from "../../expiry/index.js";
 import {ORM} from "../../orm.js";
 
 @Injectable()
 export class PostgresStatusRepository implements StatusRepository {
-  constructor(@Inject(ORM) private readonly orm: Orm) {}
+  constructor(
+    @Inject(ORM) private readonly orm: Orm,
+    @Inject(PostgresExpiry) private readonly expiry: PostgresExpiry,
+    @Inject(STATUS_OPTIONS) private readonly retention: StatusOptions
+  ) {}
 
-  async applyExpiry() {}
+  async applyExpiry() {
+    await this.expiry.expire(statuses, "created_at", this.retention.expireAfterSeconds);
+  }
 
   async record(status: Omit<ApiStatus, "_id" | "count">) {
     const minute = new Date();
