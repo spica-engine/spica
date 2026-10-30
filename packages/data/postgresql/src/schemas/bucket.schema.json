@@ -3,6 +3,9 @@
   "allOf": [
     {
       "bucketKey": true
+    },
+    {
+      "bucketIndexes": true
     }
   ],
   "definitions": {
@@ -266,9 +269,54 @@
             "description": "Additional index options"
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "required": ["definition"],
+              "properties": {
+                "definition": {
+                  "type": "object",
+                  "not": {
+                    "additionalProperties": {
+                      "not": {
+                        "const": "2dsphere"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "definition": {
+                  "type": "object",
+                  "maxProperties": 1
+                },
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "unique": {
+                      "not": {
+                        "const": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       },
-      "default": []
+      "default": [],
+      "allOf": [
+        {
+          "type": "array",
+          "uniqueItems": true
+        }
+      ]
     }
   }
 }

@@ -172,29 +172,6 @@ describe("bucket metadata", () => {
           }
         ]);
       });
-
-      it.each([
-        [{place: 1}, 'can only index the location "place" with 2dsphere'],
-        [{title: "2dsphere"}, 'cannot use 2dsphere on "title", which is not a location'],
-        [{place: "2dsphere", title: 1}, "cannot combine 2dsphere with other fields"],
-        [{}, "has no fields"]
-      ])("should refuse the index %j", (definition, message) => {
-        expect(() =>
-          describeBucket(bucketId, bucket({properties, indexes: [{definition, options: {}}]}))
-        ).toThrow(message);
-      });
-
-      it("should refuse a unique 2dsphere index", () => {
-        expect(() =>
-          describeBucket(
-            bucketId,
-            bucket({
-              properties,
-              indexes: [{definition: {place: "2dsphere"}, options: {unique: true}}]
-            })
-          )
-        ).toThrow("cannot be unique and 2dsphere at the same time");
-      });
     });
 
     describe("translated properties", () => {
@@ -257,22 +234,6 @@ describe("bucket metadata", () => {
         );
 
         expect(metadata.columnOf(["state"]).enum).toEqual(["a", "b"]);
-      });
-
-      it("should refuse an index on a translated property", () => {
-        const properties = {
-          id: {type: "uuid"},
-          name: {type: "string", options: {translate: true}}
-        };
-
-        for (const field of ["name", "name.en_US"]) {
-          expect(() =>
-            describeBucket(
-              bucketId,
-              bucket({properties, indexes: [{definition: {[field]: 1}, options: {}}]})
-            )
-          ).toThrow("indexes on translated properties are not supported on PostgreSQL yet");
-        }
       });
     });
 

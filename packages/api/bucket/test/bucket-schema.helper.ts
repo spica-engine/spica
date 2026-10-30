@@ -41,7 +41,7 @@ export function originalValidator() {
 
 export async function violations(validator: Validator, id: string, definition: unknown) {
   try {
-    await validator.validate(id, structuredClone(definition));
+    await validator.validate(id, JSON.parse(JSON.stringify(definition)));
     return [];
   } catch (error) {
     return (error.errors ?? [error]).map((e: any) => `${e.instancePath ?? ""} ${e.message}`.trim());
