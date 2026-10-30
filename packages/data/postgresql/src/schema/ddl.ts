@@ -1,7 +1,13 @@
 import {literalOf, quote} from "@spica-server/data-postgresql-orm";
 import {BucketDiff} from "@spica-server/bucket-common";
 import {BucketSchemaError, constraintName} from "./naming.js";
-import {BucketMetadata, ColumnMetadata, IndexMetadata, TableMetadata} from "./metadata.js";
+import {
+  BucketMetadata,
+  ColumnMetadata,
+  ForeignKeyMetadata,
+  IndexMetadata,
+  TableMetadata
+} from "./metadata.js";
 
 function generationSql(metadata: BucketMetadata) {
   const {generated, type} = metadata.primaryKey;
@@ -33,15 +39,16 @@ function createIndexSql(index: IndexMetadata) {
   return `CREATE ${index.unique ? "UNIQUE " : ""}INDEX ${quote(index.name)} ON ${quote(index.table)} (${columns.join(", ")})`;
 }
 
+function foreignKeySql(key: ForeignKeyMetadata) {
+  const onDelete = key.onDelete == "RESTRICT" ? "" : ` ON DELETE ${key.onDelete}`;
+  return `CONSTRAINT ${quote(key.name)} FOREIGN KEY (${quote(key.column)}) REFERENCES ${quote(key.table)} (${quote(key.referencedColumn)})${onDelete}`;
+}
+
 function createTableSql(metadata: BucketMetadata, table: TableMetadata) {
   const definitions = [
     ...table.columns.map(column => columnSql(metadata, table, column)),
     `CONSTRAINT ${quote(constraintName(table.name, table.keyColumns, "pk"))} PRIMARY KEY (${table.keyColumns.map(quote).join(", ")})`,
-    ...(table.parent
-      ? [
-          `CONSTRAINT ${quote(table.parent.fkName)} FOREIGN KEY (${quote(table.parent.column)}) REFERENCES ${quote(metadata.main.name)} (${quote(metadata.primaryKey.column)}) ON DELETE CASCADE`
-        ]
-      : [])
+    ...table.foreignKeys.map(foreignKeySql)
   ];
   return `CREATE TABLE ${quote(table.name)} (\n${definitions.map(definition => `  ${definition}`).join(",\n")}\n)`;
 }
@@ -172,6 +179,8 @@ export function updateStatements(
     .flatMap(table => createTableStatements(next, table));
 
   const dropIndexes: string[] = [];
+  const dropForeignKeys: string[] = [];
+  const addForeignKeys: string[] = [];
   const createIndexes: string[] = next.tables
     .filter(table => !previousNames.has(table.name))
     .flatMap(table => table.indexes.map(createIndexSql));
@@ -193,6 +202,23 @@ export function updateStatements(
       alterations[key].push(...alterationsOfTable[key]);
     }
 
+    const sameKey = (a: ForeignKeyMetadata, b: ForeignKeyMetadata) =>
+      a.table == b.table && a.referencedColumn == b.referencedColumn && a.onDelete == b.onDelete;
+    for (const key of before.foreignKeys) {
+      const kept = after.foreignKeys.find(candidate => candidate.name == key.name);
+      if (!kept || !sameKey(kept, key)) {
+        dropForeignKeys.push(
+          `ALTER TABLE ${quote(after.name)} DROP CONSTRAINT IF EXISTS ${quote(key.name)}`
+        );
+      }
+    }
+    for (const key of after.foreignKeys) {
+      const was = before.foreignKeys.find(candidate => candidate.name == key.name);
+      if (!was || !sameKey(was, key)) {
+        addForeignKeys.push(`ALTER TABLE ${quote(after.name)} ADD ${foreignKeySql(key)}`);
+      }
+    }
+
     const beforeNames = new Set(before.indexes.map(index => index.name));
     const afterNames = new Set(after.indexes.map(index => index.name));
     dropIndexes.push(
@@ -208,12 +234,14 @@ export function updateStatements(
   return [
     ...dropIndexes,
     ...alterations.dropChecks,
+    ...dropForeignKeys,
     ...dropTables,
     ...alterations.drops,
     ...createTables,
     ...alterations.adds,
     ...alterations.alters,
     ...alterations.checks,
+    ...addForeignKeys,
     ...createIndexes
   ];
 }

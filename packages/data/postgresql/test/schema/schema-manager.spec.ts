@@ -559,6 +559,295 @@ describe("PostgreSQL schema manager", () => {
     });
   });
 
+  describe("relations", () => {
+    const keyed = (properties: object, extra: object = {}) =>
+      bucket({
+        properties: {id: {type: "uuid", options: {generated: true}}, ...properties},
+        ...extra
+      });
+
+    const relation = (bucketId: any, relationType: string) => ({
+      type: "relation",
+      bucketId: String(bucketId),
+      relationType
+    });
+
+    const foreignKeys = async (table: string) => {
+      const {rows} = await pool.query(
+        `SELECT conname, confrelid::regclass::text AS target, confdeltype FROM pg_constraint
+         WHERE conrelid = to_regclass($1) AND contype = 'f' ORDER BY conname`,
+        [`"${table}"`]
+      );
+      return rows.map(row => [row.conname, row.target.replace(/"/g, ""), row.confdeltype]);
+    };
+
+    it("should turn a onetoone relation into a foreign key column typed after the target key", async () => {
+      const target = await manager.create(
+        bucket({
+          primary: "n",
+          properties: {n: {type: "bigint", options: {generated: true}}}
+        }),
+        () => {}
+      );
+
+      const created = await manager.create(
+        keyed({owner: relation(target._id, "onetoone")}),
+        () => {}
+      );
+      const table = tableOf(created._id);
+
+      expect((await columns(table)).find(c => c.column_name == "owner")).toMatchObject({
+        data_type: "bigint",
+        is_nullable: "YES"
+      });
+      expect(await foreignKeys(table)).toEqual([
+        [constraintName(table, ["owner"], "fk"), tableOf(target._id), "n"]
+      ]);
+    });
+
+    it("should set the reference to null when the related row goes, unless it is required", async () => {
+      const target = await manager.create(keyed({}), () => {});
+      const targetTable = tableOf(target._id);
+      const optional = await manager.create(
+        keyed({owner: relation(target._id, "onetoone")}),
+        () => {}
+      );
+      const required = await manager.create(
+        keyed({owner: relation(target._id, "onetoone")}, {required: ["owner"]}),
+        () => {}
+      );
+      const {rows} = await pool.query(`INSERT INTO "${targetTable}" DEFAULT VALUES RETURNING id`);
+      await pool.query(`INSERT INTO "${tableOf(optional._id)}" (owner) VALUES ($1)`, [rows[0].id]);
+
+      await pool.query(`DELETE FROM "${targetTable}" WHERE id = $1`, [rows[0].id]);
+
+      const left = await pool.query(`SELECT owner FROM "${tableOf(optional._id)}"`);
+      expect(left.rows).toEqual([{owner: null}]);
+      await pool.query(`INSERT INTO "${targetTable}" (id) VALUES ($1)`, [rows[0].id]);
+      await pool.query(`INSERT INTO "${tableOf(required._id)}" (owner) VALUES ($1)`, [rows[0].id]);
+      await expect(
+        pool.query(`DELETE FROM "${targetTable}" WHERE id = $1`, [rows[0].id])
+      ).rejects.toMatchObject({code: "23503"});
+    });
+
+    it("should link a onetomany relation through an ordered link table", async () => {
+      const target = await manager.create(keyed({}), () => {});
+      const created = await manager.create(
+        keyed({friends: relation(target._id, "onetomany")}),
+        () => {}
+      );
+      const table = tableOf(created._id);
+      const link = `${table}__friends`;
+
+      expect((await columns(link)).map(c => [c.column_name, c.data_type])).toEqual([
+        ["_parent", "uuid"],
+        ["_position", "integer"],
+        ["_target", "uuid"]
+      ]);
+      expect(await foreignKeys(link)).toEqual(
+        [
+          [constraintName(link, ["_parent"], "fk"), table, "c"],
+          [constraintName(link, ["_target"], "fk"), tableOf(target._id), "c"]
+        ].sort((a, b) => (a[0] < b[0] ? -1 : 1))
+      );
+
+      const targets = await pool.query(
+        `INSERT INTO "${tableOf(target._id)}" DEFAULT VALUES RETURNING id`
+      );
+      const parent = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
+      await pool.query(`INSERT INTO "${link}" VALUES ($1, 0, $2)`, [
+        parent.rows[0].id,
+        targets.rows[0].id
+      ]);
+      await pool.query(`DELETE FROM "${tableOf(target._id)}"`);
+      expect((await pool.query(`SELECT 1 FROM "${link}"`)).rowCount).toBe(0);
+    });
+
+    it("should allow a bucket to relate to itself", async () => {
+      const id = "0198a7e0-7b1c-7d2e-9f3a-4b5c6d7e8f90";
+      const created = await manager.create(
+        keyed({parent: relation(id, "onetoone")}, {_id: id}),
+        () => {}
+      );
+
+      expect(await foreignKeys(tableOf(created._id))).toEqual([
+        [constraintName(tableOf(id), ["parent"], "fk"), tableOf(id), "n"]
+      ]);
+    });
+
+    it("should refuse a relation to a bucket that does not exist", async () => {
+      const before = (await tables()).length;
+
+      await expect(
+        manager.create(
+          keyed({owner: relation("0198a7e0-0000-7d2e-9f3a-4b5c6d7e8f91", "onetoone")}),
+          () => {}
+        )
+      ).rejects.toThrow('refers to the bucket "0198a7e0-0000-7d2e-9f3a-4b5c6d7e8f91"');
+      expect((await tables()).length).toBe(before);
+    });
+
+    it("should relate from inside an object and an array item", async () => {
+      const target = await manager.create(keyed({}), () => {});
+      const created = await manager.create(
+        keyed({
+          boss: {type: "object", properties: {who: relation(target._id, "onetoone")}},
+          lines: {
+            type: "array",
+            items: {type: "object", properties: {product: relation(target._id, "onetoone")}}
+          },
+          crew: {type: "object", properties: {members: relation(target._id, "onetomany")}}
+        }),
+        () => {}
+      );
+      const table = tableOf(created._id);
+
+      expect((await columns(table)).map(c => c.column_name)).toEqual(["boss__who", "id"]);
+      expect((await columns(`${table}__lines`)).map(c => c.column_name)).toEqual([
+        "_parent",
+        "_position",
+        "product"
+      ]);
+      expect((await columns(`${table}__crew__members`)).map(c => c.column_name)).toEqual([
+        "_parent",
+        "_position",
+        "_target"
+      ]);
+    });
+
+    it("should add, retarget and remove relations on edit", async () => {
+      const first = await manager.create(keyed({}), () => {});
+      const second = await manager.create(keyed({}), () => {});
+      const created = await manager.create(keyed({}), () => {});
+      const table = tableOf(created._id);
+
+      await manager.replace(
+        created._id,
+        keyed({one: relation(first._id, "onetoone"), many: relation(first._id, "onetomany")}),
+        () => {}
+      );
+      expect(await foreignKeys(table)).toEqual([
+        [constraintName(table, ["one"], "fk"), tableOf(first._id), "n"]
+      ]);
+      expect(await tablesOfBucket(table)).toEqual([table, `${table}__many`]);
+
+      await manager.replace(
+        created._id,
+        keyed({one: relation(second._id, "onetoone"), many: relation(second._id, "onetomany")}),
+        () => {}
+      );
+      expect(await foreignKeys(table)).toEqual([
+        [constraintName(table, ["one"], "fk"), tableOf(second._id), "n"]
+      ]);
+      expect((await foreignKeys(`${table}__many`)).map(key => key[1]).sort()).toEqual(
+        [table, tableOf(second._id)].sort()
+      );
+
+      await manager.replace(created._id, keyed({}), () => {});
+      expect(await foreignKeys(table)).toEqual([]);
+      expect(await tablesOfBucket(table)).toEqual([table]);
+    });
+
+    it("should refuse to change the cardinality of a relation for now", async () => {
+      const target = await manager.create(keyed({}), () => {});
+      const created = await manager.create(
+        keyed({link: relation(target._id, "onetoone")}),
+        () => {}
+      );
+
+      await expect(
+        manager.replace(created._id, keyed({link: relation(target._id, "onetomany")}), () => {})
+      ).rejects.toThrow("Changing the type of a property is not supported yet: link.");
+    });
+
+    it("should remove the relations that point at a bucket when it is dropped", async () => {
+      const target = await manager.create(keyed({}), () => {});
+      const other = await manager.create(keyed({}), () => {});
+      const referencing = await manager.create(
+        keyed(
+          {
+            title: {type: "string"},
+            one: relation(target._id, "onetoone"),
+            keep: relation(other._id, "onetoone"),
+            many: relation(target._id, "onetomany"),
+            boss: {
+              type: "object",
+              required: ["who"],
+              properties: {who: relation(target._id, "onetoone"), name: {type: "string"}}
+            }
+          },
+          {
+            required: ["one", "title"],
+            indexes: [
+              {definition: {one: 1}, options: {}},
+              {definition: {title: 1}, options: {}}
+            ]
+          }
+        ),
+        () => {}
+      );
+      const table = tableOf(referencing._id);
+      const changed = jest.fn();
+      const onSaved = jest.fn();
+
+      await manager.drop(target._id, onSaved, changed);
+
+      expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({_id: target._id}));
+      expect(await tablesOfBucket(tableOf(target._id))).toEqual([]);
+      expect(await tablesOfBucket(table)).toEqual([table]);
+      expect((await columns(table)).map(c => c.column_name)).toEqual([
+        "boss__name",
+        "id",
+        "keep",
+        "title"
+      ]);
+      expect(await foreignKeys(table)).toEqual([
+        [constraintName(table, ["keep"], "fk"), tableOf(other._id), "n"]
+      ]);
+      const stored = await buckets.findById(referencing._id);
+      expect(Object.keys(stored.properties)).toEqual(
+        expect.arrayContaining(["id", "title", "keep", "boss"])
+      );
+      expect(stored.properties).not.toHaveProperty("one");
+      expect(stored.properties).not.toHaveProperty("many");
+      expect(stored.properties.boss).toMatchObject({
+        required: [],
+        properties: {name: {type: "string"}}
+      });
+      expect(stored.required).toEqual(["title"]);
+      expect(stored.indexes).toEqual([{definition: {title: 1}, options: {}}]);
+      expect(changed).toHaveBeenCalledTimes(1);
+      expect(changed).toHaveBeenCalledWith(expect.objectContaining({_id: referencing._id}));
+    });
+
+    it("should leave everything alone when a drop fails", async () => {
+      const target = await manager.create(keyed({}), () => {});
+      const referencing = await manager.create(
+        keyed({one: relation(target._id, "onetoone")}),
+        () => {}
+      );
+      await pool.query(`ALTER TABLE "${tableOf(referencing._id)}" ADD COLUMN stray text`);
+      await pool.query(`CREATE TABLE "${tableOf(target._id)}__blocker" (x int)`);
+      await pool.query(
+        `CREATE FUNCTION fail_drop() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'no drops'; END $$`
+      );
+      await pool.query(
+        `CREATE EVENT TRIGGER fail_drop_trigger ON sql_drop EXECUTE FUNCTION fail_drop()`
+      );
+
+      try {
+        await expect(manager.drop(target._id, () => {})).rejects.toBeDefined();
+      } finally {
+        await pool.query(`DROP EVENT TRIGGER fail_drop_trigger`);
+        await pool.query(`DROP FUNCTION fail_drop()`);
+      }
+
+      expect(await buckets.findById(target._id)).toBeTruthy();
+      expect((await buckets.findById(referencing._id)).properties).toHaveProperty("one");
+      expect((await columns(tableOf(referencing._id))).map(c => c.column_name)).toContain("one");
+    });
+  });
+
   describe("drop", () => {
     it("should delete the definition and drop the table", async () => {
       const created = await manager.create(bucket(), () => {});

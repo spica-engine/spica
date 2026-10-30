@@ -128,15 +128,107 @@ describe("bucket metadata", () => {
     it("should reject properties that need structures this part does not build yet", () => {
       const properties = {
         id: {type: "uuid"},
-        owner: {type: "relation", bucketId: "x", relationType: "onetoone"},
         where: {type: "location"},
         name: {type: "string", options: {translate: true}},
         matrix: {type: "array", items: {type: "array", items: {type: "number"}}}
       };
 
       expect(() => describeBucket(bucketId, bucket({properties}))).toThrow(
-        "Properties are not supported on PostgreSQL yet: owner (relation), where (location), name (translated string), matrix (array of nested array)."
+        "Properties are not supported on PostgreSQL yet: where (location), name (translated string), matrix (array of nested array)."
       );
+    });
+
+    describe("relations", () => {
+      const target = {
+        table: "bucket_target",
+        primaryKey: {field: "n", type: "bigint" as const, generated: true, column: "n"}
+      };
+      const targets = (id: string) => (id == "target" ? target : undefined);
+      const relation = (relationType: string, bucketId = "target") => ({
+        type: "relation",
+        bucketId,
+        relationType
+      });
+
+      it("should add a foreign key column typed after the target key for a onetoone relation", () => {
+        const metadata = describeBucket(
+          bucketId,
+          bucket({properties: {id: {type: "uuid"}, owner: relation("onetoone")}}),
+          targets
+        );
+
+        expect(metadata.columnOf(["owner"])).toMatchObject({
+          name: "owner",
+          type: "bigint",
+          notNull: false
+        });
+        expect(metadata.main.foreignKeys).toEqual([
+          {
+            name: `bucket_${bucketId}_owner_fk`,
+            column: "owner",
+            table: "bucket_target",
+            referencedColumn: "n",
+            onDelete: "SET NULL"
+          }
+        ]);
+      });
+
+      it("should restrict deleting the target of a required relation", () => {
+        const metadata = describeBucket(
+          bucketId,
+          bucket({
+            properties: {id: {type: "uuid"}, owner: relation("onetoone")},
+            required: ["owner"]
+          }),
+          targets
+        );
+
+        expect(metadata.main.foreignKeys[0].onDelete).toBe("RESTRICT");
+        expect(metadata.columnOf(["owner"]).notNull).toBe(true);
+      });
+
+      it("should give a onetomany relation a link table with the target in a column", () => {
+        const metadata = describeBucket(
+          bucketId,
+          bucket({properties: {id: {type: "uuid"}, friends: relation("onetomany")}}),
+          targets
+        );
+
+        const [link] = metadata.children;
+        expect(link.name).toBe(`bucket_${bucketId}__friends`);
+        expect(link.columns.map(column => [column.name, column.type])).toEqual([
+          ["_parent", "uuid"],
+          ["_position", "integer"],
+          ["_target", "bigint"]
+        ]);
+        expect(link.foreignKeys.map(key => [key.column, key.table, key.onDelete])).toEqual([
+          ["_parent", `bucket_${bucketId}`, "CASCADE"],
+          ["_target", "bucket_target", "CASCADE"]
+        ]);
+        expect(metadata.columnOf(["friends"])).toMatchObject({table: link.name, name: "_target"});
+      });
+
+      it("should resolve a relation to the bucket itself without a lookup", () => {
+        const metadata = describeBucket(
+          bucketId,
+          bucket({properties: {id: {type: "uuid"}, parent: relation("onetoone", bucketId)}})
+        );
+
+        expect(metadata.main.foreignKeys[0]).toMatchObject({
+          table: `bucket_${bucketId}`,
+          referencedColumn: "id"
+        });
+      });
+
+      it("should refuse a relation to a bucket that cannot be found", () => {
+        expect(() =>
+          describeBucket(
+            bucketId,
+            bucket({properties: {id: {type: "uuid"}, owner: relation("onetoone", "missing")}}),
+            targets
+          )
+        ).toThrow('Relation "owner" refers to the bucket "missing", which does not exist.');
+      });
     });
 
     describe("objects", () => {
@@ -244,7 +336,7 @@ describe("bucket metadata", () => {
           ["_position", "integer", true],
           ["_value", "text", true]
         ]);
-        expect(tags.parent.column).toBe("_parent");
+        expect(tags.foreignKeys.map(key => key.column)).toEqual(["_parent"]);
         expect(scores.columns[2].enum).toEqual(["a", "b"]);
         expect(metadata.columnOf(["tags"])).toMatchObject({table: tags.name, name: "_value"});
         expect(metadata.columnOf(["tags", "[]"])).toMatchObject({table: tags.name, name: "_value"});

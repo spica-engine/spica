@@ -39,14 +39,29 @@ export interface IndexMetadata {
   columns: {name: string; order: "asc" | "desc"}[];
 }
 
+export interface ForeignKeyMetadata {
+  name: string;
+  column: string;
+  table: string;
+  referencedColumn: string;
+  onDelete: "CASCADE" | "SET NULL" | "RESTRICT";
+}
+
 export interface TableMetadata {
   name: string;
   path: string[];
   columns: ColumnMetadata[];
   indexes: IndexMetadata[];
   keyColumns: string[];
-  parent?: {column: string; fkName: string};
+  foreignKeys: ForeignKeyMetadata[];
 }
+
+export interface RelationTarget {
+  table: string;
+  primaryKey: PrimaryKeyMetadata;
+}
+
+export type RelationTargets = (bucketId: string) => RelationTarget | undefined;
 
 export interface BucketMetadata {
   bucketId: string;
@@ -83,6 +98,8 @@ const SUPPORTED_INDEX_OPTIONS = new Set(["unique", "sparse", "background"]);
 
 const keyOf = (path: string[]) => path.join("\0");
 
+const relationTypeOf = (property: Property) => (property as {relationType?: string}).relationType;
+
 const isArray = (property: Property) => property.type == "array" || property.type == "multiselect";
 
 const isStructuredObject = (property: Property) =>
@@ -92,6 +109,11 @@ function unsupportedReason(property: Property, insideArray: boolean): string | u
   if (property.options?.translate) {
     return `translated ${property.type}`;
   }
+  if (property.type == "relation") {
+    return insideArray && relationTypeOf(property) == "onetomany"
+      ? "onetomany relation inside an array"
+      : undefined;
+  }
   if (isArray(property)) {
     if (insideArray) {
       return `nested ${property.type}`;
@@ -100,9 +122,11 @@ function unsupportedReason(property: Property, insideArray: boolean): string | u
     if (!items || Array.isArray(items)) {
       return undefined;
     }
-    return (
-      unsupportedReason(items, true) && `${property.type} of ${unsupportedReason(items, true)}`
-    );
+    if (items.type == "relation") {
+      return `${property.type} of relation`;
+    }
+    const reason = unsupportedReason(items, true);
+    return reason && (isStructuredObject(items) ? reason : `${property.type} of ${reason}`);
   }
   if (isStructuredObject(property)) {
     for (const child of Object.values(property.properties)) {
@@ -149,6 +173,7 @@ function propertyProblems(bucket: Bucket) {
 
 class TableBuilder {
   readonly columns: ColumnMetadata[] = [];
+  readonly foreignKeys: ForeignKeyMetadata[] = [];
 
   constructor(
     readonly name: string,
@@ -162,14 +187,34 @@ class TableBuilder {
       ...(column.enum ? {checkName: constraintName(this.name, [column.name], "ck")} : {})
     });
   }
+
+  reference(column: string, target: RelationTarget, onDelete: ForeignKeyMetadata["onDelete"]) {
+    this.foreignKeys.push({
+      name: constraintName(this.name, [column], "fk"),
+      column,
+      table: target.table,
+      referencedColumn: target.primaryKey.column,
+      onDelete
+    });
+  }
 }
 
 function describeTables(
   bucketId: string,
   bucket: Bucket,
-  primaryKey: PrimaryKeyMetadata
+  primaryKey: PrimaryKeyMetadata,
+  targets: RelationTargets
 ): TableMetadata[] {
   const mainName = mainTableName(bucketId);
+  const targetOf = (path: string[], targetId: string): RelationTarget => {
+    const target = targetId == bucketId ? {table: mainName, primaryKey} : targets(targetId);
+    if (!target) {
+      throw new BucketSchemaError([
+        `Relation "${path.join(".")}" refers to the bucket "${targetId}", which does not exist.`
+      ]);
+    }
+    return target;
+  };
   const main = new TableBuilder(mainName, []);
   const children: TableBuilder[] = [];
   const requiredAtTop = new Set(bucket.required ?? []);
@@ -193,6 +238,27 @@ function describeTables(
           (insideArray || required) && requiredChildren.has(name),
           insideArray
         );
+      }
+      return;
+    }
+
+    if (property.type == "relation") {
+      const relation = property as Property & {bucketId: string; relationType: string};
+      const target = targetOf(path, relation.bucketId);
+      if (relation.relationType == "onetomany") {
+        const link = new TableBuilder(fieldTableName(bucketId, path), path);
+        children.push(link);
+        link.add({
+          name: SYSTEM_COLUMNS.target,
+          path,
+          type: target.primaryKey.type,
+          notNull: true
+        });
+        link.reference(SYSTEM_COLUMNS.target, target, "CASCADE");
+      } else {
+        const name = columnName(relative);
+        table.add({name, path, type: target.primaryKey.type, notNull: required});
+        table.reference(name, target, required ? "RESTRICT" : "SET NULL");
       }
       return;
     }
@@ -251,7 +317,8 @@ function describeTables(
         path: builder.path,
         columns: builder.columns,
         indexes: [],
-        keyColumns: [primaryKey.column]
+        keyColumns: [primaryKey.column],
+        foreignKeys: builder.foreignKeys
       };
     }
     const columns: ColumnMetadata[] = [
@@ -277,10 +344,16 @@ function describeTables(
       columns,
       indexes: [],
       keyColumns: [SYSTEM_COLUMNS.parent, SYSTEM_COLUMNS.position],
-      parent: {
-        column: SYSTEM_COLUMNS.parent,
-        fkName: constraintName(builder.name, [SYSTEM_COLUMNS.parent], "fk")
-      }
+      foreignKeys: [
+        {
+          name: constraintName(builder.name, [SYSTEM_COLUMNS.parent], "fk"),
+          column: SYSTEM_COLUMNS.parent,
+          table: mainName,
+          referencedColumn: primaryKey.column,
+          onDelete: "CASCADE"
+        },
+        ...builder.foreignKeys
+      ]
     };
   };
 
@@ -345,14 +418,18 @@ function describeIndex(
   };
 }
 
-export function describeBucket(bucketId: string, bucket: Bucket): BucketMetadata {
+export function describeBucket(
+  bucketId: string,
+  bucket: Bucket,
+  targets: RelationTargets = () => undefined
+): BucketMetadata {
   const problems = propertyProblems(bucket);
   if (problems.length) {
     throw new BucketSchemaError(problems);
   }
 
   const primaryKey = primaryKeyMetadata(bucket);
-  const [main, ...children] = describeTables(bucketId, bucket, primaryKey);
+  const [main, ...children] = describeTables(bucketId, bucket, primaryKey, targets);
 
   const byPath = new Map(
     [main, ...children].flatMap(table =>
@@ -403,15 +480,11 @@ export function describeBucket(bucketId: string, bucket: Bucket): BucketMetadata
         name: constraintName(table.name, table.keyColumns, "pk"),
         logical: `primary key of ${table.name}`
       },
-      ...(table.parent
-        ? [
-            {
-              scope: "the schema",
-              name: table.parent.fkName,
-              logical: `foreign key of ${table.name}`
-            }
-          ]
-        : [])
+      ...table.foreignKeys.map(key => ({
+        scope: "the schema",
+        name: key.name,
+        logical: `foreign key of ${table.name}`
+      }))
     ])
   ];
   assertUnique(identifiers);

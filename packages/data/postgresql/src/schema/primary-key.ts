@@ -33,3 +33,14 @@ export function primaryKeyMetadata(bucket: Bucket): PrimaryKeyMetadata {
     column: columnName([field])
   };
 }
+
+export function tryPrimaryKeyMetadata(bucket: Bucket): PrimaryKeyMetadata | undefined {
+  try {
+    return primaryKeyMetadata(bucket);
+  } catch (error) {
+    if (error instanceof BucketSchemaError) {
+      return undefined;
+    }
+    throw error;
+  }
+}
