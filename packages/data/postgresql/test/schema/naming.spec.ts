@@ -6,7 +6,7 @@ import {
   fit,
   mainTableName,
   MAX_IDENTIFIER_BYTES,
-  NamingError
+  BucketSchemaError
 } from "@spica-server/data-postgresql";
 
 describe("naming", () => {
@@ -102,7 +102,7 @@ describe("naming", () => {
         }
       })();
 
-      expect(error).toBeInstanceOf(NamingError);
+      expect(error).toBeInstanceOf(BucketSchemaError);
       expect(error.problems).toEqual(['"a__b" and "a.b" both map to "a__b" in table "t".']);
     });
   });

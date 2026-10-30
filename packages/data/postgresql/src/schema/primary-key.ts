@@ -1,5 +1,5 @@
 import {Bucket} from "@spica-server/interface-bucket";
-import {columnName, NamingError} from "./naming.js";
+import {columnName, BucketSchemaError} from "./naming.js";
 
 export type KeyType = "uuid" | "bigint" | "integer" | "text";
 
@@ -22,7 +22,7 @@ export function primaryKeyMetadata(bucket: Bucket): PrimaryKeyMetadata {
   const property = field ? bucket.properties?.[field] : undefined;
   const type = property && KEY_TYPE_OF_PROPERTY[property.type as string];
   if (!type) {
-    throw new NamingError([
+    throw new BucketSchemaError([
       `primary must name a uuid, integer, bigint or string property, but "${field}" does not.`
     ]);
   }

@@ -1,4 +1,4 @@
-import {describeBucket, NamingError} from "@spica-server/data-postgresql";
+import {describeBucket, BucketSchemaError} from "@spica-server/data-postgresql";
 
 describe("bucket metadata", () => {
   const bucketId = "0198a7e0-7b1c-7d2e-9f3a-4b5c6d7e8f90";
@@ -50,8 +50,8 @@ describe("bucket metadata", () => {
     });
 
     it("should be refused without a primary property or with one that cannot hold a key", () => {
-      expect(() => describeBucket(bucketId, bucket({primary: undefined}))).toThrow(NamingError);
-      expect(() => describeBucket(bucketId, bucket({primary: "nope"}))).toThrow(NamingError);
+      expect(() => describeBucket(bucketId, bucket({primary: undefined}))).toThrow(BucketSchemaError);
+      expect(() => describeBucket(bucketId, bucket({primary: "nope"}))).toThrow(BucketSchemaError);
       expect(() =>
         describeBucket(bucketId, bucket({primary: "n", properties: {n: {type: "number"}}}))
       ).toThrow('primary must name a uuid, integer, bigint or string property, but "n" does not.');
