@@ -1,13 +1,14 @@
 import {literalOf, quote} from "@spica-server/data-postgresql-orm";
-import {BucketDiff} from "@spica-server/bucket-common";
-import {BucketSchemaError, constraintName} from "./naming.js";
+import {constraintName} from "./naming.js";
 import {
   BucketMetadata,
   ColumnMetadata,
+  ColumnType,
   ForeignKeyMetadata,
   IndexMetadata,
   TableMetadata
 } from "./metadata.js";
+import {PrimaryKeyMetadata} from "./primary-key.js";
 
 function generationSql(metadata: BucketMetadata) {
   const {generated, type} = metadata.primaryKey;
@@ -46,18 +47,22 @@ function foreignKeySql(key: ForeignKeyMetadata) {
   return `CONSTRAINT ${quote(key.name)} FOREIGN KEY (${quote(key.column)}) REFERENCES ${quote(key.table)} (${quote(key.referencedColumn)})${onDelete}`;
 }
 
-function createTableSql(metadata: BucketMetadata, table: TableMetadata) {
+function createTableSql(metadata: BucketMetadata, table: TableMetadata, withForeignKeys: boolean) {
   const definitions = [
     ...table.columns.map(column => columnSql(metadata, table, column)),
     `CONSTRAINT ${quote(constraintName(table.name, table.keyColumns, "pk"))} PRIMARY KEY (${table.keyColumns.map(quote).join(", ")})`,
-    ...table.foreignKeys.map(foreignKeySql)
+    ...(withForeignKeys ? table.foreignKeys.map(foreignKeySql) : [])
   ];
   return `CREATE TABLE ${quote(table.name)} (\n${definitions.map(definition => `  ${definition}`).join(",\n")}\n)`;
 }
 
-function createTableStatements(metadata: BucketMetadata, table: TableMetadata) {
+function createTableStatements(
+  metadata: BucketMetadata,
+  table: TableMetadata,
+  withForeignKeys = true
+) {
   return [
-    createTableSql(metadata, table),
+    createTableSql(metadata, table, withForeignKeys),
     ...table.columns.filter(column => column.enum).map(column => checkSql(table.name, column))
   ];
 }
@@ -69,149 +74,204 @@ export function createStatements(metadata: BucketMetadata): string[] {
   ];
 }
 
-function assertSameKey(previous: BucketMetadata, next: BucketMetadata) {
+export interface UpdatePlan {
+  dropForeignKeys: string[];
+  apply: string[];
+  finish: string[];
+}
+
+export const statementsOf = (plan: UpdatePlan) => [
+  ...plan.dropForeignKeys,
+  ...plan.apply,
+  ...plan.finish
+];
+
+export interface KeyChange {
+  table: string;
+  previous: PrimaryKeyMetadata;
+  next: PrimaryKeyMetadata;
+}
+
+const MAP_TABLE = "spica_key_map";
+const MAP_FUNCTION = "spica_map_key";
+
+export function keyChangeOf(previous: BucketMetadata, next: BucketMetadata): KeyChange | undefined {
   const before = previous.primaryKey;
   const after = next.primaryKey;
   if (
-    before.field != after.field ||
-    before.type != after.type ||
-    before.generated != after.generated
+    before.field == after.field &&
+    before.type == after.type &&
+    before.generated == after.generated
   ) {
-    throw new BucketSchemaError(["Changing the primary key is not supported yet."]);
+    return undefined;
   }
+  return {table: previous.main.name, previous: before, next: after};
 }
 
-function assertNoRewrite(previous: BucketMetadata, next: BucketMetadata, diff: BucketDiff) {
-  const rewritten = new Set<string>();
+export const movesKeyValues = (change: KeyChange) =>
+  change.previous.field != change.next.field || change.previous.type != change.next.type;
 
-  for (const change of diff.fields) {
-    if (change.kind == "translate") {
-      rewritten.add(change.path.join("."));
-    }
-    if (change.kind == "retyped") {
-      const before = previous.columnOf(change.path);
-      const after = next.columnOf(change.path);
-      const sameColumn =
-        before && after && before.table == after.table && before.type == after.type;
-      if (!sameColumn) {
-        rewritten.add(change.path.join("."));
-      }
-    }
+export function conversionSql(column: string, from: ColumnType, to: ColumnType) {
+  const value = quote(column);
+  if (to == "text") {
+    return from == "jsonb" ? `${value} #>> '{}'` : `${value}::text`;
   }
+  if (to == "jsonb") {
+    return `to_jsonb(${value})`;
+  }
+  if (from == "integer" && to == "bigint") {
+    return `${value}::bigint`;
+  }
+  if ((from == "integer" || from == "bigint") && to == "double precision") {
+    return `${value}::double precision`;
+  }
+  if (from == "bigint" && to == "integer") {
+    return `CASE WHEN ${value} BETWEEN -2147483648 AND 2147483647 THEN ${value}::integer END`;
+  }
+  if (from == "double precision" && (to == "integer" || to == "bigint")) {
+    return `CASE WHEN ${value} = trunc(${value}) THEN ${value}::${to} END`;
+  }
+  return `CASE WHEN pg_input_is_valid(${value}::text, '${to}') THEN ${value}::text::${to} END`;
+}
 
-  for (const table of next.tables) {
-    const before = previous.tables.find(candidate => candidate.name == table.name);
-    for (const column of table.columns) {
-      const was = before?.columns.find(candidate => candidate.name == column.name);
-      if (was && was.type != column.type) {
-        rewritten.add(column.path.join("."));
-      }
-    }
+function dropGenerationSql(table: string, key: PrimaryKeyMetadata) {
+  if (!key.generated) {
+    return [];
   }
+  const alter = `ALTER TABLE ${quote(table)} ALTER COLUMN ${quote(key.column)}`;
+  return [key.type == "uuid" ? `${alter} DROP DEFAULT` : `${alter} DROP IDENTITY IF EXISTS`];
+}
 
-  if (rewritten.size) {
-    throw new BucketSchemaError([
-      `Changing the type or the translation of a property is not supported yet: ${[...rewritten].join(", ")}.`
-    ]);
+function addGenerationSql(table: string, key: PrimaryKeyMetadata) {
+  if (!key.generated) {
+    return [];
   }
+  const alter = `ALTER TABLE ${quote(table)} ALTER COLUMN ${quote(key.column)}`;
+  if (key.type == "uuid") {
+    return [`${alter} SET DEFAULT uuidv7()`];
+  }
+  return [
+    `${alter} ADD GENERATED BY DEFAULT AS IDENTITY`,
+    `SELECT setval(pg_get_serial_sequence('${quote(table)}', '${key.column}'), COALESCE((SELECT MAX(${quote(key.column)}) FROM ${quote(table)}), 0) + 1, false)`
+  ];
+}
+
+function backfillSql(table: string, key: PrimaryKeyMetadata) {
+  const column = quote(key.column);
+  if (key.type == "uuid") {
+    return [`UPDATE ${quote(table)} SET ${column} = uuidv7() WHERE ${column} IS NULL`];
+  }
+  return [
+    `UPDATE ${quote(table)} AS target SET ${column} = numbered.position FROM (SELECT ctid AS row_id, COALESCE((SELECT MAX(${column}) FROM ${quote(table)}), 0) + ROW_NUMBER() OVER () AS position FROM ${quote(table)} WHERE ${column} IS NULL) AS numbered WHERE target.ctid = numbered.row_id`
+  ];
 }
 
 const sameEnum = (a: ColumnMetadata, b: ColumnMetadata) =>
   JSON.stringify(a.enum) == JSON.stringify(b.enum);
 
-function alterTableStatements(
-  next: BucketMetadata,
-  before: TableMetadata,
-  after: TableMetadata
-): {drops: string[]; adds: string[]; alters: string[]; checks: string[]; dropChecks: string[]} {
-  const alter = (action: string) => `ALTER TABLE ${quote(after.name)} ${action}`;
-  const result = {
-    drops: [] as string[],
-    adds: [] as string[],
-    alters: [] as string[],
-    checks: [] as string[],
-    dropChecks: [] as string[]
-  };
+const sameKeyColumns = (a: TableMetadata, b: TableMetadata) =>
+  JSON.stringify(a.keyColumns) == JSON.stringify(b.keyColumns);
 
-  for (const column of before.columns) {
-    if (!after.columns.some(candidate => candidate.name == column.name)) {
-      result.drops.push(alter(`DROP COLUMN ${quote(column.name)}`));
-    }
-  }
+const sameForeignKey = (a: ForeignKeyMetadata, b: ForeignKeyMetadata) =>
+  a.table == b.table && a.referencedColumn == b.referencedColumn && a.onDelete == b.onDelete;
 
-  for (const column of after.columns) {
-    const was = before.columns.find(candidate => candidate.name == column.name);
-    if (!was) {
-      result.adds.push(alter(`ADD COLUMN ${columnSql(next, after, column)}`));
-      if (column.enum) {
-        result.checks.push(checkSql(after.name, column));
-      }
-      continue;
-    }
-    if (was.notNull != column.notNull) {
-      result.alters.push(
-        alter(`ALTER COLUMN ${quote(column.name)} ${column.notNull ? "SET" : "DROP"} NOT NULL`)
-      );
-    }
-    if (!sameEnum(was, column)) {
-      if (was.checkName) {
-        result.dropChecks.push(alter(`DROP CONSTRAINT ${quote(was.checkName)}`));
-      }
-      if (column.enum) {
-        result.checks.push(checkSql(after.name, column));
-      }
-    }
-  }
-  return result;
-}
-
-export function updateStatements(
+export function planUpdate(
   previous: BucketMetadata,
   next: BucketMetadata,
-  diff: BucketDiff
-): string[] {
-  assertSameKey(previous, next);
-  assertNoRewrite(previous, next, diff);
+  keyChange?: KeyChange
+): UpdatePlan {
+  const ownKey = keyChange?.table == previous.main.name ? keyChange : undefined;
 
-  const nextNames = new Set(next.tables.map(table => table.name));
-  const previousNames = new Set(previous.tables.map(table => table.name));
+  const recreated = (table: TableMetadata) => {
+    const was = previous.tables.find(candidate => candidate.name == table.name);
+    return Boolean(was) && table.name != next.main.name && !sameKeyColumns(was, table);
+  };
+  const kept = next.tables.filter(
+    table => previous.tables.some(was => was.name == table.name) && !recreated(table)
+  );
+  const keptNames = new Set(kept.map(table => table.name));
+  const created = next.tables.filter(table => !keptNames.has(table.name));
+  const dropped = previous.tables.filter(table => !keptNames.has(table.name));
 
-  const dropTables = previous.tables
-    .filter(table => !nextNames.has(table.name))
-    .map(table => `DROP TABLE ${quote(table.name)} CASCADE`);
-  const createTables = next.tables
-    .filter(table => !previousNames.has(table.name))
-    .flatMap(table => createTableStatements(next, table));
-
-  const dropIndexes: string[] = [];
   const dropForeignKeys: string[] = [];
   const addForeignKeys: string[] = [];
-  const createIndexes: string[] = next.tables
-    .filter(table => !previousNames.has(table.name))
-    .flatMap(table => table.indexes.map(createIndexSql));
-  const alterations = {
-    drops: [] as string[],
-    adds: [] as string[],
-    alters: [] as string[],
-    checks: [] as string[],
-    dropChecks: [] as string[]
-  };
+  const dropIndexes: string[] = [];
+  const createIndexes: string[] = [];
+  const dropChecks: string[] = [];
+  const addChecks: string[] = [];
+  const dropColumns: string[] = [];
+  const addColumns: string[] = [];
+  const alterTypes: string[] = [];
+  const alterNullability: string[] = [];
 
-  for (const after of next.tables) {
+  const keyColumns = new Set<string>();
+  if (ownKey) {
+    keyColumns.add(ownKey.previous.column);
+    keyColumns.add(ownKey.next.column);
+  }
+  const mainWas = previous.main;
+  const mainIs = next.main;
+
+  const referencesKey = (table: TableMetadata, column: string) =>
+    keyChange &&
+    table.foreignKeys.some(key => key.column == column && key.table == keyChange.table);
+
+  const remapsKeyValues = Boolean(keyChange) && keyChange.previous.field != keyChange.next.field;
+
+  const convert = (table: TableMetadata, was: ColumnMetadata, is: ColumnMetadata) =>
+    remapsKeyValues && referencesKey(table, was.name)
+      ? `pg_temp.${MAP_FUNCTION}(${quote(was.name)})`
+      : conversionSql(was.name, was.type, is.type);
+
+  for (const after of kept) {
     const before = previous.tables.find(table => table.name == after.name);
-    if (!before) {
-      continue;
-    }
-    const alterationsOfTable = alterTableStatements(next, before, after);
-    for (const key of Object.keys(alterations) as (keyof typeof alterations)[]) {
-      alterations[key].push(...alterationsOfTable[key]);
+    const alter = (action: string) => `ALTER TABLE ${quote(after.name)} ${action}`;
+
+    for (const was of before.columns) {
+      if (!after.columns.some(column => column.name == was.name)) {
+        dropColumns.push(alter(`DROP COLUMN ${quote(was.name)}`));
+      }
     }
 
-    const sameKey = (a: ForeignKeyMetadata, b: ForeignKeyMetadata) =>
-      a.table == b.table && a.referencedColumn == b.referencedColumn && a.onDelete == b.onDelete;
+    for (const is of after.columns) {
+      const was = before.columns.find(column => column.name == is.name);
+      const isKeyColumn = after.name == mainIs.name && keyColumns.has(is.name);
+      if (!was) {
+        addColumns.push(alter(`ADD COLUMN ${columnSql(next, after, is)}`));
+        if (is.enum) {
+          addChecks.push(checkSql(after.name, is));
+        }
+        continue;
+      }
+      const typeChanged = was.type != is.type;
+      const checkChanged = typeChanged || !sameEnum(was, is);
+      if (checkChanged && was.checkName) {
+        dropChecks.push(alter(`DROP CONSTRAINT ${quote(was.checkName)}`));
+      }
+      if (checkChanged && is.enum) {
+        addChecks.push(checkSql(after.name, is));
+      }
+      if (isKeyColumn) {
+        continue;
+      }
+      if (typeChanged) {
+        alterTypes.push(
+          alter(`ALTER COLUMN ${quote(is.name)} TYPE ${is.type} USING ${convert(before, was, is)}`)
+        );
+      }
+      if (was.notNull != is.notNull) {
+        alterNullability.push(
+          alter(`ALTER COLUMN ${quote(is.name)} ${is.notNull ? "SET" : "DROP"} NOT NULL`)
+        );
+      }
+    }
+
     for (const key of before.foreignKeys) {
-      const kept = after.foreignKeys.find(candidate => candidate.name == key.name);
-      if (!kept || !sameKey(kept, key)) {
+      const still = after.foreignKeys.find(candidate => candidate.name == key.name);
+      const was = before.columns.find(column => column.name == key.column);
+      const is = after.columns.find(column => column.name == key.column);
+      const retyped = Boolean(was && is && was.type != is.type);
+      if (!still || !sameForeignKey(still, key) || retyped) {
         dropForeignKeys.push(
           `ALTER TABLE ${quote(after.name)} DROP CONSTRAINT IF EXISTS ${quote(key.name)}`
         );
@@ -219,7 +279,10 @@ export function updateStatements(
     }
     for (const key of after.foreignKeys) {
       const was = before.foreignKeys.find(candidate => candidate.name == key.name);
-      if (!was || !sameKey(was, key)) {
+      const wasColumn = before.columns.find(column => column.name == key.column);
+      const isColumn = after.columns.find(column => column.name == key.column);
+      const retyped = Boolean(wasColumn && isColumn && wasColumn.type != isColumn.type);
+      if (!was || !sameForeignKey(was, key) || retyped) {
         addForeignKeys.push(`ALTER TABLE ${quote(after.name)} ADD ${foreignKeySql(key)}`);
       }
     }
@@ -236,17 +299,112 @@ export function updateStatements(
     );
   }
 
-  return [
-    ...dropIndexes,
-    ...alterations.dropChecks,
-    ...dropForeignKeys,
-    ...dropTables,
-    ...alterations.drops,
-    ...createTables,
-    ...alterations.adds,
-    ...alterations.alters,
-    ...alterations.checks,
-    ...addForeignKeys,
-    ...createIndexes
-  ];
+  for (const table of created) {
+    addForeignKeys.push(
+      ...table.foreignKeys.map(key => `ALTER TABLE ${quote(table.name)} ADD ${foreignKeySql(key)}`)
+    );
+    createIndexes.push(...table.indexes.map(createIndexSql));
+  }
+
+  const keyBefore: string[] = [];
+  const keyAfterAdds: string[] = [];
+  const keyAfterDrops: string[] = [];
+  const keyFinal: string[] = [];
+  const keyCleanup: string[] = [];
+
+  if (ownKey) {
+    const old = ownKey.previous;
+    const target = ownKey.next;
+    const main = quote(mainIs.name);
+    const fieldChanged = old.field != target.field;
+    const typeChanged = old.type != target.type;
+    const oldColumnExistsAfter = mainIs.columns.some(column => column.name == old.column);
+    const newColumnWas = mainWas.columns.find(column => column.name == target.column);
+    const oldColumnIs = mainIs.columns.find(column => column.name == old.column);
+
+    const keyMoves = movesKeyValues(ownKey);
+
+    if (keyMoves) {
+      keyBefore.push(
+        `ALTER TABLE ${main} DROP CONSTRAINT IF EXISTS ${quote(constraintName(mainWas.name, [old.column], "pk"))}`
+      );
+    }
+    keyBefore.push(...dropGenerationSql(mainWas.name, old));
+
+    if (fieldChanged) {
+      if (newColumnWas) {
+        keyAfterAdds.push(
+          `ALTER TABLE ${main} ALTER COLUMN ${quote(target.column)} TYPE ${target.type} USING ${conversionSql(target.column, newColumnWas.type, target.type)}`
+        );
+        if (target.generated) {
+          keyAfterAdds.push(...backfillSql(mainWas.name, target));
+        }
+      }
+      keyAfterAdds.push(
+        `CREATE TEMP TABLE ${MAP_TABLE} ON COMMIT DROP AS SELECT ${quote(old.column)}::${old.type} AS old_key, ${quote(target.column)}::${target.type} AS new_key FROM ${main}`,
+        `CREATE FUNCTION pg_temp.${MAP_FUNCTION}(old_key ${old.type}) RETURNS ${target.type} LANGUAGE sql STABLE AS 'SELECT new_key FROM pg_temp.${MAP_TABLE} WHERE old_key = $1'`
+      );
+      keyCleanup.push(`DROP FUNCTION IF EXISTS pg_temp.${MAP_FUNCTION}(${old.type})`);
+      if (oldColumnIs && oldColumnExistsAfter) {
+        const was = mainWas.columns.find(column => column.name == old.column);
+        if (was.type != oldColumnIs.type) {
+          keyAfterDrops.push(
+            `ALTER TABLE ${main} ALTER COLUMN ${quote(old.column)} TYPE ${oldColumnIs.type} USING ${conversionSql(old.column, was.type, oldColumnIs.type)}`
+          );
+        }
+        if (!oldColumnIs.notNull) {
+          keyAfterDrops.push(`ALTER TABLE ${main} ALTER COLUMN ${quote(old.column)} DROP NOT NULL`);
+        }
+      }
+    } else if (typeChanged) {
+      keyAfterDrops.push(
+        `ALTER TABLE ${main} ALTER COLUMN ${quote(old.column)} TYPE ${target.type} USING ${conversionSql(old.column, old.type, target.type)}`
+      );
+    }
+
+    const addedWithGeneration = fieldChanged && !newColumnWas;
+    if (!addedWithGeneration) {
+      keyFinal.push(`ALTER TABLE ${main} ALTER COLUMN ${quote(target.column)} SET NOT NULL`);
+    }
+    if (keyMoves) {
+      keyFinal.push(
+        `ALTER TABLE ${main} ADD CONSTRAINT ${quote(constraintName(mainIs.name, [target.column], "pk"))} PRIMARY KEY (${quote(target.column)})`
+      );
+    }
+    if (!addedWithGeneration) {
+      keyFinal.push(...addGenerationSql(mainIs.name, target));
+    }
+  }
+
+  return {
+    dropForeignKeys,
+    apply: [
+      ...dropIndexes,
+      ...dropChecks,
+      ...keyBefore,
+      ...dropped.map(table => `DROP TABLE ${quote(table.name)} CASCADE`),
+      ...created.flatMap(table => createTableStatements(next, table, false)),
+      ...addColumns,
+      ...keyAfterAdds,
+      ...dropColumns,
+      ...keyAfterDrops,
+      ...alterTypes,
+      ...alterNullability,
+      ...keyFinal,
+      ...addChecks
+    ],
+    finish: [...addForeignKeys, ...createIndexes, ...keyCleanup]
+  };
 }
+
+export const mergePlans = (plans: UpdatePlan[]): UpdatePlan => ({
+  dropForeignKeys: plans.flatMap(plan => plan.dropForeignKeys),
+  apply: plans.flatMap(plan => plan.apply),
+  finish: plans.flatMap(plan => plan.finish)
+});
+
+export const updateStatements = (
+  previous: BucketMetadata,
+  next: BucketMetadata,
+  keyChange?: KeyChange
+) => statementsOf(planUpdate(previous, next, keyChange));

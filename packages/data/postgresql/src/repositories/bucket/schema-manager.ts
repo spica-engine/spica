@@ -10,12 +10,18 @@ import {
   BucketSchemaError,
   createStatements,
   describeBucket,
+  KeyChange,
+  keyChangeOf,
   mainTableName,
+  mergePlans,
+  movesKeyValues,
+  planUpdate,
   PrimaryKeyMetadata,
   tryPrimaryKeyMetadata,
   relationTargets,
   RelationTargets,
-  updateStatements,
+  statementsOf,
+  UpdatePlan,
   withoutRelationsTo
 } from "../../schema/index.js";
 
@@ -116,18 +122,65 @@ export class PostgresBucketSchemaManager implements BucketSchemaManager {
 
   private async statementsToReplace(session: Session, previous: StoredBucket, next: StoredBucket) {
     const bucketId = String(next._id);
-    const {rows} = await session.raw("SELECT to_regclass($1) AS main", [
-      quote(mainTableName(bucketId))
-    ]);
-    const nextMetadata = describeBucket(bucketId, next, await this.targetsOf(session, next));
-    if (!rows[0].main) {
-      return createStatements(nextMetadata);
+    const exists = await this.tableExists(session, mainTableName(bucketId));
+    if (!exists) {
+      return createStatements(describeBucket(bucketId, next, await this.targetsOf(session, next)));
     }
-    return updateStatements(
-      describeBucket(bucketId, previous, await this.targetsOf(session, previous)),
-      nextMetadata,
-      diffBuckets(previous, next)
+
+    const diff = diffBuckets(previous, next);
+    if (!diff.fields.length && !diff.indexes.length && !diff.primary) {
+      return [];
+    }
+
+    const previousMetadata = describeBucket(
+      bucketId,
+      previous,
+      await this.targetsOf(session, previous)
     );
+    const nextMetadata = describeBucket(bucketId, next, await this.targetsOf(session, next));
+    const keyChange = keyChangeOf(previousMetadata, nextMetadata);
+
+    const plans = [planUpdate(previousMetadata, nextMetadata, keyChange)];
+    if (keyChange && movesKeyValues(keyChange)) {
+      plans.push(...(await this.plansOfReferrers(session, bucketId, keyChange)));
+    }
+    return statementsOf(mergePlans(plans));
+  }
+
+  private async plansOfReferrers(session: Session, bucketId: string, keyChange: KeyChange) {
+    const all = (await session.findMany(buckets, {})).map(decodeBucket) as StoredBucket[];
+    const target = (primaryKey: KeyChange["previous"]) => ({
+      table: keyChange.table,
+      primaryKey
+    });
+    const plans: UpdatePlan[] = [];
+
+    for (const other of all) {
+      const otherId = String(other._id);
+      if (otherId == bucketId || !relationTargets(other.properties).includes(bucketId)) {
+        continue;
+      }
+      if (!(await this.tableExists(session, mainTableName(otherId)))) {
+        continue;
+      }
+      const resolveWith = async (primaryKey: KeyChange["previous"]) => {
+        const stored = await this.targetsOf(session, other);
+        return (id: string) => (id == bucketId ? target(primaryKey) : stored(id));
+      };
+      plans.push(
+        planUpdate(
+          describeBucket(otherId, other, await resolveWith(keyChange.previous)),
+          describeBucket(otherId, other, await resolveWith(keyChange.next)),
+          keyChange
+        )
+      );
+    }
+    return plans;
+  }
+
+  private async tableExists(session: Session, table: string) {
+    const {rows} = await session.raw("SELECT to_regclass($1) AS found", [quote(table)]);
+    return Boolean(rows[0].found);
   }
 
   private async dropStatements(session: Session, bucketId: string) {

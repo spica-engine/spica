@@ -295,37 +295,6 @@ describe("PostgreSQL schema manager", () => {
       expect((await columns(table)).map(c => c.column_name)).toEqual(["id", "title"]);
     });
 
-    it("should refuse to change the primary key for now", async () => {
-      const created = await manager.create(bucket(), () => {});
-
-      await expect(
-        manager.replace(
-          created._id,
-          bucket({properties: {id: {type: "uuid"}, title: {type: "string"}}}),
-          () => {}
-        )
-      ).rejects.toThrow("Changing the primary key is not supported yet.");
-    });
-
-    it("should refuse to retype a property into another column type for now", async () => {
-      const created = await manager.create(
-        bucket({properties: {id: {type: "uuid", options: {generated: true}}, n: {type: "string"}}}),
-        () => {}
-      );
-
-      await expect(
-        manager.replace(
-          created._id,
-          bucket({
-            properties: {id: {type: "uuid", options: {generated: true}}, n: {type: "number"}}
-          }),
-          () => {}
-        )
-      ).rejects.toThrow(
-        "Changing the type or the translation of a property is not supported yet: n."
-      );
-    });
-
     it("should accept a retype that keeps the column type", async () => {
       const created = await manager.create(
         bucket({properties: {id: {type: "uuid", options: {generated: true}}, n: {type: "string"}}}),
@@ -537,23 +506,6 @@ describe("PostgreSQL schema manager", () => {
       expect(await indexes(`${table}__tags`)).toEqual([]);
     });
 
-    it("should refuse to turn a structure into another one for now", async () => {
-      const created = await manager.create(withShape({address: shape.address}), () => {});
-
-      await expect(
-        manager.replace(created._id, withShape({address: {type: "string"}}), () => {})
-      ).rejects.toThrow(
-        "Changing the type or the translation of a property is not supported yet: address."
-      );
-      await expect(
-        manager.replace(
-          created._id,
-          withShape({address: shape.address, tags: shape.tags}),
-          () => {}
-        )
-      ).resolves.toBeTruthy();
-    });
-
     it("should drop the child tables together with the bucket", async () => {
       const created = await manager.create(withShape(shape), () => {});
 
@@ -752,20 +704,6 @@ describe("PostgreSQL schema manager", () => {
       expect(await tablesOfBucket(table)).toEqual([table]);
     });
 
-    it("should refuse to change the cardinality of a relation for now", async () => {
-      const target = await manager.create(keyed({}), () => {});
-      const created = await manager.create(
-        keyed({link: relation(target._id, "onetoone")}),
-        () => {}
-      );
-
-      await expect(
-        manager.replace(created._id, keyed({link: relation(target._id, "onetomany")}), () => {})
-      ).rejects.toThrow(
-        "Changing the type or the translation of a property is not supported yet: link."
-      );
-    });
-
     it("should remove the relations that point at a bucket when it is dropped", async () => {
       const target = await manager.create(keyed({}), () => {});
       const other = await manager.create(keyed({}), () => {});
@@ -896,23 +834,6 @@ describe("PostgreSQL schema manager", () => {
       await manager.replace(created._id, withShape({}), () => {});
       expect(await tablesOfBucket(table)).toEqual([table]);
     });
-
-    it("should refuse to translate or untranslate an existing property for now", async () => {
-      const created = await manager.create(withShape({name: {type: "string"}}), () => {});
-
-      await expect(
-        manager.replace(created._id, withShape({name: translated}), () => {})
-      ).rejects.toThrow(
-        "Changing the type or the translation of a property is not supported yet: name."
-      );
-
-      const translatedBucket = await manager.create(withShape({name: translated}), () => {});
-      await expect(
-        manager.replace(translatedBucket._id, withShape({name: {type: "string"}}), () => {})
-      ).rejects.toThrow(
-        "Changing the type or the translation of a property is not supported yet: name."
-      );
-    });
   });
 
   describe("locations", () => {
@@ -963,6 +884,538 @@ describe("PostgreSQL schema manager", () => {
 
       await manager.replace(created._id, withShape({place: {type: "location"}}), () => {});
       expect(await indexes(table)).toEqual([]);
+    });
+  });
+
+  describe("type changes", () => {
+    const withShape = (properties: object = {}, extra: object = {}) =>
+      bucket({
+        properties: {id: {type: "uuid", options: {generated: true}}, ...properties},
+        ...extra
+      });
+
+    const rowsOf = async (table: string, select: string) =>
+      (await pool.query(`SELECT ${select} FROM "${table}" ORDER BY 1`)).rows;
+
+    it("should convert existing values to the new column type and clear what does not fit", async () => {
+      const created = await manager.create(withShape({n: {type: "string"}}), () => {});
+      const table = tableOf(created._id);
+      await pool.query(`INSERT INTO "${table}" (n) VALUES ('12'), ('abc'), ('4.5'), (NULL)`);
+
+      await manager.replace(created._id, withShape({n: {type: "number"}}), () => {});
+
+      expect((await columns(table)).find(c => c.column_name == "n").data_type).toBe(
+        "double precision"
+      );
+      expect((await rowsOf(table, "n")).map(row => row.n)).toEqual([4.5, 12, null, null]);
+    });
+
+    it.each([
+      ["number", "string", "double precision", "7.5", "7.5"],
+      ["boolean", "string", "boolean", "true", "true"],
+      ["string", "boolean", "text", "true", true],
+      ["string", "date", "text", "2024-02-03T04:05:06Z", new Date("2024-02-03T04:05:06Z")]
+    ])("should convert %s to %s", async (from, to, sqlType, input, output) => {
+      const created = await manager.create(withShape({v: {type: from}}), () => {});
+      const table = tableOf(created._id);
+      await pool.query(`INSERT INTO "${table}" (v) VALUES ($1::${sqlType})`, [input]);
+
+      await manager.replace(created._id, withShape({v: {type: to}}), () => {});
+
+      expect((await rowsOf(table, "v"))[0].v).toEqual(output);
+    });
+
+    it("should keep the values and the enum when the column type stays the same", async () => {
+      const created = await manager.create(
+        withShape({kind: {type: "string", enum: ["a", "b"]}}),
+        () => {}
+      );
+      const table = tableOf(created._id);
+      await pool.query(`INSERT INTO "${table}" (kind) VALUES ('a')`);
+
+      await manager.replace(
+        created._id,
+        withShape({kind: {type: "textarea", enum: ["a", "b"]}}),
+        () => {}
+      );
+
+      expect((await rowsOf(table, "kind"))[0].kind).toBe("a");
+      await expect(pool.query(`INSERT INTO "${table}" (kind) VALUES ('c')`)).rejects.toMatchObject({
+        code: "23514"
+      });
+    });
+
+    it("should keep the enum check when the column is converted", async () => {
+      const created = await manager.create(
+        withShape({kind: {type: "string", enum: ["1", "2"]}}),
+        () => {}
+      );
+      const table = tableOf(created._id);
+
+      await manager.replace(
+        created._id,
+        withShape({kind: {type: "number", enum: [1, 2]}}),
+        () => {}
+      );
+
+      await pool.query(`INSERT INTO "${table}" (kind) VALUES (2)`);
+      await expect(pool.query(`INSERT INTO "${table}" (kind) VALUES (3)`)).rejects.toMatchObject({
+        code: "23514"
+      });
+    });
+
+    it("should convert the items of an array", async () => {
+      const created = await manager.create(
+        withShape({scores: {type: "array", items: {type: "string"}}}),
+        () => {}
+      );
+      const table = tableOf(created._id);
+      const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
+      await pool.query(`INSERT INTO "${table}__scores" VALUES ($1, 0, '3'), ($1, 1, '4.5')`, [
+        rows[0].id
+      ]);
+
+      await manager.replace(
+        created._id,
+        withShape({scores: {type: "array", items: {type: "number"}}}),
+        () => {}
+      );
+
+      expect((await rowsOf(`${table}__scores`, "_value")).map(row => row._value)).toEqual([3, 4.5]);
+    });
+
+    it("should report items that cannot be converted instead of losing them", async () => {
+      const created = await manager.create(
+        withShape({scores: {type: "array", items: {type: "string"}}}),
+        () => {}
+      );
+      const table = tableOf(created._id);
+      const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
+      await pool.query(`INSERT INTO "${table}__scores" VALUES ($1, 0, '3'), ($1, 1, 'x')`, [
+        rows[0].id
+      ]);
+
+      await expect(
+        manager.replace(
+          created._id,
+          withShape({scores: {type: "array", items: {type: "number"}}}),
+          () => {}
+        )
+      ).rejects.toThrow(/contains null values/);
+
+      expect((await rowsOf(`${table}__scores`, "_value")).map(row => row._value)).toEqual([
+        "3",
+        "x"
+      ]);
+      expect((await buckets.findById(created._id)).properties.scores.items.type).toBe("string");
+    });
+
+    it("should drop what a structure change leaves behind and keep the other data", async () => {
+      const created = await manager.create(
+        withShape({
+          note: {type: "string"},
+          address: {type: "object", properties: {city: {type: "string"}}}
+        }),
+        () => {}
+      );
+      const table = tableOf(created._id);
+      await pool.query(`INSERT INTO "${table}" (note, address__city) VALUES ('keep', 'Rome')`);
+
+      await manager.replace(
+        created._id,
+        withShape({note: {type: "string"}, address: {type: "string"}}),
+        () => {}
+      );
+
+      expect(await rowsOf(table, "note, address")).toEqual([{note: "keep", address: null}]);
+      expect((await columns(table)).map(c => c.column_name)).toEqual(["address", "id", "note"]);
+    });
+
+    it("should turn a onetoone relation into a link table and back", async () => {
+      const target = await manager.create(withShape({}), () => {});
+      const relation = (relationType: string) => ({
+        type: "relation",
+        bucketId: String(target._id),
+        relationType
+      });
+      const created = await manager.create(withShape({link: relation("onetoone")}), () => {});
+      const table = tableOf(created._id);
+
+      await manager.replace(created._id, withShape({link: relation("onetomany")}), () => {});
+      expect(await tablesOfBucket(table)).toEqual([table, `${table}__link`]);
+      expect((await columns(table)).map(c => c.column_name)).toEqual(["id"]);
+
+      await manager.replace(created._id, withShape({link: relation("onetoone")}), () => {});
+      expect(await tablesOfBucket(table)).toEqual([table]);
+      expect((await columns(table)).map(c => c.column_name)).toEqual(["id", "link"]);
+    });
+
+    it("should recreate a child table whose key changes kind and keep the rest", async () => {
+      const created = await manager.create(
+        withShape({tags: {type: "array", items: {type: "string"}}, note: {type: "string"}}),
+        () => {}
+      );
+      const table = tableOf(created._id);
+      const {rows} = await pool.query(`INSERT INTO "${table}" (note) VALUES ('keep') RETURNING id`);
+      await pool.query(`INSERT INTO "${table}__tags" VALUES ($1, 0, 'a')`, [rows[0].id]);
+
+      await manager.replace(
+        created._id,
+        withShape({tags: {type: "string", options: {translate: true}}, note: {type: "string"}}),
+        () => {}
+      );
+
+      expect((await columns(`${table}__tags`)).map(c => c.column_name)).toEqual([
+        "_locale",
+        "_parent",
+        "_value"
+      ]);
+      expect((await pool.query(`SELECT 1 FROM "${table}__tags"`)).rowCount).toBe(0);
+      expect((await rowsOf(table, "note"))[0].note).toBe("keep");
+    });
+
+    it("should translate and untranslate a property", async () => {
+      const created = await manager.create(withShape({name: {type: "string"}}), () => {});
+      const table = tableOf(created._id);
+
+      await manager.replace(
+        created._id,
+        withShape({name: {type: "string", options: {translate: true}}}),
+        () => {}
+      );
+      expect(await tablesOfBucket(table)).toEqual([table, `${table}__name`]);
+
+      await manager.replace(created._id, withShape({name: {type: "string"}}), () => {});
+      expect(await tablesOfBucket(table)).toEqual([table]);
+      expect((await columns(table)).map(c => c.column_name)).toEqual(["id", "name"]);
+    });
+
+    it("should not run any statement for an edit that leaves the structure alone", async () => {
+      const created = await manager.create(withShape({n: {type: "string"}}), () => {});
+      const execute = jest.spyOn(manager as any, "execute");
+
+      await manager.replace(
+        created._id,
+        {...withShape({n: {type: "string", title: "N"}}), title: "Renamed", description: "x"},
+        () => {}
+      );
+
+      expect(execute).toHaveBeenCalledWith(expect.anything(), []);
+      execute.mockRestore();
+    });
+  });
+
+  describe("primary key changes", () => {
+    const keyed = (primary: string, properties: object = {}, extra: object = {}) =>
+      bucket({primary, properties, ...extra});
+
+    const generatedUuid = {type: "uuid", options: {generated: true}};
+
+    const rowsOf = async (table: string, select: string) =>
+      (await pool.query(`SELECT ${select} FROM "${table}" ORDER BY 1`)).rows;
+
+    const keyColumn = async (table: string) =>
+      (
+        await pool.query(
+          `SELECT a.attname FROM pg_index i JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+           WHERE i.indrelid = to_regclass($1) AND i.indisprimary`,
+          [`"${table}"`]
+        )
+      ).rows.map(row => row.attname);
+
+    const columnOf = async (table: string, column: string) =>
+      (await columns(table)).find(c => c.column_name == column);
+
+    it("should turn the generation of a uuid key off and on", async () => {
+      const created = await manager.create(keyed("id", {id: generatedUuid}), () => {});
+      const table = tableOf(created._id);
+
+      await manager.replace(created._id, keyed("id", {id: {type: "uuid"}}), () => {});
+      expect((await columnOf(table, "id")).column_default).toBeNull();
+      await expect(pool.query(`INSERT INTO "${table}" DEFAULT VALUES`)).rejects.toMatchObject({
+        code: "23502"
+      });
+
+      await manager.replace(created._id, keyed("id", {id: generatedUuid}), () => {});
+      expect((await columnOf(table, "id")).column_default).toBe("uuidv7()");
+      expect(await keyColumn(table)).toEqual(["id"]);
+    });
+
+    it("should continue an identity key after the existing rows when generation is turned on", async () => {
+      const created = await manager.create(keyed("n", {n: {type: "integer"}}), () => {});
+      const table = tableOf(created._id);
+      await pool.query(`INSERT INTO "${table}" (n) VALUES (5), (9)`);
+
+      await manager.replace(
+        created._id,
+        keyed("n", {n: {type: "integer", options: {generated: true}}}),
+        () => {}
+      );
+
+      expect((await columnOf(table, "n")).is_identity).toBe("YES");
+      const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING n`);
+      expect(rows[0].n).toBe(10);
+
+      await manager.replace(created._id, keyed("n", {n: {type: "integer"}}), () => {});
+      expect((await columnOf(table, "n")).is_identity).toBe("NO");
+    });
+
+    it("should not rebuild the primary key when only its generation changes", async () => {
+      const created = await manager.create(keyed("id", {id: generatedUuid}), () => {});
+      const execute = jest.spyOn(manager as any, "execute");
+
+      await manager.replace(created._id, keyed("id", {id: {type: "uuid"}}), () => {});
+
+      const statements = execute.mock.calls[0][1] as string[];
+      expect(statements.some(statement => statement.includes("PRIMARY KEY"))).toBe(false);
+      expect(statements.some(statement => statement.includes("DROP CONSTRAINT"))).toBe(false);
+      execute.mockRestore();
+    });
+
+    it.each([
+      ["uuid", "string"],
+      ["string", "uuid"]
+    ])("should convert a %s key to %s with its child tables and relations", async (from, to) => {
+      const id = "0198a7e0-7b1c-7d2e-9f3a-4b5c6d7e8f90";
+      const definition = (type: string) =>
+        keyed("id", {id: {type}, tags: {type: "array", items: {type: "string"}}});
+      const created = await manager.create(definition(from), () => {});
+      const table = tableOf(created._id);
+      const referrer = await manager.create(
+        keyed("rid", {
+          rid: generatedUuid,
+          owner: {type: "relation", bucketId: String(created._id), relationType: "onetoone"},
+          owners: {type: "relation", bucketId: String(created._id), relationType: "onetomany"}
+        }),
+        () => {}
+      );
+      const referrerTable = tableOf(referrer._id);
+      await pool.query(`INSERT INTO "${table}" (id) VALUES ($1)`, [id]);
+      await pool.query(`INSERT INTO "${table}__tags" VALUES ($1, 0, 'a')`, [id]);
+      await pool.query(`INSERT INTO "${referrerTable}" (owner) VALUES ($1)`, [id]);
+      const parent = await pool.query(`SELECT rid FROM "${referrerTable}"`);
+      await pool.query(`INSERT INTO "${referrerTable}__owners" VALUES ($1, 0, $2)`, [
+        parent.rows[0].rid,
+        id
+      ]);
+
+      await manager.replace(created._id, definition(to), () => {});
+
+      const expectedType = to == "string" ? "text" : "uuid";
+      expect((await columnOf(table, "id")).data_type).toBe(expectedType);
+      expect((await columnOf(`${table}__tags`, "_parent")).data_type).toBe(expectedType);
+      expect((await columnOf(referrerTable, "owner")).data_type).toBe(expectedType);
+      expect((await columnOf(`${referrerTable}__owners`, "_target")).data_type).toBe(expectedType);
+      expect(String((await rowsOf(table, "id"))[0].id)).toBe(id);
+      expect(String((await rowsOf(`${table}__tags`, "_parent"))[0]._parent)).toBe(id);
+      expect(String((await rowsOf(referrerTable, "owner"))[0].owner)).toBe(id);
+      expect(String((await rowsOf(`${referrerTable}__owners`, "_target"))[0]._target)).toBe(id);
+      await expect(
+        pool.query(`INSERT INTO "${table}__tags" VALUES ($1, 0, 'x')`, [
+          to == "string" ? "unknown" : "0198a7e0-0000-7d2e-9f3a-4b5c6d7e8f91"
+        ])
+      ).rejects.toMatchObject({code: "23503"});
+      expect(await keyColumn(table)).toEqual(["id"]);
+    });
+
+    it("should widen and narrow an integer key", async () => {
+      const definition = (type: string) => keyed("n", {n: {type, options: {generated: true}}});
+      const created = await manager.create(definition("integer"), () => {});
+      const table = tableOf(created._id);
+      await pool.query(`INSERT INTO "${table}" DEFAULT VALUES`);
+
+      await manager.replace(created._id, definition("bigint"), () => {});
+      expect((await columnOf(table, "n")).data_type).toBe("bigint");
+      const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING n`);
+      expect(Number(rows[0].n)).toBe(2);
+
+      await manager.replace(created._id, definition("integer"), () => {});
+      expect((await columnOf(table, "n")).data_type).toBe("integer");
+    });
+
+    it("should refuse a key type that existing keys cannot be converted to, and change nothing", async () => {
+      const definition = (type: string) => keyed("id", {id: {type}});
+      const created = await manager.create(definition("uuid"), () => {});
+      const table = tableOf(created._id);
+      await pool.query(`INSERT INTO "${table}" (id) VALUES (uuidv7())`);
+
+      await expect(
+        manager.replace(created._id, definition("bigint"), () => {})
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect((await buckets.findById(created._id)).properties.id.type).toBe("uuid");
+      expect((await columnOf(table, "id")).data_type).toBe("uuid");
+      expect(await keyColumn(table)).toEqual(["id"]);
+    });
+
+    it("should change the type of an empty table's key to anything", async () => {
+      const created = await manager.create(keyed("id", {id: {type: "uuid"}}), () => {});
+
+      await manager.replace(
+        created._id,
+        keyed("id", {id: {type: "bigint", options: {generated: true}}}),
+        () => {}
+      );
+
+      expect((await columnOf(tableOf(created._id), "id")).data_type).toBe("bigint");
+    });
+
+    it("should make another property the key and carry the references along", async () => {
+      const definition = (primary: string) =>
+        keyed(
+          primary,
+          {
+            id: primary == "id" ? generatedUuid : {type: "uuid"},
+            code: {type: "string"},
+            tags: {type: "array", items: {type: "string"}}
+          },
+          {required: ["code"]}
+        );
+      const created = await manager.create(definition("id"), () => {});
+      const table = tableOf(created._id);
+      const referrer = await manager.create(
+        keyed("rid", {
+          rid: generatedUuid,
+          owner: {type: "relation", bucketId: String(created._id), relationType: "onetoone"}
+        }),
+        () => {}
+      );
+      const referrerTable = tableOf(referrer._id);
+      const first = await pool.query(`INSERT INTO "${table}" (code) VALUES ('a') RETURNING id`);
+      const second = await pool.query(`INSERT INTO "${table}" (code) VALUES ('b') RETURNING id`);
+      await pool.query(`INSERT INTO "${table}__tags" VALUES ($1, 0, 'x'), ($2, 0, 'y')`, [
+        first.rows[0].id,
+        second.rows[0].id
+      ]);
+      await pool.query(`INSERT INTO "${referrerTable}" (owner) VALUES ($1)`, [second.rows[0].id]);
+
+      await manager.replace(created._id, definition("code"), () => {});
+
+      expect(await keyColumn(table)).toEqual(["code"]);
+      expect(
+        (await rowsOf(`${table}__tags`, "_parent, _value")).map(row => [row._parent, row._value])
+      ).toEqual([
+        ["a", "x"],
+        ["b", "y"]
+      ]);
+      expect((await rowsOf(referrerTable, "owner"))[0].owner).toBe("b");
+      const oldKey = await columnOf(table, "id");
+      expect([oldKey.data_type, oldKey.is_nullable, oldKey.column_default]).toEqual([
+        "uuid",
+        "YES",
+        null
+      ]);
+      expect((await rowsOf(table, "id")).map(row => row.id).sort()).toEqual(
+        [first.rows[0].id, second.rows[0].id].sort()
+      );
+      await expect(
+        pool.query(`INSERT INTO "${table}__tags" VALUES ('zzz', 0, 'q')`)
+      ).rejects.toMatchObject({code: "23503"});
+      await pool.query(`DELETE FROM "${table}" WHERE code = 'b'`);
+      expect((await rowsOf(referrerTable, "owner"))[0].owner).toBeNull();
+    });
+
+    it("should generate the values of a new generated key for the existing rows", async () => {
+      const created = await manager.create(
+        keyed("id", {
+          id: generatedUuid,
+          n: {type: "number"},
+          tags: {type: "array", items: {type: "string"}}
+        }),
+        () => {}
+      );
+      const table = tableOf(created._id);
+      const first = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
+      await pool.query(`INSERT INTO "${table}" DEFAULT VALUES`);
+      await pool.query(`INSERT INTO "${table}__tags" VALUES ($1, 0, 'x')`, [first.rows[0].id]);
+
+      await manager.replace(
+        created._id,
+        keyed("n", {
+          id: {type: "uuid"},
+          n: {type: "bigint", options: {generated: true}},
+          tags: {type: "array", items: {type: "string"}}
+        }),
+        () => {}
+      );
+
+      expect((await rowsOf(table, "n")).map(row => Number(row.n))).toEqual([1, 2]);
+      const tagged = await pool.query(
+        `SELECT m.id FROM "${table}__tags" t JOIN "${table}" m ON m.n = t._parent`
+      );
+      expect(tagged.rows).toEqual([{id: first.rows[0].id}]);
+      const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING n`);
+      expect(Number(rows[0].n)).toBe(3);
+    });
+
+    it("should use a property added in the same edit as the new key", async () => {
+      const created = await manager.create(keyed("id", {id: generatedUuid}), () => {});
+      const table = tableOf(created._id);
+      await pool.query(`INSERT INTO "${table}" DEFAULT VALUES`);
+
+      await manager.replace(
+        created._id,
+        keyed("uid", {id: {type: "uuid"}, uid: generatedUuid}),
+        () => {}
+      );
+
+      expect(await keyColumn(table)).toEqual(["uid"]);
+      expect((await rowsOf(table, "uid")).length).toBe(1);
+      expect((await rowsOf(table, "uid"))[0].uid).toBeTruthy();
+    });
+
+    it("should use a property that replaces the old key property", async () => {
+      const created = await manager.create(keyed("id", {id: generatedUuid}), () => {});
+      const table = tableOf(created._id);
+
+      await manager.replace(created._id, keyed("slug", {slug: {type: "string"}}), () => {});
+
+      expect(await keyColumn(table)).toEqual(["slug"]);
+      expect((await columns(table)).map(c => c.column_name)).toEqual(["slug"]);
+    });
+
+    it("should leave the definition and the structure alone when the new key has duplicates", async () => {
+      const definition = (primary: string) =>
+        keyed(primary, {
+          id: primary == "id" ? generatedUuid : {type: "uuid"},
+          code: {type: "string"}
+        });
+      const created = await manager.create(definition("id"), () => {});
+      const table = tableOf(created._id);
+      await pool.query(`INSERT INTO "${table}" (code) VALUES ('same'), ('same')`);
+
+      await expect(
+        manager.replace(created._id, definition("code"), () => {})
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(await keyColumn(table)).toEqual(["id"]);
+      expect((await buckets.findById(created._id)).primary).toBe("id");
+      expect((await rowsOf(table, "code")).map(row => row.code)).toEqual(["same", "same"]);
+      const leftovers = await pool.query(
+        "SELECT proname FROM pg_proc WHERE proname = 'spica_map_key'"
+      );
+      expect(leftovers.rowCount).toBe(0);
+    });
+
+    it("should follow a key type change through a relation to the bucket itself", async () => {
+      const id = (await pool.query("SELECT uuidv7() AS id")).rows[0].id as string;
+      const definition = (type: string) =>
+        keyed(
+          "id",
+          {id: {type}, parent: {type: "relation", bucketId: id, relationType: "onetoone"}},
+          {_id: id}
+        );
+      const created = await manager.create(definition("uuid"), () => {});
+      const table = tableOf(created._id);
+      const key = "0198a7e0-7b1c-7d2e-9f3a-4b5c6d7e8f90";
+      await pool.query(`INSERT INTO "${table}" (id) VALUES ($1)`, [key]);
+      await pool.query(`INSERT INTO "${table}" (id, parent) VALUES (uuidv7(), $1)`, [key]);
+
+      await manager.replace(created._id, definition("string"), () => {});
+
+      expect((await columnOf(table, "parent")).data_type).toBe("text");
+      const linked = await pool.query(`SELECT 1 FROM "${table}" WHERE parent = $1`, [key]);
+      expect(linked.rowCount).toBe(1);
     });
   });
 
