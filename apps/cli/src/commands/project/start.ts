@@ -17,6 +17,8 @@ import {
   POSTGRES_USERNAME,
   databaseApiArgs,
   databaseImage,
+  POSTGRES_IMAGE,
+  postgresContainerCmd,
   postgresContainerEnv
 } from "./database";
 
@@ -342,9 +344,10 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
   async function createPostgres() {
     const container = await machine.createContainer({
-      Image: `postgres:${options.postgresVersion.toString()}`,
+      Image: `${POSTGRES_IMAGE}:${options.postgresVersion.toString()}`,
       name: `${databaseName}-0`,
       Env: postgresContainerEnv(name),
+      Cmd: postgresContainerCmd(name),
       Labels: {namespace: name},
       HostConfig: {
         RestartPolicy: {
