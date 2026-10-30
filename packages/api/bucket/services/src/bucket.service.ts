@@ -139,10 +139,17 @@ export class BucketService implements OnModuleInit, OnModuleDestroy {
   }
 
   async drop(id: string | Id) {
-    const dropped = await this.schemaManager.drop(bucketIds().parse(id), schema => {
-      this.schemaCache.delete(id.toString());
-      this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: schema._id}});
-    });
+    const dropped = await this.schemaManager.drop(
+      bucketIds().parse(id),
+      schema => {
+        this.schemaCache.delete(id.toString());
+        this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: schema._id}});
+      },
+      changed => {
+        this.schemaCache.set(changed._id.toString(), deepCopy(changed));
+        this.changeDispatcher.dispatch({operationType: "update", documentKey: {_id: changed._id}});
+      }
+    );
     if (!dropped) {
       throw new NotFoundException(`Bucket with ID ${id} does not exist.`);
     }
