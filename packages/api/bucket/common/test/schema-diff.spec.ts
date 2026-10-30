@@ -198,6 +198,50 @@ describe("diffBuckets", () => {
     ]);
   });
 
+  describe("primary", () => {
+    it("should report nothing when the primary property stays the same", () => {
+      expect(
+        diffBuckets(bucket({}, {primary: "id"}), bucket({}, {primary: "id"})).primary
+      ).toBeUndefined();
+    });
+
+    it("should report a changed primary property with both sides", () => {
+      expect(
+        diffBuckets(bucket({}, {primary: "id"}), bucket({}, {primary: "sku"})).primary
+      ).toEqual({
+        previous: "id",
+        next: "sku"
+      });
+    });
+
+    it("should report a primary property that appears or disappears", () => {
+      expect(
+        diffBuckets(bucket({}, {primary: undefined}), bucket({}, {primary: "id"})).primary
+      ).toEqual({
+        previous: undefined,
+        next: "id"
+      });
+      expect(
+        diffBuckets(bucket({}, {primary: "id"}), bucket({}, {primary: undefined})).primary
+      ).toEqual({
+        previous: "id",
+        next: undefined
+      });
+    });
+  });
+
+  it("should report generated changes", () => {
+    const diff = diffBuckets(
+      bucket({a: {type: "uuid"}, b: {type: "uuid", options: {generated: true}}}),
+      bucket({a: {type: "uuid", options: {generated: true}}, b: {type: "uuid", options: {}}})
+    );
+
+    expect(diff.fields).toEqual([
+      {kind: "generated", path: ["a"], generated: true},
+      {kind: "generated", path: ["b"], generated: false}
+    ]);
+  });
+
   describe("indexes", () => {
     const withIndexes = (...indexes: object[]) => bucket({a: {type: "string"}}, {indexes});
 
