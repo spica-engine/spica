@@ -22,6 +22,8 @@ const toMeta = ({key, event_id, created_at, payload}: StoredJob): JobMeta => ({
 export class PostgresJobRepository implements JobRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
+  async applyExpiry() {}
+
   async claim(meta: JobMeta) {
     const claimed = await this.orm.upsert(jobs, toStored({...meta, created_at: new Date()}), {
       conflict: ["key"],

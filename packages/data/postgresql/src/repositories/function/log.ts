@@ -8,6 +8,8 @@ import {ORM} from "../../orm.js";
 export class PostgresFunctionLogRepository implements LogRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
+  async applyExpiry() {}
+
   async deleteByFunction(
     functionId: string,
     options: {createdBetween?: {from: Date; to: Date}; levels?: number[]} = {}

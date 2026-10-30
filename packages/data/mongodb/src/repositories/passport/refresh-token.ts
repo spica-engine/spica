@@ -9,13 +9,14 @@ export class MongoRefreshTokenRepository
   implements RefreshTokenRepository
 {
   constructor(db: DatabaseService) {
-    super(db, {
-      afterInit: () =>
-        Promise.all([
-          this._coll.createIndex({token: 1}, {unique: true}),
-          this._coll.createIndex({expired_at: 1}, {expireAfterSeconds: 0})
-        ])
-    });
+    super(db);
+  }
+
+  async applyExpiry() {
+    await Promise.all([
+      this._coll.createIndex({token: 1}, {unique: true}),
+      this._coll.createIndex({expired_at: 1}, {expireAfterSeconds: 0})
+    ]);
   }
 
   insert(token: RefreshToken) {

@@ -13,8 +13,15 @@ export class MongoActivityRepository
   extends BaseCollection<Activity>("activity")
   implements ActivityRepository
 {
-  constructor(db: DatabaseService, @Inject(ACTIVITY_OPTIONS) options: ActivityOptions) {
-    super(db, {afterInit: () => this.upsertTTLIndex(options.expireAfterSeconds)});
+  constructor(
+    db: DatabaseService,
+    @Inject(ACTIVITY_OPTIONS) private readonly retention: ActivityOptions
+  ) {
+    super(db);
+  }
+
+  async applyExpiry() {
+    await this.upsertTTLIndex(this.retention.expireAfterSeconds);
   }
 
   deleteById(id: Id) {

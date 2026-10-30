@@ -123,6 +123,8 @@ export class PostgresUserRepository implements UserRepository {
 export class PostgresVerificationRepository implements VerificationRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
+  async applyExpiry() {}
+
   async consume(target: VerificationTarget & {provider: string}) {
     const [verification] = await this.orm.updateMany(
       verifications,

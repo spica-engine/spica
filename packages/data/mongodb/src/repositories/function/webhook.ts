@@ -45,8 +45,15 @@ export class MongoWebhookLogRepository
   extends BaseCollection<Log>("webhook_logs")
   implements WebhookLogRepository
 {
-  constructor(db: DatabaseService, @Inject(WEBHOOK_OPTIONS) options: WebhookOptions) {
-    super(db, {afterInit: () => this.upsertTTLIndex(options.expireAfterSeconds)});
+  constructor(
+    db: DatabaseService,
+    @Inject(WEBHOOK_OPTIONS) private readonly retention: WebhookOptions
+  ) {
+    super(db);
+  }
+
+  async applyExpiry() {
+    await this.upsertTTLIndex(this.retention.expireAfterSeconds);
   }
 
   insert(log: Log) {

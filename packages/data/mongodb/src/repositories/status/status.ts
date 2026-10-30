@@ -15,8 +15,15 @@ export class MongoStatusRepository
 {
   private readonly logger = new Logger(MongoStatusRepository.name);
 
-  constructor(db: DatabaseService, @Inject(STATUS_OPTIONS) options: StatusOptions) {
-    super(db, {afterInit: () => this.upsertTTLIndex(options.expireAfterSeconds)});
+  constructor(
+    db: DatabaseService,
+    @Inject(STATUS_OPTIONS) private readonly retention: StatusOptions
+  ) {
+    super(db);
+  }
+
+  async applyExpiry() {
+    await this.upsertTTLIndex(this.retention.expireAfterSeconds);
   }
 
   record(status: Omit<ApiStatus, "_id" | "count">) {

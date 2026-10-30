@@ -8,6 +8,8 @@ import {ORM} from "../../orm.js";
 export class PostgresCommandRepository implements CommandRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
+  async applyExpiry() {}
+
   insert(command: CommandMessage) {
     return this.orm.insert(commands, command);
   }
