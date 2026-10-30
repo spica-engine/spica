@@ -9,6 +9,7 @@ import {
   BucketSchemaManager
 } from "@spica-server/interface-bucket";
 import {PG_POOL} from "@spica-server/interface-data";
+import {constraintName} from "@spica-server/data-postgresql";
 import pg from "pg";
 
 describe("PostgreSQL schema manager", () => {
@@ -57,6 +58,9 @@ describe("PostgreSQL schema manager", () => {
     return rows.map(row => row.table_name);
   };
 
+  const tablesOfBucket = async (table: string) =>
+    (await tables()).filter(name => name.startsWith(table));
+
   const constraints = async (table: string) => {
     const {rows} = await pool.query(
       "SELECT conname, contype FROM pg_constraint WHERE conrelid = to_regclass($1) AND contype <> 'n' ORDER BY conname",
@@ -67,7 +71,7 @@ describe("PostgreSQL schema manager", () => {
 
   const indexes = async (table: string) => {
     const {rows} = await pool.query(
-      "SELECT indexname, indexdef FROM pg_indexes WHERE schemaname = current_schema() AND tablename = $1 AND indexname NOT LIKE '%\\_pk' ORDER BY indexname",
+      "SELECT indexname, indexdef FROM pg_indexes WHERE schemaname = current_schema() AND tablename = $1 AND indexname NOT IN (SELECT conname FROM pg_constraint) ORDER BY indexname",
       [table]
     );
     return rows;
@@ -211,11 +215,8 @@ describe("PostgreSQL schema manager", () => {
       ).rejects.toBeInstanceOf(BadRequestException);
 
       expect(await tables()).toEqual(before);
-      expect((await buckets.findAll()).filter(b => b.title == "Books" && !tablesOf(b))).toEqual([]);
     });
   });
-
-  const tablesOf = (stored: any) => stored._id;
 
   describe("replace", () => {
     it("should add, drop and relax columns, and move constraints and indexes", async () => {
@@ -355,6 +356,206 @@ describe("PostgreSQL schema manager", () => {
         await manager.replace("0198a7e0-7b1c-7d2e-9f3a-4b5c6d7e8f90" as any, bucket(), onSaved)
       ).toBeNull();
       expect(onSaved).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("objects and arrays", () => {
+    const withShape = (properties: object = {}, extra: object = {}) =>
+      bucket({
+        properties: {id: {type: "uuid", options: {generated: true}}, ...properties},
+        ...extra
+      });
+
+    const shape = {
+      address: {
+        type: "object",
+        required: ["city"],
+        properties: {
+          city: {type: "string"},
+          geo: {type: "object", properties: {lat: {type: "number"}}}
+        }
+      },
+      tags: {type: "array", items: {type: "string"}},
+      lines: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["sku"],
+          properties: {sku: {type: "string"}, qty: {type: "number"}}
+        }
+      },
+      kinds: {type: "multiselect", items: {type: "string", enum: ["a", "b"]}}
+    };
+
+    it("should create prefixed columns and a child table per array", async () => {
+      const created = await manager.create(withShape(shape), () => {});
+      const table = tableOf(created._id);
+
+      expect((await columns(table)).map(c => c.column_name)).toEqual([
+        "address__city",
+        "address__geo__lat",
+        "id"
+      ]);
+      expect(await tablesOfBucket(table)).toEqual(
+        [table, `${table}__kinds`, `${table}__lines`, `${table}__tags`].sort()
+      );
+      expect(await columns(`${table}__tags`)).toEqual([
+        expect.objectContaining({column_name: "_parent", data_type: "uuid", is_nullable: "NO"}),
+        expect.objectContaining({
+          column_name: "_position",
+          data_type: "integer",
+          is_nullable: "NO"
+        }),
+        expect.objectContaining({column_name: "_value", data_type: "text", is_nullable: "NO"})
+      ]);
+      expect((await columns(`${table}__lines`)).map(c => [c.column_name, c.is_nullable])).toEqual([
+        ["_parent", "NO"],
+        ["_position", "NO"],
+        ["qty", "YES"],
+        ["sku", "NO"]
+      ]);
+      expect(await constraints(`${table}__tags`)).toEqual(
+        [
+          {conname: constraintName(`${table}__tags`, ["_parent"], "fk"), contype: "f"},
+          {conname: constraintName(`${table}__tags`, ["_parent", "_position"], "pk"), contype: "p"}
+        ].sort((a, b) => (a.conname < b.conname ? -1 : 1))
+      );
+    });
+
+    it("should keep array items with their parent, in order, and remove them with it", async () => {
+      const created = await manager.create(withShape({tags: shape.tags}), () => {});
+      const table = tableOf(created._id);
+      const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
+      await pool.query(
+        `INSERT INTO "${table}__tags" (_parent, _position, _value) VALUES ($1, 1, 'b'), ($1, 0, 'a')`,
+        [rows[0].id]
+      );
+
+      const items = await pool.query(`SELECT _value FROM "${table}__tags" ORDER BY _position`);
+      expect(items.rows.map(row => row._value)).toEqual(["a", "b"]);
+      await expect(
+        pool.query(`INSERT INTO "${table}__tags" VALUES ($1, 0, 'dup')`, [rows[0].id])
+      ).rejects.toMatchObject({code: "23505"});
+      await expect(
+        pool.query(`INSERT INTO "${table}__tags" VALUES (gen_random_uuid(), 0, 'orphan')`)
+      ).rejects.toMatchObject({code: "23503"});
+
+      await pool.query(`DELETE FROM "${table}" WHERE id = $1`, [rows[0].id]);
+      expect((await pool.query(`SELECT 1 FROM "${table}__tags"`)).rowCount).toBe(0);
+    });
+
+    it("should check the enum of a multiselect", async () => {
+      const created = await manager.create(withShape({kinds: shape.kinds}), () => {});
+      const table = tableOf(created._id);
+      const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
+
+      await expect(
+        pool.query(`INSERT INTO "${table}__kinds" VALUES ($1, 0, 'c')`, [rows[0].id])
+      ).rejects.toMatchObject({code: "23514"});
+    });
+
+    it("should add and drop columns and child tables as properties come and go", async () => {
+      const created = await manager.create(withShape({tags: shape.tags}), () => {});
+      const table = tableOf(created._id);
+
+      await manager.replace(
+        created._id,
+        withShape({address: shape.address, lines: shape.lines}),
+        () => {}
+      );
+
+      expect(await tablesOfBucket(table)).toEqual([table, `${table}__lines`]);
+      expect((await columns(table)).map(c => c.column_name)).toEqual([
+        "address__city",
+        "address__geo__lat",
+        "id"
+      ]);
+
+      await manager.replace(
+        created._id,
+        withShape({
+          address: {...shape.address, properties: {city: {type: "string"}}},
+          lines: {
+            ...shape.lines,
+            items: {
+              type: "object",
+              properties: {sku: {type: "string"}, note: {type: "string"}}
+            }
+          }
+        }),
+        () => {}
+      );
+
+      expect((await columns(table)).map(c => c.column_name)).toEqual(["address__city", "id"]);
+      expect((await columns(`${table}__lines`)).map(c => [c.column_name, c.is_nullable])).toEqual([
+        ["_parent", "NO"],
+        ["_position", "NO"],
+        ["note", "YES"],
+        ["sku", "YES"]
+      ]);
+    });
+
+    it("should follow a change of the required object and of the item enum", async () => {
+      const created = await manager.create(withShape(shape), () => {});
+      const table = tableOf(created._id);
+
+      await manager.replace(
+        created._id,
+        withShape(
+          {...shape, kinds: {type: "multiselect", items: {type: "string", enum: ["a", "b", "c"]}}},
+          {required: ["address"]}
+        ),
+        () => {}
+      );
+
+      const city = (await columns(table)).find(c => c.column_name == "address__city");
+      expect(city.is_nullable).toBe("NO");
+      const {rows} = await pool.query(
+        `INSERT INTO "${table}" (address__city) VALUES ('x') RETURNING id`
+      );
+      await pool.query(`INSERT INTO "${table}__kinds" VALUES ($1, 0, 'c')`, [rows[0].id]);
+    });
+
+    it("should index the items of an array on its child table", async () => {
+      const created = await manager.create(
+        withShape(
+          {tags: shape.tags},
+          {indexes: [{definition: {tags: 1}, options: {unique: true}}]}
+        ),
+        () => {}
+      );
+      const table = tableOf(created._id);
+
+      expect((await indexes(`${table}__tags`)).map(index => index.indexname)).toEqual([
+        constraintName(`${table}__tags`, ["_value"], "uq")
+      ]);
+
+      await manager.replace(created._id, withShape({tags: shape.tags}), () => {});
+
+      expect(await indexes(`${table}__tags`)).toEqual([]);
+    });
+
+    it("should refuse to turn a structure into another one for now", async () => {
+      const created = await manager.create(withShape({address: shape.address}), () => {});
+
+      await expect(
+        manager.replace(created._id, withShape({address: {type: "string"}}), () => {})
+      ).rejects.toThrow("Changing the type of a property is not supported yet: address.");
+      await expect(
+        manager.replace(
+          created._id,
+          withShape({address: shape.address, tags: shape.tags}),
+          () => {}
+        )
+      ).resolves.toBeTruthy();
+    });
+
+    it("should drop the child tables together with the bucket", async () => {
+      const created = await manager.create(withShape(shape), () => {});
+
+      await manager.drop(created._id, () => {});
+
+      expect(await tablesOfBucket(tableOf(created._id))).toEqual([]);
     });
   });
 

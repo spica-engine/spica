@@ -1,11 +1,14 @@
 import {Bucket} from "@spica-server/interface-bucket";
+import {ITEMS_SEGMENT} from "@spica-server/bucket-common";
 import {
   assertUnique,
   BucketSchemaError,
   columnName,
   constraintName,
+  fieldTableName,
   mainTableName,
-  NamedIdentifier
+  NamedIdentifier,
+  SYSTEM_COLUMNS
 } from "./naming.js";
 import {primaryKeyMetadata, PrimaryKeyMetadata} from "./primary-key.js";
 
@@ -20,6 +23,7 @@ export type ColumnType =
   | "jsonb";
 
 export interface ColumnMetadata {
+  table: string;
   name: string;
   path: string[];
   type: ColumnType;
@@ -29,6 +33,7 @@ export interface ColumnMetadata {
 }
 
 export interface IndexMetadata {
+  table: string;
   name: string;
   unique: boolean;
   columns: {name: string; order: "asc" | "desc"}[];
@@ -36,19 +41,26 @@ export interface IndexMetadata {
 
 export interface TableMetadata {
   name: string;
+  path: string[];
   columns: ColumnMetadata[];
   indexes: IndexMetadata[];
+  keyColumns: string[];
+  parent?: {column: string; fkName: string};
 }
 
 export interface BucketMetadata {
   bucketId: string;
   primaryKey: PrimaryKeyMetadata;
   main: TableMetadata;
+  children: TableMetadata[];
+  tables: TableMetadata[];
   columnOf(path: string[]): ColumnMetadata | undefined;
   indexOf(index: IndexDefinition): IndexMetadata;
 }
 
 type IndexDefinition = NonNullable<Bucket["indexes"]>[number];
+
+type Property = NonNullable<Bucket["properties"]>[string];
 
 const COLUMN_TYPE_OF_PROPERTY: Record<string, ColumnType> = {
   string: "text",
@@ -71,29 +83,216 @@ const SUPPORTED_INDEX_OPTIONS = new Set(["unique", "sparse", "background"]);
 
 const keyOf = (path: string[]) => path.join("\0");
 
+const isArray = (property: Property) => property.type == "array" || property.type == "multiselect";
+
+const isStructuredObject = (property: Property) =>
+  property.type == "object" && Boolean(property.properties);
+
+function unsupportedReason(property: Property, insideArray: boolean): string | undefined {
+  if (property.options?.translate) {
+    return `translated ${property.type}`;
+  }
+  if (isArray(property)) {
+    if (insideArray) {
+      return `nested ${property.type}`;
+    }
+    const items = property.items as Property | undefined;
+    if (!items || Array.isArray(items)) {
+      return undefined;
+    }
+    return (
+      unsupportedReason(items, true) && `${property.type} of ${unsupportedReason(items, true)}`
+    );
+  }
+  if (isStructuredObject(property)) {
+    for (const child of Object.values(property.properties)) {
+      const reason = unsupportedReason(child as Property, insideArray);
+      if (reason) {
+        return reason;
+      }
+    }
+    return undefined;
+  }
+  if (property.type == "object" || COLUMN_TYPE_OF_PROPERTY[property.type as string]) {
+    return undefined;
+  }
+  return property.type as string;
+}
+
 function propertyProblems(bucket: Bucket) {
   const problems: string[] = [];
   const unsupported: string[] = [];
-  for (const [field, property] of Object.entries(bucket.properties ?? {})) {
-    if (!COLUMN_TYPE_OF_PROPERTY[property.type as string] || property.options?.translate) {
-      unsupported.push(
-        `${field} (${property.options?.translate ? "translated " : ""}${property.type})`
-      );
+  const visit = (properties: Record<string, Property>, prefix: string[]) => {
+    for (const [field, property] of Object.entries(properties)) {
+      const reason = unsupportedReason(property, false);
+      if (reason) {
+        unsupported.push(`${[...prefix, field].join(".")} (${reason})`);
+        continue;
+      }
+      const items = property.items as Property | undefined;
+      const children = isStructuredObject(property)
+        ? property.properties
+        : isArray(property) && items && !Array.isArray(items) && isStructuredObject(items)
+          ? items.properties
+          : undefined;
+      if (children) {
+        visit(children as Record<string, Property>, [...prefix, field]);
+      }
     }
-  }
+  };
+  visit(bucket.properties ?? {}, []);
   if (unsupported.length) {
     problems.push(`Properties are not supported on PostgreSQL yet: ${unsupported.join(", ")}.`);
   }
   return problems;
 }
 
+class TableBuilder {
+  readonly columns: ColumnMetadata[] = [];
+
+  constructor(
+    readonly name: string,
+    readonly path: string[]
+  ) {}
+
+  add(column: Omit<ColumnMetadata, "table" | "checkName">) {
+    this.columns.push({
+      ...column,
+      table: this.name,
+      ...(column.enum ? {checkName: constraintName(this.name, [column.name], "ck")} : {})
+    });
+  }
+}
+
+function describeTables(
+  bucketId: string,
+  bucket: Bucket,
+  primaryKey: PrimaryKeyMetadata
+): TableMetadata[] {
+  const mainName = mainTableName(bucketId);
+  const main = new TableBuilder(mainName, []);
+  const children: TableBuilder[] = [];
+  const requiredAtTop = new Set(bucket.required ?? []);
+
+  const collect = (
+    table: TableBuilder,
+    path: string[],
+    property: Property,
+    required: boolean,
+    insideArray: boolean
+  ) => {
+    const relative = path.slice(table.path.length);
+
+    if (isStructuredObject(property)) {
+      const requiredChildren = new Set(property.required ?? []);
+      for (const [name, child] of Object.entries(property.properties)) {
+        collect(
+          table,
+          [...path, name],
+          child as Property,
+          (insideArray || required) && requiredChildren.has(name),
+          insideArray
+        );
+      }
+      return;
+    }
+
+    if (isArray(property) && !insideArray) {
+      const items = property.items as Property | undefined;
+      if (items && !Array.isArray(items)) {
+        const child = new TableBuilder(fieldTableName(bucketId, path), path);
+        children.push(child);
+        if (isStructuredObject(items)) {
+          collect(child, path, items, true, true);
+        } else {
+          child.add({
+            name: SYSTEM_COLUMNS.value,
+            path,
+            type: COLUMN_TYPE_OF_PROPERTY[items.type as string] ?? "jsonb",
+            notNull: true,
+            ...(items.enum?.length ? {enum: [...items.enum]} : {})
+          });
+        }
+        return;
+      }
+    }
+
+    const type =
+      isStructuredObject(property) || isArray(property) || property.type == "object"
+        ? "jsonb"
+        : COLUMN_TYPE_OF_PROPERTY[property.type as string];
+    table.add({
+      name: columnName(relative),
+      path,
+      type,
+      notNull: required,
+      ...(property.enum?.length ? {enum: [...property.enum]} : {})
+    });
+  };
+
+  for (const [field, property] of Object.entries(bucket.properties ?? {})) {
+    if (field == primaryKey.field) {
+      main.add({
+        name: primaryKey.column,
+        path: [field],
+        type: primaryKey.type,
+        notNull: true,
+        ...(property.enum?.length ? {enum: [...property.enum]} : {})
+      });
+    } else {
+      collect(main, [field], property as Property, requiredAtTop.has(field), false);
+    }
+  }
+
+  const toMetadata = (builder: TableBuilder, isMain: boolean): TableMetadata => {
+    if (isMain) {
+      return {
+        name: builder.name,
+        path: builder.path,
+        columns: builder.columns,
+        indexes: [],
+        keyColumns: [primaryKey.column]
+      };
+    }
+    const columns: ColumnMetadata[] = [
+      {
+        table: builder.name,
+        name: SYSTEM_COLUMNS.parent,
+        path: builder.path,
+        type: primaryKey.type,
+        notNull: true
+      },
+      {
+        table: builder.name,
+        name: SYSTEM_COLUMNS.position,
+        path: builder.path,
+        type: "integer",
+        notNull: true
+      },
+      ...builder.columns
+    ];
+    return {
+      name: builder.name,
+      path: builder.path,
+      columns,
+      indexes: [],
+      keyColumns: [SYSTEM_COLUMNS.parent, SYSTEM_COLUMNS.position],
+      parent: {
+        column: SYSTEM_COLUMNS.parent,
+        fkName: constraintName(builder.name, [SYSTEM_COLUMNS.parent], "fk")
+      }
+    };
+  };
+
+  return [toMetadata(main, true), ...children.map(child => toMetadata(child, false))];
+}
+
 function describeIndex(
-  table: string,
   columnOf: (path: string[]) => ColumnMetadata | undefined,
   index: IndexDefinition
 ): {metadata?: IndexMetadata; problems: string[]} {
   const problems: string[] = [];
-  const columns: IndexMetadata["columns"] = [];
+  const columns: (IndexMetadata["columns"][number] & {table: string})[] = [];
   const label = JSON.stringify(index.definition);
 
   for (const [field, direction] of Object.entries(index.definition)) {
@@ -105,8 +304,16 @@ function describeIndex(
         `Index ${label} uses "${direction}", only 1 and -1 are supported on PostgreSQL.`
       );
     } else {
-      columns.push({name: column.name, order: direction == 1 ? "asc" : "desc"});
+      columns.push({
+        table: column.table,
+        name: column.name,
+        order: direction == 1 ? "asc" : "desc"
+      });
     }
+  }
+
+  if (new Set(columns.map(column => column.table)).size > 1) {
+    problems.push(`Index ${label} spans more than one table, which PostgreSQL cannot index.`);
   }
 
   const options = index.options ?? {};
@@ -120,13 +327,22 @@ function describeIndex(
     return {problems};
   }
 
+  const [{table}] = columns;
   const unique = Boolean(options.unique);
   const name = constraintName(
     table,
     columns.map(column => (column.order == "desc" ? `${column.name}_desc` : column.name)),
     unique ? "uq" : "ix"
   );
-  return {metadata: {name, unique, columns}, problems};
+  return {
+    metadata: {
+      table,
+      name,
+      unique,
+      columns: columns.map(({name, order}) => ({name, order}))
+    },
+    problems
+  };
 }
 
 export function describeBucket(bucketId: string, bucket: Bucket): BucketMetadata {
@@ -136,69 +352,79 @@ export function describeBucket(bucketId: string, bucket: Bucket): BucketMetadata
   }
 
   const primaryKey = primaryKeyMetadata(bucket);
-  const required = new Set(bucket.required ?? []);
-  const table = mainTableName(bucketId);
+  const [main, ...children] = describeTables(bucketId, bucket, primaryKey);
 
-  const columns: ColumnMetadata[] = Object.entries(bucket.properties ?? {}).map(
-    ([field, property]) => {
-      const name = columnName([field]);
-      return {
-        name,
-        path: [field],
-        type: COLUMN_TYPE_OF_PROPERTY[property.type as string],
-        notNull: field == primaryKey.field || required.has(field),
-        ...(property.enum?.length
-          ? {enum: [...property.enum], checkName: constraintName(table, [name], "ck")}
-          : {})
-      };
-    }
+  const byPath = new Map(
+    [main, ...children].flatMap(table =>
+      table.columns
+        .filter(column => !isLinkColumn(column.name))
+        .map(column => [keyOf(column.path), column] as const)
+    )
   );
-
-  const byPath = new Map(columns.map(column => [keyOf(column.path), column]));
-  const columnOf = (path: string[]) => byPath.get(keyOf(path));
+  const columnOf = (path: string[]) => byPath.get(keyOf(path.filter(s => s != ITEMS_SEGMENT)));
 
   const indexProblems: string[] = [];
-  const indexes: IndexMetadata[] = [];
   for (const index of bucket.indexes ?? []) {
-    const described = describeIndex(table, columnOf, index);
+    const described = describeIndex(columnOf, index);
     indexProblems.push(...described.problems);
     if (described.metadata) {
-      indexes.push(described.metadata);
+      [main, ...children]
+        .find(table => table.name == described.metadata.table)
+        .indexes.push(described.metadata);
     }
   }
   if (indexProblems.length) {
     throw new BucketSchemaError(indexProblems);
   }
 
+  const tables = [main, ...children];
   const identifiers: NamedIdentifier[] = [
-    ...columns.map(column => ({
-      scope: `table "${table}"`,
-      name: column.name,
-      logical: column.path.join("__")
-    })),
-    ...indexes.map(index => ({scope: "the schema", name: index.name, logical: index.name})),
-    ...columns
-      .filter(column => column.checkName)
-      .map(column => ({
+    ...tables.flatMap(table => [
+      {
         scope: "the schema",
-        name: column.checkName,
-        logical: `${column.name} check`
+        name: table.name,
+        logical: `table for ${table.path.join(".") || "the bucket"}`
+      },
+      ...table.columns.map(column => ({
+        scope: `table "${table.name}"`,
+        name: column.name,
+        logical: column.path.join("__")
       })),
-    {
-      scope: "the schema",
-      name: constraintName(table, [primaryKey.column], "pk"),
-      logical: "primary key"
-    }
+      ...table.indexes.map(index => ({scope: "the schema", name: index.name, logical: index.name})),
+      ...table.columns
+        .filter(column => column.checkName)
+        .map(column => ({
+          scope: "the schema",
+          name: column.checkName,
+          logical: `${column.name} check`
+        })),
+      {
+        scope: "the schema",
+        name: constraintName(table.name, table.keyColumns, "pk"),
+        logical: `primary key of ${table.name}`
+      },
+      ...(table.parent
+        ? [
+            {
+              scope: "the schema",
+              name: table.parent.fkName,
+              logical: `foreign key of ${table.name}`
+            }
+          ]
+        : [])
+    ])
   ];
   assertUnique(identifiers);
 
   return {
     bucketId,
     primaryKey,
-    main: {name: table, columns, indexes},
+    main,
+    children,
+    tables,
     columnOf,
     indexOf: index => {
-      const {metadata, problems} = describeIndex(table, columnOf, index);
+      const {metadata, problems} = describeIndex(columnOf, index);
       if (!metadata) {
         throw new BucketSchemaError(problems);
       }
@@ -206,3 +432,6 @@ export function describeBucket(bucketId: string, bucket: Bucket): BucketMetadata
     }
   };
 }
+
+const isLinkColumn = (name: string) =>
+  name == SYSTEM_COLUMNS.parent || name == SYSTEM_COLUMNS.position;
