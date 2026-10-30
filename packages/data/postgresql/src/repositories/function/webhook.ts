@@ -4,10 +4,13 @@ import {Id} from "@spica-server/interface-data";
 import {
   Log,
   Webhook,
+  WEBHOOK_OPTIONS,
   WebhookLogRepository,
+  WebhookOptions,
   WebhookRepository
 } from "@spica-server/interface-function-webhook";
 import {webhookLogs, webhooks} from "../../entities/index.js";
+import {PostgresExpiry} from "../../expiry/index.js";
 import {ORM} from "../../orm.js";
 
 @Injectable()
@@ -37,9 +40,15 @@ export class PostgresWebhookRepository implements WebhookRepository {
 
 @Injectable()
 export class PostgresWebhookLogRepository implements WebhookLogRepository {
-  constructor(@Inject(ORM) private readonly orm: Orm) {}
+  constructor(
+    @Inject(ORM) private readonly orm: Orm,
+    @Inject(PostgresExpiry) private readonly expiry: PostgresExpiry,
+    @Inject(WEBHOOK_OPTIONS) private readonly retention: WebhookOptions
+  ) {}
 
-  async applyExpiry() {}
+  async applyExpiry() {
+    await this.expiry.expire(webhookLogs, "created_at", this.retention.expireAfterSeconds);
+  }
 
   insert(log: Log) {
     return this.orm.insert(webhookLogs, log);
