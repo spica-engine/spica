@@ -1,7 +1,8 @@
-import {Filter, ObjectId} from "mongodb";
+import {Filter} from "mongodb";
+import {Id} from "@spica-server/interface-data";
 
 interface Document {
-  _id: ObjectId;
+  _id: Id;
 }
 
 export enum OperationType {

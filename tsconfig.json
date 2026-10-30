@@ -429,6 +429,21 @@
     },
     {
       "path": "./packages/devkit/sync"
+    },
+    {
+      "path": "./packages/interface/data"
+    },
+    {
+      "path": "./packages/data/mongodb"
+    },
+    {
+      "path": "./packages/data/postgresql"
+    },
+    {
+      "path": "./packages/data"
+    },
+    {
+      "path": "./packages/data/postgresql/orm"
     }
   ]
 }

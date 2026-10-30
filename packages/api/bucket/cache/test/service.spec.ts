@@ -1,11 +1,12 @@
 import {Test} from "@nestjs/testing";
 import {BucketCacheModule, BucketCacheService} from "@spica-server/bucket-cache";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {Cache} from "cache-manager";
 
 describe("Bucket Cache Service", () => {
   let service: BucketCacheService;
   let cacheManager: Cache;
+  let db: DatabaseService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -18,6 +19,7 @@ describe("Bucket Cache Service", () => {
 
     service = module.get(BucketCacheService);
     cacheManager = service["cacheManager"];
+    db = module.get(DatabaseService);
   });
 
   it("should clear bucket1 caches", async () => {
@@ -34,7 +36,7 @@ describe("Bucket Cache Service", () => {
   });
 
   it("should clear the bucket2 caches when bucket1 caches deleted because of the relation", async () => {
-    const {insertedId: bucket1} = await service["db"].collection("buckets").insertOne({
+    const {insertedId: bucket1} = await db.collection("buckets").insertOne({
       properties: {
         title: {
           type: "string"
@@ -42,7 +44,7 @@ describe("Bucket Cache Service", () => {
       }
     });
 
-    const {insertedId: bucket2} = await service["db"].collection("buckets").insertOne({
+    const {insertedId: bucket2} = await db.collection("buckets").insertOne({
       properties: {
         rel: {
           type: "relation",
@@ -51,7 +53,7 @@ describe("Bucket Cache Service", () => {
       }
     });
 
-    const {insertedId: bucket3} = await service["db"].collection("buckets").insertOne({
+    const {insertedId: bucket3} = await db.collection("buckets").insertOne({
       properties: {
         title: {
           ttype: "string"

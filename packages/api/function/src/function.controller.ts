@@ -24,7 +24,8 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
+import {ID} from "@spica-server/data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import os from "os";
@@ -38,19 +39,24 @@ import {
   createFunctionSecretActivity
 } from "./activity.resource.js";
 import {FunctionEngine} from "./engine.js";
-import {FunctionService} from "@spica-server/function-services";
 import {SecretService} from "@spica-server/secret-services";
 import {
   Options,
   FUNCTION_OPTIONS,
+  FUNCTION_REPOSITORY,
   EnvRelation,
   Function,
+  FunctionRepository,
   SecretRelation
 } from "@spica-server/interface-function";
-import {LogService} from "@spica-server/function-log/src/log.service";
+import {FUNCTION_LOG_REPOSITORY, LogRepository} from "@spica-server/interface-function-log";
 import {generate} from "./schema/enqueuer.resolver.js";
-import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core-patch";
+import {applyPatch} from "@spica-server/core-patch";
 import * as CRUD from "./crud.js";
+
+const FUNCTION_COLLECTION = "function";
+const ENV_VAR_COLLECTION = "env_var";
+const SECRET_COLLECTION = "secret";
 
 /**
  * @name Function
@@ -59,12 +65,13 @@ import * as CRUD from "./crud.js";
 @Controller("function")
 export class FunctionController {
   constructor(
-    private fs: FunctionService,
+    @Inject(FUNCTION_REPOSITORY) private functions: FunctionRepository,
     private engine: FunctionEngine,
     private scheduler: Scheduler,
-    private log: LogService,
+    @Inject(FUNCTION_LOG_REPOSITORY) private logs: LogRepository,
     private ss: SecretService,
-    @Inject(FUNCTION_OPTIONS) private options: Options
+    @Inject(FUNCTION_OPTIONS) private options: Options,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
   ) {}
 
   /**
@@ -98,10 +105,10 @@ export class FunctionController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:index"))
   index(
-    @ResourceFilter() resourceFilter,
+    @ResourceFilter({collection: FUNCTION_COLLECTION}) resourceFilter,
     @Query("filter", DEFAULT({}), JSONP) filter: {index?: string}
   ) {
-    return CRUD.find(this.fs, this.engine, {
+    return CRUD.find(this.queries, this.engine, {
       filter: {
         resources: resourceFilter,
         index: filter.index
@@ -119,8 +126,8 @@ export class FunctionController {
    */
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:show"))
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.findOne(this.fs, id, {
+  findOne(@Param("id", ID(FUNCTION_COLLECTION)) id: Id) {
+    return CRUD.findOne(this.queries, id, {
       resolveEnvRelations: EnvRelation.Resolved,
       resolveSecretRelations: SecretRelation.Resolved
     }).catch(error => {
@@ -136,8 +143,8 @@ export class FunctionController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.remove(this.fs, this.engine, this.log, id);
+  async deleteOne(@Param("id", ID(FUNCTION_COLLECTION)) id: Id) {
+    return CRUD.remove(this.functions, this.engine, this.logs, id);
   }
 
   /**
@@ -149,10 +156,10 @@ export class FunctionController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update"))
   async replaceOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
     @Body(Schema.validate(generate)) fn: Function
   ) {
-    return CRUD.replace(this.fs, this.engine, {...fn, _id: id}).catch(error => {
+    return CRUD.replace(this.functions, this.engine, {...fn, _id: id}).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -172,7 +179,7 @@ export class FunctionController {
   @Patch(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update"))
   async updateOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
     @Headers("content-type") contentType: string,
     @Body(
       Schema.validate({
@@ -194,7 +201,7 @@ export class FunctionController {
       throw new BadRequestException(`Content type '${contentType}' is not supported.`);
     }
 
-    const previousFn = await this.fs.findOne({_id: id});
+    const previousFn = await this.functions.findById(id);
     if (!previousFn) {
       throw new NotFoundException(`Function with id ${id} does not exist.`);
     }
@@ -202,15 +209,9 @@ export class FunctionController {
     const patchedFn = applyPatch(previousFn, patch);
     delete patchedFn._id;
 
-    const updateQuery = getUpdateQueryForPatch(patch, patchedFn);
+    const updatedFn = await this.functions.applyMergePatch(id, patch, patchedFn);
 
-    if (!updateQuery) {
-      return previousFn;
-    }
-
-    return this.fs.findOneAndUpdate({_id: id}, updateQuery, {
-      returnDocument: ReturnDocument.AFTER
-    });
+    return updatedFn === undefined ? previousFn : updatedFn;
   }
 
   /**
@@ -221,7 +222,7 @@ export class FunctionController {
   @Post()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
-    return CRUD.insert(this.fs, this.engine, fn).catch(error => {
+    return CRUD.insert(this.functions, this.engine, fn).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -235,9 +236,9 @@ export class FunctionController {
   @Post(":id/index")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
-  async updateIndex(@Param("id", OBJECT_ID) id: ObjectId, @Body("index") index: string) {
+  async updateIndex(@Param("id", ID(FUNCTION_COLLECTION)) id: Id, @Body("index") index: string) {
     return CRUD.index
-      .write(this.fs, this.engine, id, index)
+      .write(this.functions, this.engine, id, index)
       .catch(diagnostics => Promise.reject(new HttpException(diagnostics, 422)));
   }
 
@@ -247,8 +248,8 @@ export class FunctionController {
    */
   @Get(":id/index")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:show", "function/:id"))
-  async showIndex(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.index.find(this.fs, this.engine, id).catch(error => {
+  async showIndex(@Param("id", ID(FUNCTION_COLLECTION)) id: Id) {
+    return CRUD.index.find(this.functions, this.engine, id).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -259,8 +260,8 @@ export class FunctionController {
    */
   @Get(":id/dependencies")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:show", "function/:id"))
-  async getDependencies(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.dependencies.findOne(this.fs, this.engine, id).catch(error => {
+  async getDependencies(@Param("id", ID(FUNCTION_COLLECTION)) id: Id) {
+    return CRUD.dependencies.findOne(this.functions, this.engine, id).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -275,10 +276,10 @@ export class FunctionController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
   @Header("X-Content-Type-Options", "nosniff")
   async addDependency(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
     @Body("name", DEFAULT([]), ARRAY(String)) name: string[]
   ) {
-    const fn = await this.fs.findOne({_id: id});
+    const fn = await this.functions.findById(id);
 
     return CRUD.dependencies.install(this.engine, fn, name).catch(error => {
       throw new HttpException(error.message, error.status || 500);
@@ -294,8 +295,11 @@ export class FunctionController {
   @Delete(":id/dependencies/:name(*)")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteDependency(@Param("id", OBJECT_ID) id: ObjectId, @Param("name") name: string) {
-    const fn = await this.fs.findOne({_id: id});
+  async deleteDependency(
+    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+    @Param("name") name: string
+  ) {
+    const fn = await this.functions.findById(id);
 
     return CRUD.dependencies.uninstall(this.engine, fn, [name]).catch(error => {
       throw new HttpException(error.message, error.status || 500);
@@ -311,10 +315,10 @@ export class FunctionController {
   @Put(":id/env-var/:envVarId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:env-var:inject"))
   async injectEnvironmentVariable(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("envVarId", OBJECT_ID) envVarId: ObjectId
+    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+    @Param("envVarId", ID(ENV_VAR_COLLECTION)) envVarId: Id
   ) {
-    return CRUD.environment.inject(this.fs, id, this.engine, envVarId);
+    return CRUD.environment.inject(this.functions, id, this.engine, envVarId);
   }
 
   /**
@@ -327,10 +331,10 @@ export class FunctionController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:env-var:eject"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async ejectEnvironmentVariable(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("envVarId", OBJECT_ID) envVarId: ObjectId
+    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+    @Param("envVarId", ID(ENV_VAR_COLLECTION)) envVarId: Id
   ) {
-    return CRUD.environment.eject(this.fs, id, this.engine, envVarId);
+    return CRUD.environment.eject(this.functions, id, this.engine, envVarId);
   }
 
   /**
@@ -342,10 +346,10 @@ export class FunctionController {
   @Put(":id/secret/:secretId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:secret:inject"))
   async injectSecret(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("secretId", OBJECT_ID) secretId: ObjectId
+    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+    @Param("secretId", ID(SECRET_COLLECTION)) secretId: Id
   ) {
-    return CRUD.secret.inject(this.fs, this.ss, id, this.engine, secretId);
+    return CRUD.secret.inject(this.functions, this.ss, id, this.engine, secretId);
   }
 
   /**
@@ -358,9 +362,9 @@ export class FunctionController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:secret:eject"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async ejectSecret(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("secretId", OBJECT_ID) secretId: ObjectId
+    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+    @Param("secretId", ID(SECRET_COLLECTION)) secretId: Id
   ) {
-    return CRUD.secret.eject(this.fs, this.ss, id, this.engine, secretId);
+    return CRUD.secret.eject(this.functions, this.ss, id, this.engine, secretId);
   }
 }

@@ -17,31 +17,39 @@ import {
 } from "@nestjs/common";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {DatabaseService, ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
+import {ID} from "@spica-server/data";
+import {
+  COLLECTION_NAMES,
+  COLLECTION_QUERY,
+  CollectionNames,
+  CollectionQueryFacade,
+  Id
+} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {Webhook} from "@spica-server/interface-function-webhook";
 import {WebhookInvoker} from "./invoker.js";
 import {WebhookService} from "./webhook.service.js";
 import {CollectionSlug, COLL_SLUG} from "@spica-server/interface-function";
 
+const WEBHOOK_COLLECTION = "webhook";
+
 @Controller("webhook")
 export class WebhookController {
   constructor(
     private webhookService: WebhookService,
     private invoker: WebhookInvoker,
-    private database: DatabaseService,
+    @Inject(COLLECTION_NAMES) private collectionNames: CollectionNames,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Optional() @Inject(COLL_SLUG) private collSlug: CollectionSlug
   ) {}
 
   @Get("collections")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   collections() {
-    return this.database.collections().then(collections => {
+    return this.collectionNames.list().then(names => {
       const definitions: {id: string; slug: string}[] = [];
 
-      const promises = collections.map(collection => {
-        const collName = collection.collectionName;
-
+      const promises = names.map(collName => {
         let promise = Promise.resolve(collName);
 
         if (this.collSlug) {
@@ -63,32 +71,18 @@ export class WebhookController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:index"))
   find(
-    @ResourceFilter() resourceFilter: object,
+    @ResourceFilter({collection: WEBHOOK_COLLECTION}) resourceFilter: object,
     @Query("limit", DEFAULT(10), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", DEFAULT({_id: -1}), JSONP) sort: {[k: string]: number}
+    @Query("sort", DEFAULT({_id: -1}), JSONP) sort: {[path: string]: 1 | -1}
   ) {
-    const aggregate = [
-      resourceFilter,
-      {
-        $facet: {
-          meta: [{$count: "total"}],
-          data: [{$sort: sort}, {$skip: skip}, {$limit: limit}]
-        }
-      },
-      {
-        $set: {
-          meta: {$ifNull: [{$arrayElemAt: ["$meta", 0]}, {total: 0}]}
-        }
-      }
-    ];
-    return this.webhookService.aggregate(aggregate).next();
+    return this.queries.paginate(WEBHOOK_COLLECTION, {resourceFilter, sort, skip, limit}, "exact");
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:show"))
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.webhookService.findOne({_id: id});
+  findOne(@Param("id", ID(WEBHOOK_COLLECTION)) id: Id) {
+    return this.webhookService.findById(id);
   }
 
   @Post()
@@ -99,13 +93,13 @@ export class WebhookController {
     } catch (error) {
       throw new BadRequestException(error.toString());
     }
-    return this.webhookService.insertOne(hook);
+    return this.webhookService.insert(hook);
   }
 
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:update"))
   async replaceOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(WEBHOOK_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/webhook")) hook: Webhook
   ) {
     try {
@@ -113,9 +107,7 @@ export class WebhookController {
     } catch (error) {
       throw new BadRequestException(error.toString());
     }
-    const res = await this.webhookService.findOneAndReplace({_id: id}, hook, {
-      returnDocument: ReturnDocument.AFTER
-    });
+    const res = await this.webhookService.replaceById(id, hook);
     if (!res) {
       throw new NotFoundException(`Webhook with ID ${id} not found`);
     }
@@ -125,8 +117,8 @@ export class WebhookController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const res = await this.webhookService.findOneAndDelete({_id: id});
+  async deleteOne(@Param("id", ID(WEBHOOK_COLLECTION)) id: Id) {
+    const res = await this.webhookService.deleteById(id);
     if (!res) {
       throw new NotFoundException(`Webhook with ID ${id} not found`);
     }

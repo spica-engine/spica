@@ -1,0 +1,30 @@
+{{- if eq (include "database.engine" .) "postgresql" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}-database
+  labels:
+    app.kubernetes.io/name: database-init
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: helm
+data:
+  init-users.sh: |
+    #!/bin/sh
+    set -e
+
+    psql -v ON_ERROR_STOP=1 \
+      -v app_user="$SPICA_USERNAME" \
+      -v app_password="$SPICA_PASSWORD" \
+      -v app_database="$SPICA_DATABASE" \
+      --username "$POSTGRES_USER" --dbname postgres <<'SQL'
+    CREATE EXTENSION IF NOT EXISTS pg_cron;
+    CREATE ROLE :"app_user" LOGIN PASSWORD :'app_password';
+    CREATE DATABASE :"app_database" OWNER :"app_user";
+    REVOKE ALL ON DATABASE :"app_database" FROM PUBLIC;
+    GRANT USAGE ON SCHEMA cron TO :"app_user";
+    GRANT EXECUTE ON FUNCTION cron.schedule_in_database(text, text, text, text, text, boolean) TO :"app_user";
+    SQL
+{{- end }}

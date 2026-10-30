@@ -24,7 +24,8 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
+import {DuplicateKeyError, ID} from "@spica-server/data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {Factor, FactorMeta} from "@spica-server/interface-passport-authfactor";
@@ -34,7 +35,9 @@ import {UserService} from "./user.service.js";
 import {
   User,
   USER_OPTIONS,
+  USER_REPOSITORY,
   UserOptions,
+  UserRepository,
   PaginationResponse,
   POLICY_PROVIDER,
   UserSelfUpdate,
@@ -43,13 +46,14 @@ import {
 import {registerPolicyAttacher} from "./utility.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
-import {PipelineBuilder, executePaginationPlan} from "@spica-server/database-pipeline";
 import {VerificationService} from "./verification.service.js";
 import {ProviderVerificationService} from "./services/provider.verification.service.js";
 import {PasswordlessLoginService} from "./services/passwordless-login.service.js";
 import {PasswordResetService} from "./services/password-reset.service.js";
-import {UserPipelineBuilder} from "./pipeline.builder.js";
+import {replaceProviderFilter} from "./filter.js";
 import {RateLimitGuard} from "./rate-limit.guard.js";
+
+const USER_COLLECTION = "user";
 
 @Controller("passport/user")
 export class UserController {
@@ -73,27 +77,27 @@ export class UserController {
 
   constructor(
     private userService: UserService,
+    @Inject(USER_REPOSITORY) private users: UserRepository,
     private verificationService: VerificationService,
     private providerVerificationService: ProviderVerificationService,
     private passwordlessLoginService: PasswordlessLoginService,
     private passwordResetService: PasswordResetService,
     @Inject(USER_OPTIONS) private options: UserOptions,
     private authFactor: AuthFactor,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
       this.commander.register(this, [this.setUserFactor, this.deleteUserFactor], CommandType.SYNC);
     }
-    this.userService
-      .find({
-        authFactor: {$exists: true, $ne: null}
-      })
+    this.users
+      .findWithAuthFactor()
       .then(users => {
         for (const user of users) {
           if (!user.authFactor) {
             continue;
           }
-          this.authFactor.register(user._id.toHexString(), user.authFactor);
+          this.authFactor.register(user._id.toString(), user.authFactor);
         }
       })
       .catch(error => {
@@ -114,6 +118,9 @@ export class UserController {
       throw new BadRequestException(e.message);
     });
   }
+
+  private providerFilterReplacer = async (filter: object) =>
+    replaceProviderFilter(filter, value => this.userService.hashProviderValue(value));
 
   private hideSecretsExpression(): {[key: string]: 0} {
     const expression: any = {password: 0, lastPasswords: 0};
@@ -137,21 +144,7 @@ export class UserController {
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: {[key: string]: 1 | -1}
   ) {
-    const cursor = this.userService.findOnProfiler(filter);
-
-    if (limit) {
-      cursor.limit(limit);
-    }
-
-    if (skip) {
-      cursor.skip(skip);
-    }
-
-    if (sort) {
-      cursor.sort(sort);
-    }
-
-    return cursor.toArray();
+    return this.users.profilerEntries({filter, limit, skip, sort});
   }
 
   @Get()
@@ -159,35 +152,34 @@ export class UserController {
   async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", JSONP) sort: object,
+    @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
-    @ResourceFilter() resourceFilter: object
+    @ResourceFilter({collection: USER_COLLECTION}) resourceFilter: object
   ) {
-    const pipelineBuilder = await new UserPipelineBuilder(this.userService)
-      .filterResources(resourceFilter)
-      .filterByUserRequest(filter);
-
-    const seekingPipeline = new PipelineBuilder()
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .setVisibilityOfFields(this.hideSecretsExpression())
-      .result();
-
-    const plan = pipelineBuilder.buildPaginationPlan(seekingPipeline, () =>
-      this.userService.estimatedDocumentCount()
-    );
+    const spec: ReadSpec = {
+      resourceFilter,
+      filter,
+      filterReplacers: [this.providerFilterReplacer],
+      sort,
+      skip,
+      limit,
+      fields: this.hideSecretsExpression()
+    };
 
     if (paginate) {
-      const paginatedResult = await executePaginationPlan<User>(this.userService, plan);
+      const paginatedResult = await this.queries.paginate<User>(
+        "user",
+        spec,
+        "estimate-unless-filtered"
+      );
       return {
         meta: paginatedResult.meta,
         data: paginatedResult.data.map(user => this.userService.decryptProviderFields(user))
       };
     }
 
-    const users = await this.userService.aggregate<User>(plan.dataPipeline).toArray();
+    const users = await this.queries.find<User>("user", spec);
 
     return users.map(user => {
       return this.userService.decryptProviderFields(user);
@@ -218,13 +210,13 @@ export class UserController {
       registerPolicyAttacher("UserFullAccess")
     )
   )
-  async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
+  async deleteFactor(@Param("id", ID(USER_COLLECTION)) id: Id) {
     // deleteUserFactor only clears any in-progress activation; an already-activated factor is
     // no longer in that transient map, so existence must be derived from the persisted record.
-    this.deleteUserFactor(id.toHexString());
-    this.authFactor.unregister(id.toHexString());
+    this.deleteUserFactor(id.toString());
+    this.authFactor.unregister(id.toString());
 
-    const user = await this.userService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
+    const user = await this.users.removeAuthFactor(id);
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -236,16 +228,11 @@ export class UserController {
     AuthGuard(),
     ActionGuard("passport:user:show", undefined, registerPolicyAttacher("UserReadOnlyAccess"))
   )
-  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const pipelineBuilder = new UserPipelineBuilder(this.userService)
-      .findOneIfRequested(id)
-      .setVisibilityOfFields(this.hideSecretsExpression());
-
-    const pipeline = await pipelineBuilder.result();
-    let user = await this.userService
-      .aggregate<User>(pipeline)
-      .toArray()
-      .then(users => users[0]);
+  async findOne(@Param("id", ID(USER_COLLECTION)) id: Id) {
+    const user = await this.queries.findOne<User>("user", {
+      id,
+      fields: this.hideSecretsExpression()
+    });
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -296,7 +283,7 @@ export class UserController {
     )
   )
   async completeFactorVerification(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(USER_COLLECTION)) id: Id,
     @Body(
       Schema.validate({
         type: "object",
@@ -311,7 +298,7 @@ export class UserController {
     )
     {answer}: {answer: string}
   ) {
-    const factor = this.userFactors.get(id.toHexString());
+    const factor = this.userFactors.get(id.toString());
 
     if (!factor) {
       throw new BadRequestException("Start a factor verification before complete it.");
@@ -321,17 +308,17 @@ export class UserController {
       throw new BadRequestException(e);
     });
 
-    this.deleteUserFactor(id.toHexString());
+    this.deleteUserFactor(id.toString());
 
     if (!isVerified) {
       throw new UnauthorizedException("Verification has been failed.");
     }
 
-    this.authFactor.register(id.toHexString(), factor.getMeta());
+    this.authFactor.register(id.toString(), factor.getMeta());
 
     const meta = factor.getMeta();
-    return this.userService
-      .findOneAndUpdate({_id: id}, {$set: {authFactor: meta}})
+    return this.users
+      .setAuthFactor(id, meta)
       .then(() => {
         return {
           message: "Verification has been completed successfully."
@@ -357,12 +344,12 @@ export class UserController {
     user.policies = [];
     user.lastPasswords = [];
 
-    return this.userService
-      .insertOne(user)
+    return this.users
+      .insert(user)
       .then(insertedUser => this.afterUserUpsert(insertedUser))
       .catch(exception => {
         throw new BadRequestException(
-          exception.code === 11000 ? "User already exists." : exception.message
+          exception instanceof DuplicateKeyError ? "User already exists." : exception.message
         );
       });
   }
@@ -391,7 +378,7 @@ export class UserController {
     )
   )
   async updateSelf(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(USER_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/passport/user-self-update"))
     user: UserSelfUpdate
   ) {
@@ -400,8 +387,8 @@ export class UserController {
       Object.assign(user, passwordUpdates);
     }
 
-    return this.userService
-      .findOneAndUpdate({_id: id}, {$set: user}, {returnDocument: ReturnDocument.AFTER})
+    return this.users
+      .updateById(id, user as Partial<User>)
       .then(updatedUser => {
         if (!updatedUser) {
           throw new NotFoundException(`User with ID ${id} not found`);
@@ -420,7 +407,7 @@ export class UserController {
     ActionGuard("passport:user:update", undefined, registerPolicyAttacher("UserFullAccess"))
   )
   async updateOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(USER_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/passport/user-update"))
     user: Pick<User, "username" | "password" | "bannedUntil" | "deactivateJwtsBefore">
   ) {
@@ -429,8 +416,8 @@ export class UserController {
       Object.assign(user, passwordUpdates);
     }
 
-    return this.userService
-      .findOneAndUpdate({_id: id}, {$set: user}, {returnDocument: ReturnDocument.AFTER})
+    return this.users
+      .updateById(id, user)
       .then(updatedUser => {
         if (!updatedUser) {
           throw new NotFoundException(`User with ID ${id} not found`);
@@ -439,7 +426,7 @@ export class UserController {
       })
       .catch(exception => {
         throw new BadRequestException(
-          exception.code === 11000 ? "User already exists." : exception.message
+          exception instanceof DuplicateKeyError ? "User already exists." : exception.message
         );
       });
   }
@@ -448,13 +435,13 @@ export class UserController {
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.userService.deleteOne({_id: id}).then(res => {
+  async deleteOne(@Param("id", ID(USER_COLLECTION)) id: Id) {
+    return this.users.deleteById(id).then(res => {
       if (!res) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
-      if (this.authFactor.hasFactor(id.toHexString())) {
-        this.authFactor.unregister(id.toHexString());
+      if (this.authFactor.hasFactor(id.toString())) {
+        this.authFactor.unregister(id.toString());
       }
     });
   }
@@ -463,19 +450,8 @@ export class UserController {
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:policy:add"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    const res = await this.userService.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $addToSet: {policies: policyId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER,
-        projection: {password: 0, lastPasswords: 0}
-      }
-    );
+  async addPolicy(@Param("id", ID(USER_COLLECTION)) id: Id, @Param("policyId") policyId: string) {
+    const res = await this.users.addPolicy(id, policyId);
     if (!res) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
@@ -486,19 +462,11 @@ export class UserController {
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
-    const res = await this.userService.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $pull: {policies: policyId}
-      },
-      {
-        returnDocument: ReturnDocument.AFTER,
-        projection: {password: 0, lastPasswords: 0}
-      }
-    );
+  async removePolicy(
+    @Param("id", ID(USER_COLLECTION)) id: Id,
+    @Param("policyId") policyId: string
+  ) {
+    const res = await this.users.removePolicy(id, policyId);
     if (!res) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
@@ -512,7 +480,7 @@ export class UserController {
     ActionGuard("passport:user:update", "passport/user/:id")
   )
   startAuthProviderVerification(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(USER_COLLECTION)) id: Id,
     @Body("value") value: string,
     @Body("provider") provider: string,
     @Body("strategy") strategy: "Otp" | "MagicLink",
@@ -534,7 +502,7 @@ export class UserController {
     ActionGuard("passport:user:update", "passport/user/:id")
   )
   async verifyProvider(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(USER_COLLECTION)) id: Id,
     @Body("code") code: string,
     @Body("provider") provider: string,
     @Body("strategy") strategy: string,
@@ -578,7 +546,11 @@ export class UserController {
       body.provider
     );
     const cookiePath = "passport/user/session/refresh";
-    res.cookie("refreshToken", result.refreshToken.token, this.userService.getCookieOptions(cookiePath));
+    res.cookie(
+      "refreshToken",
+      result.refreshToken.token,
+      this.userService.getCookieOptions(cookiePath)
+    );
     return res.status(201).json(result.accessToken);
   }
   @Post("forgot-password/start")

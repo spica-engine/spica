@@ -1,26 +1,27 @@
-import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 import {
   Activity,
-  ACTIVITY_OPTIONS,
-  ActivityOptions,
+  ACTIVITY_REPOSITORY,
+  ActivityRepository,
   ModuleActivity
 } from "@spica-server/interface-activity";
 import {Injectable, Inject} from "@nestjs/common";
+import {ids} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
+
+const identityIds = () => ids().forCollection("identity");
 
 @Injectable()
-export class ActivityService extends BaseCollection<Activity>("activity") {
-  constructor(db: DatabaseService, @Inject(ACTIVITY_OPTIONS) options: ActivityOptions) {
-    super(db, {afterInit: () => this.upsertTTLIndex(options.expireAfterSeconds)});
-  }
+export class ActivityService {
+  constructor(@Inject(ACTIVITY_REPOSITORY) private activities: ActivityRepository) {}
 
   insert(activities: ModuleActivity[]) {
     const preparedActivities = activities.map((activity: Activity) => {
-      if (ObjectId.isValid(activity.identifier)) {
-        activity.identifier = new ObjectId(activity.identifier);
+      if (identityIds().isValid(activity.identifier)) {
+        activity.identifier = identityIds().parse(activity.identifier);
       }
 
-      if (ObjectId.isValid(activity.username)) {
-        activity.username = new ObjectId(activity.username);
+      if (identityIds().isValid(activity.username)) {
+        activity.username = identityIds().parse(activity.username);
       }
 
       activity.created_at = new Date();
@@ -28,6 +29,14 @@ export class ActivityService extends BaseCollection<Activity>("activity") {
       return activity;
     });
 
-    return this.insertMany(preparedActivities);
+    return this.activities.insertMany(preparedActivities);
+  }
+
+  deleteById(id: Id) {
+    return this.activities.deleteById(id);
+  }
+
+  deleteByIds(ids: Id[]) {
+    return this.activities.deleteByIds(ids);
   }
 }

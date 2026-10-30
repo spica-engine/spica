@@ -14,6 +14,7 @@
     "@spica-server/interface-function-runtime": "workspace:*"
   },
   "devDependencies": {
+    "@spica-server/data-mongodb": "workspace:*",
     "@spica-server/database-testing": "workspace:*"
   }
 }

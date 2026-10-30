@@ -1,9 +1,11 @@
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 import {Preference} from "@spica-server/interface-preference";
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 
 export interface Bucket {
-  _id?: ObjectId;
+  _id?: Id;
+  type?: "object";
+  category?: string;
   title?: string;
   icon?: string;
   description?: string;
@@ -44,7 +46,7 @@ interface PropertyOptions {
 }
 
 export interface BucketDocument {
-  _id?: ObjectId;
+  _id?: Id;
   [key: string]: any | undefined;
 }
 

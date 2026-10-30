@@ -18,10 +18,16 @@
       "path": "../../../interface/function/log"
     },
     {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../../database/realtime"
     },
     {
       "path": "../../../database"
+    },
+    {
+      "path": "../../../data"
     },
     {
       "path": "../../../core"

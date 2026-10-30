@@ -1,0 +1,5 @@
+{
+  "name": "data",
+  "sourceRoot": "packages/data/src",
+  "projectType": "library"
+}
