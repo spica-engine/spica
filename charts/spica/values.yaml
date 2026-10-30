@@ -11,6 +11,9 @@ database:
   name: spica
   # Image tag of the database. Defaults to 8.0.4 for mongodb and 18 for postgresql.
   version:
+  # PostgreSQL image. It must ship pg_cron, which expires logs, statuses, tokens and the other
+  # short-lived records.
+  postgresImage: spicaengine/postgres
   storageSize: 2Gi
   storageClass:
   resources: {}

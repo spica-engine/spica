@@ -13,14 +13,18 @@ export class MongoFunctionLogRepository
   extends BaseCollection<Log>("function_logs")
   implements LogRepository
 {
-  constructor(db: DatabaseService, @Inject(FUNCTION_LOG_OPTIONS) options: LogOptions) {
-    super(db, {
-      afterInit: () =>
-        Promise.all([
-          this.upsertTTLIndex(options.expireAfterSeconds),
-          this._coll.createIndex({function: 1, _id: -1})
-        ])
-    });
+  constructor(
+    db: DatabaseService,
+    @Inject(FUNCTION_LOG_OPTIONS) private readonly retention: LogOptions
+  ) {
+    super(db);
+  }
+
+  async applyExpiry() {
+    await Promise.all([
+      this.upsertTTLIndex(this.retention.expireAfterSeconds),
+      this._coll.createIndex({function: 1, _id: -1})
+    ]);
   }
 
   deleteByFunction(

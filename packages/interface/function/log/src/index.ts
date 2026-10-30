@@ -1,4 +1,4 @@
-import {Id} from "@spica-server/interface-data";
+import {ExpiringRepository, Id} from "@spica-server/interface-data";
 import {LogLevels, LogChannels} from "@spica-server/interface-function-runtime";
 
 export interface Log {
@@ -18,7 +18,7 @@ export interface LogOptions {
 
 export const FUNCTION_LOG_OPTIONS = Symbol.for("FUNCTION_LOG_OPTIONS");
 
-export interface LogRepository {
+export interface LogRepository extends ExpiringRepository {
   /**
    * Deletes the function's logs, optionally only those created in the range or at the levels.
    */
