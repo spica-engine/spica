@@ -83,6 +83,9 @@ function assertNoRewrite(previous: BucketMetadata, next: BucketMetadata, diff: B
   const rewritten = new Set<string>();
 
   for (const change of diff.fields) {
+    if (change.kind == "translate") {
+      rewritten.add(change.path.join("."));
+    }
     if (change.kind == "retyped") {
       const before = previous.columnOf(change.path);
       const after = next.columnOf(change.path);
@@ -106,7 +109,7 @@ function assertNoRewrite(previous: BucketMetadata, next: BucketMetadata, diff: B
 
   if (rewritten.size) {
     throw new BucketSchemaError([
-      `Changing the type of a property is not supported yet: ${[...rewritten].join(", ")}.`
+      `Changing the type or the translation of a property is not supported yet: ${[...rewritten].join(", ")}.`
     ]);
   }
 }

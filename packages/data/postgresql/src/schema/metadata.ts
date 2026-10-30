@@ -107,7 +107,13 @@ const isStructuredObject = (property: Property) =>
 
 function unsupportedReason(property: Property, insideArray: boolean): string | undefined {
   if (property.options?.translate) {
-    return `translated ${property.type}`;
+    if (insideArray) {
+      return `translated ${property.type} inside an array`;
+    }
+    if (!COLUMN_TYPE_OF_PROPERTY[property.type as string]) {
+      return `translated ${property.type}`;
+    }
+    return undefined;
   }
   if (property.type == "relation") {
     return insideArray && relationTypeOf(property) == "onetomany"
@@ -177,7 +183,8 @@ class TableBuilder {
 
   constructor(
     readonly name: string,
-    readonly path: string[]
+    readonly path: string[],
+    readonly keyedBy: "position" | "locale" = "position"
   ) {}
 
   add(column: Omit<ColumnMetadata, "table" | "checkName">) {
@@ -204,7 +211,7 @@ function describeTables(
   bucket: Bucket,
   primaryKey: PrimaryKeyMetadata,
   targets: RelationTargets
-): TableMetadata[] {
+): {tables: TableMetadata[]; translated: Set<string>} {
   const mainName = mainTableName(bucketId);
   const targetOf = (path: string[], targetId: string): RelationTarget => {
     const target = targetId == bucketId ? {table: mainName, primaryKey} : targets(targetId);
@@ -217,6 +224,7 @@ function describeTables(
   };
   const main = new TableBuilder(mainName, []);
   const children: TableBuilder[] = [];
+  const translated = new Set<string>();
   const requiredAtTop = new Set(bucket.required ?? []);
 
   const collect = (
@@ -239,6 +247,21 @@ function describeTables(
           insideArray
         );
       }
+      return;
+    }
+
+    if (property.options?.translate) {
+      const translations = new TableBuilder(fieldTableName(bucketId, path), path, "locale");
+      children.push(translations);
+      translated.add(keyOf(path));
+      translations.add({name: SYSTEM_COLUMNS.locale, path, type: "text", notNull: true});
+      translations.add({
+        name: SYSTEM_COLUMNS.value,
+        path,
+        type: COLUMN_TYPE_OF_PROPERTY[property.type as string],
+        notNull: true,
+        ...(property.enum?.length ? {enum: [...property.enum]} : {})
+      });
       return;
     }
 
@@ -321,6 +344,7 @@ function describeTables(
         foreignKeys: builder.foreignKeys
       };
     }
+    const keyColumn = builder.keyedBy == "locale" ? SYSTEM_COLUMNS.locale : SYSTEM_COLUMNS.position;
     const columns: ColumnMetadata[] = [
       {
         table: builder.name,
@@ -329,13 +353,17 @@ function describeTables(
         type: primaryKey.type,
         notNull: true
       },
-      {
-        table: builder.name,
-        name: SYSTEM_COLUMNS.position,
-        path: builder.path,
-        type: "integer",
-        notNull: true
-      },
+      ...(builder.keyedBy == "position"
+        ? [
+            {
+              table: builder.name,
+              name: SYSTEM_COLUMNS.position,
+              path: builder.path,
+              type: "integer" as const,
+              notNull: true
+            }
+          ]
+        : []),
       ...builder.columns
     ];
     return {
@@ -343,7 +371,7 @@ function describeTables(
       path: builder.path,
       columns,
       indexes: [],
-      keyColumns: [SYSTEM_COLUMNS.parent, SYSTEM_COLUMNS.position],
+      keyColumns: [SYSTEM_COLUMNS.parent, keyColumn],
       foreignKeys: [
         {
           name: constraintName(builder.name, [SYSTEM_COLUMNS.parent], "fk"),
@@ -357,11 +385,15 @@ function describeTables(
     };
   };
 
-  return [toMetadata(main, true), ...children.map(child => toMetadata(child, false))];
+  return {
+    tables: [toMetadata(main, true), ...children.map(child => toMetadata(child, false))],
+    translated
+  };
 }
 
 function describeIndex(
   columnOf: (path: string[]) => ColumnMetadata | undefined,
+  isTranslated: (path: string[]) => boolean,
   index: IndexDefinition
 ): {metadata?: IndexMetadata; problems: string[]} {
   const problems: string[] = [];
@@ -370,7 +402,11 @@ function describeIndex(
 
   for (const [field, direction] of Object.entries(index.definition)) {
     const column = columnOf(field.split("."));
-    if (!column) {
+    if (isTranslated(field.split("."))) {
+      problems.push(
+        `Index ${label} refers to "${field}", and indexes on translated properties are not supported on PostgreSQL yet.`
+      );
+    } else if (!column) {
       problems.push(`Index ${label} refers to "${field}", which is not a property of the bucket.`);
     } else if (direction !== 1 && direction !== -1) {
       problems.push(
@@ -429,7 +465,10 @@ export function describeBucket(
   }
 
   const primaryKey = primaryKeyMetadata(bucket);
-  const [main, ...children] = describeTables(bucketId, bucket, primaryKey, targets);
+  const {
+    tables: [main, ...children],
+    translated
+  } = describeTables(bucketId, bucket, primaryKey, targets);
 
   const byPath = new Map(
     [main, ...children].flatMap(table =>
@@ -440,9 +479,12 @@ export function describeBucket(
   );
   const columnOf = (path: string[]) => byPath.get(keyOf(path.filter(s => s != ITEMS_SEGMENT)));
 
+  const isTranslated = (path: string[]) =>
+    path.some((_, length) => translated.has(keyOf(path.slice(0, length + 1))));
+
   const indexProblems: string[] = [];
   for (const index of bucket.indexes ?? []) {
-    const described = describeIndex(columnOf, index);
+    const described = describeIndex(columnOf, isTranslated, index);
     indexProblems.push(...described.problems);
     if (described.metadata) {
       [main, ...children]
@@ -497,7 +539,7 @@ export function describeBucket(
     tables,
     columnOf,
     indexOf: index => {
-      const {metadata, problems} = describeIndex(columnOf, index);
+      const {metadata, problems} = describeIndex(columnOf, isTranslated, index);
       if (!metadata) {
         throw new BucketSchemaError(problems);
       }
@@ -507,4 +549,4 @@ export function describeBucket(
 }
 
 const isLinkColumn = (name: string) =>
-  name == SYSTEM_COLUMNS.parent || name == SYSTEM_COLUMNS.position;
+  name == SYSTEM_COLUMNS.parent || name == SYSTEM_COLUMNS.position || name == SYSTEM_COLUMNS.locale;
