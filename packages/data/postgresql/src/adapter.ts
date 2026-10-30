@@ -19,6 +19,8 @@ import {PostgresIdTypes} from "./id.js";
 import {ORM} from "./orm.js";
 import {UnsupportedCollectionQueryFacade} from "./query.js";
 import {repositoryClasses} from "./repositories/index.js";
+import {postgresBucketSchema} from "./schemas/index.js";
+import {BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
 import {assertSupportedServerVersion} from "./version.js";
 
 export const POSTGRESQL_ENGINE = "postgresql";
@@ -88,6 +90,7 @@ export class PostgresDataAdapter {
           {provide: ID_TYPES, useClass: PostgresIdTypes},
           {provide: RESULT_SHAPER, useClass: PassthroughResultShaper},
           {provide: COLLECTION_QUERY, useClass: UnsupportedCollectionQueryFacade},
+          {provide: BUCKET_SCHEMA_EXTENSION, useValue: postgresBucketSchema},
           {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
           {provide: COLLECTION_NAMES, useClass: PostgresCollectionNames},
           {provide: DATA_HEALTH, useClass: PostgresDataHealth}
@@ -99,6 +102,7 @@ export class PostgresDataAdapter {
           ID_TYPES,
           RESULT_SHAPER,
           COLLECTION_QUERY,
+          BUCKET_SCHEMA_EXTENSION,
           REPOSITORY_CLASSES,
           COLLECTION_NAMES,
           DATA_HEALTH

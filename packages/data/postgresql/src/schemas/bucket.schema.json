@@ -1,0 +1,274 @@
+{
+  "required": ["primary"],
+  "allOf": [
+    {
+      "bucketKey": true
+    }
+  ],
+  "definitions": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique uuid of schema."
+    },
+    "propertyName": {
+      "type": "string",
+      "pattern": "^(?!(?:_id|_parent|_position|_locale|_value|_source|_target)$)[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "propertyType": {
+      "enum": [
+        "array",
+        "multiselect",
+        "boolean",
+        "number",
+        "object",
+        "string",
+        "storage",
+        "richtext",
+        "date",
+        "textarea",
+        "color",
+        "relation",
+        "location",
+        "json",
+        "hash",
+        "encrypted",
+        "uuid",
+        "integer",
+        "bigint"
+      ]
+    },
+    "bucketReference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "propertyOptions": {
+      "type": "object",
+      "properties": {
+        "translate": {
+          "type": "boolean",
+          "description": "Allows keeping bucket data in different languages"
+        },
+        "history": {
+          "type": "boolean",
+          "description": "Allows keeping history for each bucket-data"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "The database generates the value when it is not provided. Only the primary property can be generated."
+        }
+      },
+      "additionalProperties": false
+    },
+    "propertyRules": {
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["options"],
+            "properties": {
+              "options": {
+                "type": "object",
+                "required": ["translate"],
+                "properties": {
+                  "translate": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "enum": [
+                  "string",
+                  "textarea",
+                  "richtext",
+                  "color",
+                  "storage",
+                  "hash",
+                  "encrypted",
+                  "number",
+                  "boolean",
+                  "date",
+                  "json",
+                  "location",
+                  "uuid",
+                  "integer",
+                  "bigint"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["options"],
+            "properties": {
+              "options": {
+                "type": "object",
+                "required": ["generated"],
+                "properties": {
+                  "generated": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "enum": ["uuid", "integer", "bigint"]
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "enum": ["array", "multiselect"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "items": {
+                "not": {
+                  "type": "object",
+                  "required": ["type"],
+                  "properties": {
+                    "type": {
+                      "const": "relation"
+                    }
+                  }
+                }
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "itemSchema": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/schema"
+        },
+        {
+          "not": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "enum": ["array", "multiselect"]
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "type": "object",
+            "required": ["options"],
+            "properties": {
+              "options": {
+                "type": "object",
+                "required": ["translate"],
+                "properties": {
+                  "translate": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "type": "object",
+            "required": ["type", "relationType"],
+            "properties": {
+              "type": {
+                "const": "relation"
+              },
+              "relationType": {
+                "const": "onetomany"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["properties"],
+            "properties": {
+              "properties": {
+                "type": "object"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "additionalProperties": {
+                  "$ref": "#/definitions/itemSchema"
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "indexes": {
+      "type": "array",
+      "title": "Database Indexes",
+      "description": "Explicit list of indexes to apply on the bucket tables",
+      "items": {
+        "type": "object",
+        "required": ["definition"],
+        "properties": {
+          "definition": {
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "enum": [1, -1, "2dsphere"]
+            },
+            "description": "Field paths and direction of the index"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "unique": {
+                "type": "boolean"
+              },
+              "sparse": {
+                "type": "boolean"
+              },
+              "background": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Additional index options"
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    }
+  }
+}
