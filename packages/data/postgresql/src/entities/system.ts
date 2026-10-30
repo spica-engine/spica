@@ -44,5 +44,5 @@ export const statuses = defineEntity<Record<string, unknown>>({
     requestSize: {type: "double precision", notNull: true, default: 0},
     responseSize: {type: "double precision", notNull: true, default: 0}
   },
-  indexes: [{columns: ["minute"], unique: true}]
+  indexes: [{columns: ["minute"], unique: true}, {columns: ["created_at"]}]
 });

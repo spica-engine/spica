@@ -195,10 +195,11 @@ jobs:
       - name: Start PostgreSQL
         if: ${{ matrix.postgresql }}
         run: |
+          docker build -t spica-postgres docker/postgres
           docker run -d --rm --name postgres \
             -p 5432:5432 \
             -e POSTGRES_PASSWORD=spica \
-            postgres:18
+            spica-postgres
 
           echo "Waiting for PostgreSQL..."
           for i in {1..30}; do

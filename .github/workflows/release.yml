@@ -93,6 +93,42 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.project }}
           cache-to: type=gha,scope=${{ matrix.project }},mode=max
 
+  postgres-image:
+    name: Release Docker image (postgres)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set the VERSION
+        run: |
+          VERSION=$(git describe --tags --abbrev=0)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: docker/postgres
+          pull: true
+          push: true
+          tags: |
+            spicaengine/postgres:18
+            spicaengine/postgres:18-${{ env.VERSION }}
+          platforms: linux/amd64, linux/arm64
+          cache-from: type=gha,scope=postgres
+          cache-to: type=gha,scope=postgres,mode=max
+
   npm-packages:
     name: Release npm package (${{ matrix.target }})
     runs-on: ubuntu-latest

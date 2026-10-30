@@ -30,7 +30,7 @@ tests:
           value: 1
       - equal:
           path: spec.template.spec.containers[0].image
-          value: postgres:18
+          value: spicaengine/postgres:18
 
   - it: should ignore database.replicas
     template: templates/postgres.yaml
@@ -48,7 +48,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: postgres:18.1
+          value: spicaengine/postgres:18.1
 
   - it: should keep the data on a volume claim
     template: templates/postgres.yaml
@@ -118,6 +118,28 @@ tests:
       - notMatchRegex:
           path: data["init-users.sh"]
           pattern: (?i)superuser|createrole|createdb
+
+  - it: should create pg_cron and let the spica role schedule jobs
+    template: templates/postgresinitdb.yaml
+    asserts:
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: CREATE EXTENSION IF NOT EXISTS pg_cron;
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: GRANT USAGE ON SCHEMA cron TO :"app_user";
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: GRANT EXECUTE ON FUNCTION cron.schedule_in_database
+
+  - it: should take the image repository from database.postgresImage
+    template: templates/postgres.yaml
+    set:
+      database.postgresImage: registry.example.com/pg
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.example.com/pg:18
 
   - it: should expose a headless service on 5432
     template: templates/postgressrv.yaml

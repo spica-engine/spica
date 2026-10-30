@@ -1,5 +1,6 @@
 import {
   DeletableById,
+  ExpiringRepository,
   FindableAll,
   Id,
   Insertable,
@@ -80,7 +81,7 @@ export interface WebhookRepository
 
 export const WEBHOOK_REPOSITORY = Symbol.for("WEBHOOK_REPOSITORY");
 
-export interface WebhookLogRepository extends Insertable<Log>, DeletableById {
+export interface WebhookLogRepository extends Insertable<Log>, DeletableById, ExpiringRepository {
   deleteByIds(ids: Id[]): Promise<number>;
 }
 

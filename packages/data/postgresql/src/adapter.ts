@@ -13,6 +13,7 @@ import {
 import pg from "pg";
 import {PostgresCollectionNames} from "./collection-names.js";
 import {systemEntities} from "./entities/index.js";
+import {PostgresExpiry} from "./expiry/index.js";
 import {PostgresDataHealth} from "./health.js";
 import {PostgresIdTypes} from "./id.js";
 import {ORM} from "./orm.js";
@@ -83,6 +84,7 @@ export class PostgresDataAdapter {
               connectWithSystemTables(typeof uri == "function" ? await uri() : uri, options)
           },
           {provide: ORM, useFactory: (pool: pg.Pool) => new Orm(pool), inject: [PG_POOL]},
+          PostgresExpiry,
           {provide: ID_TYPES, useClass: PostgresIdTypes},
           {provide: RESULT_SHAPER, useClass: PassthroughResultShaper},
           {provide: COLLECTION_QUERY, useClass: UnsupportedCollectionQueryFacade},
@@ -93,6 +95,7 @@ export class PostgresDataAdapter {
         exports: [
           PG_POOL,
           ORM,
+          PostgresExpiry,
           ID_TYPES,
           RESULT_SHAPER,
           COLLECTION_QUERY,

@@ -1,3 +1,4 @@
+import {ExpiringRepository} from "@spica-server/interface-data";
 import {PartialObserver} from "rxjs";
 
 interface IPublisher<T> {
@@ -85,7 +86,7 @@ export const COMMAND_MEMORY_OPTIONS = Symbol.for("COMMAND_MEMORY_OPTIONS");
 
 export const REPLICA_ID = Symbol.for("REPLICA_ID");
 
-export interface JobRepository {
+export interface JobRepository extends ExpiringRepository {
   /**
    * Stores the job unless a replica already did, resolving to whether this call stored it.
    */
@@ -98,7 +99,7 @@ export interface JobRepository {
 
 export const JOB_REPOSITORY = Symbol.for("JOB_REPOSITORY");
 
-export interface CommandRepository {
+export interface CommandRepository extends ExpiringRepository {
   insert(command: CommandMessage): Promise<unknown>;
 }
 
