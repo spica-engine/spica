@@ -129,13 +129,96 @@ describe("bucket metadata", () => {
       const properties = {
         id: {type: "uuid"},
         where: {type: "location"},
-        name: {type: "string", options: {translate: true}},
+        title: {type: "object", options: {translate: true}, properties: {a: {type: "string"}}},
+        rows: {
+          type: "array",
+          items: {type: "object", properties: {label: {type: "string", options: {translate: true}}}}
+        },
         matrix: {type: "array", items: {type: "array", items: {type: "number"}}}
       };
 
       expect(() => describeBucket(bucketId, bucket({properties}))).toThrow(
-        "Properties are not supported on PostgreSQL yet: where (location), name (translated string), matrix (array of nested array)."
+        "Properties are not supported on PostgreSQL yet: where (location), title (translated object), rows (translated string inside an array), matrix (array of nested array)."
       );
+    });
+
+    describe("translated properties", () => {
+      it("should keep the values of a translated property in a table keyed by locale", () => {
+        const metadata = describeBucket(
+          bucketId,
+          bucket({
+            properties: {
+              id: {type: "uuid"},
+              name: {type: "string", options: {translate: true}},
+              size: {type: "number", options: {translate: true}}
+            }
+          })
+        );
+
+        expect(metadata.main.columns.map(column => column.name)).toEqual(["id"]);
+        const [name, size] = metadata.children;
+        expect(name.name).toBe(`bucket_${bucketId}__name`);
+        expect(name.keyColumns).toEqual(["_parent", "_locale"]);
+        expect(name.columns.map(column => [column.name, column.type, column.notNull])).toEqual([
+          ["_parent", "uuid", true],
+          ["_locale", "text", true],
+          ["_value", "text", true]
+        ]);
+        expect(name.foreignKeys.map(key => [key.column, key.table, key.onDelete])).toEqual([
+          ["_parent", `bucket_${bucketId}`, "CASCADE"]
+        ]);
+        expect(size.columns[2].type).toBe("double precision");
+        expect(metadata.columnOf(["name"])).toMatchObject({table: name.name, name: "_value"});
+      });
+
+      it("should translate a property inside an object", () => {
+        const metadata = describeBucket(
+          bucketId,
+          bucket({
+            properties: {
+              id: {type: "uuid"},
+              seo: {
+                type: "object",
+                properties: {title: {type: "string", options: {translate: true}}}
+              }
+            }
+          })
+        );
+
+        expect(metadata.children.map(table => table.name)).toEqual([
+          `bucket_${bucketId}__seo__title`
+        ]);
+      });
+
+      it("should carry the enum to the value column", () => {
+        const metadata = describeBucket(
+          bucketId,
+          bucket({
+            properties: {
+              id: {type: "uuid"},
+              state: {type: "string", enum: ["a", "b"], options: {translate: true}}
+            }
+          })
+        );
+
+        expect(metadata.columnOf(["state"]).enum).toEqual(["a", "b"]);
+      });
+
+      it("should refuse an index on a translated property", () => {
+        const properties = {
+          id: {type: "uuid"},
+          name: {type: "string", options: {translate: true}}
+        };
+
+        for (const field of ["name", "name.en_US"]) {
+          expect(() =>
+            describeBucket(
+              bucketId,
+              bucket({properties, indexes: [{definition: {[field]: 1}, options: {}}]})
+            )
+          ).toThrow("indexes on translated properties are not supported on PostgreSQL yet");
+        }
+      });
     });
 
     describe("relations", () => {
