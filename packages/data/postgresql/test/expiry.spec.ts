@@ -81,6 +81,42 @@ describe("expiry", () => {
     return rows[0].count;
   }
 
+  describe("indexes", () => {
+    async function indexedColumnsOf(table: string) {
+      const {rows} = await pool.query("SELECT indexdef FROM pg_indexes WHERE tablename = $1", [
+        table
+      ]);
+      return rows.map(row => row.indexdef as string);
+    }
+
+    it("should index the expiry column of every table the purge reads", async () => {
+      expect(await indexedColumnsOf("activities")).toContainEqual(
+        expect.stringMatching(/\(created_at\)/)
+      );
+      expect(await indexedColumnsOf("statuses")).toContainEqual(
+        expect.stringMatching(/\(created_at\)/)
+      );
+      expect(await indexedColumnsOf("function_logs")).toContainEqual(
+        expect.stringMatching(/\(created_at\)/)
+      );
+      expect(await indexedColumnsOf("webhook_logs")).toContainEqual(
+        expect.stringMatching(/\(created_at\)/)
+      );
+      expect(await indexedColumnsOf("verifications")).toContainEqual(
+        expect.stringMatching(/\(created_at\)/)
+      );
+      expect(await indexedColumnsOf("commands")).toContainEqual(
+        expect.stringMatching(/\(created_at\)/)
+      );
+      expect(await indexedColumnsOf("jobs")).toContainEqual(
+        expect.stringMatching(/\(created_at\)/)
+      );
+      expect(await indexedColumnsOf("refresh_tokens")).toContainEqual(
+        expect.stringMatching(/\(expired_at\)/)
+      );
+    });
+  });
+
   describe("scheduling", () => {
     const activities = (seconds: number) =>
       createRepository(ACTIVITY_REPOSITORY, {expireAfterSeconds: seconds});

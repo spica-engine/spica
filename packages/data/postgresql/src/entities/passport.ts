@@ -92,7 +92,8 @@ export const verifications = defineEntity<StoredVerification>({
       columns: ["userId", "strategy", "purpose"],
       unique: true,
       where: {is_used: false}
-    }
+    },
+    {columns: ["createdAt"]}
   ]
 });
 

@@ -106,6 +106,7 @@ Three PRs landed. The fallback purge (PR 4 above) was dropped on purpose: pg_cro
 ### pg_cron jobs
 
 - `PostgresExpiry` (`packages/data/postgresql/src/expiry`) schedules one job per table, named `spica:<database>:<table>`, running every minute. Scheduling the same name again updates the job in place. An advisory lock in the cron database serializes replicas that start together.
+- Every expiry column has a btree index, so the purge is an index range scan, which is what MongoDB's TTL index gives. Part 4 added the missing `created_at` indexes on `statuses` and `verifications`.
 - The job command comes from `expireSql` in the ORM: `DELETE FROM "<table>" WHERE "<column>" < now() - make_interval(secs => N)`. The retention is validated as a non-negative integer because it is written into the SQL text.
 - The cron database is read from `cron.database_name`. `PostgresExpiry` opens a short-lived connection to it and calls `cron.schedule_in_database(name, schedule, command, current database)`. The job runs as the role that scheduled it. Passing a `username` argument is rejected for non-superusers, so it is left out.
 
