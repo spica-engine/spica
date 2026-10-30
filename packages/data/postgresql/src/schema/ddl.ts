@@ -74,6 +74,9 @@ export function createStatements(metadata: BucketMetadata): string[] {
   ];
 }
 
+export const dropTablesStatements = (tables: string[]) =>
+  tables.map(table => `DROP TABLE ${quote(table)} CASCADE`);
+
 export interface UpdatePlan {
   dropForeignKeys: string[];
   apply: string[];
@@ -382,7 +385,7 @@ export function planUpdate(
       ...dropIndexes,
       ...dropChecks,
       ...keyBefore,
-      ...dropped.map(table => `DROP TABLE ${quote(table.name)} CASCADE`),
+      ...dropTablesStatements(dropped.map(table => table.name)),
       ...created.flatMap(table => createTableStatements(next, table, false)),
       ...addColumns,
       ...keyAfterAdds,
