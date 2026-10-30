@@ -9,7 +9,7 @@ import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {UserModule} from "@spica-server/passport-user";
 import {INestApplication} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core-schema";
-import {OBJECT_ID} from "@spica-server/core-schema";
+import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";
@@ -24,7 +24,7 @@ describe("user Controller", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID]
+          formats: [OBJECT_ID, DATE_TIME]
         }),
         DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize(),
