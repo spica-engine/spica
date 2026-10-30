@@ -5,29 +5,32 @@ import {Bucket, BucketRepository, StoredBucket} from "@spica-server/interface-bu
 import {buckets} from "../../entities/index.js";
 import {ORM} from "../../orm.js";
 import {entryStatus} from "../helpers.js";
+import {decodeBucket, encodeBucket} from "./rows.js";
 
 @Injectable()
 export class PostgresBucketRepository implements BucketRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
-  findAll() {
-    return this.orm.findMany(buckets, {}, {orderBy: {_id: "asc"}}) as Promise<StoredBucket[]>;
+  async findAll() {
+    const found = await this.orm.findMany(buckets, {}, {orderBy: {_id: "asc"}});
+    return found.map(decodeBucket) as StoredBucket[];
   }
 
-  findById(id: Id) {
-    return this.orm.findById(buckets, id) as Promise<StoredBucket | null>;
+  async findById(id: Id) {
+    return decodeBucket(await this.orm.findById(buckets, id)) as StoredBucket | null;
   }
 
-  insert(bucket: Bucket) {
-    return this.orm.insert(buckets, bucket) as Promise<StoredBucket>;
+  async insert(bucket: Bucket) {
+    return decodeBucket(await this.orm.insert(buckets, encodeBucket(bucket))) as StoredBucket;
   }
 
-  replaceById(id: Id, bucket: Bucket) {
-    return this.orm.replaceById(buckets, id, bucket) as Promise<StoredBucket | null>;
+  async replaceById(id: Id, bucket: Bucket) {
+    const replaced = await this.orm.replaceById(buckets, id, encodeBucket(bucket));
+    return decodeBucket(replaced) as StoredBucket | null;
   }
 
-  deleteById(id: Id) {
-    return this.orm.deleteById(buckets, id) as Promise<StoredBucket | null>;
+  async deleteById(id: Id) {
+    return decodeBucket(await this.orm.deleteById(buckets, id)) as StoredBucket | null;
   }
 
   async unsetProperties(id: Id, paths: string[]) {

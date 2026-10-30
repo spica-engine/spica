@@ -16,7 +16,7 @@ export const SYSTEM_COLUMNS = {
 
 export type ConstraintKind = "pk" | "fk" | "uq" | "ck" | "ix";
 
-export class NamingError extends Error {
+export class BucketSchemaError extends Error {
   constructor(readonly problems: string[]) {
     super(problems.join("; "));
   }
@@ -74,6 +74,6 @@ export function assertUnique(identifiers: NamedIdentifier[]) {
     }
   }
   if (problems.length) {
-    throw new NamingError(problems);
+    throw new BucketSchemaError(problems);
   }
 }
