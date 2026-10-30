@@ -15,6 +15,7 @@ export * from "./src/repositories/function/log.js";
 export * from "./src/repositories/function/webhook.js";
 export * from "./src/repositories/bucket/bucket.js";
 export * from "./src/repositories/bucket/bucket-data.js";
+export * from "./src/repositories/bucket/schema-manager.js";
 export * from "./src/repositories/bucket/history.js";
 export * from "./src/repositories/dashboard/dashboard.js";
 export * from "./src/repositories/asset/asset.js";
