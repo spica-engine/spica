@@ -7,7 +7,7 @@ import {
   ForeignKeyMetadata,
   IndexMetadata,
   TableMetadata
-} from "./metadata.js";
+} from "./metadata/index.js";
 import {PrimaryKeyMetadata} from "./primary-key.js";
 
 function generationSql(metadata: BucketMetadata) {
