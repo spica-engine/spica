@@ -37,7 +37,7 @@ spec:
             defaultMode: 0755
       containers:
         - name: postgres
-          image: postgres:{{ include "database.version" . }}
+          image: {{ .Values.database.postgresImage }}:{{ include "database.version" . }}
           ports:
             - containerPort: 5432
           startupProbe:

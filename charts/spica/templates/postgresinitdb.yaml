@@ -20,8 +20,11 @@ data:
       -v app_password="$SPICA_PASSWORD" \
       -v app_database="$SPICA_DATABASE" \
       --username "$POSTGRES_USER" --dbname postgres <<'SQL'
+    CREATE EXTENSION IF NOT EXISTS pg_cron;
     CREATE ROLE :"app_user" LOGIN PASSWORD :'app_password';
     CREATE DATABASE :"app_database" OWNER :"app_user";
     REVOKE ALL ON DATABASE :"app_database" FROM PUBLIC;
+    GRANT USAGE ON SCHEMA cron TO :"app_user";
+    GRANT EXECUTE ON FUNCTION cron.schedule_in_database(text, text, text, text, text, boolean) TO :"app_user";
     SQL
 {{- end }}

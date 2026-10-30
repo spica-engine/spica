@@ -2,13 +2,22 @@ import {randomBytes} from "crypto";
 import pg from "pg";
 import {GenericContainer, Wait} from "testcontainers";
 
-const POSTGRES_IMAGE = "postgres:18";
+const POSTGRES_IMAGE_TAG = "spica-postgres-testing";
 const PASSWORD = "spica";
 
 let baseUri: Promise<string> | undefined;
 
-function startContainer() {
-  return new GenericContainer(POSTGRES_IMAGE)
+async function buildImage() {
+  const context = process.env.TESTONLY_POSTGRES_IMAGE_CONTEXT;
+  if (!context) {
+    throw new Error("TESTONLY_POSTGRES_IMAGE_CONTEXT must point to docker/postgres.");
+  }
+  await GenericContainer.fromDockerfile(context).build(POSTGRES_IMAGE_TAG, {deleteOnExit: false});
+  return POSTGRES_IMAGE_TAG;
+}
+
+async function startContainer() {
+  return new GenericContainer(await buildImage())
     .withExposedPorts(5432)
     .withEnvironment({POSTGRES_PASSWORD: PASSWORD})
     .withWaitStrategy(Wait.forLogMessage(/database system is ready to accept connections/, 2))
