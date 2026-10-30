@@ -43,16 +43,11 @@ describe("bucket schema manager", () => {
   it("should save the definition, create the collection and sync indexes on create", async () => {
     const onSaved = jest.fn();
 
-    const created = await manager.create(
-      bucket([{definition: {title: 1}, options: {}}]),
-      onSaved
-    );
+    const created = await manager.create(bucket([{definition: {title: 1}, options: {}}]), onSaved);
 
     expect(onSaved).toHaveBeenCalledWith(created);
     expect(await buckets.findById(created._id)).toEqual(created);
-    expect(await indexNames(created._id)).toContain(
-      bucketData.generateIndexName({title: 1}, {})
-    );
+    expect(await indexNames(created._id)).toContain(bucketData.generateIndexName({title: 1}, {}));
   });
 
   it("should tell the observer about the definition before the structure work fails", async () => {

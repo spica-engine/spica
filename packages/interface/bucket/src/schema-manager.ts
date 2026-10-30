@@ -14,9 +14,6 @@ export interface BucketSchemaManager {
     bucket: Bucket,
     onSaved: (saved: StoredBucket) => void
   ): Promise<StoredBucket | null>;
-  /**
-   * Resolves to null when the bucket does not exist.
-   */
   drop(id: Id, onSaved: (dropped: StoredBucket) => void): Promise<StoredBucket | null>;
 }
 
