@@ -1,8 +1,15 @@
 import React, { useState, type FC, type ReactNode } from 'react'
 import { Button, FluidContainer, Icon, Text, FlexElement, Modal, Input } from "oziko-ui-kit";
-import type { BucketType } from "../../../store/api/bucketApi";
+import type { BucketType, Property } from "../../../store/api/bucketApi";
 import styles from "./EditBucket.module.scss";
-import { useRenameBucketMutation, useCreateBucketMutation, type CreateBucketRequest } from '../../../store/api/bucketApi';
+import { useRenameBucketMutation, useCreateBucketMutation, useGetBucketCapabilitiesQuery, type CreateBucketRequest } from '../../../store/api/bucketApi';
+
+const UUID_KEY_PROPERTY = {
+    type: "uuid",
+    title: "id",
+    description: "Primary key of the row",
+    options: { translate: false, generated: true }
+} as unknown as Property;
 
 type EditBucketProps = {
     bucket?: BucketType;
@@ -18,6 +25,8 @@ type EditBucketProps = {
 const EditBucket: FC<EditBucketProps> = ({ bucket, mode = 'edit', initialValue = 'New Bucket', children }) => {
     const [renameBucket] = useRenameBucketMutation();
     const [createBucket] = useCreateBucketMutation();
+    const { data: capabilities } = useGetBucketCapabilitiesQuery();
+    const hasUuidKey = Boolean(capabilities?.propertyTypes.includes('uuid'));
     const isCreateMode = mode === 'create' || !bucket;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [value, setValue] = useState(isCreateMode ? '' : (bucket?.title || initialValue));
@@ -47,7 +56,17 @@ const EditBucket: FC<EditBucketProps> = ({ bucket, mode = 'edit', initialValue =
             if (isCreateMode) {
                 const createBucketRequest: CreateBucketRequest = {
                     title: value,
-                    order: 0 // You might want to pass this as a prop or calculate it
+                    order: 0, // You might want to pass this as a prop or calculate it
+                    ...(hasUuidKey
+                        ? {
+                            primary: "id",
+                            properties: {
+                                id: UUID_KEY_PROPERTY,
+                                title: { type: "string", title: "title", description: "Title of the row", options: { translate: false } },
+                                description: { type: "textarea", title: "description", description: "Description of the row", options: { translate: false } }
+                            }
+                        }
+                        : {})
                 };
                 const result = await createBucket(createBucketRequest);
                 if (result.data) {

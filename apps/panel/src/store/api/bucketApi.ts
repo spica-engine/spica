@@ -10,6 +10,10 @@ export type BucketDataType = {
 
 export type BucketDataWithIdType = BucketDataType & { bucketId: string };
 
+export type BucketCapabilities = {
+  propertyTypes: string[];
+};
+
 export type BucketType = {
   _id: string;
   title: string;
@@ -60,6 +64,7 @@ interface BasicProperty extends IProperty {
   options: {
     translate?: boolean;
     history?: boolean;
+    generated?: boolean;
   };
 }
 
@@ -222,6 +227,10 @@ export const bucketApi = baseApi.injectEndpoints({
       providesTags: (result, error, { bucketId, entryId }) => [
         { type: 'BucketData', id: bucketId },
       ],
+    }),
+
+    getBucketCapabilities: builder.query<BucketCapabilities, void>({
+      query: () => ({ url: 'bucket/capabilities' }),
     }),
 
     createBucket: builder.mutation<BucketType, CreateBucketRequest>({
@@ -820,6 +829,7 @@ export const bucketApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetBucketCapabilitiesQuery,
   useGetBucketsQuery,
   useGetBucketQuery,
   useGetBucketDataQuery,
