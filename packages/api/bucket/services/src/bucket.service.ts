@@ -20,10 +20,10 @@ import {
   Bucket,
   BucketPreferences,
   BUCKET_DATA_LIMIT,
-  BUCKET_DATA_REPOSITORY,
   BUCKET_REPOSITORY,
-  BucketDataRepository,
+  BUCKET_SCHEMA_MANAGER,
   BucketRepository,
+  BucketSchemaManager,
   StoredBucket
 } from "@spica-server/interface-bucket";
 
@@ -40,7 +40,7 @@ export class BucketService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     @Inject(BUCKET_REPOSITORY) private buckets: BucketRepository,
-    @Inject(BUCKET_DATA_REPOSITORY) private bucketData: BucketDataRepository,
+    @Inject(BUCKET_SCHEMA_MANAGER) private schemaManager: BucketSchemaManager,
     private pref: PreferenceService,
     private validator: Validator,
     private changeDispatcher: BucketChangeDispatcher,
@@ -125,42 +125,28 @@ export class BucketService implements OnModuleInit, OnModuleDestroy {
       bucket.documentSettings ? bucket.documentSettings.countLimit : 0
     );
 
-    const insertedBucket = await this.buckets.insert(bucket);
-
-    this.schemaCache.set(insertedBucket._id.toString(), deepCopy(insertedBucket));
-    this.changeDispatcher.dispatch({
-      operationType: "insert",
-      documentKey: {_id: insertedBucket._id}
+    return this.schemaManager.create(bucket, inserted => {
+      this.schemaCache.set(inserted._id.toString(), deepCopy(inserted));
+      this.changeDispatcher.dispatch({operationType: "insert", documentKey: {_id: inserted._id}});
     });
-
-    await this.bucketData.createStorage(insertedBucket);
-
-    await this.bucketData.syncIndexes(bucket);
-
-    return insertedBucket;
   }
 
-  async replaceById(id: Id, bucket: Bucket): Promise<StoredBucket | null> {
-    const result = await this.buckets.replaceById(id, bucket);
-    const replaced = {...bucket, _id: id} as StoredBucket;
-    this.schemaCache.set(replaced._id.toString(), deepCopy(replaced));
-    this.changeDispatcher.dispatch({
-      operationType: "replace",
-      documentKey: {_id: replaced._id}
+  replaceById(id: Id, bucket: Bucket): Promise<StoredBucket | null> {
+    return this.schemaManager.replace(id, bucket, replaced => {
+      this.schemaCache.set(replaced._id.toString(), deepCopy(replaced));
+      this.changeDispatcher.dispatch({operationType: "replace", documentKey: {_id: replaced._id}});
     });
-    await this.bucketData.syncIndexes(replaced);
-    return result;
   }
 
   async drop(id: string | Id) {
-    const schema = await this.buckets.deleteById(bucketIds().parse(id));
-    if (!schema) {
+    const dropped = await this.schemaManager.drop(bucketIds().parse(id), schema => {
+      this.schemaCache.delete(id.toString());
+      this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: schema._id}});
+    });
+    if (!dropped) {
       throw new NotFoundException(`Bucket with ID ${id} does not exist.`);
     }
-    this.schemaCache.delete(id.toString());
-    this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: schema._id}});
-    await this.bucketData.dropStorage(schema._id);
-    return schema;
+    return dropped;
   }
 
   async unsetProperties(id: Id, paths: string[]): Promise<number> {

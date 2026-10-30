@@ -17,10 +17,15 @@ import {WEBHOOK_LOG_REPOSITORY, WEBHOOK_REPOSITORY} from "@spica-server/interfac
 import {MongoFunctionRepository} from "./function/function.js";
 import {MongoFunctionLogRepository, MongoFunctionLogSink} from "./function/log.js";
 import {MongoWebhookLogRepository, MongoWebhookRepository} from "./function/webhook.js";
-import {BUCKET_DATA_REPOSITORY, BUCKET_REPOSITORY} from "@spica-server/interface-bucket";
+import {
+  BUCKET_DATA_REPOSITORY,
+  BUCKET_REPOSITORY,
+  BUCKET_SCHEMA_MANAGER
+} from "@spica-server/interface-bucket";
 import {HISTORY_REPOSITORY} from "@spica-server/interface-bucket-history";
 import {MongoBucketRepository} from "./bucket/bucket.js";
 import {MongoBucketDataRepository} from "./bucket/bucket-data.js";
+import {MongoBucketSchemaManager} from "./bucket/schema-manager.js";
 import {MongoHistoryRepository} from "./bucket/history.js";
 import {DASHBOARD_REPOSITORY} from "@spica-server/interface-dashboard";
 import {MongoDashboardRepository} from "./dashboard/dashboard.js";
@@ -62,6 +67,7 @@ export const repositoryClasses: RepositoryClasses = new Map<symbol, RepositoryCl
   [WEBHOOK_LOG_REPOSITORY, MongoWebhookLogRepository],
   [BUCKET_REPOSITORY, MongoBucketRepository],
   [BUCKET_DATA_REPOSITORY, MongoBucketDataRepository],
+  [BUCKET_SCHEMA_MANAGER, MongoBucketSchemaManager],
   [HISTORY_REPOSITORY, MongoHistoryRepository],
   [DASHBOARD_REPOSITORY, MongoDashboardRepository],
   [ASSET_REPOSITORY, MongoAssetRepository],
