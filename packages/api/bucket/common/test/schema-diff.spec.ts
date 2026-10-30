@@ -32,6 +32,23 @@ describe("diffBuckets", () => {
     ]);
   });
 
+  it.each(["constructor", "toString", "hasOwnProperty", "__proto__"])(
+    "should not mistake the inherited name %s for an existing field",
+    name => {
+      const property = {type: "string"};
+      const withField = bucket(
+        Object.defineProperty({}, name, {value: property, enumerable: true})
+      );
+
+      expect(diffBuckets(bucket(), withField).fields).toEqual([
+        {kind: "added", path: [name], property}
+      ]);
+      expect(diffBuckets(withField, bucket()).fields).toEqual([
+        {kind: "removed", path: [name], property}
+      ]);
+    }
+  );
+
   it("should report a renamed field as a removal and an addition", () => {
     const diff = diffBuckets(bucket({old: {type: "string"}}), bucket({renamed: {type: "string"}}));
 

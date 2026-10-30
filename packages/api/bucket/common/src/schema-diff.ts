@@ -36,7 +36,7 @@ function indexKey(index: IndexChange["index"]) {
   return JSON.stringify([
     Object.entries(index.definition),
     Object.keys(options)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
       .map(key => [key, options[key]])
   ]);
 }
@@ -126,14 +126,14 @@ function diffProperties(
   const nextRequired = new Set(next.required ?? []);
 
   for (const name of Object.keys(previousProperties)) {
-    if (!(name in nextProperties)) {
+    if (!Object.hasOwn(nextProperties, name)) {
       changes.push({kind: "removed", path: [...path, name], property: previousProperties[name]});
     }
   }
 
   for (const name of Object.keys(nextProperties)) {
     const fieldPath = [...path, name];
-    if (!(name in previousProperties)) {
+    if (!Object.hasOwn(previousProperties, name)) {
       changes.push({kind: "added", path: fieldPath, property: nextProperties[name]});
       continue;
     }
