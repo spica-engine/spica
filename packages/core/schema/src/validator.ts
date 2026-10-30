@@ -107,6 +107,11 @@ export class Validator {
     this._ajv.addKeyword(def);
   }
 
+  registerSchema(schema: {$id: string}) {
+    this._ajv.removeSchema(schema.$id);
+    this._ajv.addSchema(schema);
+  }
+
   removeSchema(schemaUri?: string) {
     if (schemaUri) {
       this._schemaSubscriptions.get(schemaUri)?.unsubscribe();

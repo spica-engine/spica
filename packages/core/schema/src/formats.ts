@@ -21,6 +21,15 @@ export const OBJECTID_STRING: Format = {
   }
 };
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export const UUID: Format = {
+  name: "uuid",
+  type: "string",
+  coerce: uuid => String(uuid).toLowerCase(),
+  validate: uuid => UUID_PATTERN.test(String(uuid))
+};
+
 export const DATE_TIME: Format = {
   name: "date-time",
   type: "string",

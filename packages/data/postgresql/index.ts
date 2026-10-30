@@ -5,3 +5,4 @@ export * from "./src/id.js";
 export * from "./src/orm.js";
 export * from "./src/entities/index.js";
 export * from "./src/expiry/index.js";
+export * from "./src/schemas/index.js";
