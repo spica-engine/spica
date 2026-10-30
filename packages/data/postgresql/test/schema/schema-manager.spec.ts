@@ -10,6 +10,7 @@ import {
 } from "@spica-server/interface-bucket";
 import {PG_POOL} from "@spica-server/interface-data";
 import {constraintName} from "@spica-server/data-postgresql";
+import {Session} from "@spica-server/data-postgresql-orm";
 import pg from "pg";
 
 describe("PostgreSQL schema manager", () => {
@@ -1092,7 +1093,7 @@ describe("PostgreSQL schema manager", () => {
 
     it("should not run any statement for an edit that leaves the structure alone", async () => {
       const created = await manager.create(withShape({n: {type: "string"}}), () => {});
-      const execute = jest.spyOn(manager as any, "execute");
+      const execute = jest.spyOn(Session.prototype, "executeStatements");
 
       await manager.replace(
         created._id,
@@ -1100,7 +1101,7 @@ describe("PostgreSQL schema manager", () => {
         () => {}
       );
 
-      expect(execute).toHaveBeenCalledWith(expect.anything(), []);
+      expect(execute).toHaveBeenCalledWith([]);
       execute.mockRestore();
     });
   });
@@ -1162,11 +1163,11 @@ describe("PostgreSQL schema manager", () => {
 
     it("should not rebuild the primary key when only its generation changes", async () => {
       const created = await manager.create(keyed("id", {id: generatedUuid}), () => {});
-      const execute = jest.spyOn(manager as any, "execute");
+      const execute = jest.spyOn(Session.prototype, "executeStatements");
 
       await manager.replace(created._id, keyed("id", {id: {type: "uuid"}}), () => {});
 
-      const statements = execute.mock.calls[0][1] as string[];
+      const statements = execute.mock.calls[0][0];
       expect(statements.some(statement => statement.includes("PRIMARY KEY"))).toBe(false);
       expect(statements.some(statement => statement.includes("DROP CONSTRAINT"))).toBe(false);
       execute.mockRestore();
