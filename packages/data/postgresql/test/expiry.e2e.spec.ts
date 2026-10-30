@@ -85,18 +85,20 @@ describe("expiry end to end", () => {
     expect(await countRowsOf("commands")).toBe(1);
   }, 90_000);
 
-  it("should delete expired activities without the test running the purge, using a one second schedule", async () => {
-    await createRepository(ACTIVITY_REPOSITORY, {expireAfterSeconds: 3600}).applyExpiry();
-    await cron.query("SELECT cron.alter_job($1, schedule => '1 seconds')", [
-      await jobidOf("activities")
-    ]);
-    await pool.query("INSERT INTO activities (action, created_at) VALUES (1, $1), (1, $2)", [
-      ago(2 * HOUR),
-      ago(MINUTE)
-    ]);
+  // The test above covers this one. Enable this one and disable the one above if the tick
+  // test gets too slow or flaky: alter_job speeds the same job up to run every second.
+  // it("should delete expired activities without the test running the purge, using a one second schedule", async () => {
+  //   await createRepository(ACTIVITY_REPOSITORY, {expireAfterSeconds: 3600}).applyExpiry();
+  //   await cron.query("SELECT cron.alter_job($1, schedule => '1 seconds')", [
+  //     await jobidOf("activities")
+  //   ]);
+  //   await pool.query("INSERT INTO activities (action, created_at) VALUES (1, $1), (1, $2)", [
+  //     ago(2 * HOUR),
+  //     ago(MINUTE)
+  //   ]);
 
-    await waitUntil(async () => (await countRowsOf("activities")) == 1, {timeout: 15_000});
+  //   await waitUntil(async () => (await countRowsOf("activities")) == 1, {timeout: 15_000});
 
-    expect(await countRowsOf("activities")).toBe(1);
-  }, 20_000);
+  //   expect(await countRowsOf("activities")).toBe(1);
+  // }, 20_000);
 });
