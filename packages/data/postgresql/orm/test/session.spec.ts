@@ -334,6 +334,96 @@ describe("Orm", () => {
     });
   });
 
+  describe("catalog", () => {
+    afterEach(() =>
+      pool.query('DROP TABLE IF EXISTS "Odd-Name", "catalog_a", "catalog_b", "other_c"')
+    );
+
+    it("tells whether a table exists", async () => {
+      expect(await orm.tableExists("widgets")).toBe(true);
+      expect(await orm.tableExists("nope")).toBe(false);
+    });
+
+    it("quotes the table name, so mixed case and dashes work", async () => {
+      await pool.query('CREATE TABLE "Odd-Name" (id int)');
+
+      expect(await orm.tableExists("Odd-Name")).toBe(true);
+      expect(await orm.tableExists("odd-name")).toBe(false);
+    });
+
+    it("lists the tables that start with a prefix, in order", async () => {
+      await pool.query(
+        "CREATE TABLE catalog_b (id int); CREATE TABLE catalog_a (id int); CREATE TABLE other_c (id int)"
+      );
+
+      expect(await orm.tableNames({prefix: "catalog_"})).toEqual(["catalog_a", "catalog_b"]);
+      expect(await orm.tableNames({prefix: "none"})).toEqual([]);
+    });
+
+    it("treats the underscore in a prefix literally", async () => {
+      await pool.query("CREATE TABLE catalog_a (id int); CREATE TABLE catalogxa (id int)");
+
+      try {
+        expect(await orm.tableNames({prefix: "catalog_"})).toEqual(["catalog_a"]);
+      } finally {
+        await pool.query("DROP TABLE catalogxa");
+      }
+    });
+
+    it("ignores the tables of other schemas", async () => {
+      await pool.query(
+        "CREATE SCHEMA IF NOT EXISTS elsewhere; CREATE TABLE elsewhere.catalog_a (id int)"
+      );
+
+      try {
+        expect(await orm.tableNames({prefix: "catalog_"})).toEqual([]);
+      } finally {
+        await pool.query("DROP SCHEMA elsewhere CASCADE");
+      }
+    });
+
+    it("lists every table without a prefix", async () => {
+      expect(await orm.tableNames()).toContain("widgets");
+    });
+
+    it("runs the statements in order", async () => {
+      await orm.executeStatements([
+        "CREATE TABLE catalog_a (id int)",
+        "INSERT INTO catalog_a VALUES (1)",
+        "ALTER TABLE catalog_a ADD COLUMN note text",
+        "UPDATE catalog_a SET note = 'x'"
+      ]);
+
+      const {rows} = await pool.query("SELECT id, note FROM catalog_a");
+      expect(rows).toEqual([{id: 1, note: "x"}]);
+    });
+
+    it("stops at the first failing statement", async () => {
+      await expect(
+        orm.executeStatements([
+          "CREATE TABLE catalog_a (id int)",
+          "THIS IS NOT SQL",
+          "CREATE TABLE catalog_b (id int)"
+        ])
+      ).rejects.toThrow();
+
+      expect(await orm.tableExists("catalog_a")).toBe(true);
+      expect(await orm.tableExists("catalog_b")).toBe(false);
+    });
+
+    it("rolls the statements back with the transaction", async () => {
+      await expect(
+        orm.transaction(async session => {
+          await session.executeStatements(["CREATE TABLE catalog_a (id int)"]);
+          expect(await session.tableExists("catalog_a")).toBe(true);
+          throw new Error("abort");
+        })
+      ).rejects.toThrow("abort");
+
+      expect(await orm.tableExists("catalog_a")).toBe(false);
+    });
+  });
+
   describe("transactions", () => {
     it("commits when the work resolves", async () => {
       await orm.transaction(async session => {
