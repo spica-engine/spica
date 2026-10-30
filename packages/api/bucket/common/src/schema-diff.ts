@@ -12,7 +12,8 @@ export type FieldChange =
   | {kind: "retyped"; path: string[]; previous: Property; next: Property}
   | {kind: "enum"; path: string[]; previous?: unknown[]; next?: unknown[]}
   | {kind: "required"; path: string[]; required: boolean}
-  | {kind: "translate"; path: string[]; translate: boolean};
+  | {kind: "translate"; path: string[]; translate: boolean}
+  | {kind: "generated"; path: string[]; generated: boolean};
 
 export type IndexChange = {
   kind: "added" | "removed";
@@ -22,6 +23,7 @@ export type IndexChange = {
 export interface BucketDiff {
   fields: FieldChange[];
   indexes: IndexChange[];
+  primary?: {previous?: string; next?: string};
 }
 
 const TYPE_KEYWORDS = ["type", "relationType", "bucketId"];
@@ -74,6 +76,10 @@ function diffProperty(
 
   if (Boolean(previous.options?.translate) !== Boolean(next.options?.translate)) {
     changes.push({kind: "translate", path, translate: Boolean(next.options?.translate)});
+  }
+
+  if (Boolean(previous.options?.generated) !== Boolean(next.options?.generated)) {
+    changes.push({kind: "generated", path, generated: Boolean(next.options?.generated)});
   }
 
   if (!same(previous.enum, next.enum)) {
@@ -155,5 +161,11 @@ export function diffBuckets(previous: Bucket, next: Bucket): BucketDiff {
     {properties: next.properties, required: next.required},
     fields
   );
-  return {fields, indexes: diffIndexes(previous, next)};
+  return {
+    fields,
+    indexes: diffIndexes(previous, next),
+    ...(previous.primary === next.primary
+      ? {}
+      : {primary: {previous: previous.primary, next: next.primary}})
+  };
 }
