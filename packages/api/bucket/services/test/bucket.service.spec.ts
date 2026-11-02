@@ -3,7 +3,11 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {provideRepository} from "@spica-server/data";
-import {BUCKET_DATA_REPOSITORY, BUCKET_REPOSITORY} from "@spica-server/interface-bucket";
+import {
+  BUCKET_DATA_REPOSITORY,
+  BUCKET_REPOSITORY,
+  BUCKET_SCHEMA_MANAGER
+} from "@spica-server/interface-bucket";
 import {BucketService} from "../src/bucket.service";
 import {BucketChangeDispatcher} from "../src/change-dispatcher";
 
@@ -24,6 +28,7 @@ describe("Bucket Service", () => {
           BucketChangeDispatcher,
           provideRepository(BUCKET_REPOSITORY),
           provideRepository(BUCKET_DATA_REPOSITORY),
+          provideRepository(BUCKET_SCHEMA_MANAGER),
           BucketService
         ]
       }).compile();

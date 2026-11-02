@@ -13,6 +13,7 @@ import {
   insertManySql,
   insertSql,
   replaceSql,
+  quote,
   Returning,
   selectSql,
   Statement,
@@ -148,6 +149,25 @@ export class Session {
     return Object.fromEntries(
       Object.entries(rows[0]).map(([alias, value]) => [alias, Number(value)])
     ) as Record<K, number>;
+  }
+
+  async tableExists(table: string): Promise<boolean> {
+    const {rows} = await this.db.query("SELECT to_regclass($1) AS found", [quote(table)]);
+    return Boolean(rows[0].found);
+  }
+
+  async tableNames(options: {prefix?: string} = {}): Promise<string[]> {
+    const {rows} = await this.db.query(
+      "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND starts_with(table_name, $1) ORDER BY table_name",
+      [options.prefix ?? ""]
+    );
+    return rows.map(row => row.table_name);
+  }
+
+  async executeStatements(statements: string[]): Promise<void> {
+    for (const statement of statements) {
+      await this.db.query(statement);
+    }
   }
 
   async lockTransaction(name: string): Promise<void> {

@@ -29,7 +29,13 @@ import {createBucketActivity} from "@spica-server/bucket-common";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket-cache";
 import * as CRUD from "./crud.js";
 import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core-patch";
-import {Bucket, BUCKET_DATA_REPOSITORY, BucketDataRepository} from "@spica-server/interface-bucket";
+import {
+  Bucket,
+  BUCKET_DATA_REPOSITORY,
+  BUCKET_SCHEMA_EXTENSION,
+  BucketDataRepository,
+  BucketSchemaExtension
+} from "@spica-server/interface-bucket";
 
 const BUCKETS_COLLECTION = "buckets";
 
@@ -44,6 +50,7 @@ export class BucketController {
     @Inject(BUCKET_DATA_REPOSITORY) private bucketData: BucketDataRepository,
     private validator: Validator,
     @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
+    @Inject(BUCKET_SCHEMA_EXTENSION) private schemaExtension: BucketSchemaExtension,
     @Optional() @Inject(HISTORY_REPOSITORY) private history: HistoryRepository,
     @Optional() private bucketCacheService: BucketCacheService
   ) {}
@@ -55,6 +62,17 @@ export class BucketController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   getPredefinedDefaults() {
     return this.bs.getPredefinedDefaults();
+  }
+
+  /**
+   * Returns what the database engine allows in a bucket definition.
+   */
+  @Get("capabilities")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
+  getCapabilities() {
+    return {
+      propertyTypes: (this.schemaExtension.schema.definitions.propertyType as {enum: string[]}).enum
+    };
   }
 
   /**
