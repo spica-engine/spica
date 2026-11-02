@@ -308,6 +308,91 @@ describe("Entrypoint", () => {
     });
   });
 
+  describe("async handlers of non-http events", () => {
+    function enqueueHandler(handler: string) {
+      queue.enqueue(
+        new event.Event({
+          type: -1 as any,
+          target: new event.Target({
+            cwd: meta.cwd,
+            handler,
+            context: new event.SchedulingContext({env: [], timeout: 60})
+          })
+        })
+      );
+    }
+
+    function completion() {
+      return new Promise<boolean>(resolve => {
+        queue["_complete"] = (_id: string, succedded: boolean) => resolve(succedded);
+      });
+    }
+
+    it("should report completion only after the returned promise resolves", async () => {
+      await initializeFn(`
+      export async function slow() {
+        console.log("started");
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log("finished");
+      }`);
+
+      const completed = completion();
+      const startedAt = Date.now();
+      spawn(stream).catch(() => {});
+      enqueueHandler("slow");
+
+      expect(await completed).toBe(true);
+      expect(Date.now() - startedAt).toBeGreaterThanOrEqual(500);
+      expect(writeSpy.mock.calls.map(args => args[0].toString())).toEqual([
+        "started\n",
+        "finished\n"
+      ]);
+    });
+
+    it("should report a rejected promise as failed, log it and keep the worker alive", async () => {
+      await initializeFn(`
+      export async function failing() {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        throw new Error("rejected after await");
+      }
+      export function healthy() {}`);
+
+      let exited = false;
+      spawn(stream)
+        .catch(() => {})
+        .finally(() => (exited = true));
+
+      const failed = completion();
+      enqueueHandler("failing");
+      expect(await failed).toBe(false);
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+      expect(
+        writeSpy.mock.calls.map(args => args[0].toString()).join("")
+      ).toContain("rejected after await");
+      expect(exited).toBe(false);
+
+      const succeeded = completion();
+      enqueueHandler("healthy");
+      expect(await succeeded).toBe(true);
+    });
+
+    it("should not wait for a promise the handler does not return", async () => {
+      await initializeFn(`
+      export function detached() {
+        new Promise(resolve => setTimeout(resolve, 2000)).then(() => console.log("late"));
+      }`);
+
+      const completed = completion();
+      const startedAt = Date.now();
+      spawn(stream).catch(() => {});
+      enqueueHandler("detached");
+
+      expect(await completed).toBe(true);
+      expect(Date.now() - startedAt).toBeLessThan(2000);
+    });
+  });
+
   it("should be able access to prebuilt env variables", () => {
     process.env.DATABASE_URI = "mongodb://test";
     process.env.DATABASE_NAME = "testingdb";
