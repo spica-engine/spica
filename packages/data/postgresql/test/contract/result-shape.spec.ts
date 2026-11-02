@@ -1,122 +1,40 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
-import {contractSuite, DatabaseService} from "@spica-server/database-testing";
-import {
-  BUCKET_DATA_REPOSITORY,
-  BUCKET_REPOSITORY,
-  BUCKET_SCHEMA_MANAGER
-} from "@spica-server/interface-bucket";
-import {BUCKET_QUERY} from "@spica-server/interface-bucket-common";
-import {ID_TYPES, IdType, IdTypes, PG_POOL, RESULT_SHAPER} from "@spica-server/interface-data";
-import pg from "pg";
-import {fetchRowSet, insertDocument} from "../shape/database.js";
-import {describeAll} from "../shape/support.js";
-
-const preferences = {
-  language: {available: {en_US: "English", tr_TR: "Turkish"}, default: "en_US"}
-};
+import {contractSuite} from "@spica-server/database-testing";
+import {BucketStore, bucketStoreProviders, createBucketStore} from "./bucket-store.js";
 
 const TR = {best: "tr_TR", fallback: "en_US"};
 
 type Fixture = Record<string, any>;
 
 contractSuite("result shape", engine => {
-  const mongo = engine.name == "mongodb";
   let module: TestingModule;
-  let idType: IdType;
-  let created: Record<string, any>;
+  let store: BucketStore;
   let labels: Map<string, string>;
-  let counter = 0;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [engine.module()],
-      providers: [
-        provideRepository(BUCKET_REPOSITORY),
-        provideRepository(BUCKET_SCHEMA_MANAGER),
-        ...(mongo ? [provideRepository(BUCKET_DATA_REPOSITORY)] : [])
-      ]
+      providers: bucketStoreProviders(engine)
     }).compile();
     await module.init();
-    idType = module.get<IdTypes>(ID_TYPES).unscoped();
+    store = createBucketStore(engine, module);
   }, 120_000);
 
   afterAll(() => module.close());
 
   beforeEach(() => {
-    created = {};
+    store.reset();
     labels = new Map();
   });
 
-  async function createBucket(properties: Fixture) {
-    const names = Object.keys(properties);
-    const bucket = await module.get(BUCKET_SCHEMA_MANAGER).create(
-      {
-        title: `shape ${++counter}`,
-        description: "",
-        icon: "",
-        primary: mongo ? names[0] : "id",
-        readOnly: false,
-        history: false,
-        order: 0,
-        acl: {read: "true==true", write: "true==true"},
-        properties: mongo
-          ? properties
-          : {id: {type: "uuid", options: {generated: true}}, ...properties}
-      } as any,
-      () => {}
-    );
-    created[String(bucket._id)] = bucket;
-    return bucket;
-  }
-
   async function insert(bucket: any, label: string, document: Fixture) {
-    const key = idType.generate();
+    const key = await store.insert(bucket, document);
     labels.set(String(key), label);
-    if (mongo) {
-      await module
-        .get(DatabaseService)
-        .collection(`bucket_${bucket._id}`)
-        .insertOne({
-          _id: key,
-          ...document
-        } as any);
-    } else {
-      await insertDocument(module.get<pg.Pool>(PG_POOL), describeAll(created)(String(bucket._id)), {
-        id: key,
-        ...document
-      });
-    }
     return key;
   }
 
   async function read(bucket: any, key: unknown, resolve: string[] = [], locale?: typeof TR) {
-    const result = mongo
-      ? (
-          await module.get(BUCKET_QUERY).find(
-            bucket,
-            {
-              relationPaths: resolve.map(path => [path, "_id"]),
-              localize: Boolean(locale),
-              language: locale?.best
-            },
-            {resolveSchema: id => created[String(id)], preferences: async () => preferences as any}
-          )
-        ).result[0]
-      : await module
-          .get(RESULT_SHAPER)
-          .shape(
-            {kind: "bucket", bucketId: String(bucket._id)},
-            await fetchRowSet(
-              module.get<pg.Pool>(PG_POOL),
-              describeAll(created),
-              String(bucket._id),
-              key,
-              resolve
-            ),
-            {locale}
-          );
-    return normalize(JSON.parse(JSON.stringify(result)));
+    return normalize(await store.read(bucket, key, {resolve, locale}));
   }
 
   function normalize(value: any): any {
@@ -134,7 +52,7 @@ contractSuite("result shape", engine => {
   }
 
   async function shaped(properties: Fixture, document: Fixture, resolve?: string[], locale?: any) {
-    const bucket = await createBucket(properties);
+    const bucket = await store.createBucket(properties);
     const key = await insert(bucket, "document", document);
     return {bucket, key, document: await read(bucket, key, resolve, locale)};
   }
@@ -244,13 +162,13 @@ contractSuite("result shape", engine => {
 
   describe("relation fields", () => {
     async function setup() {
-      const target = await createBucket({
+      const target = await store.createBucket({
         name: {type: "string"},
         tags: {type: "array", items: {type: "string"}}
       });
       const first = await insert(target, "first", {name: "first", tags: ["x"]});
       const second = await insert(target, "second", {name: "second", tags: []});
-      const owner = await createBucket({
+      const owner = await store.createBucket({
         title: {type: "string"},
         one: {type: "relation", bucketId: String(target._id), relationType: "onetoone"},
         many: {type: "relation", bucketId: String(target._id), relationType: "onetomany"}
@@ -338,23 +256,12 @@ contractSuite("result shape", engine => {
   });
 
   it("should expose the primary key under its own name", async () => {
-    const bucket = await createBucket({title: {type: "string"}});
-    const key = await insert(bucket, "document", {title: "t"});
-    const raw = mongo
-      ? await module.get(DatabaseService).collection(`bucket_${bucket._id}`).findOne({})
-      : await module
-          .get(RESULT_SHAPER)
-          .shape(
-            {kind: "bucket", bucketId: String(bucket._id)},
-            await fetchRowSet(
-              module.get<pg.Pool>(PG_POOL),
-              describeAll(created),
-              String(bucket._id),
-              key
-            )
-          );
+    const bucket = await store.createBucket({title: {type: "string"}});
+    const key = await store.insert(bucket, {title: "t"});
 
-    expect(raw).toHaveProperty(mongo ? "_id" : "id");
-    expect(raw).not.toHaveProperty(mongo ? "id" : "_id");
+    const document = await store.read(bucket, key);
+
+    expect(document).toHaveProperty(store.keyField);
+    expect(document).not.toHaveProperty(store.keyField == "_id" ? "id" : "_id");
   });
 });

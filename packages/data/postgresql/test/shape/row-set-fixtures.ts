@@ -1,3 +1,11 @@
+/*
+ * TEMPORARY. Stand-ins for the parts that do not exist on PostgreSQL yet:
+ * - insertDocument turns a document into rows. Part 9 (writes) replaces it with BUCKET_WRITE.
+ * - fetchRowSet reads a row set. Part 8 (queries) replaces it with BUCKET_QUERY, which hands the
+ *   row set to RESULT_SHAPER itself.
+ * Delete this file when both are merged. contract/bucket-store.ts and shape/row-layout.spec.ts
+ * are the only users.
+ */
 import {
   BucketDescription,
   columnName,
