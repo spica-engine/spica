@@ -544,6 +544,7 @@ describe("FunctionAssetReconciler.backfill", () => {
     "index.ts": Buffer.from("index"),
     "package.json": Buffer.from("{}")
   };
+  const recorded = (filename: string, strategy = "awss3") => ({filename, strategy});
 
   beforeEach(() => {
     mockDeps.storageOptions.strategy = "awss3";
@@ -601,8 +602,8 @@ describe("FunctionAssetReconciler.backfill", () => {
 
   it("should upload only the files that have no stored record", async () => {
     mockDeps.assetService.findByFunction.mockResolvedValue([
-      {filename: "index.ts"},
-      {filename: "package.json"}
+      recorded("index.ts"),
+      recorded("package.json")
     ]);
     const lockfile = Buffer.from("lock");
     mockDeps.preparationService.readFileBuffer.mockImplementation(async (_fn, filename) =>
@@ -629,11 +630,109 @@ describe("FunctionAssetReconciler.backfill", () => {
     );
   });
 
+  it("should re-upload files whose record belongs to another strategy", async () => {
+    mockDeps.assetService.findByFunction.mockResolvedValue([
+      recorded("index.ts", "default"),
+      recorded("package.json", "default")
+    ]);
+    const reconciler = buildReconciler();
+
+    await reconciler.backfill([mockFn]);
+
+    expect(mockDeps.strategy.write).toHaveBeenCalledWith(
+      "functions/my-function/index.ts",
+      files["index.ts"]
+    );
+    expect(mockDeps.strategy.write).toHaveBeenCalledWith(
+      "functions/my-function/package.json",
+      files["package.json"]
+    );
+    expect(mockDeps.assetService.upsertAsset).toHaveBeenCalledWith(
+      mockFn._id,
+      "index.ts",
+      expect.objectContaining({hash: hashBuffer(files["index.ts"]), strategy: "awss3"})
+    );
+    expect(mockDeps.assetService.upsertAsset).toHaveBeenCalledWith(
+      mockFn._id,
+      "package.json",
+      expect.objectContaining({strategy: "awss3"})
+    );
+  });
+
+  it("should upload only the files recorded under another strategy", async () => {
+    mockDeps.assetService.findByFunction.mockResolvedValue([
+      recorded("index.ts", "default"),
+      recorded("package.json", "default"),
+      recorded("package-lock.json")
+    ]);
+    const reconciler = buildReconciler();
+
+    await reconciler.backfill([mockFn]);
+
+    expect(mockDeps.preparationService.readFileBuffer).not.toHaveBeenCalledWith(
+      mockFn,
+      "package-lock.json"
+    );
+    expect(mockDeps.assetService.upsertAsset.mock.calls.map(call => call[1]).sort()).toEqual([
+      "index.ts",
+      "package.json"
+    ]);
+  });
+
+  it("should treat a record without a strategy as stored elsewhere", async () => {
+    mockDeps.assetService.findByFunction.mockResolvedValue([{filename: "index.ts"}]);
+    const reconciler = buildReconciler();
+
+    await reconciler.backfill([mockFn]);
+
+    expect(mockDeps.strategy.write).toHaveBeenCalledWith(
+      "functions/my-function/index.ts",
+      files["index.ts"]
+    );
+  });
+
+  it("should warn about files recorded under another strategy that have no local file", async () => {
+    mockDeps.assetService.findByFunction.mockResolvedValue([
+      recorded("index.ts", "default"),
+      recorded("package-lock.json", "default")
+    ]);
+    mockDeps.preparationService.readFileBuffer.mockResolvedValue(null);
+    const reconciler = buildReconciler();
+    const warn = jest.spyOn((reconciler as any).logger, "warn").mockImplementation(() => {});
+
+    await reconciler.backfill([mockFn]);
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    const reported = warn.mock.calls[0][0].split("cannot be restored: ")[1].split(", ").sort();
+    expect(reported).toEqual(["my-function/index.ts", "my-function/package.json"]);
+    expect(mockDeps.strategy.write).not.toHaveBeenCalled();
+  });
+
+  it("should not upload again once the records belong to the current strategy", async () => {
+    mockDeps.assetService.findByFunction.mockResolvedValue([
+      recorded("index.ts", "default"),
+      recorded("package.json", "default"),
+      recorded("package-lock.json", "default")
+    ]);
+    const reconciler = buildReconciler();
+    await reconciler.backfill([mockFn]);
+
+    mockDeps.strategy.write.mockClear();
+    mockDeps.assetService.findByFunction.mockResolvedValue([
+      recorded("index.ts"),
+      recorded("package.json"),
+      recorded("package-lock.json")
+    ]);
+    await reconciler.backfill([mockFn]);
+
+    expect(mockDeps.strategy.write).not.toHaveBeenCalled();
+  });
+
   it("should not read or upload anything when every file has a stored record", async () => {
     mockDeps.assetService.findByFunction.mockResolvedValue([
-      {filename: "index.ts"},
-      {filename: "package.json"},
-      {filename: "package-lock.json"}
+      recorded("index.ts"),
+      recorded("package.json"),
+      recorded("package-lock.json")
     ]);
     const reconciler = buildReconciler();
 
@@ -671,7 +770,7 @@ describe("FunctionAssetReconciler.backfill", () => {
     expect(mockDeps.assetService.upsertAsset.mock.calls.map(call => call[1])).toEqual(["index.ts"]);
 
     mockDeps.assetService.upsertAsset.mockClear();
-    mockDeps.assetService.findByFunction.mockResolvedValue([{filename: "index.ts"}]);
+    mockDeps.assetService.findByFunction.mockResolvedValue([recorded("index.ts")]);
     mockDeps.strategy.write.mockResolvedValue(undefined);
     await reconciler.backfill([mockFn]);
 
@@ -684,7 +783,7 @@ describe("FunctionAssetReconciler.backfill", () => {
     const partial = {...mockFn, _id: new ObjectId(), name: "partial"};
     const failing = {...mockFn, _id: new ObjectId(), name: "failing"};
     mockDeps.assetService.findByFunction.mockImplementation(async id => {
-      if (id == partial._id) return [{filename: "index.ts"}];
+      if (id == partial._id) return [recorded("index.ts")];
       if (id == failing._id) throw new Error("db");
       return [];
     });
@@ -720,7 +819,7 @@ describe("FunctionAssetReconciler.backfill", () => {
   it("should not warn when every function is already stored or uploaded", async () => {
     const stored = {...mockFn, _id: new ObjectId(), name: "stored"};
     mockDeps.assetService.findByFunction.mockImplementation(async id =>
-      id == stored._id ? [{filename: "index.ts"}] : []
+      id == stored._id ? [recorded("index.ts")] : []
     );
     const reconciler = buildReconciler();
     const warn = jest.spyOn((reconciler as any).logger, "warn").mockImplementation(() => {});
@@ -753,7 +852,7 @@ describe("FunctionAssetReconciler.backfill", () => {
       peak = Math.max(peak, running);
       await new Promise(r => setTimeout(r, 5));
       running--;
-      return [{filename: "index.ts"}];
+      return [recorded("index.ts")];
     });
     const reconciler = buildReconciler();
 

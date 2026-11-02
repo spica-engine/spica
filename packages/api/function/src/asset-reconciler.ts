@@ -244,7 +244,11 @@ export class FunctionAssetReconciler {
 
   private async backfillFunction(fn: Function & {_id: ObjectId}): Promise<FunctionAssetFilename[]> {
     const records = await this.assetService.findByFunction(fn._id);
-    const stored = new Set(records.map(({filename}) => filename));
+    const stored = new Set(
+      records
+        .filter(({strategy}) => strategy === this.storageOptions.strategy)
+        .map(({filename}) => filename)
+    );
     const candidates: FunctionAssetFilename[] = [
       this.preparationService.indexFilename(fn),
       "package.json",
