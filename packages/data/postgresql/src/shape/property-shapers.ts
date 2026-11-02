@@ -139,7 +139,7 @@ const arrayShaper: PropertyShaper = {
   }
 };
 
-const scalarShaper: PropertyShaper = {
+export const SCALAR_SHAPER: PropertyShaper = {
   matches: () => true,
   shape(visit) {
     const column = columnOf(visit);
@@ -158,6 +158,5 @@ export const PROPERTY_SHAPERS: PropertyShaper[] = [
   objectShaper,
   translatedShaper,
   relationShaper,
-  arrayShaper,
-  scalarShaper
+  arrayShaper
 ];

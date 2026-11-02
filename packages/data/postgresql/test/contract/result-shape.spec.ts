@@ -311,6 +311,25 @@ contractSuite("result shape", engine => {
       });
     });
 
+    it("should leave a translated property nested in an object as a map when localizing", async () => {
+      const nested = {
+        title: {type: "string", options: {translate: true}},
+        meta: {
+          type: "object",
+          properties: {label: {type: "string", options: {translate: true}}}
+        }
+      };
+      const document = {
+        title: {en_US: "hello", tr_TR: "merhaba"},
+        meta: {label: {en_US: "label", tr_TR: "etiket"}}
+      };
+
+      expect((await shaped(nested, document, [], TR)).document).toEqual({
+        title: "merhaba",
+        meta: {label: {en_US: "label", tr_TR: "etiket"}}
+      });
+    });
+
     it("should return every locale when neither the requested nor the default one exists", async () => {
       const other = {title: {fr_FR: "bonjour"}, views: {fr_FR: 1}, plain: "p"};
 
