@@ -17,8 +17,8 @@ import os from "os";
 import path from "path";
 import {PassThrough, Writable} from "stream";
 import WebSocket from "ws";
+import {getFreeAddress} from "@spica-server/core-testing";
 
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:24075";
 process.env.DISABLE_LOGGER = "true";
 
 describe("Entrypoint", () => {
@@ -95,6 +95,10 @@ describe("Entrypoint", () => {
 
     return worker;
   }
+
+  beforeEach(async () => {
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
+  });
 
   beforeEach(async () => {
     // Push model: the worker opens one subscribe stream, so the first callback hands us a

@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import {FunctionModule} from "@spica-server/function";
 import {Scheduler} from "@spica-server/function-scheduler";
-import {CoreTestingModule, Request} from "@spica-server/core-testing";
+import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {SchemaModule, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
@@ -99,7 +99,7 @@ describe("Function trigger secret placeholders", () => {
   }
 
   beforeEach(async () => {
-    process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:38659";
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     functionsPath = fs.mkdtempSync(path.join(os.tmpdir(), "spica-fn-secret-placeholder-"));
 
     const module = await Test.createTestingModule({
