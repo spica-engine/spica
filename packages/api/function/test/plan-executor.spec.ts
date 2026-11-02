@@ -10,7 +10,7 @@ import {INestApplication} from "@nestjs/common";
 import {EnvVarService, EnvVarChangeDispatcher} from "@spica-server/env_var-services";
 import {TargetChange, ChangeKind, FunctionChangePlan} from "@spica-server/interface-function";
 import {SecretService, SecretChangeDispatcher} from "@spica-server/secret-services";
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4379";
+import {getFreeAddress} from "@spica-server/core-testing";
 
 describe("PlanExecutor", () => {
   let executor: PlanExecutor;
@@ -34,6 +34,7 @@ describe("PlanExecutor", () => {
   });
 
   beforeEach(async () => {
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     module = await Test.createTestingModule({
       imports: [
         SchedulerModule.forRoot({

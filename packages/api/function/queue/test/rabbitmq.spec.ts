@@ -1,15 +1,15 @@
 import {RabbitMQQueue, EventQueue, RABBITMQ_SETTLEMENTS} from "@spica-server/function-queue";
 import {RabbitMQ} from "@spica-server/function-queue-proto";
 import grpc, {credentials} from "@grpc/grpc-js";
-
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5846";
+import {getFreeAddress} from "@spica-server/core-testing";
 
 describe("RabbitMQQueue", () => {
   let queue: EventQueue;
   let rabbitmqQueue: RabbitMQQueue;
   let rabbitmqQueueClient: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     queue = new EventQueue(
       () => {},
       () => {},

@@ -4,7 +4,7 @@ import os from "os";
 import fs from "fs";
 import path from "path";
 import {INestApplication} from "@nestjs/common";
-import {CoreTestingModule, Request} from "@spica-server/core-testing";
+import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
@@ -44,7 +44,7 @@ describe("Function RabbitMQ Stream Trigger Schema", () => {
   }
 
   beforeEach(async () => {
-    process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:38658";
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
 
     const module = await Test.createTestingModule({
       imports: [

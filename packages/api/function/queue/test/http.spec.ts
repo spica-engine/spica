@@ -1,15 +1,15 @@
 import {EventQueue, HttpQueue} from "@spica-server/function-queue";
 import {Http} from "@spica-server/function-queue-proto";
 import {credentials} from "@grpc/grpc-js";
-
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5840";
+import {getFreeAddress} from "@spica-server/core-testing";
 
 describe("HttpQueue", () => {
   let queue: EventQueue;
   let httpQueue: HttpQueue;
   let httpQueueClient: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     queue = new EventQueue(
       () => {},
       () => {},

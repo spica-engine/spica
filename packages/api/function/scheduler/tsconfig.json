@@ -3,6 +3,9 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../core/testing"
+    },
+    {
       "path": "../../replication"
     },
     {
@@ -18,13 +21,13 @@
       "path": "../../../interface/function/scheduler"
     },
     {
-      "path": "../../../interface/function/builder"
-    },
-    {
       "path": "../../../interface/function/runtime"
     },
     {
       "path": "../../../interface/function/pkgmanager"
+    },
+    {
+      "path": "../../../interface/function/builder"
     },
     {
       "path": "../runtime/node"
@@ -54,10 +57,10 @@
       "path": "../enqueuer"
     },
     {
-      "path": "../builder/legacy"
+      "path": "../builder/rollup"
     },
     {
-      "path": "../builder/rollup"
+      "path": "../builder/legacy"
     },
     {
       "path": "../builder"

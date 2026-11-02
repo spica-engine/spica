@@ -6,6 +6,9 @@
       "path": "node"
     },
     {
+      "path": "../../../core/testing"
+    },
+    {
       "path": "proto"
     }
   ],

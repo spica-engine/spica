@@ -1,15 +1,15 @@
 import {DatabaseQueue, EventQueue} from "@spica-server/function-queue";
 import {Database} from "@spica-server/function-queue-proto";
 import {credentials} from "@grpc/grpc-js";
-
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5844";
+import {getFreeAddress} from "@spica-server/core-testing";
 
 describe("DatabaseQueue", () => {
   let queue: EventQueue;
   let databaseQueue: DatabaseQueue;
   let databaseQueueClient: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     queue = new EventQueue(
       () => {},
       () => {},

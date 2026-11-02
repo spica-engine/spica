@@ -6,8 +6,8 @@ import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {PassThrough} from "stream";
 import {WorkerState} from "@spica-server/interface-function-scheduler";
+import {getFreeAddress} from "@spica-server/core-testing";
 
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
 process.env.DISABLE_LOGGER = "true";
 
 describe("Scheduler", () => {
@@ -131,6 +131,7 @@ describe("Scheduler", () => {
   }
 
   beforeEach(async () => {
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.standalone(), SchedulerModule.forRoot(schedulerOptions)]
     }).compile();

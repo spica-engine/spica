@@ -4,7 +4,7 @@ import os from "os";
 import fs from "fs";
 import path from "path";
 import {INestApplication} from "@nestjs/common";
-import {CoreTestingModule, Request} from "@spica-server/core-testing";
+import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
 import {Middlewares} from "@spica-server/core";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {SchemaModule} from "@spica-server/core-schema";
@@ -38,7 +38,7 @@ describe("Function Controller", () => {
   };
 
   beforeEach(async () => {
-    process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:38654";
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,

@@ -2,12 +2,11 @@ import {Test} from "@nestjs/testing";
 import {INestApplication} from "@nestjs/common";
 import os from "os";
 import fs from "fs";
-import net from "net";
 import path from "path";
 import amqp from "amqplib";
 import {GenericContainer, StartedTestContainer, Wait} from "testcontainers";
 import {FunctionModule} from "@spica-server/function";
-import {CoreTestingModule, Request} from "@spica-server/core-testing";
+import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {SchemaModule, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
@@ -17,17 +16,6 @@ import {SecretModule} from "@spica-server/secret";
 const RABBITMQ_USER = "spica";
 const RABBITMQ_PASSWORD = "spica-secret-password";
 const QUEUE = "secret-placeholder-e2e";
-
-function getFreePort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    server.once("error", reject);
-    server.listen(0, "0.0.0.0", () => {
-      const {port} = server.address() as net.AddressInfo;
-      server.close(() => resolve(port));
-    });
-  });
-}
 
 async function waitFor<T>(probe: () => Promise<T | undefined>, timeoutMs: number): Promise<T> {
   const start = Date.now();
@@ -73,7 +61,7 @@ describe("RabbitMQ trigger with secret placeholders (e2e)", () => {
   });
 
   beforeEach(async () => {
-    process.env.FUNCTION_GRPC_ADDRESS = `0.0.0.0:${await getFreePort()}`;
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     functionsPath = fs.mkdtempSync(path.join(os.tmpdir(), "spica-fn-rabbitmq-secret-"));
     markerPath = path.join(functionsPath, "received.txt");
 

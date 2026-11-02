@@ -12,7 +12,7 @@ import {EnvVarService, EnvVarChangeDispatcher} from "@spica-server/env_var-servi
 import {ChangeKind} from "@spica-server/interface-function";
 import {SecretService, SecretChangeDispatcher} from "@spica-server/secret-services";
 import {encrypt} from "@spica-server/core-encryption";
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
+import {getFreeAddress} from "@spica-server/core-testing";
 
 function envMap(context: any): {[key: string]: unknown} {
   const obj = context ? context.toObject() : {env: []};
@@ -40,6 +40,7 @@ describe("Engine", () => {
   const hexString = "507f1f77bcf86cd799439011";
 
   beforeEach(async () => {
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     module = await Test.createTestingModule({
       imports: [
         SchedulerModule.forRoot({

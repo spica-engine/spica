@@ -4,13 +4,13 @@ import {LegacyBuilder} from "@spica-server/function-builder-legacy";
 import {RollupBuilder} from "@spica-server/function-builder-rollup";
 import {BuilderType, SUPPORTED_LANGUAGES} from "@spica-server/interface-function-builder";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
-
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7913";
+import {getFreeAddress} from "@spica-server/core-testing";
 
 describe("Builder selection", () => {
   let module: TestingModule;
 
   async function createScheduler(builder?: BuilderType) {
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.standalone(),

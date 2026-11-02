@@ -1,15 +1,15 @@
 import {EventQueue, FirehoseQueue} from "@spica-server/function-queue";
 import {Firehose} from "@spica-server/function-queue-proto";
 import {credentials} from "@grpc/grpc-js";
-
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:8594";
+import {getFreeAddress} from "@spica-server/core-testing";
 
 describe("FirehoseQueue", () => {
   let queue: EventQueue;
   let firehoseQueue: FirehoseQueue;
   let firehoseQueueClient: any;
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     queue = new EventQueue(
       () => {},
       () => {},

@@ -3,8 +3,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {ENQUEUER} from "@spica-server/interface-function-scheduler";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
-
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7911";
+import {getFreeAddress} from "@spica-server/core-testing";
 
 const spyScheduler = jest.fn(() => ({
   enqueuer: {
@@ -34,6 +33,7 @@ describe("Scheduler Injection", () => {
   let addEnqueuerSpy: jest.SpyInstance;
 
   beforeEach(async () => {
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.standalone(),

@@ -1,6 +1,6 @@
 import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core-testing";
+import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {AssetModule} from "@spica-server/asset";
@@ -8,22 +8,10 @@ import {FunctionModule} from "@spica-server/function";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import os from "os";
-import net from "net";
 import fs from "fs";
 import path from "path";
 import {PreferenceModule} from "@spica-server/preference";
 import {SecretModule} from "@spica-server/secret";
-
-function getFreePort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    server.once("error", reject);
-    server.listen(0, "0.0.0.0", () => {
-      const {port} = server.address() as net.AddressInfo;
-      server.close(() => resolve(port));
-    });
-  });
-}
 
 describe("function", () => {
   function downloadAsset(asset) {
@@ -86,7 +74,7 @@ describe("function", () => {
   };
 
   beforeEach(async () => {
-    process.env.FUNCTION_GRPC_ADDRESS = `0.0.0.0:${await getFreePort()}`;
+    process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     const module = await Test.createTestingModule(moduleMeta).compile();
     module.enableShutdownHooks();
     app = module.createNestApplication();
