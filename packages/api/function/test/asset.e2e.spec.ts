@@ -8,12 +8,22 @@ import {FunctionModule} from "@spica-server/function";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import os from "os";
+import net from "net";
 import fs from "fs";
 import path from "path";
 import {PreferenceModule} from "@spica-server/preference";
 import {SecretModule} from "@spica-server/secret";
 
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45670";
+function getFreePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.once("error", reject);
+    server.listen(0, "0.0.0.0", () => {
+      const {port} = server.address() as net.AddressInfo;
+      server.close(() => resolve(port));
+    });
+  });
+}
 
 describe("function", () => {
   function downloadAsset(asset) {
@@ -76,6 +86,7 @@ describe("function", () => {
   };
 
   beforeEach(async () => {
+    process.env.FUNCTION_GRPC_ADDRESS = `0.0.0.0:${await getFreePort()}`;
     const module = await Test.createTestingModule(moduleMeta).compile();
     module.enableShutdownHooks();
     app = module.createNestApplication();
