@@ -154,7 +154,9 @@ async function _process(ev: event.Event, queue: EventQueue) {
 
   const callArguments: any[] = [];
 
-  let callback: (arg: any) => Promise<void> = async () => {};
+  let callback: (arg: any) => Promise<void> = async (result: any) => {
+    await result;
+  };
 
   switch (ev.type) {
     case event.Type.HTTP:
@@ -348,8 +350,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
     await callback(module[ev.target.handler](...callArguments));
     queue.complete(new event.Complete({id: ev.id, succedded: true}));
   } catch (e) {
-    queue.complete(new event.Complete({id: ev.id, succedded: false}));
-    /* 
+    /*
       Unhandled promise rejections are changed with Nodejs v15.
       Before v15, unhandled promise rejections were shown on the console with warning.
       After v15, unhandled promise rejections throws an error instead.
@@ -358,7 +359,9 @@ async function _process(ev: event.Event, queue: EventQueue) {
 
     // throw e;
 
+    // Completion unregisters this event's log routers, so the error must be written first.
     console.error(e);
+    queue.complete(new event.Complete({id: ev.id, succedded: false}));
   }
 }
 
