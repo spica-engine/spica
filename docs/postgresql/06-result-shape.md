@@ -24,10 +24,10 @@ Turns PostgreSQL rows back into documents with today's structure. Nested objects
 
 ## Provides
 
-| Contract                | What later parts expect                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| Contract                 | What later parts expect                                                                                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PostgreSQL result shaper | Given a bucket, its main row, child rows, link rows and joined rows, and the requested locale, it returns the document. Bound to the shaper hook on PostgreSQL. |
-| Row set format          | The shape that queries (Part 8), writes (Part 9) and change events (Part 10) hand to the shaper.        |
+| Row set format           | The shape that queries (Part 8), writes (Part 9) and change events (Part 10) hand to the shaper.                                                                |
 
 ## Not this part
 
@@ -42,10 +42,10 @@ Turns PostgreSQL rows back into documents with today's structure. Nested objects
 
 ### Components
 
-| Component          | Responsibility                                                                                     |
-| ------------------ | -------------------------------------------------------------------------------------------------- |
-| Row set format     | Describes the main row plus child, link and joined rows grouped by field.                         |
-| Result shaper      | Rebuilds the document from a row set using table metadata.                                         |
+| Component      | Responsibility                                                            |
+| -------------- | ------------------------------------------------------------------------- |
+| Row set format | Describes the main row plus child, link and joined rows grouped by field. |
+| Result shaper  | Rebuilds the document from a row set using table metadata.                |
 
 ### Flow
 
@@ -75,4 +75,46 @@ Turns PostgreSQL rows back into documents with today's structure. Nested objects
 
 ## As built
 
-_Fill in after the last PR merges._
+### What exists
+
+- **Hook (Part 0 contract widened):** `ResultShaper.shape<I, O = I>(resource, input, options?): Promise<O>`, with `ShapeOptions {locale?: {best, fallback}}` (`packages/interface/data/src/query.ts`). `PassthroughResultShaper` and the MongoDB facades await it; their behaviour is unchanged.
+- **Row set format** (`packages/data/postgresql/src/shape/row-set.ts`, exported from `@spica-server/data-postgresql`): `RowSet {main, children?, joined?}`.
+  - `main` is the `bucket_<id>` row, keyed by column name.
+  - `children` is keyed by property path joined with `.`. It holds the rows of array, multiselect, link and translation tables.
+  - `joined` is keyed the same way and holds the resolved target row sets: `RowSet`, `RowSet[]` or `null`. Targets are matched to keys by the target's primary key, so relations inside array items resolve too.
+  - Values are as the `pg` driver returns them: `Date`, `{x, y}` for `point`, parsed `jsonb`, `bigint` as string.
+- **Shaper** (`src/shape/`):
+  - `BucketShaper` is a pure, synchronous core. A chain in `property-shapers.ts` (object, translated, relation, array, scalar) mirrors the metadata collectors.
+  - `BucketDescriptions` loads the bucket, its relation targets and the targets of every resolved path, and builds `describeBucket` metadata once per call.
+  - `PostgresResultShaper` is bound to `RESULT_SHAPER` on PostgreSQL. It accepts a row set, a list, a page (`{meta, data}`) or `null`, and returns the same container with documents. Collection resources pass through, and empty results load nothing.
+- **Relation targets:** `resolveRelationTargets` (`schema/relation-targets.ts`) was extracted from `SchemaPlanner` and is shared with `BucketDescriptions`.
+
+### Rules as built
+
+- The primary key is the property named by `primary`. No `_id` is produced.
+- A NULL scalar is `null`. An array without child rows is `[]`. An object whose columns are all NULL is `{}`. An object with some values keeps its keys, with `null` for the NULL ones.
+- `bigint` values (keys, properties and array items) are strings.
+- A `point` becomes `{type: locationType, coordinates: [x, y]}`.
+- A resolved relation becomes the target's document, with the target's own key field and the same locale. A resolved relation without a target is `null`. Unresolved relations are keys; one-to-many keys follow `_position`.
+- Translations are `{locale: value}`. With a locale, a top-level translated property becomes `map[best] ?? map[fallback] ?? map`, which is MongoDB's rule. Translated properties inside objects stay maps, as on MongoDB.
+- Decryption works on documents, so the query facade decrypts after shaping.
+
+### Differs from MongoDB
+
+- **Order of resolved one-to-many documents:** MongoDB returns them in collection order because of `$lookup`; PostgreSQL returns them in the stored order of the ids.
+- **Unset resolved relation:** MongoDB drops the field; PostgreSQL emits `null`.
+- **Key order inside a document:** PostgreSQL follows the bucket definition. The contract cases compare parsed JSON, not the serialized string.
+
+### Tests
+
+Unit specs in `packages/data/postgresql/test/shape/` cover each rule with hand-built row sets. `test/shape/database.ts` holds test-only stand-ins for Parts 8 and 9: it writes a document as rows and reads a row set back. `test/contract/result-shape.spec.ts` stores one fixture per field type on both engines and compares them after replacing keys by labels. MongoDB goes through `BUCKET_QUERY`, PostgreSQL through `RESULT_SHAPER`.
+
+### Requests to other parts
+
+- **Part 8:**
+  - Deliver row sets in the format above, with `children` for every array, link and translation table of the requested fields and `joined` for resolved relations.
+  - Pass `locale` in the options.
+  - Decrypt after shaping.
+  - Parse `integer` and `bigint` keys from strings.
+- **Part 9:** return row sets for written rows so results go through the same shaper.
+- **Part 10:** carry row sets in change events. `BucketDescriptions` reads the definitions on every call, so a cache needs invalidation from bucket change events.

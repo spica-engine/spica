@@ -1,5 +1,5 @@
 import {Logger, Module, OnApplicationShutdown, Inject} from "@nestjs/common";
-import {DataAdapter, PassthroughResultShaper} from "@spica-server/data";
+import {DataAdapter} from "@spica-server/data";
 import {createTables, Orm} from "@spica-server/data-postgresql-orm";
 import {
   COLLECTION_NAMES,
@@ -19,6 +19,7 @@ import {PostgresIdTypes} from "./id.js";
 import {ORM} from "./orm.js";
 import {UnsupportedCollectionQueryFacade} from "./query.js";
 import {repositoryClasses} from "./repositories/index.js";
+import {BucketDescriptions, PostgresResultShaper} from "./shape/index.js";
 import {postgresBucketSchema} from "./schemas/index.js";
 import {BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
 import {assertSupportedServerVersion} from "./version.js";
@@ -88,7 +89,8 @@ export class PostgresDataAdapter {
           {provide: ORM, useFactory: (pool: pg.Pool) => new Orm(pool), inject: [PG_POOL]},
           PostgresExpiry,
           {provide: ID_TYPES, useClass: PostgresIdTypes},
-          {provide: RESULT_SHAPER, useClass: PassthroughResultShaper},
+          BucketDescriptions,
+          {provide: RESULT_SHAPER, useClass: PostgresResultShaper},
           {provide: COLLECTION_QUERY, useClass: UnsupportedCollectionQueryFacade},
           {provide: BUCKET_SCHEMA_EXTENSION, useValue: postgresBucketSchema},
           {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
@@ -100,6 +102,7 @@ export class PostgresDataAdapter {
           ORM,
           PostgresExpiry,
           ID_TYPES,
+          BucketDescriptions,
           RESULT_SHAPER,
           COLLECTION_QUERY,
           BUCKET_SCHEMA_EXTENSION,

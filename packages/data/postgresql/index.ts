@@ -8,3 +8,4 @@ export * from "./src/expiry/index.js";
 export * from "./src/schemas/index.js";
 export * from "./src/schema/index.js";
 export * from "./src/repositories/bucket/schema-manager.js";
+export * from "./src/shape/index.js";
