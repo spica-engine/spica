@@ -146,8 +146,9 @@ export function useBucketData(
   const pageSize = (queryArgs?.limit as number) ?? DEFAULT_PAGE_SIZE;
 
   const {
-    data: bucketDataResponse,
-    isLoading: bucketDataLoading,
+    currentData: bucketDataResponse,
+    isLoading,
+    isFetching,
     refetch: refreshBucketData
   } = useGetBucketDataQuery(
     queryArgs as NonNullable<typeof queryArgs>,
@@ -156,6 +157,8 @@ export function useBucketData(
       refetchOnFocus: true
     }
   );
+
+  const bucketDataLoading = isLoading || (isFetching && !bucketDataResponse);
 
   // Pages loaded beyond the first page via "load more". Reset whenever the
   // first page reloads (filter/sort/search change, refetch, or cache invalidation
