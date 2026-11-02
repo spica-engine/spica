@@ -27,7 +27,8 @@ export class Emitter<T extends {_id: ObjectId}> {
   constructor(
     private collection: Collection,
     private source: Readable,
-    private options: FindOptions<T>
+    private options: FindOptions<T>,
+    private sourceReady: Promise<void> = Promise.resolve()
   ) {
     this.collectionName = collection.collectionName;
     this.subscribe = observer => {
@@ -158,9 +159,8 @@ export class Emitter<T extends {_id: ObjectId}> {
         });
       }
 
-      this.collection
-        .aggregate(pipeline)
-        .toArray()
+      this.sourceReady
+        .then(() => this.collection.aggregate(pipeline).toArray())
         .then((documents: T[]) => {
           for (const document of documents) {
             // we can not use this.next since it's designed for notifying all listeners
