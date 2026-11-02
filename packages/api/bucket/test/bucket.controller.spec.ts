@@ -94,6 +94,13 @@ describe("BucketController", () => {
   afterEach(() => app.close());
 
   describe("get", () => {
+    it("should get the capabilities of the database engine", async () => {
+      const response = await req.get("/bucket/capabilities");
+      expect(response.statusCode).toBe(200);
+      expect(response.body.propertyTypes).toContain("relation");
+      expect(response.body.propertyTypes).not.toContain("uuid");
+    });
+
     it("should get predefinedDefaults", async () => {
       const response = await req.get("/bucket/predefineddefaults", {});
       expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);

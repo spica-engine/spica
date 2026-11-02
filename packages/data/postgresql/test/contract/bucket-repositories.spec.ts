@@ -44,6 +44,22 @@ contractSuite("bucket repositories", engine => {
   });
 
   describe("bucket", () => {
+    it("keeps the column order of a compound index", async () => {
+      const indexes = [
+        {definition: {b: 1, a: -1, c: 1}, options: {}},
+        {definition: {z: 1, y: 1}, options: {unique: true}}
+      ];
+
+      const inserted = await buckets.insert(bucket("Indexed", {indexes}));
+
+      const found = await buckets.findById(inserted._id);
+      expect(found?.indexes?.map(index => Object.keys(index.definition))).toEqual([
+        ["b", "a", "c"],
+        ["z", "y"]
+      ]);
+      expect(found?.indexes).toEqual(indexes);
+    });
+
     it("inserts a bucket and finds it by id", async () => {
       const inserted = await buckets.insert(
         bucket("Books", {

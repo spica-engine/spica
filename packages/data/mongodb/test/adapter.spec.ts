@@ -5,7 +5,8 @@ import {
   MongoCollectionQueryFacade,
   MongoDataAdapter,
   MongoDataHealth,
-  MongoIdTypes
+  MongoIdTypes,
+  mongoBucketSchema
 } from "@spica-server/data-mongodb";
 import {DatabaseModule, DatabaseService} from "@spica-server/database";
 import {
@@ -18,6 +19,7 @@ import {
   RESULT_SHAPER
 } from "@spica-server/interface-data";
 import {BUCKET_QUERY, BUCKET_WRITE} from "@spica-server/interface-bucket-common";
+import {BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
 
 @Global()
 @Module({providers: [{provide: DatabaseService, useValue: {}}], exports: [DatabaseService]})
@@ -39,6 +41,7 @@ describe("MongoDataAdapter", () => {
       COLLECTION_QUERY,
       BUCKET_QUERY,
       BUCKET_WRITE,
+      BUCKET_SCHEMA_EXTENSION,
       REPOSITORY_CLASSES,
       COLLECTION_NAMES,
       DATA_HEALTH,
@@ -61,6 +64,17 @@ describe("MongoDataAdapter", () => {
     expect(module.get(DATA_ENGINE)).toBe("mongodb");
     expect(module.get(ID_TYPES)).toBeInstanceOf(MongoIdTypes);
     expect(ids()).toBe(module.get(ID_TYPES));
+  });
+
+  it("should provide the MongoDB bucket schema extension", async () => {
+    const module = await Test.createTestingModule({
+      imports: [
+        ExistingConnectionModule,
+        DataModule.forRoot(MongoDataAdapter.forExistingConnection())
+      ]
+    }).compile();
+
+    expect(module.get(BUCKET_SCHEMA_EXTENSION)).toBe(mongoBucketSchema);
   });
 
   it("should provide the query facade and a passthrough result shaper", async () => {
