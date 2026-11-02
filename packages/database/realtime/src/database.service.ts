@@ -7,11 +7,16 @@ import {Emitter} from "./stream.js";
 import isEqual from "lodash/isEqual.js";
 import {PassThrough, Readable} from "stream";
 
+const CURSOR_READY_TIMEOUT_MS = 5000;
+
 @Injectable()
 export class RealtimeDatabaseService implements OnModuleDestroy {
   constructor(private database: DatabaseService) {}
 
-  private changeStreams = new Map<string, {stream: ChangeStream; hub: PassThrough; cursorReadable: Readable}>();
+  private changeStreams = new Map<
+    string,
+    {stream: ChangeStream; hub: PassThrough; cursorReadable: Readable; ready: Promise<void>}
+  >();
   private getChangeStream(name: string) {
     if (this.changeStreams.has(name)) {
       return this.changeStreams.get(name)!;
@@ -30,14 +35,29 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
     cursorReadable.on("error", err =>
       console.error(`[ChangeStream/${name}] cursor error: ${err.message}`)
     );
-    hub.on("error", err =>
-      console.error(`[ChangeStream/${name}] hub error: ${err.message}`)
-    );
+    hub.on("error", err => console.error(`[ChangeStream/${name}] hub error: ${err.message}`));
     cursorReadable.pipe(hub);
-    const entry = {stream, hub, cursorReadable};
+    const ready = this.whenCursorEstablished(stream);
+    const entry = {stream, hub, cursorReadable, ready};
     this.changeStreams.set(name, entry);
 
     return entry;
+  }
+
+  private whenCursorEstablished(stream: ChangeStream) {
+    return new Promise<void>(resolve => {
+      const timer = setTimeout(done, CURSOR_READY_TIMEOUT_MS);
+      function done() {
+        clearTimeout(timer);
+        stream.off("resumeTokenChanged", done);
+        stream.off("error", done);
+        stream.off("close", done);
+        resolve();
+      }
+      stream.once("resumeTokenChanged", done);
+      stream.once("error", done);
+      stream.once("close", done);
+    });
   }
 
   private emitters = new Map<string, {value: Emitter<any>; listenerCount: number}>();
@@ -50,9 +70,9 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
       return emitter.value;
     }
 
-    const {hub} = this.getChangeStream(name);
+    const {hub, ready} = this.getChangeStream(name);
     const emitter = {
-      value: new Emitter(this.database.collection(name), hub, options),
+      value: new Emitter(this.database.collection(name), hub, options, ready),
       listenerCount: 1
     };
 
@@ -136,7 +156,11 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
     return this.getEmitter(name, options).getObservable();
   }
 
-  private closeStreamSafely(entry: {stream: ChangeStream; hub: PassThrough; cursorReadable: Readable}) {
+  private closeStreamSafely(entry: {
+    stream: ChangeStream;
+    hub: PassThrough;
+    cursorReadable: Readable;
+  }) {
     if (entry && entry.stream && !entry.stream.closed) {
       // Improvement 4: close ChangeStream first (stops data production), then destroy
       // cursorReadable (terminates the pipe), then end hub — prevents ERR_STREAM_WRITE_AFTER_END
