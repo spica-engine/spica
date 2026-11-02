@@ -3,7 +3,7 @@ import {ResourceRef, ResultShaper} from "@spica-server/interface-data";
 
 @Injectable()
 export class PassthroughResultShaper implements ResultShaper {
-  shape<T>(_resource: ResourceRef, result: T): T {
-    return result;
+  shape<I, O = I>(_resource: ResourceRef, input: I): Promise<O> {
+    return Promise.resolve(input as unknown as O);
   }
 }

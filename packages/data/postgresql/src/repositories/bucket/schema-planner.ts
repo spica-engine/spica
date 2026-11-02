@@ -13,6 +13,7 @@ import {
   PrimaryKeyMetadata,
   relationTargets,
   RelationTargets,
+  resolveRelationTargets,
   statementsOf,
   tryPrimaryKeyMetadata,
   UpdatePlan,
@@ -94,18 +95,7 @@ export class SchemaPlanner {
     return plans;
   }
 
-  private async targetsOf(bucket: Bucket): Promise<RelationTargets> {
-    const resolved = new Map<string, {table: string; primaryKey: PrimaryKeyMetadata}>();
-    for (const targetId of relationTargets(bucket.properties)) {
-      if (targetId == String(bucket._id)) {
-        continue;
-      }
-      const target = await this.stored.find(targetId);
-      const primaryKey = target && tryPrimaryKeyMetadata(target);
-      if (primaryKey) {
-        resolved.set(targetId, {table: mainTableName(targetId), primaryKey});
-      }
-    }
-    return targetId => resolved.get(targetId);
+  private targetsOf(bucket: Bucket): Promise<RelationTargets> {
+    return resolveRelationTargets(bucket, id => this.stored.find(id));
   }
 }

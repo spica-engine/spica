@@ -48,7 +48,7 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
       .catch(error => {
         throw new DatabaseException(error.message);
       });
-    return {result: this.shape(bucket, this.decrypt(bucket, documents, context)), locale};
+    return {result: await this.shape(bucket, this.decrypt(bucket, documents, context)), locale};
   }
 
   async findOne<T>(
@@ -72,7 +72,7 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
       }
     );
     page.data = this.decrypt(bucket, page.data, context);
-    return {result: this.shape(bucket, page), locale};
+    return {result: await this.shape(bucket, page), locale};
   }
 
   private collection(bucket: Bucket) {
@@ -93,7 +93,7 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
     ) as T[];
   }
 
-  private shape<R>(bucket: Bucket, result: R): R {
+  private shape<R>(bucket: Bucket, result: R): Promise<R> {
     return this.shaper.shape({kind: "bucket", bucketId: bucket._id.toString()}, result);
   }
 
