@@ -165,7 +165,7 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
     bucket: Bucket,
     document: T,
     context: BucketWriteContext
-  ): T {
+  ): Promise<T> {
     const decrypted =
       context.encryptionSecret && document
         ? (decryptDocumentFields(

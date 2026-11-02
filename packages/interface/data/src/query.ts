@@ -51,8 +51,12 @@ export interface CollectionQueryFacade {
 
 export const COLLECTION_QUERY = Symbol.for("SPICA_DATA_COLLECTION_QUERY");
 
+export interface ShapeOptions {
+  locale?: {best: string; fallback: string};
+}
+
 export interface ResultShaper {
-  shape<T>(resource: ResourceRef, result: T): T;
+  shape<I, O = I>(resource: ResourceRef, input: I, options?: ShapeOptions): Promise<O>;
 }
 
 export const RESULT_SHAPER = Symbol.for("SPICA_DATA_RESULT_SHAPER");

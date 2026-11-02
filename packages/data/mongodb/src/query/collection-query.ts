@@ -153,7 +153,7 @@ export class MongoCollectionQueryFacade implements CollectionQueryFacade {
     return this.db.collection(collection).aggregate<Page<T>>(pipeline, AGGREGATE_OPTIONS).next();
   }
 
-  private shape<R>(collection: string, result: R): R {
+  private shape<R>(collection: string, result: R): Promise<R> {
     return this.shaper.shape({kind: "collection", name: collection}, result);
   }
 }
