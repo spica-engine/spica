@@ -7,9 +7,18 @@ import {httpService} from "../../http";
 import {applyPlan, buildPlan, renderPlan, resolveModules, MODULE_NAMES} from "@spica-server/sync";
 import {confirm} from "./prompt";
 import {cliReporter} from "./reporter";
+import {guard} from "../../guard";
 
 async function apply({args, options}: ActionParameters) {
   const rootDir = path.resolve((args.dir as string | undefined) ?? process.cwd());
+  try {
+    guard.assert(rootDir);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(bold(red(`✗ ${msg}`)));
+    process.exitCode = 1;
+    return;
+  }
   const autoApprove = !!options.autoApprove;
   const concurrency = options.concurrency as number;
   const abortOnError = !!options.abortOnError;
