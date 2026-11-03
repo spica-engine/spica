@@ -7,6 +7,10 @@ import {FunctionPreparationService} from "./function-preparation.service.js";
 import {PlanExecutor} from "./plan-executor.js";
 import {FunctionDependents} from "./function-dependents.js";
 
+function functionNameFromKey(key: string | undefined): string | undefined {
+  return key?.split("/")[1];
+}
+
 @Injectable()
 export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(FunctionAssetWatcher.name);
@@ -44,11 +48,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
             if (operationType === "delete") {
               // fullDocument is null for delete events; use fullDocumentBeforeChange instead.
               const prevDoc = (change as any).fullDocumentBeforeChange;
-              // key format: "functions/{functionName}/{filename}"
-              const key: string | undefined = prevDoc?.key;
-              if (!key) return;
-
-              const functionName = key.split("/")[1];
+              const functionName = functionNameFromKey(prevDoc?.key);
               if (!functionName) return;
 
               this.logger.log(
@@ -62,13 +62,14 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
             const functionId = doc?.functionId;
             const filename = doc?.filename;
             const hash = doc?.hash;
+            const functionName = functionNameFromKey(doc?.key) ?? functionId;
 
             if (!functionId) return;
 
             // Skip if this node originated the write.
             if (this.tracker.isSelfWrite({functionId: functionId.toHexString(), filename, hash})) {
               this.logger.debug(
-                `[asset-watcher] Suppressing self-write for ${functionId}/${filename}`
+                `[asset-watcher] Suppressing self-write for ${functionName}/${filename}`
               );
               return;
             }
@@ -76,7 +77,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
             const fn = await this.functionService.findOne({_id: functionId});
             if (!fn) {
               this.logger.warn(
-                `[asset-watcher] Change stream: no function found for id ${functionId}`
+                `[asset-watcher] Change stream: no function found for ${functionName}`
               );
               return;
             }
