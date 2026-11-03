@@ -19,7 +19,8 @@ import {MongoCollectionQueryFacade} from "./query/collection-query.js";
 import {MongoBucketQueryFacade} from "./bucket/query.js";
 import {MongoBucketWriteFacade} from "./bucket/write.js";
 import {BUCKET_QUERY, BUCKET_WRITE} from "@spica-server/interface-bucket-common";
-import {BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
+import {BUCKET_RULE_VALIDATOR, BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
+import {MongoBucketRuleValidator} from "./bucket/rule-validator.js";
 import {mongoBucketSchema} from "./schemas/index.js";
 
 export const MONGODB_ENGINE = "mongodb";
@@ -33,6 +34,7 @@ const providers = [
   {provide: COLLECTION_QUERY, useClass: MongoCollectionQueryFacade},
   {provide: BUCKET_QUERY, useClass: MongoBucketQueryFacade},
   {provide: BUCKET_WRITE, useClass: MongoBucketWriteFacade},
+  {provide: BUCKET_RULE_VALIDATOR, useClass: MongoBucketRuleValidator},
   {provide: BUCKET_SCHEMA_EXTENSION, useValue: mongoBucketSchema},
   {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
   {provide: COLLECTION_NAMES, useClass: MongoCollectionNames},
@@ -46,6 +48,7 @@ const exported = [
   COLLECTION_QUERY,
   BUCKET_QUERY,
   BUCKET_WRITE,
+  BUCKET_RULE_VALIDATOR,
   BUCKET_SCHEMA_EXTENSION,
   REPOSITORY_CLASSES,
   COLLECTION_NAMES,
