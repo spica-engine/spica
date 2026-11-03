@@ -494,7 +494,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.process();
   }
 
-  lostWorker(id: string) {
+  lostWorker(id: string, code?: number | null, signal?: string | null) {
     const worker = this.workers.get(id);
     const lostWarmWorker =
       worker && worker.state == WorkerState.Warm && !worker.isReplacement && worker.targetId;
@@ -515,7 +515,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.logRouters.delete(id);
 
-    this.print(`lost a worker ${id}`);
+    this.print(`lost a worker ${id}, code: ${code}, signal: ${signal}`);
 
     if (lostWarmWorker && !this.disabled && this.warmConfigs.has(worker.targetId)) {
       this.scaleWarmWorkers(worker.targetId);
@@ -729,7 +729,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       entrypointPath: this.options.spawnEntrypointPath
     });
 
-    worker.once("exit", () => this.lostWorker(id));
+    worker.once("exit", (code, signal) => this.lostWorker(id, code, signal));
 
     this.workers.set(id, worker);
 

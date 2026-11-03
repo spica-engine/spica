@@ -541,6 +541,49 @@ describe("Scheduler", () => {
       expect([...scheduler.eventToWorker.values()]).not.toContain(workerId);
       expect(scheduler.logRouters.has(workerId)).toBe(false);
     });
+
+    describe("exit diagnostics", () => {
+      let debugSpy: jest.SpyInstance;
+
+      beforeEach(() => {
+        scheduler["options"].debug = true;
+        debugSpy = jest.spyOn(scheduler["logger"], "debug").mockImplementation(() => {});
+      });
+
+      afterEach(() => {
+        scheduler["options"].debug = false;
+      });
+
+      it("should log the exit code of a worker that exited on its own", () => {
+        enqueueOne("ev1");
+        const [workerId] = findWorkerFromEventId("1");
+
+        scheduler.lostWorker(workerId, 1, null);
+
+        expect(debugSpy).toHaveBeenCalledWith(`lost a worker ${workerId}, code: 1, signal: null`);
+      });
+
+      it("should log the signal of a worker that was killed", () => {
+        enqueueOne("ev1");
+        const [workerId] = findWorkerFromEventId("1");
+
+        scheduler.lostWorker(workerId, null, "SIGKILL");
+
+        expect(debugSpy).toHaveBeenCalledWith(
+          `lost a worker ${workerId}, code: null, signal: SIGKILL`
+        );
+      });
+
+      it("should forward the code and signal of the worker's exit event to lostWorker", () => {
+        enqueueOne("ev1");
+        const [workerId, worker] = findWorkerFromEventId("1");
+        const lostWorkerSpy = jest.spyOn(scheduler, "lostWorker");
+
+        worker.emit("exit", 137, "SIGKILL");
+
+        expect(lostWorkerSpy).toHaveBeenCalledWith(workerId, 137, "SIGKILL");
+      });
+    });
   });
 
   describe("per-worker concurrency routing", () => {
