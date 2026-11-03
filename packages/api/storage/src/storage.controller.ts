@@ -24,7 +24,7 @@ import {activity} from "@spica-server/activity-services";
 import {BOOLEAN, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ID, idTransform, ids} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {Id, ResourceFilterSpec} from "@spica-server/interface-data";
 import {
   ActionGuard,
   AuthGuard,
@@ -69,7 +69,7 @@ export class StorageController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:index"))
   async find(
-    @ResourceFilter({collection: STORAGE_COLLECTION}) resourceFilter: object,
+    @ResourceFilter({collection: STORAGE_COLLECTION}) resourceFilter: ResourceFilterSpec,
     @Query("filter", JSONP) filter?: object,
     @Query("paginate", BOOLEAN) paginate?: boolean,
     @Query("limit", NUMBER) limit?: number,

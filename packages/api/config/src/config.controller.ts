@@ -8,7 +8,11 @@ import {
   Put,
   UseGuards
 } from "@nestjs/common";
-import {COLLECTION_QUERY, CollectionQueryFacade} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 import {ConfigService} from "./config.service.js";
 import {ConfigSchemaRegistry} from "./config.schema.registry.js";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
@@ -26,7 +30,9 @@ export class ConfigController {
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("config:index"))
-  async getAllConfigs(@ResourceFilter({collection: CONFIG_COLLECTION}) resourceFilter: object) {
+  async getAllConfigs(
+    @ResourceFilter({collection: CONFIG_COLLECTION}) resourceFilter: ResourceFilterSpec
+  ) {
     return this.queries.find(CONFIG_COLLECTION, {resourceFilter});
   }
 

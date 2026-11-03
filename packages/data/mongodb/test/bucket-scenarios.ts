@@ -64,7 +64,7 @@ export interface Scenario {
   hashSecret?: string;
   spec: {
     documentId?: ObjectId;
-    resourceFilter?: object;
+    resourceFilter?: {include: string[]; exclude: string[][]};
     filter?: object | string;
     language?: string;
     localize?: boolean;
@@ -196,7 +196,7 @@ export const scenarios: Scenario[] = [
     bucket: "authors",
     paginate: false,
     spec: {
-      resourceFilter: {$match: {_id: {$in: [authorsId]}}},
+      resourceFilter: {include: [authorsId.toHexString()], exclude: []},
       relationPaths: [],
       projectMap: []
     }

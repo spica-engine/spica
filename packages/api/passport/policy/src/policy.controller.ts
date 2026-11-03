@@ -18,7 +18,7 @@ import {activity} from "@spica-server/activity-services";
 import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ID} from "@spica-server/data";
-import {Id} from "@spica-server/interface-data";
+import {Id, ResourceFilterSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createPolicyActivity} from "./activity.resource.js";
 import {
@@ -44,7 +44,7 @@ export class PolicyController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:policy:index"))
   find(
     @Query("filter", DEFAULT({}), JSONP) filter: object,
-    @ResourceFilter({collection: POLICIES_COLLECTION}) resourceFilter?: object,
+    @ResourceFilter({collection: POLICIES_COLLECTION}) resourceFilter?: ResourceFilterSpec,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number
   ) {

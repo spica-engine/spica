@@ -10,6 +10,9 @@
       "path": "../interface/passport/guard"
     },
     {
+      "path": "../interface/data"
+    },
+    {
       "path": "../database/realtime"
     }
   ]

@@ -3,7 +3,12 @@ import {EnvVar} from "@spica-server/interface-env_var";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
 import {ids} from "@spica-server/data";
-import {CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
+import {
+  CollectionQueryFacade,
+  Id,
+  ReadSpec,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 
 const collection = "env_var";
 
@@ -12,7 +17,7 @@ const envVarIds = () => ids().forCollection(collection);
 export async function find(
   queries: CollectionQueryFacade,
   options?: {
-    resourceFilter?: object;
+    resourceFilter?: ResourceFilterSpec;
     limit: number;
     skip: number;
     sort?: {[path: string]: 1 | -1};

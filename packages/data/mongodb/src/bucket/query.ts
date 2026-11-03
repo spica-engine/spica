@@ -8,7 +8,11 @@ import {
   decryptDocumentFields
 } from "@spica-server/bucket-common";
 import {DatabaseService} from "@spica-server/database";
-import {executePaginationPlan, PipelineBuilder} from "@spica-server/database-pipeline";
+import {
+  executePaginationPlan,
+  PipelineBuilder,
+  renderResourceFilter
+} from "@spica-server/database-pipeline";
 import {Bucket} from "@spica-server/interface-bucket";
 import {
   BucketQueryFacade,
@@ -18,7 +22,7 @@ import {
   Locale,
   RelationMap
 } from "@spica-server/interface-bucket-common";
-import {Page, RESULT_SHAPER, ResultShaper} from "@spica-server/interface-data";
+import {ID_TYPES, IdTypes, Page, RESULT_SHAPER, ResultShaper} from "@spica-server/interface-data";
 import {PaginationPlan} from "@spica-server/interface-database";
 import {aggregatable, AGGREGATE_OPTIONS} from "../aggregate.js";
 import {BucketPipelineBuilder} from "./pipeline.builder.js";
@@ -33,7 +37,8 @@ interface BucketReadPlan {
 export class MongoBucketQueryFacade implements BucketQueryFacade {
   constructor(
     private readonly db: DatabaseService,
-    @Inject(RESULT_SHAPER) private readonly shaper: ResultShaper
+    @Inject(RESULT_SHAPER) private readonly shaper: ResultShaper,
+    @Inject(ID_TYPES) private readonly idTypes: IdTypes
   ) {}
 
   async find<T>(
@@ -110,9 +115,12 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
     let filtersAppliedPipeline: BucketPipelineBuilder;
     let locale: Locale;
 
+    const resourceIdType =
+      spec.resourceFilter && (await this.idTypes.forBucket(bucket._id.toString()));
+
     let basePipeline = await pipelineBuilder
       .findOneIfRequested(spec.documentId)
-      .filterResources(spec.resourceFilter);
+      .filterResources(renderResourceFilter(spec.resourceFilter, id => resourceIdType.parse(id)));
 
     basePipeline = await basePipeline.localize(spec.localize, spec.language, resolved => {
       locale = resolved;

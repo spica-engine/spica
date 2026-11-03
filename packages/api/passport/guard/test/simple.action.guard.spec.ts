@@ -598,5 +598,12 @@ describe("SimpleActionGuard", () => {
         excludeds: ["b", "c"]
       });
     });
+
+    it("should return the neutral filter for a collection without building any query", () => {
+      expect(resourceFilterFunction({collection: "identity"}, ctx)).toEqual({
+        include: ["a"],
+        exclude: [["b"], ["c"]]
+      });
+    });
   });
 });

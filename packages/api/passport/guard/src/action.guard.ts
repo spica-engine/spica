@@ -9,7 +9,6 @@ import {
   Optional,
   Type
 } from "@nestjs/common";
-import {ids} from "@spica-server/data";
 import {isMatch} from "matcher";
 import {Text, Parameter, parse} from "path-to-regexp";
 import {
@@ -43,38 +42,7 @@ export const resourceFilterFunction: ResourceFilterFunction = (
     };
   }
 
-  const {collection} = data;
-  const parseId = (id: string) => ids().forCollection(collection).parse(id);
-
-  let aggregation = [];
-
-  for (const exclude of excluded) {
-    aggregation.push({
-      _id: {
-        $nin: Array.from<string>(new Set(exclude)).map(parseId)
-      }
-    });
-  }
-
-  if (include.length) {
-    aggregation.push({
-      _id: {
-        $in: Array.from<string>(new Set(include)).map(parseId)
-      }
-    });
-  }
-
-  if (!aggregation.length) {
-    return {
-      $match: {}
-    };
-  }
-
-  return {
-    $match: {
-      $or: aggregation
-    }
-  };
+  return {include, exclude: excluded};
 };
 
 export const ResourceFilter = (data: ResourceFilterOptions) => {

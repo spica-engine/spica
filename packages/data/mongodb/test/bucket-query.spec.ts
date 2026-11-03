@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import {EJSON} from "bson";
 import {PassthroughResultShaper} from "@spica-server/data";
-import {MongoBucketQueryFacade} from "@spica-server/data-mongodb";
+import {MongoBucketQueryFacade, MongoIdTypes} from "@spica-server/data-mongodb";
 import {DatabaseService} from "@spica-server/database";
 import {preferences, resolveSchema, scenarios, schemas, user} from "./bucket-scenarios";
 
@@ -31,7 +31,11 @@ describe("MongoBucketQueryFacade", () => {
           };
         }
       } as unknown as DatabaseService;
-      const facade = new MongoBucketQueryFacade(db, new PassthroughResultShaper());
+      const facade = new MongoBucketQueryFacade(
+        db,
+        new PassthroughResultShaper(),
+        new MongoIdTypes()
+      );
       const context = {
         resolveSchema: resolveSchema as any,
         preferences: async () => preferences,
@@ -60,7 +64,11 @@ describe("MongoBucketQueryFacade", () => {
         estimatedDocumentCount: async () => 0
       })
     } as unknown as DatabaseService;
-    const facade = new MongoBucketQueryFacade(db, new PassthroughResultShaper());
+    const facade = new MongoBucketQueryFacade(
+      db,
+      new PassthroughResultShaper(),
+      new MongoIdTypes()
+    );
     const context = {resolveSchema: resolveSchema as any, preferences: async () => preferences};
 
     await facade.find(schemas.plain, {}, context);
@@ -76,7 +84,11 @@ describe("MongoBucketQueryFacade", () => {
         aggregate: () => ({toArray: async () => [document, {_id: "2"}]})
       })
     } as unknown as DatabaseService;
-    const facade = new MongoBucketQueryFacade(db, new PassthroughResultShaper());
+    const facade = new MongoBucketQueryFacade(
+      db,
+      new PassthroughResultShaper(),
+      new MongoIdTypes()
+    );
 
     const {result} = await facade.findOne(
       schemas.plain,
@@ -92,7 +104,7 @@ describe("MongoBucketQueryFacade", () => {
     const db = {
       collection: () => ({aggregate: () => ({toArray: async () => []})})
     } as unknown as DatabaseService;
-    const facade = new MongoBucketQueryFacade(db, shaper);
+    const facade = new MongoBucketQueryFacade(db, shaper, new MongoIdTypes());
 
     await facade.find(
       schemas.plain,

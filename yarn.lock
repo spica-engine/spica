@@ -9464,8 +9464,11 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.22"
     "@nestjs/testing": "npm:^10.4.22"
+    "@spica-server/data": "workspace:*"
     "@spica-server/database": "workspace:*"
+    "@spica-server/database-pipeline": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
+    "@spica-server/interface-data": "workspace:*"
     "@spica-server/interface-database": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
     "@types/lodash": "npm:^4.17.24"
@@ -10732,6 +10735,7 @@ __metadata:
   resolution: "@spica-server/realtime@workspace:packages/realtime"
   dependencies:
     "@spica-server/database-realtime": "workspace:*"
+    "@spica-server/interface-data": "workspace:*"
     "@spica-server/interface-passport-guard": "workspace:*"
     rxjs: "npm:^7.8.2"
   languageName: unknown

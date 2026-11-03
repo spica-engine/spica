@@ -25,7 +25,13 @@ import {activity} from "@spica-server/activity-services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {DuplicateKeyError, ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  Id,
+  ReadSpec,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {Factor, FactorMeta} from "@spica-server/interface-passport-authfactor";
@@ -155,7 +161,7 @@ export class UserController {
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", JSONP) filter: object,
-    @ResourceFilter({collection: USER_COLLECTION}) resourceFilter: object
+    @ResourceFilter({collection: USER_COLLECTION}) resourceFilter: ResourceFilterSpec
   ) {
     const spec: ReadSpec = {
       resourceFilter,

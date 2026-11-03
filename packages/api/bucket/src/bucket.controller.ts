@@ -23,7 +23,12 @@ import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-buc
 import {BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  Id,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createBucketActivity} from "@spica-server/bucket-common";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket-cache";
@@ -80,7 +85,7 @@ export class BucketController {
    */
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:index"))
-  index(@ResourceFilter({collection: BUCKETS_COLLECTION}) resourceFilter: object) {
+  index(@ResourceFilter({collection: BUCKETS_COLLECTION}) resourceFilter: ResourceFilterSpec) {
     return CRUD.find(this.queries, {resourceFilter, sort: {order: 1}});
   }
 
