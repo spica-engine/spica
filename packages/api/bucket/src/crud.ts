@@ -98,6 +98,12 @@ async function ruleValidation(rules: BucketRuleValidator, schema: Bucket) {
   }
 
   try {
+    await rules.validateFieldRules(schema);
+  } catch (error) {
+    throw new BadRequestException("Error occurred while parsing field rule\n" + error.message);
+  }
+
+  try {
     expression.run(
       schema.acl.write,
       {

@@ -19,4 +19,12 @@ describe("MongoBucketRuleValidator", () => {
       await expect(validator.validateReadRule(bucket(rule))).rejects.toThrow();
     }
   );
+
+  it("should not check field level rules, as before", async () => {
+    const withFieldRule: any = {
+      acl: {read: "true==true", write: "true==true"},
+      properties: {title: {type: "string", acl: "document.title =="}}
+    };
+    await expect(validator.validateFieldRules(withFieldRule)).resolves.toBeUndefined();
+  });
 });
