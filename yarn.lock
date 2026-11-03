@@ -9404,6 +9404,7 @@ __metadata:
     "@spica-server/core-patch": "workspace:*"
     "@spica-server/data": "workspace:*"
     "@spica-server/data-postgresql-orm": "workspace:*"
+    "@spica-server/database-pipeline": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-activity": "workspace:*"
     "@spica-server/interface-asset": "workspace:*"
