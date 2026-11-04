@@ -6,7 +6,7 @@ import {CollectionQueryFacade, Id, ResourceFilterSpec} from "@spica-server/inter
 import {HistoryRepository} from "@spica-server/interface-bucket-history";
 import * as expression from "@spica-server/bucket-expression";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
-import {Bucket, BucketDataRepository} from "@spica-server/interface-bucket";
+import {Bucket, BucketDataRepository, BucketRuleValidator} from "@spica-server/interface-bucket";
 
 export async function find(
   queries: CollectionQueryFacade,
@@ -22,8 +22,8 @@ export function findOne(bs: BucketService, id: Id): Promise<Bucket> {
   return bs.findById(id);
 }
 
-export async function insert(bs: BucketService, bucket: Bucket) {
-  ruleValidation(bucket);
+export async function insert(bs: BucketService, rules: BucketRuleValidator, bucket: Bucket) {
+  await ruleValidation(rules, bucket);
 
   if (bucket._id) {
     bucket._id = bucketIds().parse(bucket._id);
@@ -40,9 +40,10 @@ export async function replace(
   bs: BucketService,
   bucketData: BucketDataRepository,
   history: HistoryRepository,
+  rules: BucketRuleValidator,
   bucket: Bucket
 ) {
-  ruleValidation(bucket);
+  await ruleValidation(rules, bucket);
 
   // check whether we need to delete bucket id
   const _id = bucketIds().parse(bucket._id);
@@ -89,20 +90,9 @@ export async function remove(
 }
 
 // helpers
-function ruleValidation(schema: Bucket) {
+async function ruleValidation(rules: BucketRuleValidator, schema: Bucket) {
   try {
-    expression.extractPropertyMap(schema.acl.read);
-    expression.aggregate(
-      schema.acl.read,
-      {
-        auth: {
-          identifier: "",
-          policies: []
-        },
-        document: {}
-      },
-      "match"
-    );
+    await rules.validateReadRule(schema);
   } catch (error) {
     throw new BadRequestException("Error occurred while parsing read rule\n" + error.message);
   }

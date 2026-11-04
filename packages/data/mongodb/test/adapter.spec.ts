@@ -19,7 +19,7 @@ import {
   RESULT_SHAPER
 } from "@spica-server/interface-data";
 import {BUCKET_QUERY, BUCKET_WRITE} from "@spica-server/interface-bucket-common";
-import {BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
+import {BUCKET_RULE_VALIDATOR, BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
 
 @Global()
 @Module({providers: [{provide: DatabaseService, useValue: {}}], exports: [DatabaseService]})
@@ -41,6 +41,7 @@ describe("MongoDataAdapter", () => {
       COLLECTION_QUERY,
       BUCKET_QUERY,
       BUCKET_WRITE,
+      BUCKET_RULE_VALIDATOR,
       BUCKET_SCHEMA_EXTENSION,
       REPOSITORY_CLASSES,
       COLLECTION_NAMES,

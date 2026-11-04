@@ -32,3 +32,4 @@ export * from "./src/change-feed.js";
 export * from "./src/repositories/replication/command.js";
 export * from "./src/repositories/function/asset.js";
 export * from "./src/schemas/index.js";
+export * from "./src/bucket/rule-validator.js";
