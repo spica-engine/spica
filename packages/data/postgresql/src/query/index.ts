@@ -1,2 +1,2 @@
 export * from "./bucket/index.js";
-export * from "./unsupported.js";
+export * from "./collection/index.js";

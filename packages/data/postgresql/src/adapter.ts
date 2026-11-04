@@ -17,7 +17,7 @@ import {PostgresExpiry} from "./expiry/index.js";
 import {PostgresDataHealth} from "./health.js";
 import {PostgresIdTypes} from "./id.js";
 import {ORM} from "./orm.js";
-import {PostgresBucketQueryFacade, UnsupportedCollectionQueryFacade} from "./query/index.js";
+import {PostgresBucketQueryFacade, PostgresCollectionQueryFacade} from "./query/index.js";
 import {repositoryClasses} from "./repositories/index.js";
 import {BucketDescriptions, PostgresResultShaper} from "./shape/index.js";
 import {postgresBucketSchema} from "./schemas/index.js";
@@ -93,7 +93,7 @@ export class PostgresDataAdapter {
           {provide: ID_TYPES, useClass: PostgresIdTypes},
           BucketDescriptions,
           {provide: RESULT_SHAPER, useClass: PostgresResultShaper},
-          {provide: COLLECTION_QUERY, useClass: UnsupportedCollectionQueryFacade},
+          {provide: COLLECTION_QUERY, useClass: PostgresCollectionQueryFacade},
           {provide: BUCKET_QUERY, useClass: PostgresBucketQueryFacade},
           {provide: BUCKET_RULE_VALIDATOR, useClass: PostgresBucketRuleValidator},
           {provide: BUCKET_SCHEMA_EXTENSION, useValue: postgresBucketSchema},

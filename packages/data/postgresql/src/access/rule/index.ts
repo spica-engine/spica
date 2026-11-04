@@ -1,6 +1,6 @@
 export {compileRule, compileRuleIn} from "./compiler.js";
 export type {CompiledRule} from "./compiler.js";
-export {compileFilter, FILTER_LIMITS} from "./filter.js";
+export {compileFilter, compileFilterIn, FILTER_LIMITS} from "./filter.js";
 export type {FilterScope} from "./filter.js";
 export {loadRelatedBuckets} from "./related.js";
 export {InvalidRuleError, RuleCompileError, UnsupportedRuleError} from "./errors.js";
@@ -8,3 +8,4 @@ export {relationAlias} from "./fields.js";
 export {translatedValueSql} from "./translated.js";
 export type {LocaleScope} from "./translated.js";
 export type {Related, RelatedBuckets, RuleScope, RuleContext, FieldResolver} from "./fields.js";
+export type {Column} from "./operands.js";

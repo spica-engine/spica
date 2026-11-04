@@ -341,6 +341,39 @@ contractSuite("storage, activity and replication repositories", engine => {
 
       beforeEach(() => seed(tree));
 
+      it("filters in the language of the engine, inside a path", async () => {
+        const postgres = engine.name == "postgresql";
+        const inFolder = (json: object, expression: string) =>
+          storage.browse({
+            path: "folder",
+            filter: postgres ? expression : json,
+            sort: {name: 1}
+          });
+
+        expect(
+          names(await inFolder({name: "folder/b.txt"}, `document.name == "folder/b.txt"`))
+        ).toEqual(["folder/b.txt"]);
+        expect(
+          names(await inFolder({name: {$regex: "sub"}}, `contains(document.name, "sub")`))
+        ).toEqual(["folder/sub/"]);
+        expect(names(await inFolder({name: "nope"}, `document.name == "nope"`))).toEqual([]);
+      });
+
+      (engine.name == "postgresql" ? it : it.skip)(
+        "refuses a filter in the other language, or one it cannot read",
+        async () => {
+          await expect(storage.browse({filter: {name: "a.txt"}})).rejects.toMatchObject({
+            status: 404
+          });
+          await expect(storage.browse({filter: `document.nope == 1`})).rejects.toMatchObject({
+            status: 400
+          });
+          await expect(
+            storage.browse({filter: `document.name == "a"; DROP TABLE storage_objects`})
+          ).rejects.toMatchObject({status: 400});
+        }
+      );
+
       it("lists the top level", async () => {
         expect(names(await storage.browse({})).sort()).toEqual([
           "a.txt",

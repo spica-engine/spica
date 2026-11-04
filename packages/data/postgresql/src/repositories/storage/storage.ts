@@ -1,6 +1,6 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {assertFilterLanguage} from "@spica-server/data";
-import {Orm, replacePrefix, startsWith, sum} from "@spica-server/data-postgresql-orm";
+import {and, Orm, replacePrefix, startsWith, sum} from "@spica-server/data-postgresql-orm";
 import {Id} from "@spica-server/interface-data";
 import {
   StorageBrowseSpec,
@@ -10,6 +10,7 @@ import {
 import {storageObjects} from "../../entities/index.js";
 import {ORM} from "../../orm.js";
 import {browseWhere} from "./filters.js";
+import {expressionWhere} from "../expression-where.js";
 
 const SORTABLE = new Set([
   "_id",
@@ -49,15 +50,15 @@ export class PostgresStorageRepository implements StorageRepository {
     return this.orm.findMany(storageObjects, {name: names}, {orderBy: {_id: "asc"}});
   }
 
-  browse({resourceFilter, path, filter, sort, skip = 0, limit}: StorageBrowseSpec) {
+  async browse({resourceFilter, path, filter, sort, skip = 0, limit}: StorageBrowseSpec) {
     assertFilterLanguage(filter, ["expression"], "PostgreSQL");
-    if (typeof filter == "string") {
-      throw new Error("Filtering storage objects is not supported on PostgreSQL yet.");
-    }
 
     return this.orm.findMany(
       storageObjects,
-      browseWhere(resourceFilter as {include?: string[]; exclude?: string[]}, path),
+      and(
+        browseWhere(resourceFilter as {include?: string[]; exclude?: string[]}, path),
+        expressionWhere(storageObjects, typeof filter == "string" ? filter : undefined)
+      ),
       {orderBy: orderBy(sort), limit: limit || undefined, offset: skip || undefined}
     );
   }

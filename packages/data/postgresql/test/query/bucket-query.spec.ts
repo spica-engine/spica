@@ -1,10 +1,10 @@
 import {BadRequestException} from "@nestjs/common";
 import {Session} from "@spica-server/data-postgresql-orm";
 import {projectDocument} from "../../src/query/bucket/project";
-import {ReadPlan} from "../../src/query/bucket/plan";
 import {orderBy} from "../../src/query/bucket/sort";
+import {ReadPlan} from "../../src/query/bucket/plan";
 import {BucketReads} from "../../src/query/bucket/reads";
-import {countTotal} from "../../src/query/bucket/totals";
+import {countPlanOf, countTotal} from "../../src/query/bucket/totals";
 import {ruleMetadata} from "../access/rule-fixtures";
 import {expectSql} from "../access/sql";
 
@@ -66,6 +66,8 @@ const plan = (conditions: string[], extra: object = {}) =>
   }) as unknown as ReadPlan;
 
 describe("countTotal", () => {
+  const countPlan = (conditions: string[]) => countPlanOf(plan(conditions));
+
   const reads = (estimate: number) => ({
     plannerEstimate: jest.fn(async () => estimate),
     countMatching: jest.fn(async () => 7)
@@ -74,16 +76,23 @@ describe("countTotal", () => {
   it("should count exactly when anything narrows the result", async () => {
     const stub = reads(1_000_000);
 
-    expect(await countTotal(stub, plan([`("t"."age" > $1)`]))).toBe(7);
+    expect(await countTotal(stub, countPlan([`("t"."age" > $1)`]))).toBe(7);
     expect(stub.plannerEstimate).not.toHaveBeenCalled();
   });
 
   it("should trust the estimate of a large bucket that nothing narrows", async () => {
     const stub = reads(1_000_000);
 
-    expect(await countTotal(stub, plan([]))).toBe(1_000_000);
+    expect(await countTotal(stub, countPlan([]))).toBe(1_000_000);
     expect(stub.plannerEstimate).toHaveBeenCalledWith(ruleMetadata.main.name);
     expect(stub.countMatching).not.toHaveBeenCalled();
+  });
+
+  it("should count a large bucket that nothing narrows when the exact number is asked for", async () => {
+    const stub = reads(1_000_000);
+
+    expect(await countTotal(stub, countPlan([]), {exact: true})).toBe(7);
+    expect(stub.plannerEstimate).not.toHaveBeenCalled();
   });
 
   it.each([[9_999], [0], [-1]])(
@@ -91,7 +100,7 @@ describe("countTotal", () => {
     async estimate => {
       const stub = reads(estimate);
 
-      expect(await countTotal(stub, plan([]))).toBe(7);
+      expect(await countTotal(stub, countPlan([]))).toBe(7);
       expect(stub.countMatching).toHaveBeenCalledTimes(1);
     }
   );
@@ -160,7 +169,7 @@ describe("BucketReads", () => {
   it("should count with the condition values only", async () => {
     const {raw, reads} = session([{total: "7"}]);
 
-    expect(await reads.countMatching(plan([`("t"."age" > $1)`]))).toBe(7);
+    expect(await reads.countMatching(countPlanOf(plan([`("t"."age" > $1)`])))).toBe(7);
 
     expect((raw.mock.calls[0] as unknown as [string, unknown[]])[1]).toEqual(["v"]);
   });
