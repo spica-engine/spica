@@ -35,6 +35,11 @@ describe("Health Check Endpoints", () => {
     expect(res.body).toEqual({status: "ok"});
   });
 
+  it("GET /status/engine should name the engine, and not be read as a module", async () => {
+    const res = await req.get("/status/engine");
+    expect([res.statusCode, res.body]).toEqual([200, {engine: "mongodb"}]);
+  });
+
   it("GET /status/ready should return 200 when database is connected", async () => {
     const res = await req.get("/status/ready");
     expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);

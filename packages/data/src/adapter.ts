@@ -5,4 +5,4 @@ export interface DataAdapter {
   module: DynamicModule;
 }
 
-export const DATA_ENGINE = Symbol.for("SPICA_DATA_ENGINE");
+export {DATA_ENGINE} from "@spica-server/interface-data";

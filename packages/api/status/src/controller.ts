@@ -13,13 +13,16 @@ import {
 import {DATE} from "@spica-server/core";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {StatusProvider} from "@spica-server/interface-status";
-import {DATA_HEALTH, DataHealth} from "@spica-server/interface-data";
+import {DATA_ENGINE, DATA_HEALTH, DataHealth} from "@spica-server/interface-data";
 
 export const providers = new Set<StatusProvider>();
 
 @Controller("status")
 export class StatusController {
-  constructor(@Inject(DATA_HEALTH) private readonly health: DataHealth) {}
+  constructor(
+    @Inject(DATA_HEALTH) private readonly health: DataHealth,
+    @Inject(DATA_ENGINE) private readonly engine: string
+  ) {}
 
   private get providers() {
     return Array.from(providers);
@@ -63,6 +66,12 @@ export class StatusController {
         })
         .map(p => p.provide())
     );
+  }
+
+  @Get("engine")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
+  findEngine() {
+    return {engine: this.engine};
   }
 
   @Get(":module")

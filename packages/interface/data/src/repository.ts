@@ -32,4 +32,6 @@ export interface DataHealth {
 
 export const DATA_HEALTH = Symbol.for("SPICA_DATA_HEALTH");
 
+export const DATA_ENGINE = Symbol.for("SPICA_DATA_ENGINE");
+
 export const PG_POOL = Symbol.for("SPICA_PG_POOL");

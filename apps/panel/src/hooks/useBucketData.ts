@@ -6,6 +6,7 @@ import {
 } from "../store/api/bucketApi";
 import type {BucketDataQueryType} from "../store/api/bucketApi";
 import useLocalStorage from "./useLocalStorage";
+import {useKeyField} from "./useKeyField";
 import {
   computeRelationParam,
   getRelationFieldKeys,
@@ -127,6 +128,8 @@ export function useBucketData(
       ? bucketId
       : undefined;
 
+  const keyField = useKeyField(resolvedBucketId);
+
   const queryArgs = useMemo(() => {
     if (!resolvedBucketId) {
       return undefined;
@@ -138,10 +141,10 @@ export function useBucketData(
       bucketId: resolvedBucketId,
       paginate: true,
       limit: DEFAULT_PAGE_SIZE,
-      sort: {_id: -1},
+      sort: {[keyField ?? "_id"]: -1},
       ...searchQuery,
     };
-  }, [resolvedBucketId, searchQuery]);
+  }, [resolvedBucketId, searchQuery, keyField]);
 
   const pageSize = (queryArgs?.limit as number) ?? DEFAULT_PAGE_SIZE;
 
@@ -153,7 +156,7 @@ export function useBucketData(
   } = useGetBucketDataQuery(
     queryArgs as NonNullable<typeof queryArgs>,
     {
-      skip: !queryArgs || !enabled,
+      skip: !queryArgs || !enabled || keyField === undefined,
       refetchOnFocus: true
     }
   );

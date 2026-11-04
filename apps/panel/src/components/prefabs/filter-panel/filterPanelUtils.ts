@@ -258,6 +258,134 @@ export function conditionsToMongoFilter(
   return parts.length === 1 ? parts[0] : { $and: parts };
 }
 
+
+const FIELD_PATH = /^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/;
+
+export const isFieldPath = (key: string) => FIELD_PATH.test(key);
+
+const quoted = (value: string) => JSON.stringify(value);
+
+const pattern = (value: string) => quoted(escapeRegex(value));
+
+function expressionFor(condition: FilterConditionRow, field: FilterField): string | null {
+  const { field: key, operator, value } = condition;
+  if (!FIELD_PATH.test(key)) return null;
+  const path = `document.${key}`;
+
+  const number = (): number | null => {
+    const n = Number(value);
+    return isNaN(n) ? null : n;
+  };
+  const literal = (): string | null => {
+    if (field.type === 'number') {
+      const n = number();
+      return n === null ? null : String(n);
+    }
+    if (field.type === 'enum') {
+      const option = field.enumOptions?.find(o => String(o.value) === value);
+      return option != null && typeof option.value === 'number' ? String(Number(value)) : quoted(value);
+    }
+    return quoted(value);
+  };
+  const compare = (symbol: string, operand: string | null) =>
+    operand === null ? null : `${path} ${symbol} ${operand}`;
+  const ordered = (symbol: string) => {
+    const n = number();
+    return n === null ? null : `${path} ${symbol} ${n}`;
+  };
+  const ids = () => {
+    const list = parseRelationIds(value);
+    return list.length ? `[${list.map(quoted).join(', ')}]` : null;
+  };
+
+  switch (operator) {
+    case 'contains':
+      return `regex(${path}, ${pattern(value)}, "i")`;
+    case 'starts with':
+      return `regex(${path}, ${quoted(`^${escapeRegex(value)}`)}, "i")`;
+    case 'ends with':
+      return `regex(${path}, ${quoted(`${escapeRegex(value)}$`)}, "i")`;
+    case 'equals':
+      return compare('==', literal());
+    case 'not equals':
+      return compare('!=', literal());
+    case 'is empty':
+      return field.type === 'string' ? `(!(has(${path})) || ${path} == "")` : `!(has(${path}))`;
+    case 'is not empty':
+      return field.type === 'string' ? `(has(${path}) && ${path} != "")` : `has(${path})`;
+    case 'greater than':
+      return ordered('>');
+    case 'greater than or equal':
+      return ordered('>=');
+    case 'less than':
+      return ordered('<');
+    case 'less than or equal':
+      return ordered('<=');
+    case 'before':
+      return `${path} < ${quoted(value)}`;
+    case 'after':
+      return `${path} > ${quoted(value)}`;
+    case 'on or before':
+      return `${path} <= ${quoted(value)}`;
+    case 'on or after':
+      return `${path} >= ${quoted(value)}`;
+    case 'is':
+      return `${path} == ${value === 'true'}`;
+    case 'in': {
+      const list = ids();
+      return list && `${path} in ${list}`;
+    }
+    case 'not in': {
+      const list = ids();
+      return list && `!(${path} in ${list})`;
+    }
+    default:
+      return null;
+  }
+}
+
+export function conditionsToExpression(
+  conditions: FilterConditionRow[],
+  fields: FilterField[]
+): string | null {
+  const fieldMap = new Map(fields.map(f => [f.key, f]));
+  const active = conditions.filter(isConditionActive);
+
+  const built: { logicalOp: 'AND' | 'OR'; expression: string }[] = [];
+  for (const condition of active) {
+    const field = fieldMap.get(condition.field);
+    const expression = field && expressionFor(condition, field);
+    if (expression) built.push({ logicalOp: condition.logicalOp, expression: `(${expression})` });
+  }
+  if (!built.length) return null;
+  if (built.length === 1) return built[0].expression;
+
+  const ops = built.slice(1).map(c => c.logicalOp);
+  const join = (parts: string[], symbol: string) =>
+    parts.length > 1 ? `(${parts.join(` ${symbol} `)})` : parts[0];
+
+  if (ops.every(op => op === 'AND')) return join(built.map(c => c.expression), '&&');
+  if (ops.every(op => op === 'OR')) return join(built.map(c => c.expression), '||');
+
+  const andParts = [built[0].expression];
+  const orParts: string[] = [];
+  built.slice(1).forEach(c => (c.logicalOp === 'AND' ? andParts : orParts).push(c.expression));
+
+  const groups = [join(andParts, '&&'), ...(orParts.length ? [join(orParts, '||')] : [])];
+  return join(groups, '&&');
+}
+
+export function combineFilters<T extends Record<string, any> | string>(
+  filters: (T | null | undefined)[]
+): T | undefined {
+  const present = filters.filter((filter): filter is T => Boolean(filter));
+  if (present.length < 2) return present[0];
+  if (typeof present[0] === 'string') {
+    return present.map(filter => `(${filter})`).join(' && ') as T;
+  }
+  return { $and: present } as unknown as T;
+}
+
 // ── URL serialization ──────────────────────────────────────────────────────
 // Filter state lives in the `?filter=` query param so it is shareable and
 // deep-linkable. Only the semantic fields are serialized (not the transient row
