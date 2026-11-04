@@ -22,7 +22,7 @@ import {
   Logger
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
+import {DEFAULT, FILTER, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {DuplicateKeyError, ID} from "@spica-server/data";
 import {
@@ -165,7 +165,7 @@ export class IdentityController {
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
-    @Query("filter", JSONP) filter: object,
+    @Query("filter", FILTER) filter: object | string,
     @ResourceFilter({collection: IDENTITY_COLLECTION}) resourceFilter: ResourceFilterSpec
   ) {
     const spec = {

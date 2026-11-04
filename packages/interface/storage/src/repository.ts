@@ -5,9 +5,10 @@ export interface StorageBrowseSpec {
   resourceFilter?: {include?: string[]; exclude?: string[]} | object;
   path?: string;
   /**
-   * The client-supplied filter, passed through unchanged.
+   * The client-supplied filter, passed through unchanged. An object is a MongoDB JSON filter and a
+   * string is a Spica expression.
    */
-  filter?: object;
+  filter?: object | string;
   sort?: object;
   skip?: number;
   limit?: number;

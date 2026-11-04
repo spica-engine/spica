@@ -102,6 +102,16 @@ describe("Environment Variable", () => {
       const bodyWithoutIds2 = res2.body.map(({_id, updated_at, ...rest}) => rest);
       expect(bodyWithoutIds2).toEqual([envVar2]);
     });
+
+    it("should answer 404 for a filter that is not json", async () => {
+      const res = await req.get(`/env-var`, {filter: "document.key == 'ENV_KEY_3'"});
+      expect(res.statusCode).toEqual(404);
+    });
+
+    it("should answer 400 for broken json", async () => {
+      const res = await req.get(`/env-var`, {filter: '{"key": '});
+      expect(res.statusCode).toEqual(400);
+    });
   });
 
   describe("findOne", () => {

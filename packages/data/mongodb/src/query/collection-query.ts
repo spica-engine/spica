@@ -1,4 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
+import {assertFilterLanguage} from "@spica-server/data";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {
   executePaginationPlan,
@@ -108,6 +109,7 @@ export class MongoCollectionQueryFacade implements CollectionQueryFacade {
   }
 
   private async base(collection: string, spec: ReadSpec) {
+    assertFilterLanguage(spec.filter, ["json"], "MongoDB");
     const replaceIds = (filter: object) =>
       replaceFilterObjectIds(filter, this.idTypes.forCollection(collection));
     const relations = relationsOf(collection, spec.relations);
@@ -124,7 +126,7 @@ export class MongoCollectionQueryFacade implements CollectionQueryFacade {
       )
       .attachToPipeline(true, ...stagesAt(relations, "before-filter"))
       .match(renderConditions(spec))
-      .filterByUserRequest(spec.filter);
+      .filterByUserRequest(spec.filter as object);
     return builder.attachToPipeline(true, ...stagesAt(relations, "after-filter"));
   }
 

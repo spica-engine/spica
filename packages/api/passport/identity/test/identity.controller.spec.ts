@@ -140,6 +140,11 @@ describe("Identity Controller", () => {
       expect(res.body).toEqual([{_id: identity1Id, identifier: "user1", policies: []}]);
     });
 
+    it("should answer 404 for a filter that is not json", async () => {
+      const res = await req.get("/passport/identity", {filter: "document.identifier == 'user1'"});
+      expect(res.statusCode).toEqual(404);
+    });
+
     it("should skip results", async () => {
       const res = await req.get("/passport/identity", {
         sort: JSON.stringify({identifier: 1}),

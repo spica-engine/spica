@@ -21,7 +21,7 @@ import {
   Req
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {BOOLEAN, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
+import {BOOLEAN, FILTER, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ID, idTransform, ids} from "@spica-server/data";
 import {Id, ResourceFilterSpec} from "@spica-server/interface-data";
@@ -70,7 +70,7 @@ export class StorageController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:index"))
   async find(
     @ResourceFilter({collection: STORAGE_COLLECTION}) resourceFilter: ResourceFilterSpec,
-    @Query("filter", JSONP) filter?: object,
+    @Query("filter", FILTER) filter?: object | string,
     @Query("paginate", BOOLEAN) paginate?: boolean,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
@@ -86,7 +86,7 @@ export class StorageController {
     })
     resourceFilter: object,
     @Query("path") path: string,
-    @Query("filter", JSONP) filter?: object,
+    @Query("filter", FILTER) filter?: object | string,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
