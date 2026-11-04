@@ -29,6 +29,7 @@ export interface FieldResolver {
 
 export interface RuleContext {
   auth: unknown;
+  forbidAuth?: boolean;
   hashSecret?: string;
   now?: () => number;
   fields: FieldResolver;
