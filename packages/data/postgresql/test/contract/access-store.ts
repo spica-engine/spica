@@ -127,7 +127,7 @@ export async function createPostgresAccessStore(
   async function insertRow(table: string, record: Record<string, unknown>) {
     const columns = Object.keys(record);
     await pool.query(
-      `INSERT INTO ${quote(table)} (${columns.map(quote).join(", ")})
+      `INSERT INTO ${quote(table)} (${columns.map(column => quote(column)).join(", ")})
        VALUES (${columns.map((_, index) => `$${index + 1}`).join(", ")})`,
       Object.values(record)
     );
@@ -188,7 +188,7 @@ export async function createPostgresAccessStore(
 
   async function reset() {
     const tables = Object.values(TARGETS).flatMap(({metadata}) => metadata.tables.map(t => t.name));
-    await pool.query(`TRUNCATE ${tables.map(quote).join(", ")} CASCADE`);
+    await pool.query(`TRUNCATE ${tables.map(table => quote(table)).join(", ")} CASCADE`);
     idByLabel.clear();
     mainLabels = [];
   }
@@ -244,7 +244,10 @@ export async function createPostgresAccessStore(
       return Object.fromEntries(
         rows.map(row => {
           const kept = Object.keys(applyVisibility(document, row, fields));
-          return [labelOf(row.id), properties.filter(p => !kept.includes(p)).sort()];
+          return [
+            labelOf(row.id),
+            properties.filter(p => !kept.includes(p)).sort((a, b) => a.localeCompare(b))
+          ];
         })
       );
     }

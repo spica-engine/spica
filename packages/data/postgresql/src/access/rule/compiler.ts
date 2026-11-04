@@ -76,7 +76,9 @@ function foldArithmetic(operator: ArithmeticOperator, a: Scalar, b: Scalar): num
   }
 }
 
-const TOKEN = /\u0000(\d+)\u0000/g;
+// NUL cannot occur in an identifier or in any text the compiler writes, so a placeholder is never
+// mistaken for text.
+const MARK = "\u0000";
 
 interface Pending {
   value: unknown;
@@ -93,17 +95,22 @@ class RuleCompiler {
   // Folding can drop a subtree after it has bound its values, so placeholders are numbered only once
   // the final SQL is known.
   private param(value: unknown, listOf?: ColumnType) {
-    return `\u0000${this.pending.push({value, listOf}) - 1}\u0000`;
+    return `${MARK}${this.pending.push({value, listOf}) - 1}${MARK}`;
+  }
+
+  private bound(id: number, values: unknown[]) {
+    const {value, listOf} = this.pending[id];
+    return listOf && values instanceof InlineValues
+      ? `ARRAY[${(value as unknown[]).map(item => literalOf(item)).join(", ")}]`
+      : bind(values, value);
   }
 
   finish(operand: Operand, values: unknown[]): CompiledRule {
     const truth = this.truth(operand);
-    const sql = this.truthSql(truth).replace(TOKEN, (_, id) => {
-      const {value, listOf} = this.pending[Number(id)];
-      return listOf && values instanceof InlineValues
-        ? `ARRAY[${(value as unknown[]).map(literalOf).join(", ")}]`
-        : bind(values, value);
-    });
+    const sql = this.truthSql(truth)
+      .split(MARK)
+      .map((part, index) => (index % 2 ? this.bound(Number(part), values) : part))
+      .join("");
     return {
       sql,
       joins: this.joins.usedBy(sql),
