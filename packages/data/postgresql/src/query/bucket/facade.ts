@@ -51,11 +51,14 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
   ): Promise<BucketReadResult<T[]>> {
     const plan = await planRead(bucket, spec, context);
     if (plan.matchesNothing) {
-      return {result: []};
+      return {result: [], locale: plan.locale};
     }
     const tree = await this.relations(bucket, plan, spec, context);
     const rows = await this.read(reads => this.rows(reads, plan, spec, tree));
-    return {result: await this.documents<T>(bucket, plan, spec, context, rows)};
+    return {
+      result: await this.documents<T>(bucket, plan, spec, context, rows),
+      locale: plan.locale
+    };
   }
 
   async findOne<T>(
@@ -74,7 +77,7 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
   ): Promise<BucketReadResult<Page<T>>> {
     const plan = await planRead(bucket, spec, context);
     if (plan.matchesNothing) {
-      return {result: {meta: {total: 0}, data: []}};
+      return {result: {meta: {total: 0}, data: []}, locale: plan.locale};
     }
     const tree = await this.relations(bucket, plan, spec, context);
     const {rows, total} = await this.read(async reads => ({
@@ -82,7 +85,7 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
       total: await countTotal(reads, plan)
     }));
     const data = await this.documents<T>(bucket, plan, spec, context, rows);
-    return {result: {meta: {total}, data}};
+    return {result: {meta: {total}, data}, locale: plan.locale};
   }
 
   private relations(
@@ -112,7 +115,7 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
     spec: BucketReadSpec,
     tree: RelationNode
   ): Promise<{rows: Row[]; rowSets: Awaited<ReturnType<typeof loadRowSets>>}> {
-    const rows = await reads.page(plan, orderBy(plan.metadata, spec.sort), spec);
+    const rows = await reads.page(plan, orderBy(plan.metadata, spec.sort, plan.locale), spec);
 
     const requested = new Set((spec.projectMap ?? []).map(path => path[0]));
     const hidden = new Set(plan.fieldRules?.hidden ?? []);
@@ -131,7 +134,8 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
   ): Promise<T[]> {
     const shaped = await this.shaper.shape<unknown, Record<string, unknown>[]>(
       {kind: "bucket", bucketId: plan.bucketId},
-      rowSets
+      rowSets,
+      {locale: plan.locale}
     );
     return shaped.map((document, index) => {
       let result = plan.fieldRules

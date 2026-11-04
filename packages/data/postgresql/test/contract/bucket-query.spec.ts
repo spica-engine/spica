@@ -446,6 +446,121 @@ contractSuite("bucket query", engine => {
     });
   });
 
+  describe("locale", () => {
+    const TR = {best: "tr_TR", fallback: "en_US"};
+    const DOCUMENTS = {
+      one: {label: {en_US: "hello", tr_TR: "merhaba"}, plain: "a"},
+      two: {label: {en_US: "world"}, plain: "b"},
+      three: {label: {fr_FR: "bonjour"}, plain: "c"}
+    };
+    let translated: any;
+
+    beforeAll(async () => {
+      translated = await seed(
+        {label: {type: "string", options: {translate: true}}, plain: {type: "string"}},
+        DOCUMENTS
+      );
+    });
+
+    const labels = (documents: any[]) => documents.map(document => document.label);
+
+    it("should return every language when localization is not asked for", async () => {
+      const {result, locale} = await store.localized(translated, {sort: {plain: 1}});
+
+      expect(labels(result)).toEqual([
+        DOCUMENTS.one.label,
+        DOCUMENTS.two.label,
+        DOCUMENTS.three.label
+      ]);
+      expect(locale).toBeUndefined();
+    });
+
+    it("should pick the requested language, then the default one, then give every language", async () => {
+      const {result, locale} = await store.localized(translated, {
+        localize: true,
+        language: "tr",
+        sort: {plain: 1}
+      });
+
+      expect(labels(result)).toEqual(["merhaba", "world", DOCUMENTS.three.label]);
+      expect(locale).toEqual(TR);
+    });
+
+    it("should fall back to the default language when the requested one is not supported", async () => {
+      const {result, locale} = await store.localized(translated, {
+        localize: true,
+        language: "de",
+        sort: {plain: 1}
+      });
+
+      expect(labels(result).slice(0, 2)).toEqual(["hello", "world"]);
+      expect(locale).toEqual({best: "en_US", fallback: "en_US"});
+    });
+
+    it("should filter on the language the documents are read in", async () => {
+      const filter = `document.label == "merhaba"`;
+      const turkish = await store.localized(translated, {localize: true, language: "tr", filter});
+      const english = await store.localized(translated, {localize: true, language: "en", filter});
+
+      expect(turkish.result.map(document => document.plain)).toEqual(["a"]);
+      expect(english.result).toEqual([]);
+    });
+
+    it("should sort by the language the documents are read in", async () => {
+      const {result} = await store.localized(translated, {
+        localize: true,
+        language: "tr",
+        sort: {label: 1}
+      });
+
+      const order = (documents: any[]) =>
+        documents.map(document => document.plain).filter(plain => plain != "c");
+      expect(order(result)).toEqual(["a", "b"]);
+
+      const descending = await store.localized(translated, {
+        localize: true,
+        language: "tr",
+        sort: {label: -1}
+      });
+      expect(order(descending.result)).toEqual(["b", "a"]);
+    });
+
+    it("should count what a translated filter keeps", async () => {
+      const page = await store.paginate(translated, {
+        localize: true,
+        language: "en",
+        filter: `startsWith(document.label, "h")`
+      });
+      expect(page.meta).toEqual({total: 1});
+    });
+
+    it("should not report a language for a bucket without translated fields", async () => {
+      const plain = await seed({title: {type: "string"}}, {a: {title: "a"}});
+      const {locale} = await store.localized(plain, {localize: true, language: "tr"});
+      expect(locale).toBeUndefined();
+    });
+
+    it("should read the related documents in the same language", async () => {
+      const authors = await seed(
+        {bio: {type: "string", options: {translate: true}}},
+        {ann: {bio: {en_US: "writer", tr_TR: "yazar"}}}
+      );
+      const ann = String(keys.ann);
+      const posts = await store.createBucket({
+        title: {type: "string", options: {translate: true}},
+        author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}
+      });
+      await store.insert(posts, {title: {en_US: "p"}, author: ann});
+
+      const {result} = await store.localized(posts, {
+        localize: true,
+        language: "tr",
+        relationPaths: [["author", "_id"]]
+      });
+      expect(result[0].author.bio).toBe("yazar");
+    });
+  });
+
   (postgres ? describe : describe.skip)("on PostgreSQL", () => {
     beforeAll(async () => {
       bucket = await seed(PROPERTIES, DOCUMENTS);

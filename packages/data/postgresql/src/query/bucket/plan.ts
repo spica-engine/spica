@@ -1,9 +1,9 @@
 import {BadRequestException} from "@nestjs/common";
-import {ACLSyntaxException} from "@spica-server/bucket-common";
+import {ACLSyntaxException, findLocale, hasTranslatedProperties} from "@spica-server/bucket-common";
 import {assertFilterLanguage} from "@spica-server/data";
 import {bind, quote, ResolvedColumn} from "@spica-server/data-postgresql-orm";
 import {Bucket} from "@spica-server/interface-bucket";
-import {BucketReadContext, BucketReadSpec} from "@spica-server/interface-bucket-common";
+import {BucketReadContext, BucketReadSpec, Locale} from "@spica-server/interface-bucket-common";
 import {
   CompiledFieldRules,
   compileFieldRules,
@@ -25,6 +25,7 @@ const parenthesized = (sql: string) => `(${sql})`;
 export interface ReadPlan {
   bucketId: string;
   metadata: BucketMetadata;
+  locale?: Locale;
   values: unknown[];
   conditions: string[];
   joins: string[];
@@ -73,6 +74,11 @@ export async function planRead(
     lookup
   );
 
+  const locale =
+    spec.localize && hasTranslatedProperties(bucket)
+      ? findLocale(spec.language, await context.preferences())
+      : undefined;
+
   const values: unknown[] = [];
   const conditions: string[] = [];
   const joins = new Set<string>();
@@ -86,7 +92,8 @@ export async function planRead(
     metadata,
     hashSecret: context.hashSecret,
     table: TABLE,
-    related
+    related,
+    locale
   };
 
   const add = (compiled: {sql: string; joins: string[]; constant?: boolean}) => {
@@ -137,6 +144,7 @@ export async function planRead(
   return {
     bucketId,
     metadata,
+    locale,
     values,
     conditions,
     joins: unique(joins),
