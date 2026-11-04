@@ -227,6 +227,9 @@ class RuleCompiler {
   }
 
   private authValue(path: string[]): unknown {
+    if (this.context.forbidAuth) {
+      throw new InvalidRuleError('"auth" cannot be used in a filter.');
+    }
     if (!path.length) {
       throw new InvalidRuleError('"auth" has to be followed by a property.');
     }
@@ -457,7 +460,7 @@ class RuleCompiler {
   }
 }
 
-function parse(rule: string): Node {
+export function parseRule(rule: string): Node {
   try {
     return parser.parse(rule);
   } catch (error) {
@@ -471,9 +474,13 @@ export interface CompiledRule {
   constant?: boolean;
 }
 
-export function compileRuleIn(rule: string, context: RuleContext, values: unknown[]): CompiledRule {
+export function compileParsed(node: Node, context: RuleContext, values: unknown[]): CompiledRule {
   const compiler = new RuleCompiler(context);
-  return compiler.finish(compiler.visit(parse(rule)), values);
+  return compiler.finish(compiler.visit(node), values);
+}
+
+export function compileRuleIn(rule: string, context: RuleContext, values: unknown[]): CompiledRule {
+  return compileParsed(parseRule(rule), context, values);
 }
 
 export function compileRule(rule: string, scope: RuleScope, values: unknown[]): CompiledRule {
