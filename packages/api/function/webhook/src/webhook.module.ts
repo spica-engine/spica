@@ -5,9 +5,14 @@ import {SchemaResolver} from "./schema.js";
 import {WebhookController} from "./webhook.controller.js";
 import {WebhookService} from "./webhook.service.js";
 import {WebhookChangeDispatcher} from "./change-dispatcher.js";
-import {WebhookLogService} from "./log.service.js";
 import {WebhookLogController} from "./log.controller.js";
-import {WebhookOptions, WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
+import {
+  WebhookOptions,
+  WEBHOOK_LOG_REPOSITORY,
+  WEBHOOK_OPTIONS,
+  WEBHOOK_REPOSITORY
+} from "@spica-server/interface-function-webhook";
+import {provideRepository} from "@spica-server/data";
 
 @Module({})
 export class WebhookModule {
@@ -19,7 +24,8 @@ export class WebhookModule {
       providers: [
         WebhookInvoker,
         SchemaResolver,
-        WebhookLogService,
+        provideRepository(WEBHOOK_LOG_REPOSITORY),
+        provideRepository(WEBHOOK_REPOSITORY),
         WebhookService,
         WebhookChangeDispatcher,
         {

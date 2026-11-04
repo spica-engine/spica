@@ -1,9 +1,10 @@
+import {provideRepository} from "@spica-server/data";
+import {WEBHOOK_LOG_REPOSITORY, WEBHOOK_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database-testing";
 import {WebhookService, WebhookChangeDispatcher} from "@spica-server/function-webhook";
 import {Webhook, WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
 import {WebhookInvoker} from "@spica-server/function-webhook/src/invoker";
-import {WebhookLogService} from "@spica-server/function-webhook/src/log.service";
 import __fetch__ from "node-fetch";
 
 jest.setTimeout(60_000);
@@ -28,7 +29,7 @@ describe("Webhook Invoker", () => {
   let module: TestingModule;
   let service: WebhookService;
   let db: DatabaseService;
-  let logService: WebhookLogService;
+  let logService: any;
 
   let subscribeSpy: jest.SpyInstance;
   let unsubscribeSpy: jest.SpyInstance;
@@ -42,9 +43,10 @@ describe("Webhook Invoker", () => {
       imports: [DatabaseTestingModule.replicaSet()],
       providers: [
         WebhookInvoker,
+        provideRepository(WEBHOOK_REPOSITORY),
         WebhookService,
         WebhookChangeDispatcher,
-        WebhookLogService,
+        provideRepository(WEBHOOK_LOG_REPOSITORY),
         {
           provide: WEBHOOK_OPTIONS,
           useValue: {
@@ -56,7 +58,7 @@ describe("Webhook Invoker", () => {
     module.enableShutdownHooks();
     service = module.get(WebhookService);
     db = module.get(DatabaseService);
-    logService = module.get(WebhookLogService);
+    logService = module.get(WEBHOOK_LOG_REPOSITORY);
     invoker = module.get(WebhookInvoker);
 
     subscribeSpy = jest.spyOn(invoker, "subscribe" as never);
@@ -91,7 +93,7 @@ describe("Webhook Invoker", () => {
   });
 
   it("should subscribe and open a change stream against the collection", async () => {
-    const {_id, ...hook} = await service.insertOne(webhook);
+    const {_id, ...hook} = await service.insert(webhook);
     await waitForCall(subscribeSpy);
     const subsequentStream = await stream.wait();
     expect(subscribeSpy).toHaveBeenCalledTimes(1);
@@ -106,28 +108,25 @@ describe("Webhook Invoker", () => {
   });
 
   it("should unsubscribe after the webhook has deleted", async () => {
-    const hook = await service.insertOne(webhook);
+    const hook = await service.insert(webhook);
     await waitForCall(subscribeSpy);
-    await service.findOneAndDelete({_id: hook._id});
+    await service.deleteById(hook._id);
     await waitForCall(unsubscribeSpy);
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
     expect(unsubscribeSpy).toHaveBeenCalledWith(hook._id.toHexString());
   });
 
   it("should unsubscribe after the webhook has disabled", async () => {
-    const hook = await service.insertOne(webhook);
+    const hook = await service.insert(webhook);
     await waitForCall(subscribeSpy);
-    await service.findOneAndReplace(
-      {_id: hook._id},
-      {...webhook, trigger: {...webhook.trigger, active: false}}
-    );
+    await service.replaceById(hook._id, {...webhook, trigger: {...webhook.trigger, active: false}});
     await waitForCall(unsubscribeSpy);
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
     expect(unsubscribeSpy).toHaveBeenCalledWith(hook._id.toHexString());
   });
 
   it("should report changes from the database", async () => {
-    await service.insertOne(webhook);
+    await service.insert(webhook);
     await waitForCall(subscribeSpy);
     await stream.wait();
     stream.change.next();
@@ -150,7 +149,7 @@ describe("Webhook Invoker", () => {
 
   it("should report changes from the database with mapping", async () => {
     webhook.body = "{{{toJSON document}}}";
-    await service.insertOne(webhook);
+    await service.insert(webhook);
     await waitForCall(subscribeSpy);
     await stream.wait();
     stream.change.next();
@@ -168,7 +167,7 @@ describe("Webhook Invoker", () => {
   });
 
   it("should insert a log when hook has been invoked", async () => {
-    const hook = await service.insertOne(webhook);
+    const hook = await service.insert(webhook);
     await waitForCall(subscribeSpy);
     await stream.wait();
     stream.change.next();
@@ -208,7 +207,7 @@ describe("Webhook Invoker", () => {
 
   it("should insert log when webhook body compilation failed", async () => {
     webhook.body = "{{{document.title}}}";
-    const hook = await service.insertOne(webhook);
+    const hook = await service.insert(webhook);
     await waitForCall(subscribeSpy);
     await stream.wait();
     stream.change.next();

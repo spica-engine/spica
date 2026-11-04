@@ -8,6 +8,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  Inject,
   NotFoundException,
   Optional,
   Param,
@@ -18,16 +19,32 @@ import {
   UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {HistoryService} from "@spica-server/bucket-history";
-import {BucketDataService, BucketService} from "@spica-server/bucket-services";
+import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
+import {BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
+import {ID} from "@spica-server/data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  Id,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createBucketActivity} from "@spica-server/bucket-common";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket-cache";
 import * as CRUD from "./crud.js";
 import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core-patch";
-import {Bucket} from "@spica-server/interface-bucket";
+import {
+  Bucket,
+  BUCKET_DATA_REPOSITORY,
+  BUCKET_RULE_VALIDATOR,
+  BUCKET_SCHEMA_EXTENSION,
+  BucketDataRepository,
+  BucketRuleValidator,
+  BucketSchemaExtension
+} from "@spica-server/interface-bucket";
+
+const BUCKETS_COLLECTION = "buckets";
 
 /**
  * All APIs related to bucket schemas.
@@ -37,9 +54,12 @@ import {Bucket} from "@spica-server/interface-bucket";
 export class BucketController {
   constructor(
     private bs: BucketService,
-    private bds: BucketDataService,
+    @Inject(BUCKET_DATA_REPOSITORY) private bucketData: BucketDataRepository,
+    @Inject(BUCKET_RULE_VALIDATOR) private rules: BucketRuleValidator,
     private validator: Validator,
-    @Optional() private history: HistoryService,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
+    @Inject(BUCKET_SCHEMA_EXTENSION) private schemaExtension: BucketSchemaExtension,
+    @Optional() @Inject(HISTORY_REPOSITORY) private history: HistoryRepository,
     @Optional() private bucketCacheService: BucketCacheService
   ) {}
 
@@ -53,12 +73,23 @@ export class BucketController {
   }
 
   /**
+   * Returns what the database engine allows in a bucket definition.
+   */
+  @Get("capabilities")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
+  getCapabilities() {
+    return {
+      propertyTypes: (this.schemaExtension.schema.definitions.propertyType as {enum: string[]}).enum
+    };
+  }
+
+  /**
    * Returns all schemas.
    */
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:index"))
-  index(@ResourceFilter() resourceFilter: object) {
-    return CRUD.find(this.bs, {resourceFilter, sort: {order: 1}});
+  index(@ResourceFilter({collection: BUCKETS_COLLECTION}) resourceFilter: ResourceFilterSpec) {
+    return CRUD.find(this.queries, {resourceFilter, sort: {order: 1}});
   }
 
   /**
@@ -67,7 +98,7 @@ export class BucketController {
    */
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:show"))
-  async show(@Param("id", OBJECT_ID) id: ObjectId) {
+  async show(@Param("id", ID(BUCKETS_COLLECTION)) id: Id) {
     return CRUD.findOne(this.bs, id);
   }
 
@@ -97,7 +128,7 @@ export class BucketController {
   @Post()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:create"))
   async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
-    return CRUD.insert(this.bs, bucket).catch(error => {
+    return CRUD.insert(this.bs, this.rules, bucket).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -128,10 +159,13 @@ export class BucketController {
   @Put(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:update"))
   async replaceOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(BUCKETS_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    return CRUD.replace(this.bs, this.bds, this.history, {...bucket, _id: id}).catch(error => {
+    return CRUD.replace(this.bs, this.bucketData, this.history, this.rules, {
+      ...bucket,
+      _id: id
+    }).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -150,7 +184,7 @@ export class BucketController {
   @Patch(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:update"))
   async updateOne(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(BUCKETS_COLLECTION)) id: Id,
     @Headers("content-type") contentType: string,
     @Body(
       Schema.validate({
@@ -172,7 +206,7 @@ export class BucketController {
       throw new BadRequestException(`Content type '${contentType}' is not supported.`);
     }
 
-    const previousBucket = await this.bs.findOne({_id: id});
+    const previousBucket = await this.bs.findById(id);
     if (!previousBucket) {
       throw new NotFoundException(`Bucket with id ${id} does not exist.`);
     }
@@ -180,9 +214,7 @@ export class BucketController {
     const patchedBucket = applyPatch(previousBucket, patch);
     delete patchedBucket._id;
 
-    return this.bs.findOneAndReplace({_id: id}, patchedBucket, {
-      returnDocument: ReturnDocument.AFTER
-    });
+    return this.bs.replaceById(id, patchedBucket);
   }
 
   @Delete("cache")
@@ -201,7 +233,7 @@ export class BucketController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:delete"))
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.remove(this.bs, this.bds, this.history, id);
+  async deleteOne(@Param("id", ID(BUCKETS_COLLECTION)) id: Id) {
+    return CRUD.remove(this.bs, this.bucketData, this.history, id);
   }
 }

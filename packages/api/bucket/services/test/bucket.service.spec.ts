@@ -2,7 +2,12 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
-import {BucketDataService} from "../src/bucket-data.service";
+import {provideRepository} from "@spica-server/data";
+import {
+  BUCKET_DATA_REPOSITORY,
+  BUCKET_REPOSITORY,
+  BUCKET_SCHEMA_MANAGER
+} from "@spica-server/interface-bucket";
 import {BucketService} from "../src/bucket.service";
 import {BucketChangeDispatcher} from "../src/change-dispatcher";
 
@@ -10,7 +15,7 @@ describe("Bucket Service", () => {
   describe("index", () => {
     let module: TestingModule;
     let bs: BucketService;
-    let bds: BucketDataService;
+    let bds: any;
 
     beforeEach(async () => {
       module = await Test.createTestingModule({
@@ -19,10 +24,16 @@ describe("Bucket Service", () => {
           PreferenceTestingModule,
           SchemaModule.forChild()
         ],
-        providers: [BucketChangeDispatcher, BucketService, BucketDataService]
+        providers: [
+          BucketChangeDispatcher,
+          provideRepository(BUCKET_REPOSITORY),
+          provideRepository(BUCKET_DATA_REPOSITORY),
+          provideRepository(BUCKET_SCHEMA_MANAGER),
+          BucketService
+        ]
       }).compile();
       bs = module.get(BucketService);
-      bds = module.get(BucketDataService);
+      bds = module.get(BUCKET_DATA_REPOSITORY);
     });
 
     afterEach(async () => {
@@ -60,7 +71,7 @@ describe("Bucket Service", () => {
         ]
       };
 
-      const insteredBucket = await bs.insertOne(bucket);
+      const insteredBucket = await bs.insert(bucket);
       expect(insteredBucket).toEqual({
         _id: bucketId,
         properties: {
@@ -92,7 +103,7 @@ describe("Bucket Service", () => {
 
     it("should replace bucket and indexes", async () => {
       const bucketId = new ObjectId();
-      await bs.insertOne({
+      await bs.insert({
         _id: bucketId,
         properties: {
           title: {},
@@ -130,8 +141,8 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.findOneAndReplace({_id: bucketId}, updatedBucket);
-      const newBucketSchema = await bs.findOne({_id: bucketId});
+      await bs.replaceById(bucketId, updatedBucket);
+      const newBucketSchema = await bs.findById(bucketId);
       expect(newBucketSchema).toEqual({
         _id: bucketId,
         properties: {
@@ -168,7 +179,7 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.insertOne(bucket);
+      await bs.insert(bucket);
 
       const bucketData = bds.children(bucket);
       await bucketData.insertMany([
@@ -211,7 +222,7 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.insertOne(originalBucket);
+      await bs.insert(originalBucket);
 
       const updatedBucket: any = {
         _id: bucketId,
@@ -224,8 +235,8 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.findOneAndReplace({_id: bucketId}, updatedBucket);
-      const newBucketSchema = await bs.findOne({_id: bucketId});
+      await bs.replaceById(bucketId, updatedBucket);
+      const newBucketSchema = await bs.findById(bucketId);
       expect(newBucketSchema).toEqual({
         _id: bucketId,
         properties: {},
@@ -251,7 +262,7 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.insertOne(originalBucket);
+      await bs.insert(originalBucket);
 
       const updatedBucket: any = {
         _id: bucketId,
@@ -264,8 +275,8 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.findOneAndReplace({_id: bucketId}, updatedBucket);
-      const newBucketSchema = await bs.findOne({_id: bucketId});
+      await bs.replaceById(bucketId, updatedBucket);
+      const newBucketSchema = await bs.findById(bucketId);
       expect(newBucketSchema).toEqual({
         _id: bucketId,
         properties: {},
@@ -291,7 +302,7 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.insertOne(originalBucket);
+      await bs.insert(originalBucket);
 
       const updatedBucket: any = {
         _id: bucketId,
@@ -304,8 +315,8 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.findOneAndReplace({_id: bucketId}, updatedBucket);
-      const newBucketSchema = await bs.findOne({_id: bucketId});
+      await bs.replaceById(bucketId, updatedBucket);
+      const newBucketSchema = await bs.findById(bucketId);
       expect(newBucketSchema).toEqual({
         _id: bucketId,
         properties: {},
@@ -331,7 +342,7 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.insertOne(originalBucket);
+      await bs.insert(originalBucket);
 
       const updatedBucket: any = {
         _id: bucketId,
@@ -344,8 +355,8 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.findOneAndReplace({_id: bucketId}, updatedBucket);
-      const newBucketSchema = await bs.findOne({_id: bucketId});
+      await bs.replaceById(bucketId, updatedBucket);
+      const newBucketSchema = await bs.findById(bucketId);
       expect(newBucketSchema).toEqual({
         _id: bucketId,
         properties: {},
@@ -371,7 +382,7 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.insertOne(originalBucket);
+      await bs.insert(originalBucket);
 
       const reorderedOptionsBucket: any = {
         _id: bucketId,
@@ -384,10 +395,10 @@ describe("Bucket Service", () => {
         ]
       };
 
-      const dropIndexSpy = jest.spyOn(bs as any, "dropIndexes");
-      const createIndexSpy = jest.spyOn(bs as any, "createIndexes");
+      const dropIndexSpy = jest.spyOn(bds, "dropIndexes");
+      const createIndexSpy = jest.spyOn(bds, "createIndexes");
 
-      await bs.findOneAndReplace({_id: bucketId}, reorderedOptionsBucket);
+      await bs.replaceById(bucketId, reorderedOptionsBucket);
 
       expect(dropIndexSpy.mock.calls.length).toEqual(1);
       const indexesToDrop = dropIndexSpy.mock.calls[0][1];
@@ -397,7 +408,7 @@ describe("Bucket Service", () => {
       const indexesToCreate = createIndexSpy.mock.calls[0][1];
       expect(indexesToCreate).toEqual([]);
 
-      const newBucketSchema = await bs.findOne({_id: bucketId});
+      const newBucketSchema = await bs.findById(bucketId);
       expect(newBucketSchema).toEqual({
         _id: bucketId,
         properties: {},
@@ -423,12 +434,12 @@ describe("Bucket Service", () => {
         ]
       };
 
-      await bs.insertOne(bucket);
+      await bs.insert(bucket);
 
-      const dropIndexSpy = jest.spyOn(bs as any, "dropIndexes");
-      const createIndexSpy = jest.spyOn(bs as any, "createIndexes");
+      const dropIndexSpy = jest.spyOn(bds, "dropIndexes");
+      const createIndexSpy = jest.spyOn(bds, "createIndexes");
 
-      await bs.findOneAndReplace({_id: bucketId}, bucket);
+      await bs.replaceById(bucketId, bucket);
 
       expect(dropIndexSpy.mock.calls.length).toEqual(1);
       const indexesToDrop = dropIndexSpy.mock.calls[0][1];
@@ -438,7 +449,7 @@ describe("Bucket Service", () => {
       const indexesToCreate = createIndexSpy.mock.calls[0][1];
       expect(indexesToCreate).toEqual([]);
 
-      const newBucketSchema = await bs.findOne({_id: bucketId});
+      const newBucketSchema = await bs.findById(bucketId);
       expect(newBucketSchema).toEqual({
         _id: bucketId,
         properties: {},

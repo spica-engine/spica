@@ -40,10 +40,16 @@
       "path": "../../../interface/passport/user"
     },
     {
+      "path": "../../../interface/passport/refresh_token"
+    },
+    {
       "path": "../../../interface/passport/policy"
     },
     {
       "path": "../../../interface/passport/authfactor"
+    },
+    {
+      "path": "../../../interface/data"
     },
     {
       "path": "../../../interface/core"
@@ -58,10 +64,7 @@
       "path": "../../../filter"
     },
     {
-      "path": "../../../database/pipeline"
-    },
-    {
-      "path": "../../../database"
+      "path": "../../../data"
     },
     {
       "path": "../../../core/schema"

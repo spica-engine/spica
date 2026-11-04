@@ -12,6 +12,10 @@
       "types": "./index.ts",
       "default": "./dist/index.js"
     },
+    "./src/commands/project/database": {
+      "types": "./src/commands/project/database.ts",
+      "default": "./dist/src/commands/project/database.js"
+    },
     "./src/commands/project/sync": {
       "types": "./src/commands/project/sync.ts",
       "default": "./dist/src/commands/project/sync.js"

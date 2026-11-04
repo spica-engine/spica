@@ -8,5 +8,8 @@
       "types": "./index.ts",
       "default": "./dist/index.js"
     }
+  },
+  "dependencies": {
+    "@spica-server/interface-data": "workspace:*"
   }
 }

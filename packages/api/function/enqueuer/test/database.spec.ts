@@ -8,6 +8,7 @@ import {
 import {DatabaseEnqueuer} from "@spica-server/function-enqueuer";
 import {DatabaseQueue, EventQueue} from "@spica-server/function-queue";
 import {Database, event} from "@spica-server/function-queue-proto";
+import {CHANGE_FEED} from "@spica-server/interface-data";
 
 function createTarget(cwd?: string, handler?: string) {
   const target = new event.Target();
@@ -43,7 +44,7 @@ describe("DatabaseEnqueuer", () => {
     databaseEnqueuer = new DatabaseEnqueuer(
       eventQueue as any,
       databaseQueue as any,
-      database
+      module.get(CHANGE_FEED)
     );
   });
 

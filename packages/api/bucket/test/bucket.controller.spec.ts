@@ -94,6 +94,13 @@ describe("BucketController", () => {
   afterEach(() => app.close());
 
   describe("get", () => {
+    it("should get the capabilities of the database engine", async () => {
+      const response = await req.get("/bucket/capabilities");
+      expect(response.statusCode).toBe(200);
+      expect(response.body.propertyTypes).toContain("relation");
+      expect(response.body.propertyTypes).not.toContain("uuid");
+    });
+
     it("should get predefinedDefaults", async () => {
       const response = await req.get("/bucket/predefineddefaults", {});
       expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
@@ -251,6 +258,53 @@ describe("BucketController", () => {
 
       let getDataResponse = await req.get(`/bucket/${secondInsertedBucket._id}/data`, {});
       expect([getDataResponse.statusCode, getDataResponse.statusText]).toEqual([404, "Not Found"]);
+    });
+  });
+
+  describe("rules", () => {
+    it("should accept rules the engine can apply", async () => {
+      const response = await req.post("/bucket", {
+        ...bucket,
+        acl: {read: "has(document.title) && document.title == auth.identifier", write: "true==true"}
+      });
+      expect(response.statusCode).toBe(201);
+    });
+
+    it("should reject a read rule that cannot be parsed", async () => {
+      const response = await req.post("/bucket", {
+        ...bucket,
+        acl: {read: "document.title ==", write: "true==true"}
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toContain("Error occurred while parsing read rule");
+    });
+
+    it("should reject a read rule that calls an unknown function", async () => {
+      const response = await req.post("/bucket", {
+        ...bucket,
+        acl: {read: "nope(document.title)", write: "true==true"}
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toContain("Error occurred while parsing read rule");
+    });
+
+    it("should reject a write rule that cannot be parsed", async () => {
+      const response = await req.post("/bucket", {
+        ...bucket,
+        acl: {read: "true==true", write: "document.title =="}
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toContain("Error occurred while parsing write rule");
+    });
+
+    it("should reject a bad rule when the bucket is replaced", async () => {
+      const {body: inserted} = await req.post("/bucket", bucket);
+      const response = await req.put(`/bucket/${inserted._id}`, {
+        ...bucket,
+        acl: {read: "document.title ==", write: "true==true"}
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toContain("Error occurred while parsing read rule");
     });
   });
 

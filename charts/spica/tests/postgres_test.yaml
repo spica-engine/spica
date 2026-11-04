@@ -1,0 +1,235 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: postgresql engine
+templates:
+  - templates/postgres.yaml
+  - templates/postgressecrets.yaml
+  - templates/postgressrv.yaml
+  - templates/postgresinitdb.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.masterKey: test-master-key
+  application.publicHost: https://test.example.com
+  database.type: postgresql
+
+tests:
+  - it: should render a single-replica StatefulSet running postgres 18
+    template: templates/postgres.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: metadata.name
+          value: release-name-database
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: spicaengine/postgres:18
+
+  - it: should ignore database.replicas
+    template: templates/postgres.yaml
+    set:
+      database.replicas: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+
+  - it: should take the image tag from database.version
+    template: templates/postgres.yaml
+    set:
+      database.version: "18.1"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: spicaengine/postgres:18.1
+
+  - it: should keep the data on a volume claim
+    template: templates/postgres.yaml
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 2Gi
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /var/lib/postgresql
+
+  - it: should run the root user as the postgres superuser
+    template: templates/postgres.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-root-credentials
+                key: rootUsername
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-root-credentials
+                key: rootPassword
+
+  - it: should hand the spica user and database name to the init script
+    template: templates/postgres.yaml
+    set:
+      database.name: custom
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SPICA_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-spica-credentials
+                key: spicaUsername
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SPICA_DATABASE
+            value: custom
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: init-db
+            mountPath: /docker-entrypoint-initdb.d
+
+  - it: should create an unprivileged spica role that owns the database
+    template: templates/postgresinitdb.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: CREATE ROLE :"app_user" LOGIN PASSWORD :'app_password';
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: CREATE DATABASE :"app_database" OWNER :"app_user";
+      - notMatchRegex:
+          path: data["init-users.sh"]
+          pattern: (?i)superuser|createrole|createdb
+
+  - it: should create pg_cron and let the spica role schedule jobs
+    template: templates/postgresinitdb.yaml
+    asserts:
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: CREATE EXTENSION IF NOT EXISTS pg_cron;
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: GRANT USAGE ON SCHEMA cron TO :"app_user";
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: GRANT EXECUTE ON FUNCTION cron.schedule_in_database
+
+  - it: should take the image repository from database.postgresImage
+    template: templates/postgres.yaml
+    set:
+      database.postgresImage: registry.example.com/pg
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.example.com/pg:18
+
+  - it: should expose a headless service on 5432
+    template: templates/postgressrv.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-database
+      - equal:
+          path: spec.clusterIP
+          value: None
+      - contains:
+          path: spec.ports
+          content:
+            port: 5432
+            targetPort: 5432
+
+  - it: should store the spica and root credentials in separate hook secrets
+    template: templates/postgressecrets.yaml
+    set:
+      database.spicaUsername: app
+      database.spicaPassword: app-secret
+      database.rootUsername: admin
+      database.rootPassword: admin-secret
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: release-name-database-spica-credentials
+        documentIndex: 0
+      - equal:
+          path: data.spicaUsername
+          decodeBase64: true
+          value: app
+        documentIndex: 0
+      - equal:
+          path: data.spicaPassword
+          decodeBase64: true
+          value: app-secret
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: release-name-database-root-credentials
+        documentIndex: 1
+      - equal:
+          path: data.rootUsername
+          decodeBase64: true
+          value: admin
+        documentIndex: 1
+      - equal:
+          path: data.rootPassword
+          decodeBase64: true
+          value: admin-secret
+        documentIndex: 1
+
+  - it: should default the usernames and generate the passwords
+    template: templates/postgressecrets.yaml
+    asserts:
+      - equal:
+          path: data.spicaUsername
+          decodeBase64: true
+          value: spica
+        documentIndex: 0
+      - equal:
+          path: data.rootUsername
+          decodeBase64: true
+          value: root
+        documentIndex: 1
+      - matchRegex:
+          path: data.spicaPassword
+          pattern: ^\S+\s*$
+        documentIndex: 0
+      - matchRegex:
+          path: data.rootPassword
+          pattern: ^\S+\s*$
+        documentIndex: 1
+
+  - it: should render nothing for the mongodb engine
+    set:
+      database.type: mongodb
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/postgres.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/postgressrv.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/postgressecrets.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/postgresinitdb.yaml

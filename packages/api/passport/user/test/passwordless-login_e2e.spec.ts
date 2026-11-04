@@ -1,3 +1,4 @@
+import {USER_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
 import {INestApplication} from "@nestjs/common";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
@@ -23,6 +24,7 @@ describe("Passwordless Login E2E with MailHog", () => {
   let passwordlessService: PasswordlessLoginService;
   let userConfigService: UserConfigService;
   let userService: UserService;
+  let users: any;
   let db: DatabaseService;
   let container: any;
   let smtpPort: number;
@@ -104,6 +106,7 @@ describe("Passwordless Login E2E with MailHog", () => {
 
     passwordlessService = module.get(PasswordlessLoginService);
     userService = module.get(UserService);
+    users = module.get(USER_REPOSITORY);
     db = module.get(DatabaseService);
     userConfigService = module.get(UserConfigService);
 
@@ -139,7 +142,7 @@ describe("Passwordless Login E2E with MailHog", () => {
   beforeEach(async () => {
     const encryptedEmail = userService.encryptField(testEmail);
 
-    await userService.insertOne({
+    await users.insertOne({
       username: testUsername,
       password: "hashedpassword",
       policies: [],

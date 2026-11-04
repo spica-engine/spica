@@ -1,6 +1,9 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
+import {DataModule} from "@spica-server/data";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import {start, connect, getDatabaseName} from "./start";
+import {createPostgresDatabase} from "./start-postgres";
+import {testingDataAdapter, testingPostgresAdapter} from "./data-adapter";
 
 @Global()
 @Module({})
@@ -17,6 +20,7 @@ export class DatabaseTestingModule {
   static standalone(dbName?: string): DynamicModule {
     return {
       module: DatabaseTestingModule,
+      imports: [DataModule.forRoot(testingDataAdapter())],
       providers: [
         {
           provide: MongoClient,
@@ -34,6 +38,7 @@ export class DatabaseTestingModule {
   static replicaSet(dbName?: string): DynamicModule {
     return {
       module: DatabaseTestingModule,
+      imports: [DataModule.forRoot(testingDataAdapter())],
       providers: [
         {
           provide: MongoClient,
@@ -49,9 +54,17 @@ export class DatabaseTestingModule {
     };
   }
 
+  static postgres(dbName?: string): DynamicModule {
+    return {
+      module: DatabaseTestingModule,
+      imports: [DataModule.forRoot(testingPostgresAdapter(() => createPostgresDatabase(dbName)))]
+    };
+  }
+
   static connect(connectionUri: string, dbName?: string) {
     return {
       module: DatabaseTestingModule,
+      imports: [DataModule.forRoot(testingDataAdapter())],
       providers: [
         {
           provide: MongoClient,

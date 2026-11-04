@@ -20,9 +20,9 @@ import {
   HttpException
 } from "@nestjs/common";
 import {activity, ActivityService, createActivity} from "@spica-server/activity-services";
-import {HistoryService} from "@spica-server/bucket-history";
+import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
 import {ChangeEmitter} from "@spica-server/bucket-hooks";
-import {BucketDataService, BucketService} from "@spica-server/bucket-services";
+import {BucketService, bucketIds} from "@spica-server/bucket-services";
 import {
   ARRAY,
   BOOLEAN,
@@ -35,21 +35,26 @@ import {
   EXPRESSION
 } from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
+import {DocumentId, ID, ids} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, StrategyType} from "@spica-server/passport-guard";
 import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket-cache";
 import {
-  deleteDocument,
-  findDocuments,
-  insertDocument,
-  patchDocument,
-  replaceDocument,
   authIdToString,
   isJSONFilter,
   filterReviver,
-  decryptDocumentFields
+  decryptDocumentFields,
+  setContentLanguage
 } from "@spica-server/bucket-common";
+import {
+  BUCKET_QUERY,
+  BUCKET_WRITE,
+  BucketQueryFacade,
+  BucketWriteFacade,
+  BucketReadContext,
+  BucketReadSpec
+} from "@spica-server/interface-bucket-common";
 import {expressionFilterParser} from "./filter.js";
 import {
   clearRelations,
@@ -58,11 +63,17 @@ import {
   createBucketDataActivity
 } from "@spica-server/bucket-common";
 import {applyPatch} from "@spica-server/core-patch";
-import {BucketDocument} from "@spica-server/interface-bucket";
+import {
+  BUCKET_DATA_REPOSITORY,
+  BucketDataRepository,
+  BucketDocument
+} from "@spica-server/interface-bucket";
 import {
   BUCKET_DATA_HASH_SECRET,
   BUCKET_DATA_ENCRYPTION_SECRET
 } from "@spica-server/interface-bucket";
+
+const BUCKETS_COLLECTION = "buckets";
 
 /**
  * All APIs related to bucket documents.
@@ -72,10 +83,12 @@ import {
 export class BucketDataController {
   constructor(
     private bs: BucketService,
-    private bds: BucketDataService,
+    @Inject(BUCKET_DATA_REPOSITORY) private bucketData: BucketDataRepository,
     private validator: Validator,
+    @Inject(BUCKET_QUERY) private queries: BucketQueryFacade,
+    @Inject(BUCKET_WRITE) private writes: BucketWriteFacade,
     @Optional() private changeEmitter: ChangeEmitter,
-    @Optional() private history: HistoryService,
+    @Optional() @Inject(HISTORY_REPOSITORY) private history: HistoryRepository,
     @Optional() @Inject() private activityService: ActivityService,
     @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
     @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
@@ -106,7 +119,7 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", "bucket/:bucketId/data", authIdToString))
   async find(
     @StrategyType() strategyType: ReqAuthStrategy,
-    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
@@ -119,7 +132,7 @@ export class BucketDataController {
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
   ) {
-    const schema = await this.bs.findOne({_id: bucketId});
+    const schema = await this.bs.findById(bucketId);
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
@@ -129,31 +142,27 @@ export class BucketDataController {
       relation == true ? schema : Array.isArray(relation) ? relation : []
     );
 
-    return findDocuments(
-      schema,
-      {
-        relationPaths,
-        language: acceptedLanguage,
-        filter,
-        limit,
-        skip,
-        sort,
-        req,
-        projectMap: [],
-        applyAcl: strategyType === ReqAuthStrategy.USER
-      },
-      {
-        localize,
-        paginate
-      },
-      {
-        collection: schema => this.bds.children(schema),
-        preference: () => this.bs.getPreferences(),
-        schema: this.bs.resolveSchema
-      },
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
+    const spec: BucketReadSpec = {
+      relationPaths,
+      language: acceptedLanguage,
+      localize,
+      filter,
+      limit,
+      skip,
+      sort,
+      projectMap: [],
+      applyAcl: strategyType === ReqAuthStrategy.USER,
+      user: req.user
+    };
+
+    const read = paginate
+      ? this.queries.paginate(schema, spec, this.bucketContext())
+      : this.queries.find(schema, spec, this.bucketContext());
+
+    return read.then(({result, locale}) => {
+      setContentLanguage(req, locale);
+      return result;
+    }, this.errorHandler);
   }
 
   @Get("profile")
@@ -162,32 +171,18 @@ export class BucketDataController {
     ActionGuard("bucket:data:profile", "bucket/:bucketId/data")
   )
   async findProfileEntries(
-    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
     @Query("filter", JSONPR(filterReviver)) filter?: object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: {[key: string]: 1 | -1}
   ) {
-    const schema = await this.bs.findOne({_id: bucketId});
+    const schema = await this.bs.findById(bucketId);
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
-    const cursor = this.bds.children(schema).findOnProfiler(filter);
-
-    if (limit) {
-      cursor.limit(limit);
-    }
-
-    if (skip) {
-      cursor.skip(skip);
-    }
-
-    if (sort) {
-      cursor.sort(sort);
-    }
-
-    return cursor.toArray();
+    return this.bucketData.profilerEntries(schema, {filter, limit, skip, sort});
   }
 
   /**
@@ -212,13 +207,13 @@ export class BucketDataController {
     @StrategyType() strategyType: ReqAuthStrategy,
     @Headers("accept-language") acceptedLanguage: string,
     @Req() req: any,
-    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @Param("documentId", OBJECT_ID) documentId: ObjectId,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
+    @DocumentId("documentId", "bucketId") documentId: Id,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
     relation?: boolean | string[]
   ) {
-    const schema = await this.bs.findOne({_id: bucketId});
+    const schema = await this.bs.findById(bucketId);
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
@@ -228,30 +223,25 @@ export class BucketDataController {
       relation == true ? schema : Array.isArray(relation) ? relation : []
     );
 
-    const [document]: any = await findDocuments(
-      schema,
-      {
-        relationPaths,
-        language: acceptedLanguage,
-        limit: 1,
-        documentId: documentId,
-        req,
-        projectMap: [],
-        applyAcl: strategyType === ReqAuthStrategy.USER
-      },
-      {
-        localize
-      },
-      {
-        collection: schema => this.bds.children(schema),
-        preference: () => this.bs.getPreferences(),
-        schema: this.bs.resolveSchema
-      },
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
-
-    return document;
+    return this.queries
+      .findOne(
+        schema,
+        {
+          relationPaths,
+          language: acceptedLanguage,
+          localize,
+          limit: 1,
+          documentId: documentId,
+          projectMap: [],
+          applyAcl: strategyType === ReqAuthStrategy.USER,
+          user: req.user
+        },
+        this.bucketContext()
+      )
+      .then(({result, locale}) => {
+        setContentLanguage(req, locale);
+        return result;
+      }, this.errorHandler);
   }
 
   /**
@@ -289,27 +279,26 @@ export class BucketDataController {
   async insertOne(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
     @Body(Schema.validate(req => req.params.bucketId)) rawDocument: BucketDocument
   ) {
-    const schema = await this.bs.findOne({_id: bucketId});
+    const schema = await this.bs.findById(bucketId);
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
-    const document = await insertDocument(
-      schema,
-      rawDocument,
-      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
-      {
-        collection: schema => this.bds.children(schema),
-        schema: this.bs.resolveSchema,
-        deleteOne: documentId => this.deleteOne(strategyType, req, bucketId, documentId)
-      },
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
+    const document = await this.writes
+      .insert(
+        schema,
+        rawDocument,
+        {applyAcl: strategyType === ReqAuthStrategy.USER, user: req.user},
+        {
+          ...this.bucketContext(),
+          deleteOne: documentId => this.deleteOne(strategyType, req, bucketId, documentId)
+        }
+      )
+      .catch(this.errorHandler);
 
     if (!document) {
       return;
@@ -318,10 +307,10 @@ export class BucketDataController {
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
         {
-          bucket: bucketId.toHexString(),
+          bucket: bucketId.toString(),
           type: "insert"
         },
-        document._id.toHexString(),
+        document._id.toString(),
         undefined,
         document
       );
@@ -355,29 +344,24 @@ export class BucketDataController {
   async replace(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @Param("documentId", OBJECT_ID) documentId: ObjectId,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
+    @DocumentId("documentId", "bucketId") documentId: Id,
     @Body(Schema.validate(req => req.params.bucketId)) document: BucketDocument
   ) {
-    const schema = await this.bs.findOne({_id: bucketId});
+    const schema = await this.bs.findById(bucketId);
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
-    const schemaResolver = this.bs.resolveSchema;
-    const previousDocument = await replaceDocument(
-      schema,
-      {...document, _id: documentId},
-      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
-      {
-        collection: schema => this.bds.children(schema),
-        schema: schemaResolver
-      },
-      undefined,
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
+    const previousDocument = await this.writes
+      .replace(
+        schema,
+        {...document, _id: documentId},
+        {applyAcl: strategyType === ReqAuthStrategy.USER, user: req.user},
+        this.bucketContext()
+      )
+      .catch(this.errorHandler);
 
     if (!previousDocument) {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
@@ -392,17 +376,22 @@ export class BucketDataController {
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
         {
-          bucket: bucketId.toHexString(),
+          bucket: bucketId.toString(),
           type: "update"
         },
-        documentId.toHexString(),
+        documentId.toString(),
         previousDocument,
         currentDocument
       );
     }
 
     if (this.encryptionSecret) {
-      return decryptDocumentFields(currentDocument, schema, this.encryptionSecret, schemaResolver);
+      return decryptDocumentFields(
+        currentDocument,
+        schema,
+        this.encryptionSecret,
+        this.bs.resolveSchema
+      );
     }
 
     return currentDocument;
@@ -432,19 +421,17 @@ export class BucketDataController {
   async patch(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @Param("documentId", OBJECT_ID) documentId: ObjectId,
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
+    @DocumentId("documentId", "bucketId") documentId: Id,
     @Body() patch: Partial<BucketDocument>
   ) {
-    const schema = await this.bs.findOne({_id: bucketId});
+    const schema = await this.bs.findById(bucketId);
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
-    const bkt = this.bds.children(schema);
-
-    const previousDocument = await bkt.findOne({_id: documentId});
+    const previousDocument = await this.bucketData.findById(schema, documentId);
 
     if (!previousDocument) {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
@@ -454,19 +441,15 @@ export class BucketDataController {
 
     await this.validateDocument(bucketId, patchedDocument);
 
-    const currentDocument = await patchDocument(
-      schema,
-      {...patchedDocument, _id: documentId},
-      patch,
-      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
-      {
-        collection: schema => this.bds.children(schema),
-        schema: this.bs.resolveSchema
-      },
-      {returnDocument: ReturnDocument.AFTER},
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
+    const currentDocument = await this.writes
+      .patch(
+        schema,
+        {...patchedDocument, _id: documentId},
+        patch,
+        {applyAcl: strategyType === ReqAuthStrategy.USER, user: req.user, returnDocument: "after"},
+        this.bucketContext()
+      )
+      .catch(this.errorHandler);
 
     if (!currentDocument) {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
@@ -479,10 +462,10 @@ export class BucketDataController {
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
         {
-          bucket: bucketId.toHexString(),
+          bucket: bucketId.toString(),
           type: "update"
         },
-        documentId.toHexString(),
+        documentId.toString(),
         previousDocument,
         currentDocument
       );
@@ -508,26 +491,23 @@ export class BucketDataController {
   async deleteOne(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
-    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @Param("documentId", OBJECT_ID) documentId: ObjectId
+    @Param("bucketId", ID(BUCKETS_COLLECTION)) bucketId: Id,
+    @DocumentId("documentId", "bucketId") documentId: Id
   ) {
-    const schema = await this.bs.findOne({_id: bucketId});
+    const schema = await this.bs.findById(bucketId);
 
     if (!schema) {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
-    const deletedDocument = await deleteDocument(
-      schema,
-      documentId,
-      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
-      {
-        collection: schema => this.bds.children(schema),
-        schema: this.bs.resolveSchema
-      },
-      this.hashSecret,
-      this.encryptionSecret
-    ).catch(this.errorHandler);
+    const deletedDocument = await this.writes
+      .delete(
+        schema,
+        documentId,
+        {applyAcl: strategyType === ReqAuthStrategy.USER, user: req.user},
+        this.bucketContext()
+      )
+      .catch(this.errorHandler);
 
     if (!deletedDocument) {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
@@ -536,22 +516,20 @@ export class BucketDataController {
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
         {
-          bucket: bucketId.toHexString(),
+          bucket: bucketId.toString(),
           type: "delete"
         },
-        documentId.toHexString(),
+        documentId.toString(),
         deletedDocument,
         undefined
       );
     }
 
     if (this.history) {
-      await this.history.deleteMany({
-        document_id: documentId
-      });
+      await this.history.deleteByDocument(documentId);
     }
 
-    await clearRelations(this.bs, bucketId, documentId);
+    await clearRelations(this.bs, this.bucketData, bucketId, documentId);
 
     const dependents = getDependents(schema, deletedDocument);
 
@@ -560,8 +538,8 @@ export class BucketDataController {
         await this.deleteOne(
           strategyType,
           req,
-          new ObjectId(targetBucketId),
-          new ObjectId(targetDocId)
+          bucketIds().parse(targetBucketId),
+          (await ids().forBucket(targetBucketId)).parse(targetDocId)
         );
 
         if (this.activityService) {
@@ -575,12 +553,21 @@ export class BucketDataController {
     }
   }
 
+  private bucketContext(): BucketReadContext {
+    return {
+      resolveSchema: this.bs.resolveSchema,
+      preferences: () => this.bs.getPreferences(),
+      hashSecret: this.hashSecret,
+      encryptionSecret: this.encryptionSecret
+    };
+  }
+
   errorHandler(error: {status: number; message: string}) {
     throw new HttpException(error.message, error.status || 500);
   }
 
-  validateDocument(bucketId: ObjectId, document: BucketDocument): Promise<void> {
-    const validatorMixin = Schema.validate(bucketId.toHexString());
+  validateDocument(bucketId: Id, document: BucketDocument): Promise<void> {
+    const validatorMixin = Schema.validate(bucketId.toString());
     const pipe: any = new validatorMixin(this.validator);
     return pipe.transform(document);
   }

@@ -11,6 +11,16 @@ import {projectLocalResourceFolder, projectName} from "../../validator";
 import path from "path";
 import fs from "fs";
 import {DockerMachine} from "../../project";
+import {
+  DATABASE_TYPES,
+  DatabaseType,
+  POSTGRES_USERNAME,
+  databaseApiArgs,
+  databaseImage,
+  POSTGRES_IMAGE,
+  postgresContainerCmd,
+  postgresContainerEnv
+} from "./database";
 
 function streamToBuffer(stream: Stream): Promise<Buffer> {
   return new Promise(resolve => {
@@ -32,6 +42,11 @@ async function create({args: cmdArgs, options}: ActionParameters) {
   const {localResourceFolder}: {localResourceFolder?: string} = options;
 
   const machine = new DockerMachine();
+  const databaseType = options.databaseType as DatabaseType;
+
+  if (databaseType == "postgresql" && Number(options.databaseReplicas) != 1) {
+    throw Error("PostgreSQL projects run a single database node. Remove --database-replicas.");
+  }
 
   const networkName = `${name}-network`,
     databaseName = `${name}-db`,
@@ -71,9 +86,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     ...args,
     // If user defines some of these values in the apiOptions file, they will be overwriten.
     // We should explain this behavior to users on the documentation or somewhere else.
-    `--database-name=${name}`,
-    `--database-replica-set=${name}`,
-    `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
+    ...databaseApiArgs(databaseType, name, databaseName),
     `--public-url=${apiUrl}`,
     `--function-api-url=${functionApiUrl}`,
     `--master-key=${name}`,
@@ -137,10 +150,10 @@ async function create({args: cmdArgs, options}: ActionParameters) {
           image: "spicaengine/panel",
           tag: options.imageVersion.toString()
         },
-        {
-          image: "mongo",
-          tag: options.mongoVersion.toString()
-        },
+        databaseImage(databaseType, {
+          mongo: options.mongoVersion.toString(),
+          postgres: options.postgresVersion.toString()
+        }),
         {
           image: "nginx",
           tag: "latest"
@@ -210,122 +223,187 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     return container.start();
   }
 
-  const databaseReplicas = Number(options.databaseReplicas);
+  async function startMongoDatabase() {
+    const databaseReplicas = Number(options.databaseReplicas);
 
-  // shell to use inside DB containers (will be detected at runtime)
-  let shell = "mongo";
+    // shell to use inside DB containers (will be detected at runtime)
+    let shell = "mongo";
 
-  // Detect available mongo shell inside a container (prefer mongosh, fallback to mongo)
-  async function detectShell(container: any): Promise<string> {
-    const probe = await container.exec({
-      Cmd: ["sh", "-c", "command -v mongosh || command -v mongo || true"],
-      AttachStdout: true,
-      AttachStderr: true
+    // Detect available mongo shell inside a container (prefer mongosh, fallback to mongo)
+    async function detectShell(container: any): Promise<string> {
+      const probe = await container.exec({
+        Cmd: ["sh", "-c", "command -v mongosh || command -v mongo || true"],
+        AttachStdout: true,
+        AttachStderr: true
+      });
+      const res = await probe.start({});
+      const out = (await streamToBuffer(res)).toString().trim();
+      if (!out) throw new Error("no mongo shell available in container");
+      return out.split("/").pop() as string;
+    }
+
+    await spin({
+      text: `Creating database containers (1/${databaseReplicas})`,
+      op: async spinner => {
+        for (let index = 0; index < databaseReplicas; index++) {
+          await createMongoDB(index);
+          spinner.text = `Creating database containers (${index + 1}/${databaseReplicas})`;
+        }
+      }
     });
-    const res = await probe.start({});
-    const out = (await streamToBuffer(res)).toString().trim();
-    if (!out) throw new Error("no mongo shell available in container");
-    return out.split("/").pop() as string;
+
+    await spin({
+      text: "Waiting the database containers to become ready.",
+      op: async spinner => {
+        const replSetConfig = JSON.stringify({
+          _id: name,
+          members: new Array(databaseReplicas).fill(0).map((_, index) => {
+            return {_id: index, host: `${databaseName}-${index}`};
+          })
+        });
+
+        const firstContainer = machine.getContainer(`${databaseName}-0`);
+
+        // detect available shell once on the container
+        const detected = await detectShell(firstContainer);
+        if (detected) shell = detected;
+
+        const initiateReplication = async (reconfig = false) => {
+          spinner.text = "Initiating replication between database containers.";
+          const exec = await firstContainer.exec({
+            Cmd: [
+              shell,
+              "admin",
+              "--eval",
+              reconfig
+                ? `rs.reconfig(${replSetConfig}, { force: true })`
+                : `rs.initiate(${replSetConfig})`
+            ],
+            AttachStderr: true,
+            AttachStdout: true
+          });
+          const result = await exec.start({});
+          const buffer = await streamToBuffer(result);
+          return buffer.toString();
+        };
+
+        let output = await initiateReplication();
+        let retry = 0,
+          maxRetries = 5,
+          wait = 1000;
+
+        while (retry < maxRetries) {
+          retry++;
+          if (output.indexOf("ECONNREFUSED") != -1) {
+            output = await initiateReplication();
+          } else {
+            break;
+          }
+          await new Promise(resolve => setTimeout(resolve, wait));
+          spinner.text = `Initiating replication between database containers. Retrying ${retry}`;
+        }
+
+        if (output.indexOf("already initialized") != -1) {
+          output = await initiateReplication(true);
+        }
+
+        if (output.indexOf("ok: 1") == -1) {
+          return Promise.reject(output);
+        }
+      }
+    });
+
+    await spin({
+      text: "Waiting for the replica set to become ready.",
+      op: async () => {
+        const firstContainer = machine.getContainer(`${databaseName}-0`);
+
+        for (let i = 0; i < 15; i++) {
+          const exec = await firstContainer.exec({
+            Cmd: [shell, "admin", "--eval", "rs.status()"],
+            AttachStderr: true,
+            AttachStdout: true
+          });
+          const output = await exec.start({});
+          const response = await streamToBuffer(output);
+          const responseText = response.toString("utf-8");
+          if (
+            responseText.indexOf("ok: 1") > -1 &&
+            responseText.indexOf("stateStr: 'PRIMARY'") > -1
+          ) {
+            return Promise.resolve();
+          }
+          // Wait some to try again
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
+        return Promise.reject("Replica Set did not become ready in 30 seconds.");
+      }
+    });
   }
 
-  await spin({
-    text: `Creating database containers (1/${databaseReplicas})`,
-    op: async spinner => {
-      for (let index = 0; index < databaseReplicas; index++) {
-        await createMongoDB(index);
-        spinner.text = `Creating database containers (${index + 1}/${databaseReplicas})`;
+  async function createPostgres() {
+    const container = await machine.createContainer({
+      Image: `${POSTGRES_IMAGE}:${options.postgresVersion.toString()}`,
+      name: `${databaseName}-0`,
+      Env: postgresContainerEnv(name),
+      Cmd: postgresContainerCmd(name),
+      Labels: {namespace: name},
+      HostConfig: {
+        RestartPolicy: {
+          Name: options.restart ? "unless-stopped" : "no"
+        },
+        Mounts: [
+          {
+            Source: `${name}-db-0`,
+            Type: "volume",
+            Target: "/var/lib/postgresql",
+            VolumeOptions: {
+              DriverConfig: {
+                Name: "local",
+                Options: {}
+              },
+              NoCopy: false,
+              Labels: {namespace: name}
+            }
+          }
+        ]
       }
-    }
-  });
+    });
+    await network.connect({Container: container.id});
+    await container.start();
+  }
 
-  await spin({
-    text: "Waiting the database containers to become ready.",
-    op: async spinner => {
-      const replSetConfig = JSON.stringify({
-        _id: name,
-        members: new Array(databaseReplicas).fill(0).map((_, index) => {
-          return {_id: index, host: `${databaseName}-${index}`};
-        })
-      });
+  async function startPostgresDatabase() {
+    await spin({text: "Creating the database container.", op: createPostgres});
 
-      const firstContainer = machine.getContainer(`${databaseName}-0`);
-
-      // detect available shell once on the container
-      const detected = await detectShell(firstContainer);
-      if (detected) shell = detected;
-
-      const initiateReplication = async (reconfig = false) => {
-        spinner.text = "Initiating replication between database containers.";
-        const exec = await firstContainer.exec({
-          Cmd: [
-            shell,
-            "admin",
-            "--eval",
-            reconfig
-              ? `rs.reconfig(${replSetConfig}, { force: true })`
-              : `rs.initiate(${replSetConfig})`
-          ],
-          AttachStderr: true,
-          AttachStdout: true
-        });
-        const result = await exec.start({});
-        const buffer = await streamToBuffer(result);
-        return buffer.toString();
-      };
-
-      let output = await initiateReplication();
-      let retry = 0,
-        maxRetries = 5,
-        wait = 1000;
-
-      while (retry < maxRetries) {
-        retry++;
-        if (output.indexOf("ECONNREFUSED") != -1) {
-          output = await initiateReplication();
-        } else {
-          break;
+    await spin({
+      text: "Waiting the database container to become ready.",
+      op: async () => {
+        const container = machine.getContainer(`${databaseName}-0`);
+        for (let i = 0; i < 30; i++) {
+          const exec = await container.exec({
+            Cmd: ["pg_isready", "-U", POSTGRES_USERNAME, "-d", name],
+            AttachStderr: true,
+            AttachStdout: true
+          });
+          await streamToBuffer(await exec.start({}));
+          const {ExitCode} = await exec.inspect();
+          if (ExitCode == 0) {
+            return;
+          }
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
-        await new Promise(resolve => setTimeout(resolve, wait));
-        spinner.text = `Initiating replication between database containers. Retrying ${retry}`;
+        return Promise.reject("Database did not become ready in 60 seconds.");
       }
+    });
+  }
 
-      if (output.indexOf("already initialized") != -1) {
-        output = await initiateReplication(true);
-      }
-
-      if (output.indexOf("ok: 1") == -1) {
-        return Promise.reject(output);
-      }
-    }
-  });
-
-  await spin({
-    text: "Waiting for the replica set to become ready.",
-    op: async () => {
-      const firstContainer = machine.getContainer(`${databaseName}-0`);
-
-      for (let i = 0; i < 15; i++) {
-        const exec = await firstContainer.exec({
-          Cmd: [shell, "admin", "--eval", "rs.status()"],
-          AttachStderr: true,
-          AttachStdout: true
-        });
-        const output = await exec.start({});
-        const response = await streamToBuffer(output);
-        const responseText = response.toString("utf-8");
-        if (
-          responseText.indexOf("ok: 1") > -1 &&
-          responseText.indexOf("stateStr: 'PRIMARY'") > -1
-        ) {
-          return Promise.resolve();
-        }
-        // Wait some to try again
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-
-      return Promise.reject("Replica Set did not become ready in 30 seconds.");
-    }
-  });
+  if (databaseType == "postgresql") {
+    await startPostgresDatabase();
+  } else {
+    await startMongoDatabase();
+  }
 
   let binds = [];
   if (localResourceFolder) {
@@ -480,6 +558,14 @@ export default function (program: Program): Command {
     })
     .option("--mongo-version", "Version of the MongoDB image to run.", {
       default: "8.0",
+      validator: CaporalValidator.STRING
+    })
+    .option("--database-type", "Database engine of the project. PostgreSQL is experimental.", {
+      default: "mongodb",
+      validator: DATABASE_TYPES
+    })
+    .option("--postgres-version", "Version of the PostgreSQL image to run.", {
+      default: "18",
       validator: CaporalValidator.STRING
     })
     .option("-o, --open", "Open project authorization page after creation.", {

@@ -25,6 +25,9 @@
       "path": "../../../interface/bucket/hooks"
     },
     {
+      "path": "../../../interface/bucket"
+    },
+    {
       "path": "../../function/queue/proto"
     },
     {
@@ -34,9 +37,6 @@
       "path": "../../function/enqueuer"
     },
     {
-      "path": "../../../database"
-    },
-    {
       "path": "../services"
     },
     {
@@ -44,6 +44,9 @@
     },
     {
       "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../data"
     }
   ]
 }

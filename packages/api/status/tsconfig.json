@@ -16,7 +16,7 @@
       "path": "../../interface/status"
     },
     {
-      "path": "../../database"
+      "path": "../../interface/data"
     },
     {
       "path": "../../core/schema"

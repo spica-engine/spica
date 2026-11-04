@@ -1,4 +1,5 @@
-import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {ids} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 import {PolicyService} from "./policy.service.js";
 import {changeFactory, Policy} from "@spica-server/interface-passport-policy";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
@@ -8,8 +9,10 @@ export async function find(ps: PolicyService, filter: object, limit?: number, sk
   return ps.paginate(filter, limit, skip);
 }
 
-export function findOne(ps: PolicyService, id: ObjectId) {
-  return ps.findOne(id);
+const policyIds = () => ids().forCollection("policies");
+
+export function findOne(ps: PolicyService, id: Id) {
+  return ps.findById(id);
 }
 
 export async function insert(ps: PolicyService, body: Policy) {
@@ -20,9 +23,9 @@ export async function insert(ps: PolicyService, body: Policy) {
     throw new BadRequestException(message);
   }
   if (body._id) {
-    body._id = new ObjectId(body._id);
+    body._id = policyIds().parse(body._id);
   }
-  return ps.insertOne(body);
+  return ps.insert(body);
 }
 
 export async function replace(ps: PolicyService, policy: Policy) {
@@ -33,9 +36,9 @@ export async function replace(ps: PolicyService, policy: Policy) {
     throw new BadRequestException(message);
   }
 
-  const _id = new ObjectId(policy._id);
+  const _id = policyIds().parse(policy._id);
   delete policy._id;
-  const res = await ps.replaceOne({_id}, policy);
+  const res = await ps.replaceById(_id, policy);
 
   if (!res) {
     throw new NotFoundException(`Policy with ID ${_id} not found`);
@@ -45,19 +48,19 @@ export async function replace(ps: PolicyService, policy: Policy) {
 
 export async function remove(
   ps: PolicyService,
-  id: ObjectId,
+  id: Id,
   apikeyFinalizer: changeFactory,
   identityFinalizer: changeFactory
 ) {
   if (apikeyFinalizer) {
-    await apikeyFinalizer(id.toHexString());
+    await apikeyFinalizer(id.toString());
   }
 
   if (identityFinalizer) {
-    await identityFinalizer(id.toHexString());
+    await identityFinalizer(id.toString());
   }
 
-  const res = await ps.deleteOne({_id: id as any});
+  const res = await ps.deleteById(id);
 
   if (!res) {
     throw new NotFoundException(`Policy with ID ${id} not found`);

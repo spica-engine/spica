@@ -8,26 +8,23 @@ import {
 import {ActivityService} from "@spica-server/activity-services";
 import {BucketCacheService} from "@spica-server/bucket-cache";
 import {
-  insertDocument,
   insertActivity,
-  replaceDocument,
-  patchDocument,
-  deleteDocument,
   clearRelations,
   getDependents,
   applyFieldLevelAcl,
   decryptDocumentFields
 } from "@spica-server/bucket-common";
-import {HistoryService} from "@spica-server/bucket-history";
-import {ChangeEmitter} from "@spica-server/bucket-hooks";
+import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
 import {
-  BucketService,
-  getBucketDataCollection,
-  BucketDataService
-} from "@spica-server/bucket-services";
+  BUCKET_WRITE,
+  BucketWriteContext,
+  BucketWriteFacade
+} from "@spica-server/interface-bucket-common";
+import {ChangeEmitter} from "@spica-server/bucket-hooks";
+import {BucketService, bucketIds, getBucketDataCollection} from "@spica-server/bucket-services";
 import {applyPatch, deepCopy} from "@spica-server/core-patch";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ObjectId, ReturnDocument} from "@spica-server/database";
+import {ids} from "@spica-server/data";
 import {RealtimeDatabaseService} from "@spica-server/database-realtime";
 import {ChunkKind} from "@spica-server/interface-realtime";
 import {GuardService} from "@spica-server/passport-guard-services";
@@ -38,7 +35,9 @@ import {
   Bucket,
   BucketDocument,
   BUCKET_DATA_ENCRYPTION_SECRET,
-  BUCKET_DATA_HASH_SECRET
+  BUCKET_DATA_HASH_SECRET,
+  BUCKET_DATA_REPOSITORY,
+  BucketDataRepository
 } from "@spica-server/interface-bucket";
 import {getConnectionHandlers} from "@spica-server/realtime";
 import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
@@ -52,10 +51,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private realtime: RealtimeDatabaseService,
     private guardService: GuardService,
     private bucketService: BucketService,
-    private bucketDataService: BucketDataService,
+    @Inject(BUCKET_DATA_REPOSITORY) private bucketData: BucketDataRepository,
     private validator: Validator,
+    @Inject(BUCKET_WRITE) private writes: BucketWriteFacade,
     @Optional() private activity: ActivityService,
-    @Optional() private history: HistoryService,
+    @Optional() @Inject(HISTORY_REPOSITORY) private history: HistoryRepository,
     @Optional() private hookEmitter: ChangeEmitter,
     @Optional() private bucketCacheService: BucketCacheService,
     @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
@@ -88,7 +88,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   private async getCollectionName(_client, req): Promise<string> {
     const schemaId = req.params.id;
 
-    if (!ObjectId.isValid(schemaId)) {
+    if (!bucketIds().isValid(schemaId)) {
       throw new Error(`${schemaId} is not a valid object id.`);
     }
 
@@ -98,7 +98,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   private async getFindOptions(_client, req): Promise<any> {
     const schemaId = req.params.id;
 
-    const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
+    const schema = await this.bucketService.findById(bucketIds().parse(schemaId));
 
     if (!schema) {
       throw new Error(`Could not find the schema with id ${schemaId}.`);
@@ -159,20 +159,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     let insertedDoc;
 
     try {
-      insertedDoc = await insertDocument(
+      insertedDoc = await this.writes.insert(
         schema,
         document,
-        {
-          req: client.upgradeReq,
-          applyAcl: this.shouldApplyAcl(client.upgradeReq)
-        },
-        {
-          collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver(),
-          deleteOne: id => this.delete(client, {_id: id})
-        },
-        this.hashSecret,
-        this.encryptionSecret
+        {applyAcl: this.shouldApplyAcl(client.upgradeReq), user: client.upgradeReq.user},
+        {...this.writeContext(), deleteOne: id => this.delete(client, {_id: id})}
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -223,11 +214,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return this.send(client, ChunkKind.Response, error.status || 403, error.message);
     }
 
-    if (!ObjectId.isValid(document._id)) {
+    const documentIds = await ids().forBucket(schema._id.toString());
+
+    if (!documentIds.isValid(document._id)) {
       return this.send(client, ChunkKind.Response, 400, `${document._id} is an invalid object id`);
     }
 
-    const documentId = new ObjectId(document._id);
+    const documentId = documentIds.parse(document._id);
 
     try {
       await this.validateDocument(schema._id.toString(), document);
@@ -238,20 +231,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     let previousDocument;
 
     try {
-      previousDocument = await replaceDocument(
+      previousDocument = await this.writes.replace(
         schema,
         {...document, _id: documentId},
-        {
-          req: client.upgradeReq,
-          applyAcl: this.shouldApplyAcl(client.upgradeReq)
-        },
-        {
-          collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver()
-        },
-        undefined,
-        this.hashSecret,
-        this.encryptionSecret
+        {applyAcl: this.shouldApplyAcl(client.upgradeReq), user: client.upgradeReq.user},
+        this.writeContext()
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -318,15 +302,15 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return this.send(client, ChunkKind.Response, error.status || 403, error.message);
     }
 
-    if (!ObjectId.isValid(document._id)) {
+    const documentIds = await ids().forBucket(schema._id.toString());
+
+    if (!documentIds.isValid(document._id)) {
       return this.send(client, ChunkKind.Response, 400, `${document._id} is an invalid object id`);
     }
 
-    const documentId = new ObjectId(document._id);
+    const documentId = documentIds.parse(document._id);
 
-    const previousDocument = await this.bucketDataService
-      .children(schema)
-      .findOne({_id: documentId});
+    const previousDocument = await this.bucketData.findById(schema, documentId);
 
     if (!previousDocument) {
       return this.send(
@@ -348,21 +332,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     let currentDocument;
 
     try {
-      currentDocument = await patchDocument(
+      currentDocument = await this.writes.patch(
         schema,
         {...patchedDocument, _id: documentId},
         document,
         {
-          req: client.upgradeReq,
-          applyAcl: this.shouldApplyAcl(client.upgradeReq)
+          applyAcl: this.shouldApplyAcl(client.upgradeReq),
+          user: client.upgradeReq.user,
+          returnDocument: "after"
         },
-        {
-          collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver()
-        },
-        {returnDocument: ReturnDocument.AFTER},
-        this.hashSecret,
-        this.encryptionSecret
+        this.writeContext()
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -428,26 +407,20 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       }
     }
 
-    if (!ObjectId.isValid(document._id)) {
+    const documentIds = await ids().forBucket(schema._id.toString());
+
+    if (!documentIds.isValid(document._id)) {
       return this.send(client, ChunkKind.Response, 400, `${document._id} is an invalid object id`);
     }
 
     let deletedDocument;
 
     try {
-      deletedDocument = await deleteDocument(
+      deletedDocument = await this.writes.delete(
         schema,
         document._id,
-        {
-          req: client.upgradeReq,
-          applyAcl: this.shouldApplyAcl(client.upgradeReq)
-        },
-        {
-          collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver()
-        },
-        this.hashSecret,
-        this.encryptionSecret
+        {applyAcl: this.shouldApplyAcl(client.upgradeReq), user: client.upgradeReq.user},
+        this.writeContext()
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, 500, error.message);
@@ -479,9 +452,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.history) {
-      this.history.deleteMany({
-        document_id: new ObjectId(document._id)
-      });
+      this.history.deleteByDocument(documentIds.parse(document._id));
     }
 
     if (this.activity) {
@@ -494,7 +465,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       );
     }
 
-    clearRelations(this.bucketService, schema._id, document._id);
+    clearRelations(this.bucketService, this.bucketData, schema._id, document._id);
 
     const dependents = getDependents(schema, deletedDocument);
 
@@ -528,13 +499,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   private async getSchema(client: any): Promise<Bucket> {
     const schemaId = client.upgradeReq.params.id;
 
-    if (!ObjectId.isValid(schemaId)) {
+    if (!bucketIds().isValid(schemaId)) {
       const error: any = new Error(`${schemaId} is an invalid object id.`);
       error.status = 400;
       throw error;
     }
 
-    const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
+    const schema = await this.bucketService.findById(bucketIds().parse(schemaId));
 
     if (!schema) {
       const error: any = new Error(`Could not find the schema with id ${schemaId}`);
@@ -543,6 +514,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     return schema;
+  }
+
+  private writeContext(): BucketWriteContext {
+    return {
+      resolveSchema: this.getBucketResolver(),
+      hashSecret: this.hashSecret,
+      encryptionSecret: this.encryptionSecret
+    };
   }
 
   getBucketResolver() {
@@ -563,7 +542,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return document;
     }
 
-    const schema = await this.getBucketResolver()(new ObjectId(req.params.id));
+    const schema = await this.getBucketResolver()(bucketIds().parse(req.params.id));
     if (!schema?.properties) {
       return document;
     }
@@ -573,7 +552,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   private async decryptDocuments(_client: any, req: any) {
     const bucketId = req.params.id;
-    const schema = await this.getBucketResolver()(new ObjectId(bucketId));
+    const schema = await this.getBucketResolver()(bucketIds().parse(bucketId));
     if (!schema) return undefined;
     return (document: any) => {
       if (!document) return document;
