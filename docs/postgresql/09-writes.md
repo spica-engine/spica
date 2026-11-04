@@ -90,6 +90,22 @@ Makes bucket data insert, replace, patch and delete work on PostgreSQL behind th
 
 - Should patches on array fields rewrite the whole child table, or diff it?
 
+## Requests from other parts
+
+### Encrypted fields in access rules (from Part 7)
+
+Part 5 stores an `encrypted` property as one `text` column that holds the ciphertext. Ciphertext is not deterministic, so a rule cannot compare an encrypted field. On MongoDB the stored value is `{encrypted, hash}` and a rule compares `<field>.hash` with `hash(value, secret)`.
+
+- **What Part 9 has to do.** Store a deterministic hash next to the ciphertext when a document is written (insert, replace and patch), for example in a second column of the same table. Part 5 is merged, so adding the column is a change to the table layout and the DDL planner in `packages/data/postgresql/src/schema/`, shipped with the first PR that writes encrypted values.
+- **What Part 7 does until then.** The rule compiler refuses any rule that mentions an encrypted field, with an `UnsupportedRuleError` that becomes a 400 when the bucket is saved. The refusal is in `packages/data/postgresql/src/access/rule/fields.ts`, in two places: a field of the bucket and a field of a related bucket reached through a one-to-many relation.
+- **What changes in Part 7 code when the hash lands.** Lift both refusals, and make `access/rule/coerce.ts` hash a string literal with the secret and compare it with the hash column, as the MongoDB replacer does.
+- **Tests that exist only to pin the refusal.** They carry the marker `[part9-encrypted]` (`grep -rn part9-encrypted packages`). When the hash lands, remove them, or rewrite them to assert the comparison, in the same PR as the compiler change. They are in `packages/data/postgresql/test/access/`:
+  - `rule-fixtures.ts`: the `secret: {type: "encrypted"}` properties of the main and the related bucket.
+  - `rule-compiler.spec.ts`: the encrypted case of the "unsupported" list.
+  - `rule-relations.spec.ts`: the encrypted case of a one-to-many list, and "should refuse encrypted and list fields of the related bucket".
+  - `field-rules.spec.ts`: the field rule that mentions `document.secret`.
+  - `rule-validator.spec.ts`: the `secret` properties of the three test buckets, and the cases that expect an encrypted field to be rejected for a read rule, a related bucket and a field rule.
+
 ## Done when
 
 - Insert, replace, patch and delete give the same responses, hooks, history and activity on both engines.

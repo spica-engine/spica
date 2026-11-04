@@ -97,7 +97,13 @@
       "path": "../../core/patch"
     },
     {
+      "path": "../../core/encryption"
+    },
+    {
       "path": "../../core/differ"
+    },
+    {
+      "path": "../../api/bucket/expression"
     },
     {
       "path": "../../database/testing"

@@ -18,4 +18,8 @@ export class MongoBucketRuleValidator implements BucketRuleValidator {
       "match"
     );
   }
+
+  // MongoDB has never checked field level rules when a bucket is saved, and rules that saved before
+  // must keep saving.
+  async validateFieldRules(): Promise<void> {}
 }
