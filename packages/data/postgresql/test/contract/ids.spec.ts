@@ -1,7 +1,15 @@
 import {HttpException, HttpStatus} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {BucketDocumentIdPipe, ID, ids, idTransform, InvalidIdError} from "@spica-server/data";
+import {
+  BucketDocumentIdPipe,
+  ID,
+  ids,
+  idTransform,
+  InvalidIdError,
+  provideRepository
+} from "@spica-server/data";
 import {contractSuite} from "@spica-server/database-testing";
+import {BUCKET_REPOSITORY, BUCKET_SCHEMA_MANAGER} from "@spica-server/interface-bucket";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 
 contractSuite("id types", engine => {
@@ -9,7 +17,13 @@ contractSuite("id types", engine => {
   let idTypes: IdTypes;
 
   beforeAll(async () => {
-    module = await Test.createTestingModule({imports: [engine.module()]}).compile();
+    module = await Test.createTestingModule({
+      imports: [engine.module()],
+      providers:
+        engine.name == "postgresql"
+          ? [provideRepository(BUCKET_REPOSITORY), provideRepository(BUCKET_SCHEMA_MANAGER)]
+          : []
+    }).compile();
     await module.init();
     idTypes = module.get<IdTypes>(ID_TYPES);
   });
@@ -76,4 +90,40 @@ contractSuite("id types", engine => {
       HttpException
     );
   });
+
+  (engine.name == "postgresql" ? it : it.skip)(
+    "parses bucket document ids by the key type of the bucket's primary",
+    async () => {
+      const bucket = await module.get(BUCKET_SCHEMA_MANAGER).create(
+        {
+          title: "numbered",
+          description: "",
+          icon: "",
+          primary: "number",
+          readOnly: false,
+          history: false,
+          order: 0,
+          acl: {read: "true==true", write: "true==true"},
+          properties: {number: {type: "integer", options: {generated: true}}}
+        } as any,
+        () => {}
+      );
+
+      const idType = await idTypes.forBucket(String(bucket._id));
+      expect(idType.name).toBe("integer");
+      expect(idType.parse("42")).toBe(42);
+
+      const parsed = await new BucketDocumentIdPipe(idTypes).transform({
+        documentId: "42",
+        bucketId: String(bucket._id)
+      });
+      expect(parsed).toBe(42);
+      await expect(
+        new BucketDocumentIdPipe(idTypes).transform({
+          documentId: "01890a5d-ac96-774b-bcce-b302099a8057",
+          bucketId: String(bucket._id)
+        })
+      ).rejects.toBeInstanceOf(HttpException);
+    }
+  );
 });

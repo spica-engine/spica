@@ -1,46 +1,15 @@
-import {InvalidIdError} from "@spica-server/data";
 import {bind, Condition, InlineValues, literalOf} from "@spica-server/data-postgresql-orm";
 import {ResourceFilterSpec} from "@spica-server/interface-data";
-import {UuidV7Type} from "../id.js";
+import {keyIdType} from "../id.js";
 import {KeyType} from "../schema/primary-key.js";
 
 export type KeyValue = string | number;
 
 export type KeyParser = (id: string) => KeyValue;
 
-const INTEGER_RANGE = {min: -(2n ** 31n), max: 2n ** 31n - 1n};
-const BIGINT_RANGE = {min: -(2n ** 63n), max: 2n ** 63n - 1n};
-
-function parseWhole(id: string, type: KeyType, range: {min: bigint; max: bigint}): bigint {
-  if (typeof id != "string" || !/^-?\d+$/.test(id)) {
-    throw new InvalidIdError(`"${String(id)}" is not a valid ${type}.`);
-  }
-  const value = BigInt(id);
-  if (value < range.min || value > range.max) {
-    throw new InvalidIdError(`"${id}" is out of the ${type} range.`);
-  }
-  return value;
-}
-
 export function keyParser(type: KeyType): KeyParser {
-  switch (type) {
-    case "uuid": {
-      const uuid = new UuidV7Type();
-      return id => uuid.parse(id);
-    }
-    case "integer":
-      return id => Number(parseWhole(id, type, INTEGER_RANGE));
-    case "bigint":
-      // bigint stays a string so it survives the driver without losing precision.
-      return id => parseWhole(id, type, BIGINT_RANGE).toString();
-    case "text":
-      return id => {
-        if (typeof id != "string") {
-          throw new InvalidIdError(`"${String(id)}" is not a valid text key.`);
-        }
-        return id;
-      };
-  }
+  const idType = keyIdType(type);
+  return id => idType.parse(id) as unknown as KeyValue;
 }
 
 function distinct(ids: string[], parse: KeyParser): KeyValue[] {
