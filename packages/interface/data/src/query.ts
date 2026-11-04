@@ -9,9 +9,18 @@ export type WhereCondition =
   | {in: unknown[]}
   | {matches: string; caseInsensitive?: boolean};
 
+/**
+ * What a caller's policies allow, as data. An empty filter allows everything. Each exclude list
+ * belongs to one policy statement and the statements are alternatives of each other, as is include.
+ */
+export interface ResourceFilterSpec {
+  include: string[];
+  exclude: string[][];
+}
+
 export interface ReadSpec {
   id?: Id;
-  resourceFilter?: object;
+  resourceFilter?: ResourceFilterSpec;
   filter?: object;
   /**
    * Run on the caller filter before the engine's own id and date replacers.

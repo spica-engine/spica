@@ -17,7 +17,7 @@ describe("Storage Service", () => {
   let strategyInstance: Strategy;
   let storageObjectId: ObjectId = new ObjectId("56cb91bdc3464f14678934ca");
 
-  const resourceFilter = {$match: {}};
+  const resourceFilter = {include: [], exclude: []};
 
   beforeEach(async () => {
     storageObject = {

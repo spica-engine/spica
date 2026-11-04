@@ -9,7 +9,7 @@ import {
 } from "@spica-server/interface-function";
 import {createPlan, refreshPlan, secretRefreshPlan} from "./change.js";
 import {DuplicateKeyError, ids} from "@spica-server/data";
-import {CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {CollectionQueryFacade, Id, ResourceFilterSpec} from "@spica-server/interface-data";
 import {FunctionEngine} from "./engine.js";
 import {LogRepository} from "@spica-server/interface-function-log";
 import {BadRequestException, InternalServerErrorException, NotFoundException} from "@nestjs/common";
@@ -65,7 +65,7 @@ export async function find<
   engine: FunctionEngine,
   options?: {
     filter?: {
-      resources?: object;
+      resources?: ResourceFilterSpec;
       index?: string;
     };
     resolveEnvRelations?: ER;

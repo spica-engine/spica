@@ -23,7 +23,8 @@ import {
   COLLECTION_QUERY,
   CollectionNames,
   CollectionQueryFacade,
-  Id
+  Id,
+  ResourceFilterSpec
 } from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {Webhook} from "@spica-server/interface-function-webhook";
@@ -71,7 +72,7 @@ export class WebhookController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:index"))
   find(
-    @ResourceFilter({collection: WEBHOOK_COLLECTION}) resourceFilter: object,
+    @ResourceFilter({collection: WEBHOOK_COLLECTION}) resourceFilter: ResourceFilterSpec,
     @Query("limit", DEFAULT(10), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", DEFAULT({_id: -1}), JSONP) sort: {[path: string]: 1 | -1}

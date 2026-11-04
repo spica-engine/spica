@@ -23,7 +23,12 @@ import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-buc
 import {BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  Id,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createBucketActivity} from "@spica-server/bucket-common";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket-cache";
@@ -32,8 +37,10 @@ import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core-patch";
 import {
   Bucket,
   BUCKET_DATA_REPOSITORY,
+  BUCKET_RULE_VALIDATOR,
   BUCKET_SCHEMA_EXTENSION,
   BucketDataRepository,
+  BucketRuleValidator,
   BucketSchemaExtension
 } from "@spica-server/interface-bucket";
 
@@ -48,6 +55,7 @@ export class BucketController {
   constructor(
     private bs: BucketService,
     @Inject(BUCKET_DATA_REPOSITORY) private bucketData: BucketDataRepository,
+    @Inject(BUCKET_RULE_VALIDATOR) private rules: BucketRuleValidator,
     private validator: Validator,
     @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Inject(BUCKET_SCHEMA_EXTENSION) private schemaExtension: BucketSchemaExtension,
@@ -80,7 +88,7 @@ export class BucketController {
    */
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:index"))
-  index(@ResourceFilter({collection: BUCKETS_COLLECTION}) resourceFilter: object) {
+  index(@ResourceFilter({collection: BUCKETS_COLLECTION}) resourceFilter: ResourceFilterSpec) {
     return CRUD.find(this.queries, {resourceFilter, sort: {order: 1}});
   }
 
@@ -120,7 +128,7 @@ export class BucketController {
   @Post()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:create"))
   async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
-    return CRUD.insert(this.bs, bucket).catch(error => {
+    return CRUD.insert(this.bs, this.rules, bucket).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -154,11 +162,12 @@ export class BucketController {
     @Param("id", ID(BUCKETS_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    return CRUD.replace(this.bs, this.bucketData, this.history, {...bucket, _id: id}).catch(
-      error => {
-        throw new HttpException(error.message, error.status || 500);
-      }
-    );
+    return CRUD.replace(this.bs, this.bucketData, this.history, this.rules, {
+      ...bucket,
+      _id: id
+    }).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
+    });
   }
 
   /**

@@ -15,7 +15,12 @@ import {
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core-schema";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  Id,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "@spica-server/interface-passport";
 import {
@@ -39,7 +44,7 @@ export class StrategyController {
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:index"))
-  find(@ResourceFilter({collection: STRATEGY_COLLECTION}) resourceFilter: object) {
+  find(@ResourceFilter({collection: STRATEGY_COLLECTION}) resourceFilter: ResourceFilterSpec) {
     return this.queries.find(STRATEGY_COLLECTION, {resourceFilter});
   }
 

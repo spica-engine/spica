@@ -24,7 +24,12 @@ import * as CRUD from "./crud.js";
 import {activity} from "@spica-server/activity-services";
 import {createEnvVarActivity} from "./activity.resource.js";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  Id,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 
 const ENV_VAR_COLLECTION = "env_var";
 
@@ -38,7 +43,7 @@ export class EnvVarController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:index"))
   async find(
-    @ResourceFilter({collection: ENV_VAR_COLLECTION}) resourceFilter: object,
+    @ResourceFilter({collection: ENV_VAR_COLLECTION}) resourceFilter: ResourceFilterSpec,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},

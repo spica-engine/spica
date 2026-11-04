@@ -8,9 +8,11 @@ import {BucketService, ServicesModule} from "@spica-server/bucket-services";
 import {
   BUCKET_DATA_REPOSITORY,
   BUCKET_REPOSITORY,
+  BUCKET_RULE_VALIDATOR,
   BUCKET_SCHEMA_EXTENSION,
   BucketDataRepository,
   BucketRepository,
+  BucketRuleValidator,
   BucketSchemaExtension
 } from "@spica-server/interface-bucket";
 import {SchemaModule, Validator} from "@spica-server/core-schema";
@@ -144,6 +146,7 @@ export class BucketModule {
     bs: BucketService,
     @Inject(BUCKET_REPOSITORY) buckets: BucketRepository,
     @Inject(BUCKET_DATA_REPOSITORY) bucketData: BucketDataRepository,
+    @Inject(BUCKET_RULE_VALIDATOR) rules: BucketRuleValidator,
     validator: Validator,
     @Optional() @Inject(HISTORY_REPOSITORY) private history: HistoryRepository,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
@@ -160,7 +163,7 @@ export class BucketModule {
     });
 
     registerStatusProvider(bs, buckets, bucketData);
-    registerAssetHandlers(bs, bucketData, history, validator, this.assetRepManager);
+    registerAssetHandlers(bs, bucketData, history, rules, validator, this.assetRepManager);
   }
 }
 

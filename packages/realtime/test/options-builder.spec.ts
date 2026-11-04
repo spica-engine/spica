@@ -12,30 +12,33 @@ describe("RealtimeOptionsError", () => {
 
 describe("RealtimeOptionsBuilder", () => {
   describe("applyResourceFilter", () => {
-    it("should initialize filter with $and array and push resource filter $match", () => {
+    it("should initialize an empty $and array and keep the resource filter as data", () => {
       const builder = new RealtimeOptionsBuilder();
-      const result = builder.applyResourceFilter({$match: {owner: "user1"}}).result();
+      const result = builder.applyResourceFilter({include: ["id1"], exclude: [["id2"]]}).result();
 
       expect(result).toEqual({
-        filter: {$and: [{owner: "user1"}]}
+        filter: {$and: []},
+        resourceFilter: {include: ["id1"], exclude: [["id2"]]}
       });
     });
 
-    it("should use empty $match when resourceFilter is undefined", () => {
+    it("should allow everything when resourceFilter is undefined", () => {
       const builder = new RealtimeOptionsBuilder();
       const result = builder.applyResourceFilter(undefined).result();
 
       expect(result).toEqual({
-        filter: {$and: [{}]}
+        filter: {$and: []},
+        resourceFilter: {include: [], exclude: []}
       });
     });
 
-    it("should use empty $match when resourceFilter is null", () => {
+    it("should allow everything when resourceFilter is null", () => {
       const builder = new RealtimeOptionsBuilder();
       const result = builder.applyResourceFilter(null).result();
 
       expect(result).toEqual({
-        filter: {$and: [{}]}
+        filter: {$and: []},
+        resourceFilter: {include: [], exclude: []}
       });
     });
   });
@@ -44,12 +47,13 @@ describe("RealtimeOptionsBuilder", () => {
     it("should parse valid JSON filter and push to $and array when resource filter exists", () => {
       const builder = new RealtimeOptionsBuilder();
       const result = builder
-        .applyResourceFilter({$match: {owner: "user1"}})
+        .applyResourceFilter({include: ["id1"], exclude: []})
         .filter('{"status": "active"}')
         .result();
 
       expect(result).toEqual({
-        filter: {$and: [{owner: "user1"}, {status: "active"}]}
+        filter: {$and: [{status: "active"}]},
+        resourceFilter: {include: ["id1"], exclude: []}
       });
     });
 
@@ -182,7 +186,7 @@ describe("RealtimeOptionsBuilder", () => {
     it("should support full chain of resource filter + filter + sort + limit + skip", () => {
       const builder = new RealtimeOptionsBuilder();
       const result = builder
-        .applyResourceFilter({$match: {owner: "user1"}})
+        .applyResourceFilter({include: ["id1"], exclude: []})
         .filter('{"status": "active"}')
         .sort('{"created_at": -1}')
         .limit("10")
@@ -190,7 +194,8 @@ describe("RealtimeOptionsBuilder", () => {
         .result();
 
       expect(result).toEqual({
-        filter: {$and: [{owner: "user1"}, {status: "active"}]},
+        filter: {$and: [{status: "active"}]},
+        resourceFilter: {include: ["id1"], exclude: []},
         sort: {created_at: -1},
         limit: 10,
         skip: 5
@@ -199,11 +204,7 @@ describe("RealtimeOptionsBuilder", () => {
 
     it("should support sort + limit + skip without filter", () => {
       const builder = new RealtimeOptionsBuilder();
-      const result = builder
-        .sort('{"name": 1}')
-        .limit("25")
-        .skip("0")
-        .result();
+      const result = builder.sort('{"name": 1}').limit("25").skip("0").result();
 
       expect(result).toEqual({
         sort: {name: 1},
@@ -237,13 +238,14 @@ describe("RealtimeOptionsBuilder", () => {
     it("should build options with resource filter and sort/limit/skip", () => {
       const req = createMockReq(
         {sort: '{"name": 1}', limit: "10", skip: "5"},
-        {$match: {owner: "user1"}}
+        {include: ["id1"], exclude: []}
       );
 
       const result = RealtimeOptionsBuilder.fromQuery(req, {useResourceFilter: true});
 
       expect(result).toEqual({
-        filter: {$and: [{owner: "user1"}]},
+        filter: {$and: []},
+        resourceFilter: {include: ["id1"], exclude: []},
         sort: {name: 1},
         limit: 10,
         skip: 5
@@ -251,7 +253,7 @@ describe("RealtimeOptionsBuilder", () => {
     });
 
     it("should build options with resource filter and user filter", () => {
-      const req = createMockReq({filter: '{"status": "active"}'}, {$match: {owner: "user1"}});
+      const req = createMockReq({filter: '{"status": "active"}'}, {include: ["id1"], exclude: []});
 
       const result = RealtimeOptionsBuilder.fromQuery(req, {
         useResourceFilter: true,
@@ -259,7 +261,8 @@ describe("RealtimeOptionsBuilder", () => {
       });
 
       expect(result).toEqual({
-        filter: {$and: [{owner: "user1"}, {status: "active"}]}
+        filter: {$and: [{status: "active"}]},
+        resourceFilter: {include: ["id1"], exclude: []}
       });
     });
 

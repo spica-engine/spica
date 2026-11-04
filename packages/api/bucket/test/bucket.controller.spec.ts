@@ -261,6 +261,53 @@ describe("BucketController", () => {
     });
   });
 
+  describe("rules", () => {
+    it("should accept rules the engine can apply", async () => {
+      const response = await req.post("/bucket", {
+        ...bucket,
+        acl: {read: "has(document.title) && document.title == auth.identifier", write: "true==true"}
+      });
+      expect(response.statusCode).toBe(201);
+    });
+
+    it("should reject a read rule that cannot be parsed", async () => {
+      const response = await req.post("/bucket", {
+        ...bucket,
+        acl: {read: "document.title ==", write: "true==true"}
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toContain("Error occurred while parsing read rule");
+    });
+
+    it("should reject a read rule that calls an unknown function", async () => {
+      const response = await req.post("/bucket", {
+        ...bucket,
+        acl: {read: "nope(document.title)", write: "true==true"}
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toContain("Error occurred while parsing read rule");
+    });
+
+    it("should reject a write rule that cannot be parsed", async () => {
+      const response = await req.post("/bucket", {
+        ...bucket,
+        acl: {read: "true==true", write: "document.title =="}
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toContain("Error occurred while parsing write rule");
+    });
+
+    it("should reject a bad rule when the bucket is replaced", async () => {
+      const {body: inserted} = await req.post("/bucket", bucket);
+      const response = await req.put(`/bucket/${inserted._id}`, {
+        ...bucket,
+        acl: {read: "document.title ==", write: "true==true"}
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toContain("Error occurred while parsing read rule");
+    });
+  });
+
   describe("validation", () => {
     let bucket;
 
