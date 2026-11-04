@@ -331,6 +331,43 @@ export const regex: Func = (context, mode) => {
   };
 };
 
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+function textMatch(fnName: "startsWith" | "contains"): Func {
+  return (context, mode) => {
+    validateArgumentsLength(fnName, context.arguments, 2);
+    validateArgumentsOrder(fnName, context.arguments, [
+      PropertyAccesChainValidation,
+      LiteralValidation
+    ]);
+
+    return ctx => {
+      if (context.target == "aggregation") {
+        const [propertyName, text] = parseArguments(context.arguments, ctx, convert);
+        assertText(fnName, text);
+        const regex = fnName == "startsWith" ? `^${escapeRegExp(text)}` : escapeRegExp(text);
+        const expression = {$eq: [{$regexMatch: {input: propertyName, regex}}, true]};
+        return wrapExpressionByMode(expression, mode);
+      }
+      const [documentValue, text] = parseArguments(context.arguments, ctx, compile);
+      assertText(fnName, text);
+      if (typeof documentValue != "string") {
+        return false;
+      }
+      return fnName == "startsWith" ? documentValue.startsWith(text) : documentValue.includes(text);
+    };
+  };
+}
+
+function assertText(fnName: string, text: unknown) {
+  if (typeof text != "string") {
+    throw new TypeError(`Function '${fnName}' arg[1] must be a string.`);
+  }
+}
+
+export const startsWith = textMatch("startsWith");
+export const contains = textMatch("contains");
+
 function parseArguments(args: object[], ctx: object, builder: Function) {
   const items = [];
 
