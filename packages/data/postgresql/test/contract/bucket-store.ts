@@ -18,7 +18,7 @@ import {
   BUCKET_REPOSITORY,
   BUCKET_SCHEMA_MANAGER
 } from "@spica-server/interface-bucket";
-import {BUCKET_QUERY} from "@spica-server/interface-bucket-common";
+import {BUCKET_QUERY, BucketReadSpec} from "@spica-server/interface-bucket-common";
 import {ID_TYPES, IdTypes, PG_POOL, RESULT_SHAPER} from "@spica-server/interface-data";
 import pg from "pg";
 import {fetchRowSet, insertDocument} from "../shape/row-set-fixtures.js";
@@ -31,9 +31,15 @@ export interface ReadOptions {
   locale?: {best: string; fallback: string};
 }
 
+export interface BucketOptions {
+  acl?: {read: string; write: string};
+}
+
 export interface BucketStore {
   readonly keyField: "_id" | "id";
-  createBucket(properties: Fixture): Promise<any>;
+  createBucket(properties: Fixture, options?: BucketOptions): Promise<any>;
+  find(bucket: any, spec?: BucketReadSpec): Promise<any[]>;
+  paginate(bucket: any, spec?: BucketReadSpec): Promise<{meta: {total: number}; data: any[]}>;
   insert(bucket: any, document: Fixture): Promise<unknown>;
   read(bucket: any, key: unknown, options?: ReadOptions): Promise<any>;
   reset(): void;
@@ -55,6 +61,10 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
   let counter = 0;
 
   const idType = () => module.get<IdTypes>(ID_TYPES).unscoped();
+  const context = () => ({
+    resolveSchema: id => created[String(id)],
+    preferences: async () => preferences
+  });
 
   return {
     keyField: mongo ? "_id" : "id",
@@ -63,7 +73,7 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
       created = {};
     },
 
-    async createBucket(properties) {
+    async createBucket(properties, options = {}) {
       const bucket = await module.get(BUCKET_SCHEMA_MANAGER).create(
         {
           title: `shape ${++counter}`,
@@ -73,7 +83,7 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
           readOnly: false,
           history: false,
           order: 0,
-          acl: {read: "true==true", write: "true==true"},
+          acl: options.acl ?? {read: "true==true", write: "true==true"},
           properties: mongo
             ? properties
             : {id: {type: "uuid", options: {generated: true}}, ...properties}
@@ -82,6 +92,16 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
       );
       created[String(bucket._id)] = bucket;
       return bucket;
+    },
+
+    async find(bucket, spec = {}) {
+      const {result} = await module.get(BUCKET_QUERY).find(bucket, spec, context());
+      return JSON.parse(JSON.stringify(result));
+    },
+
+    async paginate(bucket, spec = {}) {
+      const {result} = await module.get(BUCKET_QUERY).paginate(bucket, spec, context());
+      return JSON.parse(JSON.stringify(result));
     },
 
     async insert(bucket, document) {
