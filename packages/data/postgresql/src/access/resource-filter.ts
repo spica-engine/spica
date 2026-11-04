@@ -55,8 +55,8 @@ function arrayOf(values: unknown[], items: KeyValue[], type: string) {
 }
 
 /**
- * Every exclude list and the include list are alternatives of each other, as in the MongoDB
- * rendering. A filter without any of them allows every row.
+ * Every exclude list and the include list are alternatives of each other: an id passes when any
+ * one of them lets it through. A filter without any of them allows every row.
  */
 export function resourceFilterCondition(
   filter: ResourceFilterSpec | undefined,
