@@ -20,7 +20,7 @@ function checkSize(node: unknown) {
     if (value === null || typeof value != "object") {
       return;
     }
-    if ("kind" in value && ++terms > FILTER_LIMITS.terms) {
+    if ("kind" in value && value.kind != "literal" && ++terms > FILTER_LIMITS.terms) {
       throw new InvalidRuleError(`The filter has more than ${FILTER_LIMITS.terms} terms.`);
     }
     for (const [key, child] of Object.entries(value)) {

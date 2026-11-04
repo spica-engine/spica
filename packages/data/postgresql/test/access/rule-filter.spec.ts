@@ -79,6 +79,13 @@ describe("compileFilter", () => {
       expect(() => compile(filter)).toThrow(RuleCompileError);
     });
 
+    it("should not count the values of a list as terms", () => {
+      const values = Array.from({length: 100}, (_, index) => `"v${index}"`).join(", ");
+      const {values: bound} = compile(`document.title in [${values}]`);
+
+      expect(bound).toHaveLength(100);
+    });
+
     it("should accept a filter inside the limits", () => {
       const filter = Array.from({length: 10}, (_, index) => `document.age > ${index}`).join(" || ");
       expect(() => compile(filter)).not.toThrow();
