@@ -147,7 +147,7 @@ Also added: `COLLECTION_NAMES` (lists collections for the function trigger schem
 - `resourceFilterFunction` in the action guard still builds `{_id: {$in}}` and `{_id: {$nin}}` itself. The import rule doesn't catch it because ids are parsed through `ids()` and nothing is imported from MongoDB. Part 7 moves it behind the adapter.
 - `ChangeEvent` keeps MongoDB's change stream field names on purpose. Part 10 reworks the shape before the PostgreSQL source.
 - The repository interfaces repeat operations such as `findById`, `insert` and `deleteById`. The shared base interface is the last PR of Part 3.
-- `legacyPlan` in `packages/data/mongodb/test/collection-query.spec.ts` rebuilds the old `PipelineBuilder` plan to prove the facade changed nothing. Part 8 removes it.
+- `legacyPlan` in `packages/data/mongodb/test/collection-query.spec.ts` rebuilds the old `PipelineBuilder` plan to prove the facade changed nothing. Part 8 removed it; the tests state the expected stages instead.
 - Behaviour edges:
   - apikey and webhook lists with `sort={}` or `limit=0` used to answer 500 and now succeed.
   - `Content-language` is no longer sent when a bucket read fails.

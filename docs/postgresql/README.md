@@ -56,12 +56,12 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 | Mongo operator coverage       | No conversion. A filter in the other engine's language returns 404.                                             |
 | Missed change events          | Not handled for now. Spica doesn't use change stream resume today. The feed is plain LISTEN/NOTIFY.             |
 | Schema edits on large buckets | All edits run online, however long they take. None are refused, and the user is responsible for them.           |
-| Devkit API shape              | A completely new devkit for PostgreSQL. `@spica-devkit/bucket` stays as it is, and callers put SQL in the filter. |
+| Devkit API shape              | A completely new devkit for PostgreSQL. `@spica-devkit/bucket` stays as it is, and callers write the filter in the expression language. |
 | Existing installs             | Not supported. There is no path for moving a MongoDB instance to PostgreSQL, because MongoDB compatibility and the best key performance can't both be had. |
 | ORM                           | A small ORM written in Spica, on the same driver as the bucket-data SQL. CRUD and lookups by key only; list endpoints use the query facade. |
 | System migrations             | The PostgreSQL track is plain SQL migration files. They only change tables on existing installs; each has a test that runs it, is safe to run again, and nothing records what ran. |
 | System table creation         | The API creates its tables at startup with `CREATE TABLE IF NOT EXISTS`, under an advisory lock so replicas don't race. New installs and test databases need no migration. |
-| What SQL filters may contain  | Parsed against an allow-list, never pasted into a query. The list is written during Part 8.                     |
+| What a caller filter may contain | The Spica expression language, compiled to SQL with bound values and never pasted into a query. It cannot name another table or read `auth`. Written in Part 8. |
 | System record ids             | A UUID v7 `id` primary key. The caller may provide it, and PostgreSQL generates it otherwise. MongoDB ObjectIds are not supported. |
 | Minimum PostgreSQL version    | 18. System tables use its built-in `uuidv7()`.                                                                  |
 | Key name in responses         | `_id` on MongoDB, `id` on PostgreSQL. The panel will adapt later, outside this plan.                            |

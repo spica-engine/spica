@@ -1,13 +1,10 @@
 import {FilterLanguageError, PassthroughResultShaper} from "@spica-server/data";
 import {MongoCollectionQueryFacade, MongoIdTypes} from "@spica-server/data-mongodb";
-import {executePaginationPlan, PipelineBuilder} from "@spica-server/database-pipeline";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
-import {replaceFilterDates, replaceFilterObjectIds} from "@spica-server/filter";
 import {Test} from "@nestjs/testing";
 import {COLLECTION_QUERY, CollectionQueryFacade, ResultShaper} from "@spica-server/interface-data";
 
-// Records every pipeline the facade sends so it can be compared with the pipeline today's callers
-// build with PipelineBuilder.
+// Records every pipeline the facade sends, so a test can state the stages it expects.
 function recordingDatabase() {
   const calls: {collection: string; pipeline: object[]}[] = [];
   const db = {
@@ -28,6 +25,16 @@ const resourceFilter = {
 
 const neutralResourceFilter = {include: ["5f1e8b9c2a4d3e0012345678"], exclude: []};
 
+// What the client filter above becomes: the keys turn into ObjectIds and the dates into Dates.
+const clientMatch = (extra: object = {}) => ({
+  $match: {
+    _id: new ObjectId("5f1e8b9c2a4d3e0012345679"),
+    created_at: new Date("2020-01-01T00:00:00.000Z"),
+    name: "x",
+    ...extra
+  }
+});
+
 const clientFilter = () => ({
   _id: "5f1e8b9c2a4d3e0012345679",
   created_at: "2020-01-01T00:00:00.000Z",
@@ -35,7 +42,7 @@ const clientFilter = () => ({
 });
 
 describe("MongoCollectionQueryFacade", () => {
-  describe("pipeline parity", () => {
+  describe("pipelines", () => {
     let calls: {collection: string; pipeline: object[]}[];
     let facade: MongoCollectionQueryFacade;
 
@@ -49,33 +56,9 @@ describe("MongoCollectionQueryFacade", () => {
       );
     });
 
-    async function legacyPlan(
-      replacers: ((filter: object) => Promise<object>)[] | undefined,
-      chain: {resourceFilter?: object; filter?: object; id?: ObjectId},
-      seeking: {sort?: any; skip?: number; limit?: number; fields?: any}
-    ) {
-      const base = await new PipelineBuilder(replacers)
-        .findOneIfRequested(chain.id)
-        .filterResources(chain.resourceFilter)
-        .filterByUserRequest(chain.filter);
-      const seekingPipeline = new PipelineBuilder()
-        .sort(seeking.sort)
-        .skip(seeking.skip)
-        .limit(seeking.limit)
-        .setVisibilityOfFields(seeking.fields)
-        .result();
-      return base.buildPaginationPlan(seekingPipeline, async () => 42);
-    }
-
     const identitySecrets = {password: 0, lastPasswords: 0, "authFactor.secret": 0} as const;
 
     it("should build the identity list pipeline", async () => {
-      const legacy = await legacyPlan(
-        undefined,
-        {resourceFilter, filter: clientFilter()},
-        {sort: {_id: -1}, skip: 5, limit: 10, fields: identitySecrets}
-      );
-
       await facade.find("identity", {
         resourceFilter: neutralResourceFilter,
         filter: clientFilter(),
@@ -85,16 +68,22 @@ describe("MongoCollectionQueryFacade", () => {
         fields: identitySecrets
       });
 
-      expect(calls).toEqual([{collection: "identity", pipeline: legacy.dataPipeline}]);
+      expect(calls).toEqual([
+        {
+          collection: "identity",
+          pipeline: [
+            resourceFilter,
+            clientMatch(),
+            {$sort: {_id: -1}},
+            {$skip: 5},
+            {$limit: 10},
+            {$project: identitySecrets}
+          ]
+        }
+      ]);
     });
 
-    it("should count filtered identity pages with the same count pipeline", async () => {
-      const legacy = await legacyPlan(
-        undefined,
-        {resourceFilter, filter: clientFilter()},
-        {sort: {_id: -1}, skip: 5, limit: 10, fields: identitySecrets}
-      );
-
+    it("should count filtered identity pages with the filters alone", async () => {
       const page = await facade.paginate(
         "identity",
         {
@@ -108,7 +97,17 @@ describe("MongoCollectionQueryFacade", () => {
         "estimate-unless-filtered"
       );
 
-      expect(calls.map(call => call.pipeline)).toEqual([legacy.dataPipeline, legacy.countPipeline]);
+      expect(calls.map(call => call.pipeline)).toEqual([
+        [
+          resourceFilter,
+          clientMatch(),
+          {$sort: {_id: -1}},
+          {$skip: 5},
+          {$limit: 10},
+          {$project: identitySecrets}
+        ],
+        [resourceFilter, clientMatch(), {$count: "total"}]
+      ]);
       expect(page).toEqual({meta: {total: 0}, data: []});
     });
 
@@ -123,7 +122,7 @@ describe("MongoCollectionQueryFacade", () => {
       expect(page).toEqual({meta: {total: 42}, data: []});
     });
 
-    it("should run caller replacers before the id and date replacers like UserPipelineBuilder", async () => {
+    it("should run caller replacers before the id and date replacers", async () => {
       const providerReplacer = async (filter: any) => {
         if (filter.email) {
           filter["email.hash"] = `hashed:${filter.email}`;
@@ -131,12 +130,6 @@ describe("MongoCollectionQueryFacade", () => {
         }
         return filter;
       };
-      const legacy = await legacyPlan(
-        [providerReplacer, replaceFilterObjectIds, replaceFilterDates],
-        {resourceFilter, filter: {...clientFilter(), email: "a@b.c"}},
-        {fields: identitySecrets}
-      );
-
       await facade.find("user", {
         resourceFilter: neutralResourceFilter,
         filter: {...clientFilter(), email: "a@b.c"},
@@ -144,7 +137,11 @@ describe("MongoCollectionQueryFacade", () => {
         fields: identitySecrets
       });
 
-      expect(calls[0].pipeline).toEqual(legacy.dataPipeline);
+      expect(calls[0].pipeline).toEqual([
+        resourceFilter,
+        clientMatch({"email.hash": "hashed:a@b.c"}),
+        {$project: identitySecrets}
+      ]);
     });
 
     it("should build the token hashing refresh token list pipeline", async () => {
@@ -154,12 +151,6 @@ describe("MongoCollectionQueryFacade", () => {
         }
         return filter;
       };
-      const legacy = await legacyPlan(
-        [replaceFilterObjectIds, replaceFilterDates, tokenReplacer],
-        {resourceFilter, filter: {...clientFilter(), token: "t"}},
-        {sort: {created_at: 1}, skip: 1, limit: 2, fields: {token: 0}}
-      );
-
       await facade.find("refresh_token", {
         resourceFilter: neutralResourceFilter,
         filter: {...clientFilter(), token: "t"},
@@ -170,7 +161,14 @@ describe("MongoCollectionQueryFacade", () => {
         fields: {token: 0}
       });
 
-      expect(calls[0].pipeline).toEqual(legacy.dataPipeline);
+      expect(calls[0].pipeline).toEqual([
+        resourceFilter,
+        clientMatch({token: "hashed:t"}),
+        {$sort: {created_at: 1}},
+        {$skip: 1},
+        {$limit: 2},
+        {$project: {token: 0}}
+      ]);
     });
 
     it("should build the single document pipelines of user, refresh token and secret", async () => {
@@ -180,24 +178,16 @@ describe("MongoCollectionQueryFacade", () => {
         ["refresh_token", {token: 0}],
         ["secret", {value: 0}]
       ] as const) {
-        const legacy = new PipelineBuilder()
-          .findOneIfRequested(id)
-          .setVisibilityOfFields(fields)
-          .result();
-
         await facade.findOne(collection, {id, fields});
 
-        expect(calls.pop()).toEqual({collection, pipeline: legacy});
+        expect(calls.pop()).toEqual({
+          collection,
+          pipeline: [{$match: {_id: id}}, {$project: fields}]
+        });
       }
     });
 
     it("should put the secret projection after the seeking stages", async () => {
-      const legacy = await legacyPlan(
-        undefined,
-        {resourceFilter, filter: clientFilter()},
-        {sort: {key: 1}, skip: 2, limit: 3, fields: {value: 0}}
-      );
-
       await facade.find("secret", {
         resourceFilter: neutralResourceFilter,
         filter: clientFilter(),
@@ -207,7 +197,14 @@ describe("MongoCollectionQueryFacade", () => {
         fields: {value: 0}
       });
 
-      expect(calls[0].pipeline).toEqual(legacy.dataPipeline);
+      expect(calls[0].pipeline).toEqual([
+        resourceFilter,
+        clientMatch(),
+        {$sort: {key: 1}},
+        {$skip: 2},
+        {$limit: 3},
+        {$project: {value: 0}}
+      ]);
     });
 
     it("should build the resource filtered and sorted schema list pipelines", async () => {
@@ -260,7 +257,7 @@ describe("MongoCollectionQueryFacade", () => {
       };
       const hideSecrets = {$project: {"secrets.value": 0}};
 
-      it("should build the function list pipeline of FunctionPipelineBuilder", async () => {
+      it("should build the function list pipeline", async () => {
         await facade.find("function", {
           resourceFilter: neutralResourceFilter,
           relations: ["env_vars", "secrets"],
@@ -343,7 +340,7 @@ describe("MongoCollectionQueryFacade", () => {
       ]);
     });
 
-    it("should resolve activity names before matching like ActivityPipelineBuilder", async () => {
+    it("should resolve activity names before matching", async () => {
       const from = new Date("2024-01-01T00:00:00.000Z");
       const to = new Date("2024-02-01T00:00:00.000Z");
       const resolveName = (from: string, field: string) => [
@@ -543,22 +540,15 @@ describe("MongoCollectionQueryFacade", () => {
       expect(logs).toHaveLength(1);
     });
 
-    it("should return the same page as executePaginationPlan", async () => {
-      const plan = (
-        await new PipelineBuilder().filterResources({$match: {}}).filterByUserRequest({title: "b"})
-      ).buildPaginationPlan([{$sort: {title: 1}}], () =>
-        db.collection("webhook").estimatedDocumentCount()
-      );
-      const legacy = await executePaginationPlan(db.collection("webhook"), plan);
-
+    it("should count only the documents a filter keeps", async () => {
       const page = await facade.paginate(
         "webhook",
         {resourceFilter: {include: [], exclude: []}, filter: {title: "b"}, sort: {title: 1}},
         "estimate-unless-filtered"
       );
 
-      expect(page).toEqual(legacy);
       expect(page.meta).toEqual({total: 1});
+      expect(page.data).toEqual([expect.objectContaining({title: "b"})]);
     });
   });
 });
