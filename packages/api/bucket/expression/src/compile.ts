@@ -1,4 +1,5 @@
 import {Mode} from "@spica-server/interface-bucket-expression";
+import {assertListAfterIn} from "./ast.js";
 import * as func from "./func.js";
 
 function visitArgFns(fns: any[], ctx) {
@@ -136,6 +137,8 @@ function visitBinaryOperator(node, mode: Mode) {
       return visitBinaryOperatorEqual(node, mode);
     case "!=":
       return visitBinaryOperatorNotEqual(node, mode);
+    case "in":
+      return visitBinaryOperatorIn(node, mode);
 
     case "%":
       return visitBinaryOperatorRemainder(node, mode);
@@ -191,14 +194,22 @@ function visitBinaryOperatorLessOrEqual(node, mode: Mode) {
   return ctx => visit(node.left, mode)(ctx) <= visit(node.right, mode)(ctx);
 }
 
+function isEqual(left, right) {
+  if (left instanceof Date && right instanceof Date) {
+    return left.getTime() == right.getTime();
+  }
+  return left == right;
+}
+
 function visitBinaryOperatorEqual(node, mode: Mode) {
+  return ctx => isEqual(visit(node.left, mode)(ctx), visit(node.right, mode)(ctx));
+}
+
+function visitBinaryOperatorIn(node, mode: Mode) {
+  assertListAfterIn(node);
   return ctx => {
     const left = visit(node.left, mode)(ctx);
-    const right = visit(node.right, mode)(ctx);
-    if (left instanceof Date && right instanceof Date) {
-      return left.getTime() == right.getTime();
-    }
-    return left == right;
+    return visit(node.right, mode)(ctx).some(item => isEqual(left, item));
   };
 }
 

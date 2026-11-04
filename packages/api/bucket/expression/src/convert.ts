@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica-server/database";
-import {getMostLeftSelectIdentifier} from "./ast.js";
+import {assertListAfterIn, getMostLeftSelectIdentifier} from "./ast.js";
 import {compile} from "./compile.js";
 import * as func from "./func.js";
 import {Mode, Replacer} from "@spica-server/interface-bucket-expression";
@@ -165,6 +165,8 @@ function visitBinaryOperator(node, mode: Mode) {
       return visitBinaryOperatorEqual(node, mode);
     case "!=":
       return visitBinaryOperatorNotEqual(node, mode);
+    case "in":
+      return visitBinaryOperatorIn(node, mode);
 
     case "%":
       return visitBinaryOperatorRemainder(node, mode);
@@ -269,6 +271,14 @@ function visitBinaryOperatorLessOrEqual(node, mode: Mode) {
 function visitBinaryOperatorEqual(node, mode: Mode) {
   return ctx => {
     const expression = {$eq: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
+    return wrapExpressionByMode(expression, mode);
+  };
+}
+
+function visitBinaryOperatorIn(node, mode: Mode) {
+  assertListAfterIn(node);
+  return ctx => {
+    const expression = {$in: [visit(node.left, mode)(ctx), visit(node.right, mode)(ctx)]};
     return wrapExpressionByMode(expression, mode);
   };
 }

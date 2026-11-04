@@ -46,6 +46,30 @@ describe("compileRule against rows in PostgreSQL", () => {
     });
   });
 
+  describe("membership", () => {
+    beforeAll(() =>
+      store.replace({
+        ann: {title: "alpha", count: 5, created: "2024-01-01T00:00:00.000Z"},
+        bob: {title: "beta", count: 10},
+        cem: {},
+        dee: {title: "gamma", count: 5}
+      })
+    );
+
+    it.each([
+      [`document.title in ["alpha", "gamma"]`, ["ann", "dee"]],
+      [`document.title in ["nope"]`, []],
+      [`document.title in []`, []],
+      [`document.count in [5, 7]`, ["ann", "dee"]],
+      [`document.title in [null]`, ["cem"]],
+      [`!(document.title in ["alpha"])`, ["bob", "cem", "dee"]],
+      [`document.title in ["alpha", "beta"] && document.count > 5`, ["bob"]],
+      [`document.created in ["2024-01-01T00:00:00.000Z"]`, ["ann"]]
+    ])("%s lets through %j", async (rule, expected) => {
+      expect(await store.select(rule)).toEqual(expected);
+    });
+  });
+
   describe("comparing a field with a value of another type", () => {
     beforeAll(() =>
       store.replace({
