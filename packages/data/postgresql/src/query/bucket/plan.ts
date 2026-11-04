@@ -8,6 +8,7 @@ import {
   CompiledFieldRules,
   compileFieldRules,
   compileFilter,
+  compileFilterNode,
   compileRule,
   keyParser,
   loadRelatedBuckets,
@@ -15,6 +16,7 @@ import {
   RuleCompileError
 } from "../../access/index.js";
 import {BucketMetadata, describeBucket, resolveRelationTargets} from "../../schema/index.js";
+import {expressionOf, wherePaths} from "./where.js";
 
 export const TABLE = "t";
 
@@ -71,7 +73,8 @@ export async function planRead(
   const related = await loadRelatedBuckets(
     {bucket, metadata, bucketId},
     rulesOf(bucket, spec, filter),
-    lookup
+    lookup,
+    spec.where ? wherePaths(spec.where) : []
   );
 
   const locale =
@@ -131,6 +134,14 @@ export async function planRead(
   if (filter) {
     try {
       add(compileFilter(filter, scope, values));
+    } catch (error) {
+      throw error instanceof RuleCompileError ? new BadRequestException(error.message) : error;
+    }
+  }
+
+  if (spec.where) {
+    try {
+      add(compileFilterNode(expressionOf(spec.where), scope, values));
     } catch (error) {
       throw error instanceof RuleCompileError ? new BadRequestException(error.message) : error;
     }

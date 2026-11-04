@@ -50,7 +50,8 @@ function documentPaths(rule: string): string[][] {
 export async function loadRelatedBuckets(
   own: Related & {bucketId: string},
   rules: string | string[],
-  find: (bucketId: string) => Promise<Bucket | null | undefined>
+  find: (bucketId: string) => Promise<Bucket | null | undefined>,
+  extraPaths: string[][] = []
 ): Promise<RelatedBuckets> {
   const loaded = new Map<string, Related | null>([[own.bucketId, own]]);
 
@@ -90,7 +91,7 @@ export async function loadRelatedBuckets(
     }
   };
 
-  for (const path of [rules].flat().flatMap(documentPaths)) {
+  for (const path of [...[rules].flat().flatMap(documentPaths), ...extraPaths]) {
     await walk(own.bucket, path);
   }
   return id => loaded.get(id) ?? undefined;

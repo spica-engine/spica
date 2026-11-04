@@ -1,6 +1,6 @@
 export {compileRule, compileRuleIn} from "./compiler.js";
 export type {CompiledRule} from "./compiler.js";
-export {compileFilter, compileFilterIn, FILTER_LIMITS} from "./filter.js";
+export {compileFilter, compileFilterIn, compileFilterNode, FILTER_LIMITS} from "./filter.js";
 export type {FilterScope} from "./filter.js";
 export {loadRelatedBuckets} from "./related.js";
 export {InvalidRuleError, RuleCompileError, UnsupportedRuleError} from "./errors.js";

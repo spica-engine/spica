@@ -179,6 +179,78 @@ contractSuite("bucket query", engine => {
     });
   });
 
+  describe("conditions built by a caller", () => {
+    beforeAll(async () => {
+      bucket = await seed(PROPERTIES, DOCUMENTS);
+    });
+
+    const condition = (path: string[], operator: string, value: unknown) => ({
+      path,
+      operator,
+      value
+    });
+    const read = async (where: any) => titles(await store.find(bucket, {where, sort: {title: 1}}));
+
+    it.each([
+      [condition(["title"], "eq", "beta"), ["beta"]],
+      [condition(["age"], "gt", 20), ["alpha", "gamma"]],
+      [condition(["age"], "lte", 25), ["beta", "gamma"]],
+      [condition(["title"], "ne", "alpha"), ["beta", "delta 100%", "gamma"]],
+      [condition(["title"], "in", ["alpha", "gamma", "nope"]), ["alpha", "gamma"]],
+      [condition(["title"], "nin", ["alpha", "beta"]), ["delta 100%", "gamma"]],
+      [condition(["title"], "regex", "^al"), ["alpha"]],
+      [condition(["address", "city"], "eq", "Rome"), ["alpha", "gamma"]],
+      [
+        {
+          or: [condition(["title"], "eq", "alpha"), condition(["title"], "eq", "beta")]
+        },
+        ["alpha", "beta"]
+      ],
+      [
+        {
+          and: [condition(["address", "city"], "eq", "Rome"), condition(["age"], "gt", 25)]
+        },
+        ["alpha"]
+      ]
+    ])("%j keeps %j", async (where, expected) => {
+      expect(await read(where)).toEqual(expected);
+    });
+
+    it("should count what the conditions keep", async () => {
+      const page = await store.paginate(bucket, {where: condition(["age"], "gt", 20), limit: 1});
+      expect(page.meta).toEqual({total: 2});
+    });
+
+    it("should never let a condition reach what the read rule hides", async () => {
+      const guarded = await seed(PROPERTIES, DOCUMENTS, {
+        acl: {read: `document.age > 20`, write: "true==true"}
+      });
+
+      const found = await store.find(guarded, {
+        applyAcl: true,
+        where: {
+          or: [condition(["age"], "lt", 100), condition(["title"], "eq", "beta")]
+        }
+      });
+      expect(titles(found).sort()).toEqual(["alpha", "gamma"]);
+    });
+
+    (postgres ? it : it.skip)("should apply together with an expression filter", async () => {
+      const found = await store.find(bucket, {
+        filter: `document.age > 20`,
+        where: condition(["address", "city"], "eq", "Rome"),
+        sort: {title: 1}
+      });
+      expect(titles(found)).toEqual(["alpha", "gamma"]);
+    });
+
+    (postgres ? it : it.skip)("should answer 400 for an operator it cannot write", async () => {
+      await expect(
+        store.find(bucket, {where: condition(["title"], "exists", true)})
+      ).rejects.toMatchObject({status: 400});
+    });
+  });
+
   describe("pagination", () => {
     beforeAll(async () => {
       bucket = await seed(PROPERTIES, DOCUMENTS);
@@ -397,6 +469,15 @@ contractSuite("bucket query", engine => {
 
     it("should filter by a field of a related document", async () => {
       const found = await read([["author"]], {filter: `document.author.name == "Bob"`});
+      expect(found.map(post => post.title)).toEqual(["second"]);
+      expect(found[0].author).toEqual({name: "Bob", company: "<globex>"});
+    });
+
+    it("should filter by a field of a related document through conditions", async () => {
+      const found = await read([["author", "_id"]], {
+        where: {path: ["author", "name"], operator: "eq", value: "Bob"}
+      });
+
       expect(found.map(post => post.title)).toEqual(["second"]);
       expect(found[0].author).toEqual({name: "Bob", company: "<globex>"});
     });
