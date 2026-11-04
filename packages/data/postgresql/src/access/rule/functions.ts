@@ -1,7 +1,7 @@
 import {ColumnType} from "../../schema/metadata/types.js";
 import {coerceConstant} from "./coerce.js";
 import {InvalidRuleError, UnsupportedRuleError} from "./errors.js";
-import {ArrayField, childRows, elementColumn, RuleScope} from "./fields.js";
+import {ArrayField, childRows, elementColumn, RuleContext} from "./fields.js";
 import {Column, constant, Expression, Operand, Scalar} from "./operands.js";
 
 type Node = any;
@@ -14,7 +14,7 @@ interface Item {
 }
 
 export interface FunctionHost {
-  scope: RuleScope;
+  context: RuleContext;
   param(value: unknown, listOf?: ColumnType): string;
   alias(): string;
   target(node: Node): Target;
@@ -98,7 +98,7 @@ function unixTime(args: Node[], host: FunctionHost): Operand {
 
 function now(args: Node[], host: FunctionHost): Operand {
   arity("now", args, 0);
-  return constant((host.scope.now?.() ?? Date.now()) / 1000);
+  return constant((host.context.now?.() ?? Date.now()) / 1000);
 }
 
 function lengthOf(args: Node[], host: FunctionHost): Operand {

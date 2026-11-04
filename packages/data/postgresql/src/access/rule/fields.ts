@@ -23,6 +23,17 @@ export interface RuleScope {
   related?: RelatedBuckets;
 }
 
+export interface FieldResolver {
+  locate(path: string[], joins: Joins): Column | ArrayField;
+}
+
+export interface RuleContext {
+  auth: unknown;
+  hashSecret?: string;
+  now?: () => number;
+  fields: FieldResolver;
+}
+
 export interface ArrayField {
   kind: "array";
   name: string;
@@ -221,8 +232,23 @@ export function locate(path: string[], scope: RuleScope, joins: Joins): Column |
   throw new InvalidRuleError(`"${name}" is not a property of the bucket.`);
 }
 
-export function resolveField(path: string[], scope: RuleScope, joins: Joins): Column {
-  const field = locate(path, scope, joins);
+export class BucketFieldResolver implements FieldResolver {
+  constructor(private readonly scope: RuleScope) {}
+
+  locate(path: string[], joins: Joins) {
+    return locate(path, this.scope, joins);
+  }
+}
+
+export const contextOf = (scope: RuleScope): RuleContext => ({
+  auth: scope.auth,
+  hashSecret: scope.hashSecret,
+  now: scope.now,
+  fields: new BucketFieldResolver(scope)
+});
+
+export function resolveField(path: string[], fields: FieldResolver, joins: Joins): Column {
+  const field = fields.locate(path, joins);
   if (field.kind == "array") {
     throw new UnsupportedRuleError(
       `"${field.name}" is a list. Use has, length, some, every or equal on it.`
