@@ -1,5 +1,10 @@
+import {ResourceFilterSpec} from "@spica-server/interface-data";
+
 export class RealtimeOptionsError extends Error {
-  constructor(public readonly statusCode: number, message: string) {
+  constructor(
+    public readonly statusCode: number,
+    message: string
+  ) {
     super(message);
     this.name = "RealtimeOptionsError";
   }
@@ -8,13 +13,12 @@ export class RealtimeOptionsError extends Error {
 export class RealtimeOptionsBuilder {
   protected options: any = {};
 
-  applyResourceFilter(resourceFilter: any): this {
+  applyResourceFilter(resourceFilter: ResourceFilterSpec | undefined): this {
     if (!this.options.filter) {
       this.options.filter = {$and: []};
     }
 
-    const policyMatch = resourceFilter || {$match: {}};
-    this.options.filter.$and.push(policyMatch.$match);
+    this.options.resourceFilter = resourceFilter || {include: [], exclude: []};
 
     return this;
   }

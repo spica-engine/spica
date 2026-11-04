@@ -18,7 +18,12 @@ import {activity} from "@spica-server/activity-services";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  Id,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createApikeyActivity} from "./activity.resource.js";
 import {ApiKey, APIKEY_REPOSITORY, ApiKeyRepository} from "@spica-server/interface-passport-apikey";
@@ -36,7 +41,7 @@ export class ApiKeyController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:index"))
   find(
-    @ResourceFilter({collection: APIKEY_COLLECTION}) resourceFilter: object,
+    @ResourceFilter({collection: APIKEY_COLLECTION}) resourceFilter: ResourceFilterSpec,
     @Query("limit", DEFAULT(0), NUMBER) limit?: number,
     @Query("skip", DEFAULT(0), NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: {[path: string]: 1 | -1}

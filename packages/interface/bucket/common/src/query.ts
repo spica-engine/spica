@@ -1,10 +1,10 @@
-import {Id, Page} from "@spica-server/interface-data";
+import {Id, Page, ResourceFilterSpec} from "@spica-server/interface-data";
 import {Bucket, BucketPreferences} from "@spica-server/interface-bucket";
 import {Locale} from "./locale.js";
 
 export interface BucketReadSpec {
   documentId?: Id;
-  resourceFilter?: object;
+  resourceFilter?: ResourceFilterSpec;
   /**
    * A revived JSON filter or an ACL expression string, as clients send them today.
    */

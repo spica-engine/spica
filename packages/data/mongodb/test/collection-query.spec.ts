@@ -26,6 +26,8 @@ const resourceFilter = {
   $match: {$or: [{_id: {$in: [new ObjectId("5f1e8b9c2a4d3e0012345678")]}}]}
 };
 
+const neutralResourceFilter = {include: ["5f1e8b9c2a4d3e0012345678"], exclude: []};
+
 const clientFilter = () => ({
   _id: "5f1e8b9c2a4d3e0012345679",
   created_at: "2020-01-01T00:00:00.000Z",
@@ -75,7 +77,7 @@ describe("MongoCollectionQueryFacade", () => {
       );
 
       await facade.find("identity", {
-        resourceFilter,
+        resourceFilter: neutralResourceFilter,
         filter: clientFilter(),
         sort: {_id: -1},
         skip: 5,
@@ -96,7 +98,7 @@ describe("MongoCollectionQueryFacade", () => {
       const page = await facade.paginate(
         "identity",
         {
-          resourceFilter,
+          resourceFilter: neutralResourceFilter,
           filter: clientFilter(),
           sort: {_id: -1},
           skip: 5,
@@ -113,7 +115,7 @@ describe("MongoCollectionQueryFacade", () => {
     it("should estimate unfiltered pages instead of counting", async () => {
       const page = await facade.paginate(
         "env_var",
-        {resourceFilter, skip: 0, limit: 0},
+        {resourceFilter: neutralResourceFilter, skip: 0, limit: 0},
         "estimate-unless-filtered"
       );
 
@@ -136,7 +138,7 @@ describe("MongoCollectionQueryFacade", () => {
       );
 
       await facade.find("user", {
-        resourceFilter,
+        resourceFilter: neutralResourceFilter,
         filter: {...clientFilter(), email: "a@b.c"},
         filterReplacers: [providerReplacer],
         fields: identitySecrets
@@ -159,7 +161,7 @@ describe("MongoCollectionQueryFacade", () => {
       );
 
       await facade.find("refresh_token", {
-        resourceFilter,
+        resourceFilter: neutralResourceFilter,
         filter: {...clientFilter(), token: "t"},
         filterReplacers: [tokenReplacer],
         sort: {created_at: 1},
@@ -197,7 +199,7 @@ describe("MongoCollectionQueryFacade", () => {
       );
 
       await facade.find("secret", {
-        resourceFilter,
+        resourceFilter: neutralResourceFilter,
         filter: clientFilter(),
         sort: {key: 1},
         skip: 2,
@@ -209,8 +211,8 @@ describe("MongoCollectionQueryFacade", () => {
     });
 
     it("should build the resource filtered and sorted schema list pipelines", async () => {
-      await facade.find("buckets", {resourceFilter, sort: {order: 1}});
-      await facade.find("dashboard", {resourceFilter});
+      await facade.find("buckets", {resourceFilter: neutralResourceFilter, sort: {order: 1}});
+      await facade.find("dashboard", {resourceFilter: neutralResourceFilter});
       await facade.find("strategy", {filter: {type: "oauth"}, fields: {options: 0}});
 
       expect(calls).toEqual([
@@ -240,7 +242,11 @@ describe("MongoCollectionQueryFacade", () => {
         }
       ];
 
-      await facade.paginate("apikey", {resourceFilter, sort, skip: 0, limit: 10}, "exact");
+      await facade.paginate(
+        "apikey",
+        {resourceFilter: neutralResourceFilter, sort, skip: 0, limit: 10},
+        "exact"
+      );
 
       expect(calls).toEqual([{collection: "apikey", pipeline: legacy}]);
     });
@@ -256,7 +262,7 @@ describe("MongoCollectionQueryFacade", () => {
 
       it("should build the function list pipeline of FunctionPipelineBuilder", async () => {
         await facade.find("function", {
-          resourceFilter,
+          resourceFilter: neutralResourceFilter,
           relations: ["env_vars", "secrets"],
           fields: {"secrets.value": 0}
         });
@@ -407,7 +413,7 @@ describe("MongoCollectionQueryFacade", () => {
     });
 
     it("should keep $skip in the $facet data stage when nothing else is requested", async () => {
-      await facade.paginate("apikey", {resourceFilter}, "exact");
+      await facade.paginate("apikey", {resourceFilter: neutralResourceFilter}, "exact");
 
       expect(calls[0].pipeline[1]).toEqual({
         $facet: {meta: [{$count: "total"}], data: [{$skip: 0}]}
@@ -486,7 +492,7 @@ describe("MongoCollectionQueryFacade", () => {
 
       const page = await facade.paginate(
         "webhook",
-        {resourceFilter: {$match: {}}, sort: {_id: -1}, skip: 1, limit: 1},
+        {resourceFilter: {include: [], exclude: []}, sort: {_id: -1}, skip: 1, limit: 1},
         "exact"
       );
 
@@ -497,7 +503,12 @@ describe("MongoCollectionQueryFacade", () => {
     it("should report zero for an empty exact page like the webhook pipeline", async () => {
       const page = await facade.paginate(
         "webhook",
-        {resourceFilter: {$match: {title: "none"}}, sort: {_id: -1}, skip: 0, limit: 10},
+        {
+          resourceFilter: {include: ["5f1e8b9c2a4d3e00000000ff"], exclude: []},
+          sort: {_id: -1},
+          skip: 0,
+          limit: 10
+        },
         "exact"
       );
 
@@ -530,7 +541,7 @@ describe("MongoCollectionQueryFacade", () => {
 
       const page = await facade.paginate(
         "webhook",
-        {resourceFilter: {$match: {}}, filter: {title: "b"}, sort: {title: 1}},
+        {resourceFilter: {include: [], exclude: []}, filter: {title: "b"}, sort: {title: 1}},
         "estimate-unless-filtered"
       );
 

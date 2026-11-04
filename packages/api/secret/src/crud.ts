@@ -4,7 +4,12 @@ import {encrypt} from "@spica-server/core-encryption";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
 import {ids} from "@spica-server/data";
-import {CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
+import {
+  CollectionQueryFacade,
+  Id,
+  ReadSpec,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 
 const collection = "secret";
 
@@ -15,7 +20,7 @@ const HIDDEN_VALUE = {value: 0} as const;
 export async function find(
   queries: CollectionQueryFacade,
   options?: {
-    resourceFilter?: object;
+    resourceFilter?: ResourceFilterSpec;
     limit: number;
     skip: number;
     sort?: {[path: string]: 1 | -1};

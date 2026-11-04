@@ -22,7 +22,12 @@ import {Schema} from "@spica-server/core-schema";
 import {ResourceFilter} from "@spica-server/passport-guard";
 import * as CRUD from "./crud.js";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  Id,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 
 const DASHBOARD_COLLECTION = "dashboard";
 
@@ -35,7 +40,7 @@ export class DashboardController {
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:index"))
-  findAll(@ResourceFilter({collection: DASHBOARD_COLLECTION}) resourceFilter: object) {
+  findAll(@ResourceFilter({collection: DASHBOARD_COLLECTION}) resourceFilter: ResourceFilterSpec) {
     return CRUD.find(this.queries, resourceFilter);
   }
 

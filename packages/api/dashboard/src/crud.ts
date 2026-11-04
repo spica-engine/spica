@@ -1,11 +1,14 @@
 import {Dashboard, DashboardRepository} from "@spica-server/interface-dashboard";
 import {NotFoundException} from "@nestjs/common";
 import {ids} from "@spica-server/data";
-import {CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {CollectionQueryFacade, Id, ResourceFilterSpec} from "@spica-server/interface-data";
 
 const dashboardIds = () => ids().forCollection("dashboard");
 
-export function find(queries: CollectionQueryFacade, resourceFilter: object): Promise<Dashboard[]> {
+export function find(
+  queries: CollectionQueryFacade,
+  resourceFilter: ResourceFilterSpec
+): Promise<Dashboard[]> {
   return queries.find<Dashboard>("dashboard", {resourceFilter});
 }
 

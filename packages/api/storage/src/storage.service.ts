@@ -21,7 +21,12 @@ import {TransactionExecutor} from "@spica-server/transaction";
 
 import fs from "fs";
 import {DuplicateKeyError, ids} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  Id,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 
 const storageIds = () => ids().forCollection("storage");
 
@@ -91,7 +96,7 @@ export class StorageService {
   }
 
   async getAll<P extends boolean>(
-    resourceFilter: object,
+    resourceFilter: ResourceFilterSpec,
     filter: object,
     paginate: P,
     limit: number,
@@ -99,7 +104,7 @@ export class StorageService {
     sort?: any
   ): Promise<P extends true ? PaginatedStorageResponse : StorageResponse[]>;
   async getAll<P extends boolean>(
-    resourceFilter: object,
+    resourceFilter: ResourceFilterSpec,
     filter: object,
     paginate: P,
     limit: number,

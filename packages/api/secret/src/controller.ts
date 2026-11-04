@@ -22,7 +22,12 @@ import {activity} from "@spica-server/activity-services";
 import {createSecretActivity} from "./activity.resource.js";
 import * as CRUD from "./crud.js";
 import {ID} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  Id,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
 
 const SECRET_COLLECTION = "secret";
 
@@ -36,7 +41,7 @@ export class SecretController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("secret:index"))
   async find(
-    @ResourceFilter({collection: SECRET_COLLECTION}) resourceFilter: object,
+    @ResourceFilter({collection: SECRET_COLLECTION}) resourceFilter: ResourceFilterSpec,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},

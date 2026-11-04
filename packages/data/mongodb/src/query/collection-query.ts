@@ -1,6 +1,10 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
-import {executePaginationPlan, PipelineBuilder} from "@spica-server/database-pipeline";
+import {
+  executePaginationPlan,
+  PipelineBuilder,
+  renderResourceFilter
+} from "@spica-server/database-pipeline";
 import {replaceFilterDates, replaceFilterObjectIds} from "@spica-server/filter";
 import {
   CollectionQueryFacade,
@@ -113,7 +117,11 @@ export class MongoCollectionQueryFacade implements CollectionQueryFacade {
       replaceFilterDates
     ])
       .findOneIfRequested(spec.id)
-      .filterResources(spec.resourceFilter)
+      .filterResources(
+        renderResourceFilter(spec.resourceFilter, id =>
+          this.idTypes.forCollection(collection).parse(id)
+        )
+      )
       .attachToPipeline(true, ...stagesAt(relations, "before-filter"))
       .match(renderConditions(spec))
       .filterByUserRequest(spec.filter);

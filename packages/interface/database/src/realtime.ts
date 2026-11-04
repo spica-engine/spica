@@ -1,5 +1,5 @@
 import {Filter} from "mongodb";
-import {Id} from "@spica-server/interface-data";
+import {Id, ResourceFilterSpec} from "@spica-server/interface-data";
 
 interface Document {
   _id: Id;
@@ -38,6 +38,7 @@ export interface DatabaseChange<T extends Document> {
 
 export interface FindOptions<T> {
   filter?: Filter<T>;
+  resourceFilter?: ResourceFilterSpec;
   sort?: {
     [index: string]: -1 | 1;
   };

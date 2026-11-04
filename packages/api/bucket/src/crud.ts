@@ -2,7 +2,7 @@ import {schemaDiff} from "@spica-server/core-differ";
 import {ChangeKind} from "@spica-server/interface-core";
 import {findRelations} from "@spica-server/bucket-common";
 import {BucketService, bucketIds} from "@spica-server/bucket-services";
-import {CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {CollectionQueryFacade, Id, ResourceFilterSpec} from "@spica-server/interface-data";
 import {HistoryRepository} from "@spica-server/interface-bucket-history";
 import * as expression from "@spica-server/bucket-expression";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
@@ -11,7 +11,7 @@ import {Bucket, BucketDataRepository} from "@spica-server/interface-bucket";
 export async function find(
   queries: CollectionQueryFacade,
   options: {
-    resourceFilter: object;
+    resourceFilter: ResourceFilterSpec;
     sort: {[path: string]: 1 | -1};
   }
 ): Promise<Bucket[]> {
