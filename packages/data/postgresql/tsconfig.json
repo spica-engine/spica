@@ -101,6 +101,9 @@
     },
     {
       "path": "../../database/testing"
+    },
+    {
+      "path": "../../database/pipeline"
     }
   ]
 }
