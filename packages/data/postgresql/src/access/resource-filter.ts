@@ -49,7 +49,7 @@ function distinct(ids: string[], parse: KeyParser): KeyValue[] {
 
 function arrayOf(values: unknown[], items: KeyValue[], type: string) {
   if (values instanceof InlineValues) {
-    return `ARRAY[${items.map(literalOf).join(", ")}]::${type}[]`;
+    return `ARRAY[${items.map(item => literalOf(item)).join(", ")}]::${type}[]`;
   }
   return `${bind(values, items)}::${type}[]`;
 }
