@@ -1,23 +1,30 @@
 import {aggregate, run} from "../src/index";
 
+const textMatch = (regex: string) => ({
+  $eq: [
+    {
+      $cond: [{$eq: [{$type: "$title"}, "string"]}, {$regexMatch: {input: "$title", regex}}, false]
+    },
+    true
+  ]
+});
+
 describe("startsWith and contains", () => {
   describe("aggregation", () => {
     it("should match the start of a field", () => {
       expect(aggregate(`startsWith(document.title, "ann")`, {}, "match")).toEqual({
-        $expr: {$eq: [{$regexMatch: {input: "$title", regex: "^ann"}}, true]}
+        $expr: textMatch("^ann")
       });
     });
 
     it("should match anywhere in a field", () => {
-      expect(aggregate(`contains(document.title, "ann")`, {}, "project")).toEqual({
-        $eq: [{$regexMatch: {input: "$title", regex: "ann"}}, true]
-      });
+      expect(aggregate(`contains(document.title, "ann")`, {}, "project")).toEqual(textMatch("ann"));
     });
 
     it("should escape what a regular expression reads as syntax", () => {
-      expect(aggregate(`contains(document.title, "a.b*(c)[d]\\\\")`, {}, "project")).toEqual({
-        $eq: [{$regexMatch: {input: "$title", regex: "a\\.b\\*\\(c\\)\\[d\\]\\\\"}}, true]
-      });
+      expect(aggregate(`contains(document.title, "a.b*(c)[d]\\\\")`, {}, "project")).toEqual(
+        textMatch("a\\.b\\*\\(c\\)\\[d\\]\\\\")
+      );
     });
 
     it("should refuse arguments of the wrong kind", () => {
