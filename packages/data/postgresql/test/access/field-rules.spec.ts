@@ -20,7 +20,10 @@ async function compile(rules: Record<string, string>, auth: unknown = {}) {
 }
 
 const author = relationAlias(["author"]);
-const authorJoin = `LEFT JOIN "bucket_${otherId}" AS "${author}" ON "${author}"."id" = "t"."author"`;
+const authorJoin = [
+  `LEFT JOIN "bucket_${otherId}" AS "${author}"`,
+  `ON "${author}"."id" = "t"."author"`
+].join(" ");
 
 describe("fieldRulesOf", () => {
   it("should list the top level properties that have a rule, in order", () => {
@@ -101,7 +104,8 @@ describe("compileFieldRules", () => {
   });
 
   it("should refuse a rule that cannot be applied on PostgreSQL", async () => {
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules. Remove or rewrite when Part 9 lands a comparable hash (docs/postgresql/09-writes.md).
+    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
+    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
     await expect(compile({title: "document.secret == 'x'"})).rejects.toThrow(UnsupportedRuleError);
   });
 });

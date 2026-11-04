@@ -1,6 +1,7 @@
 import {compileRule, InvalidRuleError, UnsupportedRuleError} from "@spica-server/data-postgresql";
 import {InlineValues} from "@spica-server/data-postgresql-orm";
 import {ruleBucket, ruleMetadata, uuid} from "./rule-fixtures";
+import {expectSql} from "./sql";
 
 const NOW = 1_700_000_000_500;
 
@@ -85,8 +86,11 @@ describe("built-in functions", () => {
       expect(compile("length(document.title) > 3").sql).toBe(
         'char_length("t"."title") > $1::bigint'
       );
-      expect(compile("length(document.note) > 3").sql).toBe(
-        `CASE WHEN jsonb_typeof("t"."note") = 'array' THEN jsonb_array_length("t"."note") END > $1::bigint`
+      expectSql(
+        compile("length(document.note) > 3").sql,
+        `CASE WHEN jsonb_typeof("t"."note") = 'array'
+              THEN jsonb_array_length("t"."note")
+         END > $1::bigint`
       );
     });
 
@@ -138,7 +142,7 @@ describe("built-in functions", () => {
       expect(() => compile('regex(document.age, "1")')).toThrow(UnsupportedRuleError);
     });
 
-    it("should check its arguments like the MongoDB form", () => {
+    it("should check the number and kind of its arguments", () => {
       expect(() => compile("regex(document.title)")).toThrow(
         "Function 'regex' accepts minimum 2 argument(s) but found 1."
       );
@@ -172,15 +176,22 @@ describe("built-in functions", () => {
     });
 
     it("should require the list to hold exactly the values", () => {
-      expect(compile(tags("equal"))).toEqual({
-        sql: `(SELECT COUNT(*) = 2 AND COALESCE(BOOL_AND("_a1"."_value" = ANY($1::text[])), TRUE) ${rows("tags")})`,
-        values: [["a", "b"]]
-      });
+      const compiled = compile(tags("equal"));
+
+      expectSql(
+        compiled.sql,
+        `(SELECT COUNT(*) = 2
+                 AND COALESCE(BOOL_AND("_a1"."_value" = ANY($1::text[])), TRUE)
+          ${rows("tags")})`
+      );
+      expect(compiled.values).toEqual([["a", "b"]]);
     });
 
     it("should give every use its own alias", () => {
-      expect(compile("some(document.tags, ['a']) && every(document.tags, ['b'])").sql).toBe(
-        `(EXISTS (SELECT 1 ${rows("tags", "_a1")} AND "_a1"."_value" = ANY($1::text[])) AND $2::text[] <@ ARRAY(SELECT "_a2"."_value" ${rows("tags", "_a2")}))`
+      expectSql(
+        compile("some(document.tags, ['a']) && every(document.tags, ['b'])").sql,
+        `(EXISTS (SELECT 1 ${rows("tags", "_a1")} AND "_a1"."_value" = ANY($1::text[]))
+          AND $2::text[] <@ ARRAY(SELECT "_a2"."_value" ${rows("tags", "_a2")}))`
       );
     });
 
@@ -251,7 +262,7 @@ describe("built-in functions", () => {
       expect(compile("some(['a'], ['a'])").sql).toBe("TRUE");
     });
 
-    it("should refuse what the MongoDB form cannot do either, or cannot be done in SQL", () => {
+    it("should refuse what cannot be written as SQL", () => {
       expect(() => compile("some(document.title, ['a'])")).toThrow(UnsupportedRuleError);
       expect(() => compile("some(document.tags, document.tags)")).toThrow(UnsupportedRuleError);
       expect(() => compile("some(document.tags, [document.title])")).toThrow(UnsupportedRuleError);
@@ -262,7 +273,7 @@ describe("built-in functions", () => {
       );
     });
 
-    it("should check its arguments like the MongoDB form", () => {
+    it("should check the number and kind of its arguments", () => {
       expect(() => compile("some(document.tags)")).toThrow(
         "Function 'some' accepts exactly 2 argument(s) but found 1."
       );

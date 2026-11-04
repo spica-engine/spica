@@ -7,6 +7,7 @@ import {
 } from "@spica-server/data-postgresql";
 import {InlineValues} from "@spica-server/data-postgresql-orm";
 import {bucketId, ruleBucket, ruleMetadata, uuid} from "./rule-fixtures";
+import {expectSql} from "./sql";
 
 interface Options {
   auth?: unknown;
@@ -42,10 +43,13 @@ describe("compileRule", () => {
       expect(compile(rule)).toEqual({sql, values: []});
     });
 
+    // #2133: a decimal can only come from auth until the rule parser reads 2.5 as a number.
     it("should fold arithmetic with auth values", () => {
       expect(compile("1 / 4 == auth.quarter", {auth: {quarter: 0.25}}).sql).toBe("TRUE");
     });
 
+    // #2133: the rule parser reads 2.5 as a list. When the grammar is fixed, expect a comparison
+    // with 2.5 here, and write the decimals in this spec as literals again.
     it("should refuse a decimal literal until the parser reads it correctly", () => {
       expect(() => compile("document.age > 2.5")).toThrow("not read correctly");
     });
@@ -85,7 +89,7 @@ describe("compileRule", () => {
       expect(compile("24 < document.age").sql).toBe('$1::bigint < "t"."age"');
     });
 
-    it("should be true for a missing value on !=, like MongoDB", () => {
+    it("should be true for a missing value on !=", () => {
       expect(compile("document.title != 'x'")).toEqual({
         sql: '"t"."title" IS DISTINCT FROM $1::text',
         values: ["x"]
@@ -123,6 +127,7 @@ describe("compileRule", () => {
 
     it.each([
       ["document.age > 24", '"t"."age" > $1::bigint', [24]],
+      // #2133: the decimal comes from auth, because the rule parser cannot read 2.5 yet.
       ["document.age >= auth.min", '"t"."age" >= $1::double precision', [2.5]],
       ["document.count < 3", '"t"."count" < $1::bigint', [3]],
       ["document.count <= 3", '"t"."count" <= $1::bigint', [3]],
@@ -257,7 +262,7 @@ describe("compileRule", () => {
       );
     });
 
-    it("should refuse ! in front of a bare path, like MongoDB", () => {
+    it("should refuse ! in front of a bare path and ask for brackets", () => {
       expect(() => compile("!document.active")).toThrow(InvalidRuleError);
       expect(() => compile("!(document.active)")).toThrow(InvalidRuleError);
     });
@@ -268,10 +273,16 @@ describe("compileRule", () => {
     });
 
     it("should compile the conditional operator to CASE", () => {
-      expect(compile("document.count > 1 ? document.active : document.title == 'a'")).toEqual({
-        sql: 'CASE WHEN "t"."count" > $1::bigint THEN "t"."active" IS TRUE ELSE "t"."title" = $2::text END',
-        values: [1, "a"]
-      });
+      const compiled = compile("document.count > 1 ? document.active : document.title == 'a'");
+
+      expectSql(
+        compiled.sql,
+        `CASE WHEN "t"."count" > $1::bigint
+              THEN "t"."active" IS TRUE
+              ELSE "t"."title" = $2::text
+         END`
+      );
+      expect(compiled.values).toEqual([1, "a"]);
     });
 
     it("should pick a branch of the conditional operator when its test is known", () => {
@@ -309,8 +320,12 @@ describe("compileRule", () => {
       expect(compile("document.count % 2 == 0").sql).toBe(
         '("t"."count"::bigint % NULLIF($1::bigint, 0)) = $2::bigint'
       );
-      expect(compile("document.age % 2 == 0").sql).toBe(
-        'mod("t"."age"::double precision::numeric, NULLIF($1::double precision, 0)::numeric)::double precision = $2::bigint'
+      expectSql(
+        compile("document.age % 2 == 0").sql,
+        `mod(
+           "t"."age"::double precision::numeric,
+           NULLIF($1::double precision, 0)::numeric
+         )::double precision = $2::bigint`
       );
     });
 
@@ -321,7 +336,7 @@ describe("compileRule", () => {
   });
 
   describe("fields", () => {
-    it("should resolve a field under an unknown root as a document field, like MongoDB", () => {
+    it("should read a name other than auth and document as a field of the document", () => {
       expect(compile("title == 'x'").sql).toBe('"t"."title" = $1::text');
     });
 
@@ -344,7 +359,8 @@ describe("compileRule", () => {
       expect(() => compile("auth == 1")).toThrow(InvalidRuleError);
     });
 
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules. Remove or rewrite when Part 9 lands a comparable hash (docs/postgresql/09-writes.md).
+    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
+    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
     it.each(["document.secret == 'x'", "document.tags == 'x'", "document.author.id == 'x'"])(
       "should refuse %s as unsupported",
       rule => {

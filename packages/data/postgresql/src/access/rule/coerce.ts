@@ -31,7 +31,7 @@ function numeric(value: unknown, type: ColumnType): Coerced | undefined {
   return undefined;
 }
 
-// Only a literal in the rule is converted, never a value taken from auth, as in the MongoDB replacers.
+// Only a literal written in the rule is converted. A value taken from auth is compared as it is.
 function convertLiteral(value: string, property: Property, hashSecret?: string): string {
   return property.type == "hash" && hashSecret ? hash(value, hashSecret) : value;
 }

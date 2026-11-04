@@ -33,7 +33,8 @@ describe("PostgresBucketRuleValidator", () => {
     properties: {
       id: {type: "uuid", options: {generated: true}},
       title: {type: "string"},
-      // [part9-encrypted] Pins the refusal of encrypted fields in rules. Remove or rewrite when Part 9 lands a comparable hash (docs/postgresql/09-writes.md).
+      // [part9-encrypted] Pins the refusal of encrypted fields in rules.
+      // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
       secret: {type: "encrypted"},
       tags: {type: "array", items: {type: "string"}}
     },
@@ -53,7 +54,8 @@ describe("PostgresBucketRuleValidator", () => {
   it.each([
     ["document.title ==", "syntax"],
     ["document.nope == 1", "unknown field"],
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules. Remove or rewrite when Part 9 lands a comparable hash (docs/postgresql/09-writes.md).
+    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
+    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
     ["document.secret == 'x'", "encrypted field"],
     ["regex(document.title, 'a', 'm')", "unsupported regex flag"],
     ["regex(document.title, '(?<=a)b')", "unsupported regex syntax"],
@@ -92,7 +94,8 @@ describe("PostgresBucketRuleValidator", () => {
         properties: {
           id: {type: "uuid", options: {generated: true}},
           name: {type: "string"},
-          // [part9-encrypted] Pins the refusal of encrypted fields in rules. Remove or rewrite when Part 9 lands a comparable hash (docs/postgresql/09-writes.md).
+          // [part9-encrypted] Pins the refusal of encrypted fields in rules.
+          // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
           secret: {type: "encrypted"}
         }
       } as any);
@@ -122,14 +125,15 @@ describe("PostgresBucketRuleValidator", () => {
       ).rejects.toBeInstanceOf(RuleCompileError);
     });
 
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules. Remove or rewrite when Part 9 lands a comparable hash (docs/postgresql/09-writes.md).
+    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
+    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
     it("should reject an encrypted field of the related bucket", async () => {
       await expect(
         validator.validateReadRule(withAuthor("document.author.secret == 'x'"))
       ).rejects.toBeInstanceOf(RuleCompileError);
     });
 
-    it("should leave a relation to a bucket that does not exist to the schema manager", async () => {
+    it("should leave a relation to a missing bucket to the schema manager", async () => {
       await expect(
         validator.validateReadRule(
           withAuthor("document.author.name == 'x'", () => "0198a7e0-0000-7d2e-9f3a-4b5c6d7e8f99")
@@ -144,7 +148,8 @@ describe("PostgresBucketRuleValidator", () => {
         properties: {
           id: {type: "uuid", options: {generated: true}},
           title: {type: "string", acl},
-          // [part9-encrypted] Pins the refusal of encrypted fields in rules. Remove or rewrite when Part 9 lands a comparable hash (docs/postgresql/09-writes.md).
+          // [part9-encrypted] Pins the refusal of encrypted fields in rules.
+          // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
           secret: {type: "encrypted"}
         }
       });
@@ -156,7 +161,8 @@ describe("PostgresBucketRuleValidator", () => {
       }
     );
 
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules. Remove or rewrite when Part 9 lands a comparable hash (docs/postgresql/09-writes.md).
+    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
+    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
     it.each(["document.title ==", "document.secret == 'x'", "document.nope == 1"])(
       "should reject %s",
       async rule => {

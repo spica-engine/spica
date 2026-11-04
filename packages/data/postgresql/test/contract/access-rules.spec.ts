@@ -1,151 +1,154 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {aggregate} from "@spica-server/bucket-expression";
-import {compileRule, createStatements} from "@spica-server/data-postgresql";
-import {quote} from "@spica-server/data-postgresql-orm";
-import {contractSuite, DatabaseService} from "@spica-server/database-testing";
-import {PG_POOL} from "@spica-server/interface-data";
-import pg from "pg";
-import {
-  otherMetadata,
-  relatedFor,
-  ruleBucket,
-  ruleMetadata,
-  thirdMetadata
-} from "../access/rule-fixtures";
+import {contractSuite} from "@spica-server/database-testing";
+import {AccessStore, createAccessStore} from "./access-store";
 
-const U = "0192f3a0-0000-7000-8000-0000000000c1";
-const V = "0192f3a0-0000-7000-8000-0000000000c2";
-
-const ids = {
-  r1: "0192f3a0-0000-7000-8000-0000000000d1",
-  r2: "0192f3a0-0000-7000-8000-0000000000d2",
-  r3: "0192f3a0-0000-7000-8000-0000000000d3",
-  r4: "0192f3a0-0000-7000-8000-0000000000d4"
-};
-
-const labels = Object.fromEntries(Object.entries(ids).map(([label, id]) => [id, label]));
-
-const documents = [
-  {id: ids.r1, title: "alpha", age: 30, owner: U, active: true, tags: ["a", "b"]},
-  {id: ids.r2, title: "beta", age: 20, owner: V, active: false, tags: ["b"]},
-  {id: ids.r3, tags: []},
-  {id: ids.r4, title: "alpha", age: 25, owner: U, active: true, tags: []}
-];
-
-const all = ["r1", "r2", "r3", "r4"];
+const alice = "0192f3a0-0000-7000-8000-0000000000c1";
+const bruce = "0192f3a0-0000-7000-8000-0000000000c2";
 
 /**
- * Every rule here is one that both engines must answer alike. The rules come from the rules the
- * existing specs and the admin panel use, and from each built-in function.
+ * The rules here have to answer the same on every engine. They come from the existing specs and the
+ * admin panel, plus one or more per built-in function.
  */
-const corpus: [rule: string, auth: unknown, expected: string[]][] = [
-  ["true==true", {}, all],
-  ["document.owner == auth._id", {_id: U}, ["r1", "r4"]],
-  ["document.owner != auth._id", {_id: U}, ["r2", "r3"]],
-  ["auth.role == 'admin'", {role: "admin"}, all],
-  ["auth.role == 'admin'", {role: "user"}, []],
-  ["auth.identifier != 'noop'", {identifier: "someone"}, all],
-  ["auth.identifier != 'noop'", {identifier: "noop"}, []],
-  ["document.age > 24", {}, ["r1", "r4"]],
-  ["!(document.age > 24)", {}, ["r2", "r3"]],
-  ["document.age >= 25 && document.title == 'alpha'", {}, ["r1", "r4"]],
-  ["document.title != 'alpha'", {}, ["r2", "r3"]],
-  ["document.owner == auth._id || auth.role == 'admin'", {_id: U, role: "user"}, ["r1", "r4"]],
-  ["document.owner == auth._id || auth.role == 'admin'", {_id: U, role: "admin"}, all],
-  [
-    "document.age > 24 ? document.title == 'alpha' : document.title == 'beta'",
-    {},
-    ["r1", "r2", "r4"]
-  ],
-  ["has(document.title)", {}, ["r1", "r2", "r4"]],
-  ["!(has(document.title))", {}, ["r3"]],
-  ["some(document.tags, ['a'])", {}, ["r1"]],
-  ["some(document.tags, ['b', 'z'])", {}, ["r1", "r2"]],
-  ["every(document.tags, ['a', 'b'])", {}, ["r1"]],
-  ["every(document.tags, ['b'])", {}, ["r1", "r2"]],
-  ["equal(document.tags, ['b'])", {}, ["r2"]],
-  ["equal(document.tags, [])", {}, ["r3", "r4"]],
-  ["length(document.tags) == 2", {}, ["r1"]],
-  ["length(document.tags) > 0", {}, ["r1", "r2"]],
-  ['regex(document.title, "^al")', {}, ["r1", "r4"]]
-];
-
 contractSuite("access rules", engine => {
   let module: TestingModule;
+  let store: AccessStore;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({imports: [engine.module()]}).compile();
     await module.init();
-
-    if (engine.name == "mongodb") {
-      const collection = module.get(DatabaseService).collection("access_rule_cases");
-      await collection.deleteMany({});
-      await collection.insertMany(
-        documents.map(({id, ...fields}) => ({_id: id as never, ...fields}))
-      );
-      return;
-    }
-
-    const pool = module.get<pg.Pool>(PG_POOL);
-    for (const metadata of [thirdMetadata, otherMetadata, ruleMetadata]) {
-      for (const statement of createStatements(metadata)) {
-        await pool.query(statement);
-      }
-    }
-    for (const {id, tags, ...columns} of documents) {
-      const names = Object.keys({id, ...columns});
-      await pool.query(
-        `INSERT INTO ${quote(ruleMetadata.main.name)} (${names.map(quote).join(", ")})
-         VALUES (${names.map((_, index) => `$${index + 1}`).join(", ")})`,
-        Object.values({id, ...columns})
-      );
-      const child = ruleMetadata.tables.find(table => table.path.join(".") == "tags")!.name;
-      for (const [position, tag] of tags.entries()) {
-        await pool.query(
-          `INSERT INTO ${quote(child)} ("_parent", "_position", "_value") VALUES ($1, $2, $3)`,
-          [id, position, tag]
-        );
-      }
-    }
+    store = await createAccessStore(engine, module);
   }, 120_000);
 
   afterAll(() => module.close());
 
-  async function select(rule: string, auth: unknown): Promise<string[]> {
-    if (engine.name == "mongodb") {
-      const found = await module
-        .get(DatabaseService)
-        .collection("access_rule_cases")
-        .aggregate([{$match: aggregate(rule, {auth}, "match")}])
-        .toArray();
-      return found.map(document => labels[document._id as unknown as string]).sort();
-    }
-
-    const values: unknown[] = [];
-    const related = await relatedFor(rule);
-    const {sql, joins} = compileRule(
-      rule,
-      {bucket: ruleBucket, metadata: ruleMetadata, auth, table: "t", related},
-      values
+  describe("comparing the fields of a document", () => {
+    beforeAll(() =>
+      store.replace({
+        ann: {title: "alpha", age: 30},
+        bob: {title: "beta", age: 20},
+        cem: {},
+        dee: {title: "alpha", age: 25}
+      })
     );
-    const {rows} = await module
-      .get<pg.Pool>(PG_POOL)
-      .query(
-        `SELECT "t"."id" FROM ${quote(ruleMetadata.main.name)} AS "t" ${joins.join(" ")} WHERE ${sql}`,
-        values
-      );
-    return rows.map(row => labels[row.id]).sort();
-  }
 
-  it.each(corpus)("should select the same rows for %s with %j", async (rule, auth, expected) => {
-    expect(await select(rule, auth)).toEqual(expected);
+    it("should let through the documents the comparison holds for", async () => {
+      expect(await store.select("document.age > 24")).toEqual(["ann", "dee"]);
+    });
+
+    it("should let through a document without the field when the comparison is negated", async () => {
+      expect(await store.select("!(document.age > 24)")).toEqual(["bob", "cem"]);
+    });
+
+    it.each([
+      ["document.title != 'alpha'", ["bob", "cem"]],
+      ["document.age >= 25 && document.title == 'alpha'", ["ann", "dee"]],
+      ["document.title == 'beta' || document.age > 29", ["ann", "bob"]],
+      [
+        "document.age > 24 ? document.title == 'alpha' : document.title == 'beta'",
+        ["ann", "bob", "dee"]
+      ]
+    ])("%s lets through %j", async (rule, expected) => {
+      expect(await store.select(rule)).toEqual(expected);
+    });
   });
 
-  describe("known differences", () => {
-    it("should treat a field with no value as null on PostgreSQL only", async () => {
-      expect(await select("document.title == null", {})).toEqual(
-        engine.name == "mongodb" ? [] : ["r3"]
-      );
+  describe("depending on who asks", () => {
+    beforeAll(() =>
+      store.replace({
+        ann: {owner: alice},
+        bob: {owner: bruce},
+        cem: {},
+        dee: {owner: alice}
+      })
+    );
+
+    it("should let through the documents the caller owns", async () => {
+      expect(await store.select("document.owner == auth._id", {_id: alice})).toEqual([
+        "ann",
+        "dee"
+      ]);
+    });
+
+    it("should decide a rule that depends on the caller only", async () => {
+      const admin = await store.select("auth.role == 'admin'", {role: "admin"});
+      const user = await store.select("auth.role == 'admin'", {role: "user"});
+
+      expect([admin, user]).toEqual([["ann", "bob", "cem", "dee"], []]);
+    });
+
+    describe.each([
+      ["an admin", {_id: alice, role: "admin"}, ["ann", "bob", "cem", "dee"]],
+      ["a user", {_id: alice, role: "user"}, ["ann", "dee"]]
+    ])("when the rule also lets admins through, for %s", (_, auth, expected) => {
+      it("should let through what they are allowed to", async () => {
+        const rule = "document.owner == auth._id || auth.role == 'admin'";
+
+        expect(await store.select(rule, auth)).toEqual(expected);
+      });
+    });
+
+    it.each([
+      ["document.owner != auth._id", {_id: alice}, ["bob", "cem"]],
+      ["auth.identifier != 'noop'", {identifier: "someone"}, ["ann", "bob", "cem", "dee"]],
+      ["auth.identifier != 'noop'", {identifier: "noop"}, []]
+    ])("%s lets through %j for %j", async (rule, auth, expected) => {
+      expect(await store.select(rule, auth)).toEqual(expected);
+    });
+  });
+
+  describe("lists", () => {
+    beforeAll(() =>
+      store.replace({
+        ann: {tags: ["a", "b"]},
+        bob: {tags: ["b"]},
+        cem: {tags: []},
+        dee: {tags: []}
+      })
+    );
+
+    it("should let through the documents that have any of the values", async () => {
+      expect(await store.select("some(document.tags, ['b', 'z'])")).toEqual(["ann", "bob"]);
+    });
+
+    it("should let through the documents that have all of the values", async () => {
+      expect(await store.select("every(document.tags, ['a', 'b'])")).toEqual(["ann"]);
+    });
+
+    it("should let through the documents that have exactly the values", async () => {
+      expect(await store.select("equal(document.tags, ['b'])")).toEqual(["bob"]);
+    });
+
+    it.each([
+      ["some(document.tags, ['a'])", ["ann"]],
+      ["every(document.tags, ['b'])", ["ann", "bob"]],
+      ["equal(document.tags, [])", ["cem", "dee"]],
+      ["length(document.tags) == 2", ["ann"]],
+      ["length(document.tags) > 0", ["ann", "bob"]]
+    ])("%s lets through %j", async (rule, expected) => {
+      expect(await store.select(rule)).toEqual(expected);
+    });
+  });
+
+  describe("functions on a field", () => {
+    beforeAll(() =>
+      store.replace({
+        ann: {title: "alpha"},
+        bob: {title: "beta"},
+        cem: {},
+        dee: {title: "alpha"}
+      })
+    );
+
+    it("should tell whether the field has a value", async () => {
+      expect(await store.select("has(document.title)")).toEqual(["ann", "bob", "dee"]);
+    });
+
+    it("should let through the documents that lack the value when has() is negated", async () => {
+      expect(await store.select("!(has(document.title))")).toEqual(["cem"]);
+    });
+
+    it("should match a field against a regular expression", async () => {
+      expect(await store.select('regex(document.title, "^al")')).toEqual(["ann", "dee"]);
     });
   });
 });

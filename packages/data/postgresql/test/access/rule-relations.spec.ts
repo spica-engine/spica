@@ -17,6 +17,7 @@ import {
   thirdId,
   uuid
 } from "./rule-fixtures";
+import {expectSql} from "./sql";
 
 async function compile(rule: string, auth: unknown = {}, hashSecret?: string) {
   const values: unknown[] = [];
@@ -32,17 +33,23 @@ async function compile(rule: string, auth: unknown = {}, hashSecret?: string) {
 const author = relationAlias(["author"]);
 const boss = relationAlias(["author", "boss"]);
 
-const authorJoin = `LEFT JOIN "bucket_${otherId}" AS "${author}" ON "${author}"."id" = "t"."author"`;
-const bossJoin = `LEFT JOIN "bucket_${thirdId}" AS "${boss}" ON "${boss}"."id" = "${author}"."boss"`;
+const join = (table: string, alias: string, on: string) =>
+  `LEFT JOIN "${table}" AS "${alias}" ON ${on}`;
+
+const authorJoin = join(`bucket_${otherId}`, author, `"${author}"."id" = "t"."author"`);
+const bossJoin = join(`bucket_${thirdId}`, boss, `"${boss}"."id" = "${author}"."boss"`);
 
 const otherTags = otherMetadata.tables.find(table => table.path.join(".") == "tags")!.name;
 
 const tableOf = (path: string) =>
   ruleMetadata.tables.find(table => table.path.join(".") == path)!.name;
 
+// The rows of the link table that belong to the post, which every query on editors starts from.
+const editorLinks = `FROM "${tableOf("editors")}" AS "_a1" WHERE "_a1"."_parent" = "t"."id"`;
+
 describe("relation paths in rules", () => {
   describe("one to one", () => {
-    it("should use the key column when the path ends at the key of the related bucket", async () => {
+    it("should use the key column when the path ends at the related key", async () => {
       expect(await compile("document.author.id == auth.x", {x: uuid})).toEqual({
         sql: '"t"."author" = $1::uuid',
         joins: [],
@@ -112,8 +119,13 @@ describe("relation paths in rules", () => {
     it("should read lists of the related bucket", async () => {
       const compiled = await compile("some(document.author.tags, ['x'])");
       expect(compiled.joins).toEqual([authorJoin]);
-      expect(compiled.sql).toBe(
-        `EXISTS (SELECT 1 FROM "${otherTags}" AS "_a1" WHERE "_a1"."_parent" = "${author}"."id" AND "_a1"."_value" = ANY($1::text[]))`
+      expectSql(
+        compiled.sql,
+        `EXISTS (
+           SELECT 1 FROM "${otherTags}" AS "_a1"
+           WHERE "_a1"."_parent" = "${author}"."id"
+             AND "_a1"."_value" = ANY($1::text[])
+         )`
       );
     });
 
@@ -126,24 +138,39 @@ describe("relation paths in rules", () => {
 
   describe("one to many", () => {
     it("should read the key of the related bucket from the link table", async () => {
-      expect(await compile("some(document.editors.id, [auth.x])", {x: uuid})).toEqual({
-        sql: `EXISTS (SELECT 1 FROM "${tableOf("editors")}" AS "_a1" WHERE "_a1"."_parent" = "t"."id" AND "_a1"."_target" = ANY($1::uuid[]))`,
-        joins: [],
-        values: [[uuid]]
-      });
+      const compiled = await compile("some(document.editors.id, [auth.x])", {x: uuid});
+
+      expectSql(
+        compiled.sql,
+        `EXISTS (
+           SELECT 1 ${editorLinks}
+             AND "_a1"."_target" = ANY($1::uuid[])
+         )`
+      );
+      expect(compiled.joins).toEqual([]);
+      expect(compiled.values).toEqual([[uuid]]);
     });
 
     it("should look at a field of the related bucket inside the EXISTS", async () => {
-      expect(await compile("some(document.editors.name, ['ann'])")).toEqual({
-        sql: `EXISTS (SELECT 1 FROM "${tableOf("editors")}" AS "_a1" JOIN "bucket_${otherId}" AS "_a1_t" ON "_a1_t"."id" = "_a1"."_target" WHERE "_a1"."_parent" = "t"."id" AND "_a1_t"."name" = ANY($1::text[]))`,
-        joins: [],
-        values: [["ann"]]
-      });
+      const compiled = await compile("some(document.editors.name, ['ann'])");
+
+      expectSql(
+        compiled.sql,
+        `EXISTS (
+           SELECT 1 FROM "${tableOf("editors")}" AS "_a1"
+           JOIN "bucket_${otherId}" AS "_a1_t" ON "_a1_t"."id" = "_a1"."_target"
+           WHERE "_a1"."_parent" = "t"."id"
+             AND "_a1_t"."name" = ANY($1::text[])
+         )`
+      );
+      expect(compiled.joins).toEqual([]);
+      expect(compiled.values).toEqual([["ann"]]);
     });
 
     it("should count and test the linked rows", async () => {
-      expect((await compile("length(document.editors) > 1")).sql).toBe(
-        `(SELECT COUNT(*) FROM "${tableOf("editors")}" AS "_a1" WHERE "_a1"."_parent" = "t"."id") > $1::bigint`
+      expectSql(
+        (await compile("length(document.editors) > 1")).sql,
+        `(SELECT COUNT(*) ${editorLinks}) > $1::bigint`
       );
       expect((await compile("has(document.editors)")).sql).toContain("EXISTS");
     });
@@ -157,7 +184,8 @@ describe("relation paths in rules", () => {
       await expect(compile("some(document.editors.boss, [auth.x])", {x: uuid})).rejects.toThrow(
         UnsupportedRuleError
       );
-      // [part9-encrypted] Pins the refusal of encrypted fields in rules. Remove or rewrite when Part 9 lands a comparable hash (docs/postgresql/09-writes.md).
+      // [part9-encrypted] Pins the refusal of encrypted fields in rules.
+      // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
       await expect(compile("some(document.editors.secret, ['x'])")).rejects.toThrow(
         UnsupportedRuleError
       );
@@ -170,7 +198,8 @@ describe("relation paths in rules", () => {
       await expect(compile("document.title.x == 1")).rejects.toThrow(InvalidRuleError);
     });
 
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules. Remove or rewrite when Part 9 lands a comparable hash (docs/postgresql/09-writes.md).
+    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
+    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
     it("should refuse encrypted and list fields of the related bucket", async () => {
       await expect(compile("document.author.secret == 'x'")).rejects.toThrow(UnsupportedRuleError);
       await expect(compile("document.author.tags == 'x'")).rejects.toThrow("is a list");
@@ -224,7 +253,7 @@ describe("relation paths in rules", () => {
       expect(related(thirdId)?.bucket.title).toBe("Third");
     });
 
-    it("should not load anything for a rule without relations or a rule that does not parse", async () => {
+    it("should load nothing for a rule without relations or one that does not parse", async () => {
       const find = jest.fn(findBucket);
       await loadRelatedBuckets(own, "document.title == 'x'", find);
       await loadRelatedBuckets(own, "document.title ==", find);
