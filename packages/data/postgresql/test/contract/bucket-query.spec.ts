@@ -284,6 +284,175 @@ contractSuite("bucket query", engine => {
     });
   });
 
+  describe("relations", () => {
+    let companies: any;
+    let authors: any;
+    let posts: any;
+    const labels = new Map<string, string>();
+
+    const label = (value: unknown): unknown => {
+      if (Array.isArray(value)) {
+        return value.map(label);
+      }
+      if (value && typeof value == "object") {
+        return Object.fromEntries(
+          Object.entries(value)
+            .filter(([name, inner]) => name != "_id" && name != "id" && inner != null)
+            .map(([name, inner]) => [name, label(inner)])
+        );
+      }
+      return typeof value == "string" && labels.has(value) ? `<${labels.get(value)}>` : value;
+    };
+
+    const insertLabeled = async (bucket: any, name: string, document: any) => {
+      const key = await store.insert(bucket, document);
+      labels.set(String(key), name);
+      return String(key);
+    };
+
+    beforeAll(async () => {
+      store.reset();
+      labels.clear();
+      companies = await store.createBucket({name: {type: "string"}});
+      const acme = await insertLabeled(companies, "acme", {name: "Acme"});
+      const globex = await insertLabeled(companies, "globex", {name: "Globex"});
+
+      authors = await store.createBucket({
+        name: {type: "string"},
+        company: {type: "relation", bucketId: String(companies._id), relationType: "onetoone"}
+      });
+      const ann = await insertLabeled(authors, "ann", {name: "Ann", company: acme});
+      const bob = await insertLabeled(authors, "bob", {name: "Bob", company: globex});
+      const cem = await insertLabeled(authors, "cem", {name: "Cem"});
+
+      posts = await store.createBucket({
+        title: {type: "string"},
+        author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"},
+        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"},
+        meta: {
+          type: "object",
+          properties: {
+            reviewer: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}
+          }
+        }
+      });
+      await insertLabeled(posts, "first", {
+        title: "first",
+        author: ann,
+        editors: [bob, ann],
+        meta: {reviewer: cem}
+      });
+      await insertLabeled(posts, "second", {title: "second", author: bob, editors: [], meta: {}});
+      await insertLabeled(posts, "third", {title: "third", editors: [cem]});
+    });
+
+    const read = async (relationPaths: string[][], extra: any = {}) =>
+      label(await store.find(posts, {sort: {title: 1}, relationPaths, ...extra})) as any[];
+
+    it("should keep the keys of relations nobody asked for", async () => {
+      const [first, , third] = await read([]);
+      expect(first).toMatchObject({author: "<ann>", editors: ["<bob>", "<ann>"]});
+      expect(third.author).toBeUndefined();
+    });
+
+    it("should replace a one-to-one relation with the document it points at", async () => {
+      const [first, second, third] = await read([["author", "_id"]]);
+
+      expect(first.author).toEqual({name: "Ann", company: "<acme>"});
+      expect(second.author).toEqual({name: "Bob", company: "<globex>"});
+      expect(third.author ?? null).toBeNull();
+    });
+
+    it("should resolve every target of a one-to-many relation", async () => {
+      const [first, second, third] = await read([["editors", "_id"]]);
+
+      expect(first.editors.map((editor: any) => editor.name).sort()).toEqual(["Ann", "Bob"]);
+      expect(second.editors).toEqual([]);
+      expect(third.editors).toEqual([{name: "Cem"}]);
+    });
+
+    it("should resolve a relation nested in an object", async () => {
+      const [first, second] = await read([["meta", "reviewer", "_id"]]);
+
+      expect(first.meta.reviewer).toEqual({name: "Cem"});
+      expect(second.meta.reviewer ?? null).toBeNull();
+    });
+
+    it("should resolve relations of relations only when asked to", async () => {
+      const [first, second] = await read([["author", "company", "_id"]]);
+
+      expect(first.author).toEqual({name: "Ann", company: {name: "Acme"}});
+      expect(second.author).toEqual({name: "Bob", company: {name: "Globex"}});
+    });
+
+    it("should resolve several relations at once", async () => {
+      const [first] = await read([
+        ["author", "company", "_id"],
+        ["editors", "_id"]
+      ]);
+
+      expect(first.author.company).toEqual({name: "Acme"});
+      expect(first.editors.map((editor: any) => editor.company).sort()).toEqual([
+        "<acme>",
+        "<globex>"
+      ]);
+    });
+
+    it("should filter by a field of a related document", async () => {
+      const found = await read([["author", "_id"]], {filter: `document.author.name == "Bob"`});
+      expect(found.map(post => post.title)).toEqual(["second"]);
+      expect(found[0].author).toEqual({name: "Bob", company: "<globex>"});
+    });
+
+    it("should resolve the relations of a page with a shared target once for every document", async () => {
+      const page = await store.paginate(posts, {
+        sort: {title: 1},
+        relationPaths: [["author", "_id"]],
+        limit: 2
+      });
+
+      expect(page.meta).toEqual({total: 3});
+      expect(page.data.map((post: any) => post.author.name)).toEqual(["Ann", "Bob"]);
+    });
+
+    it("should leave out a relation a field rule hides", async () => {
+      const guarded = await store.createBucket({
+        title: {type: "string"},
+        author: {
+          type: "relation",
+          bucketId: String(authors._id),
+          relationType: "onetoone",
+          acl: `auth.role == "admin"`
+        }
+      });
+      const ann = [...labels].find(([, name]) => name == "ann")![0];
+      await store.insert(guarded, {title: "g", author: ann});
+
+      const [asGuest] = await store.find(guarded, {
+        relationPaths: [["author", "_id"]],
+        applyAcl: true,
+        user: {role: "guest"}
+      });
+      const [asAdmin] = await store.find(guarded, {
+        relationPaths: [["author", "_id"]],
+        applyAcl: true,
+        user: {role: "admin"}
+      });
+
+      expect(asGuest).not.toHaveProperty("author");
+      expect((label(asAdmin) as any).author).toEqual({name: "Ann", company: "<acme>"});
+    });
+
+    it("should ignore a path that is not a relation", async () => {
+      const [first] = await read([
+        ["title", "_id"],
+        ["nope", "_id"],
+        ["meta", "_id"]
+      ]);
+      expect(first.title).toBe("first");
+    });
+  });
+
   (postgres ? describe : describe.skip)("on PostgreSQL", () => {
     beforeAll(async () => {
       bucket = await seed(PROPERTIES, DOCUMENTS);

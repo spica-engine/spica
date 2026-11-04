@@ -15,6 +15,7 @@ import {loadRowSets} from "./children.js";
 import {planRead, ReadPlan} from "./plan.js";
 import {projectDocument} from "./project.js";
 import {BucketReads} from "./reads.js";
+import {buildRelationTree, describer, RelationNode, resolveRelations} from "./relations.js";
 import {orderBy} from "./sort.js";
 import {countTotal} from "./totals.js";
 
@@ -52,7 +53,8 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
     if (plan.matchesNothing) {
       return {result: []};
     }
-    const rows = await this.read(reads => this.rows(reads, plan, spec));
+    const tree = await this.relations(bucket, plan, spec, context);
+    const rows = await this.read(reads => this.rows(reads, plan, spec, tree));
     return {result: await this.documents<T>(bucket, plan, spec, context, rows)};
   }
 
@@ -74,12 +76,22 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
     if (plan.matchesNothing) {
       return {result: {meta: {total: 0}, data: []}};
     }
+    const tree = await this.relations(bucket, plan, spec, context);
     const {rows, total} = await this.read(async reads => ({
-      rows: await this.rows(reads, plan, spec),
+      rows: await this.rows(reads, plan, spec, tree),
       total: await countTotal(reads, plan)
     }));
     const data = await this.documents<T>(bucket, plan, spec, context, rows);
     return {result: {meta: {total}, data}};
+  }
+
+  private relations(
+    bucket: Bucket,
+    plan: ReadPlan,
+    spec: BucketReadSpec,
+    context: BucketReadContext
+  ) {
+    return buildRelationTree(bucket, plan.metadata, spec.relationPaths ?? [], describer(context));
   }
 
   private async read<R>(work: (reads: BucketReads) => Promise<R>): Promise<R> {
@@ -97,18 +109,16 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
   private async rows(
     reads: BucketReads,
     plan: ReadPlan,
-    spec: BucketReadSpec
+    spec: BucketReadSpec,
+    tree: RelationNode
   ): Promise<{rows: Row[]; rowSets: Awaited<ReturnType<typeof loadRowSets>>}> {
     const rows = await reads.page(plan, orderBy(plan.metadata, spec.sort), spec);
 
     const requested = new Set((spec.projectMap ?? []).map(path => path[0]));
     const hidden = new Set(plan.fieldRules?.hidden ?? []);
-    const rowSets = await loadRowSets(
-      reads,
-      plan.metadata,
-      rows,
-      root => hidden.has(root) || (requested.size > 0 && !requested.has(root))
-    );
+    const skip = (root: string) => hidden.has(root) || (requested.size > 0 && !requested.has(root));
+    const rowSets = await loadRowSets(reads, plan.metadata, rows, skip);
+    await resolveRelations(reads, tree, rowSets, skip);
     return {rows, rowSets};
   }
 
