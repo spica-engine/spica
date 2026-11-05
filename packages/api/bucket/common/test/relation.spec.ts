@@ -4,12 +4,35 @@ import {
   isObject,
   isDesiredRelation,
   createRelationMap,
+  getRelationPaths,
   getRelationResolvedBucketSchema
 } from "@spica-server/bucket-common";
 import {deepCopy} from "@spica-server/core-patch";
 import {RelationType} from "@spica-server/interface-bucket-common";
 
 describe("Relation", () => {
+  describe("getRelationPaths", () => {
+    it("should list the relations of a bucket as plain paths", () => {
+      const bucket: any = {
+        properties: {
+          title: {type: "string"},
+          author: {type: "relation", bucketId: "a", relationType: "onetoone"},
+          editors: {type: "relation", bucketId: "a", relationType: "onetomany"}
+        }
+      };
+
+      expect(getRelationPaths(bucket)).toEqual([["author"], ["editors"]]);
+    });
+
+    it("should split the dotted relations a client names", () => {
+      expect(getRelationPaths(["author", "meta.reviewer"])).toEqual([
+        ["author"],
+        ["meta", "reviewer"]
+      ]);
+      expect(getRelationPaths([])).toEqual([]);
+    });
+  });
+
   it("should check whether schema is object or not", () => {
     const schema = {
       type: "object",

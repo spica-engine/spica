@@ -26,6 +26,7 @@ import {ID_TYPES, IdTypes, Page, RESULT_SHAPER, ResultShaper} from "@spica-serve
 import {PaginationPlan} from "@spica-server/interface-database";
 import {aggregatable, AGGREGATE_OPTIONS} from "../aggregate.js";
 import {BucketPipelineBuilder} from "./pipeline.builder.js";
+import {markRelationsToResolve} from "./relation-paths.js";
 import {resetNonOverlappingPathsInRelationMap} from "./stages.js";
 
 interface BucketReadPlan {
@@ -154,7 +155,7 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
       .limit(spec.limit);
 
     const relationPathResolvedPipeline = await filtersAppliedPipeline.resolveRelationPath(
-      spec.relationPaths || [],
+      markRelationsToResolve(spec.relationPaths),
       relationStage => {
         seekingPipeline.attachToPipeline(true, ...relationStage);
       }
