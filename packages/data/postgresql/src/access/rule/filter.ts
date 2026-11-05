@@ -33,10 +33,6 @@ function checkSize(node: unknown) {
   visit(node, 0);
 }
 
-/**
- * Compiles an expression a caller sent. Unlike a rule it has no caller identity to read, and its
- * size is bounded because anyone who can list a bucket can send one.
- */
 export function compileFilter(filter: string, scope: FilterScope, values: unknown[]): CompiledRule {
   if (filter.length > FILTER_LIMITS.length) {
     throw new InvalidRuleError(`The filter is longer than ${FILTER_LIMITS.length} characters.`);
