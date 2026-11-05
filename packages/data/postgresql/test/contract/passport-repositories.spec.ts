@@ -557,6 +557,12 @@ contractSuite("passport repositories", engine => {
       expect(await policies.replaceById(missingId(), policy("x") as any)).toBe(0);
     });
 
+    it("counts a replacement that changes nothing", async () => {
+      const {_id} = await policies.insert({_id: idType.generate(), ...policy("a")} as any);
+
+      expect(await policies.replaceById(_id as any, policy("a") as any)).toBe(1);
+    });
+
     it("deletes a policy", async () => {
       const {_id} = await policies.insert({_id: idType.generate(), ...policy("a")} as any);
 
