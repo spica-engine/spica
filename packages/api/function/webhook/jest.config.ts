@@ -4,7 +4,11 @@ export default {
   projects: [
     {
       preset: "../../../../jest.preset.js",
-      testMatch: ["<rootDir>/test/schema.spec.ts", "<rootDir>/test/log.service.spec.ts"],
+      testMatch: [
+        "<rootDir>/test/schema.spec.ts",
+        "<rootDir>/test/log.service.spec.ts",
+        "<rootDir>/test/invoker.logs.spec.ts"
+      ],
       moduleNameMapper: {"node-fetch": "<rootDir>/__mocks__/node-fetch.cjs"}
     },
     {

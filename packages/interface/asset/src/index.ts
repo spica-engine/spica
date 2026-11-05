@@ -87,7 +87,7 @@ export interface AssetRepository
   /**
    * The filter is the client-supplied filter, passed through unchanged.
    */
-  find(filter?: object): Promise<Asset[]>;
+  find(filter?: object | string): Promise<Asset[]>;
   findVersions(url: string): Promise<Asset[]>;
   /**
    * Resolves to the asset as it was before the update, or null when there is none with the id.

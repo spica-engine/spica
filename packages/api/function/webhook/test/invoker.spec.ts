@@ -66,7 +66,9 @@ describe("Webhook Invoker", () => {
 
     const nodeFetch = {fetch: __fetch__};
     fetchSpy = jest.spyOn(nodeFetch, "fetch");
-    insertLogSpy = jest.spyOn(logService, "insertOne" as never).mockImplementation();
+    insertLogSpy = jest
+      .spyOn(logService, "insertOne" as never)
+      .mockResolvedValue(undefined as never);
 
     webhook = {
       title: "wh1",

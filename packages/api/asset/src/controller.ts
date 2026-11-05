@@ -29,7 +29,7 @@ import {
 } from "@spica-server/interface-asset";
 import {exporters, operators, validators} from "./registration.js";
 import {putConfiguration} from "./helpers.js";
-import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
+import {BOOLEAN, FILTER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {AssetRepManager} from "./representative.js";
@@ -49,7 +49,7 @@ export class AssetController {
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:index"))
-  find(@Query("filter", DEFAULT({}), JSONP) filter: object) {
+  find(@Query("filter", FILTER) filter?: object | string) {
     return this.assets.find(filter);
   }
 

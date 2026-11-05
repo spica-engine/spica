@@ -284,7 +284,9 @@ export class StorageService {
     tx.add({
       execute: async () => {
         try {
-          insertedObjects = await this.objects.insertAll(schemas);
+          const stored = await this.objects.insertAll(schemas);
+          const byName = new Map(stored.map(object => [object.name, object]));
+          insertedObjects = schemas.map(schema => byName.get(schema.name));
         } catch (exception) {
           throw new BadRequestException(
             exception instanceof DuplicateKeyError

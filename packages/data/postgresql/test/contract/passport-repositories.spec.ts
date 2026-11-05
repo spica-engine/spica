@@ -497,6 +497,20 @@ contractSuite("passport repositories", engine => {
       expect(await apiKeys.findById(active._id)).toMatchObject({key: "k1", active: true});
     });
 
+    it("reports a duplicate key as DuplicateKeyError", async () => {
+      await apiKeys.insert(apiKey("k1"));
+      const other = await apiKeys.insert(apiKey("k2"));
+
+      const inserted = await apiKeys.insert(apiKey("k1", {name: "again"})).catch(e => e);
+      const updated = await apiKeys.updateById(other._id, {key: "k1"}).catch(e => e);
+      const replaced = await apiKeys.replaceById(other._id, apiKey("k1")).catch(e => e);
+
+      expect(inserted).toBeInstanceOf(DuplicateKeyError);
+      expect(inserted.keyValue).toEqual({key: "k1"});
+      expect(updated).toBeInstanceOf(DuplicateKeyError);
+      expect(replaced).toBeInstanceOf(DuplicateKeyError);
+    });
+
     it("updates and replaces an api key", async () => {
       const {_id} = await apiKeys.insert(apiKey("k1", {description: "first"}));
 
