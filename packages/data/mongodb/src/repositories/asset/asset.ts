@@ -1,5 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {assertFilterLanguage} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {Asset, AssetRepository} from "@spica-server/interface-asset";
 
@@ -10,6 +11,11 @@ export class MongoAssetRepository
 {
   constructor(db: DatabaseService) {
     super(db);
+  }
+
+  async find(filter: object | string = {}) {
+    assertFilterLanguage(filter, ["json"], "MongoDB");
+    return super.find(filter as object);
   }
 
   findById(id: Id) {

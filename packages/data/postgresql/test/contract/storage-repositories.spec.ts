@@ -161,6 +161,43 @@ contractSuite("storage, activity and replication repositories", engine => {
       expect(await assets.findById(missingId())).toBeNull();
     });
 
+    it("lists the assets that match a filter in the language of the engine", async () => {
+      const postgres = engine.name == "postgresql";
+      await assets.insert(asset("a"));
+      await assets.insert({...asset("b"), status: "installed"});
+
+      const filtered = (json: object, expression: string) =>
+        assets.find((postgres ? expression : json) as any);
+
+      expect(
+        (await filtered({status: "installed"}, `document.status == "installed"`)).map(a => a.name)
+      ).toEqual(["b"]);
+      expect((await filtered({name: "nope"}, `document.name == "nope"`)).map(a => a.name)).toEqual(
+        []
+      );
+    });
+
+    (engine.name == "postgresql" ? it : it.skip)(
+      "refuses a filter in the other language, or one it cannot read",
+      async () => {
+        await expect(assets.find({status: "installed"} as any)).rejects.toMatchObject({
+          status: 404
+        });
+        await expect(assets.find(`document.nope == 1` as any)).rejects.toMatchObject({
+          status: 400
+        });
+      }
+    );
+
+    (engine.name == "mongodb" ? it : it.skip)(
+      "refuses a filter in the other language",
+      async () => {
+        await expect(assets.find(`document.status == "installed"` as any)).rejects.toMatchObject({
+          status: 404
+        });
+      }
+    );
+
     it("finds the versions of an asset by its url", async () => {
       await assets.insert(asset("v1", "https://assets/same"));
       await assets.insert(asset("v2", "https://assets/same"));

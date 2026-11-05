@@ -2,6 +2,7 @@ import {Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService, ReturnDocument} from "@spica-server/database";
 import {Id} from "@spica-server/interface-data";
 import {ApiKey, ApiKeyRepository} from "@spica-server/interface-passport-apikey";
+import {translateWriteError} from "../errors.js";
 
 @Injectable()
 export class MongoApiKeyRepository
@@ -23,7 +24,7 @@ export class MongoApiKeyRepository
   }
 
   insert(apiKey: ApiKey) {
-    return this.insertOne(apiKey);
+    return this.insertOne(apiKey).catch(translateWriteError);
   }
 
   updateById(id: Id, changes: Partial<ApiKey>) {
@@ -31,11 +32,13 @@ export class MongoApiKeyRepository
       {_id: id},
       {$set: changes},
       {returnDocument: ReturnDocument.AFTER}
-    );
+    ).catch(translateWriteError);
   }
 
   replaceById(id: Id, apiKey: ApiKey) {
-    return this.findOneAndReplace({_id: id}, apiKey, {returnDocument: ReturnDocument.AFTER});
+    return this.findOneAndReplace({_id: id}, apiKey, {
+      returnDocument: ReturnDocument.AFTER
+    }).catch(translateWriteError);
   }
 
   deleteById(id: Id) {
