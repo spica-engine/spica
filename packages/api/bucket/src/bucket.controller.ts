@@ -33,7 +33,7 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-gua
 import {createBucketActivity} from "@spica-server/bucket-common";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket-cache";
 import * as CRUD from "./crud.js";
-import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core-patch";
+import {applyPatch} from "@spica-server/core-patch";
 import {
   Bucket,
   BUCKET_DATA_REPOSITORY,

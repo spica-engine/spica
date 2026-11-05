@@ -29,11 +29,11 @@ export async function insert(bs: BucketService, rules: BucketRuleValidator, buck
     bucket._id = bucketIds().parse(bucket._id);
   }
 
-  await bs.insert(bucket);
+  const inserted = await bs.insert(bucket);
 
   bs.emitSchemaChanges();
 
-  return bucket;
+  return inserted;
 }
 
 export async function replace(

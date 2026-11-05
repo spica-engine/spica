@@ -52,8 +52,7 @@ export async function insert(evs: EnvVarService, body: EnvVar) {
     envVar._id = envVarIds().parse(body._id);
   }
 
-  await evs.insert(envVar);
-  return envVar;
+  return evs.insert(envVar);
 }
 
 export async function replace(evs: EnvVarService, body: EnvVar) {
