@@ -21,6 +21,10 @@ export type StatusModule = {
 
 export type HealthResponse = {status: string};
 
+export type DataEngine = "mongodb" | "postgresql";
+
+export type EngineResponse = {engine: DataEngine};
+
 export type ModuleStatusArgs = {
   module: string;
   begin?: string;
@@ -46,6 +50,10 @@ export const statusApi = baseApi.injectEndpoints({
 
     getReadiness: builder.query<HealthResponse, void>({
       query: () => ({url: "status/ready"})
+    }),
+
+    getEngine: builder.query<EngineResponse, void>({
+      query: () => ({url: "status/engine"})
     })
   }),
   overrideExisting: false
@@ -55,7 +63,8 @@ export const {
   useGetStatusesQuery,
   useGetModuleStatusQuery,
   useGetLivenessQuery,
-  useGetReadinessQuery
+  useGetReadinessQuery,
+  useGetEngineQuery
 } = statusApi;
 
 export const statusApiReducerPath = statusApi.reducerPath;
