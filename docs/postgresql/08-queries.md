@@ -132,7 +132,7 @@ Delivered as these PRs:
 
 ### System collection reads (`src/query/collection/`)
 
-- `PostgresCollectionQueryFacade` replaced the placeholder. `COLLECTION_ENTITIES` maps the names controllers use (`identity`, `env_var`, `function_logs`, ...) to entities. A filter names the properties documents use; secret columns (`password`, `lastPasswords`, `encrypted`, `iv`, `authTag`, `secret`, and the api key, refresh token and verification code) cannot be filtered or sorted on.
+- `PostgresCollectionQueryFacade` replaced the placeholder. `COLLECTION_ENTITIES` maps the names controllers use (`identity`, `env_var`, `function_logs`, ...) to entities. A filter names the properties documents use; secret columns (`password`, `lastPasswords`, `encrypted`, `iv`, `authTag`, `secret`, and the api key, refresh token and verification code) cannot be used in a filter, a `where` condition or a sort.
 - Supported: `id`, `resourceFilter`, `where` (`eq`, `in`, `matches` as a POSIX regex), `createdBetween`, `fields` (inclusion or exclusion), `sort`, `skip`, `limit`, `paginate` with both strategies, and the relations MongoDB resolves: activity `identifier` and `username` (the name stands in for the id, and `where` compares the name), function `env_vars` and `secrets` (the documents), function logs `function` (the name, or the id when the function is gone).
 - `filterReplacers` is MongoDB-shaped and ignored on PostgreSQL. `StorageRepository.browse` takes the same expression filter over the storage columns.
 
@@ -144,7 +144,7 @@ Delivered as these PRs:
 ### Admin panel
 
 - `GET /status/engine` returns `{engine}` for an authenticated caller (no permission needed, or users without `status:index` could not load a bucket list). The `DATA_ENGINE` token moved to `@spica-server/interface-data`.
-- `useEngine`, `useKeyField`, `conditionsToExpression` and `combineFilters` write the bucket filter builder, quick search and relation picker in the engine's language, and sort by the key field. The expressions the panel writes are compiled in `test/access/panel-expressions.spec.ts`.
+- `useEngine`, `useKeyField`, `conditionsToExpression` and `combineFilters` write the bucket filter builder, quick search and relation picker in the engine's language, and sort by the key field. The panel's own spec (`filterPanelUtils.spec.ts`) pins the expressions it writes; it has no test runner yet, which Part 12 adds.
 - Not done: the other pages that build filters (storage, profiler, users, identities, api keys, policies, activity, and the realtime strategy), and every place that reads `_id` from a document.
 
 ### Differences between the engines
@@ -152,7 +152,7 @@ Delivered as these PRs:
 - Ordering a missing value: `document.age < 25` also matches a document with no `age` on MongoDB, and does not on PostgreSQL (NULL).
 - A one-to-many relation returns the targets in the stored order on PostgreSQL and in collection order on MongoDB.
 - A document with neither the requested nor the default language keeps its translation map on MongoDB. Sorting by such a field puts it last on MongoDB and first on PostgreSQL.
-- `createdBetween` is the creation time of the id on MongoDB and the `created_at` column on PostgreSQL.
+- `createdBetween` is the creation time of the id on MongoDB and the `created_at` column on PostgreSQL. A collection without that column compares the time inside the UUID v7 id, clamped to the 48 bits it holds.
 - Unset values are `null` in a PostgreSQL document and absent in a MongoDB one.
 
 ### Blocks the completion of this part

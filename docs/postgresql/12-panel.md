@@ -84,7 +84,7 @@ On MongoDB it is the display field of a bucket. On PostgreSQL it is the key fiel
 
 ### Tests
 
-Two specs exist (`field-acl.spec.ts`, `filterPanelUtils.spec.ts`) and import from `@jest/globals`. There is no `apps/panel/jest.config` and no `test` target, so CI does not run them. Hooks, slices, cache patches, the storage and profiler builders, relations, the drawer and every page are untested. The PostgreSQL side checks the panel's expression shapes in `packages/data/postgresql/test/access/panel-expressions.spec.ts`.
+Three specs exist (`field-acl.spec.ts`, `filterPanelUtils.spec.ts`, `useBucketSearch.spec.ts`) and import from `@jest/globals`. There is no `apps/panel/jest.config` and no `test` target, so CI does not run them. Hooks, slices, cache patches, the storage and profiler builders, relations, the drawer and every page are untested.
 
 ## Decisions needed
 
