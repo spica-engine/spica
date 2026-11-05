@@ -28,6 +28,7 @@ import {aggregatable, AGGREGATE_OPTIONS} from "../aggregate.js";
 import {BucketPipelineBuilder} from "./pipeline.builder.js";
 import {markRelationsToResolve} from "./relation-paths.js";
 import {resetNonOverlappingPathsInRelationMap} from "./stages.js";
+import {filterOf} from "./where.js";
 
 interface BucketReadPlan {
   plan: PaginationPlan;
@@ -108,6 +109,7 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
     spec: BucketReadSpec,
     context: BucketReadContext
   ): Promise<BucketReadPlan> {
+    const filter = filterOf(spec);
     const pipelineBuilder = new BucketPipelineBuilder(bucket, context);
     const seekingPipelineBuilder = new PipelineBuilder();
 
@@ -144,9 +146,9 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
       });
       filtersAppliedPipeline = await rulesAppliedPipeline
         .attachToPipeline(!!ruleResetStage, ruleResetStage)
-        .filterByUserRequest(spec.filter);
+        .filterByUserRequest(filter);
     } else {
-      filtersAppliedPipeline = await basePipeline.filterByUserRequest(spec.filter);
+      filtersAppliedPipeline = await basePipeline.filterByUserRequest(filter);
     }
 
     const seekingPipeline = seekingPipelineBuilder

@@ -54,10 +54,10 @@ import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
 
 import {
   createSchema,
-  extractAggregationFromQuery,
   getBucketName,
-  requestedFieldsFromExpression,
+  parseQuery,
   requestedFieldsFromInfo,
+  requestedFieldsFromQuery,
   validateBuckets
 } from "./schema.js";
 import {applyPatch, deepCopy} from "@spica-server/core-patch";
@@ -260,16 +260,12 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
-      let matchExpression = {};
-      if (query && Object.keys(query).length) {
-        matchExpression = extractAggregationFromQuery(
-          deepCopy(bucket),
-          query,
-          deepCopy(this.buckets)
-        );
-      }
+      const where =
+        query && Object.keys(query).length
+          ? parseQuery(deepCopy(bucket), query, deepCopy(this.buckets))
+          : undefined;
 
-      const expressionFields = requestedFieldsFromExpression(matchExpression, []);
+      const expressionFields = requestedFieldsFromQuery(where);
       const responseFields = requestedFieldsFromInfo(info, "data");
 
       const {result, locale} = await this.queries.paginate<BucketDocument>(
@@ -282,7 +278,7 @@ export class GraphqlController implements OnModuleInit {
           skip,
           sort,
           relationPaths: [...expressionFields, ...responseFields],
-          filter: matchExpression,
+          where,
           projectMap: responseFields,
           applyAcl: this.shouldApplyAcl(context)
         },

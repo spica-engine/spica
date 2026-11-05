@@ -59,3 +59,9 @@ export function compileFilter(filter: string, scope: FilterScope, values: unknow
   const {fields, now} = contextOf({...scope, auth: undefined});
   return compileFilterIn(filter, fields, values, now);
 }
+
+export function compileFilterNode(node: unknown, scope: FilterScope, values: unknown[]) {
+  const {fields, now} = contextOf({...scope, auth: undefined});
+  checkSize(node);
+  return compileParsed(node, {auth: undefined, forbidAuth: true, now, fields}, values);
+}
