@@ -346,7 +346,9 @@ function textMatch(fnName: "startsWith" | "contains"): Func {
         const [propertyName, text] = parseArguments(context.arguments, ctx, convert);
         assertText(fnName, text);
         const regex = fnName == "startsWith" ? `^${escapeRegExp(text)}` : escapeRegExp(text);
-        const expression = {$eq: [{$regexMatch: {input: propertyName, regex}}, true]};
+        const isText = {$eq: [{$type: propertyName}, "string"]};
+        const match = {$regexMatch: {input: propertyName, regex}};
+        const expression = {$eq: [{$cond: [isText, match, false]}, true]};
         return wrapExpressionByMode(expression, mode);
       }
       const [documentValue, text] = parseArguments(context.arguments, ctx, compile);
