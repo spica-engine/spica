@@ -174,6 +174,30 @@ function regex(args: Node[], host: FunctionHost): Operand {
   };
 }
 
+function textMatch(name: "startsWith" | "contains"): Implementation {
+  return (args, host) => {
+    arity(name, args, 2);
+    requirePath(name, args, 0);
+    const text = requireString(name, args, 1);
+    const target = host.target(args[0]);
+    if (target.kind != "column" || (target.type != "text" && target.type != "uuid")) {
+      throw new UnsupportedRuleError(`${name} works on text fields only on PostgreSQL.`);
+    }
+    if (target.property.type == "hash") {
+      throw new UnsupportedRuleError(`${name} cannot be used on a hash field.`);
+    }
+    const escaped = text.replace(/[\\%_]/g, "\\$&");
+    const pattern = name == "startsWith" ? `${escaped}%` : `%${escaped}%`;
+    const input = target.type == "uuid" ? `${target.sql}::text` : target.sql;
+    return {
+      kind: "expression",
+      sql: `${input} LIKE ${host.param(pattern)}::text`,
+      type: "boolean",
+      twoValued: false
+    };
+  };
+}
+
 function itemOf(node: Node, host: FunctionHost): Item {
   if (Array.isArray(node)) {
     return {value: node.map(child => itemOf(child, host).value), literal: false};
@@ -317,6 +341,8 @@ const FUNCTIONS: Record<string, Implementation> = {
   now,
   length: lengthOf,
   regex,
+  startsWith: textMatch("startsWith"),
+  contains: textMatch("contains"),
   some: listFunction("some"),
   every: listFunction("every"),
   equal: listFunction("equal")

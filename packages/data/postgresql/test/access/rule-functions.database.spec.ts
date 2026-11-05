@@ -7,6 +7,33 @@ const everyone = ["ann", "bob", "cem", "dee"];
 describe("built-in functions against rows in PostgreSQL", () => {
   const store = usePostgresAccessStore();
 
+  describe("matching text", () => {
+    beforeAll(() =>
+      store.replace({
+        ann: {title: "Annabel"},
+        bob: {title: "100% sure"},
+        cem: {title: "a_b\\c"},
+        dee: {title: "annex"}
+      })
+    );
+
+    it.each([
+      [`startsWith(document.title, "Ann")`, ["ann"]],
+      [`startsWith(document.title, "ann")`, ["dee"]],
+      [`contains(document.title, "nn")`, ["ann", "dee"]],
+      [`contains(document.title, "nope")`, []],
+      [`startsWith(document.title, "")`, everyone],
+      [`contains(document.title, "%")`, ["bob"]],
+      [`contains(document.title, "100% s")`, ["bob"]],
+      [`contains(document.title, "_")`, ["cem"]],
+      [`contains(document.title, "a_b")`, ["cem"]],
+      [`contains(document.title, "\\\\")`, ["cem"]],
+      [`!(contains(document.title, "nn"))`, ["bob", "cem"]]
+    ])("%s lets through %j", async (rule, expected) => {
+      expect(await store.select(rule)).toEqual(expected);
+    });
+  });
+
   describe("lists of text", () => {
     beforeAll(() =>
       store.replace({

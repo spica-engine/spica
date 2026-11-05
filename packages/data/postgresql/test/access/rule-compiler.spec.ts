@@ -24,6 +24,43 @@ function compile(rule: string, {auth, hashSecret, values = []}: Options = {}) {
   return {sql, values};
 }
 
+describe("compileRule membership", () => {
+  it("should write a list as a chain of equalities with every value bound", () => {
+    const {sql, values} = compile(`document.title in ["a", "b", "c"]`);
+
+    expectSql(
+      sql,
+      `(("t"."title" = $1::text OR "t"."title" = $2::text) OR "t"."title" = $3::text)`
+    );
+    expect(values).toEqual(["a", "b", "c"]);
+  });
+
+  it("should compare one value like a plain equality", () => {
+    expect(compile(`document.title in ["a"]`).sql).toBe(compile(`document.title == "a"`).sql);
+  });
+
+  it("should decide an empty list and known values", () => {
+    expect(compile(`document.title in []`).sql).toBe("FALSE");
+    expect(compile(`1 in [1, 2]`).sql).toBe("TRUE");
+    expect(compile(`3 in [1, 2]`).sql).toBe("FALSE");
+  });
+
+  it("should convert the values like a comparison does", () => {
+    const hashSecret = "secret";
+    expect(compile(`document.password in ["x"]`, {hashSecret}).values).toEqual([
+      hash("x", hashSecret)
+    ]);
+    expect(compile(`document.count in [1, 2]`).sql).toContain("::bigint");
+  });
+
+  it("should refuse what it cannot write as SQL", () => {
+    expect(() => compile(`document.title in document.tags`)).toThrow(InvalidRuleError);
+    expect(() => compile(`document.title in "a"`)).toThrow(InvalidRuleError);
+    expect(() => compile(`document.title in [document.note]`)).toThrow(UnsupportedRuleError);
+    expect(() => compile(`document.tags in ["a"]`)).toThrow(UnsupportedRuleError);
+  });
+});
+
 describe("compileRule", () => {
   describe("constants", () => {
     it.each([

@@ -189,7 +189,31 @@ class RuleCompiler {
     if (type == "select") {
       return this.select(node);
     }
+    if (type == "in") {
+      return this.membership(node);
+    }
     throw new UnsupportedRuleError(`The operator "${type}" is not supported on PostgreSQL.`);
+  }
+
+  // Written as a chain of equalities so every value is coerced like it is in a comparison.
+  private membership(node: Node): Operand {
+    if (!Array.isArray(node.right)) {
+      throw new InvalidRuleError(
+        "The right side of 'in' has to be a list, for example document.status in ['open', 'done']."
+      );
+    }
+    const left = this.visit(node.left);
+    const items = node.right.map((item: Node) => {
+      if (item.kind != "literal") {
+        throw new UnsupportedRuleError(
+          "A list after 'in' can only hold literal values on PostgreSQL."
+        );
+      }
+      return this.literal(item);
+    });
+    return items
+      .map((item: Constant) => this.compare("==", left, item))
+      .reduce((any: Operand, next: Operand) => this.logical("or", any, next), constant(false));
   }
 
   private pathOf(node: Node): {root: string; path: string[]} {
