@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -15,11 +16,40 @@ import {ActivityService} from "@spica-server/activity-services";
 import {DATE, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {ID, ids} from "@spica-server/data";
-import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  Id,
+  ReadSpec,
+  WhereCondition
+} from "@spica-server/interface-data";
 
 const ACTIVITY_COLLECTION = "activity";
 
 const activityIds = () => ids().forCollection(ACTIVITY_COLLECTION);
+
+const asList = (value: unknown, operator: string) => {
+  if (!Array.isArray(value) || value.some(item => typeof item != "string")) {
+    throw new BadRequestException(`${operator} of the resource filter must be a list of strings.`);
+  }
+  return value;
+};
+
+const resourceCondition = (resource: any): WhereCondition => {
+  if (Array.isArray(resource)) {
+    return {eq: asList(resource, "The filter")};
+  }
+  const {$all, $in, ...unknown} = resource ?? {};
+  if (Object.keys(unknown).length || ($all === undefined && $in === undefined)) {
+    throw new BadRequestException("The resource filter accepts only $all and $in.");
+  }
+  return {
+    contains: {
+      ...($all !== undefined && {all: asList($all, "$all")}),
+      ...($in !== undefined && {any: asList($in, "$in")})
+    }
+  };
+};
 
 @Controller("activity")
 export class ActivityController {
@@ -43,7 +73,7 @@ export class ActivityController {
     const where: ReadSpec["where"] = {
       ...(identifier && {identifier: {eq: identifier}}),
       ...(username && {username: {eq: username}}),
-      ...(resource && {resource: {eq: resource}}),
+      ...(resource && {resource: resourceCondition(resource)}),
       ...(action?.length && {action: {in: action}})
     };
     const hasRange = begin?.getTime() && end?.getTime();

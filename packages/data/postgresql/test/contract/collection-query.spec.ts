@@ -266,6 +266,23 @@ contractSuite("collection query", engine => {
       });
       expect(found).toHaveLength(2);
     });
+
+    it("should find the activities of a resource list that holds all and any of the given values", async () => {
+      await activities.insertMany([
+        {action: 1, resource: ["bucket", "1"], created_at: new Date()},
+        {action: 2, resource: ["bucket", "2"], created_at: new Date()},
+        {action: 3, resource: ["function", "2"], created_at: new Date()}
+      ] as any);
+      const actions = async (resource: object) =>
+        (await queries.find<any>("activity", {where: {resource}, sort: {action: 1}})).map(
+          activity => activity.action
+        );
+
+      expect(await actions({contains: {all: ["bucket"]}})).toEqual([1, 2]);
+      expect(await actions({contains: {any: ["1", "2"]}})).toEqual([1, 2, 3]);
+      expect(await actions({contains: {all: ["bucket"], any: ["2"]}})).toEqual([2]);
+      expect(await actions({contains: {all: ["bucket", "3"]}})).toEqual([]);
+    });
   });
 
   (postgres ? describe : describe.skip)("relations on PostgreSQL", () => {

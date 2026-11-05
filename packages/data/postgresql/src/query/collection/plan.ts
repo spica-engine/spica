@@ -59,6 +59,18 @@ function conditionOf(
       ? `${expression} = ANY(${bind(values, wanted)}::${column.type}[])`
       : undefined;
   }
+  if ("contains" in condition) {
+    if (!list) {
+      throw new BadRequestException("Only a list field can contain values.");
+    }
+    const {all, any} = condition.contains;
+    return [
+      all && `${expression} @> ${bind(values, all)}::${column.type}`,
+      any && `${expression} && ${bind(values, any)}::${column.type}`
+    ]
+      .filter(Boolean)
+      .join(" AND ");
+  }
   if ("matches" in condition) {
     const operator = condition.caseInsensitive ? "~*" : "~";
     return `${expression} ${operator} ${bind(values, condition.matches)}::text`;
