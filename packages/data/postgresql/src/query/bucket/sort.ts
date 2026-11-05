@@ -1,10 +1,10 @@
 import {BadRequestException} from "@nestjs/common";
 import {quote} from "@spica-server/data-postgresql-orm";
 import {BucketMetadata} from "../../schema/index.js";
-import {TABLE} from "./plan.js";
+import {tableColumn} from "./plan.js";
 
-// MongoDB sorts a missing value before every other one, so ascending puts NULL first.
-const DIRECTIONS = {asc: "ASC NULLS FIRST", desc: "DESC NULLS LAST"};
+const ASCENDING_MISSING_FIRST = "ASC NULLS FIRST";
+const DESCENDING_MISSING_LAST = "DESC NULLS LAST";
 
 export function orderBy(metadata: BucketMetadata, sort?: object): string {
   const columns = new Set<string>();
@@ -17,14 +17,14 @@ export function orderBy(metadata: BucketMetadata, sort?: object): string {
     }
     if (!columns.has(column.name)) {
       columns.add(column.name);
-      const order = Number(direction) == -1 ? DIRECTIONS.desc : DIRECTIONS.asc;
-      terms.push(`${quote(TABLE)}.${quote(column.name)} ${order}`);
+      const order = Number(direction) == -1 ? DESCENDING_MISSING_LAST : ASCENDING_MISSING_FIRST;
+      terms.push(`${tableColumn(column.name)} ${order}`);
     }
   }
 
   const key = metadata.primaryKey.column;
   if (!columns.has(key)) {
-    terms.push(`${quote(TABLE)}.${quote(key)} ASC`);
+    terms.push(`${tableColumn(key)} ASC`);
   }
   return terms.join(", ");
 }

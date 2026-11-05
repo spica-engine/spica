@@ -1,14 +1,11 @@
-import {quote, Session} from "@spica-server/data-postgresql-orm";
 import {fieldKey, RowSet} from "../../shape/index.js";
 import {BucketMetadata, SYSTEM_COLUMNS} from "../../schema/index.js";
+import {BucketReads} from "./reads.js";
 
 type Row = Record<string, unknown>;
 
-/**
- * One query per child table for the whole page, grouped by the row that owns each child.
- */
 export async function loadRowSets(
-  session: Session,
+  reads: Pick<BucketReads, "childRows">,
   metadata: BucketMetadata,
   rows: Row[],
   skip: (rootProperty: string) => boolean
@@ -22,11 +19,7 @@ export async function loadRowSets(
       if (skip(table.path[0])) {
         continue;
       }
-      const {rows: found} = await session.raw(
-        `SELECT * FROM ${quote(table.name)} WHERE ${quote(SYSTEM_COLUMNS.parent)} = ANY($1::${primaryKey.type}[])`,
-        [keys]
-      );
-      for (const child of found) {
+      for (const child of await reads.childRows(table.name, primaryKey.type, keys)) {
         const owner = String(child[SYSTEM_COLUMNS.parent]);
         const byTable = children.get(owner) ?? {};
         (byTable[fieldKey(table.path)] ??= []).push(child);

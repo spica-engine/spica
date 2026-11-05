@@ -1,6 +1,6 @@
 import {Inject, Injectable, Logger} from "@nestjs/common";
 import {DatabaseException, decryptDocumentFields} from "@spica-server/bucket-common";
-import {Orm, quote, Session} from "@spica-server/data-postgresql-orm";
+import {Orm} from "@spica-server/data-postgresql-orm";
 import {Bucket} from "@spica-server/interface-bucket";
 import {
   BucketQueryFacade,
@@ -9,17 +9,17 @@ import {
   BucketReadSpec
 } from "@spica-server/interface-bucket-common";
 import {Page, RESULT_SHAPER, ResultShaper} from "@spica-server/interface-data";
-import {applyVisibility, visibilitySelect} from "../../access/index.js";
+import {applyVisibility} from "../../access/index.js";
 import {ORM} from "../../orm.js";
 import {loadRowSets} from "./children.js";
-import {planRead, ReadPlan, TABLE} from "./plan.js";
+import {planRead, ReadPlan} from "./plan.js";
 import {projectDocument} from "./project.js";
+import {BucketReads} from "./reads.js";
 import {orderBy} from "./sort.js";
 import {countTotal} from "./totals.js";
 
 type Row = Record<string, unknown>;
 
-const READ_TIMEOUT_MS = 30_000;
 const QUERY_CANCELED = "57014";
 
 const logger = new Logger("PostgresBucketQueryFacade");
@@ -52,7 +52,7 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
     if (plan.matchesNothing) {
       return {result: []};
     }
-    const rows = await this.read(plan, spec, session => this.rows(session, plan, spec));
+    const rows = await this.read(reads => this.rows(reads, plan, spec));
     return {result: await this.documents<T>(bucket, plan, spec, context, rows)};
   }
 
@@ -74,26 +74,20 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
     if (plan.matchesNothing) {
       return {result: {meta: {total: 0}, data: []}};
     }
-    const {rows, total} = await this.read(plan, spec, async session => ({
-      rows: await this.rows(session, plan, spec),
-      total: await countTotal(session, plan)
+    const {rows, total} = await this.read(async reads => ({
+      rows: await this.rows(reads, plan, spec),
+      total: await countTotal(reads, plan)
     }));
     const data = await this.documents<T>(bucket, plan, spec, context, rows);
     return {result: {meta: {total}, data}};
   }
 
-  private async read<R>(
-    plan: ReadPlan,
-    spec: BucketReadSpec,
-    work: (session: Session) => Promise<R>
-  ): Promise<R> {
+  private async read<R>(work: (reads: BucketReads) => Promise<R>): Promise<R> {
     try {
       return await this.orm.transaction(async session => {
-        await session.raw("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY");
-        await session.raw("SELECT set_config('statement_timeout', $1, true)", [
-          String(READ_TIMEOUT_MS)
-        ]);
-        return work(session);
+        const reads = new BucketReads(session);
+        await reads.restrictToReading();
+        return work(reads);
       });
     } catch (error) {
       return databaseError(error);
@@ -101,35 +95,17 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
   }
 
   private async rows(
-    session: Session,
+    reads: BucketReads,
     plan: ReadPlan,
     spec: BucketReadSpec
   ): Promise<{rows: Row[]; rowSets: Awaited<ReturnType<typeof loadRowSets>>}> {
-    const {metadata, values, conditions, fieldRules} = plan;
-    const joins = [...new Set([...plan.joins, ...(fieldRules?.joins ?? [])])];
-    const flags = fieldRules ? visibilitySelect(fieldRules).map(flag => `, ${flag}`) : [];
-    const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-
-    const paging: string[] = [];
-    if (Number(spec.limit) > 0) {
-      values.push(Number(spec.limit));
-      paging.push(`LIMIT $${values.length}`);
-    }
-    if (Number(spec.skip) > 0) {
-      values.push(Number(spec.skip));
-      paging.push(`OFFSET $${values.length}`);
-    }
-
-    const {rows} = await session.raw(
-      `SELECT ${quote(TABLE)}.*${flags.join("")} FROM ${quote(metadata.main.name)} AS ${quote(TABLE)} ${joins.join(" ")} ${where} ORDER BY ${orderBy(metadata, spec.sort)} ${paging.join(" ")}`,
-      values
-    );
+    const rows = await reads.page(plan, orderBy(plan.metadata, spec.sort), spec);
 
     const requested = new Set((spec.projectMap ?? []).map(path => path[0]));
-    const hidden = new Set(fieldRules?.hidden ?? []);
+    const hidden = new Set(plan.fieldRules?.hidden ?? []);
     const rowSets = await loadRowSets(
-      session,
-      metadata,
+      reads,
+      plan.metadata,
       rows,
       root => hidden.has(root) || (requested.size > 0 && !requested.has(root))
     );

@@ -16,9 +16,6 @@ function copyPath(source: Document, target: Document, path: string[]) {
   to[path[path.length - 1]] = value;
 }
 
-/**
- * Keeps only the requested paths, and always the key of the document.
- */
 export function projectDocument(
   document: Document,
   projectMap: string[][],

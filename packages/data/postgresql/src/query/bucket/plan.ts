@@ -18,6 +18,10 @@ import {BucketMetadata, describeBucket, resolveRelationTargets} from "../../sche
 
 export const TABLE = "t";
 
+export const tableColumn = (column: string) => `${quote(TABLE)}.${quote(column)}`;
+
+const parenthesized = (sql: string) => `(${sql})`;
+
 export interface ReadPlan {
   bucketId: string;
   metadata: BucketMetadata;
@@ -26,9 +30,6 @@ export interface ReadPlan {
   joins: string[];
   fieldRules?: CompiledFieldRules;
   matchesNothing: boolean;
-  /**
-   * How many leading values the conditions use, so a count can leave the rest out.
-   */
   conditionValues: number;
 }
 
@@ -77,7 +78,8 @@ export async function planRead(
   const joins = new Set<string>();
   let matchesNothing = false;
   const key = metadata.primaryKey;
-  const keyColumn = `${quote(TABLE)}.${quote(key.column)}`;
+  const keyColumn = tableColumn(key.column);
+  const keyEquals = (id: string) => `${keyColumn} = ${bind(values, parseKey(id))}::${key.type}`;
   const parseKey = keyParser(key.type);
   const scope = {
     bucket,
@@ -91,15 +93,13 @@ export async function planRead(
     if (compiled.constant === false) {
       matchesNothing = true;
     } else if (compiled.constant === undefined) {
-      conditions.push(`(${compiled.sql})`);
+      conditions.push(parenthesized(compiled.sql));
       compiled.joins.forEach(join => joins.add(join));
     }
   };
 
   if (spec.documentId !== undefined) {
-    conditions.push(
-      `${keyColumn} = ${bind(values, parseKey(String(spec.documentId)))}::${key.type}`
-    );
+    conditions.push(keyEquals(String(spec.documentId)));
   }
 
   const resourceFilter = spec.resourceFilter;
