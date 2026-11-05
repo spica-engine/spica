@@ -1,6 +1,6 @@
 import {CompiledRule, compileParsed, parseRule} from "./compiler.js";
 import {InvalidRuleError} from "./errors.js";
-import {contextOf, RuleScope} from "./fields.js";
+import {contextOf, FieldResolver, RuleScope} from "./fields.js";
 
 export const FILTER_LIMITS = {length: 4096, depth: 32, terms: 64};
 
@@ -41,11 +41,21 @@ function checkSize(node: unknown) {
   visit(node, 0);
 }
 
-export function compileFilter(filter: string, scope: FilterScope, values: unknown[]): CompiledRule {
+export function compileFilterIn(
+  filter: string,
+  fields: FieldResolver,
+  values: unknown[],
+  now?: () => number
+): CompiledRule {
   if (filter.length > FILTER_LIMITS.length) {
     throw new InvalidRuleError(`The filter is longer than ${FILTER_LIMITS.length} characters.`);
   }
   const node = parseRule(filter);
   checkSize(node);
-  return compileParsed(node, {...contextOf({...scope, auth: undefined}), forbidAuth: true}, values);
+  return compileParsed(node, {auth: undefined, forbidAuth: true, now, fields}, values);
+}
+
+export function compileFilter(filter: string, scope: FilterScope, values: unknown[]): CompiledRule {
+  const {fields, now} = contextOf({...scope, auth: undefined});
+  return compileFilterIn(filter, fields, values, now);
 }

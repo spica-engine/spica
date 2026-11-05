@@ -1,5 +1,5 @@
-import {Inject, Injectable, Logger} from "@nestjs/common";
-import {DatabaseException, decryptDocumentFields} from "@spica-server/bucket-common";
+import {Inject, Injectable} from "@nestjs/common";
+import {decryptDocumentFields} from "@spica-server/bucket-common";
 import {Orm} from "@spica-server/data-postgresql-orm";
 import {Bucket} from "@spica-server/interface-bucket";
 import {
@@ -11,31 +11,16 @@ import {
 import {Page, RESULT_SHAPER, ResultShaper} from "@spica-server/interface-data";
 import {applyVisibility} from "../../access/index.js";
 import {ORM} from "../../orm.js";
+import {readOnly} from "../read.js";
 import {loadRowSets} from "./children.js";
 import {planRead, ReadPlan} from "./plan.js";
 import {projectDocument} from "./project.js";
 import {BucketReads} from "./reads.js";
 import {buildRelationTree, describer, RelationNode, resolveRelations} from "./relations.js";
 import {orderBy} from "./sort.js";
-import {countTotal} from "./totals.js";
+import {countPlanOf, countTotal} from "./totals.js";
 
 type Row = Record<string, unknown>;
-
-const QUERY_CANCELED = "57014";
-
-const logger = new Logger("PostgresBucketQueryFacade");
-
-function databaseError(error: unknown): never {
-  if (error instanceof Error && "status" in error) {
-    throw error;
-  }
-  logger.error((error as Error)?.message);
-  throw new DatabaseException(
-    (error as {code?: string})?.code == QUERY_CANCELED
-      ? "The query took too long."
-      : "The query could not be completed."
-  );
-}
 
 @Injectable()
 export class PostgresBucketQueryFacade implements BucketQueryFacade {
@@ -82,7 +67,7 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
     const tree = await this.relations(bucket, plan, spec, context);
     const {rows, total} = await this.read(async reads => ({
       rows: await this.rows(reads, plan, spec, tree),
-      total: await countTotal(reads, plan)
+      total: await countTotal(reads, countPlanOf(plan))
     }));
     const data = await this.documents<T>(bucket, plan, spec, context, rows);
     return {result: {meta: {total}, data}, locale: plan.locale};
@@ -97,16 +82,8 @@ export class PostgresBucketQueryFacade implements BucketQueryFacade {
     return buildRelationTree(bucket, plan.metadata, spec.relationPaths ?? [], describer(context));
   }
 
-  private async read<R>(work: (reads: BucketReads) => Promise<R>): Promise<R> {
-    try {
-      return await this.orm.transaction(async session => {
-        const reads = new BucketReads(session);
-        await reads.restrictToReading();
-        return work(reads);
-      });
-    } catch (error) {
-      return databaseError(error);
-    }
+  private read<R>(work: (reads: BucketReads) => Promise<R>): Promise<R> {
+    return readOnly(this.orm, session => new BucketReads(session), work);
   }
 
   private async rows(
