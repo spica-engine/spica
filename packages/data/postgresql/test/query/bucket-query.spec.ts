@@ -146,6 +146,17 @@ describe("BucketReads", () => {
     ]);
   });
 
+  it("should read rows by their keys, typed like the key", async () => {
+    const {raw, reads} = session([{id: "a"}]);
+
+    expect(await reads.rowsWithKeys("bucket_x", "id", "uuid", ["a"])).toEqual([{id: "a"}]);
+
+    expect(raw.mock.calls[0]).toEqual([
+      expect.stringContaining(`FROM "bucket_x" WHERE "id" = ANY($1::uuid[])`),
+      [["a"]]
+    ]);
+  });
+
   it("should count with the condition values only", async () => {
     const {raw, reads} = session([{total: "7"}]);
 

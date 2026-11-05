@@ -46,6 +46,10 @@ function selectChildren(table: string, parentType: KeyType) {
   return `SELECT * FROM ${quote(table)} WHERE ${quote(SYSTEM_COLUMNS.parent)} = ANY($1::${parentType}[])`;
 }
 
+function selectByKeys(table: string, keyColumn: string, keyType: KeyType) {
+  return `SELECT * FROM ${quote(table)} WHERE ${quote(keyColumn)} = ANY($1::${keyType}[])`;
+}
+
 function countMatching(plan: ReadPlan) {
   const text = `SELECT COUNT(*) AS total FROM ${quote(plan.metadata.main.name)} AS ${quote(TABLE)} ${plan.joins.join(" ")} ${whereOf(plan.conditions)}`;
   return {text, values: plan.values.slice(0, plan.conditionValues)};
@@ -66,6 +70,15 @@ export class BucketReads {
 
   async childRows(table: string, parentType: KeyType, parents: unknown[]): Promise<Row[]> {
     return (await this.session.raw<Row>(selectChildren(table, parentType), [parents])).rows;
+  }
+
+  async rowsWithKeys(
+    table: string,
+    keyColumn: string,
+    keyType: KeyType,
+    keys: unknown[]
+  ): Promise<Row[]> {
+    return (await this.session.raw<Row>(selectByKeys(table, keyColumn, keyType), [keys])).rows;
   }
 
   async plannerEstimate(table: string): Promise<number> {
