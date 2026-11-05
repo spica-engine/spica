@@ -1,12 +1,11 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DuplicateKeyError, provideRepository} from "@spica-server/data";
-import {contractSuite} from "@spica-server/database-testing";
+import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {DASHBOARD_REPOSITORY, DashboardRepository} from "@spica-server/interface-dashboard";
 import {ID_TYPES, IdType, IdTypes} from "@spica-server/interface-data";
 import {ENV_VAR_REPOSITORY, EnvVarRepository} from "@spica-server/interface-env_var";
 import {SECRET_REPOSITORY, SecretRepository} from "@spica-server/interface-secret";
 import {STATUS_OPTIONS, STATUS_REPOSITORY, StatusRepository} from "@spica-server/interface-status";
-import {clearStorage, waitForMongoIndexes} from "./support.js";
 
 contractSuite("system repositories", engine => {
   let module: TestingModule;

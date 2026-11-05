@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DuplicateKeyError, provideRepository} from "@spica-server/data";
-import {contractSuite} from "@spica-server/database-testing";
+import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {
   ACTIVITY_OPTIONS,
   ACTIVITY_REPOSITORY,
@@ -17,7 +17,6 @@ import {
   REPLICATION_SERVICE_OPTIONS
 } from "@spica-server/interface-replication";
 import {STORAGE_REPOSITORY, StorageRepository} from "@spica-server/interface-storage";
-import {clearStorage, waitForMongoIndexes} from "./support.js";
 
 contractSuite("storage, activity and replication repositories", engine => {
   let module: TestingModule;

@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {InvalidIdError, provideRepository} from "@spica-server/data";
-import {contractSuite} from "@spica-server/database-testing";
+import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {
   COLLECTION_QUERY,
   CollectionQueryFacade,
@@ -9,7 +9,6 @@ import {
   ResourceFilterSpec
 } from "@spica-server/interface-data";
 import {ENV_VAR_REPOSITORY, EnvVarRepository} from "@spica-server/interface-env_var";
-import {clearStorage, waitForMongoIndexes} from "./support.js";
 
 const sorted = (...ids: string[]) => ids.sort();
 

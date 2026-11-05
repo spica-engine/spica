@@ -1,7 +1,8 @@
 import {TestingModule} from "@nestjs/testing";
-import {ContractEngine, DatabaseService} from "@spica-server/database-testing";
+import {DatabaseService} from "@spica-server/database";
 import {PG_POOL} from "@spica-server/interface-data";
 import pg from "pg";
+import {ContractEngine} from "./contract";
 
 export async function clearStorage(
   engine: ContractEngine,
