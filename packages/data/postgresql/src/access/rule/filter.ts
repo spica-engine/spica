@@ -6,26 +6,37 @@ export const FILTER_LIMITS = {length: 4096, depth: 32, terms: 64};
 
 export type FilterScope = Omit<RuleScope, "auth">;
 
+// A term is something the compiler has to evaluate: an operator, a call or a negation. The fields
+// a comparison names (`document.age` is two selects and two identifiers) and its literals are not
+// terms, or one comparison would cost five of them.
+const isTerm = (node: {kind: string; type?: string}) =>
+  node.kind == "call" || node.kind == "unary" || (node.kind == "operator" && node.type != "select");
+
 function checkSize(node: unknown) {
   let terms = 0;
 
   const visit = (value: unknown, depth: number) => {
-    if (depth > FILTER_LIMITS.depth) {
-      throw new InvalidRuleError(`The filter is nested deeper than ${FILTER_LIMITS.depth} levels.`);
-    }
     if (Array.isArray(value)) {
-      value.forEach(item => visit(item, depth + 1));
+      value.forEach(item => visit(item, depth));
       return;
     }
     if (value === null || typeof value != "object") {
       return;
     }
-    if ("kind" in value && ++terms > FILTER_LIMITS.terms) {
-      throw new InvalidRuleError(`The filter has more than ${FILTER_LIMITS.terms} terms.`);
+    if ("kind" in value) {
+      const expression = value as {kind: string; type?: string};
+      if (++depth > FILTER_LIMITS.depth) {
+        throw new InvalidRuleError(
+          `The filter is nested deeper than ${FILTER_LIMITS.depth} levels.`
+        );
+      }
+      if (isTerm(expression) && ++terms > FILTER_LIMITS.terms) {
+        throw new InvalidRuleError(`The filter has more than ${FILTER_LIMITS.terms} terms.`);
+      }
     }
     for (const [key, child] of Object.entries(value)) {
       if (key != "parent") {
-        visit(child, depth + 1);
+        visit(child, depth);
       }
     }
   };

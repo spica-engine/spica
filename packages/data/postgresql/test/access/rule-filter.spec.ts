@@ -68,15 +68,34 @@ describe("compileFilter", () => {
     });
 
     it("should refuse a filter that has too many terms", () => {
-      const filter = Array.from({length: FILTER_LIMITS.terms}, () => "document.age > 1").join(
-        " && "
-      );
-      expect(() => compile(filter)).toThrow(/more than \d+ terms/);
+      const balanced = (count: number): string =>
+        count == 1
+          ? "document.age > 1"
+          : `(${balanced(Math.ceil(count / 2))} || ${balanced(Math.floor(count / 2))})`;
+
+      expect(() => compile(balanced(FILTER_LIMITS.terms))).toThrow(/more than \d+ terms/);
+    });
+
+    it("should refuse a flat chain once it is nested too deep, as the parser nests it", () => {
+      const chain = Array.from({length: 40}, () => "document.age > 1").join(" || ");
+      expect(() => compile(chain)).toThrow(/nested deeper than/);
     });
 
     it("should refuse a filter that is nested too deep", () => {
       const filter = `${"!(".repeat(FILTER_LIMITS.depth)}document.age > 1${")".repeat(FILTER_LIMITS.depth)}`;
       expect(() => compile(filter)).toThrow(RuleCompileError);
+    });
+
+    it("should not count the fields and literals a comparison names as terms", () => {
+      const filter = Array.from({length: 25}, (_, index) => `document.age == ${index}`).join(
+        " || "
+      );
+      expect(() => compile(filter)).not.toThrow();
+    });
+
+    it("should measure nesting in expressions, not in the hops between them", () => {
+      const list = Array.from({length: 40}, (_, index) => `"v${index}"`).join(", ");
+      expect(() => compile(`some(document.tags, [${list}])`)).not.toThrow();
     });
 
     it("should accept a filter inside the limits", () => {
