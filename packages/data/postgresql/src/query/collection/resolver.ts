@@ -28,7 +28,6 @@ const PROPERTY_TYPES: Record<string, string> = {
 
 const SECRET_NAMES = new Set(["password", "lastPasswords", "encrypted", "iv", "authTag", "secret"]);
 
-// Filtering on a secret would let a caller read it one guess at a time.
 const SECRET_PROPERTIES: Record<string, string[]> = {
   apikeys: ["key"],
   refresh_tokens: ["token"],

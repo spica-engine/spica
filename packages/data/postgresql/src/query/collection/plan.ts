@@ -38,8 +38,11 @@ const idColumnOf = (entity: Entity) => entity.byProperty.get(entity.idProperty)!
 
 const reference = (column: ResolvedColumn) => `${quote(ALIAS)}.${quote(column.column)}`;
 
+const MAX_UUID_V7_TIME = 2 ** 48 - 1;
+
 function uuidAt(time: Date) {
-  const hex = time.getTime().toString(16).padStart(12, "0");
+  const milliseconds = Math.min(Math.max(time.getTime(), 0), MAX_UUID_V7_TIME);
+  const hex = milliseconds.toString(16).padStart(12, "0");
   return `${hex.slice(0, 8)}-${hex.slice(8)}-7000-8000-000000000000`;
 }
 
@@ -107,7 +110,7 @@ export function planCollection(entity: Entity, spec: ReadSpec, relations: Active
 
   for (const [field, condition] of Object.entries(spec.where ?? {})) {
     const column = entity.byProperty.get(field);
-    if (!column) {
+    if (!column || isSecret(entity, column)) {
       throw new BadRequestException(`"${field}" is not a field of the collection.`);
     }
     const related = names.get(field);

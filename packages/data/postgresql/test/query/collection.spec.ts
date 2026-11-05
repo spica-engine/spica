@@ -1,13 +1,19 @@
 import {BadRequestException} from "@nestjs/common";
 import {
+  apiKeys,
+  envVars,
   identities,
   InvalidRuleError,
+  refreshTokens,
   secrets,
   storageObjects,
   UnsupportedRuleError,
-  users
+  users,
+  verifications
 } from "@spica-server/data-postgresql";
-import {orderBy, projection} from "../../src/query/collection/plan";
+import {Entity} from "@spica-server/data-postgresql-orm";
+import {ReadSpec} from "@spica-server/interface-data";
+import {orderBy, planCollection, projection} from "../../src/query/collection/plan";
 import {relationsOf} from "../../src/query/collection/relations";
 import {EntityFieldResolver} from "../../src/query/collection/resolver";
 import {expectSql} from "../access/sql";
@@ -101,6 +107,34 @@ describe("projection", () => {
 
   it("should never select nothing", () => {
     expect(columns(projection(storageObjects, none, {nope: 1, _id: 0}))).toEqual([`"t"."id"`]);
+  });
+});
+
+describe("planCollection", () => {
+  const plan = (entity: Entity, spec: ReadSpec) =>
+    planCollection(entity, spec, relationsOf("env_var"));
+
+  it.each([
+    ["password", identities],
+    ["key", apiKeys],
+    ["token", refreshTokens],
+    ["code", verifications]
+  ])("should not let a condition read %s one guess at a time", (property, entity) => {
+    expect(() => plan(entity, {where: {[property]: {matches: "^a"}}})).toThrow(BadRequestException);
+    expect(() => plan(entity, {where: {[property]: {eq: "a"}}})).toThrow(BadRequestException);
+  });
+
+  it("should still accept a condition on a plain field", () => {
+    expect(plan(storageObjects, {where: {name: {eq: "a"}}}).conditions).toHaveLength(1);
+  });
+
+  it.each([
+    ["before 1970", new Date(-1000), "00000000-0000-7000-8000-000000000000"],
+    ["after what 48 bits hold", new Date(8.64e15), "ffffffff-ffff-7000-8000-000000000000"]
+  ])("should keep a time %s inside a valid uuid", (_, time, expected) => {
+    const {values} = plan(envVars, {createdBetween: {from: time, to: time}});
+
+    expect(values).toEqual([expected, expected]);
   });
 });
 

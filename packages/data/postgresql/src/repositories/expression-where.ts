@@ -3,7 +3,6 @@ import {and, Condition, Entity, Where} from "@spica-server/data-postgresql-orm";
 import {compileFilterIn, RuleCompileError} from "../access/index.js";
 import {EntityFieldResolver} from "../query/collection/resolver.js";
 
-// The ORM only accepts a Condition under a property; the id is a placeholder and is never read.
 export function expressionWhere(entity: Entity, filter: string | undefined): Where {
   if (!filter?.trim()) {
     return and();
