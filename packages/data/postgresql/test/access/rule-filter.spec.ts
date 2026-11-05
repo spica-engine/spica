@@ -86,7 +86,7 @@ describe("compileFilter", () => {
       expect(() => compile(filter)).toThrow(RuleCompileError);
     });
 
-    it("should not count the fields and literals a comparison names as terms", () => {
+    it("should count a comparison as one term, not the five nodes of `document.age == 1`", () => {
       const filter = Array.from({length: 25}, (_, index) => `document.age == ${index}`).join(
         " || "
       );

@@ -6,9 +6,6 @@ export const FILTER_LIMITS = {length: 4096, depth: 32, terms: 64};
 
 export type FilterScope = Omit<RuleScope, "auth">;
 
-// A term is something the compiler has to evaluate: an operator, a call or a negation. The fields
-// a comparison names (`document.age` is two selects and two identifiers) and its literals are not
-// terms, or one comparison would cost five of them.
 const isTerm = (node: {kind: string; type?: string}) =>
   node.kind == "call" || node.kind == "unary" || (node.kind == "operator" && node.type != "select");
 
