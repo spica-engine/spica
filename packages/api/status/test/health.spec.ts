@@ -1,20 +1,21 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {DATA_HEALTH, DataHealth} from "@spica-server/interface-data";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {StatusModule} from "@spica-server/status";
 
-describe("Health Check Endpoints", () => {
+contractSuite("Health Check Endpoints", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
-  let db: DatabaseService;
+  let health: DataHealth;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         StatusModule.forRoot({expireAfterSeconds: 60}),
         CoreTestingModule,
         PassportTestingModule.initialize()
@@ -23,7 +24,7 @@ describe("Health Check Endpoints", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
-    db = module.get(DatabaseService);
+    health = module.get(DATA_HEALTH);
     await app.listen(req.socket);
   });
 
@@ -37,7 +38,7 @@ describe("Health Check Endpoints", () => {
 
   it("GET /status/engine should name the engine, and not be read as a module", async () => {
     const res = await req.get("/status/engine");
-    expect([res.statusCode, res.body]).toEqual([200, {engine: "mongodb"}]);
+    expect([res.statusCode, res.body]).toEqual([200, {engine: engine.name}]);
   });
 
   it("GET /status/ready should return 200 when database is connected", async () => {
@@ -47,8 +48,7 @@ describe("Health Check Endpoints", () => {
   });
 
   it("GET /status/ready should return Service Unavailable when database is not ready", async () => {
-    // mock database ping command to throw an error
-    jest.spyOn(db, "command").mockRejectedValueOnce(new Error("Database is not ready"));
+    jest.spyOn(health, "ping").mockRejectedValueOnce(new Error("Database is not ready"));
     const res = await req.get("/status/ready");
     expect([res.statusCode, res.statusText]).toEqual([503, "Service Unavailable"]);
   });
