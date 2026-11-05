@@ -118,7 +118,7 @@ Delivered as these PRs:
 - `assertFilterLanguage` and `FilterLanguageError` (a `NotFoundException`) are in `@spica-server/data`. MongoDB accepts JSON on collections and the storage browse, and JSON or an expression on buckets. PostgreSQL accepts an expression only. Policy, asset and the `/profile` endpoints still read JSON and are not facade reads.
 - The expression grammar was not linear: parse time doubled with each level of nested brackets (16 levels took about 200 ms). `cache: true` in the PEG parser makes it linear. This also protects the MongoDB `?filter=` and saved rules.
 - Added to both engines: the `in` operator (it was in the grammar but neither engine evaluated it), `startsWith(field, text)` and `contains(field, text)`. On PostgreSQL `in` is a chain of equalities, so values convert like in a comparison, and the text functions are `LIKE` with an escaped, bound pattern. On MongoDB the text functions match only text.
-- `compileFilter` (`access/rule/filter.ts`) refuses `auth`, and refuses a filter over 4096 characters, 32 levels deep or with more than 64 non-literal terms. Tests pin an injection corpus and a seeded fuzz run.
+- `compileFilter` (`access/rule/filter.ts`) refuses `auth`, and refuses a filter over 4096 characters, 32 levels deep or with more than 64 terms (operators, calls and negations; the fields and literals a comparison names are not counted). Tests pin an injection corpus and a seeded fuzz run.
 
 ### Bucket reads (`packages/data/postgresql/src/query/bucket/`)
 
