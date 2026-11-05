@@ -6,6 +6,9 @@
       "path": "../../data"
     },
     {
+      "path": "../../interface/data"
+    },
+    {
       "path": ".."
     }
   ]

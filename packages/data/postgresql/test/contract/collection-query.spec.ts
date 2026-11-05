@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {FilterLanguageError, provideRepository} from "@spica-server/data";
-import {contractSuite} from "@spica-server/database-testing";
+import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {
   COLLECTION_QUERY,
   CollectionQueryFacade,
@@ -30,7 +30,6 @@ import {
 } from "@spica-server/interface-passport-identity";
 import {USER_OPTIONS, USER_REPOSITORY, UserRepository} from "@spica-server/interface-passport-user";
 import {SECRET_REPOSITORY, SecretRepository} from "@spica-server/interface-secret";
-import {clearStorage, waitForMongoIndexes} from "./support.js";
 
 contractSuite("collection query", engine => {
   let module: TestingModule;

@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DuplicateKeyError, provideRepository} from "@spica-server/data";
-import {contractSuite} from "@spica-server/database-testing";
+import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {ID_TYPES, IdType, IdTypes} from "@spica-server/interface-data";
 import {
   FUNCTION_OPTIONS,
@@ -25,7 +25,6 @@ import {
   WebhookLogRepository,
   WebhookRepository
 } from "@spica-server/interface-function-webhook";
-import {clearStorage, waitForMongoIndexes} from "./support.js";
 
 contractSuite("function repositories", engine => {
   let module: TestingModule;
