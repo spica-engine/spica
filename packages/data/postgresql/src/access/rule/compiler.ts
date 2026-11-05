@@ -3,7 +3,7 @@ import {bind, InlineValues, literalOf} from "@spica-server/data-postgresql-orm";
 import {ColumnType} from "../../schema/metadata/types.js";
 import {coerceConstant} from "./coerce.js";
 import {InvalidRuleError, UnsupportedRuleError} from "./errors.js";
-import {Joins, locate, resolveField, RuleScope} from "./fields.js";
+import {contextOf, Joins, resolveField, RuleContext, RuleScope} from "./fields.js";
 import {callFunction, FunctionHost} from "./functions.js";
 import {Column, constant, Constant, Expression, isNull, Operand, Scalar} from "./operands.js";
 
@@ -90,7 +90,7 @@ class RuleCompiler {
   private readonly joins = new Joins();
   private aliases = 0;
 
-  constructor(private readonly scope: RuleScope) {}
+  constructor(private readonly context: RuleContext) {}
 
   // Folding can drop a subtree after it has bound its values, so placeholders are numbered only once
   // the final SQL is known.
@@ -120,7 +120,7 @@ class RuleCompiler {
 
   private host(): FunctionHost {
     return {
-      scope: this.scope,
+      context: this.context,
       param: (value, listOf) => this.param(value, listOf),
       alias: () => `_a${++this.aliases}`,
       target: node => this.target(node)
@@ -132,7 +132,7 @@ class RuleCompiler {
     if (root == "auth") {
       return {kind: "auth" as const, value: this.authValue(path)};
     }
-    return locate(root == "document" ? path : [root, ...path], this.scope, this.joins);
+    return this.context.fields.locate(root == "document" ? path : [root, ...path], this.joins);
   }
 
   visit(node: Node): Operand {
@@ -221,9 +221,9 @@ class RuleCompiler {
       if (!rest.length) {
         throw new InvalidRuleError('"document" has to be followed by a property.');
       }
-      return resolveField(rest, this.scope, this.joins);
+      return resolveField(rest, this.context.fields, this.joins);
     }
-    return resolveField([root, ...rest], this.scope, this.joins);
+    return resolveField([root, ...rest], this.context.fields, this.joins);
   }
 
   private authValue(path: string[]): unknown {
@@ -235,7 +235,7 @@ class RuleCompiler {
         source !== null && typeof source == "object" && key in source
           ? (source as Record<string, unknown>)[key]
           : undefined,
-      this.scope.auth
+      this.context.auth
     );
   }
 
@@ -366,7 +366,7 @@ class RuleCompiler {
     const coerced = coerceConstant(
       value,
       {type: typed.type, property: typed.kind == "column" ? typed.property : undefined},
-      this.scope.hashSecret
+      this.context.hashSecret
     );
 
     if (!coerced) {
@@ -471,7 +471,11 @@ export interface CompiledRule {
   constant?: boolean;
 }
 
-export function compileRule(rule: string, scope: RuleScope, values: unknown[]): CompiledRule {
-  const compiler = new RuleCompiler(scope);
+export function compileRuleIn(rule: string, context: RuleContext, values: unknown[]): CompiledRule {
+  const compiler = new RuleCompiler(context);
   return compiler.finish(compiler.visit(parse(rule)), values);
+}
+
+export function compileRule(rule: string, scope: RuleScope, values: unknown[]): CompiledRule {
+  return compileRuleIn(rule, contextOf(scope), values);
 }
