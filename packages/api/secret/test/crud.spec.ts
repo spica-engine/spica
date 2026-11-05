@@ -1,6 +1,11 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {COLLECTION_QUERY, CollectionQueryFacade} from "@spica-server/interface-data";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  ID_TYPES,
+  IdTypes
+} from "@spica-server/interface-data";
+import {contractSuite, waitForMongoIndexes} from "@spica-server/database-testing";
 import {SecretService, ServicesModule} from "@spica-server/secret-services";
 import {isEncryptedData} from "@spica-server/core-encryption";
 import * as CRUD from "../src/crud";
@@ -8,21 +13,21 @@ import {NotFoundException, INestApplication} from "@nestjs/common";
 
 const ENCRYPTION_SECRET = "test-encryption-secret-32chars!!";
 
-describe("Secret CRUD", () => {
+contractSuite("Secret CRUD", engine => {
   let ss: SecretService;
   let queries: CollectionQueryFacade;
+  let newId: () => any;
   let app: INestApplication;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [
-        DatabaseTestingModule.standalone(),
-        ServicesModule.forRoot({encryptionSecret: ENCRYPTION_SECRET})
-      ]
+      imports: [engine.module(), ServicesModule.forRoot({encryptionSecret: ENCRYPTION_SECRET})]
     }).compile();
+    await waitForMongoIndexes(engine, module, {secret: ["key_1"]});
 
     ss = module.get(SecretService);
     queries = module.get(COLLECTION_QUERY);
+    newId = () => module.get<IdTypes>(ID_TYPES).forCollection("secret").generate();
     app = module.createNestApplication();
     await app.init();
   });
@@ -52,14 +57,14 @@ describe("Secret CRUD", () => {
     });
 
     it("should accept a custom _id", async () => {
-      const customId = new ObjectId();
+      const customId = newId();
       const result = await CRUD.insert(ss, {
         _id: customId,
         key: "CUSTOM_ID_KEY",
         value: "val"
       });
 
-      expect(result._id.toHexString()).toBe(customId.toHexString());
+      expect(String(result._id)).toBe(String(customId));
       expect(result.key).toBe("CUSTOM_ID_KEY");
       expect((result as any).value).toBeUndefined();
     });
@@ -99,7 +104,7 @@ describe("Secret CRUD", () => {
     });
 
     it("should throw NotFoundException for non-existent id", async () => {
-      const nonExistentId = new ObjectId();
+      const nonExistentId = newId();
 
       await expect(CRUD.findOne(queries, nonExistentId)).rejects.toThrow(NotFoundException);
     });
@@ -160,7 +165,7 @@ describe("Secret CRUD", () => {
         limit: 0,
         skip: 0,
         paginate: false,
-        filter: {key: "KEY_B"}
+        filter: engine.name == "postgresql" ? "document.key == 'KEY_B'" : {key: "KEY_B"}
       })) as any[];
 
       expect(results.length).toBe(1);
@@ -194,7 +199,7 @@ describe("Secret CRUD", () => {
     });
 
     it("should throw NotFoundException for non-existent id", async () => {
-      const nonExistentId = new ObjectId();
+      const nonExistentId = newId();
 
       await expect(CRUD.replace(ss, nonExistentId, {key: "KEY", value: "val"})).rejects.toThrow(
         NotFoundException
@@ -229,7 +234,7 @@ describe("Secret CRUD", () => {
     });
 
     it("should throw NotFoundException for non-existent id", async () => {
-      const nonExistentId = new ObjectId();
+      const nonExistentId = newId();
 
       await expect(CRUD.remove(ss, nonExistentId)).rejects.toThrow(NotFoundException);
     });

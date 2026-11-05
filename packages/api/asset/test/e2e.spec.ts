@@ -1,14 +1,15 @@
 import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {AssetModule, exporters, operators, registrar, validators} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import os from "os";
 
-describe("E2E Tests", () => {
+contractSuite("E2E Tests", engine => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
   }
@@ -33,13 +34,18 @@ describe("E2E Tests", () => {
     return req.get("asset").then(r => r.body);
   }
 
+  const filterOn = (field: string, value: string) =>
+    engine.name == "postgresql"
+      ? `document.${field} == '${value}'`
+      : JSON.stringify({[field]: value});
+
   let req: Request;
   let app: INestApplication;
 
   const moduleMeta: ModuleMetadata = {
     imports: [
       CoreTestingModule,
-      DatabaseTestingModule.replicaSet(),
+      engine.module(),
       PassportTestingModule.initialize({overriddenStrategyType: "identity"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
       AssetModule.forRoot({persistentPath: os.tmpdir()})
@@ -63,10 +69,7 @@ describe("E2E Tests", () => {
     req.setDefaultHeaders({Authorization: `IDENTITY ${token}`});
   });
 
-  afterEach(async () => {
-    await app.get(DatabaseService).dropDatabase();
-    await app.close();
-  });
+  afterEach(() => app.close());
 
   describe("Core", () => {
     describe("get", () => {
@@ -112,7 +115,7 @@ describe("E2E Tests", () => {
 
       it("should get asset1", async () => {
         const assets = await req
-          .get("/asset", {filter: JSON.stringify({name: "asset1"})})
+          .get("/asset", {filter: filterOn("name", "asset1")})
           .then(r => r.body);
         expect(assets).toEqual([
           {
@@ -130,7 +133,7 @@ describe("E2E Tests", () => {
 
       it("should get downlaoded assets", async () => {
         const assets = await req
-          .get("asset", {filter: JSON.stringify({status: "downloaded"})})
+          .get("asset", {filter: filterOn("status", "downloaded")})
           .then(r => r.body);
         expect(assets).toEqual([
           {
@@ -162,7 +165,7 @@ describe("E2E Tests", () => {
 
       it("should get installed assets", async () => {
         const assets = await req
-          .get("asset", {filter: JSON.stringify({status: "installed"})})
+          .get("asset", {filter: filterOn("status", "installed")})
           .then(r => r.body);
         expect(assets).toEqual([
           {
@@ -354,7 +357,8 @@ describe("E2E Tests", () => {
 
       describe("errors", () => {
         it("should throw error if asset does not exist", async () => {
-          const res = await req.post(`asset/000000000000000000000000`, {configs: []});
+          const missing = app.get<IdTypes>(ID_TYPES).forCollection("asset").generate();
+          const res = await req.post(`asset/${missing}`, {configs: []});
           expect(res.statusCode).toEqual(404);
           expect(res.body.message).toEqual("Not Found");
         });

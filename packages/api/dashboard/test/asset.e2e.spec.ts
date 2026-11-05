@@ -2,14 +2,15 @@ import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {DashboardModule} from "@spica-server/dashboard";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {AssetModule} from "@spica-server/asset";
+import {AssetModule, exporters, operators, validators} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import os from "os";
 
-describe("Dashboard", () => {
+contractSuite("Dashboard", engine => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
   }
@@ -33,7 +34,7 @@ describe("Dashboard", () => {
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
         DashboardModule.forRoot({realtime: false}),
@@ -43,11 +44,17 @@ describe("Dashboard", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
+    dashboardId = String(module.get<IdTypes>(ID_TYPES).forCollection("dashboard").generate());
 
     await app.listen(req.socket);
   });
 
-  afterEach(() => app.close());
+  afterEach(async () => {
+    await app.close();
+    validators.clear();
+    operators.clear();
+    exporters.clear();
+  });
 
   function getDashboards() {
     return req.get("dashboard").then(r => r.body);
@@ -59,7 +66,7 @@ describe("Dashboard", () => {
 
   let dashboardv1Resource;
   let dashboardv1;
-  const dashboardId = new ObjectId().toString();
+  let dashboardId: string;
 
   let dashboardv2Resource;
   let dashboardv2;

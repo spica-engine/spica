@@ -1,28 +1,38 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite, waitForMongoIndexes} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID} from "@spica-server/core-schema";
 import {EnvVarModule} from "../src";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 
-describe("Environment Variable", () => {
+contractSuite("Environment Variable", engine => {
   let req: Request;
   let app: INestApplication;
+  let missingId: () => string;
+
+  const postgres = engine.name == "postgresql";
+  const filterOn = (field: string, value: string) =>
+    postgres ? `document.${field} == '${value}'` : JSON.stringify({[field]: value});
+  const filterOtherLanguage = (field: string, value: string) =>
+    postgres ? JSON.stringify({[field]: value}) : `document.${field} == '${value}'`;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.standalone(),
+        engine.module(),
         CoreTestingModule,
         EnvVarModule.forRoot({realtime: false}),
         SchemaModule.forRoot({formats: [OBJECT_ID]}),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"})
       ]
     }).compile();
+    await waitForMongoIndexes(engine, module, {env_var: ["key_1"]});
 
     req = module.get(Request);
+    missingId = () => String(module.get<IdTypes>(ID_TYPES).forCollection("env_var").generate());
 
     app = module.createNestApplication();
 
@@ -65,11 +75,9 @@ describe("Environment Variable", () => {
       const envVar2 = {key: "ENV_KEY_2", value: "val_2"};
       const envVar3 = {key: "ENV_KEY_3", value: "val_3"};
 
-      await Promise.all([
-        req.post("/env-var", envVar1),
-        req.post("/env-var", envVar2),
-        req.post("/env-var", envVar3)
-      ]);
+      for (const envVar of [envVar1, envVar2, envVar3]) {
+        await req.post("/env-var", envVar);
+      }
 
       const res = await req.get(`/env-var`, {paginate: true, sort: JSON.stringify({_id: -1})});
       const bodyWithoutIds = {
@@ -93,18 +101,18 @@ describe("Environment Variable", () => {
         req.post("/env-var", envVar3)
       ]);
 
-      const res = await req.get(`/env-var`, {filter: JSON.stringify({key: "ENV_KEY_3"})});
+      const res = await req.get(`/env-var`, {filter: filterOn("key", "ENV_KEY_3")});
       const bodyWithoutIds = res.body.map(({_id, updated_at, ...rest}) => rest);
       expect(bodyWithoutIds.length).toBe(1);
       expect(bodyWithoutIds).toEqual([envVar3]);
 
-      const res2 = await req.get(`/env-var`, {filter: JSON.stringify({value: "val_2"})});
+      const res2 = await req.get(`/env-var`, {filter: filterOn("value", "val_2")});
       const bodyWithoutIds2 = res2.body.map(({_id, updated_at, ...rest}) => rest);
       expect(bodyWithoutIds2).toEqual([envVar2]);
     });
 
-    it("should answer 404 for a filter that is not json", async () => {
-      const res = await req.get(`/env-var`, {filter: "document.key == 'ENV_KEY_3'"});
+    it("should answer 404 for a filter in the other engine's language", async () => {
+      const res = await req.get(`/env-var`, {filter: filterOtherLanguage("key", "ENV_KEY_3")});
       expect(res.statusCode).toEqual(404);
     });
 
@@ -211,7 +219,7 @@ describe("Environment Variable", () => {
 
     it("should not update and return 404", async () => {
       const res = await req
-        .post(`/env-var/${ObjectId.createFromTime(Date.now())}`, {
+        .post(`/env-var/${missingId()}`, {
           key: "ENV_KEY",
           value: "123"
         })
