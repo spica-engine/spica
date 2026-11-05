@@ -1,5 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {assertFilterLanguage} from "@spica-server/data";
 import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {Id} from "@spica-server/interface-data";
 import {
@@ -50,6 +51,8 @@ export class MongoStorageRepository
   }
 
   async browse({resourceFilter, path, filter, sort, skip = 0, limit}: StorageBrowseSpec) {
+    assertFilterLanguage(filter, ["json"], "MongoDB");
+
     const convertedResourceFilter = StoragePipelineBuilder.createResourceFilter(
       resourceFilter as {
         include?: string[];
@@ -63,7 +66,7 @@ export class MongoStorageRepository
       await new PipelineBuilder()
         .filterResources(convertedResourceFilter)
         .attachToPipeline(true, {$match: pathFilter})
-        .filterByUserRequest(filter)
+        .filterByUserRequest(filter as object)
     ).result();
 
     const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();

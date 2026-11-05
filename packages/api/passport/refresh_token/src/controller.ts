@@ -13,7 +13,7 @@ import {
   Body,
   BadRequestException
 } from "@nestjs/common";
-import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
+import {BOOLEAN, DEFAULT, FILTER, JSONP, NUMBER} from "@spica-server/core";
 import {ID} from "@spica-server/data";
 import {
   COLLECTION_QUERY,
@@ -51,7 +51,7 @@ export class RefreshTokenController {
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
-    @Query("filter", JSONP) filter: object,
+    @Query("filter", FILTER) filter: object | string,
     @ResourceFilter({collection: REFRESH_TOKEN_COLLECTION}) resourceFilter: ResourceFilterSpec
   ) {
     const hashSecret = this.options.refreshTokenHashSecret;

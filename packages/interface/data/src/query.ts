@@ -21,7 +21,11 @@ export interface ResourceFilterSpec {
 export interface ReadSpec {
   id?: Id;
   resourceFilter?: ResourceFilterSpec;
-  filter?: object;
+  /**
+   * An object is a MongoDB JSON filter and a string is a Spica expression. Each engine accepts
+   * only its own language and answers the other with FilterLanguageError.
+   */
+  filter?: object | string;
   /**
    * Run on the caller filter before the engine's own id and date replacers.
    */

@@ -1,4 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
+import {assertFilterLanguage} from "@spica-server/data";
 import {Orm, replacePrefix, startsWith, sum} from "@spica-server/data-postgresql-orm";
 import {Id} from "@spica-server/interface-data";
 import {
@@ -49,7 +50,8 @@ export class PostgresStorageRepository implements StorageRepository {
   }
 
   browse({resourceFilter, path, filter, sort, skip = 0, limit}: StorageBrowseSpec) {
-    if (filter && Object.keys(filter).length) {
+    assertFilterLanguage(filter, ["expression"], "PostgreSQL");
+    if (typeof filter == "string") {
       throw new Error("Filtering storage objects is not supported on PostgreSQL yet.");
     }
 

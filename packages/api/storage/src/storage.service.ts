@@ -85,7 +85,7 @@ export class StorageService {
   async browse(
     resourceFilter: {include?: string[]; exclude?: string[]} | object,
     path: string,
-    filter: object,
+    filter: object | string,
     limit: number,
     skip: number = 0,
     sort?: any
@@ -97,7 +97,7 @@ export class StorageService {
 
   async getAll<P extends boolean>(
     resourceFilter: ResourceFilterSpec,
-    filter: object,
+    filter: object | string,
     paginate: P,
     limit: number,
     skip: number,
@@ -105,7 +105,7 @@ export class StorageService {
   ): Promise<P extends true ? PaginatedStorageResponse : StorageResponse[]>;
   async getAll<P extends boolean>(
     resourceFilter: ResourceFilterSpec,
-    filter: object,
+    filter: object | string,
     paginate: P,
     limit: number,
     skip: number = 0,

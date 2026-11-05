@@ -1,4 +1,4 @@
-import {PassthroughResultShaper} from "@spica-server/data";
+import {FilterLanguageError, PassthroughResultShaper} from "@spica-server/data";
 import {MongoCollectionQueryFacade, MongoIdTypes} from "@spica-server/data-mongodb";
 import {executePaginationPlan, PipelineBuilder} from "@spica-server/database-pipeline";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
@@ -473,6 +473,18 @@ describe("MongoCollectionQueryFacade", () => {
       await db
         .collection("webhook")
         .insertMany([{title: "a"}, {title: "b"}, {title: "c"}].map(doc => ({...doc})));
+    });
+
+    it("should answer 404 for a filter that is an expression", async () => {
+      const reads = [
+        facade.find("webhook", {filter: "document.title == 'b'"}),
+        facade.paginate("webhook", {filter: "document.title == 'b'"}, "exact"),
+        facade.findOne("webhook", {filter: "document.title == 'b'"})
+      ];
+
+      for (const read of reads) {
+        await expect(read).rejects.toBeInstanceOf(FilterLanguageError);
+      }
     });
 
     it("should return the same exact page as the webhook $facet pipeline", async () => {

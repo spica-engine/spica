@@ -166,6 +166,14 @@ describe("Storage Acceptance", () => {
       ]);
     });
 
+    it("should answer 404 for a filter that is not json", async () => {
+      const res = await req.get("/storage", {filter: "document.name == 'third.txt'"});
+      expect(res.statusCode).toEqual(404);
+
+      const browse = await req.get("/storage/browse", {filter: "document.name == 'third.txt'"});
+      expect(browse.statusCode).toEqual(404);
+    });
+
     it("should work with _id filter", async () => {
       const {body} = await req.get("/storage", {
         filter: JSON.stringify({name: "third.txt"})

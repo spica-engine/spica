@@ -1,3 +1,5 @@
+import {NotFoundException} from "@nestjs/common";
+
 export class InvalidIdError extends Error {
   readonly name = "InvalidIdError";
 
@@ -20,3 +22,5 @@ export class DuplicateKeyError extends Error {
     super(message);
   }
 }
+
+export class FilterLanguageError extends NotFoundException {}
