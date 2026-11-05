@@ -356,7 +356,7 @@ contractSuite("bucket query", engine => {
     });
 
     it("should replace a one-to-one relation with the document it points at", async () => {
-      const [first, second, third] = await read([["author", "_id"]]);
+      const [first, second, third] = await read([["author"]]);
 
       expect(first.author).toEqual({name: "Ann", company: "<acme>"});
       expect(second.author).toEqual({name: "Bob", company: "<globex>"});
@@ -364,7 +364,7 @@ contractSuite("bucket query", engine => {
     });
 
     it("should resolve every target of a one-to-many relation", async () => {
-      const [first, second, third] = await read([["editors", "_id"]]);
+      const [first, second, third] = await read([["editors"]]);
 
       expect(first.editors.map((editor: any) => editor.name).sort()).toEqual(["Ann", "Bob"]);
       expect(second.editors).toEqual([]);
@@ -372,24 +372,21 @@ contractSuite("bucket query", engine => {
     });
 
     it("should resolve a relation nested in an object", async () => {
-      const [first, second] = await read([["meta", "reviewer", "_id"]]);
+      const [first, second] = await read([["meta", "reviewer"]]);
 
       expect(first.meta.reviewer).toEqual({name: "Cem"});
       expect(second.meta.reviewer ?? null).toBeNull();
     });
 
     it("should resolve relations of relations only when asked to", async () => {
-      const [first, second] = await read([["author", "company", "_id"]]);
+      const [first, second] = await read([["author", "company"]]);
 
       expect(first.author).toEqual({name: "Ann", company: {name: "Acme"}});
       expect(second.author).toEqual({name: "Bob", company: {name: "Globex"}});
     });
 
     it("should resolve several relations at once", async () => {
-      const [first] = await read([
-        ["author", "company", "_id"],
-        ["editors", "_id"]
-      ]);
+      const [first] = await read([["author", "company"], ["editors"]]);
 
       expect(first.author.company).toEqual({name: "Acme"});
       expect(first.editors.map((editor: any) => editor.company).sort()).toEqual([
@@ -399,7 +396,7 @@ contractSuite("bucket query", engine => {
     });
 
     it("should filter by a field of a related document", async () => {
-      const found = await read([["author", "_id"]], {filter: `document.author.name == "Bob"`});
+      const found = await read([["author"]], {filter: `document.author.name == "Bob"`});
       expect(found.map(post => post.title)).toEqual(["second"]);
       expect(found[0].author).toEqual({name: "Bob", company: "<globex>"});
     });
@@ -407,7 +404,7 @@ contractSuite("bucket query", engine => {
     it("should resolve the relations of a page with a shared target once for every document", async () => {
       const page = await store.paginate(posts, {
         sort: {title: 1},
-        relationPaths: [["author", "_id"]],
+        relationPaths: [["author"]],
         limit: 2
       });
 
@@ -429,12 +426,12 @@ contractSuite("bucket query", engine => {
       await store.insert(guarded, {title: "g", author: ann});
 
       const [asGuest] = await store.find(guarded, {
-        relationPaths: [["author", "_id"]],
+        relationPaths: [["author"]],
         applyAcl: true,
         user: {role: "guest"}
       });
       const [asAdmin] = await store.find(guarded, {
-        relationPaths: [["author", "_id"]],
+        relationPaths: [["author"]],
         applyAcl: true,
         user: {role: "admin"}
       });
@@ -444,11 +441,7 @@ contractSuite("bucket query", engine => {
     });
 
     it("should ignore a path that is not a relation", async () => {
-      const [first] = await read([
-        ["title", "_id"],
-        ["nope", "_id"],
-        ["meta", "_id"]
-      ]);
+      const [first] = await read([["title"], ["nope"], ["meta"]]);
       expect(first.title).toBe("first");
     });
   });

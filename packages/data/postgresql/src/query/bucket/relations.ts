@@ -109,8 +109,6 @@ async function addPath(node: RelationNode, segments: string[], describe: Describ
   }
 }
 
-const CLIENT_KEY_SEGMENT = "_id";
-
 export async function buildRelationTree(
   bucket: Bucket,
   metadata: BucketMetadata,
@@ -119,8 +117,7 @@ export async function buildRelationTree(
 ): Promise<RelationNode> {
   const root: RelationNode = {bucket, metadata, edges: new Map()};
   for (const path of relationPaths) {
-    const segments = path.at(-1) == CLIENT_KEY_SEGMENT ? path.slice(0, -1) : path;
-    await addPath(root, segments, describe, 0);
+    await addPath(root, path, describe, 0);
   }
   return root;
 }

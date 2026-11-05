@@ -25,23 +25,26 @@ const describe_ = async (id: string) => described[id];
 const tree = (paths: string[][]) => buildRelationTree(ruleBucket, ruleMetadata, paths, describe_);
 
 describe("buildRelationTree", () => {
-  it("should read the key a client ends a path with as the relation itself", async () => {
+  it("should ignore a segment after a relation that names no property", async () => {
     const root = await tree([["author", "_id"]]);
+
+    expect([...root.edges.keys()]).toEqual(["author"]);
+    expect(root.edges.get("author").target.edges.size).toBe(0);
+  });
+
+  it("should read a plain path as the relation it names", async () => {
+    const root = await tree([["author"]]);
 
     expect([...root.edges.keys()]).toEqual(["author"]);
     expect(root.edges.get("author")).toMatchObject({path: ["author"], many: false});
   });
 
   it("should tell one-to-many relations", async () => {
-    expect((await tree([["editors", "_id"]])).edges.get("editors").many).toBe(true);
+    expect((await tree([["editors"]])).edges.get("editors").many).toBe(true);
   });
 
   it("should share the edge of paths that start the same way", async () => {
-    const root = await tree([
-      ["author", "boss", "_id"],
-      ["author", "_id"],
-      ["editors", "_id"]
-    ]);
+    const root = await tree([["author", "boss"], ["author"], ["editors"]]);
 
     expect([...root.edges.keys()]).toEqual(["author", "editors"]);
     expect([...root.edges.get("author").target.edges.keys()]).toEqual(["boss"]);
@@ -49,7 +52,7 @@ describe("buildRelationTree", () => {
   });
 
   it("should ignore paths that do not lead to a relation", async () => {
-    const root = await tree([["title", "_id"], ["nope", "_id"], ["address", "_id"], []]);
+    const root = await tree([["title"], ["nope"], ["address"], []]);
     expect(root.edges.size).toBe(0);
   });
 
@@ -57,7 +60,7 @@ describe("buildRelationTree", () => {
     const root = await buildRelationTree(
       ruleBucket,
       ruleMetadata,
-      [["author", "_id"]],
+      [["author"]],
       async () => undefined
     );
     expect(root.edges.size).toBe(0);
@@ -76,7 +79,7 @@ describe("buildRelationTree", () => {
       table: ruleMetadata.main.name,
       primaryKey: ruleMetadata.primaryKey
     }));
-    const hops = (count: number) => [...Array(count).fill("next"), "_id"];
+    const hops = (count: number) => Array(count).fill("next");
     const chain = (count: number) =>
       buildRelationTree(selfBucket, selfMetadata, [hops(count)], async () => ({
         bucket: selfBucket,
