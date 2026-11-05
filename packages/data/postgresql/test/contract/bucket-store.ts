@@ -127,7 +127,7 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
             await module.get(BUCKET_QUERY).find(
               bucket,
               {
-                relationPaths: resolve.map(path => [path, "_id"]),
+                relationPaths: resolve.map(path => [path]),
                 localize: Boolean(locale),
                 language: locale?.best
               },
