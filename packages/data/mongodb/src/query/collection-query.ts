@@ -20,6 +20,7 @@ import {
 } from "@spica-server/interface-data";
 import {PaginationPlan} from "@spica-server/interface-database";
 import {aggregatable, AGGREGATE_OPTIONS} from "../aggregate.js";
+import {replaceHashedFields} from "./hashed-fields.js";
 import {Relation, RelationPlacement, relationsOf} from "./profiles.js";
 
 class ReadPipelineBuilder extends PipelineBuilder {
@@ -120,6 +121,7 @@ export class MongoCollectionQueryFacade implements CollectionQueryFacade {
       replaceFilterObjectIds(filter, this.idTypes.forCollection(collection));
     const relations = relationsOf(collection, spec.relations);
     const builder = await new ReadPipelineBuilder([
+      ...(spec.hashed ? [async (filter: object) => replaceHashedFields(filter, spec.hashed)] : []),
       ...(spec.filterReplacers || []),
       replaceIds,
       replaceFilterDates

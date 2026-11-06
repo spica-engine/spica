@@ -30,7 +30,6 @@ import {
   RefreshTokenRepository
 } from "@spica-server/interface-passport-refresh_token";
 import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options.js";
-import {replaceRefreshTokenFilter} from "./filter.js";
 
 const REFRESH_TOKEN_COLLECTION = "refresh_token";
 
@@ -58,9 +57,7 @@ export class RefreshTokenController {
     const spec: ReadSpec = {
       resourceFilter,
       filter,
-      filterReplacers: hashSecret
-        ? [async filter => replaceRefreshTokenFilter(filter, hashSecret)]
-        : [],
+      hashed: hashSecret ? {secret: hashSecret, fields: {token: "token"}} : undefined,
       sort,
       skip,
       limit,

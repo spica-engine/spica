@@ -4,6 +4,11 @@ export type ResourceRef = {kind: "collection"; name: string} | {kind: "bucket"; 
 
 export type FilterReplacer = (filter: object) => Promise<object>;
 
+export interface HashedFields {
+  secret: string;
+  fields: {[field: string]: string};
+}
+
 export type WhereCondition =
   | {eq: unknown}
   | {in: unknown[]}
@@ -31,6 +36,11 @@ export interface ReadSpec {
    * Run on the caller filter before the engine's own id and date replacers.
    */
   filterReplacers?: FilterReplacer[];
+  /**
+   * Fields whose filter values are compared as hashes. Each field maps to the stored path that
+   * holds the hash, so a filter on "email" compares "email.hash" with the hash of the given value.
+   */
+  hashed?: HashedFields;
   /**
    * Conditions the caller builds itself, unlike filter which comes from client input.
    */

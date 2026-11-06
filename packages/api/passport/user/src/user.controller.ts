@@ -56,7 +56,6 @@ import {VerificationService} from "./verification.service.js";
 import {ProviderVerificationService} from "./services/provider.verification.service.js";
 import {PasswordlessLoginService} from "./services/passwordless-login.service.js";
 import {PasswordResetService} from "./services/password-reset.service.js";
-import {replaceProviderFilter} from "./filter.js";
 import {RateLimitGuard} from "./rate-limit.guard.js";
 
 const USER_COLLECTION = "user";
@@ -125,9 +124,6 @@ export class UserController {
     });
   }
 
-  private providerFilterReplacer = async (filter: object) =>
-    replaceProviderFilter(filter, value => this.userService.hashProviderValue(value));
-
   private hideSecretsExpression(): {[key: string]: 0} {
     const expression: any = {password: 0, lastPasswords: 0};
 
@@ -166,7 +162,7 @@ export class UserController {
     const spec: ReadSpec = {
       resourceFilter,
       filter,
-      filterReplacers: [this.providerFilterReplacer],
+      hashed: this.userService.providerHashedFields(),
       sort,
       skip,
       limit,
