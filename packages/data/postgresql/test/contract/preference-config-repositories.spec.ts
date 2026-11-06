@@ -102,6 +102,17 @@ contractSuite("preference and config repositories", engine => {
       });
     });
 
+    it("clears an option set to undefined and keeps the others", async () => {
+      await configs.setOption("user", "verificationProcessMaxAttempt", 3);
+      await configs.setOption("user", "providerVerificationConfig", [{provider: "email"}]);
+
+      await configs.setOption("user", "providerVerificationConfig", undefined);
+
+      const options: any = (await configs.findByModule("user")).options;
+      expect(options.verificationProcessMaxAttempt).toBe(3);
+      expect(options.providerVerificationConfig ?? null).toBeNull();
+    });
+
     it("sets a nested option by its dotted name", async () => {
       await configs.setOptions("user", {password: {minLength: 8, minNumber: 1}});
 

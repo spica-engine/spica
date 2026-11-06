@@ -25,13 +25,14 @@ export class PostgresConfigRepository implements ConfigRepository {
   }
 
   async setOption(module: string, name: string, value: unknown) {
+    const stored = value === undefined ? null : value;
     const initial = name
       .split(".")
-      .reduceRight<unknown>((nested, key) => ({[key]: nested}), value) as object;
+      .reduceRight<unknown>((nested, key) => ({[key]: nested}), stored) as object;
     await this.orm.upsert(
       configs,
       {module, options: initial},
-      {conflict: ["module"], set: {options: jsonbSet({[name]: value})}}
+      {conflict: ["module"], set: {options: jsonbSet({[name]: stored})}}
     );
   }
 }
