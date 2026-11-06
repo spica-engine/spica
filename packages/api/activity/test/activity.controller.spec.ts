@@ -186,7 +186,8 @@ contractSuite("Activity Acceptance", engine => {
 
   it("should filter activities by resources", async () => {
     const {body: activities} = await request.get("/activity", {
-      resource: JSON.stringify({$all: ["test_module"], $in: ["test_id1", "test_id3"]})
+      resource: ["test_module"],
+      documentId: ["test_id1", "test_id3"]
     });
 
     activities.forEach(activity => {
@@ -212,12 +213,32 @@ contractSuite("Activity Acceptance", engine => {
     ]);
   });
 
-  it("should refuse a resource filter other than $all and $in", async () => {
-    const {statusCode} = await request.get("/activity", {
-      resource: JSON.stringify({$regex: "test"})
+  it("should filter activities by the values their resource holds", async () => {
+    const {body: activities} = await request.get("/activity", {
+      resource: ["test_module", "test_id2"]
     });
 
-    expect(statusCode).toBe(400);
+    expect(activities.map(activity => activity.resource)).toEqual([["test_module", "test_id2"]]);
+  });
+
+  it("should filter activities by any of the given document ids", async () => {
+    const {body: activities} = await request.get("/activity", {
+      documentId: ["test_id2", "test_id3"]
+    });
+
+    expect(activities.map(activity => activity.resource)).toEqual([
+      ["test_module", "test_id3"],
+      ["test_module", "test_id2"]
+    ]);
+  });
+
+  it("should answer nothing when no activity holds the given resource", async () => {
+    const {body: activities} = await request.get("/activity", {
+      resource: ["test_module"],
+      documentId: ["missing"]
+    });
+
+    expect(activities).toEqual([]);
   });
 
   it("should skip and limit", async () => {
