@@ -15,7 +15,7 @@ Lets function code talk to PostgreSQL directly. On MongoDB instances, `@spica-de
 ## Rules that apply
 
 - The new devkit has its own API. It doesn't imitate `@spica-devkit/database`.
-- `@spica-devkit/bucket` needs nothing special. On PostgreSQL, callers write the filter in SQL and the API handles it.
+- `@spica-devkit/bucket` needs nothing special. On PostgreSQL, callers write the filter in the expression language (`document.age > 18 && contains(document.name, "an")`) and the API handles it.
 - The experimental devkit database cache loads the new devkit on PostgreSQL instances.
 
 ## Depends on

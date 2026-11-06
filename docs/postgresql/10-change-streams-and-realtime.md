@@ -22,7 +22,7 @@ Makes the change feed work on PostgreSQL. Every committed change reaches every l
 ## Rules that apply
 
 - No resume or catch-up for now. Spica doesn't use change stream resume today, so this matches current behaviour.
-- Realtime filters follow the engine, like REST filters. On PostgreSQL, subscribers send SQL filters. The MongoDB in-memory matcher stays for MongoDB.
+- Realtime filters follow the engine, like REST filters. On PostgreSQL, subscribers send expression filters. The MongoDB in-memory matcher stays for MongoDB.
 - Feed events carry documents in today's shape.
 
 ## Depends on
@@ -31,7 +31,7 @@ Makes the change feed work on PostgreSQL. Every committed change reaches every l
 - **Part 5 (merged):** bucket tables and their DDL plan, where triggers attach.
 - **Part 6 (merged):** the result shaper.
 - **Part 7 (merged):** SQL rendering for realtime ACL.
-- **Part 8 (merged):** the SQL filter parser and the query path for initial results.
+- **Part 8 (merged):** the caller filter compiler (`compileFilter`, `compileFilterIn`, `compileFilterNode`) and the query path for initial results.
 
 ## Provides
 
@@ -62,7 +62,7 @@ Makes the change feed work on PostgreSQL. Every committed change reaches every l
 | Row triggers          | On bucket tables, added by the schema manager's DDL plan. On system tables that have consumers, created together with the table at API startup, and added by a migration on installs that already have the table. They notify on commit. |
 | NOTIFY payload        | Only the table, operation and primary key, because notifications have a size limit. The key is the table's own: `id` or the bucket's chosen key. |
 | Listener              | A dedicated connection with LISTEN, outside the request pool. It loads the changed row by key and publishes the shaped document on the feed. A deleted row sends its key. |
-| Realtime SQL filter   | The first result comes from an SQL query through the query path. Each change is checked against the same filter, and ACL, in PostgreSQL before it goes to the socket. |
+| Realtime filter       | The first result comes from a query through the query path. Each change is checked against the same filter, and ACL, in PostgreSQL before it goes to the socket. |
 | Trigger options       | Function database trigger options map their bucket or collection to tables, with the same operation types.  |
 
 ### Flow
@@ -90,7 +90,7 @@ Makes the change feed work on PostgreSQL. Every committed change reaches every l
 2. Triggers on system tables that have consumers. Caches and replication work on PostgreSQL.
 3. Function database triggers on PostgreSQL.
 4. Webhooks, the asset watcher and the asset service on PostgreSQL.
-5. Realtime with SQL filters, sort, limit and ACL.
+5. Realtime with expression filters, sort, limit and ACL.
 
 ## Open questions
 

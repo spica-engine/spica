@@ -19,9 +19,11 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 | [6 Result shape](./06-result-shape.md)                                     | 0, 5         |
 | [7 Access control](./07-access-control.md)                                 | 0, 5         |
 | [8 Queries](./08-queries.md)                                               | 0, 5, 6, 7   |
-| [9 Writes](./09-writes.md)                                                 | 0, 5, 6, 7, 8 |
+| [8a Controller writes](./08a-controller-writes.md)                         | 3, 8         |
+| [9 Writes](./09-writes.md)                                                 | 0, 5, 6, 7, 8, 8a |
 | [10 Change streams and realtime](./10-change-streams-and-realtime.md)      | 0, 5, 6, 7, 8 |
 | [11 Devkit](./11-devkit.md)                                                | 1, 5         |
+| [12 Admin panel](./12-panel.md)                                            | 8, 8a, 10    |
 
 ## Rules for every PR
 
@@ -44,6 +46,7 @@ Every part is delivered as a series of small PRs. A part starts only after the p
   - MongoDB: ObjectIds in `_id`, as today.
   - PostgreSQL system records: a UUID v7 `id` key that the caller may provide and PostgreSQL generates otherwise.
   - PostgreSQL bucket data: whatever primary key the bucket's owner defines.
+- **The backend defines the contract; clients follow it.** Rules, schemas, contracts and implementations belong to the backend. Every client adapts to them, the admin panel, the devkit, and another server alike. What a client sends or expects today never decides the contract, and the backend does not bend to keep a client working. The reverse is allowed only when the change is harmless for every client and there is no other way out, and it is written in the part document before it is built. A part that needs a client to change lists that change in the client's own part.
 - **Controllers stay engine-agnostic.** Only adapters know how each engine expresses a request.
 - **No query conversion.** Each engine accepts only its own filter language, and a filter in the other language returns 404. ACL policies and bucket rules are the exception: they are engine-neutral and are rendered for the running engine.
 - **Real tables for bucket data.** Bucket fields become columns, child tables and foreign keys. No JSON columns stand in for structure.
@@ -56,12 +59,12 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 | Mongo operator coverage       | No conversion. A filter in the other engine's language returns 404.                                             |
 | Missed change events          | Not handled for now. Spica doesn't use change stream resume today. The feed is plain LISTEN/NOTIFY.             |
 | Schema edits on large buckets | All edits run online, however long they take. None are refused, and the user is responsible for them.           |
-| Devkit API shape              | A completely new devkit for PostgreSQL. `@spica-devkit/bucket` stays as it is, and callers put SQL in the filter. |
+| Devkit API shape              | A completely new devkit for PostgreSQL. `@spica-devkit/bucket` stays as it is, and callers write the filter in the expression language. |
 | Existing installs             | Not supported. There is no path for moving a MongoDB instance to PostgreSQL, because MongoDB compatibility and the best key performance can't both be had. |
 | ORM                           | A small ORM written in Spica, on the same driver as the bucket-data SQL. CRUD and lookups by key only; list endpoints use the query facade. |
 | System migrations             | The PostgreSQL track is plain SQL migration files. They only change tables on existing installs; each has a test that runs it, is safe to run again, and nothing records what ran. |
 | System table creation         | The API creates its tables at startup with `CREATE TABLE IF NOT EXISTS`, under an advisory lock so replicas don't race. New installs and test databases need no migration. |
-| What SQL filters may contain  | Parsed against an allow-list, never pasted into a query. The list is written during Part 8.                     |
+| What a caller filter may contain | The Spica expression language, compiled to SQL with bound values and never pasted into a query. It cannot name another table or read `auth`. Written in Part 8. |
 | System record ids             | A UUID v7 `id` primary key. The caller may provide it, and PostgreSQL generates it otherwise. MongoDB ObjectIds are not supported. |
 | Minimum PostgreSQL version    | 18. System tables use its built-in `uuidv7()`.                                                                  |
 | Key name in responses         | `_id` on MongoDB, `id` on PostgreSQL. The panel will adapt later, outside this plan.                            |
