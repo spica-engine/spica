@@ -5,3 +5,4 @@ export {createPostgresDatabase} from "./src/start-postgres";
 export {stream} from "./src/watch-shim";
 export * from "./src/contract";
 export * from "./src/storage";
+export * from "./src/change-feed";

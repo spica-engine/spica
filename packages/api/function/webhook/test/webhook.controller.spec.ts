@@ -4,7 +4,12 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {
+  contractSuite,
+  ensureCollections,
+  QuietChangeFeedModule
+} from "@spica-server/database-testing";
+import {COLLECTION_NAMES, CollectionNames, ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {WebhookService, WebhookChangeDispatcher} from "@spica-server/function-webhook";
 import {Webhook} from "@spica-server/interface-function-webhook";
 import {SchemaResolver} from "@spica-server/function-webhook/src/schema";
@@ -13,16 +18,18 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 import {WebhookInvoker} from "@spica-server/function-webhook/src/invoker";
 import {WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
 
-describe("Webhook Controller", () => {
+contractSuite("Webhook Controller", engine => {
   let app: INestApplication;
   let req: Request;
   let module: TestingModule;
   let webhook: Webhook;
+  let collection: string;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
+        QuietChangeFeedModule,
         CoreTestingModule,
         PassportTestingModule.initialize(),
         SchemaModule.forChild()
@@ -44,9 +51,9 @@ describe("Webhook Controller", () => {
     req.reject = true;
     await app.listen(req.socket);
 
-    const db = module.get(DatabaseService);
-    await db.createCollection("coll1");
-    await db.createCollection("coll2");
+    await ensureCollections(engine, module, ["dashboard", "env_var"]);
+    const names = await module.get<CollectionNames>(COLLECTION_NAMES).list();
+    collection = [...names].sort().find(name => name != "webhook_logs");
 
     webhook = {
       title: "wh1",
@@ -55,7 +62,7 @@ describe("Webhook Controller", () => {
       trigger: {
         name: "database",
         options: {
-          collection: "coll1",
+          collection,
           type: "INSERT"
         }
       }
@@ -81,7 +88,9 @@ describe("Webhook Controller", () => {
     };
     expected.trigger.active = true;
 
-    expect(ObjectId.isValid(expected._id)).toEqual(true);
+    expect(module.get<IdTypes>(ID_TYPES).forCollection("webhook").isValid(expected._id)).toEqual(
+      true
+    );
     expect(hook).toEqual(expected);
   });
 
@@ -114,17 +123,13 @@ describe("Webhook Controller", () => {
   });
 
   it("should list collections", async () => {
+    const names = await module.get<CollectionNames>(COLLECTION_NAMES).list();
     const {body: collections} = await req.get("/webhook/collections", undefined);
-    expect(collections.map(c => c.id).sort((a, b) => a.localeCompare(b))).toEqual([
-      "coll1",
-      "coll2",
-      "webhook_logs"
-    ]);
-    expect(collections.map(c => c.slug).sort((a, b) => a.localeCompare(b))).toEqual([
-      "coll1",
-      "coll2",
-      "webhook_logs"
-    ]);
+
+    const ids = collections.map(c => c.id).sort((a, b) => a.localeCompare(b));
+    expect(ids).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+    expect(ids).toEqual(expect.arrayContaining([collection, "webhook_logs"]));
+    expect(collections.map(c => c.slug).sort((a, b) => a.localeCompare(b))).toEqual(ids);
   });
 
   describe("validation", () => {

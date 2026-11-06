@@ -1,12 +1,19 @@
+import {provideRepository} from "@spica-server/data";
 import {
-  MongoEnvVarRepository,
-  MongoFunctionRepository,
-  MongoSecretRepository
-} from "@spica-server/data-mongodb";
-import {COLLECTION_NAMES, COLLECTION_QUERY} from "@spica-server/interface-data";
+  COLLECTION_NAMES,
+  COLLECTION_QUERY,
+  CollectionNames,
+  ID_TYPES,
+  IdTypes
+} from "@spica-server/interface-data";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, ObjectId} from "@spica-server/database";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {
+  contractSuite,
+  ensureCollections,
+  QuietChangeFeedModule
+} from "@spica-server/database-testing";
+import {ENV_VAR_REPOSITORY} from "@spica-server/interface-env_var";
+import {SECRET_REPOSITORY} from "@spica-server/interface-secret";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {PlanExecutor} from "@spica-server/function/src/plan-executor";
@@ -15,7 +22,12 @@ import {FunctionPreparationService} from "@spica-server/function/src/function-pr
 import {FunctionService} from "@spica-server/function-services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService, EnvVarChangeDispatcher} from "@spica-server/env_var-services";
-import {ChangeKind} from "@spica-server/interface-function";
+import {
+  ChangeKind,
+  FUNCTION_OPTIONS,
+  FUNCTION_REPOSITORY,
+  FunctionRepository
+} from "@spica-server/interface-function";
 import {SecretService, SecretChangeDispatcher} from "@spica-server/secret-services";
 import {encrypt} from "@spica-server/core-encryption";
 import {getFreeAddress} from "@spica-server/core-testing";
@@ -28,23 +40,23 @@ function envMap(context: any): {[key: string]: unknown} {
   }, {});
 }
 
-describe("Engine", () => {
+contractSuite("Engine", contract => {
   let engine: FunctionEngine;
   let executor: PlanExecutor;
   let subscribeSpy: jest.SpyInstance;
   let unsubscribeSpy: jest.SpyInstance;
 
   let scheduler: Scheduler;
-  let database: DatabaseService;
   let fs: FunctionService;
-  let functions: MongoFunctionRepository;
+  let functions: FunctionRepository;
   let evs: EnvVarService;
   let ss: SecretService;
 
   let module: TestingModule;
   let app: INestApplication;
 
-  const hexString = "507f1f77bcf86cd799439011";
+  let functionKey: any;
+  let functionId: string;
 
   beforeEach(async () => {
     process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
@@ -70,23 +82,31 @@ describe("Engine", () => {
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
-        DatabaseTestingModule.replicaSet()
+        contract.module(),
+        QuietChangeFeedModule
+      ],
+      providers: [
+        {provide: FUNCTION_OPTIONS, useValue: {entryLimit: 4}},
+        provideRepository(ENV_VAR_REPOSITORY),
+        provideRepository(SECRET_REPOSITORY),
+        provideRepository(FUNCTION_REPOSITORY)
       ]
     }).compile();
 
     app = module.createNestApplication();
 
     scheduler = module.get(Scheduler);
-    database = module.get(DatabaseService);
+    functionKey = module.get<IdTypes>(ID_TYPES).forCollection("function").generate();
+    functionId = String(functionKey);
 
-    evs = new EnvVarService(new MongoEnvVarRepository(database), new EnvVarChangeDispatcher());
+    evs = new EnvVarService(module.get(ENV_VAR_REPOSITORY), new EnvVarChangeDispatcher());
     ss = new SecretService(
-      new MongoSecretRepository(database),
+      module.get(SECRET_REPOSITORY),
       "test-encryption-secret",
       new SecretChangeDispatcher()
     );
 
-    functions = new MongoFunctionRepository(database, {} as any);
+    functions = module.get(FUNCTION_REPOSITORY);
     fs = new FunctionService(functions, evs, ss);
 
     const options = {root: "test_root", timeout: 1, outDir: ".build"} as any;
@@ -132,8 +152,8 @@ describe("Engine", () => {
   });
 
   it("should unregister triggers on module destroy", async () => {
-    await functions.insertOne({
-      _id: new ObjectId(hexString),
+    await functions.insert({
+      _id: functionKey,
       env_vars: [],
       language: "js",
       timeout: 10,
@@ -148,7 +168,7 @@ describe("Engine", () => {
       kind: ChangeKind.Removed,
       options: {},
       type: "http",
-      target: {id: hexString, handler: "test_handler", name: "my_fn"}
+      target: {id: functionId, handler: "test_handler", name: "my_fn"}
     });
   });
 
@@ -159,8 +179,8 @@ describe("Engine", () => {
     const supersedeSpy = jest.spyOn(scheduler, "supersedeWorkers");
 
     const env = await evs.insert({_id: undefined, key: "IGNORE_ME", value: "NO"});
-    const fnId = new ObjectId(hexString);
-    await functions.insertOne({
+    const fnId = functionKey;
+    await functions.insert({
       _id: fnId,
       env_vars: [env._id],
       language: "js",
@@ -176,7 +196,7 @@ describe("Engine", () => {
     expect(subscribeSpy).not.toHaveBeenCalled();
     expect(unsubscribeSpy).not.toHaveBeenCalled();
 
-    expect(supersedeSpy.mock.calls.at(-1)[0].toObject().id).toBe(hexString);
+    expect(supersedeSpy.mock.calls.at(-1)[0].toObject().id).toBe(functionId);
     expect(envMap(contextSpy.mock.calls.at(-1)[1])).toEqual({IGNORE_ME: "YES"});
   });
 
@@ -184,8 +204,8 @@ describe("Engine", () => {
     const contextSpy = jest.spyOn(scheduler, "reconcileContext");
 
     const env = await evs.insert({_id: undefined, key: "IGNORE_ME", value: "NO"});
-    const fnId = new ObjectId(hexString);
-    await functions.insertOne({
+    const fnId = functionKey;
+    await functions.insert({
       _id: fnId,
       env_vars: [env._id],
       language: "js",
@@ -202,7 +222,7 @@ describe("Engine", () => {
     expect(unsubscribeSpy).not.toHaveBeenCalled();
     expect(envMap(contextSpy.mock.calls.at(-1)[1])).toEqual({});
 
-    const fn = await functions.findOne({_id: fnId});
+    const fn = await functions.findById(fnId);
     expect(fn.env_vars).toEqual([]);
   });
 
@@ -216,8 +236,8 @@ describe("Engine", () => {
       key: "DB_PASSWORD",
       value: encryptedValue
     });
-    const fnId = new ObjectId(hexString);
-    await functions.insertOne({
+    const fnId = functionKey;
+    await functions.insert({
       _id: fnId,
       env_vars: [],
       secrets: [secret._id],
@@ -247,8 +267,8 @@ describe("Engine", () => {
       key: "REMOVED_SECRET",
       value: encryptedValue
     });
-    const fnId = new ObjectId(hexString);
-    await functions.insertOne({
+    const fnId = functionKey;
+    await functions.insert({
       _id: fnId,
       env_vars: [],
       secrets: [secret._id],
@@ -266,12 +286,13 @@ describe("Engine", () => {
     expect(unsubscribeSpy).not.toHaveBeenCalled();
     expect(envMap(contextSpy.mock.calls.at(-1)[1])).not.toHaveProperty("REMOVED_SECRET");
 
-    const fn = await functions.findOne({_id: fnId});
+    const fn = await functions.findById(fnId);
     expect(fn.secrets).toEqual([]);
   });
 
   it("should get initial schema for database trigger", async () => {
-    await database.createCollection("test");
+    await ensureCollections(contract, module, ["dashboard"]);
+    const [collection] = [...(await module.get<CollectionNames>(COLLECTION_NAMES).list())].sort();
     const expectedSchema: any = {
       $id: "http://spica.internal/function/enqueuer/database",
       type: "object",
@@ -280,8 +301,8 @@ describe("Engine", () => {
         collection: {
           title: "Collection Name",
           type: "string",
-          viewEnum: expect.arrayContaining(["test"]),
-          enum: expect.arrayContaining(["test"]),
+          viewEnum: expect.arrayContaining([collection]),
+          enum: expect.arrayContaining([collection]),
           description: "Collection name that the event will be tracked on"
         },
         type: {
