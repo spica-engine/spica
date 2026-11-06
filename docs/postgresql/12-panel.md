@@ -14,6 +14,7 @@ Makes the admin panel (`apps/panel`) usable against an API that runs on PostgreS
 
 ## Rules that apply
 
+- **The API defines the contract and the panel follows it.** A request shape the panel sends today never decides what the API accepts: when the panel's request is not what the contract defines, the panel changes. The server does not translate a client's MongoDB operators (`$all`, `$in`, `$regex`) into engine terms to keep an old request working. The one exception is a change that is harmless for every client and has no other way out, and it is written down here before it is built.
 - The panel asks the API for the engine (`GET /status/engine`) and writes each filter in that language: MongoDB JSON, or an expression string on PostgreSQL. It never converts one into the other.
 - A request that carries a filter waits until the engine is known.
 - A document's key is read through one place (`useKeyField`), never as a literal `_id`, wherever the document is a **bucket document**. System records (identity, user, policy, api key, function, env var, secret, storage object, activity, webhook, dashboard, strategy) keep their UUID v7 `_id`.
@@ -45,6 +46,7 @@ Makes the admin panel (`apps/panel`) usable against an API that runs on PostgreS
 - Facade lists that take a filter (JSON on MongoDB, an expression on PostgreSQL): identity, user, refresh token, secret, env var, storage (`/storage` and `/storage/browse`), bucket data.
 - Not facade filters: policy, asset, function (`JSONP`), and every `/profile` endpoint. They stay JSON.
 - **`/activity` and `/apikey` ignore `filter`.** Neither controller has the parameter. The panel's filter panels on the Activities and API key pages are no-ops on both engines. `/activity` sorts by `_id` itself.
+- **`/activity` takes MongoDB operators in `resource`.** The panel sends `resource={"$all":[module,bucketId],"$in":[documentIds]}` (`store/api/activitiesApi.ts`, `ActivityFilterPopover.tsx`). That is MongoDB syntax in a public parameter. The API defines the neutral contract instead (Part 8a): `resource` repeated, for the values the activity's resource list must all hold, and `documentId` repeated, for the values of which it must hold any. The panel sends `/activity?resource=bucket&resource=<bucketId>&documentId=<a>&documentId=<b>`. Part 8a drops the JSON form, so the panel change below ships with it.
 - **Policy filtering is client-side** (`pages/policy/Policy.tsx`) and matches a string against a MongoDB object like `{$regex}`, so any condition returns nothing. Engine-independent.
 - Function logs ignore `sort`.
 
@@ -126,7 +128,7 @@ Three specs exist (`field-acl.spec.ts`, `filterPanelUtils.spec.ts`, `useBucketSe
 
 1. A panel test runner, so every later PR brings tests that run.
 2. The filter serialization helper and widened types (13 files, mechanical, behaviour-neutral).
-3. Identity and user filters in the engine's language, with the decision on API key, activity and policy.
+3. Identity and user filters in the engine's language, with the decision on API key, activity and policy. The activity page sends the neutral `resource`/`documentId` parameters instead of `resource={"$all","$in"}` (`buildActivityFilterOptions`, `getActivities`).
 4. Storage filters (about 8 files, a new expression builder), and removal of the dead `StorageContext` code.
 5. Hide the profiler on PostgreSQL.
 6. UUID v7 timestamps: one helper, four call sites.
