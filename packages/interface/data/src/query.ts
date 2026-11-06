@@ -7,6 +7,7 @@ export type FilterReplacer = (filter: object) => Promise<object>;
 export type WhereCondition =
   | {eq: unknown}
   | {in: unknown[]}
+  | {contains: {all?: unknown[]; any?: unknown[]}}
   | {matches: string; caseInsensitive?: boolean};
 
 /**

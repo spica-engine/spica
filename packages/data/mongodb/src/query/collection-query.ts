@@ -46,6 +46,12 @@ function renderCondition(condition: WhereCondition): unknown {
   if ("in" in condition) {
     return {$in: condition.in};
   }
+  if ("contains" in condition) {
+    return {
+      ...(condition.contains.all && {$all: condition.contains.all}),
+      ...(condition.contains.any && {$in: condition.contains.any})
+    };
+  }
   if ("matches" in condition) {
     return condition.caseInsensitive
       ? {$regex: condition.matches, $options: "i"}
