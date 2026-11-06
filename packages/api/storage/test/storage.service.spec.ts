@@ -1,6 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {NotFoundException} from "@nestjs/common";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {clearStorage, contractSuite, waitForMongoIndexes} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {StorageService} from "@spica-server/storage";
 import {Default} from "@spica-server/storage";
 import {Strategy} from "@spica-server/storage";
@@ -8,30 +9,34 @@ import {StorageObject, STORAGE_OPTIONS, STORAGE_REPOSITORY} from "@spica-server/
 import {provideRepository} from "@spica-server/data";
 import {Readable} from "stream";
 
-describe("Storage Service", () => {
+contractSuite("Storage Service", engine => {
   let module: TestingModule;
 
   let storageService: StorageService;
   let repository: any;
   let storageObject: StorageObject<Buffer>;
   let strategyInstance: Strategy;
-  let storageObjectId: ObjectId = new ObjectId("56cb91bdc3464f14678934ca");
+  let storageObjectId: any;
+
+  const newId = () => module.get<IdTypes>(ID_TYPES).forCollection("storage").generate();
+  const filterOf = (mongodb: object, postgresql: string) =>
+    engine.name == "mongodb" ? mongodb : postgresql;
 
   const resourceFilter = {include: [], exclude: []};
 
+  const seed = (objects: any[]) =>
+    repository.insertAll(
+      objects.map(({content: {data, ...content}, ...object}) => ({
+        created_at: new Date(),
+        updated_at: new Date(),
+        ...object,
+        content
+      }))
+    );
+
   beforeEach(async () => {
-    storageObject = {
-      _id: storageObjectId,
-      name: "name",
-      url: "url",
-      content: {
-        data: Buffer.from("abc"),
-        type: "type",
-        size: 10
-      }
-    };
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.standalone()],
+      imports: [engine.module()],
       providers: [
         provideRepository(STORAGE_REPOSITORY),
         StorageService,
@@ -48,11 +53,23 @@ describe("Storage Service", () => {
     storageService = module.get(StorageService);
     repository = module.get(STORAGE_REPOSITORY);
     strategyInstance = module.get(Strategy);
-  });
+    await waitForMongoIndexes(engine, module, {storage: ["name_1"]});
+    storageObjectId = newId();
+    storageObject = {
+      _id: storageObjectId,
+      name: "name",
+      url: "url",
+      content: {
+        data: Buffer.from("abc"),
+        type: "type",
+        size: 10
+      }
+    };
+  }, 120_000);
 
-  afterEach(() => {
-    repository.deleteMany({});
-    module.close();
+  afterEach(async () => {
+    await clearStorage(engine, module, {mongodb: ["storage"], postgresql: ["storage_objects"]});
+    await module.close();
   });
 
   it("should add storage objects", async () => {
@@ -112,7 +129,7 @@ describe("Storage Service", () => {
     it("should revert storage insert if one of objects failed", async () => {
       const storageObjects = [
         {
-          _id: "successId",
+          _id: newId(),
           name: "name1",
           content: {
             data: Buffer.from("abc1"),
@@ -121,7 +138,7 @@ describe("Storage Service", () => {
           }
         },
         {
-          _id: "failId",
+          _id: newId(),
           name: "name2",
           content: {
             data: Buffer.from("abc2"),
@@ -130,7 +147,7 @@ describe("Storage Service", () => {
           }
         },
         {
-          _id: "thirdId",
+          _id: newId(),
           name: "name3",
           content: {
             data: Buffer.from("abc3"),
@@ -152,7 +169,7 @@ describe("Storage Service", () => {
         "Error: Failed to write object name2 to storage. Reason: Upload failed for Item"
       );
 
-      const insertedObjects = await repository.find();
+      const insertedObjects = await repository.findByNamePrefix("");
       expect(insertedObjects).toEqual([]);
 
       const objectPromises = storageObjects.map(storageObject =>
@@ -162,17 +179,15 @@ describe("Storage Service", () => {
       expect(result).toEqual(["ENOENT", "ENOENT", "ENOENT"]);
     });
 
-    it("should revert updateMeta when MongoDB updateMany fails", async () => {
+    it("should revert updateMeta when the rename of the names fails", async () => {
       await storageService.insert([storageObject]);
       const originalName = storageObject.name;
       const newName = "renamed_object";
 
-      jest
-        .spyOn((repository as any)._coll, "updateMany")
-        .mockRejectedValueOnce(new Error("MongoDB updateMany failed"));
+      jest.spyOn(repository, "renamePrefix").mockRejectedValueOnce(new Error("rename failed"));
 
       await expect(storageService.updateMeta(storageObjectId, newName)).rejects.toThrow(
-        "MongoDB updateMany failed"
+        "rename failed"
       );
 
       const storedContent = await strategyInstance.read(originalName);
@@ -237,10 +252,10 @@ describe("Storage Service", () => {
   });
 
   it("should delete multiple storage objects", async () => {
-    const object1Id = new ObjectId();
-    const object2Id = new ObjectId();
-    const object3Id = new ObjectId();
-    const object4Id = new ObjectId();
+    const object1Id = newId();
+    const object2Id = newId();
+    const object3Id = newId();
+    const object4Id = newId();
 
     const testObjects = [
       {
@@ -295,12 +310,12 @@ describe("Storage Service", () => {
   });
 
   it("should delete folder with nested sub-resources at multiple levels", async () => {
-    const folderId = new ObjectId();
-    const subFolder1Id = new ObjectId();
-    const subFolder2Id = new ObjectId();
-    const nestedFileId = new ObjectId();
-    const deepNestedFileId = new ObjectId();
-    const rootFileId = new ObjectId();
+    const folderId = newId();
+    const subFolder1Id = newId();
+    const subFolder2Id = newId();
+    const nestedFileId = newId();
+    const deepNestedFileId = newId();
+    const rootFileId = newId();
 
     const remainingData = {
       _id: rootFileId,
@@ -400,18 +415,25 @@ describe("Storage Service", () => {
           content: {data: Buffer.from(""), type: "type2"}
         }
       ];
-      await repository.insertMany(storageObjects);
+      await seed(storageObjects);
     });
 
     it("should filter by name", async () => {
-      const res = await storageService.getAll(resourceFilter, {name: "object1"}, false, 0, 0, {});
+      const res = await storageService.getAll(
+        resourceFilter,
+        filterOf({name: "object1"}, "document.name == 'object1'"),
+        false,
+        0,
+        0,
+        {}
+      );
       expect(res.map(r => r.name)).toEqual(["object1"]);
     });
 
     it("should filter by content type", async () => {
       const res = await storageService.getAll(
         resourceFilter,
-        {"content.type": "type1"},
+        filterOf({"content.type": "type1"}, "document.content.type == 'type1'"),
         false,
         0,
         0,
@@ -426,7 +448,10 @@ describe("Storage Service", () => {
 
       const resGte = await storageService.getAll(
         resourceFilter,
-        {created_at: {$gte: targetDate}},
+        filterOf(
+          {created_at: {$gte: targetDate}},
+          `document.created_at >= '${targetDate.toISOString()}'`
+        ),
         false,
         0,
         0,
@@ -437,7 +462,10 @@ describe("Storage Service", () => {
 
       const resLt = await storageService.getAll(
         resourceFilter,
-        {created_at: {$lt: targetDate}},
+        filterOf(
+          {created_at: {$lt: targetDate}},
+          `document.created_at < '${targetDate.toISOString()}'`
+        ),
         false,
         0,
         0,
@@ -452,7 +480,10 @@ describe("Storage Service", () => {
 
       const res1 = await storageService.getAll(
         resourceFilter,
-        {updated_at: {$gte: targetDate}},
+        filterOf(
+          {updated_at: {$gte: targetDate}},
+          `document.updated_at >= '${targetDate.toISOString()}'`
+        ),
         false,
         0,
         0,
@@ -462,7 +493,10 @@ describe("Storage Service", () => {
 
       const res2 = await storageService.getAll(
         resourceFilter,
-        {updated_at: {$lt: targetDate}},
+        filterOf(
+          {updated_at: {$lt: targetDate}},
+          `document.updated_at < '${targetDate.toISOString()}'`
+        ),
         false,
         0,
         0,
@@ -491,10 +525,10 @@ describe("Storage Service", () => {
         content: {data: Buffer.from(""), type: "type4"}
       }
     ];
-    await repository.insertMany(storageObjects);
+    await seed(storageObjects);
     const res = await storageService.getAll(
       resourceFilter,
-      {name: {$regex: "^object"}},
+      filterOf({name: {$regex: "^object"}}, "regex(document.name, '^object')"),
       false,
       2,
       1,
@@ -515,7 +549,7 @@ describe("Storage Service", () => {
           type: ""
         }
       }));
-      await repository.insertMany(storageObjects);
+      await seed(storageObjects);
     });
 
     it("should sort storage objects descend by name", async () => {
@@ -656,7 +690,7 @@ describe("Storage Service", () => {
 
     it("should skip validation if total size limit was not provided", async () => {
       module = await Test.createTestingModule({
-        imports: [DatabaseTestingModule.standalone()],
+        imports: [engine.module()],
         providers: [
           provideRepository(STORAGE_REPOSITORY),
           StorageService,
@@ -675,7 +709,7 @@ describe("Storage Service", () => {
 
       const [insertedObj] = await storageService.insert([
         {
-          _id: new ObjectId(),
+          _id: newId(),
           name: "name",
           url: "url",
           content: {
@@ -692,7 +726,7 @@ describe("Storage Service", () => {
     beforeEach(async () => {
       storageObjects = [
         {
-          _id: new ObjectId(),
+          _id: newId(),
           name: "name",
           url: "url",
           content: {
@@ -702,7 +736,7 @@ describe("Storage Service", () => {
           }
         },
         {
-          _id: new ObjectId(),
+          _id: newId(),
           name: "name2",
           url: "url2",
           content: {
@@ -712,13 +746,13 @@ describe("Storage Service", () => {
           }
         }
       ];
-      await repository.insertMany(storageObjects);
+      await seed(storageObjects);
     });
 
     describe("insert", () => {
       it("should insert if it won't exceed the limit", async () => {
         const storageObject = {
-          _id: new ObjectId(),
+          _id: newId(),
           name: "name3",
           url: "url",
           content: {
@@ -734,7 +768,7 @@ describe("Storage Service", () => {
 
       it("should not insert if it exceed the limit", async () => {
         const storageObject = {
-          _id: new ObjectId(),
+          _id: newId(),
           name: "name3",
           url: "url",
           content: {
@@ -744,7 +778,7 @@ describe("Storage Service", () => {
           }
         };
 
-        await repository.insertMany([storageObject]).catch(e => {
+        await seed([storageObject]).catch(e => {
           expect(e).toEqual(new Error("Total storage object size limit exceeded"));
         });
       });
@@ -769,7 +803,7 @@ describe("Storage Service", () => {
 
     describe("browse", () => {
       beforeEach(async () => {
-        await repository.deleteMany({});
+        await clearStorage(engine, module, {mongodb: ["storage"], postgresql: ["storage_objects"]});
 
         jest.spyOn(strategyInstance, "write").mockResolvedValue(undefined);
         jest.spyOn(strategyInstance, "writeStream").mockResolvedValue(undefined);
@@ -853,7 +887,7 @@ describe("Storage Service", () => {
           }
         ];
 
-        await repository.insertMany(testFiles);
+        await seed(testFiles);
       });
 
       describe("browse filter", () => {
@@ -989,7 +1023,7 @@ describe("Storage Service", () => {
           const contentResult = await storageService.browse(
             photosResourceFilter,
             "photos",
-            {"content.type": "image/jpeg"},
+            filterOf({"content.type": "image/jpeg"}, "document.content.type == 'image/jpeg'"),
             10,
             0
           );
@@ -1006,7 +1040,7 @@ describe("Storage Service", () => {
           const nameResult = await storageService.browse(
             photosResourceFilter,
             "photos",
-            {name: {$regex: "vacation"}},
+            filterOf({name: {$regex: "vacation"}}, "regex(document.name, 'vacation')"),
             10,
             0
           );
@@ -1032,7 +1066,7 @@ describe("Storage Service", () => {
 
   describe("proxyRead", () => {
     it("should throw NotFoundException when object is not found by id", async () => {
-      await expect(storageService.proxyRead(new ObjectId(), {})).rejects.toThrow(NotFoundException);
+      await expect(storageService.proxyRead(newId(), {})).rejects.toThrow(NotFoundException);
     });
 
     it("should throw NotFoundException when object is not found by name", async () => {

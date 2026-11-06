@@ -1,17 +1,27 @@
 import {INestApplication, NestApplicationOptions, ForbiddenException} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite, waitForMongoIndexes} from "@spica-server/database-testing";
+import {ID_TYPES, IdType, IdTypes} from "@spica-server/interface-data";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {getMultipartFormDataMeta, StorageModule} from "@spica-server/storage";
 import {Binary, serialize} from "bson";
+import fs from "fs";
+import os from "os";
+import path from "path";
 import {StorageObject} from "@spica-server/interface-storage";
 import {GuardService} from "@spica-server/passport-guard-services";
 
-describe("Storage Acceptance", () => {
+contractSuite("Storage Acceptance", engine => {
   let app: INestApplication;
   let req: Request;
   let guardService: GuardService;
+  let ids: IdType;
+
+  const isId = (value: unknown) => ids.isValid(value);
+  const filterOf = (mongodb: object, postgresql: string) =>
+    engine.name == "mongodb" ? JSON.stringify(mongodb) : postgresql;
+  const nameFilter = (name: string) => filterOf({name}, `document.name == '${name}'`);
 
   async function addTextObjects() {
     const first = {
@@ -43,16 +53,26 @@ describe("Storage Acceptance", () => {
     });
   }
 
+  const storagePaths: string[] = [];
+
+  afterAll(() => {
+    storagePaths.forEach(storagePath => fs.rmSync(storagePath, {recursive: true, force: true}));
+  });
+
   const urlRegex = /http:\/\/insteadof\/storage\/.*?\/view/;
 
   async function initModule(options: NestApplicationOptions) {
+    const storagePath = fs.mkdtempSync(path.join(os.tmpdir(), "spica-storage-"));
+    storagePaths.push(storagePath);
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.standalone(),
+        engine.module(),
         StorageModule.forRoot({
-          defaultPath: process.env.TEST_TMPDIR,
+          defaultPath: fs.mkdtempSync(
+            path.join(process.env.TEST_TMPDIR || os.tmpdir(), "storage-")
+          ),
           defaultPublicUrl: "http://insteadof",
           strategy: "default",
           objectSizeLimit: 0.1,
@@ -66,8 +86,8 @@ describe("Storage Acceptance", () => {
     guardService = module.get(GuardService);
     await app.listen(req.socket);
 
-    // wait for indexes
-    await new Promise((resolve, _) => setTimeout(resolve, 1000));
+    ids = module.get<IdTypes>(ID_TYPES).forCollection("storage");
+    await waitForMongoIndexes(engine, module, {storage: ["name_1"]});
 
     await addTextObjects();
   }
@@ -84,7 +104,7 @@ describe("Storage Acceptance", () => {
         sort: JSON.stringify({_id: -1})
       });
 
-      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
+      expect(isId(body[0]._id)).toEqual(true);
       expect(body).toEqual([
         {
           _id: body[0]._id,
@@ -108,7 +128,7 @@ describe("Storage Acceptance", () => {
       });
 
       expect(body.meta).toEqual({total: 3});
-      expect(ObjectId.isValid(body.data[0]._id)).toEqual(true);
+      expect(isId(body.data[0]._id)).toEqual(true);
       expect(body.data).toEqual([
         {
           _id: body.data[0]._id,
@@ -127,7 +147,7 @@ describe("Storage Acceptance", () => {
     it("should work with paginate true and zero result", async () => {
       const {body} = await req.get("/storage", {
         paginate: true,
-        filter: JSON.stringify({name: "non_exist_name"})
+        filter: nameFilter("non_exist_name")
       });
 
       expect(body.meta).toEqual({total: 0});
@@ -137,7 +157,7 @@ describe("Storage Acceptance", () => {
     it("should work with paginate false and zero result", async () => {
       const {body} = await req.get("/storage", {
         paginate: false,
-        filter: JSON.stringify({name: "non_exist_name"})
+        filter: nameFilter("non_exist_name")
       });
 
       expect(body).toEqual([]);
@@ -147,10 +167,10 @@ describe("Storage Acceptance", () => {
   describe("filter", () => {
     it("should work with filter", async () => {
       const {body} = await req.get("/storage", {
-        filter: JSON.stringify({name: "third.txt"})
+        filter: nameFilter("third.txt")
       });
 
-      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
+      expect(isId(body[0]._id)).toEqual(true);
       expect(body).toEqual([
         {
           _id: body[0]._id,
@@ -166,24 +186,27 @@ describe("Storage Acceptance", () => {
       ]);
     });
 
-    it("should answer 404 for a filter that is not json", async () => {
-      const res = await req.get("/storage", {filter: "document.name == 'third.txt'"});
+    it("should answer 404 for a filter in the language of the other engine", async () => {
+      const other =
+        engine.name == "mongodb" ? "document.name == 'third.txt'" : '{"name":"third.txt"}';
+
+      const res = await req.get("/storage", {filter: other});
       expect(res.statusCode).toEqual(404);
 
-      const browse = await req.get("/storage/browse", {filter: "document.name == 'third.txt'"});
+      const browse = await req.get("/storage/browse", {filter: other});
       expect(browse.statusCode).toEqual(404);
     });
 
     it("should work with _id filter", async () => {
       const {body} = await req.get("/storage", {
-        filter: JSON.stringify({name: "third.txt"})
+        filter: nameFilter("third.txt")
       });
 
       const response = await req.get("/storage", {
-        filter: JSON.stringify({_id: body[0]._id})
+        filter: filterOf({_id: body[0]._id}, `document._id == '${body[0]._id}'`)
       });
 
-      expect(ObjectId.isValid(response.body[0]._id)).toEqual(true);
+      expect(isId(response.body[0]._id)).toEqual(true);
       expect(body).toEqual([
         {
           _id: response.body[0]._id,
@@ -216,11 +239,17 @@ describe("Storage Acceptance", () => {
       const body = postRes.body;
 
       const ltRes = await req.get("/storage", {
-        filter: JSON.stringify({created_at: {$lt: body[0].created_at}})
+        filter: filterOf(
+          {created_at: {$lt: body[0].created_at}},
+          `document.created_at < '${body[0].created_at}'`
+        )
       });
 
       const gteRes = await req.get("/storage", {
-        filter: JSON.stringify({created_at: {$gte: body[0].created_at}})
+        filter: filterOf(
+          {created_at: {$gte: body[0].created_at}},
+          `document.created_at >= '${body[0].created_at}'`
+        )
       });
 
       expect(gteRes.body).toEqual([
@@ -282,7 +311,7 @@ describe("Storage Acceptance", () => {
       } = await req.get("/storage", {paginate: true, limit: "1", sort: JSON.stringify({_id: -1})});
 
       expect(meta.total).toBe(3);
-      expect(ObjectId.isValid(data[0]._id)).toEqual(true);
+      expect(isId(data[0]._id)).toEqual(true);
       expect(data).toEqual([
         {
           _id: data[0]._id,
@@ -304,8 +333,8 @@ describe("Storage Acceptance", () => {
       } = await req.get("/storage", {paginate: true, skip: "1", sort: JSON.stringify({_id: -1})});
 
       expect(meta.total).toBe(3);
-      expect(ObjectId.isValid(data[0]._id)).toEqual(true);
-      expect(ObjectId.isValid(data[1]._id)).toEqual(true);
+      expect(isId(data[0]._id)).toEqual(true);
+      expect(isId(data[1]._id)).toEqual(true);
       expect(data).toEqual([
         {
           _id: data[0]._id,
@@ -343,7 +372,7 @@ describe("Storage Acceptance", () => {
       });
 
       expect(meta.total).toBe(3);
-      expect(ObjectId.isValid(data[0]._id)).toEqual(true);
+      expect(isId(data[0]._id)).toEqual(true);
       expect(data).toEqual([
         {
           _id: data[0]._id,
@@ -368,9 +397,9 @@ describe("Storage Acceptance", () => {
         });
 
         expect(meta.total).toBe(3);
-        expect(ObjectId.isValid(data[0]._id)).toEqual(true);
-        expect(ObjectId.isValid(data[1]._id)).toEqual(true);
-        expect(ObjectId.isValid(data[2]._id)).toEqual(true);
+        expect(isId(data[0]._id)).toEqual(true);
+        expect(isId(data[1]._id)).toEqual(true);
+        expect(isId(data[2]._id)).toEqual(true);
         expect(data).toEqual([
           {
             _id: data[0]._id,
@@ -417,9 +446,9 @@ describe("Storage Acceptance", () => {
         });
 
         expect(meta.total).toBe(3);
-        expect(ObjectId.isValid(data[0]._id)).toEqual(true);
-        expect(ObjectId.isValid(data[1]._id)).toEqual(true);
-        expect(ObjectId.isValid(data[2]._id)).toEqual(true);
+        expect(isId(data[0]._id)).toEqual(true);
+        expect(isId(data[1]._id)).toEqual(true);
+        expect(isId(data[2]._id)).toEqual(true);
         expect(data).toEqual([
           {
             _id: data[0]._id,
@@ -588,7 +617,7 @@ describe("Storage Acceptance", () => {
       const {
         body: [first]
       } = await req.get("/storage", {
-        filter: JSON.stringify({name: "first.txt"})
+        filter: nameFilter("first.txt")
       });
 
       let res = await req.patch(`/storage/${first._id}`, {name: "updated_first.txt"});
@@ -603,11 +632,11 @@ describe("Storage Acceptance", () => {
           size: 5
         }
       };
-      expect(ObjectId.isValid(res.body._id)).toEqual(true);
+      expect(isId(res.body._id)).toEqual(true);
       expect(res.body).toEqual(expectedObject);
 
       res = await req.get(`storage/${first._id}`);
-      expect(ObjectId.isValid(res.body._id)).toEqual(true);
+      expect(isId(res.body._id)).toEqual(true);
       expect(res.body).toEqual({
         _id: res.body._id,
         name: "updated_first.txt",
@@ -646,7 +675,7 @@ describe("Storage Acceptance", () => {
         }
       );
 
-      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
+      expect(isId(body[0]._id)).toEqual(true);
       expect(urlRegex.test(body[0].url)).toEqual(true);
       expect(body).toEqual([
         {
@@ -690,8 +719,8 @@ describe("Storage Acceptance", () => {
         }
       );
 
-      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
-      expect(ObjectId.isValid(body[1]._id)).toEqual(true);
+      expect(isId(body[0]._id)).toEqual(true);
+      expect(isId(body[1]._id)).toEqual(true);
 
       expect(urlRegex.test(body[0].url)).toEqual(true);
       expect(urlRegex.test(body[1].url)).toEqual(true);
@@ -936,7 +965,7 @@ describe("Storage Acceptance", () => {
         body: {data: objects}
       } = await req.get("/storage", {paginate: true});
 
-      const unauthorizedId = new ObjectId().toString();
+      const unauthorizedId = String(ids.generate());
       const idsToDelete = [objects[0]._id.toString(), unauthorizedId];
 
       const originalCheckAuthorization = guardService.checkAuthorization;
@@ -1005,7 +1034,7 @@ describe("Storage Acceptance", () => {
       };
       const {body, statusCode, statusText} = await req.post("/storage", [object]);
 
-      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
+      expect(isId(body[0]._id)).toEqual(true);
       expect(urlRegex.test(body[0].url)).toEqual(true);
 
       expect(body).toEqual([
@@ -1093,8 +1122,8 @@ describe("Storage Acceptance", () => {
       );
       const {body: resBody, statusCode, statusText} = await req.post("/storage", body, headers);
 
-      expect(ObjectId.isValid(resBody[0]._id)).toEqual(true);
-      expect(ObjectId.isValid(resBody[1]._id)).toEqual(true);
+      expect(isId(resBody[0]._id)).toEqual(true);
+      expect(isId(resBody[1]._id)).toEqual(true);
 
       expect(urlRegex.test(resBody[0].url)).toEqual(true);
       expect(urlRegex.test(resBody[1].url)).toEqual(true);
@@ -1460,7 +1489,7 @@ describe("Storage Acceptance", () => {
 
     it("should rename the folder and its children based on new name", async () => {
       const {body: folderResponse} = await req.get("/storage", {
-        filter: JSON.stringify({name: "folder/subfolder/"})
+        filter: nameFilter("folder/subfolder/")
       });
       const subfolderId = folderResponse[0]._id;
 
