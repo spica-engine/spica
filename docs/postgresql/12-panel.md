@@ -14,7 +14,7 @@ Makes the admin panel (`apps/panel`) usable against an API that runs on PostgreS
 
 ## Rules that apply
 
-- **The API defines the contract and the panel follows it.** A request shape the panel sends today never decides what the API accepts: when the panel's request is not what the contract defines, the panel changes. The server does not translate a client's MongoDB operators (`$all`, `$in`, `$regex`) into engine terms to keep an old request working. The one exception is a change that is harmless for every client and has no other way out, and it is written down here before it is built.
+- The panel follows the API's contract (README, "The backend defines the contract; clients follow it"). When a request the panel sends is not what the contract defines, the panel changes. What the panel needs from the server is not built to fit the panel; it goes under "Requests to other parts".
 - The panel asks the API for the engine (`GET /status/engine`) and writes each filter in that language: MongoDB JSON, or an expression string on PostgreSQL. It never converts one into the other.
 - A request that carries a filter waits until the engine is known.
 - A document's key is read through one place (`useKeyField`), never as a literal `_id`, wherever the document is a **bucket document**. System records (identity, user, policy, api key, function, env var, secret, storage object, activity, webhook, dashboard, strategy) keep their UUID v7 `_id`.

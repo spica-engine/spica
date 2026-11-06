@@ -46,6 +46,7 @@ Every part is delivered as a series of small PRs. A part starts only after the p
   - MongoDB: ObjectIds in `_id`, as today.
   - PostgreSQL system records: a UUID v7 `id` key that the caller may provide and PostgreSQL generates otherwise.
   - PostgreSQL bucket data: whatever primary key the bucket's owner defines.
+- **The backend defines the contract; clients follow it.** Rules, schemas, contracts and implementations belong to the backend. Every client adapts to them, the admin panel, the devkit, and another server alike. What a client sends or expects today never decides the contract, and the backend does not bend to keep a client working. The reverse is allowed only when the change is harmless for every client and there is no other way out, and it is written in the part document before it is built. A part that needs a client to change lists that change in the client's own part.
 - **Controllers stay engine-agnostic.** Only adapters know how each engine expresses a request.
 - **No query conversion.** Each engine accepts only its own filter language, and a filter in the other language returns 404. ACL policies and bucket rules are the exception: they are engine-neutral and are rendered for the running engine.
 - **Real tables for bucket data.** Bucket fields become columns, child tables and foreign keys. No JSON columns stand in for structure.
