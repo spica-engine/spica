@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportModule} from "@spica-server/passport";
 import {INestApplication} from "@nestjs/common";
@@ -9,7 +9,7 @@ import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {Config} from "twilio/lib/twiml/VoiceResponse";
 import {ConfigModule} from "@spica-server/config";
 
-describe("User Ban Logic", () => {
+contractSuite("User Ban Logic", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
@@ -33,7 +33,7 @@ describe("User Ban Logic", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID, DATE_TIME]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         CoreTestingModule,
         ConfigModule.forRoot(),

@@ -1,5 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {INestApplication} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core-schema";
@@ -8,11 +9,10 @@ import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {PassportModule} from "@spica-server/passport";
 import {ConfigModule} from "@spica-server/config";
 
-describe("User Controller CRUD Operations", () => {
+contractSuite("User Controller CRUD Operations", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
-  let database: DatabaseService;
   let adminToken: string;
 
   beforeAll(async () => {
@@ -21,7 +21,7 @@ describe("User Controller CRUD Operations", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID, DATE_TIME]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         CoreTestingModule,
         ConfigModule.forRoot(),
@@ -71,7 +71,6 @@ describe("User Controller CRUD Operations", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
-    database = module.get(DatabaseService);
 
     await app.listen(req.socket);
 
@@ -88,7 +87,7 @@ describe("User Controller CRUD Operations", () => {
   afterAll(() => app.close());
 
   afterEach(async () => {
-    await database.collection("user").deleteMany({});
+    await clearStorage(engine, module, {mongodb: ["user"], postgresql: ["users"]});
   });
 
   describe("POST /passport/user (create)", () => {
@@ -262,7 +261,12 @@ describe("User Controller CRUD Operations", () => {
     it("should filter users by username", async () => {
       const res = await req.get(
         "/passport/user",
-        {filter: JSON.stringify({username: "listuser1"})},
+        {
+          filter:
+            engine.name == "mongodb"
+              ? JSON.stringify({username: "listuser1"})
+              : "document.username == 'listuser1'"
+        },
         {Authorization: `IDENTITY ${adminToken}`}
       );
 
@@ -334,7 +338,7 @@ describe("User Controller CRUD Operations", () => {
     });
 
     it("should return 404 for non-existent user ID", async () => {
-      const fakeId = "000000000000000000000000";
+      const fakeId = module.get<IdTypes>(ID_TYPES).forCollection("user").generate();
       const res = await req.get(`/passport/user/${fakeId}`, undefined, {
         Authorization: `IDENTITY ${adminToken}`
       });

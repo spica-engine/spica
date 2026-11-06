@@ -1,6 +1,12 @@
 import {USER_REPOSITORY, VERIFICATION_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  ID_TYPES,
+  IdTypes
+} from "@spica-server/interface-data";
 import {VerificationService} from "@spica-server/passport-user/src/verification.service";
 import {ProviderVerificationService} from "@spica-server/passport-user/src/services/provider.verification.service";
 import {UserConfigService} from "@spica-server/passport-user/src/config.service";
@@ -17,7 +23,7 @@ import {UserModule, UserService} from "@spica-server/passport-user";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";
 
-describe("VerificationService", () => {
+contractSuite("VerificationService", engine => {
   let module: TestingModule;
   let verificationService: VerificationService;
   let verifications: any;
@@ -27,8 +33,18 @@ describe("VerificationService", () => {
   let users: any;
   let mailerService: MailerService;
   let smsService: SmsService;
-  let db: DatabaseService;
+  let queries: CollectionQueryFacade;
   let maxAttemptCount = 3;
+
+  const newUserId = () => module.get<IdTypes>(ID_TYPES).forCollection("user").generate();
+
+  const findVerification = async (criteria: Record<string, unknown>) => {
+    const where = Object.fromEntries(
+      Object.entries(criteria).map(([field, value]) => [field, {eq: value}])
+    ) as any;
+    const [verification] = await queries.find("verification", {where, limit: 1});
+    return verification ?? null;
+  };
 
   const STRATEGY = "Otp";
   const PURPOSE = "verify";
@@ -49,7 +65,7 @@ describe("VerificationService", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         CoreTestingModule,
         PassportTestingModule.initialize(),
         PreferenceTestingModule,
@@ -104,7 +120,7 @@ describe("VerificationService", () => {
     users = module.get(USER_REPOSITORY);
     mailerService = module.get(MailerService);
     smsService = module.get(SmsService);
-    db = module.get(DatabaseService);
+    queries = module.get(COLLECTION_QUERY);
 
     await userConfigService.set({
       verificationProcessMaxAttempt: maxAttemptCount
@@ -112,7 +128,10 @@ describe("VerificationService", () => {
   });
 
   afterEach(async () => {
-    await Promise.all([verifications.deleteMany({}), users.deleteMany({})]);
+    await clearStorage(engine, module, {
+      mongodb: ["verification", "user"],
+      postgresql: ["verifications", "users"]
+    });
     mockMailerService.sendMail.mockReset();
     mockSmsService.sendSms.mockReset();
   });
@@ -130,7 +149,7 @@ describe("VerificationService", () => {
     });
 
     it("should create verification record and send email for email provider", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "test@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -158,7 +177,7 @@ describe("VerificationService", () => {
         text: expect.stringContaining(`Your verification code for ${EMAIL_PROVIDER} is:`)
       });
 
-      const updatedVerification = await verifications.findOne({
+      const updatedVerification = await findVerification({
         userId: userId,
         destination: email
       });
@@ -174,7 +193,7 @@ describe("VerificationService", () => {
     });
 
     it("should create verification record and send SMS for phone provider", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const phoneNumber = "+1234567890";
 
       mockSmsService.sendSms.mockResolvedValue({
@@ -200,7 +219,7 @@ describe("VerificationService", () => {
         body: expect.stringContaining(`Your verification code for ${PHONE_PROVIDER} is:`)
       });
 
-      const updatedVerification = await verifications.findOne({
+      const updatedVerification = await findVerification({
         userId: userId,
         destination: phoneNumber
       });
@@ -216,7 +235,7 @@ describe("VerificationService", () => {
     });
 
     it("should throw error for invalid email format", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const invalidEmail = "not-an-email";
 
       await expect(
@@ -231,7 +250,7 @@ describe("VerificationService", () => {
 
       const [mailCalls, verificationRecord] = await Promise.all([
         Promise.resolve(mockMailerService.sendMail.mock.calls.length),
-        verifications.findOne({userId, destination: invalidEmail})
+        findVerification({userId, destination: invalidEmail})
       ]);
 
       expect(mailCalls).toBe(0);
@@ -239,7 +258,7 @@ describe("VerificationService", () => {
     });
 
     it("should throw error for invalid phone number format", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const invalidPhone = "not-a-phone";
 
       await expect(
@@ -254,7 +273,7 @@ describe("VerificationService", () => {
 
       const [smsCalls, verificationRecord] = await Promise.all([
         Promise.resolve(mockSmsService.sendSms.mock.calls.length),
-        verifications.findOne({userId, destination: invalidPhone})
+        findVerification({userId, destination: invalidPhone})
       ]);
 
       expect(smsCalls).toBe(0);
@@ -262,7 +281,7 @@ describe("VerificationService", () => {
     });
 
     it("should throw error for unknown provider", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "test@example.com";
       const unknownProvider = "unknown-provider";
 
@@ -278,7 +297,7 @@ describe("VerificationService", () => {
 
       const [mailCalls, verificationRecord] = await Promise.all([
         Promise.resolve(mockMailerService.sendMail.mock.calls.length),
-        verifications.findOne({userId, destination: email})
+        findVerification({userId, destination: email})
       ]);
 
       expect(mailCalls).toBe(0);
@@ -286,7 +305,7 @@ describe("VerificationService", () => {
     });
 
     it("should throw error when email is not accepted by SMTP", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "test@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -304,12 +323,12 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      const verificationRecord = await verifications.findOne({userId, destination: email});
+      const verificationRecord = await findVerification({userId, destination: email});
       expect(verificationRecord).toBeNull();
     });
 
     it("should throw error when SMS fails to send", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const phoneNumber = "+1234567890";
 
       mockSmsService.sendSms.mockResolvedValue({
@@ -327,7 +346,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      const verificationRecord = await verifications.findOne({
+      const verificationRecord = await findVerification({
         userId,
         destination: phoneNumber
       });
@@ -335,7 +354,7 @@ describe("VerificationService", () => {
     });
 
     it("should throw error when verification count exceeds maximum attempts", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "test@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -386,7 +405,7 @@ describe("VerificationService", () => {
     });
 
     it("should verify successfully with correct code", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "test@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -423,7 +442,7 @@ describe("VerificationService", () => {
         provider: EMAIL_PROVIDER
       });
 
-      const finalVerification = await verifications.findOne({
+      const finalVerification = await findVerification({
         userId,
         destination: email
       });
@@ -431,7 +450,7 @@ describe("VerificationService", () => {
     });
 
     it("should fail with wrong code and mark verification as used (one-time use)", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "test@example.com";
       const wrongCode = "999999";
 
@@ -459,12 +478,12 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      const updatedVerification = await verifications.findOne({userId, destination: email});
+      const updatedVerification = await findVerification({userId, destination: email});
       expect(updatedVerification.is_used).toBe(true);
     });
 
     it("should fail when trying to reuse the same verification", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "test@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -500,7 +519,7 @@ describe("VerificationService", () => {
         provider: EMAIL_PROVIDER
       });
 
-      const updatedVerification = await verifications.findOne({userId, destination: email});
+      const updatedVerification = await findVerification({userId, destination: email});
 
       expect(updatedVerification.is_used).toBe(true);
 
@@ -514,13 +533,13 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(NotFoundException);
 
-      const finalVerification = await verifications.findOne({userId, destination: email});
+      const finalVerification = await findVerification({userId, destination: email});
       expect(finalVerification.is_used).toBe(true);
     });
 
     it("should fail with wrong userId", async () => {
-      const userId = new ObjectId();
-      const wrongUserId = new ObjectId();
+      const userId = newUserId();
+      const wrongUserId = newUserId();
       const email = "test@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -551,12 +570,12 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(NotFoundException);
 
-      const updatedVerification = await verifications.findOne({userId, destination: email});
+      const updatedVerification = await findVerification({userId, destination: email});
       expect(updatedVerification.is_used).toBe(false);
     });
 
     it("should fail when trying to verify with wrong provider", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "test@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -587,12 +606,12 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(NotFoundException);
 
-      const updatedVerification = await verifications.findOne({userId, destination: email});
+      const updatedVerification = await findVerification({userId, destination: email});
       expect(updatedVerification.is_used).toBe(false);
     });
 
     it("should fail when trying to verify with wrong purpose", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "test@example.com";
       const wrongPurpose = "login";
 
@@ -624,12 +643,12 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(NotFoundException);
 
-      const updatedVerification = await verifications.findOne({userId, destination: email});
+      const updatedVerification = await findVerification({userId, destination: email});
       expect(updatedVerification.is_used).toBe(false);
     });
 
     it("should verify phone provider successfully with correct code", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const phoneNumber = "+1234567890";
 
       mockSmsService.sendSms.mockResolvedValue({
@@ -665,7 +684,7 @@ describe("VerificationService", () => {
         provider: PHONE_PROVIDER
       });
 
-      const finalVerification = await verifications.findOne({
+      const finalVerification = await findVerification({
         userId,
         destination: phoneNumber
       });
@@ -673,7 +692,7 @@ describe("VerificationService", () => {
     });
 
     it("should fail phone verification with wrong code", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const phoneNumber = "+1234567890";
       const wrongCode = "999999";
 
@@ -700,7 +719,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      const updatedVerification = await verifications.findOne({
+      const updatedVerification = await findVerification({
         userId,
         destination: phoneNumber
       });
@@ -709,10 +728,10 @@ describe("VerificationService", () => {
   });
 
   describe("OTP - ProviderVerificationService", () => {
-    let userId: ObjectId;
+    let userId: any;
     beforeEach(async () => {
-      userId = new ObjectId();
-      await users.insertOne({
+      userId = newUserId();
+      await users.insert({
         _id: userId,
         username: "testphoneuser",
         password: "testpassword"
@@ -764,13 +783,13 @@ describe("VerificationService", () => {
         destination: email
       });
 
-      const finalVerification = await verifications.findOne({
+      const finalVerification = await findVerification({
         userId,
         destination: email
       });
       expect(finalVerification.is_used).toBe(true);
 
-      const user = await users.findOne({_id: userId});
+      const user = await users.findById(userId);
 
       const UserWithEmail = userService.decryptProviderFields(user);
 
@@ -793,7 +812,7 @@ describe("VerificationService", () => {
     });
 
     it("should create verification record and send magic link via email", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "magiclink@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -821,7 +840,7 @@ describe("VerificationService", () => {
         text: expect.stringContaining("verify-magic-link?token=")
       });
 
-      const verification = await verifications.findOne({
+      const verification = await findVerification({
         userId,
         destination: email
       });
@@ -837,7 +856,7 @@ describe("VerificationService", () => {
     });
 
     it("should create verification record and send magic link via SMS", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const phone = "+9876543210";
 
       mockSmsService.sendSms.mockResolvedValue({
@@ -863,7 +882,7 @@ describe("VerificationService", () => {
         body: expect.stringContaining("verify-magic-link?token=")
       });
 
-      const verification = await verifications.findOne({
+      const verification = await findVerification({
         userId,
         destination: phone
       });
@@ -879,7 +898,7 @@ describe("VerificationService", () => {
     });
 
     it("should confirm magic link verification with valid token", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "confirm-magic@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -911,7 +930,7 @@ describe("VerificationService", () => {
         provider: EMAIL_PROVIDER
       });
 
-      const verification = await verifications.findOne({
+      const verification = await findVerification({
         userId,
         destination: email
       });
@@ -919,7 +938,7 @@ describe("VerificationService", () => {
     });
 
     it("should fail confirmation with tampered token", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "tampered@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -944,7 +963,7 @@ describe("VerificationService", () => {
     });
 
     it("should fail confirmation when token is reused", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "reuse-magic@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -977,7 +996,7 @@ describe("VerificationService", () => {
         {provider: "phone", strategy: "MagicLink"}
       ]);
 
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "not-enabled@example.com";
 
       await expect(
@@ -996,7 +1015,7 @@ describe("VerificationService", () => {
     it("should fail when providerVerificationConfig is not set", async () => {
       await userConfigService.updateProviderVerificationConfig(undefined);
 
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "no-config@example.com";
 
       await expect(
@@ -1013,7 +1032,7 @@ describe("VerificationService", () => {
     });
 
     it("should throw for unknown strategy", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "unknown-strategy@example.com";
 
       await expect(
@@ -1028,7 +1047,7 @@ describe("VerificationService", () => {
     });
 
     it("should enforce max attempts for magic link strategy", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "maxattempt-magic@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -1059,7 +1078,7 @@ describe("VerificationService", () => {
     });
 
     it("should clean up verification record when email fails to send", async () => {
-      const userId = new ObjectId();
+      const userId = newUserId();
       const email = "fail-send@example.com";
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -1077,7 +1096,7 @@ describe("VerificationService", () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      const verification = await verifications.findOne({
+      const verification = await findVerification({
         userId,
         destination: email
       });
@@ -1087,11 +1106,11 @@ describe("VerificationService", () => {
 
   describe("MagicLink - ProviderVerificationService", () => {
     const MAGIC_LINK_STRATEGY = "MagicLink";
-    let userId: ObjectId;
+    let userId: any;
 
     beforeEach(async () => {
-      userId = new ObjectId();
-      await users.insertOne({
+      userId = newUserId();
+      await users.insert({
         _id: userId,
         username: "magiclink-user",
         password: "testpassword"
@@ -1139,7 +1158,7 @@ describe("VerificationService", () => {
         destination: email
       });
 
-      const user = await users.findOne({_id: userId});
+      const user = await users.findById(userId);
       const decrypted = userService.decryptProviderFields(user);
       expect(decrypted.email).toBe(email);
     });
@@ -1175,7 +1194,7 @@ describe("VerificationService", () => {
         destination: phone
       });
 
-      const user = await users.findOne({_id: userId});
+      const user = await users.findById(userId);
       const decrypted = userService.decryptProviderFields(user);
       expect(decrypted.phone).toBe(phone);
     });

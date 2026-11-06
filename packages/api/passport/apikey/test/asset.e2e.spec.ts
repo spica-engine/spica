@@ -2,14 +2,15 @@ import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {ApiKeyModule} from "@spica-server/passport-apikey";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {AssetModule} from "@spica-server/asset";
+import {AssetModule, exporters, operators, validators} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import os from "os";
 
-describe("Apikey", () => {
+contractSuite("Apikey", engine => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
   }
@@ -33,7 +34,7 @@ describe("Apikey", () => {
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
         ApiKeyModule.forRoot({realtime: false}),
@@ -43,11 +44,17 @@ describe("Apikey", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
+    apikeyId = String(module.get<IdTypes>(ID_TYPES).forCollection("apikey").generate());
 
     await app.listen(req.socket);
   });
 
-  afterEach(() => app.close());
+  afterEach(async () => {
+    await app.close();
+    validators.clear();
+    operators.clear();
+    exporters.clear();
+  });
 
   function getApikeys() {
     return req.get("passport/apikey").then(r => r.body.data);
@@ -59,7 +66,7 @@ describe("Apikey", () => {
 
   let apikeyv1Resource;
   let apikeyv1;
-  const apikeyId = new ObjectId().toString();
+  let apikeyId: string;
 
   let apikeyv2Resource;
   let apikeyv2;
