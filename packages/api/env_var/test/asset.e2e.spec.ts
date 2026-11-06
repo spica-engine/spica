@@ -1,16 +1,17 @@
 import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {AssetModule} from "@spica-server/asset";
+import {AssetModule, exporters, operators, validators} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import os from "os";
 import {PreferenceModule} from "@spica-server/preference";
 import {EnvVarModule} from "@spica-server/env_var";
 
-describe("EnvVar", () => {
+contractSuite("EnvVar", engine => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
   }
@@ -34,7 +35,7 @@ describe("EnvVar", () => {
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceModule.forRoot(),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
@@ -45,11 +46,17 @@ describe("EnvVar", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
+    envVarId = String(module.get<IdTypes>(ID_TYPES).forCollection("env_var").generate());
 
     await app.listen(req.socket);
   });
 
-  afterEach(() => app.close());
+  afterEach(async () => {
+    await app.close();
+    validators.clear();
+    operators.clear();
+    exporters.clear();
+  });
 
   function stripTimestamps({updated_at, ...rest}) {
     return rest;
@@ -65,7 +72,7 @@ describe("EnvVar", () => {
 
   let envVarv1Resource;
   let envVarv1;
-  const envVarId = new ObjectId().toString();
+  let envVarId: string;
 
   let envVarv2Resource;
   let envVarv2;

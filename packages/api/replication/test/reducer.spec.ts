@@ -1,11 +1,15 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {JobReducer} from "@spica-server/replication";
 import {provideRepository} from "@spica-server/data";
-import {JOB_REPOSITORY, REPLICATION_SERVICE_OPTIONS} from "@spica-server/interface-replication";
+import {
+  JOB_REPOSITORY,
+  JobRepository,
+  REPLICATION_SERVICE_OPTIONS
+} from "@spica-server/interface-replication";
 import {replicationServiceOptions} from "@spica-server/replication/testing";
 
-describe("Commander", () => {
+contractSuite("Job reducer", engine => {
   let module: TestingModule;
   let reducer: JobReducer;
   let meta;
@@ -13,7 +17,7 @@ describe("Commander", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.standalone()],
+      imports: [engine.module()],
       providers: [
         {provide: REPLICATION_SERVICE_OPTIONS, useValue: replicationServiceOptions},
         provideRepository(JOB_REPOSITORY),
@@ -40,9 +44,9 @@ describe("Commander", () => {
   });
 
   it("should set created_at on the stored job so the TTL index can expire it", async () => {
-    await reducer.do(meta, job);
+    await reducer.do({...meta, event_id: "event-1"}, job);
 
-    const stored = await module.get(JOB_REPOSITORY).findOne({_id: meta._id});
+    const stored = await module.get<JobRepository>(JOB_REPOSITORY).takeByEventId("event-1");
     expect(stored.created_at).toBeInstanceOf(Date);
   });
 });

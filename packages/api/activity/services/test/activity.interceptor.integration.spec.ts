@@ -2,7 +2,7 @@ import {Controller, INestApplication, Post, Req, UseInterceptors} from "@nestjs/
 import {Test} from "@nestjs/testing";
 import {activity, ActivityService} from "@spica-server/activity-services";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {
   Predict,
   ModuleActivity,
@@ -42,7 +42,7 @@ export class TestController {
   }
 }
 
-describe("Interceptor with a proper activity handler", () => {
+contractSuite("Interceptor with a proper activity handler", engine => {
   let request: Request;
   let app: INestApplication;
   let repository: ActivityRepository;
@@ -50,7 +50,7 @@ describe("Interceptor with a proper activity handler", () => {
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create(), CoreTestingModule],
+      imports: [engine.module(), CoreTestingModule],
       controllers: [TestController],
       providers: [
         provideRepository(ACTIVITY_REPOSITORY),
