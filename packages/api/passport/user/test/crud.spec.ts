@@ -1,6 +1,7 @@
 import {USER_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportModule} from "@spica-server/passport";
 import {INestApplication} from "@nestjs/common";
@@ -8,10 +9,9 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {UserService} from "../src/user.service";
-import {ObjectId} from "@spica-server/database";
 import {ConfigModule} from "@spica-server/config";
 
-describe("User Email Hashing and Encryption", () => {
+contractSuite("User Email Hashing and Encryption", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
@@ -20,13 +20,16 @@ describe("User Email Hashing and Encryption", () => {
   let adminToken: string;
   let testUserId: string;
   let createdAt: Date;
+
+  const filterOf = (mongodb: object, postgresql: string) =>
+    engine.name == "mongodb" ? JSON.stringify(mongodb) : postgresql;
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
           formats: [OBJECT_ID, DATE_TIME]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         CoreTestingModule,
         ConfigModule.forRoot(),
@@ -92,12 +95,12 @@ describe("User Email Hashing and Encryption", () => {
       })
       .then(res => res.body.token);
 
-    const userId = new ObjectId();
-    testUserId = userId.toHexString();
+    const userId = module.get<IdTypes>(ID_TYPES).forCollection("user").generate();
+    testUserId = String(userId);
     createdAt = new Date();
     const encryptedEmail = userService.encryptField("test@example.com");
 
-    await users.insertOne({
+    await users.insert({
       _id: userId,
       username: "testuser",
       password: "password123",
@@ -134,7 +137,7 @@ describe("User Email Hashing and Encryption", () => {
   it("should find user by email", async () => {
     const listRes = await req.get(
       "/passport/user",
-      {filter: JSON.stringify({email: "test@example.com"})},
+      {filter: filterOf({email: "test@example.com"}, "document.email == 'test@example.com'")},
       {
         Authorization: `IDENTITY ${adminToken}`
       }
@@ -155,7 +158,7 @@ describe("User Email Hashing and Encryption", () => {
   it("should return empty result when searching with wrong email", async () => {
     const listRes = await req.get(
       "/passport/user",
-      {filter: JSON.stringify({email: "wrong@example.com"})},
+      {filter: filterOf({email: "wrong@example.com"}, "document.email == 'wrong@example.com'")},
       {
         Authorization: `IDENTITY ${adminToken}`
       }
@@ -169,9 +172,10 @@ describe("User Email Hashing and Encryption", () => {
     const listRes = await req.get(
       "/passport/user",
       {
-        filter: JSON.stringify({
-          $or: [{email: "test@example.com"}, {username: "nonexistent"}]
-        })
+        filter: filterOf(
+          {$or: [{email: "test@example.com"}, {username: "nonexistent"}]},
+          "document.email == 'test@example.com' || document.username == 'nonexistent'"
+        )
       },
       {
         Authorization: `IDENTITY ${adminToken}`
@@ -195,12 +199,15 @@ describe("User Email Hashing and Encryption", () => {
     const listRes = await req.get(
       "/passport/user",
       {
-        filter: JSON.stringify({
-          $or: [
-            {$and: [{email: "test@example.com"}, {username: "testuser"}]},
-            {username: "nonexistent"}
-          ]
-        })
+        filter: filterOf(
+          {
+            $or: [
+              {$and: [{email: "test@example.com"}, {username: "testuser"}]},
+              {username: "nonexistent"}
+            ]
+          },
+          "(document.email == 'test@example.com' && document.username == 'testuser') || document.username == 'nonexistent'"
+        )
       },
       {
         Authorization: `IDENTITY ${adminToken}`

@@ -2,7 +2,7 @@ import {All, Controller, Get, INestApplication, ModuleMetadata, Req, Res} from "
 import {Test} from "@nestjs/testing";
 import {SchemaModule, hash, OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {PassportModule} from "@spica-server/passport";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {REQUEST_SERVICE} from "@spica-server/interface-passport";
@@ -226,13 +226,16 @@ function parseCookie(setCookieHeader: string): ParsedCookie {
   };
 }
 
-describe("E2E Tests", () => {
+contractSuite("E2E Tests", engine => {
+  const equalsFilter = (field: string, value: string) =>
+    engine.name == "mongodb" ? JSON.stringify({[field]: value}) : `document.${field} == '${value}'`;
+
   const publicUrl = "http://insteadof";
   const moduleMetaData: ModuleMetadata = {
     controllers: [SAMLController, OAuthController],
     imports: [
       SchemaModule.forRoot({formats: [OBJECT_ID, DATE_TIME]}),
-      DatabaseTestingModule.replicaSet(),
+      engine.module(),
       ConfigModule.forRoot(),
       PassportModule.forRoot({
         publicUrl: publicUrl,
@@ -454,7 +457,7 @@ describe("E2E Tests", () => {
       // also refresh token last_used_at should be updated
       const {body: tokens} = await req.get(
         "passport/refresh-token",
-        {filter: JSON.stringify({token: parsedCookie.value})},
+        {filter: equalsFilter("token", parsedCookie.value)},
         {
           Authorization: `IDENTITY ${newToken}`
         }
@@ -471,7 +474,7 @@ describe("E2E Tests", () => {
         body: [refreshToken]
       } = await req.get(
         "passport/refresh-token",
-        {filter: JSON.stringify({token: parsedCookie.value})},
+        {filter: equalsFilter("token", parsedCookie.value)},
         {
           Authorization: `IDENTITY ${token}`
         }
@@ -543,7 +546,7 @@ describe("E2E Tests", () => {
         body: [refreshToken]
       } = await req.get(
         "passport/refresh-token",
-        {filter: JSON.stringify({token: parsedCookie.value})},
+        {filter: equalsFilter("token", parsedCookie.value)},
         {
           Authorization: `IDENTITY ${token}`
         }
@@ -578,7 +581,7 @@ describe("E2E Tests", () => {
         body: [refreshToken]
       } = await req.get(
         "passport/refresh-token",
-        {filter: JSON.stringify({token: rawTokenFromCookie})},
+        {filter: equalsFilter("token", rawTokenFromCookie)},
         {
           Authorization: `IDENTITY ${token}`
         }
@@ -846,7 +849,7 @@ describe("E2E Tests", () => {
       async function getUser(username: string) {
         const {body: users} = await req.get(
           "/passport/user",
-          {filter: JSON.stringify({username})},
+          {filter: equalsFilter("username", username)},
           {Authorization: `IDENTITY ${token}`}
         );
         expect(users.length).toEqual(1);

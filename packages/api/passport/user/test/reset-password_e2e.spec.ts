@@ -1,7 +1,7 @@
 import {USER_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
 import {INestApplication} from "@nestjs/common";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {UserService} from "@spica-server/passport-user/src/user.service";
 import {MailerService} from "@spica-server/mailer";
 import {MailerModule} from "@spica-server/mailer";
@@ -15,7 +15,7 @@ import {GenericContainer} from "testcontainers";
 import {UserConfigService} from "../src/config.service";
 import {ConfigModule} from "@spica-server/config";
 
-describe("Password Reset E2E with MailHog", () => {
+contractSuite("Password Reset E2E with MailHog", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
@@ -69,7 +69,7 @@ describe("Password Reset E2E with MailHog", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         CoreTestingModule,
         PreferenceTestingModule,
         ConfigModule.forRoot(),
@@ -155,7 +155,7 @@ describe("Password Reset E2E with MailHog", () => {
     await app.init();
 
     const encryptedEmail = userService.encryptField(email);
-    await users.insertOne({
+    await users.insert({
       username: username,
       password: oldPassword,
       policies: [],
@@ -168,7 +168,6 @@ describe("Password Reset E2E with MailHog", () => {
 
   afterEach(async () => {
     if (app) await app.close();
-    if (module) await module.close();
     if (container) await container.stop();
   });
 
