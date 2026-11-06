@@ -70,9 +70,7 @@ contractSuite("Storage Acceptance", engine => {
         PassportTestingModule.initialize(),
         engine.module(),
         StorageModule.forRoot({
-          defaultPath: fs.mkdtempSync(
-            path.join(process.env.TEST_TMPDIR || os.tmpdir(), "storage-")
-          ),
+          defaultPath: storagePath,
           defaultPublicUrl: "http://insteadof",
           strategy: "default",
           objectSizeLimit: 0.1,
