@@ -1,4 +1,5 @@
 import {Entity, quote, ResolvedColumn} from "@spica-server/data-postgresql-orm";
+import {HashedFields} from "@spica-server/interface-data";
 import {Column, FieldResolver, InvalidRuleError, UnsupportedRuleError} from "../../access/index.js";
 
 type ColumnType = Column["type"];
@@ -44,16 +45,21 @@ export function isSecret(entity: Entity, column: ResolvedColumn): boolean {
 export class EntityFieldResolver implements FieldResolver {
   constructor(
     private readonly entity: Entity,
-    private readonly alias: string
+    private readonly alias: string,
+    private readonly hashed?: HashedFields
   ) {}
 
   locate(path: string[]): Column {
     const name = path.join(".");
-    const column = this.entity.byProperty.get(name);
+    const stored =
+      this.hashed && Object.prototype.hasOwnProperty.call(this.hashed.fields, name)
+        ? this.hashed.fields[name]
+        : undefined;
+    const column = this.entity.byProperty.get(stored ?? name);
     if (!column) {
       throw new InvalidRuleError(`"${name}" is not a field of the collection.`);
     }
-    if (isSecret(this.entity, column)) {
+    if (!stored && isSecret(this.entity, column)) {
       throw new UnsupportedRuleError(`"${name}" cannot be used in a filter.`);
     }
     const type = COLUMN_TYPES[column.type];
@@ -64,7 +70,7 @@ export class EntityFieldResolver implements FieldResolver {
       kind: "column",
       sql: `${quote(this.alias)}.${quote(column.column)}`,
       type,
-      property: {type: PROPERTY_TYPES[column.type]} as Property
+      property: {type: stored ? "hash" : PROPERTY_TYPES[column.type]} as Property
     };
   }
 }

@@ -1,4 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
+import {hash} from "@spica-server/core-encryption";
 import {FilterLanguageError, provideRepository} from "@spica-server/data";
 import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {
@@ -282,6 +283,90 @@ contractSuite("collection query", engine => {
       expect(await actions({contains: {any: ["1", "2"]}})).toEqual([1, 2, 3]);
       expect(await actions({contains: {all: ["bucket"], any: ["2"]}})).toEqual([2]);
       expect(await actions({contains: {all: ["bucket", "3"]}})).toEqual([]);
+    });
+  });
+
+  describe("hashed fields", () => {
+    const secret = "hashed-fields-secret";
+    const hashed = {secret, fields: {email: "email.hash", phone: "phone.hash"}};
+    const mongodb = engine.name == "mongodb";
+
+    const seedUsers = async () => {
+      const stored = (value: string) => ({
+        encrypted: "encrypted",
+        iv: "iv",
+        authTag: "tag",
+        hash: hash(value, secret)
+      });
+      for (const [username, email, phone] of [
+        ["ann", "ann@spica.io", "+100"],
+        ["bob", "bob@spica.io", "+200"],
+        ["cem", "cem@spica.io", "+300"]
+      ]) {
+        await users.insert({
+          username,
+          password: "x",
+          policies: [],
+          lastPasswords: [],
+          failedAttempts: [],
+          email: stored(email),
+          phone: stored(phone)
+        } as any);
+      }
+    };
+
+    const usernames = async (json: object, expression: string) =>
+      (
+        await queries.find<any>("user", {
+          filter: mongodb ? json : expression,
+          hashed,
+          sort: {username: 1}
+        })
+      ).map(user => user.username);
+
+    it("should compare a field with the hash of the given value", async () => {
+      await seedUsers();
+
+      expect(await usernames({email: "bob@spica.io"}, "document.email == 'bob@spica.io'")).toEqual([
+        "bob"
+      ]);
+      expect(
+        await usernames({email: "nobody@spica.io"}, "document.email == 'nobody@spica.io'")
+      ).toEqual([]);
+    });
+
+    it("should hash the values of a list and of every side of a logical operator", async () => {
+      await seedUsers();
+
+      expect(
+        await usernames(
+          {email: {$in: ["ann@spica.io", "cem@spica.io"]}},
+          "document.email in ['ann@spica.io', 'cem@spica.io']"
+        )
+      ).toEqual(["ann", "cem"]);
+      expect(
+        await usernames(
+          {$or: [{email: "ann@spica.io"}, {phone: "+300"}]},
+          "document.email == 'ann@spica.io' || document.phone == '+300'"
+        )
+      ).toEqual(["ann", "cem"]);
+    });
+
+    it("should leave the other fields of the filter as they are", async () => {
+      await seedUsers();
+
+      expect(
+        await usernames(
+          {$and: [{email: "bob@spica.io"}, {username: "bob"}]},
+          "document.email == 'bob@spica.io' && document.username == 'bob'"
+        )
+      ).toEqual(["bob"]);
+      expect(
+        await usernames(
+          {$and: [{email: "bob@spica.io"}, {username: "ann"}]},
+          "document.email == 'bob@spica.io' && document.username == 'ann'"
+        )
+      ).toEqual([]);
     });
   });
 

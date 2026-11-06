@@ -45,14 +45,15 @@ export function compileFilterIn(
   filter: string,
   fields: FieldResolver,
   values: unknown[],
-  now?: () => number
+  now?: () => number,
+  hashSecret?: string
 ): CompiledRule {
   if (filter.length > FILTER_LIMITS.length) {
     throw new InvalidRuleError(`The filter is longer than ${FILTER_LIMITS.length} characters.`);
   }
   const node = parseRule(filter);
   checkSize(node);
-  return compileParsed(node, {auth: undefined, forbidAuth: true, now, fields}, values);
+  return compileParsed(node, {auth: undefined, forbidAuth: true, now, fields, hashSecret}, values);
 }
 
 export function compileFilter(filter: string, scope: FilterScope, values: unknown[]): CompiledRule {

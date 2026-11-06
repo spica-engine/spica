@@ -154,7 +154,13 @@ export function planCollection(entity: Entity, spec: ReadSpec, relations: Active
 
   if (typeof spec.filter == "string" && spec.filter.trim()) {
     try {
-      const compiled = compileFilterIn(spec.filter, new EntityFieldResolver(entity, ALIAS), values);
+      const compiled = compileFilterIn(
+        spec.filter,
+        new EntityFieldResolver(entity, ALIAS, spec.hashed),
+        values,
+        undefined,
+        spec.hashed?.secret
+      );
       if (compiled.constant === false) {
         matchesNothing = true;
       } else if (compiled.constant === undefined) {
