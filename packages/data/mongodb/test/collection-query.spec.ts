@@ -2,6 +2,7 @@ import {FilterLanguageError, PassthroughResultShaper} from "@spica-server/data";
 import {MongoCollectionQueryFacade, MongoIdTypes} from "@spica-server/data-mongodb";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {Test} from "@nestjs/testing";
+import {hash} from "@spica-server/core-encryption";
 import {COLLECTION_QUERY, CollectionQueryFacade, ResultShaper} from "@spica-server/interface-data";
 
 // Records every pipeline the facade sends, so a test can state the stages it expects.
@@ -141,6 +142,28 @@ describe("MongoCollectionQueryFacade", () => {
         resourceFilter,
         clientMatch({"email.hash": "hashed:a@b.c"}),
         {$project: identitySecrets}
+      ]);
+    });
+
+    it("should compare the declared hashed fields with the hash of the given value", async () => {
+      await facade.find("user", {
+        filter: {
+          $or: [{email: "a@b.c"}, {phone: {$in: ["1", "2"]}}],
+          username: "bob"
+        },
+        hashed: {secret: "s", fields: {email: "email.hash", phone: "phone.hash"}}
+      });
+
+      expect(calls[0].pipeline).toEqual([
+        {
+          $match: {
+            $or: [
+              {"email.hash": hash("a@b.c", "s")},
+              {"phone.hash": {$in: [hash("1", "s"), hash("2", "s")]}}
+            ],
+            username: "bob"
+          }
+        }
       ]);
     });
 

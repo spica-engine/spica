@@ -286,10 +286,9 @@ contractSuite("collection query", engine => {
     });
   });
 
-  describe("hashed fields", () => {
+  (postgres ? describe : describe.skip)("hashed fields on PostgreSQL", () => {
     const secret = "hashed-fields-secret";
     const hashed = {secret, fields: {email: "email.hash", phone: "phone.hash"}};
-    const mongodb = engine.name == "mongodb";
 
     const seedUsers = async () => {
       const stored = (value: string) => ({
@@ -315,40 +314,27 @@ contractSuite("collection query", engine => {
       }
     };
 
-    const usernames = async (json: object, expression: string) =>
-      (
-        await queries.find<any>("user", {
-          filter: mongodb ? json : expression,
-          hashed,
-          sort: {username: 1}
-        })
-      ).map(user => user.username);
+    const usernames = async (filter: string) =>
+      (await queries.find<any>("user", {filter, hashed, sort: {username: 1}})).map(
+        user => user.username
+      );
 
     it("should compare a field with the hash of the given value", async () => {
       await seedUsers();
 
-      expect(await usernames({email: "bob@spica.io"}, "document.email == 'bob@spica.io'")).toEqual([
-        "bob"
-      ]);
-      expect(
-        await usernames({email: "nobody@spica.io"}, "document.email == 'nobody@spica.io'")
-      ).toEqual([]);
+      expect(await usernames("document.email == 'bob@spica.io'")).toEqual(["bob"]);
+      expect(await usernames("document.email == 'nobody@spica.io'")).toEqual([]);
     });
 
     it("should hash the values of a list and of every side of a logical operator", async () => {
       await seedUsers();
 
+      expect(await usernames("document.email in ['ann@spica.io', 'cem@spica.io']")).toEqual([
+        "ann",
+        "cem"
+      ]);
       expect(
-        await usernames(
-          {email: {$in: ["ann@spica.io", "cem@spica.io"]}},
-          "document.email in ['ann@spica.io', 'cem@spica.io']"
-        )
-      ).toEqual(["ann", "cem"]);
-      expect(
-        await usernames(
-          {$or: [{email: "ann@spica.io"}, {phone: "+300"}]},
-          "document.email == 'ann@spica.io' || document.phone == '+300'"
-        )
+        await usernames("document.email == 'ann@spica.io' || document.phone == '+300'")
       ).toEqual(["ann", "cem"]);
     });
 
@@ -356,16 +342,10 @@ contractSuite("collection query", engine => {
       await seedUsers();
 
       expect(
-        await usernames(
-          {$and: [{email: "bob@spica.io"}, {username: "bob"}]},
-          "document.email == 'bob@spica.io' && document.username == 'bob'"
-        )
+        await usernames("document.email == 'bob@spica.io' && document.username == 'bob'")
       ).toEqual(["bob"]);
       expect(
-        await usernames(
-          {$and: [{email: "bob@spica.io"}, {username: "ann"}]},
-          "document.email == 'bob@spica.io' && document.username == 'ann'"
-        )
+        await usernames("document.email == 'bob@spica.io' && document.username == 'ann'")
       ).toEqual([]);
     });
   });
