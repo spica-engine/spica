@@ -8,7 +8,7 @@ import {
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {Test} from "@nestjs/testing";
 import {Store} from "cache-manager";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 
 @Controller("bucket/:bucketId/data")
 export class TestController {
@@ -32,7 +32,7 @@ async function waitForCacheInvalidation() {
   await new Promise((resolve, _) => setTimeout(resolve, 100));
 }
 
-describe("Bucket Cache Integration", () => {
+contractSuite("Bucket Cache Integration", engine => {
   describe("with cache module", () => {
     let req: Request;
     let app: INestApplication;
@@ -42,11 +42,7 @@ describe("Bucket Cache Integration", () => {
 
     beforeEach(async () => {
       const module = await Test.createTestingModule({
-        imports: [
-          DatabaseTestingModule.standalone(),
-          CoreTestingModule,
-          BucketCacheModule.register({ttl: 60})
-        ],
+        imports: [engine.module(), CoreTestingModule, BucketCacheModule.register({ttl: 60})],
         controllers: [TestController],
         providers: []
       }).compile();
