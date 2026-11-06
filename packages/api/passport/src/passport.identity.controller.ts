@@ -340,7 +340,10 @@ export class PassportIdentityController {
 
   @Get("identity/strategies")
   async strategies() {
-    return this.queries.find(STRATEGY_COLLECTION, {filter: {type: "saml"}, fields: {options: 0}});
+    return this.queries.find(STRATEGY_COLLECTION, {
+      where: {type: {eq: "saml"}},
+      fields: {options: 0}
+    });
   }
 
   @Get("identity/strategy/:id/url")
