@@ -46,7 +46,7 @@ Makes the admin panel (`apps/panel`) usable against an API that runs on PostgreS
 - Facade lists that take a filter (JSON on MongoDB, an expression on PostgreSQL): identity, user, refresh token, secret, env var, storage (`/storage` and `/storage/browse`), bucket data.
 - Not facade filters: policy, asset, function (`JSONP`), and every `/profile` endpoint. They stay JSON.
 - **`/activity` and `/apikey` ignore `filter`.** Neither controller has the parameter. The panel's filter panels on the Activities and API key pages are no-ops on both engines. `/activity` sorts by `_id` itself.
-- **`/activity` takes MongoDB operators in `resource`.** The panel sends `resource={"$all":[module,bucketId],"$in":[documentIds]}` (`store/api/activitiesApi.ts`, `ActivityFilterPopover.tsx`). That is MongoDB syntax in a public parameter. The API defines the neutral contract instead (Part 8a): `resource` repeated, for the values the activity's resource list must all hold, and `documentId` repeated, for the values of which it must hold any. The panel sends `/activity?resource=bucket&resource=<bucketId>&documentId=<a>&documentId=<b>`. Part 8a drops the JSON form, so the panel change below ships with it.
+- **`/activity` took MongoDB operators in `resource`.** The panel sent `resource={"$all":[module,bucketId],"$in":[documentIds]}`. Part 8a redefines the parameter instead of translating it: `resource` repeated (values the activity's resource list must all hold) and `documentId` repeated (ids of which it must hold any), and changes the panel's `buildActivityFilterOptions` and `getActivities` in the same PR, so the filter never breaks on MongoDB. Nothing is left to do for it here.
 - **Policy filtering is client-side** (`pages/policy/Policy.tsx`) and matches a string against a MongoDB object like `{$regex}`, so any condition returns nothing. Engine-independent.
 - Function logs ignore `sort`.
 
@@ -128,7 +128,7 @@ Three specs exist (`field-acl.spec.ts`, `filterPanelUtils.spec.ts`, `useBucketSe
 
 1. A panel test runner, so every later PR brings tests that run.
 2. The filter serialization helper and widened types (13 files, mechanical, behaviour-neutral).
-3. Identity and user filters in the engine's language, with the decision on API key, activity and policy. The activity page sends the neutral `resource`/`documentId` parameters instead of `resource={"$all","$in"}` (`buildActivityFilterOptions`, `getActivities`).
+3. Identity and user filters in the engine's language, with the decision on API key, activity and policy.
 4. Storage filters (about 8 files, a new expression builder), and removal of the dead `StorageContext` code.
 5. Hide the profiler on PostgreSQL.
 6. UUID v7 timestamps: one helper, four call sites.
