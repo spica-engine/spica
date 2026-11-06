@@ -12,11 +12,6 @@ export interface ActivityListResponse {
   };
 }
 
-export interface ActivityFilterResource {
-  $all?: string[];
-  $in?: string[];
-}
-
 export interface ActivityOptions {
   limit?: number;
   skip?: number;
@@ -30,8 +25,10 @@ export interface ActivityOptions {
   begin?: string | Date;
   /** End of date range (ISO string) */
   end?: string | Date;
-  /** Resource filter: { $all: [module, bucketId?], $in: [documentIds] } */
-  resource?: ActivityFilterResource;
+  /** Values the activity's resource must hold: [module, bucketId?] */
+  resource?: string[];
+  /** Document ids of which the activity's resource must hold at least one */
+  documentId?: string[];
 }
 
 const ACTIVITY_TAG = 'Activity' as const;
@@ -75,18 +72,14 @@ export function buildActivityFilterOptions(values: {
     opts.end = values.dateRange.to;
   }
 
-  const resource: ActivityFilterResource = {};
   if (values.module) {
-    resource.$all = [values.module];
+    opts.resource = [values.module];
     if (values.module === 'bucket' && values.bucketId) {
-      resource.$all.push(values.bucketId);
+      opts.resource.push(values.bucketId);
     }
   }
   if (values.documentIds?.length) {
-    resource.$in = values.documentIds;
-  }
-  if (resource.$all?.length || resource.$in?.length) {
-    opts.resource = resource;
+    opts.documentId = values.documentIds;
   }
 
   return opts;
@@ -97,7 +90,8 @@ export const activitiesApi = baseApi.injectEndpoints({
     getActivities: builder.query<Activity[], ActivityOptions | void>({
       query: (options: ActivityOptions = {}) => {
         const params = new URLSearchParams();
-        const { limit, skip, sort, filter, identifier, action, begin, end, resource } = options;
+        const { limit, skip, sort, filter, identifier, action, begin, end, resource, documentId } =
+          options;
 
         if (limit != null) params.append('limit', String(limit));
         if (skip != null) params.append('skip', String(skip));
@@ -112,9 +106,8 @@ export const activitiesApi = baseApi.injectEndpoints({
         const endIso = toIsoString(end);
         if (beginIso) params.append('begin', beginIso);
         if (endIso) params.append('end', endIso);
-        if (resource && (resource.$all?.length || resource.$in?.length)) {
-          params.append('resource', JSON.stringify(resource));
-        }
+        resource?.forEach((value) => params.append('resource', value));
+        documentId?.forEach((value) => params.append('documentId', value));
 
         const qs = params.toString();
         return qs ? `/activity?${qs}` : `/activity`;
