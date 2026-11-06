@@ -1,12 +1,12 @@
 import {provideRepository} from "@spica-server/data";
 import {WEBHOOK_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {WebhookService, WebhookChangeDispatcher} from "@spica-server/function-webhook";
 import {Webhook, ChangeKind} from "@spica-server/interface-function-webhook";
 import {bufferCount, bufferTime, take} from "rxjs/operators";
 
-describe("Webhook Service", () => {
+contractSuite("Webhook Service", engine => {
   let service: WebhookService;
   let webhooks: any;
   let module: TestingModule;
@@ -14,7 +14,7 @@ describe("Webhook Service", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet()],
+      imports: [engine.module()],
       providers: [provideRepository(WEBHOOK_REPOSITORY), WebhookService, WebhookChangeDispatcher]
     }).compile();
     service = module.get(WebhookService);
@@ -59,7 +59,7 @@ describe("Webhook Service", () => {
         .subscribe(targets => {
           expect(targets).toEqual({
             kind: ChangeKind.Added,
-            target: hook._id.toHexString(),
+            target: String(hook._id),
             webhook: {
               title: hook.title,
               url: hook.url,
@@ -80,7 +80,7 @@ describe("Webhook Service", () => {
       .subscribe(targets => {
         expect(targets).toEqual({
           kind: ChangeKind.Added,
-          target: hook._id.toHexString(),
+          target: String(hook._id),
           webhook: {
             title: hook.title,
             url: hook.url,
@@ -102,7 +102,7 @@ describe("Webhook Service", () => {
           expect(targets).toEqual([
             {
               kind: ChangeKind.Added,
-              target: hook._id.toHexString(),
+              target: String(hook._id),
               webhook: {
                 title: hook.title,
                 url: hook.url,
@@ -112,7 +112,7 @@ describe("Webhook Service", () => {
             },
             {
               kind: ChangeKind.Removed,
-              target: hook._id.toHexString()
+              target: String(hook._id)
             }
           ]);
           done();
@@ -131,7 +131,7 @@ describe("Webhook Service", () => {
           expect(targets).toEqual([
             {
               kind: ChangeKind.Added,
-              target: hook._id.toHexString(),
+              target: String(hook._id),
               webhook: {
                 title: hook.title,
                 url: hook.url,
@@ -141,7 +141,7 @@ describe("Webhook Service", () => {
             },
             {
               kind: ChangeKind.Removed,
-              target: hook._id.toHexString()
+              target: String(hook._id)
             }
           ]);
           done();
@@ -151,17 +151,16 @@ describe("Webhook Service", () => {
   });
 
   it("should keep reporting after a reload fails", done => {
-    const coll = webhooks._coll;
-    const findOne = coll.findOne.bind(coll);
+    const findById = webhooks.findById.bind(webhooks);
     let alreadyFailed = false;
 
     jest.spyOn((service as any).logger, "error").mockImplementation(() => {});
-    jest.spyOn(coll, "findOne").mockImplementation((...args) => {
+    jest.spyOn(webhooks, "findById").mockImplementation((...args) => {
       if (!alreadyFailed) {
         alreadyFailed = true;
         return Promise.reject(new Error("transient failure"));
       }
-      return findOne(...args);
+      return findById(...args);
     });
 
     service
@@ -173,7 +172,7 @@ describe("Webhook Service", () => {
         done();
       });
 
-    // insertOne stamps _id onto the given document, so build the second one up front
+    // insert stamps _id onto the given document, so build the second one up front
     const second = {...webhook, title: "wh2"};
 
     service

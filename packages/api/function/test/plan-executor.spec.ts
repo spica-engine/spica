@@ -1,12 +1,9 @@
-import {
-  MongoEnvVarRepository,
-  MongoFunctionRepository,
-  MongoSecretRepository
-} from "@spica-server/data-mongodb";
-import {COLLECTION_QUERY} from "@spica-server/interface-data";
+import {provideRepository} from "@spica-server/data";
+import {COLLECTION_QUERY, ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, ObjectId} from "@spica-server/database";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite, QuietChangeFeedModule} from "@spica-server/database-testing";
+import {ENV_VAR_REPOSITORY} from "@spica-server/interface-env_var";
+import {SECRET_REPOSITORY} from "@spica-server/interface-secret";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {PlanExecutor} from "@spica-server/function/src/plan-executor";
 import {TriggerSecretResolver} from "@spica-server/function/src/trigger-secret-resolver";
@@ -14,24 +11,31 @@ import {FunctionPreparationService} from "@spica-server/function/src/function-pr
 import {FunctionService} from "@spica-server/function-services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService, EnvVarChangeDispatcher} from "@spica-server/env_var-services";
-import {TargetChange, ChangeKind, FunctionChangePlan} from "@spica-server/interface-function";
+import {
+  TargetChange,
+  ChangeKind,
+  FunctionChangePlan,
+  FUNCTION_OPTIONS,
+  FUNCTION_REPOSITORY,
+  FunctionRepository
+} from "@spica-server/interface-function";
 import {SecretService, SecretChangeDispatcher} from "@spica-server/secret-services";
 import {getFreeAddress} from "@spica-server/core-testing";
 
-describe("PlanExecutor", () => {
+contractSuite("PlanExecutor", engine => {
   let executor: PlanExecutor;
   let subscribeSpy: jest.SpyInstance;
   let unsubscribeSpy: jest.SpyInstance;
 
   let scheduler: Scheduler;
-  let database: DatabaseService;
   let fs: FunctionService;
-  let functions: MongoFunctionRepository;
+  let functions: FunctionRepository;
 
   let module: TestingModule;
   let app: INestApplication;
 
-  const hexString = "507f1f77bcf86cd799439011";
+  let functionKey: any;
+  let functionId: string;
 
   const apply = (plan: FunctionChangePlan) => executor.apply(plan);
   const routing = (changes: TargetChange[]): FunctionChangePlan => ({
@@ -64,25 +68,30 @@ describe("PlanExecutor", () => {
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
-        DatabaseTestingModule.replicaSet()
+        engine.module(),
+        QuietChangeFeedModule
+      ],
+      providers: [
+        {provide: FUNCTION_OPTIONS, useValue: {entryLimit: 4}},
+        provideRepository(ENV_VAR_REPOSITORY),
+        provideRepository(SECRET_REPOSITORY),
+        provideRepository(FUNCTION_REPOSITORY)
       ]
     }).compile();
 
     app = module.createNestApplication();
 
     scheduler = module.get(Scheduler);
-    database = module.get(DatabaseService);
+    functionKey = module.get<IdTypes>(ID_TYPES).forCollection("function").generate();
+    functionId = String(functionKey);
 
-    const evs = new EnvVarService(
-      new MongoEnvVarRepository(database),
-      new EnvVarChangeDispatcher()
-    );
+    const evs = new EnvVarService(module.get(ENV_VAR_REPOSITORY), new EnvVarChangeDispatcher());
     const ss = new SecretService(
-      new MongoSecretRepository(database),
+      module.get(SECRET_REPOSITORY),
       "test-encryption-secret",
       new SecretChangeDispatcher()
     );
-    functions = new MongoFunctionRepository(database, {} as any);
+    functions = module.get(FUNCTION_REPOSITORY);
     fs = new FunctionService(functions, evs, ss);
 
     const options = {root: "test_root", timeout: 1, outDir: ".build"} as any;
@@ -196,8 +205,8 @@ describe("PlanExecutor", () => {
   });
 
   it("should reconcile warm workers per function, surviving a single-trigger removal", async () => {
-    await functions.insertOne({
-      _id: new ObjectId(hexString),
+    await functions.insert({
+      _id: functionKey,
       env_vars: [],
       language: "js",
       timeout: 10,
@@ -211,7 +220,7 @@ describe("PlanExecutor", () => {
 
     const reconcileSpy = jest.spyOn(scheduler, "reconcileWarmWorkers");
 
-    apply({routing: [], outdate: [], reconcile: [hexString]});
+    apply({routing: [], outdate: [], reconcile: [functionId]});
 
     await waitForCalls(reconcileSpy);
     expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(2);
@@ -220,15 +229,15 @@ describe("PlanExecutor", () => {
   it("should drain the warm reserve when the function no longer exists", async () => {
     const reconcileSpy = jest.spyOn(scheduler, "reconcileWarmWorkers");
 
-    apply({routing: [], outdate: [], reconcile: [hexString]});
+    apply({routing: [], outdate: [], reconcile: [functionId]});
 
     await waitForCalls(reconcileSpy);
     expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(0);
   });
 
   it("should roll active-trigger workers over via supersede and refill the reserve", async () => {
-    await functions.insertOne({
-      _id: new ObjectId(hexString),
+    await functions.insert({
+      _id: functionKey,
       env_vars: [],
       language: "js",
       timeout: 10,
@@ -241,11 +250,11 @@ describe("PlanExecutor", () => {
     const supersedeSpy = jest.spyOn(scheduler, "supersedeWorkers");
     const reconcileSpy = jest.spyOn(scheduler, "reconcileWarmWorkers");
 
-    await apply({routing: [], outdate: [hexString], reconcile: [hexString]});
+    await apply({routing: [], outdate: [functionId], reconcile: [functionId]});
 
     // an existing function with an active trigger rolls over (supersede + pre-warm), not a hard
     // outdate — that path is reserved for deleted / inactive functions.
-    expect(supersedeSpy.mock.calls.at(-1)[0].toObject().id).toBe(hexString);
+    expect(supersedeSpy.mock.calls.at(-1)[0].toObject().id).toBe(functionId);
     expect(outdateSpy).not.toHaveBeenCalled();
     expect(unsubscribeSpy).not.toHaveBeenCalled();
 
@@ -257,15 +266,15 @@ describe("PlanExecutor", () => {
     const outdateSpy = jest.spyOn(scheduler, "outdateWorkers");
     const supersedeSpy = jest.spyOn(scheduler, "supersedeWorkers");
 
-    await apply({routing: [], outdate: [hexString], reconcile: [hexString]});
+    await apply({routing: [], outdate: [functionId], reconcile: [functionId]});
 
-    expect(outdateSpy).toHaveBeenCalledWith(hexString);
+    expect(outdateSpy).toHaveBeenCalledWith(functionId);
     expect(supersedeSpy).not.toHaveBeenCalled();
   });
 
   it("should reconcile per-function concurrency from the function", async () => {
-    await functions.insertOne({
-      _id: new ObjectId(hexString),
+    await functions.insert({
+      _id: functionKey,
       env_vars: [],
       language: "js",
       timeout: 10,
@@ -276,7 +285,7 @@ describe("PlanExecutor", () => {
 
     const reconcileSpy = jest.spyOn(scheduler, "reconcileConcurrency");
 
-    apply({routing: [], outdate: [], reconcile: [hexString]});
+    apply({routing: [], outdate: [], reconcile: [functionId]});
 
     await waitForCalls(reconcileSpy);
     expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(4);
@@ -285,15 +294,15 @@ describe("PlanExecutor", () => {
   it("should reset concurrency to the default when the function no longer exists", async () => {
     const reconcileSpy = jest.spyOn(scheduler, "reconcileConcurrency");
 
-    apply({routing: [], outdate: [], reconcile: [hexString]});
+    apply({routing: [], outdate: [], reconcile: [functionId]});
 
     await waitForCalls(reconcileSpy);
     expect(reconcileSpy.mock.calls.at(-1)[1]).toBe(1);
   });
 
   it("should stamp the reconciled execution context into the scheduler", async () => {
-    await functions.insertOne({
-      _id: new ObjectId(hexString),
+    await functions.insert({
+      _id: functionKey,
       env_vars: [],
       language: "js",
       timeout: 10,
@@ -303,15 +312,15 @@ describe("PlanExecutor", () => {
 
     const contextSpy = jest.spyOn(scheduler, "reconcileContext");
 
-    apply({routing: [], outdate: [], reconcile: [hexString]});
+    apply({routing: [], outdate: [], reconcile: [functionId]});
 
     await waitForCalls(contextSpy);
     expect(contextSpy.mock.calls.at(-1)[1].toObject().timeout).toBe(10);
   });
 
   it("should not resolve apply() until the execution context is reconciled", async () => {
-    await functions.insertOne({
-      _id: new ObjectId(hexString),
+    await functions.insert({
+      _id: functionKey,
       env_vars: [],
       language: "js",
       timeout: 10,
@@ -323,7 +332,7 @@ describe("PlanExecutor", () => {
 
     // awaiting apply must be enough — no polling — for the context to be in the scheduler,
     // otherwise a freshly-subscribed route could serve events before its context is loaded.
-    await apply({routing: [], outdate: [], reconcile: [hexString]});
+    await apply({routing: [], outdate: [], reconcile: [functionId]});
 
     expect(contextSpy).toHaveBeenCalled();
     expect(contextSpy.mock.calls.at(-1)[1].toObject().timeout).toBe(10);
