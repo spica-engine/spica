@@ -15,7 +15,7 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-gua
 import {StatusProvider} from "@spica-server/interface-status";
 import {DATA_ENGINE, DATA_HEALTH, DataHealth} from "@spica-server/interface-data";
 
-export const providers = new Set<StatusProvider>();
+export const providers = new Map<string, StatusProvider>();
 
 @Controller("status")
 export class StatusController {
@@ -25,7 +25,7 @@ export class StatusController {
   ) {}
 
   private get providers() {
-    return Array.from(providers);
+    return Array.from(providers.values());
   }
 
   @Get("live")
