@@ -2,7 +2,7 @@ import {ForbiddenException, INestApplication, UnauthorizedException} from "@nest
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request, Websocket} from "@spica-server/core-testing";
 import {WsAdapter} from "@spica-server/core-websocket";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
@@ -13,6 +13,8 @@ import {UserModule} from "@spica-server/passport-user";
 import {User} from "@spica-server/interface-passport-user";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";
+
+mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
 
 function url(query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL("/passport/user", "ws://insteadof");

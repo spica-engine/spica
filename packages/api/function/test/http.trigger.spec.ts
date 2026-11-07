@@ -5,12 +5,14 @@ import fs from "fs";
 import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+
+mongoOnly("FunctionModule subscribes to the change feed, which PostgreSQL gets in Part 10");
 
 /**
  * Tests for HTTP trigger schema validation on create (POST), read (GET), and update (PUT) operations.

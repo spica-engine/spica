@@ -1,8 +1,12 @@
 import {Test} from "@nestjs/testing";
 import {BucketService, ServicesModule} from "@spica-server/bucket-services";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {DatabaseTestingModule, ObjectId, mongoOnly} from "@spica-server/database-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {collectionSlugFactory} from "@spica-server/bucket-hooks/src/module";
+
+mongoOnly(
+  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+);
 
 describe("hook module", () => {
   describe("factory", () => {

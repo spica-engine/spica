@@ -6,9 +6,18 @@ import {SchemaModule, hash} from "@spica-server/core-schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId, DatabaseService} from "@spica-server/database-testing";
+import {
+  DatabaseTestingModule,
+  ObjectId,
+  DatabaseService,
+  mongoOnly
+} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
+
+mongoOnly(
+  "hashed bucket fields on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+);
 
 describe("Hash Field", () => {
   let app: INestApplication;

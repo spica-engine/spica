@@ -3,9 +3,11 @@ import {Test} from "@nestjs/testing";
 import {LogModule} from "@spica-server/function-log";
 import {CoreTestingModule, Websocket} from "@spica-server/core-testing";
 import {WsAdapter} from "@spica-server/core-websocket";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {PassportTestingModule} from "@spica-server/passport-testing";
+
+mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
 
 describe("Realtime Authorization", () => {
   let wsc: Websocket;

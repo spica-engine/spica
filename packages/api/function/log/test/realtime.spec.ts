@@ -3,9 +3,16 @@ import {Test} from "@nestjs/testing";
 import {LogModule} from "@spica-server/function-log";
 import {CoreTestingModule, Websocket} from "@spica-server/core-testing";
 import {WsAdapter} from "@spica-server/core-websocket";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {
+  DatabaseService,
+  DatabaseTestingModule,
+  ObjectId,
+  mongoOnly
+} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {ChunkKind} from "@spica-server/interface-realtime";
+
+mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
 
 function url(path: string, query?: {[k: string]: string | string[]}) {
   const url = new URL(path, "ws://insteadof");

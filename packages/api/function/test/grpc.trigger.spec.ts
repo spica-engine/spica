@@ -5,12 +5,16 @@ import fs from "fs";
 import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+
+mongoOnly(
+  "needs a gRPC server and FunctionModule, which subscribes to the change feed (Part 10); it exercises the function engine, not the database"
+);
 
 describe("Function gRPC Trigger Schema", () => {
   let app: INestApplication;

@@ -59,7 +59,7 @@ Everything else the survey checked (secret, function, webhook, identity, user, a
 
 | Item | Detail | Proposal |
 | ---- | ------ | -------- |
-| Policy update | `replaceById` returns a count. MongoDB's is `modifiedCount`, so an identical `PUT` is 0 and the helper answers 404. PostgreSQL returns 1 whenever the row exists. The response body is the number, not the policy. | **Decision needed** (below). |
+| Policy update | `replaceById` returns a count and the helper answers 404 for 0. MongoDB's is `matchedCount` (not `modifiedCount`, as first thought), so an identical `PUT` already answers 200 there; PostgreSQL returns 1 whenever the row exists. The response body is the number, not the policy. | Nothing to change. A spec pins it on both engines. |
 | API key duplicate | The MongoDB repository does not call `translateWriteError`, so a duplicate `key` is a raw driver error. PostgreSQL throws `DuplicateKeyError`. | Translate it on MongoDB, so both throw `DuplicateKeyError`. |
 | Storage `insertAll` | `storage.service.insert` matches the returned rows to its input by index. PostgreSQL's `INSERT … RETURNING` keeps the order in practice, not by contract. | Match by the unique `name`. |
 | Webhook invoker | `logs.insert(...)` is fire-and-forget with no `.catch` (`invoker.ts:79`, `:109`). A failing insert is an unhandled rejection. | Catch and log. |
@@ -89,10 +89,7 @@ Everything else the survey checked (secret, function, webhook, identity, user, a
 
 ## Decisions needed
 
-1. **Policy `PUT`.** Options:
-   - Return the existence count on both engines (MongoDB `matchedCount`): an identical `PUT` stops being a 404 on MongoDB, which is a bug fix, and the body stays a number. Recommended.
-   - Return the policy. The right API, but it changes the response body clients already read.
-   - Make PostgreSQL report 0 for an identical replace. Copies a quirk, and costs a comparison per update.
+1. **Policy `PUT`.** Settled without a decision: the survey misread MongoDB's repository. `replaceById` returns `matchedCount` there, so an identical `PUT` was never a 404 on either engine, and the body stays the number. The options that were listed (change MongoDB, return the policy, make PostgreSQL report 0) were not needed.
 2. **Which specs belong to this part.** Recommended split:
    - *Converted here:* every spec of a system domain whose behaviour exists on PostgreSQL after Part 8 (reads) and this part (writes).
    - *`mongoOnly` with a named part:* bucket data, GraphQL and bucket-common data specs ("needs bucket data writes on PostgreSQL, Part 9"); realtime and change feed specs ("realtime on PostgreSQL, Part 10"); function enqueuer, runtime database and webhook invoker change-stream specs (Part 10); profiler specs ("the profiler reads MongoDB's `system.profile`; PostgreSQL has no equivalent").
@@ -111,15 +108,16 @@ No new components. The helpers return the repository result, the repositories tr
 ## PR breakdown
 
 1. Fix the three CRUD helpers (env var, dashboard, bucket schema) and the activity records they feed, with a spec per helper that runs on both engines. First, because every later conversion needs it.
-2. The policy `PUT` contract, per the decision above.
+2. The policy `PUT` contract (a spec; see decision 1).
 3. The smaller items: API key duplicate, storage `insertAll` order, webhook invoker catch, asset list filter, the unused import.
-4. Convert the cheap specs (about 25, none touch raw collections): env var, secret, dashboard, config, preference, status, activity, replication reducer, function log authorization and service, webhook service, schema and log service, scheduler builder selection and injection, storage module.
-5. Convert passport: identity, user (13 specs), apikey, policy, refresh token, and the five cross-cutting specs. Replace raw `DatabaseService` seeding with the repositories.
-6. Convert function: controller, engine, plan executor, triggers, log, webhook.
-7. Convert storage (about 2,700 lines, heavy ObjectId assertions: use `ID_TYPES`) and the bucket schema, cache, history and asset specs.
-8. Classify what is left with `mongoOnly("reason")` per the decision, and run `yarn check:engine-specs --strict --under=<dir>/` for every directory above.
+4. Test support: the storage helpers move to `@spica-server/database-testing`.
+5. Convert the small domains.
+6. Convert passport.
+7. Convert function.
+8. Convert storage and the bucket schema specs.
+9. Classify what is left with `mongoOnly("reason")` and run `yarn check:engine-specs --strict --under=<dir>/` for every directory above.
 
-Order: 1, 2, 3 first. 4 to 7 are independent of each other.
+Order: 1 to 4 first. 5 to 8 are independent of each other. 9 last. The conversions found seven problems that were not in the survey; each went into its own PR (see "As built").
 
 ## Open questions
 
@@ -137,4 +135,47 @@ Order: 1, 2, 3 first. 4 to 7 are independent of each other.
 
 ## As built
 
-_Fill in after the last PR merges._
+### The planned items
+
+- **CRUD helpers (#2158):** `crud.insert` of env var, dashboard and bucket returns what the service returns, so `POST` answers with `_id` on both engines and the activity record is written. A spec per helper runs on both engines. The unused `getUpdateQueryForPatch` import is gone.
+- **Policy `PUT` (#2159):** only a spec. MongoDB already returned `matchedCount`, so the "identical `PUT` is a 404" claim above was wrong (see decision 1).
+- **Smaller items (#2160):** the MongoDB API key repository translates a duplicate `key` to `DuplicateKeyError`; `storage.service.insert` matches the inserted rows by `name`; the webhook invoker records its logs through `record()`, which catches and logs; `GET /asset` takes the `FILTER` pipe, and `PostgresAssetRepository.find` takes an expression.
+- **Test support (#2161):** `clearStorage` and `waitForMongoIndexes` live in `@spica-server/database-testing`. The planned engine-neutral reset, shared-database `connect` and time-ordered id fixture were not needed. The conversions added `idAt` (an id of a given time), `ensureCollections` and `QuietChangeFeedModule` (a change feed that never emits, for specs that do not test it).
+
+### Found while converting
+
+Each of these was a real gap, found by a spec that passed on MongoDB, and went into its own PR:
+
+- **#2164, the activity resource filter.** The panel sent `resource={"$all":[...],"$in":[...]}`, MongoDB operators in a public parameter. The API now takes `resource` (repeated: values the resource list holds) and `documentId` (repeated: ids of which it holds any). The query facade gets a `contains` condition (`$all`/`$in` on MongoDB, `@>`/`&&` on PostgreSQL). The panel changed in the same PR.
+- **#2166, the status providers.** `GET /status/:module` answered with the first provider ever registered in the process. They are keyed by module now.
+- **#2168, `setOption(name, undefined)`.** It emptied the options of the whole module on PostgreSQL; it stores a JSON `null` now, like MongoDB.
+- **#2169, the strategy lists.** The identity and user strategy lists passed a MongoDB filter object and answered an empty list on PostgreSQL. They use a `where` condition now.
+- **#2170, filters on hashed fields.** `email` and `phone` of a user and the `token` of a refresh token are stored as hashes. `ReadSpec.hashed` (`{secret, fields}`) declares them, MongoDB rewrites the filter object and PostgreSQL hashes the literals of an expression, so both engines filter by the plain value. The controller-level replacers are gone.
+
+### Conversions
+
+- **Small domains (#2167):** activity, asset, config, dashboard, env var, preference, replication reducer and secret.
+- **Passport (#2171):** 18 specs, plus the CRUD half of `identity.controller` (the profiler describe is `identity.profiler.spec.ts`).
+- **Function (#2173):** `engine`, `plan-executor`, the scheduler, the function log controller and the webhook specs that do not need the change feed. The scheduler takes `CHANGE_FEED`, so these specs import `QuietChangeFeedModule`.
+- **Storage and bucket schema (#2174):** storage (3), bucket cache (2), the schema of the hook module and `bucket.schema.resolver`.
+
+57 specs under `packages/api` run through `contractSuite`, some of them converted before this part.
+
+### Classified `mongoOnly` (55)
+
+| Reason | Specs | Removed by |
+| ------ | ----- | ---------- |
+| Realtime, change feed triggers and commands, `FunctionModule`, RabbitMQ and gRPC (these also need `FunctionModule`) | 27 | Part 10 |
+| `BucketModule` needs `BUCKET_DATA_REPOSITORY` on PostgreSQL: bucket data, encrypted, hash and rule specs, GraphQL, `bucket.controller`, `bucket.module`, `bucket.service`, `bucket.e2e`, history, the hook factory and `preference.integration` | 22 | Part 9 |
+| The profiler reads MongoDB's `system.profile` | 3 | stays |
+| MongoDB TTL index inspection (`log/service`, `webhook/log.service`); PostgreSQL expires rows with the pg_cron job of Part 4 | 2 | stays |
+| `passport/test/identity.e2e.spec.ts` is an `xdescribe` since 2024 and fails when enabled | 1 | decide: fix or delete |
+
+The 13 specs under `packages/data/mongodb/test` are MongoDB's own and stay unclassified. `yarn check:engine-specs --strict --under=packages/api/` lists nothing.
+
+### Notes
+
+- **Function merge patch:** the repository takes a MongoDB `$set`/`$unset` update document, and PostgreSQL replays it by hand. Not a bug; it stays this way.
+- **Specs share a process:** the status provider registry (fixed in #2166) and the asset `validators`, `operators` and `exporters` registries outlive a module, so specs that install assets clear them after each module.
+- **MongoDB in local runs:** without `MONGODB_URL`, each MongoDB module starts a container that lives until the run ends, which overloads Docker on specs with many modules. CI uses one shared server through `MONGODB_URL`; set it locally to the same effect.
+- **Plan versus built:** the plan counted the bucket schema, history and service specs as convertible. They build `BucketModule` or `BucketService`, which need the bucket data repository, so they are classified for Part 9.

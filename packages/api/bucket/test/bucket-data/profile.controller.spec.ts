@@ -8,10 +8,13 @@ import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {
   DatabaseService,
   DatabaseTestingModule,
-  ProfilingLevel
+  ProfilingLevel,
+  mongoOnly
 } from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
+
+mongoOnly("the profiler reads MongoDB's system.profile, which PostgreSQL has no equivalent of");
 
 describe("BucketDataController profiler", () => {
   let app: INestApplication;

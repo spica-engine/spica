@@ -3,12 +3,15 @@ import {
   ChangeStream,
   DatabaseService,
   DatabaseTestingModule,
-  stream
+  stream,
+  mongoOnly
 } from "@spica-server/database-testing";
 import {DatabaseEnqueuer} from "@spica-server/function-enqueuer";
 import {DatabaseQueue, EventQueue} from "@spica-server/function-queue";
 import {Database, event} from "@spica-server/function-queue-proto";
 import {CHANGE_FEED} from "@spica-server/interface-data";
+
+mongoOnly("database triggers and commands read the change feed, which PostgreSQL gets in Part 10");
 
 function createTarget(cwd?: string, handler?: string) {
   const target = new event.Target();
@@ -23,7 +26,6 @@ describe("DatabaseEnqueuer", () => {
   let noopTarget: event.Target;
   let databaseEnqueuer: DatabaseEnqueuer;
   let database: DatabaseService;
-
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({

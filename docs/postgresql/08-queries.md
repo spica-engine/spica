@@ -155,10 +155,6 @@ Delivered as these PRs:
 - `createdBetween` is the creation time of the id on MongoDB and the `created_at` column on PostgreSQL. A collection without that column compares the time inside the UUID v7 id, clamped to the 48 bits it holds.
 - Unset values are `null` in a PostgreSQL document and absent in a MongoDB one.
 
-### Blocks the completion of this part
-
-- **Part 8a (controller writes) has to merge before this part does.** The system-domain controller specs create their data through the controllers, and a write through the controller does not work on PostgreSQL: `POST /env-var`, `/dashboard` and `/bucket` return no `_id`, because their `crud.insert` returns the object it passed and relies on MongoDB's driver to add the `_id`, while the PostgreSQL ORM returns a new record. Until that is fixed the specs cannot run on both engines, and a part is not accepted with unclassified or failing specs. 117 specs in the repository use the MongoDB testing module without being classified. `08a-controller-writes.md` plans the fix and the conversion.
-
 ### Left for other parts
 
 - `BUCKET_DATA_REPOSITORY` is still not bound on PostgreSQL, so the bucket HTTP module does not boot there. Bucket reads are covered at the facade, not through the controller.

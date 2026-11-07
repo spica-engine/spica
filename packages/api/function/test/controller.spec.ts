@@ -6,13 +6,15 @@ import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
 import {Middlewares} from "@spica-server/core";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {DatabaseTestingModule, ObjectId, mongoOnly} from "@spica-server/database-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
 import {Scheduler, ScheduleWorker} from "@spica-server/function-scheduler";
+
+mongoOnly("FunctionModule subscribes to the change feed, which PostgreSQL gets in Part 10");
 
 describe("Function Controller", () => {
   let app: INestApplication;
