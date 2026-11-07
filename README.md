@@ -51,6 +51,10 @@ npm install -g @spica/cli
 spica project start my-first-server
 ```
 
+## One-Click Deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/Spica/)
+
 ## How It Works
 
 We are trying to reduce development time for fast-paced projects and startups. Also we want to give a platform where the backend developers enjoy while developing robust projects. You can use Spica as a backend engine as well as a headless CMS.
