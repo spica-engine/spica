@@ -6,7 +6,7 @@ import {
   HttpException,
   HttpStatus
 } from "@nestjs/common";
-import {Id} from "@spica-server/interface-data";
+import {HashedFields, Id} from "@spica-server/interface-data";
 import {
   User,
   USER_OPTIONS,
@@ -393,6 +393,11 @@ export class UserService {
 
     const secret = this.getProviderHashSecret();
     return hashValue(value, secret);
+  }
+
+  providerHashedFields(): HashedFields | undefined {
+    const secret = this.userOptions.providerHashSecret;
+    return secret ? {secret, fields: {email: "email.hash", phone: "phone.hash"}} : undefined;
   }
 
   private getProviderEncryptionSecret(): string {

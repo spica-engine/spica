@@ -12,7 +12,7 @@ import {
   Inject
 } from "@nestjs/common";
 import {ActivityService} from "@spica-server/activity-services";
-import {DATE, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
+import {DATE, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {ID, ids} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
@@ -34,7 +34,8 @@ export class ActivityController {
     @Query("identifier") identifier: string,
     @Query("username") username: string,
     @Query("action", DEFAULT([]), ARRAY(Number)) action: number[],
-    @Query("resource", JSONP) resource: object,
+    @Query("resource", ARRAY(String)) resource: string[],
+    @Query("documentId", ARRAY(String)) documentId: string[],
     @Query("begin", DATE) begin: Date,
     @Query("end", DATE) end: Date,
     @Query("skip", NUMBER) skip: number,
@@ -43,7 +44,14 @@ export class ActivityController {
     const where: ReadSpec["where"] = {
       ...(identifier && {identifier: {eq: identifier}}),
       ...(username && {username: {eq: username}}),
-      ...(resource && {resource: {eq: resource}}),
+      ...((resource.length || documentId.length) && {
+        resource: {
+          contains: {
+            ...(resource.length && {all: resource}),
+            ...(documentId.length && {any: documentId})
+          }
+        }
+      }),
       ...(action?.length && {action: {in: action}})
     };
     const hasRange = begin?.getTime() && end?.getTime();

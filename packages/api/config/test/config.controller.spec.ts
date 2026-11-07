@@ -3,9 +3,9 @@ import {Test} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {ConfigModule} from "../src/config.module";
-import {CONFIG_REPOSITORY} from "@spica-server/interface-config";
+import {CONFIG_REPOSITORY, ConfigRepository} from "@spica-server/interface-config";
 import {ConfigSchemaRegistry} from "../src/config.schema.registry";
 
 describe("ConfigSchemaRegistry", () => {
@@ -165,11 +165,14 @@ describe("ConfigSchemaRegistry", () => {
   });
 });
 
-describe("ConfigController", () => {
+contractSuite("ConfigController", engine => {
   let request: Request;
   let app: INestApplication;
-  let configs: any;
+  let configs: ConfigRepository;
   let registry: ConfigSchemaRegistry;
+
+  const seed = (config: {module: string; options: object}) =>
+    configs.replaceByModule(config.module, config);
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -177,7 +180,7 @@ describe("ConfigController", () => {
         CoreTestingModule,
         PassportTestingModule.initialize(),
         ConfigModule.forRoot(),
-        DatabaseTestingModule.standalone()
+        engine.module()
       ]
     }).compile();
 
@@ -217,11 +220,11 @@ describe("ConfigController", () => {
     });
 
     it("should return all configurations", async () => {
-      await configs.insertOne({
+      await seed({
         module: "bucket",
         options: {maxLimit: 100, enableCache: true}
       });
-      await configs.insertOne({
+      await seed({
         module: "function",
         options: {timeout: 30000, maxMemory: 512}
       });
@@ -248,8 +251,8 @@ describe("ConfigController", () => {
     });
 
     it("should get the correct config when multiple configs exist", async () => {
-      await configs.insertOne({module: "bucket", options: {maxLimit: 100}});
-      await configs.insertOne({module: "function", options: {timeout: 30000}});
+      await seed({module: "bucket", options: {maxLimit: 100}});
+      await seed({module: "function", options: {timeout: 30000}});
 
       const response = await request.get("/config/function");
       expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
@@ -268,7 +271,7 @@ describe("ConfigController", () => {
     });
 
     it("should update an existing config", async () => {
-      await configs.insertOne({
+      await seed({
         module: "bucket",
         options: {maxLimit: 100, enableCache: true}
       });
@@ -280,7 +283,7 @@ describe("ConfigController", () => {
     });
 
     it("should replace entire config on update", async () => {
-      await configs.insertOne({
+      await seed({
         module: "bucket",
         options: {maxLimit: 100, enableCache: true}
       });

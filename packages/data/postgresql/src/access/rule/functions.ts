@@ -1,7 +1,7 @@
 import {ColumnType} from "../../schema/metadata/types.js";
 import {coerceConstant} from "./coerce.js";
 import {InvalidRuleError, UnsupportedRuleError} from "./errors.js";
-import {ArrayField, childRows, elementColumn, RuleScope} from "./fields.js";
+import {ArrayField, childRows, elementColumn, RuleContext} from "./fields.js";
 import {Column, constant, Expression, Operand, Scalar} from "./operands.js";
 
 type Node = any;
@@ -14,7 +14,7 @@ interface Item {
 }
 
 export interface FunctionHost {
-  scope: RuleScope;
+  context: RuleContext;
   param(value: unknown, listOf?: ColumnType): string;
   alias(): string;
   target(node: Node): Target;
@@ -98,7 +98,7 @@ function unixTime(args: Node[], host: FunctionHost): Operand {
 
 function now(args: Node[], host: FunctionHost): Operand {
   arity("now", args, 0);
-  return constant((host.scope.now?.() ?? Date.now()) / 1000);
+  return constant((host.context.now?.() ?? Date.now()) / 1000);
 }
 
 function lengthOf(args: Node[], host: FunctionHost): Operand {
@@ -171,6 +171,30 @@ function regex(args: Node[], host: FunctionHost): Operand {
     sql: `${input} ${operator} ${host.param(pattern)}::text`,
     type: "boolean",
     twoValued: false
+  };
+}
+
+function textMatch(name: "startsWith" | "contains"): Implementation {
+  return (args, host) => {
+    arity(name, args, 2);
+    requirePath(name, args, 0);
+    const text = requireString(name, args, 1);
+    const target = host.target(args[0]);
+    if (target.kind != "column" || (target.type != "text" && target.type != "uuid")) {
+      throw new UnsupportedRuleError(`${name} works on text fields only on PostgreSQL.`);
+    }
+    if (target.property.type == "hash") {
+      throw new UnsupportedRuleError(`${name} cannot be used on a hash field.`);
+    }
+    const escaped = text.replace(/[\\%_]/g, "\\$&");
+    const pattern = name == "startsWith" ? `${escaped}%` : `%${escaped}%`;
+    const input = target.type == "uuid" ? `${target.sql}::text` : target.sql;
+    return {
+      kind: "expression",
+      sql: `${input} LIKE ${host.param(pattern)}::text`,
+      type: "boolean",
+      twoValued: false
+    };
   };
 }
 
@@ -317,6 +341,8 @@ const FUNCTIONS: Record<string, Implementation> = {
   now,
   length: lengthOf,
   regex,
+  startsWith: textMatch("startsWith"),
+  contains: textMatch("contains"),
   some: listFunction("some"),
   every: listFunction("every"),
   equal: listFunction("equal")

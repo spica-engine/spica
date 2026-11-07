@@ -1,26 +1,55 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {InvalidIdError} from "@spica-server/data";
-import {contractSuite} from "@spica-server/database-testing";
-import {createResourceStore, ResourceStore} from "./resource-store";
+import {InvalidIdError, provideRepository} from "@spica-server/data";
+import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  ID_TYPES,
+  IdTypes,
+  ResourceFilterSpec
+} from "@spica-server/interface-data";
+import {ENV_VAR_REPOSITORY, EnvVarRepository} from "@spica-server/interface-env_var";
 
 const sorted = (...ids: string[]) => ids.sort();
 
 contractSuite("resource filter", engine => {
   let module: TestingModule;
-  let store: ResourceStore;
+  let queries: CollectionQueryFacade;
+  let envVars: EnvVarRepository;
+  let ids: IdTypes;
   let [a, b, c, d]: string[] = [];
 
   beforeAll(async () => {
-    module = await Test.createTestingModule({imports: [engine.module()]}).compile();
+    module = await Test.createTestingModule({
+      imports: [engine.module()],
+      providers: [provideRepository(ENV_VAR_REPOSITORY)]
+    }).compile();
     await module.init();
-    store = await createResourceStore(engine, module);
-  });
+    await waitForMongoIndexes(engine, module, {env_var: ["key_1"]});
+
+    queries = module.get(COLLECTION_QUERY);
+    envVars = module.get(ENV_VAR_REPOSITORY);
+    ids = module.get(ID_TYPES);
+  }, 120_000);
 
   afterAll(() => module.close());
 
   beforeEach(async () => {
-    [a, b, c, d] = await store.reset(4);
+    await clearStorage(engine, module, {mongodb: ["env_var"], postgresql: ["env_vars"]});
+    const inserted: string[] = [];
+    for (const key of ["a", "b", "c", "d"]) {
+      inserted.push(String((await envVars.insert({key, value: key}))._id));
+    }
+    [a, b, c, d] = inserted;
   });
+
+  const store = {
+    newId: () => ids.forCollection("env_var").serialize(ids.forCollection("env_var").generate()),
+    async allowed(resourceFilter: ResourceFilterSpec | undefined) {
+      const found = await queries.find<{_id: unknown}>("env_var", {resourceFilter});
+      return found.map(document => String(document._id)).sort();
+    }
+  };
 
   it("should let everything through when there is no filter", async () => {
     expect(await store.allowed(undefined)).toEqual(sorted(a, b, c, d));

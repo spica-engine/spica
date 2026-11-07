@@ -7,11 +7,15 @@ import amqp from "amqplib";
 import {GenericContainer, StartedTestContainer, Wait} from "testcontainers";
 import {FunctionModule} from "@spica-server/function";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {SchemaModule, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+
+mongoOnly(
+  "needs RabbitMQ and FunctionModule, which subscribes to the change feed (Part 10); it exercises the function engine, not the database"
+);
 
 const RABBITMQ_USER = "spica";
 const RABBITMQ_PASSWORD = "spica-secret-password";

@@ -1,21 +1,23 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {ApiKeyModule} from "@spica-server/passport-apikey";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID} from "@spica-server/core-schema";
 
-describe("ApiKey", () => {
+contractSuite("ApiKey", engine => {
   let req: Request;
   let app: INestApplication;
+  let newId: () => any;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.standalone(),
+        engine.module(),
         CoreTestingModule,
         PreferenceTestingModule,
         PassportTestingModule.initialize(),
@@ -25,6 +27,7 @@ describe("ApiKey", () => {
     }).compile();
 
     req = module.get(Request);
+    newId = () => module.get<IdTypes>(ID_TYPES).forCollection("apikey").generate();
 
     app = module.createNestApplication();
 
@@ -123,9 +126,7 @@ describe("ApiKey", () => {
     });
 
     it("should return 404", async () => {
-      const res = await req
-        .get(`/passport/apikey/${ObjectId.createFromTime(Date.now())}`, undefined)
-        .catch(r => r);
+      const res = await req.get(`/passport/apikey/${newId()}`, undefined).catch(r => r);
       expect(res.statusCode).toBe(404);
     });
   });
@@ -145,7 +146,7 @@ describe("ApiKey", () => {
     });
 
     it("should add apikey with id and key", async () => {
-      const id = new ObjectId();
+      const id = newId();
       const body = {
         _id: id,
         key: "super_secret_key",
@@ -154,7 +155,7 @@ describe("ApiKey", () => {
       };
       const {body: apiKey} = await req.post("/passport/apikey", body);
 
-      expect(apiKey).toEqual({...body, _id: id.toHexString(), active: true, policies: []});
+      expect(apiKey).toEqual({...body, _id: String(id), active: true, policies: []});
     });
 
     it("should return validation errors", async () => {
@@ -191,7 +192,7 @@ describe("ApiKey", () => {
 
     it("should not update and return 404", async () => {
       const res = await req
-        .post(`/passport/apikey/${ObjectId.createFromTime(Date.now())}`, {
+        .post(`/passport/apikey/${newId()}`, {
           name: "test1",
           description: "test1",
           active: false
@@ -226,7 +227,7 @@ describe("ApiKey", () => {
     });
 
     it("should throw NotFoundExpection", async () => {
-      const {body} = await req.delete(`/passport/apikey/${new ObjectId()}`);
+      const {body} = await req.delete(`/passport/apikey/${newId()}`);
       expect([body.statusCode, body.message]).toEqual([404, "Not Found"]);
 
       const apiKeys = (await req.get("/passport/apikey", {})).body;

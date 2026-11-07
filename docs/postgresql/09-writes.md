@@ -21,6 +21,7 @@ Makes bucket data insert, replace, patch and delete work on PostgreSQL behind th
 
 ## Depends on
 
+- **Part 8a (merged):** the system-domain controller writes and the converted system specs. Part 9 extends them.
 - **Part 0 (merged):** the write facade.
 - **Part 5 (merged):** table metadata and the field mapping.
 - **Part 6 (merged):** the result shaper, for returning the saved record.

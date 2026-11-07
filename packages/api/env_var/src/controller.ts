@@ -14,7 +14,7 @@ import {
   UseInterceptors,
   Inject
 } from "@nestjs/common";
-import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
+import {BOOLEAN, DEFAULT, FILTER, NUMBER, JSONP} from "@spica-server/core";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
 import {EnvVarService} from "@spica-server/env_var-services";
 import {Schema} from "@spica-server/core-schema";
@@ -48,7 +48,7 @@ export class EnvVarController {
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
-    @Query("filter", JSONP) filter: object
+    @Query("filter", FILTER) filter: object | string
   ) {
     return CRUD.find(this.queries, {resourceFilter, limit, skip, sort, paginate, filter});
   }

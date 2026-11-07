@@ -6,9 +6,13 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database-testing";
+import {DatabaseTestingModule, ObjectId, stream, mongoOnly} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
+
+mongoOnly(
+  "GraphQL over bucket data on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+);
 
 export function getBucketName(id: string | ObjectId) {
   return `Bucket_${id}`;

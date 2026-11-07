@@ -2,7 +2,7 @@ import {Global, INestApplication, Module} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {ENQUEUER} from "@spica-server/interface-function-scheduler";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite, QuietChangeFeedModule} from "@spica-server/database-testing";
 import {getFreeAddress} from "@spica-server/core-testing";
 
 const spyScheduler = jest.fn(() => ({
@@ -24,7 +24,7 @@ const spyScheduler = jest.fn(() => ({
 })
 export class SpySchedulerModule {}
 
-describe("Scheduler Injection", () => {
+contractSuite("Scheduler Injection", engine => {
   let module: TestingModule;
   let scheduler: Scheduler;
   let app: INestApplication;
@@ -33,10 +33,12 @@ describe("Scheduler Injection", () => {
   let addEnqueuerSpy: jest.SpyInstance;
 
   beforeEach(async () => {
+    spyScheduler.mockClear();
     process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.standalone(),
+        engine.module(),
+        QuietChangeFeedModule,
         SchedulerModule.forRoot({
           invocationLogs: false,
           databaseName: undefined,

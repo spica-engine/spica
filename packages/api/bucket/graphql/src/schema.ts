@@ -1,5 +1,6 @@
-import {ObjectId} from "@spica-server/database";
 import {bucketIds} from "@spica-server/bucket-services";
+import {ids} from "@spica-server/data";
+import {conditionPaths, FilterCondition, FilterNode} from "@spica-server/interface-bucket-common";
 import {Id} from "@spica-server/interface-data";
 import {GraphQLResolveInfo} from "graphql";
 import {Prefix, Suffix, SchemaWarning} from "@spica-server/interface-bucket-graphql";
@@ -449,152 +450,109 @@ function mergeNodes(node: any, rootKey: string) {
   return mergedNode;
 }
 
-export function extractAggregationFromQuery(bucket: any, query: object, buckets: Bucket[]): object {
-  const bucketProperties = bucket.properties;
-  if (bucketIds().isValid(bucket._id)) {
-    bucketProperties._id = {
-      type: "objectid"
-    };
+type Properties = Record<string, any>;
+
+function parseConditions(
+  holder: {_id?: unknown; properties?: Properties},
+  query: object,
+  buckets: Bucket[],
+  prefix: string[]
+): FilterNode[] {
+  const properties: Properties = {...holder.properties};
+  if (bucketIds().isValid(holder._id)) {
+    properties._id = {type: "objectid"};
   }
 
-  let finalExpression = {};
+  const nodes: FilterNode[] = [];
   for (const [key, value] of Object.entries(query)) {
     if (key == "OR" || key == "AND") {
-      const conditions = [];
-      const operator = `$${key.toLowerCase()}`;
-
-      for (const condition of value) {
-        const conditionExpression = extractAggregationFromQuery(bucket, condition, buckets);
-
-        if (Object.keys(conditionExpression).length) {
-          conditions.push(conditionExpression);
-        }
-      }
-
-      if (conditions.length) {
-        const expression = {
-          [operator]: conditions
-        };
-        finalExpression = {...finalExpression, ...expression};
+      const children = (value as object[])
+        .map(condition => group(parseConditions(holder, condition, buckets, prefix)))
+        .filter(child => child);
+      if (children.length) {
+        nodes.push(key == "OR" ? {or: children} : {and: children});
       }
     } else if (isParsableObject(value)) {
-      if (bucket.properties[key].type == "relation") {
-        const relatedBucketId = bucket.properties[key].bucketId;
-        const relatedBucket = buckets.find(bucket => bucket._id == relatedBucketId);
-
-        bucket.properties[key] = {
-          _id: relatedBucketId,
-          properties: relatedBucket.properties
-        };
-      }
-
-      let expression = extractAggregationFromQuery(bucket.properties[key], value, buckets);
-      expression = mergeNestedExpression({[key]: expression}, []);
-
-      if (Object.keys(expression).length) {
-        finalExpression = {...finalExpression, ...expression};
+      const property = properties[key];
+      const nested =
+        property?.type == "relation"
+          ? buckets.find(bucket => bucket._id == property.bucketId)
+          : property;
+      if (nested?.properties) {
+        nodes.push(...parseConditions(nested, value, buckets, [...prefix, key]));
       }
     } else {
-      const expression = createExpression(key, value, bucketProperties);
-
-      if (expression) {
-        //deep merge
-        for (const [key, value] of Object.entries(expression)) {
-          if (finalExpression[key] && isParsableObject(value)) {
-            finalExpression[key] = {...finalExpression[key], ...value};
-          } else {
-            finalExpression[key] = value;
-          }
-        }
+      const condition = createCondition(key, value, properties);
+      if (condition) {
+        nodes.push({...condition, path: [...prefix, ...condition.path]});
       }
     }
   }
-
-  return finalExpression;
+  return nodes;
 }
 
-function createExpression(key: string, value: any, bucketProperties: any): object {
-  const desiredProperty = Object.keys(bucketProperties).find(
-    bucketProperty => bucketProperty == key
-  );
+const group = (nodes: FilterNode[]): FilterNode | undefined =>
+  nodes.length > 1 ? {and: nodes} : nodes[0];
 
-  if (desiredProperty) {
-    value = castToOriginalType(value, bucketProperties[desiredProperty]);
+export function parseQuery(
+  bucket: Bucket,
+  query: object,
+  buckets: Bucket[]
+): FilterNode | undefined {
+  return group(parseConditions(bucket, query, buckets, []));
+}
+
+function createCondition(
+  key: string,
+  value: any,
+  properties: Properties
+): FilterCondition | undefined {
+  const toCondition = (name: string, operator: string) => {
+    const property = properties[name];
     return {
-      [desiredProperty]: value
+      path: [name],
+      operator,
+      value: castToOriginalType(value, property),
+      ...(isIdProperty(property) && {id: true})
     };
-  } else {
-    const property = key.substring(0, key.lastIndexOf("_"));
-    const operator = key.substring(key.lastIndexOf("_") + 1);
-    const desiredProperty = Object.keys(bucketProperties).find(
-      bucketProperty => bucketProperty == property
-    );
+  };
 
-    if (desiredProperty && operator) {
-      value = castToOriginalType(value, bucketProperties[desiredProperty]);
-      return {
-        [desiredProperty]: {
-          [`$${operator}`]: value
-        }
-      };
-    }
+  if (key in properties) {
+    return toCondition(key, "eq");
+  }
+  const property = key.substring(0, key.lastIndexOf("_"));
+  const operator = key.substring(key.lastIndexOf("_") + 1);
+  if (property in properties && operator) {
+    return toCondition(property, operator);
   }
 }
+
+const isIdProperty = (property: any): boolean =>
+  property?.type == "objectid" || (property?.type == "array" && isIdProperty(property.items));
 
 function castToOriginalType(value: any, property: any): unknown {
   switch (property.type) {
     case "date":
       return new Date(value);
-    case "objectid":
-      return new ObjectId(value);
     case "array":
-      return value.map(val => castToOriginalType(val, property.items));
+      return Array.isArray(value)
+        ? value.map(val => castToOriginalType(val, property.items))
+        : value;
     default:
       return value;
   }
 }
 
-function mergeNestedExpression(expression: any, path: string[]) {
-  let finalResult = {};
-  if (isParsableObject(expression)) {
-    for (const [key, value] of Object.entries(expression)) {
-      if (key.startsWith("$")) {
-        const expPath = path.join(".");
-        const result = {[expPath]: expression};
-        finalResult = {...finalResult, ...result};
-        continue;
-      }
-
-      const result = mergeNestedExpression(value, path.concat([key]));
-      if (isParsableObject(expression)) {
-        finalResult = {...finalResult, ...result};
-      }
-    }
-  } else {
-    const expPath = path.join(".");
-    const result = {[expPath]: expression};
-    finalResult = {...finalResult, ...result};
-  }
-  return finalResult;
-}
-
 function isParsableObject(object: any): boolean {
   return (
     typeof object == "object" &&
+    object !== null &&
     !Array.isArray(object) &&
-    !ObjectId.isValid(object) &&
+    !ids().unscoped().isValid(object) &&
     !!Object.keys(object).length
   );
 }
 
-export function requestedFieldsFromExpression(expression: object, requestedFields: string[][]) {
-  for (const [key, value] of Object.entries(expression)) {
-    if (key == "$or" || key == "$and") {
-      value.forEach(condition => requestedFieldsFromExpression(condition, requestedFields));
-    } else {
-      const field = key.split(".");
-      requestedFields.push(field);
-    }
-  }
-  return requestedFields;
+export function requestedFieldsFromQuery(where: FilterNode | undefined): string[][] {
+  return where ? conditionPaths(where) : [];
 }

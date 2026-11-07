@@ -44,11 +44,6 @@ export const ALLOWLIST = [
     reason: "ACL rules render to MongoDB filters with ObjectIds (Part 7)"
   },
   {
-    file: "packages/api/bucket/graphql/src/schema.ts",
-    match: ["@spica-server/database", "ObjectId"],
-    reason: "GraphQL where arguments render to MongoDB filters (Part 8)"
-  },
-  {
     file: "packages/api/storage/src/body.ts",
     match: ["bson"],
     reason: "application/bson is a request body format of the storage API, not database access"

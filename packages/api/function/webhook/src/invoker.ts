@@ -1,4 +1,4 @@
-import {Inject, Injectable, OnModuleDestroy} from "@nestjs/common";
+import {Inject, Injectable, Logger, OnModuleDestroy} from "@nestjs/common";
 import fetch from "node-fetch";
 import {
   Webhook,
@@ -13,6 +13,7 @@ import {CHANGE_FEED, ChangeFeed, ChangeOperation} from "@spica-server/interface-
 
 @Injectable()
 export class WebhookInvoker implements OnModuleDestroy {
+  private readonly logger = new Logger(WebhookInvoker.name);
   private targets = new Map<string, Subscription>();
   private onDestroySubject = new Subject();
 
@@ -42,6 +43,14 @@ export class WebhookInvoker implements OnModuleDestroy {
 
   preCompile(body: string) {
     handlebars.precompile(body, {strict: true});
+  }
+
+  private record(log: Parameters<WebhookLogRepository["insert"]>[0]) {
+    this.logs
+      .insert(log)
+      .catch(error =>
+        this.logger.error(`Failed to record the log of webhook ${log.webhook}: ${error?.message}`)
+      );
   }
 
   private subscribe(target: string, {trigger, url, body}: Webhook) {
@@ -76,7 +85,7 @@ export class WebhookInvoker implements OnModuleDestroy {
             }
           });
         } catch (error) {
-          this.logs.insert({
+          this.record({
             succeed: false,
             content: {
               error: error.message
@@ -106,7 +115,7 @@ export class WebhookInvoker implements OnModuleDestroy {
             };
           })
           .then(response => {
-            this.logs.insert({
+            this.record({
               succeed: response.status < 400,
               content: {
                 request: {body: request.body, headers: request.headers, url: url},

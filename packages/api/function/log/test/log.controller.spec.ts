@@ -1,87 +1,83 @@
 import {INestApplication} from "@nestjs/common";
-import {Test} from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
 import {LogModule} from "@spica-server/function-log";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseService, ObjectId} from "@spica-server/database";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {provideRepository} from "@spica-server/data";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
+import {
+  FUNCTION_OPTIONS,
+  FUNCTION_REPOSITORY,
+  FunctionRepository
+} from "@spica-server/interface-function";
+import {FUNCTION_LOG_SINK, LogSink} from "@spica-server/interface-function-log";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 
-describe("Log Controller", () => {
+const HOUR = 3600 * 1000;
+
+contractSuite("Log Controller", engine => {
+  let module: TestingModule;
   let app: INestApplication;
   let req: Request;
-  let db: DatabaseService;
-
-  const fnId = new ObjectId();
-  const deletedFnId = new ObjectId();
-
-  // _id encodes the timestamp, and the controller filters/sorts on it, so logs have to be seeded
-  // with ids built from a known second rather than freshly generated ones.
-  const day = Math.floor(new Date("2024-01-02T00:00:00.000Z").getTime() / 1000);
-  const logId = (offsetSeconds: number, counter: number) =>
-    new ObjectId(
-      (day + offsetSeconds).toString(16).padStart(8, "0") + counter.toString(16).padStart(16, "0")
-    );
+  let fnId: string;
+  let deletedFnId: string;
 
   beforeAll(async () => {
-    const module = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         CoreTestingModule,
         LogModule.forRoot({expireAfterSeconds: 60, realtime: false}),
         PassportTestingModule.initialize()
+      ],
+      providers: [
+        {provide: FUNCTION_OPTIONS, useValue: {entryLimit: 4}},
+        provideRepository(FUNCTION_REPOSITORY),
+        provideRepository(FUNCTION_LOG_SINK)
       ]
     }).compile();
 
     app = module.createNestApplication();
     req = module.get(Request);
-    db = module.get(DatabaseService);
     await app.listen(req.socket);
   });
 
   afterAll(() => app.close());
 
   beforeEach(async () => {
-    await db.collection("function").insertMany([{_id: fnId, name: "my-fn"}]);
-    await db.collection("function_logs").insertMany([
-      {
-        _id: logId(1, 1),
-        function: fnId.toString(),
+    const functions = module.get<FunctionRepository>(FUNCTION_REPOSITORY);
+    const sink = module.get<LogSink>(FUNCTION_LOG_SINK);
+
+    fnId = String((await functions.insert({name: "my-fn", language: "javascript"} as any))._id);
+    deletedFnId = String(module.get<IdTypes>(ID_TYPES).unscoped().generate());
+
+    for (const [content, fn] of [
+      ["first", fnId],
+      ["second", fnId],
+      ["orphan", deletedFnId]
+    ]) {
+      await sink.insert({
+        function: fn,
         event_id: "event",
         channel: "stdout",
         level: 1,
-        content: "first",
+        content,
         created_at: new Date()
-      },
-      {
-        _id: logId(2, 2),
-        function: fnId.toString(),
-        event_id: "event",
-        channel: "stdout",
-        level: 1,
-        content: "second",
-        created_at: new Date()
-      },
-      {
-        _id: logId(3, 3),
-        function: deletedFnId.toString(),
-        event_id: "event",
-        channel: "stdout",
-        level: 1,
-        content: "orphan",
-        created_at: new Date()
-      }
-    ]);
+      } as any);
+    }
   });
 
   afterEach(async () => {
-    await db.collection("function").deleteMany({});
-    await db.collection("function_logs").deleteMany({});
+    await clearStorage(engine, module, {
+      mongodb: ["function", "function_logs"],
+      postgresql: ["functions", "function_logs"]
+    });
   });
 
   const list = (query: object = {}) =>
     req.get("/function-logs", {
-      begin: new Date(day * 1000).toISOString(),
-      end: new Date((day + 3600) * 1000).toISOString(),
+      begin: new Date(Date.now() - HOUR).toISOString(),
+      end: new Date(Date.now() + HOUR).toISOString(),
       ...query
     });
 
@@ -89,7 +85,7 @@ describe("Log Controller", () => {
     const res = await list();
 
     expect(res.body.map(log => [log.content, log.function])).toEqual([
-      ["orphan", deletedFnId.toString()],
+      ["orphan", deletedFnId],
       ["second", "my-fn"],
       ["first", "my-fn"]
     ]);
@@ -117,7 +113,7 @@ describe("Log Controller", () => {
   });
 
   it("should filter by function", async () => {
-    const res = await list({functions: [fnId.toString()]});
+    const res = await list({functions: [fnId]});
 
     expect(res.body.map(log => log.content)).toEqual(["second", "first"]);
   });

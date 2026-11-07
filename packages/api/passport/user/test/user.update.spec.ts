@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, DatabaseService} from "@spica-server/database-testing";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportModule} from "@spica-server/passport";
 import {INestApplication} from "@nestjs/common";
@@ -8,11 +8,10 @@ import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {ConfigModule} from "@spica-server/config";
 
-describe("User Update Endpoints", () => {
+contractSuite("User Update Endpoints", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
-  let database: DatabaseService;
   let user1: any;
   let user2: any;
   let user1Token: string;
@@ -24,7 +23,7 @@ describe("User Update Endpoints", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID, DATE_TIME]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         CoreTestingModule,
         ConfigModule.forRoot(),
@@ -74,7 +73,6 @@ describe("User Update Endpoints", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
-    database = module.get(DatabaseService);
 
     await app.listen(req.socket);
 
@@ -132,7 +130,7 @@ describe("User Update Endpoints", () => {
   afterAll(() => app.close());
 
   afterEach(async () => {
-    await database.collection("user").deleteMany({});
+    await clearStorage(engine, module, {mongodb: ["user"], postgresql: ["users"]});
   });
 
   describe("user self update", () => {

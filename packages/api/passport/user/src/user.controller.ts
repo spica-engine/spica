@@ -22,7 +22,7 @@ import {
   Logger
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
+import {DEFAULT, FILTER, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {DuplicateKeyError, ID} from "@spica-server/data";
 import {
@@ -56,7 +56,6 @@ import {VerificationService} from "./verification.service.js";
 import {ProviderVerificationService} from "./services/provider.verification.service.js";
 import {PasswordlessLoginService} from "./services/passwordless-login.service.js";
 import {PasswordResetService} from "./services/password-reset.service.js";
-import {replaceProviderFilter} from "./filter.js";
 import {RateLimitGuard} from "./rate-limit.guard.js";
 
 const USER_COLLECTION = "user";
@@ -125,9 +124,6 @@ export class UserController {
     });
   }
 
-  private providerFilterReplacer = async (filter: object) =>
-    replaceProviderFilter(filter, value => this.userService.hashProviderValue(value));
-
   private hideSecretsExpression(): {[key: string]: 0} {
     const expression: any = {password: 0, lastPasswords: 0};
 
@@ -160,13 +156,13 @@ export class UserController {
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: {[path: string]: 1 | -1},
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
-    @Query("filter", JSONP) filter: object,
+    @Query("filter", FILTER) filter: object | string,
     @ResourceFilter({collection: USER_COLLECTION}) resourceFilter: ResourceFilterSpec
   ) {
     const spec: ReadSpec = {
       resourceFilter,
       filter,
-      filterReplacers: [this.providerFilterReplacer],
+      hashed: this.userService.providerHashedFields(),
       sort,
       skip,
       limit,

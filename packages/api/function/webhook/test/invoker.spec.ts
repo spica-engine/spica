@@ -1,11 +1,18 @@
 import {provideRepository} from "@spica-server/data";
 import {WEBHOOK_LOG_REPOSITORY, WEBHOOK_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database-testing";
+import {
+  DatabaseService,
+  DatabaseTestingModule,
+  stream,
+  mongoOnly
+} from "@spica-server/database-testing";
 import {WebhookService, WebhookChangeDispatcher} from "@spica-server/function-webhook";
 import {Webhook, WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
 import {WebhookInvoker} from "@spica-server/function-webhook/src/invoker";
 import __fetch__ from "node-fetch";
+
+mongoOnly("database triggers and commands read the change feed, which PostgreSQL gets in Part 10");
 
 jest.setTimeout(60_000);
 
@@ -66,7 +73,9 @@ describe("Webhook Invoker", () => {
 
     const nodeFetch = {fetch: __fetch__};
     fetchSpy = jest.spyOn(nodeFetch, "fetch");
-    insertLogSpy = jest.spyOn(logService, "insertOne" as never).mockImplementation();
+    insertLogSpy = jest
+      .spyOn(logService, "insertOne" as never)
+      .mockResolvedValue(undefined as never);
 
     webhook = {
       title: "wh1",

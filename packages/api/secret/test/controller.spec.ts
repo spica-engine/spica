@@ -1,7 +1,8 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite, waitForMongoIndexes} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID} from "@spica-server/core-schema";
 import {SecretModule} from "../src";
@@ -9,22 +10,30 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 
 const ENCRYPTION_SECRET = "test-encryption-secret-32chars!!";
 
-describe("Secret", () => {
+contractSuite("Secret", engine => {
   let req: Request;
   let app: INestApplication;
+  let missingId: () => string;
+
+  const filterOn = (field: string, value: string) =>
+    engine.name == "postgresql"
+      ? `document.${field} == '${value}'`
+      : JSON.stringify({[field]: value});
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.standalone(),
+        engine.module(),
         CoreTestingModule,
         SecretModule.forRoot({realtime: false, encryptionSecret: ENCRYPTION_SECRET}),
         SchemaModule.forRoot({formats: [OBJECT_ID]}),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"})
       ]
     }).compile();
+    await waitForMongoIndexes(engine, module, {secret: ["key_1"]});
 
     req = module.get(Request);
+    missingId = () => String(module.get<IdTypes>(ID_TYPES).forCollection("secret").generate());
 
     app = module.createNestApplication();
 
@@ -76,7 +85,7 @@ describe("Secret", () => {
       await req.post("/secret", {key: "KEY_1", value: "val_1"});
       await req.post("/secret", {key: "KEY_2", value: "val_2"});
 
-      const res = await req.get(`/secret`, {filter: JSON.stringify({key: "KEY_2"})});
+      const res = await req.get(`/secret`, {filter: filterOn("key", "KEY_2")});
       expect(res.body.length).toBe(1);
       expect(res.body[0].key).toBe("KEY_2");
     });
@@ -93,7 +102,7 @@ describe("Secret", () => {
     });
 
     it("should return 404 for non-existent id", async () => {
-      const res = await req.get(`/secret/${new ObjectId()}`).catch(r => r);
+      const res = await req.get(`/secret/${missingId()}`).catch(r => r);
       expect(res.statusCode).toBe(404);
     });
   });
@@ -151,9 +160,7 @@ describe("Secret", () => {
     });
 
     it("should return 404 for non-existent secret", async () => {
-      const res = await req
-        .put(`/secret/${new ObjectId()}`, {key: "KEY", value: "val"})
-        .catch(r => r);
+      const res = await req.put(`/secret/${missingId()}`, {key: "KEY", value: "val"}).catch(r => r);
 
       expect(res.statusCode).toBe(404);
     });
@@ -215,7 +222,7 @@ describe("Secret", () => {
     });
 
     it("should return 404 for non-existent secret", async () => {
-      const res = await req.delete(`/secret/${new ObjectId()}`).catch(r => r);
+      const res = await req.delete(`/secret/${missingId()}`).catch(r => r);
 
       expect(res.statusCode).toBe(404);
     });

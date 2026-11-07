@@ -3,7 +3,7 @@ import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {Middlewares} from "@spica-server/core";
 import {StatusModule} from "@spica-server/status";
 import {Test} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {ATTACH_STATUS_TRACKER} from "@spica-server/interface-status";
 
@@ -31,7 +31,7 @@ export class TestController {
   }
 }
 
-describe("Status Interceptor", () => {
+contractSuite("Status Interceptor", engine => {
   describe("With Module", () => {
     let req: Request;
     let app: INestApplication;
@@ -39,7 +39,7 @@ describe("Status Interceptor", () => {
     beforeEach(async () => {
       const module = await Test.createTestingModule({
         imports: [
-          DatabaseTestingModule.standalone(),
+          engine.module(),
           CoreTestingModule,
           StatusModule.forRoot({expireAfterSeconds: 60 * 60, httpStatusTracking: true}),
           PassportTestingModule.initialize()
@@ -89,10 +89,10 @@ describe("Status Interceptor", () => {
 
     it("should track request size and count for post request", async () => {
       const body = {message: "a".repeat(2 * MbInKb)};
-      await sleep(1000);
 
       await req.post("/test", body);
 
+      await sleep(1000);
       const res = await req.get("/status/api");
 
       await sleep(2000);
@@ -103,11 +103,11 @@ describe("Status Interceptor", () => {
         module: "api",
         status: {
           request: {
-            current: 2,
+            current: 1,
             unit: "count"
           },
           uploaded: {
-            current: 0,
+            current: 2,
             unit: "mb"
           },
           downloaded: {
@@ -123,7 +123,7 @@ describe("Status Interceptor", () => {
     async function getTracker(httpStatusTracking: boolean) {
       const module = await Test.createTestingModule({
         imports: [
-          DatabaseTestingModule.standalone(),
+          engine.module(),
           CoreTestingModule,
           StatusModule.forRoot({expireAfterSeconds: 60 * 60, httpStatusTracking}),
           PassportTestingModule.initialize()
@@ -150,7 +150,7 @@ describe("Status Interceptor", () => {
 
     beforeEach(async () => {
       const module = await Test.createTestingModule({
-        imports: [DatabaseTestingModule.standalone(), CoreTestingModule],
+        imports: [engine.module(), CoreTestingModule],
         controllers: [TestController]
       }).compile();
 

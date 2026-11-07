@@ -25,7 +25,7 @@ export async function find(
     skip: number;
     sort?: {[path: string]: 1 | -1};
     paginate: boolean;
-    filter?: object;
+    filter?: object | string;
   }
 ): Promise<HiddenSecret[] | PaginationResponse<HiddenSecret>> {
   const {resourceFilter, limit, skip, sort, paginate, filter} = options;

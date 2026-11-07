@@ -10,8 +10,10 @@ const grammar = fs
   .readFileSync(path.join(__dirname, "grammar.pegjs"), {encoding: "utf8"})
   .toString();
 
+// Without the cache, parse time doubles with every level of nested brackets.
 const parser = peg.generate(grammar, {
-  output: "parser"
+  output: "parser",
+  cache: true
 });
 
 export {parser};

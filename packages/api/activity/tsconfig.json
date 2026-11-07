@@ -7,6 +7,12 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../interface/passport/user"
+    },
+    {
+      "path": "../../interface/passport/identity"
+    },
+    {
       "path": "../passport/guard"
     },
     {

@@ -23,6 +23,17 @@ export const JSONP: PipeTransform<string, object> = {
   }
 };
 
+/**
+ * A filter that starts with `{` is JSON. Anything else stays a string for the engine to read as
+ * an expression.
+ */
+export const FILTER: PipeTransform<string, object | string> = {
+  transform: value => {
+    const text = typeof value == "string" ? value.trim() : "";
+    return text && text[0] != "{" ? value : JSONP.transform(value, undefined);
+  }
+};
+
 export function JSONPR(reviver?: (key: string, value: any) => any): PipeTransform<string, object> {
   return {
     transform: value => {

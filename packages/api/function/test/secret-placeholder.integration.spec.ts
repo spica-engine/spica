@@ -6,11 +6,13 @@ import path from "path";
 import {FunctionModule} from "@spica-server/function";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {SchemaModule, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+
+mongoOnly("FunctionModule subscribes to the change feed, which PostgreSQL gets in Part 10");
 
 describe("Function trigger secret placeholders", () => {
   let app: INestApplication;

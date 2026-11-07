@@ -1,13 +1,10 @@
 /*
- * TEMPORARY. Gives the result shape contract one `createBucket / insert / read` surface over both
- * engines while PostgreSQL has no write or query facade.
+ * TEMPORARY. Gives the contract specs one `createBucket / insert / read` surface over both engines
+ * while PostgreSQL has no write facade.
  *
- * Remove it once these parts are merged, and use the facades from the specs directly:
- * - Part 9 binds BUCKET_WRITE on PostgreSQL: `insert` becomes `BUCKET_WRITE.insert`, on both engines.
- * - Part 8 binds BUCKET_QUERY on PostgreSQL: `read` becomes `BUCKET_QUERY.find`, on both engines.
- *   The facade calls RESULT_SHAPER itself, so fetchRowSet and the direct RESULT_SHAPER call go.
- * Then also delete ../shape/row-set-fixtures.ts. `createBucket` stays engine specific, because
- * PostgreSQL buckets need a primary key property.
+ * Remove it once Part 9 binds BUCKET_WRITE on PostgreSQL: `insert` becomes `BUCKET_WRITE.insert`,
+ * on both engines. Then also delete ../shape/row-set-fixtures.ts. `createBucket` stays engine
+ * specific, because PostgreSQL buckets need a primary key property.
  */
 import {Provider} from "@nestjs/common";
 import {TestingModule} from "@nestjs/testing";
@@ -18,10 +15,10 @@ import {
   BUCKET_REPOSITORY,
   BUCKET_SCHEMA_MANAGER
 } from "@spica-server/interface-bucket";
-import {BUCKET_QUERY} from "@spica-server/interface-bucket-common";
-import {ID_TYPES, IdTypes, PG_POOL, RESULT_SHAPER} from "@spica-server/interface-data";
+import {BUCKET_QUERY, BucketReadSpec} from "@spica-server/interface-bucket-common";
+import {ID_TYPES, IdTypes, PG_POOL} from "@spica-server/interface-data";
 import pg from "pg";
-import {fetchRowSet, insertDocument} from "../shape/row-set-fixtures.js";
+import {insertDocument} from "../shape/row-set-fixtures.js";
 import {describeAll} from "../shape/support.js";
 
 type Fixture = Record<string, any>;
@@ -31,9 +28,16 @@ export interface ReadOptions {
   locale?: {best: string; fallback: string};
 }
 
+export interface BucketOptions {
+  acl?: {read: string; write: string};
+}
+
 export interface BucketStore {
   readonly keyField: "_id" | "id";
-  createBucket(properties: Fixture): Promise<any>;
+  createBucket(properties: Fixture, options?: BucketOptions): Promise<any>;
+  find(bucket: any, spec?: BucketReadSpec): Promise<any[]>;
+  paginate(bucket: any, spec?: BucketReadSpec): Promise<{meta: {total: number}; data: any[]}>;
+  localized(bucket: any, spec?: BucketReadSpec): Promise<{result: any[]; locale?: any}>;
   insert(bucket: any, document: Fixture): Promise<unknown>;
   read(bucket: any, key: unknown, options?: ReadOptions): Promise<any>;
   reset(): void;
@@ -55,6 +59,10 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
   let counter = 0;
 
   const idType = () => module.get<IdTypes>(ID_TYPES).unscoped();
+  const context = () => ({
+    resolveSchema: id => created[String(id)],
+    preferences: async () => preferences
+  });
 
   return {
     keyField: mongo ? "_id" : "id",
@@ -63,7 +71,7 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
       created = {};
     },
 
-    async createBucket(properties) {
+    async createBucket(properties, options = {}) {
       const bucket = await module.get(BUCKET_SCHEMA_MANAGER).create(
         {
           title: `shape ${++counter}`,
@@ -73,7 +81,7 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
           readOnly: false,
           history: false,
           order: 0,
-          acl: {read: "true==true", write: "true==true"},
+          acl: options.acl ?? {read: "true==true", write: "true==true"},
           properties: mongo
             ? properties
             : {id: {type: "uuid", options: {generated: true}}, ...properties}
@@ -82,6 +90,21 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
       );
       created[String(bucket._id)] = bucket;
       return bucket;
+    },
+
+    async find(bucket, spec = {}) {
+      const {result} = await module.get(BUCKET_QUERY).find(bucket, spec, context());
+      return JSON.parse(JSON.stringify(result));
+    },
+
+    async localized(bucket, spec = {}) {
+      const {result, locale} = await module.get(BUCKET_QUERY).find(bucket, spec, context());
+      return {result: JSON.parse(JSON.stringify(result)), locale};
+    },
+
+    async paginate(bucket, spec = {}) {
+      const {result} = await module.get(BUCKET_QUERY).paginate(bucket, spec, context());
+      return JSON.parse(JSON.stringify(result));
     },
 
     async insert(bucket, document) {
@@ -102,31 +125,18 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
     },
 
     async read(bucket, key, {resolve = [], locale} = {}) {
-      const result = mongo
-        ? (
-            await module.get(BUCKET_QUERY).find(
-              bucket,
-              {
-                relationPaths: resolve.map(path => [path, "_id"]),
-                localize: Boolean(locale),
-                language: locale?.best
-              },
-              {resolveSchema: id => created[String(id)], preferences: async () => preferences}
-            )
-          ).result[0]
-        : await module
-            .get(RESULT_SHAPER)
-            .shape(
-              {kind: "bucket", bucketId: String(bucket._id)},
-              await fetchRowSet(
-                module.get<pg.Pool>(PG_POOL),
-                describeAll(created),
-                String(bucket._id),
-                key,
-                resolve
-              ),
-              {locale}
-            );
+      const {
+        result: [result]
+      } = await module.get(BUCKET_QUERY).find(
+        bucket,
+        {
+          documentId: key as any,
+          relationPaths: resolve.map(path => [path]),
+          localize: Boolean(locale),
+          language: locale?.best
+        },
+        context()
+      );
       return JSON.parse(JSON.stringify(result));
     }
   };

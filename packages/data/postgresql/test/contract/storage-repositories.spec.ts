@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DuplicateKeyError, provideRepository} from "@spica-server/data";
-import {contractSuite} from "@spica-server/database-testing";
+import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {
   ACTIVITY_OPTIONS,
   ACTIVITY_REPOSITORY,
@@ -17,7 +17,6 @@ import {
   REPLICATION_SERVICE_OPTIONS
 } from "@spica-server/interface-replication";
 import {STORAGE_REPOSITORY, StorageRepository} from "@spica-server/interface-storage";
-import {clearStorage, waitForMongoIndexes} from "./support.js";
 
 contractSuite("storage, activity and replication repositories", engine => {
   let module: TestingModule;
@@ -160,6 +159,43 @@ contractSuite("storage, activity and replication repositories", engine => {
       expect((await assets.find({})).map(a => a.name)).toEqual(["a", "b"]);
       expect(await assets.findById(missingId())).toBeNull();
     });
+
+    it("lists the assets that match a filter in the language of the engine", async () => {
+      const postgres = engine.name == "postgresql";
+      await assets.insert(asset("a"));
+      await assets.insert({...asset("b"), status: "installed"});
+
+      const filtered = (json: object, expression: string) =>
+        assets.find((postgres ? expression : json) as any);
+
+      expect(
+        (await filtered({status: "installed"}, `document.status == "installed"`)).map(a => a.name)
+      ).toEqual(["b"]);
+      expect((await filtered({name: "nope"}, `document.name == "nope"`)).map(a => a.name)).toEqual(
+        []
+      );
+    });
+
+    (engine.name == "postgresql" ? it : it.skip)(
+      "refuses a filter in the other language, or one it cannot read",
+      async () => {
+        await expect(assets.find({status: "installed"} as any)).rejects.toMatchObject({
+          status: 404
+        });
+        await expect(assets.find(`document.nope == 1` as any)).rejects.toMatchObject({
+          status: 400
+        });
+      }
+    );
+
+    (engine.name == "mongodb" ? it : it.skip)(
+      "refuses a filter in the other language",
+      async () => {
+        await expect(assets.find(`document.status == "installed"` as any)).rejects.toMatchObject({
+          status: 404
+        });
+      }
+    );
 
     it("finds the versions of an asset by its url", async () => {
       await assets.insert(asset("v1", "https://assets/same"));
@@ -340,6 +376,39 @@ contractSuite("storage, activity and replication repositories", engine => {
       ];
 
       beforeEach(() => seed(tree));
+
+      it("filters in the language of the engine, inside a path", async () => {
+        const postgres = engine.name == "postgresql";
+        const inFolder = (json: object, expression: string) =>
+          storage.browse({
+            path: "folder",
+            filter: postgres ? expression : json,
+            sort: {name: 1}
+          });
+
+        expect(
+          names(await inFolder({name: "folder/b.txt"}, `document.name == "folder/b.txt"`))
+        ).toEqual(["folder/b.txt"]);
+        expect(
+          names(await inFolder({name: {$regex: "sub"}}, `contains(document.name, "sub")`))
+        ).toEqual(["folder/sub/"]);
+        expect(names(await inFolder({name: "nope"}, `document.name == "nope"`))).toEqual([]);
+      });
+
+      (engine.name == "postgresql" ? it : it.skip)(
+        "refuses a filter in the other language, or one it cannot read",
+        async () => {
+          await expect(storage.browse({filter: {name: "a.txt"}})).rejects.toMatchObject({
+            status: 404
+          });
+          await expect(storage.browse({filter: `document.nope == 1`})).rejects.toMatchObject({
+            status: 400
+          });
+          await expect(
+            storage.browse({filter: `document.name == "a"; DROP TABLE storage_objects`})
+          ).rejects.toMatchObject({status: 400});
+        }
+      );
 
       it("lists the top level", async () => {
         expect(names(await storage.browse({})).sort()).toEqual([

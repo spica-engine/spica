@@ -6,8 +6,11 @@
 import React, {useCallback, useState, useEffect, useMemo} from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import {useFillScrollContainer} from "../../../hooks/useFillScrollContainer";
+import {useEngine} from "../../../hooks/useEngine";
+import {useKeyField} from "../../../hooks/useKeyField";
 import FilterPanel from "../filter-panel/FilterPanel";
-import type {FilterField} from "../filter-panel/types";
+import type {FilterConditionRow, FilterField} from "../filter-panel/types";
+import {conditionsToExpression} from "../filter-panel/filterPanelUtils";
 import type {Property} from "src/store/api/bucketApi";
 import {Button, FlexElement, FluidContainer, Text} from "oziko-ui-kit";
 import styles from "./RelationPicker.module.scss";
@@ -30,13 +33,15 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
   currentValue,
   bucketProperties: providedBucketProperties
 }) => {
-  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
+  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | string | null>(null);
   const [additionalPages, setAdditionalPages] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const LIMIT = 7;
   const hasBucketId = typeof bucketId === "string" && bucketId.trim().length > 0;
   const resolvedBucketId = hasBucketId ? bucketId : undefined;
+  const keyField = useKeyField(resolvedBucketId);
+  const engine = useEngine();
   
   const {data: bucket} = useGetBucketQuery(resolvedBucketId as string, {
     skip: !resolvedBucketId,
@@ -49,10 +54,10 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
     relation: true,
     limit: LIMIT,
     skip: 0,
-    sort: { _id: -1 },
+    sort: { [keyField ?? "_id"]: -1 },
     filter: appliedFilter || undefined
   }, {
-    skip: !resolvedBucketId,
+    skip: !resolvedBucketId || keyField === undefined,
   });
 
   const [getBucketData] = useLazyGetBucketDataQuery();
@@ -102,7 +107,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
         relation: true,
         limit: LIMIT,
         skip: skipValue,
-        sort: { _id: -1 },
+        sort: { [keyField ?? "_id"]: -1 },
         filter: appliedFilter || undefined
       }).unwrap();
 
@@ -121,7 +126,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
     } finally {
       setIsFetchingMore(false);
     }
-  }, [resolvedBucketId, appliedFilter, currentPage, LIMIT, getBucketData, isFetching]);
+  }, [resolvedBucketId, appliedFilter, currentPage, LIMIT, getBucketData, isFetching, keyField]);
 
   useFillScrollContainer({
     containerId: "scrollableDiv",
@@ -152,11 +157,14 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
       });
   }, [bucket]);
 
-  const handleFilterApply = useCallback((filter: Record<string, any> | null) => {
-    setAppliedFilter(filter);
-    setAdditionalPages([]);
-    setCurrentPage(0);
-  }, []);
+  const handleFilterApply = useCallback(
+    (filter: Record<string, any> | null, conditions: FilterConditionRow[]) => {
+      setAppliedFilter(engine === "postgresql" ? conditionsToExpression(conditions, filterFields) : filter);
+      setAdditionalPages([]);
+      setCurrentPage(0);
+    },
+    [engine, filterFields]
+  );
 
   const handleFilterClear = useCallback(() => {
     setAppliedFilter(null);

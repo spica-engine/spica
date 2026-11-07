@@ -2,10 +2,14 @@ import {Test} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {HistoryModule} from "@spica-server/bucket-history";
 import {HookModule} from "@spica-server/bucket-hooks";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {BucketCacheModule} from "@spica-server/bucket-cache";
+
+mongoOnly(
+  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+);
 
 describe("Bucket Module", () => {
   it("should import hook module", async () => {

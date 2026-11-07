@@ -8,6 +8,8 @@ import type {BucketType} from "src/store/api/bucketApi";
 import Loader from "../../components/atoms/loader/Loader";
 import {useBucketColumns} from "../../hooks/useBucketColumns";
 import {useBucketSearch} from "../../hooks/useBucketSearch";
+import {useEngine} from "../../hooks/useEngine";
+import type {DataEngine} from "../../store/api/statusApi";
 import {useBucketDataStrategy} from "../../hooks/useBucketDataStrategy";
 import {useAppDispatch} from "../../store/hook";
 import {resetBucketSelection} from "../../store";
@@ -16,12 +18,24 @@ import {BucketLookupContext, type BucketLookup} from "../../contexts/BucketLooku
 import BucketEntryDrawer from "../../components/organisms/BucketEntryDrawer/BucketEntryDrawer";
 import type {FilterField, FilterConditionRow} from "../../components/prefabs/filter-panel/types";
 import {
+  combineFilters,
+  conditionsToExpression,
   conditionsToMongoFilter,
   decodeFilterConditions,
   encodeFilterConditions,
   isConditionActive
 } from "../../components/prefabs/filter-panel/filterPanelUtils";
 
+
+function keyFilterField(bucket: BucketType, engine?: DataEngine): FilterField {
+  if (engine !== "postgresql" || !bucket.primary) return {key: "_id", label: "ID", type: "id"};
+  const type = (bucket.properties as any)?.[bucket.primary]?.type;
+  return {
+    key: bucket.primary,
+    label: "ID",
+    type: type === "integer" || type === "bigint" ? "number" : type === "string" ? "string" : "id"
+  };
+}
 
 export default function Bucket() {
   const {bucketId = "", entryId = ""} = useParams<{bucketId: string; entryId: string}>();
@@ -67,7 +81,8 @@ export default function Bucket() {
   const {formattedColumns, visibleColumns, searchableColumns, toggleColumn} =
     useBucketColumns(bucket, bucketId);
 
-  const {searchQuery, handleSearch} = useBucketSearch(bucketId, searchableColumns);
+  const engine = useEngine();
+  const {searchQuery, handleSearch} = useBucketSearch(bucketId, searchableColumns, engine);
 
   // Derive FilterField[] from bucket.properties for the filter panel
   const filterFields = useMemo((): FilterField[] => {
@@ -75,9 +90,9 @@ export default function Bucket() {
     const skipTypes = new Set(["location", "object", "array", "json", "storage"]);
     // _id is not part of bucket.properties; surface it manually so entries can be
     // filtered by ObjectId (backend coerces the hex string to ObjectId).
-    const idField: FilterField = {key: "_id", label: "ID", type: "id"};
+    const idField = keyFilterField(bucket, engine);
     const derived = Object.entries(bucket.properties)
-      .filter(([, prop]: [string, any]) => !skipTypes.has(prop.type))
+      .filter(([key, prop]: [string, any]) => !skipTypes.has(prop.type) && key !== idField.key)
       .map(([key, prop]: [string, any]): FilterField => {
         const strTypes = new Set(["string", "textarea", "color", "richtext", "hash", "encrypted"]);
         const fieldType: FilterField["type"] =
@@ -97,14 +112,16 @@ export default function Bucket() {
         return base;
       });
     return [idField, ...derived];
-  }, [bucket]);
+  }, [bucket, engine]);
 
   // The MongoDB filter is derived from the URL-owned conditions against this
   // bucket's fields (a relation click lands as an `_id equals` condition here).
-  const appliedFilter = useMemo(
-    () => (appliedConditions.length ? conditionsToMongoFilter(appliedConditions, filterFields) : null),
-    [appliedConditions, filterFields]
-  );
+  const appliedFilter = useMemo(() => {
+    if (!appliedConditions.length) return null;
+    return engine === "postgresql"
+      ? conditionsToExpression(appliedConditions, filterFields)
+      : conditionsToMongoFilter(appliedConditions, filterFields);
+  }, [appliedConditions, filterFields, engine]);
 
   // Merge filter/sort into searchQuery for useBucketData
   const mergedSearchQuery = useMemo(() => {
@@ -113,17 +130,15 @@ export default function Bucket() {
     if (appliedSort) {
       merged.sort = appliedSort as any;
     }
-    const combinedFilter = [(searchQuery as any)?.filter, appliedFilter].filter(Boolean);
-    if (combinedFilter.length === 1) {
-      merged.filter = combinedFilter[0];
-    } else if (combinedFilter.length > 1) {
-      merged.filter = {$and: combinedFilter};
+    const combinedFilter = combineFilters([(searchQuery as any)?.filter, appliedFilter]);
+    if (combinedFilter) {
+      merged.filter = combinedFilter;
     }
     return merged;
   }, [searchQuery, appliedFilter, appliedSort]);
 
   const {bucketData, bucketDataLoading, refreshLoading, handleRefresh, loadMore, hasMore, isFetchingMore} =
-    useBucketDataStrategy(bucketId, mergedSearchQuery);
+    useBucketDataStrategy(bucketId, mergedSearchQuery, engine !== undefined);
 
   // The open document is driven entirely by the `:entryId` route segment so the URL
   // is shareable. Prefer the already-loaded row (its relations are resolved); fall

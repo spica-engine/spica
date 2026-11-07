@@ -1,10 +1,9 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {provideRepository} from "@spica-server/data";
-import {contractSuite} from "@spica-server/database-testing";
+import {contractSuite, clearStorage} from "@spica-server/database-testing";
 import {BUCKET_REPOSITORY, BucketRepository} from "@spica-server/interface-bucket";
 import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
 import {ID_TYPES, IdType, IdTypes} from "@spica-server/interface-data";
-import {clearStorage} from "./support.js";
 
 contractSuite("bucket repositories", engine => {
   let module: TestingModule;

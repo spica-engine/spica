@@ -1,13 +1,13 @@
 /*
  * TEMPORARY. Gives the access rule specs one `replace / select` surface over both engines while
- * PostgreSQL has no write or query facade.
+ * PostgreSQL has no write facade.
  *
- * Remove it once these parts are merged, and use the facades from the specs directly:
- * - Part 9 binds BUCKET_WRITE on PostgreSQL: `replace` becomes `BUCKET_WRITE.insert` on both engines.
- * - Part 8 binds BUCKET_QUERY on PostgreSQL: `select` becomes `BUCKET_QUERY.find` with `applyAcl` on
- *   both engines, and `hiddenFields` a read of the same facade.
- * `PostgresAccessStore` goes with them. It exists for the specs of relations and field rules, which
- * read the output of the rule compiler until the facades do.
+ * Part 9 binds BUCKET_WRITE on PostgreSQL: `replace` becomes `BUCKET_WRITE.insert` on both
+ * engines. BUCKET_QUERY is bound since Part 8 (contract/bucket-query.spec.ts covers it with
+ * rules and field rules), but these specs pin the SQL the rule compiler writes against tables
+ * they lay out themselves, with no bucket stored behind them, so `select` and `hiddenFields` keep
+ * running the compiler's output directly. `PostgresAccessStore` goes when the specs can create
+ * their buckets through the facades.
  */
 import {Test, TestingModule} from "@nestjs/testing";
 import {aggregate} from "@spica-server/bucket-expression";

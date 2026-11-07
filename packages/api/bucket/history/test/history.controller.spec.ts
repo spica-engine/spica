@@ -3,10 +3,19 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {HistoryModule} from "@spica-server/bucket-history";
 import {ServicesModule} from "@spica-server/bucket-services";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {
+  DatabaseService,
+  DatabaseTestingModule,
+  ObjectId,
+  mongoOnly
+} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {POLICY_RESOLVER} from "@spica-server/interface-passport-guard";
+
+mongoOnly(
+  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+);
 
 describe("History Acceptance", () => {
   let app: INestApplication;

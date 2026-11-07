@@ -103,6 +103,9 @@
       "path": "../../core/patch"
     },
     {
+      "path": "../../core/encryption"
+    },
+    {
       "path": "../../core/differ"
     },
     {

@@ -1,4 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
+import {assertFilterLanguage} from "@spica-server/data";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {
   executePaginationPlan,
@@ -19,6 +20,7 @@ import {
 } from "@spica-server/interface-data";
 import {PaginationPlan} from "@spica-server/interface-database";
 import {aggregatable, AGGREGATE_OPTIONS} from "../aggregate.js";
+import {replaceHashedFields} from "./hashed-fields.js";
 import {Relation, RelationPlacement, relationsOf} from "./profiles.js";
 
 class ReadPipelineBuilder extends PipelineBuilder {
@@ -44,6 +46,12 @@ function stagesAt(relations: Relation[], placement: RelationPlacement): object[]
 function renderCondition(condition: WhereCondition): unknown {
   if ("in" in condition) {
     return {$in: condition.in};
+  }
+  if ("contains" in condition) {
+    return {
+      ...(condition.contains.all && {$all: condition.contains.all}),
+      ...(condition.contains.any && {$in: condition.contains.any})
+    };
   }
   if ("matches" in condition) {
     return condition.caseInsensitive
@@ -108,10 +116,12 @@ export class MongoCollectionQueryFacade implements CollectionQueryFacade {
   }
 
   private async base(collection: string, spec: ReadSpec) {
+    assertFilterLanguage(spec.filter, ["json"], "MongoDB");
     const replaceIds = (filter: object) =>
       replaceFilterObjectIds(filter, this.idTypes.forCollection(collection));
     const relations = relationsOf(collection, spec.relations);
     const builder = await new ReadPipelineBuilder([
+      ...(spec.hashed ? [async (filter: object) => replaceHashedFields(filter, spec.hashed)] : []),
       ...(spec.filterReplacers || []),
       replaceIds,
       replaceFilterDates
@@ -124,7 +134,7 @@ export class MongoCollectionQueryFacade implements CollectionQueryFacade {
       )
       .attachToPipeline(true, ...stagesAt(relations, "before-filter"))
       .match(renderConditions(spec))
-      .filterByUserRequest(spec.filter);
+      .filterByUserRequest(spec.filter as object);
     return builder.attachToPipeline(true, ...stagesAt(relations, "after-filter"));
   }
 

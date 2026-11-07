@@ -1,31 +1,45 @@
 import {INestApplication} from "@nestjs/common";
-import {Test} from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, DatabaseService} from "@spica-server/database-testing";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
 import {PassportModule} from "@spica-server/passport";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {ConfigModule, ConfigService} from "@spica-server/config";
 
-describe("Password Policy - Identity", () => {
+contractSuite("Password Policy - Identity", engine => {
   let app: INestApplication;
   let req: Request;
-  let database: DatabaseService;
+  let module: TestingModule;
   let configService: ConfigService;
   let adminToken: string;
+
+  const clearConfigs = () =>
+    clearStorage(engine, module, {mongodb: ["config"], postgresql: ["configs"]});
+
+  async function removeCreatedIdentities() {
+    const {body: identities} = await req.get("/passport/identity", undefined, {
+      Authorization: `IDENTITY ${adminToken}`
+    });
+    for (const identity of identities.filter(identity => identity.identifier != "spica")) {
+      await req.delete(`/passport/identity/${identity._id}`, undefined, {
+        Authorization: `IDENTITY ${adminToken}`
+      });
+    }
+  }
 
   function setIdentityConfig(options: object) {
     return configService.replace("identity", {module: "identity", options});
   }
 
   beforeAll(async () => {
-    const module = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
           formats: [OBJECT_ID, DATE_TIME]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         CoreTestingModule,
         ConfigModule.forRoot(),
@@ -75,7 +89,6 @@ describe("Password Policy - Identity", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
-    database = module.get(DatabaseService);
     configService = module.get(ConfigService);
 
     await app.listen(req.socket);
@@ -103,7 +116,7 @@ describe("Password Policy - Identity", () => {
     });
 
     afterAll(async () => {
-      await database.collection("identity").deleteMany({identifier: {$ne: "spica"}});
+      await removeCreatedIdentities();
     });
   });
 
@@ -121,8 +134,8 @@ describe("Password Policy - Identity", () => {
     });
 
     afterAll(async () => {
-      await database.collection("config").deleteMany({module: "identity"});
-      await database.collection("identity").deleteMany({identifier: {$ne: "spica"}});
+      await clearConfigs();
+      await removeCreatedIdentities();
     });
 
     it("should reject password shorter than minLength", async () => {
@@ -224,8 +237,8 @@ describe("Password Policy - Identity", () => {
     });
 
     afterAll(async () => {
-      await database.collection("config").deleteMany({module: "identity"});
-      await database.collection("identity").deleteMany({identifier: {$ne: "spica"}});
+      await clearConfigs();
+      await removeCreatedIdentities();
     });
 
     it("should reject password shorter than minLength", async () => {
@@ -249,7 +262,7 @@ describe("Password Policy - Identity", () => {
 
   describe("when password policy config is updated at runtime", () => {
     beforeAll(async () => {
-      await database.collection("config").deleteMany({module: "identity"});
+      await clearConfigs();
       await setIdentityConfig({
         password: {
           minLength: 3
@@ -258,8 +271,8 @@ describe("Password Policy - Identity", () => {
     });
 
     afterAll(async () => {
-      await database.collection("config").deleteMany({module: "identity"});
-      await database.collection("identity").deleteMany({identifier: {$ne: "spica"}});
+      await clearConfigs();
+      await removeCreatedIdentities();
     });
 
     it("should start validating passwords with the new policy without restart", async () => {

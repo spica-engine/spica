@@ -5,6 +5,7 @@ import {SYSTEM_COLUMNS} from "../../schema/naming.js";
 import {BucketMetadata, ColumnMetadata} from "../../schema/metadata/types.js";
 import {InvalidRuleError, UnsupportedRuleError} from "./errors.js";
 import {Column, Property} from "./operands.js";
+import {LocaleScope, translatedValueSql} from "./translated.js";
 
 export interface Related {
   bucket: Bucket;
@@ -21,6 +22,19 @@ export interface RuleScope {
   table?: string;
   now?: () => number;
   related?: RelatedBuckets;
+  locale?: LocaleScope;
+}
+
+export interface FieldResolver {
+  locate(path: string[], joins: Joins): Column | ArrayField;
+}
+
+export interface RuleContext {
+  auth: unknown;
+  forbidAuth?: boolean;
+  hashSecret?: string;
+  now?: () => number;
+  fields: FieldResolver;
 }
 
 export interface ArrayField {
@@ -87,7 +101,13 @@ function propertyIn(bucket: Bucket, path: string[]): Property | undefined {
   return undefined;
 }
 
-function leaf(frame: Frame, path: string[], property: Property, name: string): Column | ArrayField {
+function leaf(
+  frame: Frame,
+  path: string[],
+  property: Property,
+  name: string,
+  locale?: LocaleScope
+): Column | ArrayField {
   // Encrypted values have no comparable column until Part 9 stores a hash (docs/postgresql/09-writes.md).
   if (property.type == "encrypted") {
     throw new UnsupportedRuleError(
@@ -111,6 +131,14 @@ function leaf(frame: Frame, path: string[], property: Property, name: string): C
   }
 
   const child = children.find(candidate => candidate.name == column.table);
+  if (child?.keyColumns.includes(SYSTEM_COLUMNS.locale) && locale && path.length == 1) {
+    return {
+      kind: "column",
+      sql: translatedValueSql(child, `${quote(frame.alias)}.${quote(primaryKey.column)}`, locale),
+      type: column.type,
+      property
+    };
+  }
   if (!child || child.keyColumns.includes(SYSTEM_COLUMNS.locale) || column.type == "point") {
     throw new UnsupportedRuleError(`"${name}" cannot be used in a rule on PostgreSQL.`);
   }
@@ -190,7 +218,7 @@ export function locate(path: string[], scope: RuleScope, joins: Joins): Column |
     }
     const rest = path.slice(index + 1);
     if (!rest.length) {
-      return leaf(frame, local, property, name);
+      return leaf(frame, local, property, name, scope.locale);
     }
     if (property.type != "relation") {
       continue;
@@ -221,8 +249,23 @@ export function locate(path: string[], scope: RuleScope, joins: Joins): Column |
   throw new InvalidRuleError(`"${name}" is not a property of the bucket.`);
 }
 
-export function resolveField(path: string[], scope: RuleScope, joins: Joins): Column {
-  const field = locate(path, scope, joins);
+export class BucketFieldResolver implements FieldResolver {
+  constructor(private readonly scope: RuleScope) {}
+
+  locate(path: string[], joins: Joins) {
+    return locate(path, this.scope, joins);
+  }
+}
+
+export const contextOf = (scope: RuleScope): RuleContext => ({
+  auth: scope.auth,
+  hashSecret: scope.hashSecret,
+  now: scope.now,
+  fields: new BucketFieldResolver(scope)
+});
+
+export function resolveField(path: string[], fields: FieldResolver, joins: Joins): Column {
+  const field = fields.locate(path, joins);
   if (field.kind == "array") {
     throw new UnsupportedRuleError(
       `"${field.name}" is a list. Use has, length, some, every or equal on it.`

@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceModule} from "@spica-server/preference";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
@@ -7,6 +7,10 @@ import {INestApplication} from "@nestjs/common";
 import {BucketModule, BucketCoreModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
+
+mongoOnly(
+  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+);
 
 describe("Preference Integration", () => {
   let module: TestingModule;

@@ -1,21 +1,27 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
 import {PreferenceService, PreferenceChangeDispatcher} from "@spica-server/preference-services";
-import {Preference, PREFERENCE_REPOSITORY} from "@spica-server/interface-preference";
+import {
+  Preference,
+  PREFERENCE_REPOSITORY,
+  PreferenceRepository
+} from "@spica-server/interface-preference";
 import {provideRepository} from "@spica-server/data";
 import {Observable} from "rxjs";
 import {take} from "rxjs/operators";
 
-describe("Preference Service", () => {
+contractSuite("Preference Service", engine => {
   async function addPref(prefs: Preference[]) {
-    await module.get(DatabaseService).collection("preferences").insertMany(prefs);
+    for (const pref of prefs) {
+      await module.get<PreferenceRepository>(PREFERENCE_REPOSITORY).insert(pref);
+    }
   }
 
   let module: TestingModule;
   let preferenceService: PreferenceService;
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet()],
+      imports: [engine.module()],
       providers: [
         provideRepository(PREFERENCE_REPOSITORY),
         PreferenceService,
@@ -26,8 +32,7 @@ describe("Preference Service", () => {
   }, 120000);
 
   beforeEach(async () => {
-    // clear prefs
-    await module.get(DatabaseService).collection("preferences").deleteMany({});
+    await clearStorage(engine, module, {mongodb: ["preferences"], postgresql: ["preferences"]});
 
     // add prefs
     const prefs: Preference[] = [

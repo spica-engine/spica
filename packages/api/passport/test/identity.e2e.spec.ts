@@ -1,7 +1,7 @@
 import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {AssetModule} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core-schema";
@@ -11,6 +11,8 @@ import {IdentityModule} from "@spica-server/passport-identity";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {PreferenceModule} from "@spica-server/preference";
 import {ConfigModule} from "@spica-server/config";
+
+mongoOnly("the spec is disabled (xdescribe) since 2024 and runs on no engine");
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;

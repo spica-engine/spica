@@ -3,7 +3,7 @@ import {bind, InlineValues, literalOf} from "@spica-server/data-postgresql-orm";
 import {ColumnType} from "../../schema/metadata/types.js";
 import {coerceConstant} from "./coerce.js";
 import {InvalidRuleError, UnsupportedRuleError} from "./errors.js";
-import {Joins, locate, resolveField, RuleScope} from "./fields.js";
+import {contextOf, Joins, resolveField, RuleContext, RuleScope} from "./fields.js";
 import {callFunction, FunctionHost} from "./functions.js";
 import {Column, constant, Constant, Expression, isNull, Operand, Scalar} from "./operands.js";
 
@@ -90,7 +90,7 @@ class RuleCompiler {
   private readonly joins = new Joins();
   private aliases = 0;
 
-  constructor(private readonly scope: RuleScope) {}
+  constructor(private readonly context: RuleContext) {}
 
   // Folding can drop a subtree after it has bound its values, so placeholders are numbered only once
   // the final SQL is known.
@@ -120,7 +120,7 @@ class RuleCompiler {
 
   private host(): FunctionHost {
     return {
-      scope: this.scope,
+      context: this.context,
       param: (value, listOf) => this.param(value, listOf),
       alias: () => `_a${++this.aliases}`,
       target: node => this.target(node)
@@ -132,7 +132,7 @@ class RuleCompiler {
     if (root == "auth") {
       return {kind: "auth" as const, value: this.authValue(path)};
     }
-    return locate(root == "document" ? path : [root, ...path], this.scope, this.joins);
+    return this.context.fields.locate(root == "document" ? path : [root, ...path], this.joins);
   }
 
   visit(node: Node): Operand {
@@ -189,7 +189,31 @@ class RuleCompiler {
     if (type == "select") {
       return this.select(node);
     }
+    if (type == "in") {
+      return this.membership(node);
+    }
     throw new UnsupportedRuleError(`The operator "${type}" is not supported on PostgreSQL.`);
+  }
+
+  // Written as a chain of equalities so every value is coerced like it is in a comparison.
+  private membership(node: Node): Operand {
+    if (!Array.isArray(node.right)) {
+      throw new InvalidRuleError(
+        "The right side of 'in' has to be a list, for example document.status in ['open', 'done']."
+      );
+    }
+    const left = this.visit(node.left);
+    const items = node.right.map((item: Node) => {
+      if (item.kind != "literal") {
+        throw new UnsupportedRuleError(
+          "A list after 'in' can only hold literal values on PostgreSQL."
+        );
+      }
+      return this.literal(item);
+    });
+    return items
+      .map((item: Constant) => this.compare("==", left, item))
+      .reduce((any: Operand, next: Operand) => this.logical("or", any, next), constant(false));
   }
 
   private pathOf(node: Node): {root: string; path: string[]} {
@@ -221,12 +245,15 @@ class RuleCompiler {
       if (!rest.length) {
         throw new InvalidRuleError('"document" has to be followed by a property.');
       }
-      return resolveField(rest, this.scope, this.joins);
+      return resolveField(rest, this.context.fields, this.joins);
     }
-    return resolveField([root, ...rest], this.scope, this.joins);
+    return resolveField([root, ...rest], this.context.fields, this.joins);
   }
 
   private authValue(path: string[]): unknown {
+    if (this.context.forbidAuth) {
+      throw new InvalidRuleError('"auth" cannot be used in a filter.');
+    }
     if (!path.length) {
       throw new InvalidRuleError('"auth" has to be followed by a property.');
     }
@@ -235,7 +262,7 @@ class RuleCompiler {
         source !== null && typeof source == "object" && key in source
           ? (source as Record<string, unknown>)[key]
           : undefined,
-      this.scope.auth
+      this.context.auth
     );
   }
 
@@ -366,7 +393,7 @@ class RuleCompiler {
     const coerced = coerceConstant(
       value,
       {type: typed.type, property: typed.kind == "column" ? typed.property : undefined},
-      this.scope.hashSecret
+      this.context.hashSecret
     );
 
     if (!coerced) {
@@ -457,7 +484,7 @@ class RuleCompiler {
   }
 }
 
-function parse(rule: string): Node {
+export function parseRule(rule: string): Node {
   try {
     return parser.parse(rule);
   } catch (error) {
@@ -471,7 +498,15 @@ export interface CompiledRule {
   constant?: boolean;
 }
 
+export function compileParsed(node: Node, context: RuleContext, values: unknown[]): CompiledRule {
+  const compiler = new RuleCompiler(context);
+  return compiler.finish(compiler.visit(node), values);
+}
+
+export function compileRuleIn(rule: string, context: RuleContext, values: unknown[]): CompiledRule {
+  return compileParsed(parseRule(rule), context, values);
+}
+
 export function compileRule(rule: string, scope: RuleScope, values: unknown[]): CompiledRule {
-  const compiler = new RuleCompiler(scope);
-  return compiler.finish(compiler.visit(parse(rule)), values);
+  return compileRuleIn(rule, contextOf(scope), values);
 }

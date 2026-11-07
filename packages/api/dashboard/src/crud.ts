@@ -20,8 +20,7 @@ export async function insert(dashboards: DashboardRepository, dashboard: Dashboa
   if (dashboard._id) {
     dashboard._id = dashboardIds().parse(dashboard._id);
   }
-  await dashboards.insert(dashboard);
-  return dashboard;
+  return dashboards.insert(dashboard);
 }
 
 export async function replace(dashboards: DashboardRepository, dashboard: Dashboard) {

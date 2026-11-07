@@ -22,7 +22,7 @@ export async function find(
     skip: number;
     sort?: {[path: string]: 1 | -1};
     paginate: boolean;
-    filter?: object;
+    filter?: object | string;
   }
 ): Promise<EnvVar[] | PaginationResponse<EnvVar>> {
   const {resourceFilter, limit, skip, sort, paginate, filter} = options;
@@ -52,8 +52,7 @@ export async function insert(evs: EnvVarService, body: EnvVar) {
     envVar._id = envVarIds().parse(body._id);
   }
 
-  await evs.insert(envVar);
-  return envVar;
+  return evs.insert(envVar);
 }
 
 export async function replace(evs: EnvVarService, body: EnvVar) {

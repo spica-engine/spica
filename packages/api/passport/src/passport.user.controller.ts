@@ -362,7 +362,10 @@ export class PassportUserController {
 
   @Get("user/strategies")
   async strategies() {
-    return this.queries.find(STRATEGY_COLLECTION, {filter: {type: "oauth"}, fields: {options: 0}});
+    return this.queries.find(STRATEGY_COLLECTION, {
+      where: {type: {eq: "oauth"}},
+      fields: {options: 0}
+    });
   }
 
   @Get("user/strategy/:id/url")

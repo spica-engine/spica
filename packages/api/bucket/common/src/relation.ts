@@ -33,7 +33,7 @@ export function findRelations(
 
 export function getRelationPaths(target: Bucket | string[]) {
   if (Array.isArray(target)) {
-    return target.map(pattern => pattern.split(".").concat(["_id"]));
+    return target.map(pattern => pattern.split("."));
   }
 
   const relationPaths = [];
@@ -41,7 +41,7 @@ export function getRelationPaths(target: Bucket | string[]) {
     if (target.properties[propertyKey].type != "relation") {
       continue;
     }
-    relationPaths.push([propertyKey, "_id"]);
+    relationPaths.push([propertyKey]);
   }
   return relationPaths;
 }

@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database-testing";
+import {DatabaseTestingModule, ObjectId, stream, mongoOnly} from "@spica-server/database-testing";
 import {CommandMemory} from "@spica-server/replication";
 import {provideRepository} from "@spica-server/data";
 import {
@@ -7,6 +7,8 @@ import {
   COMMAND_REPOSITORY,
   REPLICATION_SERVICE_OPTIONS
 } from "@spica-server/interface-replication";
+
+mongoOnly("database triggers and commands read the change feed, which PostgreSQL gets in Part 10");
 
 describe("Memory", () => {
   describe("Command", () => {

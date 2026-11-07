@@ -1,8 +1,12 @@
 import {provideRepository} from "@spica-server/data";
 import {WEBHOOK_LOG_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {TestingModule, Test} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
+
+mongoOnly(
+  "it inspects MongoDB TTL indexes (listIndexes, upsertTTLIndex); PostgreSQL expires rows with the pg_cron job of Part 4"
+);
 
 describe("Webhook Log Service", () => {
   let module: TestingModule;

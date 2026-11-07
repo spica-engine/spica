@@ -21,6 +21,35 @@ const rows = (path: string, alias = "_a1") =>
   `FROM "${tableOf(path)}" AS "${alias}" WHERE "${alias}"."_parent" = "t"."id"`;
 
 describe("built-in functions", () => {
+  describe("startsWith and contains", () => {
+    it("should match the escaped text with LIKE", () => {
+      expect(compile(`startsWith(document.title, "an")`)).toEqual({
+        sql: `"t"."title" LIKE $1::text`,
+        values: ["an%"]
+      });
+      expect(compile(`contains(document.title, "an")`).values).toEqual(["%an%"]);
+    });
+
+    it("should escape what LIKE reads as a pattern", () => {
+      expect(compile(`contains(document.title, "100%_\\\\")`).values).toEqual(["%100\\%\\_\\\\%"]);
+    });
+
+    it("should read a uuid as text", () => {
+      expect(compile(`startsWith(document.owner, "0192")`).sql).toBe(
+        `"t"."owner"::text LIKE $1::text`
+      );
+    });
+
+    it("should refuse what is not a text field and a string", () => {
+      expect(() => compile(`startsWith(document.age, "1")`)).toThrow(UnsupportedRuleError);
+      expect(() => compile(`startsWith(document.password, "1")`)).toThrow(UnsupportedRuleError);
+      expect(() => compile(`startsWith(document.tags, "a")`)).toThrow(UnsupportedRuleError);
+      expect(() => compile(`contains(document.title, 1)`)).toThrow(InvalidRuleError);
+      expect(() => compile(`contains(document.title, document.note)`)).toThrow(InvalidRuleError);
+      expect(() => compile(`contains(document.title)`)).toThrow(InvalidRuleError);
+    });
+  });
+
   describe("has", () => {
     it("should test a column for NULL", () => {
       expect(compile("has(document.title)")).toEqual({
