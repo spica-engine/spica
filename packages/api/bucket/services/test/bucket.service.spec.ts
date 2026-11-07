@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core-schema";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {DatabaseTestingModule, ObjectId, mongoOnly} from "@spica-server/database-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {provideRepository} from "@spica-server/data";
 import {
@@ -10,6 +10,10 @@ import {
 } from "@spica-server/interface-bucket";
 import {BucketService} from "../src/bucket.service";
 import {BucketChangeDispatcher} from "../src/change-dispatcher";
+
+mongoOnly(
+  "bucket index definitions through the MongoDB schema manager, and the bucket data repository on PostgreSQL, Part 9"
+);
 
 describe("Bucket Service", () => {
   describe("index", () => {

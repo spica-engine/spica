@@ -1,8 +1,12 @@
 import {provideRepository} from "@spica-server/data";
 import {FUNCTION_LOG_REPOSITORY} from "@spica-server/interface-function-log";
 import {TestingModule, Test} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {FUNCTION_LOG_OPTIONS} from "@spica-server/interface-function-log";
+
+mongoOnly(
+  "it inspects MongoDB TTL indexes (listIndexes, upsertTTLIndex); PostgreSQL expires rows with the pg_cron job of Part 4"
+);
 
 describe("Function Log Service", () => {
   let module: TestingModule;

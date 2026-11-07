@@ -3,10 +3,13 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {
   DatabaseService,
   DatabaseTestingModule,
-  getConnectionUri
+  getConnectionUri,
+  mongoOnly
 } from "@spica-server/database-testing";
 import {ClassCommander, ReplicationModule} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
+
+mongoOnly("database triggers and commands read the change feed, which PostgreSQL gets in Part 10");
 
 function wait(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));

@@ -1,7 +1,7 @@
 import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {DatabaseTestingModule, ObjectId, mongoOnly} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {AssetModule} from "@spica-server/asset";
 import {FunctionModule} from "@spica-server/function";
@@ -12,6 +12,8 @@ import fs from "fs";
 import path from "path";
 import {PreferenceModule} from "@spica-server/preference";
 import {SecretModule} from "@spica-server/secret";
+
+mongoOnly("FunctionModule subscribes to the change feed, which PostgreSQL gets in Part 10");
 
 describe("function", () => {
   function downloadAsset(asset) {
