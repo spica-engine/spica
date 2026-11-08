@@ -28,6 +28,7 @@ function errMsg(e: unknown): string {
 }
 
 const BACKFILL_CONCURRENCY = 4;
+const RECONCILE_CONCURRENCY = 4;
 
 interface AssetMove {
   filename: FunctionAssetFilename;
@@ -338,17 +339,15 @@ export class FunctionAssetReconciler {
     }
   }
 
-  async reconcileAll(fns: Array<Function & {_id: Id}>): Promise<void> {
-    await Promise.all(
-      fns.map(async fn => {
-        try {
-          await this.reconcileFunction(fn);
-        } catch (err) {
-          this.logger.error(
-            `[reconcile] Failed for function ${fn.name}: ${err instanceof Error ? err.message : err}`
-          );
-        }
-      })
-    );
+  async reconcileAll(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
+    await forEachWithConcurrency(fns, RECONCILE_CONCURRENCY, async fn => {
+      try {
+        await this.reconcileFunction(fn);
+      } catch (err) {
+        this.logger.error(
+          `[reconcile] Failed for function ${fn.name}: ${err instanceof Error ? err.message : err}`
+        );
+      }
+    });
   }
 }
