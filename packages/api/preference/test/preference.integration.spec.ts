@@ -8,9 +8,7 @@ import {BucketModule, BucketCoreModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 
-mongoOnly(
-  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)"
-);
+mongoOnly("bucket data writes on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)");
 
 describe("Preference Integration", () => {
   let module: TestingModule;

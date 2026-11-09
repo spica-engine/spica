@@ -4,9 +4,7 @@ import {DatabaseTestingModule, ObjectId, mongoOnly} from "@spica-server/database
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {collectionSlugFactory} from "@spica-server/bucket-hooks/src/module";
 
-mongoOnly(
-  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)"
-);
+mongoOnly("bucket data writes on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)");
 
 describe("hook module", () => {
   describe("factory", () => {
