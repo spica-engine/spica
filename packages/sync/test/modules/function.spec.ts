@@ -628,6 +628,107 @@ describe("functionModule.renderDetail", () => {
   });
 });
 
+describe("functionModule.renderDetail key order", () => {
+  const resource = (schema: Record<string, unknown>) => ({
+    slug: "f",
+    id: "id1",
+    data: {schema, index: "", dependencies: {}}
+  });
+
+  it("does not show a schema diff when only the key order differs", () => {
+    const local = resource({name: "f", warmWorkers: 1, concurrencyPerWorker: 20});
+    const remote = resource({name: "f", concurrencyPerWorker: 20, warmWorkers: 1});
+
+    expect(functionModule.renderDetail(local, remote)).not.toHaveProperty("schema");
+  });
+
+  it("shows only the really changed key when key order also differs", () => {
+    const local = resource({name: "f", timeout: 60, warmWorkers: 1, concurrencyPerWorker: 20});
+    const remote = resource({
+      name: "f",
+      timeout: 30,
+      concurrencyPerWorker: 20,
+      warmWorkers: 1
+    });
+
+    const changedLines = functionModule
+      .renderDetail(local, remote)
+      .schema.split("\n")
+      .filter(line => /^[+-]/.test(line) && !/^(\+\+\+|---)/.test(line));
+
+    expect(changedLines).toEqual(["-timeout: 30", "+timeout: 60"]);
+  });
+
+  it("sorts keys of nested objects as well", () => {
+    const local = resource({name: "f", triggers: {h: {type: "http", active: true}}});
+    const remote = resource({name: "f", triggers: {h: {active: true, type: "http"}}});
+
+    expect(functionModule.renderDetail(local, remote)).not.toHaveProperty("schema");
+  });
+});
+
+describe("functionModule order field", () => {
+  const fn = (schema: Record<string, unknown>) => ({schema, index: "", dependencies: {}});
+  const resource = (schema: Record<string, unknown>) => ({slug: "f", id: "1", data: fn(schema)});
+
+  it("does not report a function whose only difference is order", () => {
+    expect(functionModule.diffFields(fn({name: "f", order: 39}), fn({name: "f"}))).toEqual([]);
+    expect(functionModule.diffFields(fn({name: "f", order: 1}), fn({name: "f", order: 2}))).toEqual(
+      []
+    );
+  });
+
+  it("still reports the other fields of a function whose order differs", () => {
+    expect(
+      functionModule.diffFields(
+        fn({name: "f", order: 1, timeout: 60}),
+        fn({name: "f", order: 2, timeout: 30})
+      )
+    ).toEqual(["schema"]);
+  });
+
+  it("does not show order in the schema detail", () => {
+    const detail = functionModule.renderDetail(
+      resource({name: "f", timeout: 60}),
+      resource({name: "f", timeout: 30, order: 39})
+    );
+    expect(detail.schema).not.toContain("order");
+  });
+});
+
+describe("functionModule.diffFields trigger array order", () => {
+  const withAuthenticate = (authenticate: string[]) => ({
+    schema: {name: "f", triggers: {h: {type: "http", active: true, options: {authenticate}}}},
+    index: "",
+    dependencies: {}
+  });
+
+  it("ignores a reorder of the http authenticate strategies", () => {
+    const changed = functionModule.diffFields(
+      withAuthenticate(["IDENTITY", "APIKEY"]),
+      withAuthenticate(["APIKEY", "IDENTITY"])
+    );
+    expect(changed).toEqual([]);
+  });
+
+  it("still reports different authenticate strategies", () => {
+    const changed = functionModule.diffFields(
+      withAuthenticate(["IDENTITY"]),
+      withAuthenticate(["IDENTITY", "APIKEY"])
+    );
+    expect(changed).toEqual(["schema"]);
+  });
+
+  it("shows no schema detail when only the authenticate order differs", () => {
+    const toResource = (data: ReturnType<typeof withAuthenticate>) => ({slug: "f", id: "1", data});
+    const detail = functionModule.renderDetail(
+      toResource(withAuthenticate(["IDENTITY", "APIKEY"])),
+      toResource(withAuthenticate(["APIKEY", "IDENTITY"]))
+    );
+    expect(detail).not.toHaveProperty("schema");
+  });
+});
+
 describe("function dependency versions reported by the instance", () => {
   const fn = (dependencies: Record<string, string>) => ({
     schema: {name: "f"},
