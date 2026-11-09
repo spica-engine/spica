@@ -59,6 +59,9 @@ export function postgresWriter() {
     patch: (bucket: any, document: object, patch: object, options: object = {}) =>
       writes.patch(bucket, document as any, patch, options, context()),
 
+    remove: (bucket: any, documentId: unknown, options: object = {}) =>
+      writes.delete(bucket, documentId as any, options, context()),
+
     query: (text: string, values: unknown[] = []) => pool.query(text, values),
 
     rows: async (bucket: any) =>

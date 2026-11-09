@@ -123,3 +123,14 @@ async function updateMainRow(
   );
   return rows[0];
 }
+
+export async function deleteRow(
+  session: Session,
+  metadata: BucketMetadata,
+  previous: RowSet
+): Promise<void> {
+  const {column} = metadata.primaryKey;
+  await session.raw(`DELETE FROM ${quote(metadata.main.name)} WHERE ${quote(column)} = $1`, [
+    previous.main[column]
+  ]);
+}
