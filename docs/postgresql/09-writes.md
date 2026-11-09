@@ -114,4 +114,51 @@ Part 5 stores an `encrypted` property as one `text` column that holds the cipher
 
 ## As built
 
-_Fill in after the last PR merges._
+### The planned items
+
+| PR | What it is |
+| --- | --- |
+| #2177 | **Document key.** `IdTypes.keyField(bucket)` names the key field (`_id` on MongoDB, `bucket.primary` on PostgreSQL). `documentKey`, `documentKeyField` and `withDocumentKey` in `bucket-common` replace the hard-coded `_id` in the bucket data controller, GraphQL, the realtime insert and the activity helper. The compiled input schema adds `_id` only where `_id` is the key and handles `uuid` and `bigint` properties. |
+| #2179 | **Write rules through the facade.** `checkWriteRule` (`bucket-common/src/write-rule.ts`) replaces the `$replaceWith` + `$lookup` aggregation of the MongoDB facade. It loads the records a rule reads by key through `BUCKET_QUERY` (one `find` per top-level relation, nested relations through `relationPaths`), so one check serves both engines. Pinned first by nine MongoDB specs. |
+| #2180 | **`BUCKET_DATA_REPOSITORY`** (assigned to this part by documents 05 and 08a, not listed above). `findById`, per-bucket and total counts, and removing the rows of deleted languages (`unsetFields`). `createStorage`, `dropStorage`, `syncIndexes` and `clearRelation` do nothing, since the schema manager and foreign keys do that work. |
+| #2181 | **Row writer, main table.** `PostgresBucketWriteFacade.insert`: write rule, `REMOVE` limit, then one transaction for the total and count limits and the row. Key rules, identity sequence kept ahead of a given key, `jsonb`, `point`, `bigint` and timestamp values. A string primary key cannot be combined with removing the oldest documents (rejected when the bucket is saved). |
+| #2182 | **Encrypted values.** `<field>__hash` column (path `[...field, "hash"]`) for new buckets, ciphertext as JSON text, `{encrypted, iv, authTag, hash}` rebuilt on read. Both Part 7 refusals are lifted, filters and rules hash their literals, and the `[part9-encrypted]` tests assert the comparison. |
+| #2183 | **Child tables.** Lists, multiselects, lists of objects, translations and one-to-many links, in the transaction of the main row, in batches of at most 30,000 parameters. |
+| #2184 | **Replace and patch.** Row lock, previous record loaded, answered before or after as MongoDB does. A replacement rewrites every column and child table. A patch rewrites only what it touches, taking values from the merged document; a changed list, translation or relation rewrites its whole child table (the open question: a merge patch replaces a list as a whole). |
+| #2185 | **Delete.** The foreign keys remove child rows and links, and clear references that are not required. |
+| #2186 | **Constraint errors.** Unique violations answer with MongoDB's exact message, foreign key, not-null and enum violations name the property, other value errors are `Database error: ...`. |
+| #2187 | **Native transactions.** `TransactionExecutor(runner?)`; steps marked `native` are undone by the runner's transaction, the others are rolled back by hand after it. `Orm.runInTransaction` makes the connection ambient (`AsyncLocalStorage`) so repositories take part without a signature change; a joined `orm.transaction` runs in a savepoint; a call made after its transaction ended is refused. The storage service uses it for its two database steps. |
+| this PR | **Spec sweep.** See below. |
+
+### Found while converting
+
+Each of these was a gap that a spec passing on MongoDB exposed on PostgreSQL:
+
+- **Retargeted relations.** Changing the target bucket of a relation made the schema manager add a foreign key over values that referred to the old bucket, and the change failed. The planner now clears them (`NULL` for a nullable column, no rows for a link table) between dropping the old constraint and adding the new one. A required column cannot be cleared; that change is refused with the constraint error.
+- **Filters and secrets.** `compileFilter` and `compileFilterNode` accepted a hash secret and never passed it on, so a filter on a hash or encrypted field compared the plain literal. Both pass it now.
+- **History.** `createHistory` read the document id from `_id`, and `getDocument` still threw "not stored on PostgreSQL yet". `createHistory(bucketId, documentId, previous, current)` takes the document id from the caller, and `getDocument` reads through the query facade.
+- **Decryption errors.** `decryptDocumentFields` named the document by `_id`; it asks for the bucket's key.
+
+### Differences between the engines
+
+- A missing scalar is `null` in a PostgreSQL document and absent in a MongoDB one, an empty one-to-many relation is `[]` on PostgreSQL and absent on MongoDB (also noted in document 08). The shared specs drop nulls through a helper where it matters.
+- An empty patch answers the unchanged document on PostgreSQL; MongoDB answers `400 Database error: Argument "update" must be an object`.
+- A link to a document that does not exist is a 400 on PostgreSQL; MongoDB stores it. Deleting a document that a **required** one-to-one reference points to is refused on PostgreSQL; MongoDB unsets the reference and leaves a document that breaks its own `required`.
+- Filtering inside a `json` value, and the advanced filter constructors of MongoDB JSON filters (`Date(...)`), are MongoDB only.
+- Existing PostgreSQL buckets do not get the `__hash` column of an encrypted property. Only buckets created after Part 9 have it; writing an encrypted value into an older table fails with a database error.
+- The `REMOVE` limit deletes the lowest key first, which is the oldest document only for generated uuid, integer and bigint keys.
+
+### Specs
+
+- **Shared (both engines):** `contract/bucket-write.spec.ts` (insert, replace, patch, delete, unique indexes, limits, write rules, encrypted values), `contract/bucket-data-repository.spec.ts`, and under `packages/api/bucket`: the post/put/patch, delete, unique, limitation, defaults, json, field-level authorization, relation-disposal, read (`bucket-data/index.spec.ts`), side effects (history, activity and hooks of every write), schema changes, `bucket.module`, `bucket.e2e`, hash, encrypted and the three expression specs. Also the hook factory and `preference.integration` (which exercises the removal of deleted languages). The harness is `packages/api/bucket/test/support/bucket-app.ts`: it adds the key property to bucket definitions on PostgreSQL and takes the engine differences out of the spec bodies.
+- **PostgreSQL only:** `test/write/{insert,update,delete,errors}.spec.ts`, `test/transaction.spec.ts`.
+- **Still `mongoOnly`:** `bucket.controller.spec.ts` (MongoDB's bucket model; PostgreSQL buckets are covered by `schema-manager.spec`, `bucket-schema.postgresql.spec` and `bucket-schema-changes.spec`), `history.controller.spec.ts` (seeds MongoDB collections; history on writes is covered by `side-effects.spec.ts`), `bucket.service.spec.ts` (MongoDB index definitions), `graphql.spec.ts`, and the two MongoDB-syntax filter specs `json-field-filter.spec.ts` and `index-mongodb-filters.spec.ts`.
+- The temporary helpers are gone: `bucket-store.ts` and `access-store.ts` write through `BUCKET_WRITE`, and `row-set-fixtures.ts` keeps only `fetchRowSet`.
+- Specs that install assets clear the asset registries first, since two engines share a process (as in document 08a).
+
+### Requests to other parts
+
+- **GraphQL (no part owns it yet):** the schema names every document by `_id` and the `ObjectId` scalar and passes MongoDB-shaped ids. A PostgreSQL bucket's key and its types need a schema change before `graphql.spec.ts` can run on both engines. The write path (`BUCKET_WRITE`, history) is ready.
+- **Part 10:** the realtime gateway reads `_id` from client messages and answers inserts by key; its wire format has to name the key field, and its writes have to go through the same facade (it already does). Change events from writes are Part 10's.
+- **Relation values and the target key (open):** the compiled input schema still validates relation values as `objectid-string`. PostgreSQL's unscoped id type is a uuid, so a relation to a bucket with an integer, bigint or text key is rejected by the validator before it reaches the writer. Relations to uuid-keyed buckets work. It needs the target's key type in `compile`.
+- **Part 12 (panel):** the panel still assumes `_id` for documents (document 08).
