@@ -22,9 +22,10 @@ import {repositoryClasses} from "./repositories/index.js";
 import {BucketDescriptions, PostgresResultShaper} from "./shape/index.js";
 import {postgresBucketSchema} from "./schemas/index.js";
 import {BUCKET_RULE_VALIDATOR, BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
-import {BUCKET_QUERY} from "@spica-server/interface-bucket-common";
+import {BUCKET_QUERY, BUCKET_WRITE} from "@spica-server/interface-bucket-common";
 import {PostgresBucketRuleValidator} from "./access/rule-validator.js";
 import {assertSupportedServerVersion} from "./version.js";
+import {PostgresBucketWriteFacade} from "./write/index.js";
 
 export const POSTGRESQL_ENGINE = "postgresql";
 
@@ -95,6 +96,7 @@ export class PostgresDataAdapter {
           {provide: RESULT_SHAPER, useClass: PostgresResultShaper},
           {provide: COLLECTION_QUERY, useClass: PostgresCollectionQueryFacade},
           {provide: BUCKET_QUERY, useClass: PostgresBucketQueryFacade},
+          {provide: BUCKET_WRITE, useClass: PostgresBucketWriteFacade},
           {provide: BUCKET_RULE_VALIDATOR, useClass: PostgresBucketRuleValidator},
           {provide: BUCKET_SCHEMA_EXTENSION, useValue: postgresBucketSchema},
           {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
@@ -110,6 +112,7 @@ export class PostgresDataAdapter {
           RESULT_SHAPER,
           COLLECTION_QUERY,
           BUCKET_QUERY,
+          BUCKET_WRITE,
           BUCKET_RULE_VALIDATOR,
           BUCKET_SCHEMA_EXTENSION,
           REPOSITORY_CLASSES,

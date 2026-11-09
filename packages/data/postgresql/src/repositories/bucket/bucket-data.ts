@@ -8,9 +8,9 @@ import {
 } from "@spica-server/interface-bucket";
 import {BUCKET_QUERY, BucketQueryFacade} from "@spica-server/interface-bucket-common";
 import {EntryStatus, Id, ProfilerQuery} from "@spica-server/interface-data";
-import {buckets} from "../../entities/index.js";
 import {ORM} from "../../orm.js";
 import {fieldTableName, mainTableName} from "../../schema/index.js";
+import {allBucketTables, countDocuments} from "./counts.js";
 
 const unavailable = () => Promise.reject(new Error("Schemas and preferences are not read here."));
 
@@ -72,29 +72,16 @@ export class PostgresBucketDataRepository implements BucketDataRepository {
   }
 
   async status(): Promise<EntryStatus> {
-    const stored = await this.orm.findMany(buckets, {}, {select: ["_id"]});
-    const counts = stored.map(({_id}) => this.countOf(mainTableName(String(_id))));
-    const current = counts.length ? await this.total(`SELECT ${counts.join(" + ")} AS total`) : 0;
+    const current = await countDocuments(this.orm, await allBucketTables(this.orm));
     return {limit: this.bucketDataLimit, current, unit: "count"};
   }
 
   async statusOf(bucket: Bucket): Promise<EntryStatus> {
-    const current = await this.total(
-      `SELECT ${this.countOf(mainTableName(String(bucket._id)))} AS total`
-    );
+    const current = await countDocuments(this.orm, [mainTableName(String(bucket._id))]);
     return {limit: bucket.documentSettings?.countLimit || undefined, current, unit: "count"};
   }
 
   async profilerEntries(_bucket: Bucket, _query: ProfilerQuery) {
     return [];
-  }
-
-  private countOf(table: string) {
-    return `(SELECT count(*) FROM ${quote(table)})`;
-  }
-
-  private async total(sql: string) {
-    const {rows} = await this.orm.raw<{total: string}>(sql);
-    return Number(rows[0].total);
   }
 }

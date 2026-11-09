@@ -18,7 +18,11 @@ function generatedPaths(properties: Properties | undefined, prefix: string[]): s
   });
 }
 
-export function keyProblems(bucket: {primary?: string; properties?: Properties}): string[] {
+export function keyProblems(bucket: {
+  primary?: string;
+  properties?: Properties;
+  documentSettings?: {countLimit?: number; limitExceedBehaviour?: string};
+}): string[] {
   const properties = bucket.properties ?? {};
   const key = bucket.primary ? properties[bucket.primary] : undefined;
 
@@ -33,6 +37,12 @@ export function keyProblems(bucket: {primary?: string; properties?: Properties})
     }
     if (key.options?.translate) {
       problems.push(`the primary property "${bucket.primary}" cannot be translated`);
+    }
+    const settings = bucket.documentSettings;
+    if (key.type == "string" && settings?.countLimit && settings.limitExceedBehaviour == "remove") {
+      problems.push(
+        `the oldest documents cannot be removed to stay within the count limit when the primary property "${bucket.primary}" is a string, as its values have no insertion order`
+      );
     }
   }
 
