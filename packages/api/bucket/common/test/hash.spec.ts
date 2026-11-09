@@ -16,7 +16,7 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 mongoOnly(
-  "hashed bucket fields on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+  "hashed bucket fields on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)"
 );
 
 describe("Hash Field", () => {

@@ -8,7 +8,7 @@ import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {BucketCacheModule} from "@spica-server/bucket-cache";
 
 mongoOnly(
-  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)"
 );
 
 describe("Bucket Module", () => {

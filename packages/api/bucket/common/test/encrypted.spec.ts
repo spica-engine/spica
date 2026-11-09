@@ -16,7 +16,7 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 mongoOnly(
-  "encrypted bucket fields on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+  "encrypted bucket fields on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)"
 );
 
 describe("Encrypted Field", () => {
