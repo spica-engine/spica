@@ -1,64 +1,8 @@
-import {Test, TestingModule} from "@nestjs/testing";
-import {PostgresBucketWriteFacade} from "@spica-server/data-postgresql";
 import {encrypt} from "@spica-server/core-encryption";
-import {provideRepository} from "@spica-server/data";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
-import {BUCKET_REPOSITORY, BUCKET_SCHEMA_MANAGER} from "@spica-server/interface-bucket";
-import {BUCKET_WRITE} from "@spica-server/interface-bucket-common";
-import {PG_POOL} from "@spica-server/interface-data";
-import pg from "pg";
-import {fieldTableName, mainTableName} from "@spica-server/data-postgresql";
-
-const uuid = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, "0")}`;
+import {postgresWriter, uuid} from "./support.js";
 
 describe("PostgreSQL bucket write: insert", () => {
-  let module: TestingModule;
-  let writes: PostgresBucketWriteFacade;
-  let pool: pg.Pool;
-  const known = new Map<string, any>();
-  let counter = 0;
-
-  beforeAll(async () => {
-    module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.postgres()],
-      providers: [provideRepository(BUCKET_REPOSITORY), provideRepository(BUCKET_SCHEMA_MANAGER)]
-    }).compile();
-    await module.init();
-    writes = module.get(BUCKET_WRITE);
-    pool = module.get(PG_POOL);
-  }, 120_000);
-
-  afterAll(() => module.close());
-
-  async function createBucket(properties: object, extra: object = {}) {
-    const bucket = await module.get(BUCKET_SCHEMA_MANAGER).create(
-      {
-        title: `insert ${++counter}`,
-        description: "",
-        primary: "id",
-        acl: {read: "true==true", write: "true==true"},
-        properties: {id: {type: "uuid", options: {generated: true}}, ...properties},
-        ...extra
-      } as any,
-      () => {}
-    );
-    known.set(String(bucket._id), bucket);
-    return bucket;
-  }
-
-  const insert = (bucket: any, document: object) =>
-    writes.insert(
-      bucket,
-      document as any,
-      {},
-      {
-        resolveSchema: id => known.get(String(id)),
-        deleteOne: async () => {}
-      }
-    );
-
-  const rows = async (bucket: any) =>
-    (await pool.query(`SELECT * FROM "${mainTableName(String(bucket._id))}" ORDER BY 1`)).rows;
+  const {createBucket, insert, rows, rowsOf} = postgresWriter();
 
   describe("keys", () => {
     it("should generate a uuid", async () => {
@@ -236,13 +180,6 @@ describe("PostgreSQL bucket write: insert", () => {
   });
 
   describe("child tables", () => {
-    const rowsOf = async (bucket: any, path: string, order = "1, 2") =>
-      (
-        await pool.query(
-          `SELECT * FROM "${fieldTableName(String(bucket._id), path.split("."))}" ORDER BY ${order}`
-        )
-      ).rows;
-
     it("should write the items of a list in order, one row each", async () => {
       const bucket = await createBucket({tags: {type: "array", items: {type: "string"}}});
 
