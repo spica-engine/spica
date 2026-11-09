@@ -12,7 +12,8 @@ import {
   clearRelations,
   getDependents,
   applyFieldLevelAcl,
-  decryptDocumentFields
+  decryptDocumentFields,
+  documentKey
 } from "@spica-server/bucket-common";
 import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
 import {
@@ -175,7 +176,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           bucket: schema._id.toString(),
           type: "insert"
         },
-        insertedDoc._id.toString(),
+        documentKey(schema, insertedDoc).toString(),
         undefined,
         insertedDoc
       );
@@ -190,7 +191,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         client.upgradeReq,
         Action.POST,
         schema._id.toString(),
-        insertedDoc._id.toString(),
+        documentKey(schema, insertedDoc).toString(),
         this.activity
       );
     }

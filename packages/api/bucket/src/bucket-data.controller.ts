@@ -45,7 +45,9 @@ import {
   isJSONFilter,
   filterReviver,
   decryptDocumentFields,
-  setContentLanguage
+  documentKey,
+  setContentLanguage,
+  withDocumentKey
 } from "@spica-server/bucket-common";
 import {
   BUCKET_QUERY,
@@ -304,13 +306,16 @@ export class BucketDataController {
       return;
     }
 
+    const insertedKey = documentKey(schema, document).toString();
+    req.documentKey = insertedKey;
+
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
         {
           bucket: bucketId.toString(),
           type: "insert"
         },
-        document._id.toString(),
+        insertedKey,
         undefined,
         document
       );
@@ -357,7 +362,7 @@ export class BucketDataController {
     const previousDocument = await this.writes
       .replace(
         schema,
-        {...document, _id: documentId},
+        withDocumentKey(schema, document, documentId),
         {applyAcl: strategyType === ReqAuthStrategy.USER, user: req.user},
         this.bucketContext()
       )
@@ -367,7 +372,7 @@ export class BucketDataController {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
     }
 
-    const currentDocument = {...document, _id: documentId};
+    const currentDocument = withDocumentKey(schema, document, documentId);
 
     if (this.history && schema.history) {
       await this.history.createHistory(bucketId, previousDocument, currentDocument);
@@ -444,7 +449,7 @@ export class BucketDataController {
     const currentDocument = await this.writes
       .patch(
         schema,
-        {...patchedDocument, _id: documentId},
+        withDocumentKey(schema, patchedDocument, documentId),
         patch,
         {applyAcl: strategyType === ReqAuthStrategy.USER, user: req.user, returnDocument: "after"},
         this.bucketContext()

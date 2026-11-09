@@ -23,7 +23,7 @@ export function createBucketDataActivity(
   const bucketId = req.params.bucketId.toString();
 
   const documentId = (
-    preActivity.action == Action.POST ? res._id : req.params.documentId
+    preActivity.action == Action.POST ? (req.documentKey ?? res._id) : req.params.documentId
   ).toString();
 
   const resource = ["bucket", bucketId, "data", documentId];

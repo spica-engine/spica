@@ -56,4 +56,8 @@ export class MongoIdTypes implements IdTypes {
   unscoped(): IdType {
     return this.objectId;
   }
+
+  keyField(): string {
+    return "_id";
+  }
 }
