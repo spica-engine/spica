@@ -471,6 +471,10 @@ export function diffSchemaFields<T extends object>(
   );
 }
 
+export function stringifyForDiff(data: unknown): string {
+  return yaml.stringify(data, {sortMapEntries: true});
+}
+
 /**
  * Build a unified diff string between two text representations.
  */
@@ -487,8 +491,8 @@ export function renderSchemaDetail(
   remoteData: object,
   ignoredFields: string[]
 ): Record<string, string> {
-  const localYaml = yaml.stringify(omit(localData, ignoredFields));
-  const remoteYaml = yaml.stringify(omit(remoteData, ignoredFields));
+  const localYaml = stringifyForDiff(omit(localData, ignoredFields));
+  const remoteYaml = stringifyForDiff(omit(remoteData, ignoredFields));
   return {schema: buildUnifiedDiff(remoteYaml, localYaml, "schema.yaml")};
 }
 

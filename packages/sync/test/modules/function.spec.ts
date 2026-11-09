@@ -628,6 +628,46 @@ describe("functionModule.renderDetail", () => {
   });
 });
 
+describe("functionModule.renderDetail key order", () => {
+  const resource = (schema: Record<string, unknown>) => ({
+    slug: "f",
+    id: "id1",
+    data: {schema, index: "", dependencies: {}}
+  });
+
+  it("does not show a schema diff when only the key order differs", () => {
+    const local = resource({name: "f", warmWorkers: 1, concurrencyPerWorker: 20});
+    const remote = resource({name: "f", concurrencyPerWorker: 20, warmWorkers: 1});
+
+    expect(functionModule.renderDetail(local, remote)).not.toHaveProperty("schema");
+  });
+
+  it("shows only the really changed key when key order also differs", () => {
+    const local = resource({name: "f", category: "S2", warmWorkers: 1, concurrencyPerWorker: 20});
+    const remote = resource({
+      name: "f",
+      category: "S2",
+      order: 39,
+      concurrencyPerWorker: 20,
+      warmWorkers: 1
+    });
+
+    const changedLines = functionModule
+      .renderDetail(local, remote)
+      .schema.split("\n")
+      .filter(line => /^[+-]/.test(line) && !/^(\+\+\+|---)/.test(line));
+
+    expect(changedLines).toEqual(["-order: 39"]);
+  });
+
+  it("sorts keys of nested objects as well", () => {
+    const local = resource({name: "f", triggers: {h: {type: "http", active: true}}});
+    const remote = resource({name: "f", triggers: {h: {active: true, type: "http"}}});
+
+    expect(functionModule.renderDetail(local, remote)).not.toHaveProperty("schema");
+  });
+});
+
 describe("function dependency versions reported by the instance", () => {
   const fn = (dependencies: Record<string, string>) => ({
     schema: {name: "f"},

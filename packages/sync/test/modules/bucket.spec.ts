@@ -149,3 +149,31 @@ describe("bucketModule.diffFields", () => {
     expect(changed).not.toContain("_id");
   });
 });
+
+describe("bucketModule.renderDetail key order", () => {
+  const resource = (data: Record<string, unknown>) => ({slug: "pages", id: "id1", data}) as any;
+
+  it("reports only the really changed key when the key order differs", () => {
+    const local = resource({title: "Pages", description: "new", primary: "title"});
+    const remote = resource({title: "Pages", primary: "title", description: "old"});
+
+    const changedLines = bucketModule
+      .renderDetail(local, remote)
+      .schema.split("\n")
+      .filter(line => /^[+-]/.test(line) && !/^(\+\+\+|---)/.test(line));
+
+    expect(changedLines).toEqual(["-description: old", "+description: new"]);
+  });
+
+  it("produces no changed lines when only the key order differs", () => {
+    const local = resource({title: "Pages", properties: {a: {type: "string", title: "A"}}});
+    const remote = resource({properties: {a: {title: "A", type: "string"}}, title: "Pages"});
+
+    const changedLines = bucketModule
+      .renderDetail(local, remote)
+      .schema.split("\n")
+      .filter(line => /^[+-]/.test(line) && !/^(\+\+\+|---)/.test(line));
+
+    expect(changedLines).toEqual([]);
+  });
+});

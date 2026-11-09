@@ -5,7 +5,7 @@ import isEqual from "lodash/isEqual.js";
 import semver from "semver";
 import {bold, cyan, green, red, yellow} from "colorette";
 import {SyncHttpClient} from "../http";
-import {buildUnifiedDiff, diffObjectFields} from "../planner";
+import {buildUnifiedDiff, diffObjectFields, stringifyForDiff} from "../planner";
 import {
   ensureDir,
   omit,
@@ -360,8 +360,8 @@ export const functionModule: FunctionModule = {
   renderDetail(local, remote) {
     const result: Record<string, string> = {};
 
-    const localSchemaYaml = yaml.stringify(omit(local.data.schema, SCHEMA_IGNORED));
-    const remoteSchemaYaml = yaml.stringify(omit(remote.data.schema, SCHEMA_IGNORED));
+    const localSchemaYaml = stringifyForDiff(omit(local.data.schema, SCHEMA_IGNORED));
+    const remoteSchemaYaml = stringifyForDiff(omit(remote.data.schema, SCHEMA_IGNORED));
     if (localSchemaYaml !== remoteSchemaYaml) {
       result["schema"] = buildUnifiedDiff(remoteSchemaYaml, localSchemaYaml, "schema.yaml");
     }
