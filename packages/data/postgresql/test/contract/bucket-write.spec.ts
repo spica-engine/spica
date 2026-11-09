@@ -443,6 +443,72 @@ contractSuite("bucket write: insert", engine => {
   });
 });
 
+contractSuite("bucket write: unique indexes", engine => {
+  const writer = writerOver(engine);
+  const unique = (property: string) => ({
+    status: 400,
+    message: `Value of the property .${property} should unique across all documents.`
+  });
+  let bucket: any;
+
+  beforeAll(async () => {
+    bucket = await writer.bucket(
+      {
+        title: {type: "string"},
+        address: {type: "object", properties: {city: {type: "string"}}}
+      },
+      {
+        indexes: [
+          {definition: {title: 1}, options: {unique: true}},
+          {definition: {"address.city": 1}, options: {unique: true}}
+        ]
+      }
+    );
+    await writer.insert(bucket, {title: "taken", address: {city: "Rome"}});
+  });
+
+  it("should refuse an insert that repeats a unique value and write nothing", async () => {
+    await expect(
+      writer.insert(bucket, {title: "taken", address: {city: "Oslo"}})
+    ).rejects.toMatchObject(unique("title"));
+
+    expect((await writer.store.find(bucket)).some(found => found.address.city == "Oslo")).toBe(
+      false
+    );
+  });
+
+  it("should name the path of a unique value inside an object", async () => {
+    await expect(
+      writer.insert(bucket, {title: "other", address: {city: "Rome"}})
+    ).rejects.toMatchObject(unique("address.city"));
+  });
+
+  it("should refuse a replacement that repeats a unique value and keep the document", async () => {
+    const key = (await writer.insert(bucket, {title: "mine", address: {city: "Bonn"}}))[
+      writer.keyField
+    ];
+
+    await expect(
+      writer.replace(bucket, {[writer.keyField]: key, title: "taken", address: {city: "Bonn"}})
+    ).rejects.toMatchObject(unique("title"));
+
+    expect((await writer.store.read(bucket, key)).title).toBe("mine");
+  });
+
+  it("should refuse a patch that repeats a unique value and keep the document", async () => {
+    const key = (await writer.insert(bucket, {title: "yours", address: {city: "Lyon"}}))[
+      writer.keyField
+    ];
+    const merged = {[writer.keyField]: key, title: "taken", address: {city: "Lyon"}};
+
+    await expect(writer.patch(bucket, merged, {title: "taken"})).rejects.toMatchObject(
+      unique("title")
+    );
+
+    expect((await writer.store.read(bucket, key)).title).toBe("yours");
+  });
+});
+
 contractSuite("bucket write: insert with a total document limit", engine => {
   const writer = writerOver(engine, 3);
 
