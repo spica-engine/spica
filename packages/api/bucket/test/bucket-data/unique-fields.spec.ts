@@ -1,151 +1,106 @@
-import {INestApplication} from "@nestjs/common";
-import {Test, TestingModule} from "@nestjs/testing";
-import {BucketModule} from "@spica-server/bucket";
-import {SchemaModule} from "@spica-server/core-schema";
-import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
-import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
-import {PassportTestingModule} from "@spica-server/passport-testing";
-import {PreferenceTestingModule} from "@spica-server/preference-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {BucketApp, startBucketApp} from "../support/bucket-app";
 
-mongoOnly("bucket data writes on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)");
-
-describe("BucketDataController", () => {
-  let app: INestApplication;
-  let req: Request;
-  let module: TestingModule;
+contractSuite("BucketDataController: unique fields", engine => {
+  let api: BucketApp;
+  let bucket;
+  let key: "_id" | "id";
 
   beforeEach(async () => {
-    module = await Test.createTestingModule({
-      imports: [
-        SchemaModule.forRoot({
-          formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
-          defaults: [CREATED_AT, UPDATED_AT]
-        }),
-        CoreTestingModule,
-        PassportTestingModule.initialize(),
-        DatabaseTestingModule.replicaSet(),
-        PreferenceTestingModule,
-        BucketModule.forRoot({
-          hooks: false,
-          history: false,
-          realtime: false,
-          cache: false,
-          graphql: false
-        })
-      ]
-    }).compile();
-    app = module.createNestApplication();
-    req = module.get(Request);
-    req.reject = true; /* Reject for non 2xx response codes */
-    await app.listen(req.socket);
-  });
-
-  afterEach(() => app.close());
-
-  describe("unique fields", () => {
-    let bucket;
-    beforeEach(async () => {
-      const body = {
+    api = await startBucketApp(engine);
+    key = api.keyField;
+    bucket = await api.createBucket(
+      {
+        title: {type: "string", options: {}},
+        description: {type: "string", options: {}}
+      },
+      {
         title: "new bucket",
         description: "new bucket",
-        properties: {
-          title: {
-            type: "string",
-            options: {}
-          },
-          description: {
-            type: "string",
-            options: {}
-          }
-        },
         indexes: [
           {
             definition: {title: 1},
             options: {unique: true}
           }
         ]
-      };
+      }
+    );
+  });
 
-      bucket = await req.post("/bucket", body).then(r => r.body);
+  afterEach(() => api.close());
+
+  it("should insert documents when they have unique values", async () => {
+    const document = {
+      title: "Rat Of The Eternal",
+      description: "Description of book"
+    };
+
+    let response = await api.req.post(`/bucket/${bucket._id}/data`, document);
+    expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
+
+    document.title = "Hawk Without Hate";
+
+    response = await api.req.post(`/bucket/${bucket._id}/data`, document);
+    expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
+  });
+
+  it("should update document when updated one have unique value", async () => {
+    let document: any = {
+      title: "Men Without Faith",
+      description: "Description of book"
+    };
+
+    let response = await api.req.post(`/bucket/${bucket._id}/data`, document).then(res => {
+      document = res.body;
+      return res;
     });
+    expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
 
-    it("should insert documents when they have unique values", async () => {
-      let document = {
-        title: "Rat Of The Eternal",
-        description: "Description of book"
-      };
+    document.title = "Creators Of The Day";
 
-      let response = await req.post(`/bucket/${bucket._id}/data`, document);
-      expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
+    response = await api.req.put(`/bucket/${bucket._id}/data/${document[key]}`, document);
+    expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
+  });
 
-      document.title = "Hawk Without Hate";
+  it("should not update document when updated one does not have unique value", async () => {
+    const document = {
+      title: "Fish And Companions",
+      description: "Description of book"
+    };
 
-      response = await req.post(`/bucket/${bucket._id}/data`, document);
-      expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
-    });
+    let document2: any = {
+      title: "Mice And Enemies",
+      description: "Description of book"
+    };
 
-    it("should update document when updated one have unique value", async () => {
-      let document = {
-        _id: undefined,
-        title: "Men Without Faith",
-        description: "Description of book"
-      };
+    await api.req.post(`/bucket/${bucket._id}/data`, document);
+    document2 = await api.req.post(`/bucket/${bucket._id}/data`, document2).then(r => r.body);
 
-      let response = await req.post(`/bucket/${bucket._id}/data`, document).then(res => {
-        document = res.body;
-        return res;
-      });
-      expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
+    document2.title = "Fish And Companions";
 
-      document.title = "Creators Of The Day";
+    const response = await api.req
+      .put(`/bucket/${bucket._id}/data/${document2[key]}`, document2)
+      .catch(e => e);
 
-      response = await req.put(`/bucket/${bucket._id}/data/${document._id}`, document);
-      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
-    });
+    expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+    expect(response.body.message).toEqual(
+      "Value of the property .title should unique across all documents."
+    );
+  });
 
-    it("should not update document when updated one does not have unique value", async () => {
-      const document = {
-        title: "Fish And Companions",
-        description: "Description of book"
-      };
+  it("should not insert documents when they do not have unique values", async () => {
+    const document = {
+      title: "Mice And Enemies",
+      description: "Description of book"
+    };
 
-      let document2 = {
-        _id: undefined,
-        title: "Mice And Enemies",
-        description: "Description of book"
-      };
+    await api.req.post(`/bucket/${bucket._id}/data`, document);
 
-      await req.post(`/bucket/${bucket._id}/data`, document);
-      document2 = await req.post(`/bucket/${bucket._id}/data`, document2).then(r => r.body);
+    const response = await api.req.post(`/bucket/${bucket._id}/data`, document).catch(e => e);
 
-      document2.title = "Fish And Companions";
-
-      const response = await req
-        .put(`/bucket/${bucket._id}/data/${document2._id}`, document2)
-        .catch(e => e);
-
-      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-      expect(response.body.message).toEqual(
-        "Value of the property .title should unique across all documents."
-      );
-    });
-
-    it("should not insert documents when they do not have unique values", async () => {
-      const document = {
-        title: "Mice And Enemies",
-        description: "Description of book"
-      };
-
-      await req.post(`/bucket/${bucket._id}/data`, document);
-
-      const response = await req.post(`/bucket/${bucket._id}/data`, document).catch(e => e);
-
-      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-      expect(response.body.message).toEqual(
-        "Value of the property .title should unique across all documents."
-      );
-    });
+    expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+    expect(response.body.message).toEqual(
+      "Value of the property .title should unique across all documents."
+    );
   });
 });
