@@ -24,11 +24,6 @@ function propertyAt(properties: Properties | undefined, path: string[]) {
   );
 }
 
-/**
- * The schema manager creates, indexes and drops the tables in the transaction that saves the
- * bucket, and foreign keys clear the references to a deleted document. What is left here is
- * reading and counting documents and removing the rows of deleted languages.
- */
 @Injectable()
 export class PostgresBucketDataRepository implements BucketDataRepository {
   constructor(
