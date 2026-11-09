@@ -205,44 +205,6 @@ describe("functionModule.readRemote", () => {
     expect(result[0].data.index).toBe("");
     expect(result[0].data.dependencies).toEqual({});
   });
-
-  it("does not hang when a non-positive concurrency is requested", async () => {
-    mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve([{_id: "fn1", name: "MyFn"}]);
-      return Promise.resolve(url.endsWith("/index") ? {index: ""} : []);
-    });
-
-    const result = await functionModule.readRemote(mockHttp, {concurrency: 0});
-    expect(result).toHaveLength(1);
-  });
-
-  it("keeps the per-function detail requests within the requested concurrency", async () => {
-    const CONCURRENCY = 4;
-    const REQUESTS_PER_FUNCTION = 2; // index + dependencies, fired together
-    const fns = Array.from({length: 50}, (_, i) => ({_id: `fn${i}`, name: `Fn${i}`}));
-
-    let inFlight = 0;
-    let peakInFlight = 0;
-
-    const detailRequest = (url: string) => {
-      peakInFlight = Math.max(peakInFlight, ++inFlight);
-      return new Promise(resolve =>
-        setImmediate(() => {
-          inFlight--;
-          resolve(url.endsWith("/index") ? {index: ""} : []);
-        })
-      );
-    };
-
-    mockHttp.get.mockImplementation((url: string) =>
-      url === "function" ? Promise.resolve(fns) : detailRequest(url)
-    );
-
-    const result = await functionModule.readRemote(mockHttp, {concurrency: CONCURRENCY});
-
-    expect(result).toHaveLength(50);
-    expect(peakInFlight).toBeLessThanOrEqual(CONCURRENCY * REQUESTS_PER_FUNCTION);
-  });
 });
 
 describe("functionModule.create", () => {

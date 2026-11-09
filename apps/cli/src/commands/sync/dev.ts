@@ -2,6 +2,8 @@ import path from "path";
 import fs from "fs";
 import chokidar from "chokidar";
 import {ActionParameters, Command, Program} from "@caporal/core";
+import caporalCore from "@caporal/core";
+const {CaporalValidator} = caporalCore;
 import {bold, cyan, green, red, yellow} from "colorette";
 import ora from "ora";
 import {httpService} from "../../http";
@@ -11,6 +13,8 @@ import {
   applyPlan,
   renderPlan,
   resolveModules,
+  limitConcurrency,
+  DEFAULT_CONCURRENCY,
   MODULE_NAMES,
   readYaml,
   DevEventContext,
@@ -368,6 +372,8 @@ async function dev({args, options}: ActionParameters) {
     ? (Array.isArray(options.module) ? options.module : [options.module]).map(String)
     : undefined;
 
+  const concurrency = options.concurrency as number;
+
   const modules = resolveModules(moduleFilter);
 
   // Warn if context URL is HTTPS (this command is designed for local dev)
@@ -390,16 +396,19 @@ async function dev({args, options}: ActionParameters) {
     );
   }
 
-  const http = httpService.create({
-    baseUrl: ctx.url,
-    authorization: ctx.authorization
-  });
+  const http = limitConcurrency(
+    httpService.create({
+      baseUrl: ctx.url,
+      authorization: ctx.authorization
+    }),
+    concurrency
+  );
 
   // ── First sync ────────────────────────────────────────────────────────────
   console.log(bold("\nBuilding plan…"));
   let plan: Awaited<ReturnType<typeof buildPlan>>;
   try {
-    plan = await buildPlan(modules, http, rootDir, {reporter: cliReporter});
+    plan = await buildPlan(modules, http, rootDir, {reporter: cliReporter, concurrency});
   } catch (err) {
     console.log(`\n${bold(red(`✗ Failed to build plan: ${formatError(err)}`))}`);
     process.exitCode = 1;
@@ -424,7 +433,7 @@ async function dev({args, options}: ActionParameters) {
     console.log(bold("\nApplying changes…"));
     try {
       const {errors} = await applyPlan(plan, http, {
-        concurrency: 5,
+        concurrency,
         abortOnError: true,
         reporter: cliReporter
       });
@@ -501,6 +510,14 @@ export default function (program: Program): Command {
       "Watch local project files and automatically sync changes to the connected Spica instance."
     )
     .argument("[dir]", "Project directory (default: current working directory)")
+    .option(
+      "--concurrency <n>",
+      "Maximum parallel API requests.",
+      {
+        default: DEFAULT_CONCURRENCY as number,
+        validator: CaporalValidator.NUMBER
+      }
+    )
     .option(
       "--module <name>",
       `Filter to specific module(s). Available: ${MODULE_NAMES.join(", ")}.`,

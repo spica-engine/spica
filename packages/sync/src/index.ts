@@ -7,6 +7,7 @@
 
 export * from "./types";
 export * from "./http";
+export * from "./concurrency";
 export * from "./reporter";
 export * from "./fs-utils";
 export * from "./source";
