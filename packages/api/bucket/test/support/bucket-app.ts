@@ -33,6 +33,12 @@ export function withoutNulls<T>(value: T): T {
   return value;
 }
 
+export function keyed(engine: ContractEngine, properties: Record<string, unknown>) {
+  return engine.name == "postgresql"
+    ? {primary: "id", properties: {id: {type: "uuid", options: {generated: true}}, ...properties}}
+    : {properties};
+}
+
 export interface BucketApp {
   app: INestApplication;
   req: Request;
