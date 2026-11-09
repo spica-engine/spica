@@ -79,9 +79,7 @@ export function clearReferencesSql(table: TableMetadata, column: string): string
   if (target && !target.notNull) {
     return `UPDATE ${quote(table.name)} SET ${quote(column)} = NULL WHERE ${quote(column)} IS NOT NULL`;
   }
-  return table.keyColumns.includes(SYSTEM_COLUMNS.parent)
-    ? `DELETE FROM ${quote(table.name)}`
-    : undefined;
+  return column == SYSTEM_COLUMNS.target ? `DELETE FROM ${quote(table.name)}` : undefined;
 }
 
 export const addPrimaryKeySql = (table: string, column: string) =>

@@ -2,13 +2,13 @@ import {Inject, Injectable} from "@nestjs/common";
 import {gte, Orm} from "@spica-server/data-postgresql-orm";
 import {diff, schemaDiff} from "@spica-server/core-differ";
 import {Bucket, BucketDocument} from "@spica-server/interface-bucket";
+import {BUCKET_QUERY, BucketQueryFacade} from "@spica-server/interface-bucket-common";
 import {History, HistoryRepository, HistorySummary} from "@spica-server/interface-bucket-history";
 import {ChangeKind, ChangePaths} from "@spica-server/interface-core";
 import {Id} from "@spica-server/interface-data";
 import {histories} from "../../entities/index.js";
 import {ORM} from "../../orm.js";
 import {keyedReadContext} from "./read-context.js";
-import {BUCKET_QUERY, BucketQueryFacade} from "@spica-server/interface-bucket-common";
 import {StoredBuckets} from "./stored-buckets.js";
 
 const MAX_HISTORIES_PER_DOCUMENT = 10;
@@ -81,7 +81,7 @@ export class PostgresHistoryRepository implements HistoryRepository {
       }
       return session.insert(histories, {
         bucket_id: bucketId,
-        document_id: documentId,
+        document_id: String(documentId) as unknown as Id,
         changes
       });
     });

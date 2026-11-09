@@ -748,6 +748,78 @@ describe("PostgreSQL schema manager", () => {
       expect((await pool.query(`SELECT * FROM "${table}__many"`)).rows).toEqual([]);
     });
 
+    describe("a relation inside the items of a list", () => {
+      const lines = (required: string[], target: unknown) =>
+        keyed({
+          lines: {
+            type: "array",
+            items: {
+              type: "object",
+              required,
+              properties: {sku: {type: "string"}, product: relation(target, "onetoone")}
+            }
+          }
+        });
+
+      async function itemsAround(required: string[]) {
+        const first = await manager.create(keyed({}), () => {});
+        const second = await manager.create(keyed({}), () => {});
+        const created = await manager.create(lines(required, first._id), () => {});
+        const table = tableOf(created._id);
+        const product = (
+          await pool.query(`INSERT INTO "${tableOf(first._id)}" DEFAULT VALUES RETURNING id`)
+        ).rows[0].id;
+        const parent = (await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`))
+          .rows[0].id;
+        for (const [position, sku] of ["a", "b"].entries()) {
+          await pool.query(
+            `INSERT INTO "${table}__lines" (_parent, _position, sku, product) VALUES ($1, $2, $3, $4)`,
+            [parent, position, sku, product]
+          );
+        }
+        return {first, second, created, table, product};
+      }
+
+      it("should clear the relation of each item and keep the items when it is retargeted", async () => {
+        const {second, created, table} = await itemsAround([]);
+
+        await manager.replace(created._id, lines([], second._id), () => {});
+
+        expect(
+          (await pool.query(`SELECT _position, sku, product FROM "${table}__lines" ORDER BY 1`))
+            .rows
+        ).toEqual([
+          {_position: 0, sku: "a", product: null},
+          {_position: 1, sku: "b", product: null}
+        ]);
+      });
+
+      it("should refuse to retarget a required relation and keep every item", async () => {
+        const {first, second, created, table, product} = await itemsAround(["product"]);
+        const required = (target: unknown) => ({
+          ...lines(["product"], target),
+          required: ["lines"]
+        });
+
+        await expect(
+          manager.replace(created._id, required(second._id), () => {})
+        ).rejects.toMatchObject({
+          status: 400,
+          message: expect.stringContaining("Existing documents refer to documents")
+        });
+
+        expect(
+          (await pool.query(`SELECT sku, product FROM "${table}__lines" ORDER BY _position`)).rows
+        ).toEqual([
+          {sku: "a", product},
+          {sku: "b", product}
+        ]);
+        expect((await foreignKeys(`${table}__lines`)).map(key => key[1])).toContain(
+          tableOf(first._id)
+        );
+      });
+    });
+
     it("should refuse to retarget a required relation that has values and change nothing", async () => {
       const first = await manager.create(keyed({}), () => {});
       const second = await manager.create(keyed({}), () => {});
