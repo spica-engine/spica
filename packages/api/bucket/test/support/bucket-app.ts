@@ -12,7 +12,7 @@ import {
 } from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {ContractEngine} from "@spica-server/database-testing";
-import {BucketOptions} from "@spica-server/interface-bucket";
+import {BUCKET_DATA_REPOSITORY, BucketOptions} from "@spica-server/interface-bucket";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
@@ -48,6 +48,7 @@ export interface BucketApp {
   definition(properties: Record<string, unknown>, extra?: object): any;
   createBucket(properties: Record<string, unknown>, extra?: object): Promise<any>;
   unknownKey(): string;
+  stored(bucketId: string, documentId: string): Promise<any>;
   filter(mongodb: object, expression: string): string;
   close(): Promise<void>;
 }
@@ -112,6 +113,13 @@ export async function startBucketApp(
     async createBucket(properties, extra) {
       const {body} = await req.post("/bucket", definition(properties, extra));
       return body;
+    },
+    async stored(bucketId, documentId) {
+      const bucket = (await req.get(`/bucket/${bucketId}`)).body;
+      const idType = await module.get<IdTypes>(ID_TYPES).forBucket(bucketId);
+      return module
+        .get(BUCKET_DATA_REPOSITORY, {strict: false})
+        .findById(bucket, idType.parse(documentId));
     },
     filter: (mongodb, expression) => (postgres ? expression : JSON.stringify(mongodb)),
     unknownKey: () => String(module.get<IdTypes>(ID_TYPES).unscoped().generate()),
