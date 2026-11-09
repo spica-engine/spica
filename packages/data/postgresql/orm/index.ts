@@ -1,3 +1,4 @@
+export * from "./src/dynamic-table.js";
 export * from "./src/entity.js";
 export * from "./src/errors.js";
 export * from "./src/expressions.js";

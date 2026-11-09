@@ -1,8 +1,8 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {fieldTableName, mainTableName} from "@spica-server/data-postgresql";
+import {fieldTableName, mainTableName, ORM} from "@spica-server/data-postgresql";
+import {Orm} from "@spica-server/data-postgresql-orm";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
-import {PG_POOL, RESULT_SHAPER} from "@spica-server/interface-data";
-import pg from "pg";
+import {RESULT_SHAPER} from "@spica-server/interface-data";
 import {BucketStore, bucketStoreProviders, createBucketStore} from "../contract/bucket-store.js";
 import {fetchRowSet} from "./row-set-fixtures.js";
 import {describeAll} from "./support.js";
@@ -11,7 +11,7 @@ describe("PostgreSQL row layout", () => {
   const engine = {name: "postgresql", module: () => DatabaseTestingModule.postgres()} as const;
   let module: TestingModule;
   let store: BucketStore;
-  let pool: pg.Pool;
+  let orm: Orm;
   let described: Record<string, any>;
 
   beforeAll(async () => {
@@ -21,7 +21,7 @@ describe("PostgreSQL row layout", () => {
     }).compile();
     await module.init();
     store = createBucketStore(engine, module);
-    pool = module.get(PG_POOL);
+    orm = module.get(ORM);
   }, 120_000);
 
   afterAll(() => module.close());
@@ -38,7 +38,7 @@ describe("PostgreSQL row layout", () => {
   }
 
   const rows = async (table: string, order: string) =>
-    (await pool.query(`SELECT * FROM "${table}" ORDER BY ${order}`)).rows;
+    (await orm.raw(`SELECT * FROM "${table}" ORDER BY ${order}`)).rows;
 
   async function shapeRows(
     bucket: any,
@@ -46,7 +46,7 @@ describe("PostgreSQL row layout", () => {
     change?: (rowSet: any) => void,
     locale?: any
   ) {
-    const rowSet = await fetchRowSet(pool, describeAll(described), String(bucket._id), key);
+    const rowSet = await fetchRowSet(orm, describeAll(described), String(bucket._id), key);
     change?.(rowSet);
     const shaped = await module
       .get(RESULT_SHAPER)

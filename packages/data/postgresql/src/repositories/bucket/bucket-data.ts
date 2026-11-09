@@ -1,5 +1,5 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {Orm, quote} from "@spica-server/data-postgresql-orm";
+import {Orm} from "@spica-server/data-postgresql-orm";
 import {
   Bucket,
   BUCKET_DATA_LIMIT,
@@ -10,7 +10,7 @@ import {BUCKET_QUERY, BucketQueryFacade} from "@spica-server/interface-bucket-co
 import {EntryStatus, Id, ProfilerQuery} from "@spica-server/interface-data";
 import {ORM} from "../../orm.js";
 import {keyedReadContext} from "./read-context.js";
-import {fieldTableName, mainTableName} from "../../schema/index.js";
+import {fieldTableName, mainTableName, SYSTEM_COLUMNS} from "../../schema/index.js";
 import {allBucketTables, countDocuments} from "./counts.js";
 
 type Properties = NonNullable<Bucket["properties"]>;
@@ -62,9 +62,7 @@ export class PostgresBucketDataRepository implements BucketDataRepository {
     await this.orm.transaction(async session => {
       for (const [table, locales] of localesByTable) {
         if (await session.tableExists(table)) {
-          await session.raw(`DELETE FROM ${quote(table)} WHERE "_locale" = ANY($1::text[])`, [
-            locales
-          ]);
+          await session.table(table).deleteWhereIn(SYSTEM_COLUMNS.locale, locales);
         }
       }
     });

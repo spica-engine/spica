@@ -13,7 +13,6 @@ describe("PostgreSQL transaction runner", () => {
   let module: TestingModule;
   let runner: TransactionRunner;
   let orm: Orm;
-  let pool: pg.Pool;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -22,17 +21,18 @@ describe("PostgreSQL transaction runner", () => {
     await module.init();
     runner = module.get(TRANSACTION_RUNNER);
     orm = module.get(ORM);
-    pool = module.get(PG_POOL);
-    await pool.query("CREATE TABLE probe (value text)");
+    await orm.executeStatements(["CREATE TABLE probe (value text)"]);
   }, 120_000);
 
   afterAll(() => module.close());
 
-  beforeEach(() => pool.query("DELETE FROM probe"));
+  beforeEach(() => orm.truncate(["probe"]));
 
-  const add = (value: string) => orm.raw("INSERT INTO probe (value) VALUES ($1)", [value]);
+  const add = (value: string) => orm.table("probe").insertRow({value});
   const stored = async () =>
-    (await pool.query("SELECT value FROM probe ORDER BY value")).rows.map(row => row.value);
+    (await module.get<pg.Pool>(PG_POOL).query("SELECT value FROM probe ORDER BY value")).rows.map(
+      row => row.value
+    );
 
   it("should commit what the work wrote through the orm together", async () => {
     await runner(async () => {
@@ -73,7 +73,7 @@ describe("PostgreSQL transaction runner", () => {
       runner(async () => {
         await add("a");
         await orm.transaction(async session => {
-          await session.raw("INSERT INTO probe (value) VALUES ('b')");
+          await session.table("probe").insertRow({value: "b"});
         });
         throw new Error("failed");
       })
@@ -87,7 +87,7 @@ describe("PostgreSQL transaction runner", () => {
       await add("outer");
       await expect(
         orm.transaction(async session => {
-          await session.raw("INSERT INTO probe (value) VALUES ('inner')");
+          await session.table("probe").insertRow({value: "inner"});
           await session.raw("SELECT 1 / 0");
         })
       ).rejects.toThrow("division by zero");
@@ -100,7 +100,7 @@ describe("PostgreSQL transaction runner", () => {
   it("should keep what a joined transaction wrote when it succeeds", async () => {
     await runner(async () => {
       await orm.transaction(async session => {
-        await session.raw("INSERT INTO probe (value) VALUES ('inner')");
+        await session.table("probe").insertRow({value: "inner"});
       });
       await add("outer");
     });
@@ -127,7 +127,7 @@ describe("PostgreSQL transaction runner", () => {
           await add("by hand");
         },
         rollback: async () => {
-          await orm.raw("DELETE FROM probe WHERE value = 'by hand'");
+          await orm.table("probe").deleteWhere("value", "by hand");
         }
       })
       .add({
@@ -145,9 +145,9 @@ describe("PostgreSQL transaction runner", () => {
 
   it("should keep queries of the orm out of a transaction that no runner started", async () => {
     await orm.transaction(async session => {
-      await session.raw("INSERT INTO probe (value) VALUES ('inside')");
+      await session.table("probe").insertRow({value: "inside"});
 
-      expect((await orm.raw("SELECT value FROM probe")).rows).toEqual([]);
+      expect(await orm.table("probe").rows()).toEqual([]);
     });
 
     expect(await stored()).toEqual(["inside"]);

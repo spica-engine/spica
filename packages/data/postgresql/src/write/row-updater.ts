@@ -1,4 +1,4 @@
-import {quote, Session} from "@spica-server/data-postgresql-orm";
+import {Session} from "@spica-server/data-postgresql-orm";
 import {Bucket} from "@spica-server/interface-bucket";
 import {BucketMetadata, ColumnMetadata, SYSTEM_COLUMNS} from "../schema/index.js";
 import {fieldKey, Row, RowSet} from "../shape/index.js";
@@ -38,14 +38,11 @@ export async function lockRowSet(
   key: unknown
 ): Promise<RowSet | undefined> {
   const {column} = metadata.primaryKey;
-  const {rows} = await session.raw<Row>(
-    `SELECT * FROM ${quote(metadata.main.name)} WHERE ${quote(column)} = $1 FOR UPDATE`,
-    [key]
-  );
-  if (!rows.length) {
+  const row = await session.table(metadata.main.name).lockRow(column, key);
+  if (!row) {
     return undefined;
   }
-  const [rowSet] = await loadRowSets(new BucketReads(session), metadata, rows, () => false);
+  const [rowSet] = await loadRowSets(new BucketReads(session), metadata, [row], () => false);
   return rowSet;
 }
 
@@ -98,10 +95,7 @@ async function rewrite(
   for (const table of metadata.children.filter(table => isChanged(table.path))) {
     const name = fieldKey(table.path);
     if (previous.children?.[name]?.length) {
-      await session.raw(
-        `DELETE FROM ${quote(table.name)} WHERE ${quote(SYSTEM_COLUMNS.parent)} = $1`,
-        [key]
-      );
+      await session.table(table.name).deleteWhere(SYSTEM_COLUMNS.parent, key);
     }
     children[name] = await insertMany(session, table, childRows(table, document, key, converter));
   }
@@ -116,12 +110,14 @@ async function updateMainRow(
   document: object,
   converter: Converter
 ): Promise<Row> {
-  const assignments = columns.map((column, index) => `${quote(column.name)} = $${index + 2}`);
-  const {rows} = await session.raw<Row>(
-    `UPDATE ${quote(metadata.main.name)} SET ${assignments.join(", ")} WHERE ${quote(metadata.primaryKey.column)} = $1 RETURNING *`,
-    [key, ...columns.map(column => converter.value(column, valueAt(document, column.path)))]
-  );
-  return rows[0];
+  const values: Row = {};
+  for (const column of columns) {
+    values[column.name] = converter.value(column, valueAt(document, column.path));
+  }
+  const row = await session
+    .table(metadata.main.name)
+    .updateRow(metadata.primaryKey.column, key, values);
+  return row as Row;
 }
 
 export async function deleteRow(
@@ -130,7 +126,5 @@ export async function deleteRow(
   previous: RowSet
 ): Promise<void> {
   const {column} = metadata.primaryKey;
-  await session.raw(`DELETE FROM ${quote(metadata.main.name)} WHERE ${quote(column)} = $1`, [
-    previous.main[column]
-  ]);
+  await session.table(metadata.main.name).deleteWhere(column, previous.main[column]);
 }

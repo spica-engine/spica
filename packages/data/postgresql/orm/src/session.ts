@@ -1,5 +1,6 @@
 import {AsyncLocalStorage} from "node:async_hooks";
 import pg from "pg";
+import {DynamicTable, countAllRows} from "./dynamic-table.js";
 import {Entity} from "./entity.js";
 import {translateError} from "./errors.js";
 import {Aggregation, Assignment, isUnconditional, Where} from "./expressions.js";
@@ -38,6 +39,20 @@ export class Session {
 
   async raw<T extends pg.QueryResultRow = any>(text: string, values: unknown[] = []) {
     return (await this.db.query(text, values)) as pg.QueryResult<T>;
+  }
+
+  table(name: string): DynamicTable {
+    return new DynamicTable(this.db, name);
+  }
+
+  async truncate(tables: string[]): Promise<void> {
+    if (tables.length) {
+      await this.db.query(`TRUNCATE ${tables.map(quote).join(", ")} CASCADE`);
+    }
+  }
+
+  countRows(tables: string[]): Promise<number> {
+    return countAllRows(this.db, tables);
   }
 
   async insert<R>(entity: Entity<R>, record: Partial<R>): Promise<R> {
