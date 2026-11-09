@@ -185,6 +185,196 @@ describe("MongoBucketWriteFacade", () => {
     });
   });
 
+  describe("write rules over relations", () => {
+    let boss: Bucket;
+    let author: Bucket;
+    let ann: ObjectId;
+    let bob: ObjectId;
+    let ceo: ObjectId;
+
+    const buckets = () => [bucket, author, boss];
+
+    const withRule = (rule: string) => {
+      bucket.acl.write = rule;
+      bucket.properties = {
+        title: {type: "string"},
+        author: {type: "relation", bucketId: author._id.toString(), relationType: "onetoone"},
+        editors: {type: "relation", bucketId: author._id.toString(), relationType: "onetomany"},
+        meta: {
+          type: "object",
+          properties: {
+            author: {type: "relation", bucketId: author._id.toString(), relationType: "onetoone"}
+          }
+        }
+      } as any;
+    };
+
+    const copyOf = (b: Bucket) => ({...b, properties: JSON.parse(JSON.stringify(b.properties))});
+
+    const ruleContext = () => ({
+      ...context(),
+      resolveSchema: (id: any) => copyOf(buckets().find(b => b._id.toString() == id.toString())!)
+    });
+
+    const options = {applyAcl: true, user: {_id: "u"}};
+
+    beforeEach(async () => {
+      boss = {
+        _id: new ObjectId(),
+        title: "Bosses",
+        primary: "title",
+        acl: {read: "true==true", write: "true==true"},
+        properties: {title: {type: "string"}}
+      } as any;
+      author = {
+        _id: new ObjectId(),
+        title: "Authors",
+        primary: "name",
+        acl: {read: "true==true", write: "true==true"},
+        properties: {
+          name: {type: "string"},
+          boss: {type: "relation", bucketId: boss._id.toString(), relationType: "onetoone"}
+        }
+      } as any;
+      await db.collection("buckets").insertMany([boss as any, author as any]);
+
+      ceo = (await db.collection(`bucket_${boss._id}`).insertOne({title: "ceo"})).insertedId;
+      ann = (
+        await db
+          .collection(`bucket_${author._id}`)
+          .insertOne({name: "ann", boss: ceo.toHexString()})
+      ).insertedId;
+      bob = (await db.collection(`bucket_${author._id}`).insertOne({name: "bob"})).insertedId;
+    });
+
+    const insert = (document: object) => facade.insert(bucket, document, options, ruleContext());
+
+    const allowed = () => expect(documents()).resolves.toHaveLength(1);
+    const denied = {status: 401, message: "ACL rules has rejected this operation."};
+
+    it("should evaluate a rule on the related document of a one-to-one relation", async () => {
+      withRule("document.author.name == 'ann'");
+
+      await expect(insert({title: "a", author: bob.toHexString()})).rejects.toMatchObject(denied);
+      expect(await documents()).toEqual([]);
+
+      await insert({title: "a", author: ann.toHexString()});
+      await allowed();
+    });
+
+    it("should evaluate a rule through two relations", async () => {
+      withRule("document.author.boss.title == 'ceo'");
+
+      await expect(insert({title: "a", author: bob.toHexString()})).rejects.toMatchObject(denied);
+
+      await insert({title: "a", author: ann.toHexString()});
+      await allowed();
+    });
+
+    it("should evaluate a rule on a relation inside an object", async () => {
+      withRule("document.meta.author.name == 'ann'");
+
+      await expect(insert({title: "a", meta: {author: bob.toHexString()}})).rejects.toMatchObject(
+        denied
+      );
+
+      await insert({title: "a", meta: {author: ann.toHexString()}});
+      await allowed();
+    });
+
+    it("should treat a relation to a missing document as absent", async () => {
+      withRule("has(document.author.name)");
+
+      await expect(
+        insert({title: "a", author: new ObjectId().toHexString()})
+      ).rejects.toMatchObject(denied);
+      await expect(insert({title: "a"})).rejects.toMatchObject(denied);
+
+      await insert({title: "a", author: ann.toHexString()});
+      await allowed();
+    });
+
+    it("should evaluate a rule on the related documents of a one-to-many relation", async () => {
+      withRule("length(document.editors) == 2 || document.editors.name == 'none'");
+      const missing = new ObjectId().toHexString();
+
+      await expect(
+        insert({title: "a", editors: [ann.toHexString(), missing]})
+      ).rejects.toMatchObject(denied);
+
+      await insert({title: "a", editors: [bob.toHexString(), ann.toHexString()]});
+      await allowed();
+    });
+
+    it("should leave the given document as it was", async () => {
+      withRule("document.author.name == 'ann'");
+      const document = {title: "a", author: ann.toHexString()};
+
+      await insert(document);
+
+      expect(document.author).toBe(ann.toHexString());
+      expect(await documents()).toEqual([expect.objectContaining({author: ann.toHexString()})]);
+    });
+
+    it("should evaluate a rule on the replacement, not on the stored document", async () => {
+      withRule("true==true");
+      const {_id} = await insert({title: "a", author: bob.toHexString()});
+      withRule("document.author.name == 'ann'");
+
+      await expect(
+        facade.replace(bucket, {_id, title: "b", author: bob.toHexString()}, options, ruleContext())
+      ).rejects.toMatchObject(denied);
+
+      await facade.replace(
+        bucket,
+        {_id, title: "b", author: ann.toHexString()},
+        options,
+        ruleContext()
+      );
+      expect(await documents()).toEqual([{_id, title: "b", author: ann.toHexString()}]);
+    });
+
+    it("should evaluate a rule on the patched document", async () => {
+      withRule("true==true");
+      const {_id} = await insert({title: "a", author: bob.toHexString()});
+      withRule("document.author.name == 'ann'");
+
+      await expect(
+        facade.patch(
+          bucket,
+          {_id, title: "b", author: bob.toHexString()},
+          {title: "b"},
+          options,
+          ruleContext()
+        )
+      ).rejects.toMatchObject(denied);
+
+      await facade.patch(
+        bucket,
+        {_id, title: "a", author: ann.toHexString()},
+        {author: ann.toHexString()},
+        options,
+        ruleContext()
+      );
+      expect(await documents()).toEqual([{_id, title: "a", author: ann.toHexString()}]);
+    });
+
+    it("should evaluate a rule on the stored document when deleting", async () => {
+      withRule("true==true");
+      const {_id} = await insert({title: "a", author: bob.toHexString()});
+      withRule("document.author.name == 'ann'");
+
+      await expect(
+        facade.delete(bucket, _id.toHexString(), options, ruleContext())
+      ).rejects.toMatchObject(denied);
+      expect(await documents()).toHaveLength(1);
+
+      withRule("document.author.name == 'bob'");
+      await facade.delete(bucket, _id.toHexString(), options, ruleContext());
+      expect(await documents()).toEqual([]);
+    });
+  });
+
   it("should pass results through the result shaper as bucket resources", async () => {
     const shaper = {shape: jest.fn((_, result) => result)};
     const shaped = new MongoBucketWriteFacade(db, shaper);
