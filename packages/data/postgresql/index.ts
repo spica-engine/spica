@@ -11,3 +11,4 @@ export * from "./src/repositories/bucket/schema-manager.js";
 export * from "./src/shape/index.js";
 export * from "./src/query/index.js";
 export * from "./src/access/index.js";
+export * from "./src/write/index.js";

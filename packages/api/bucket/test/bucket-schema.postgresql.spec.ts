@@ -104,6 +104,37 @@ describe("PostgreSQL bucket schema", () => {
       )
     );
 
+    it.each(["uuid", "integer", "bigint"])(
+      "should allow removing the oldest documents with a %s key",
+      type =>
+        accepted(
+          bucket(
+            {
+              primary: "key",
+              documentSettings: {countLimit: 5, limitExceedBehaviour: "remove"}
+            },
+            {id: {type: "string"}, key: {type}}
+          )
+        )
+    );
+
+    it("should reject removing the oldest documents with a string key", () =>
+      rejected(
+        bucket(
+          {primary: "key", documentSettings: {countLimit: 5, limitExceedBehaviour: "remove"}},
+          {id: {type: "string"}, key: {type: "string"}}
+        ),
+        "have no insertion order"
+      ));
+
+    it("should allow a string key when new documents are prevented at the count limit", () =>
+      accepted(
+        bucket(
+          {primary: "key", documentSettings: {countLimit: 5, limitExceedBehaviour: "prevent"}},
+          {id: {type: "string"}, key: {type: "string"}}
+        )
+      ));
+
     it("should reject a translated key", () =>
       rejected(
         bucket(
