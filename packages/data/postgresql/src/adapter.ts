@@ -25,6 +25,7 @@ import {BUCKET_RULE_VALIDATOR, BUCKET_SCHEMA_EXTENSION} from "@spica-server/inte
 import {BUCKET_QUERY, BUCKET_WRITE} from "@spica-server/interface-bucket-common";
 import {PostgresBucketRuleValidator} from "./access/rule-validator.js";
 import {assertSupportedServerVersion} from "./version.js";
+import {TRANSACTION_RUNNER} from "@spica-server/transaction";
 import {PostgresBucketWriteFacade} from "./write/index.js";
 
 export const POSTGRESQL_ENGINE = "postgresql";
@@ -90,6 +91,11 @@ export class PostgresDataAdapter {
               connectWithSystemTables(typeof uri == "function" ? await uri() : uri, options)
           },
           {provide: ORM, useFactory: (pool: pg.Pool) => new Orm(pool), inject: [PG_POOL]},
+          {
+            provide: TRANSACTION_RUNNER,
+            useFactory: (orm: Orm) => (work: () => Promise<unknown>) => orm.runInTransaction(work),
+            inject: [ORM]
+          },
           PostgresExpiry,
           {provide: ID_TYPES, useClass: PostgresIdTypes},
           BucketDescriptions,
@@ -106,6 +112,7 @@ export class PostgresDataAdapter {
         exports: [
           PG_POOL,
           ORM,
+          TRANSACTION_RUNNER,
           PostgresExpiry,
           ID_TYPES,
           BucketDescriptions,

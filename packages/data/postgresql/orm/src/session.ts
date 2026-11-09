@@ -1,3 +1,4 @@
+import {AsyncLocalStorage} from "node:async_hooks";
 import pg from "pg";
 import {Entity} from "./entity.js";
 import {translateError} from "./errors.js";
@@ -201,21 +202,39 @@ export class Session {
   }
 }
 
+const ambientTransaction = new AsyncLocalStorage<pg.PoolClient>();
+
 export class Orm extends Session {
   constructor(private readonly pool: pg.Pool) {
-    super(pool);
+    super({
+      query: (text: string, values?: unknown[]) =>
+        (ambientTransaction.getStore() ?? pool).query(text, values)
+    });
   }
 
   override async lockTransaction(_name: string): Promise<void> {
     throw new Error("A transaction lock needs a transaction.");
   }
 
-  override async transaction<T>(work: (session: Session) => Promise<T>): Promise<T> {
+  override transaction<T>(work: (session: Session) => Promise<T>): Promise<T> {
+    const joined = ambientTransaction.getStore();
+    return joined
+      ? work(new Session(joined))
+      : this.withClient(client => work(new Session(client)));
+  }
+
+  runInTransaction<T>(work: () => Promise<T>): Promise<T> {
+    return ambientTransaction.getStore()
+      ? work()
+      : this.withClient(client => ambientTransaction.run(client, work));
+  }
+
+  private async withClient<T>(work: (client: pg.PoolClient) => Promise<T>): Promise<T> {
     const client = await this.pool.connect();
     let rollbackFailed = false;
     try {
       await client.query("BEGIN");
-      const result = await work(new Session(client));
+      const result = await work(client);
       await client.query("COMMIT");
       return result;
     } catch (error) {

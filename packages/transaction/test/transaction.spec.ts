@@ -1,4 +1,9 @@
-import {TransactionExecutor, TransactionStep, TransactionError} from "../src/transaction";
+import {
+  TransactionExecutor,
+  TransactionRunner,
+  TransactionStep,
+  TransactionError
+} from "../src/transaction";
 
 describe("TransactionExecutor", () => {
   it("should execute all steps in order when nothing fails", async () => {
@@ -259,5 +264,112 @@ describe("TransactionExecutor", () => {
       expect(txError.message).toBe("string error");
       expect(txError.rollbackErrors[0].message).toBe("string rollback error");
     }
+  });
+
+  describe("with a runner", () => {
+    const events: string[] = [];
+
+    const runner: TransactionRunner = async work => {
+      events.push("begin");
+      try {
+        const result = await work();
+        events.push("commit");
+        return result;
+      } catch (error) {
+        events.push("abort");
+        throw error;
+      }
+    };
+
+    const step = (name: string, options: Partial<TransactionStep> = {}): TransactionStep => ({
+      execute: async () => {
+        events.push(`exec-${name}`);
+      },
+      rollback: async () => {
+        events.push(`rollback-${name}`);
+      },
+      ...options
+    });
+
+    beforeEach(() => {
+      events.length = 0;
+    });
+
+    it("should run every step inside the runner and commit when nothing fails", async () => {
+      await new TransactionExecutor(runner)
+        .add(step("db", {native: true}))
+        .add(step("file"))
+        .execute();
+
+      expect(events).toEqual(["begin", "exec-db", "exec-file", "commit"]);
+    });
+
+    it("should leave the native steps to the runner and roll back the others in reverse", async () => {
+      const executor = new TransactionExecutor(runner)
+        .add(step("db", {native: true}))
+        .add(step("file-1"))
+        .add(step("file-2"))
+        .add(step("broken", {execute: async () => Promise.reject(new Error("failed"))}));
+
+      await expect(executor.execute()).rejects.toThrow("failed");
+
+      expect(events).toEqual([
+        "begin",
+        "exec-db",
+        "exec-file-1",
+        "exec-file-2",
+        "rollback-file-2",
+        "rollback-file-1",
+        "abort"
+      ]);
+    });
+
+    it("should roll back a step that is not native even when it comes first", async () => {
+      const executor = new TransactionExecutor(runner)
+        .add(step("file"))
+        .add(step("db", {native: true}))
+        .add(step("broken", {execute: async () => Promise.reject(new Error("failed"))}));
+
+      await expect(executor.execute()).rejects.toThrow("failed");
+
+      expect(events).toEqual(["begin", "exec-file", "exec-db", "rollback-file", "abort"]);
+    });
+
+    it("should roll back the steps that are not native when the commit fails", async () => {
+      const failingCommit: TransactionRunner = async work => {
+        await work();
+        events.push("commit-failed");
+        throw new Error("commit failed");
+      };
+      const executor = new TransactionExecutor(failingCommit)
+        .add(step("db", {native: true}))
+        .add(step("file"));
+
+      await expect(executor.execute()).rejects.toThrow("commit failed");
+
+      expect(events).toEqual(["exec-db", "exec-file", "commit-failed", "rollback-file"]);
+    });
+
+    it("should report the errors of the rollbacks that failed", async () => {
+      const executor = new TransactionExecutor(runner)
+        .add(step("file", {rollback: async () => Promise.reject(new Error("stuck"))}))
+        .add(step("broken", {execute: async () => Promise.reject(new Error("failed"))}));
+
+      const error = await executor.execute().catch(thrown => thrown);
+
+      expect(error).toBeInstanceOf(TransactionError);
+      expect(error.message).toBe("failed");
+      expect(error.rollbackErrors.map((e: Error) => e.message)).toEqual(["stuck"]);
+    });
+
+    it("should roll back every step when there is no runner, native or not", async () => {
+      const executor = new TransactionExecutor()
+        .add(step("db", {native: true}))
+        .add(step("broken", {execute: async () => Promise.reject(new Error("failed"))}));
+
+      await expect(executor.execute()).rejects.toThrow("failed");
+
+      expect(events).toEqual(["exec-db", "rollback-db"]);
+    });
   });
 });

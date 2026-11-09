@@ -4,7 +4,8 @@ import {
   Inject,
   Injectable,
   Logger,
-  NotFoundException
+  NotFoundException,
+  Optional
 } from "@nestjs/common";
 import {
   StorageOptions,
@@ -17,7 +18,11 @@ import {
   PaginatedStorageResponse
 } from "@spica-server/interface-storage";
 import {Strategy, ProxyReadResult} from "./strategy/strategy.js";
-import {TransactionExecutor} from "@spica-server/transaction";
+import {
+  TRANSACTION_RUNNER,
+  TransactionExecutor,
+  TransactionRunner
+} from "@spica-server/transaction";
 
 import fs from "fs";
 import {DuplicateKeyError, ids} from "@spica-server/data";
@@ -38,7 +43,8 @@ export class StorageService {
     @Inject(STORAGE_REPOSITORY) private objects: StorageRepository,
     private service: Strategy,
     @Inject(STORAGE_OPTIONS) private storageOptions: StorageOptions,
-    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
+    @Optional() @Inject(TRANSACTION_RUNNER) private transactions?: TransactionRunner
   ) {
     this.service.resumableUploadFinished.subscribe({
       next: async (document: StorageObjectMeta) => {
@@ -204,7 +210,7 @@ export class StorageService {
     const oldName = existing.name;
 
     if (oldName !== name) {
-      const tx = new TransactionExecutor();
+      const tx = new TransactionExecutor(this.transactions);
 
       tx.add({
         execute: async () => {
@@ -216,6 +222,7 @@ export class StorageService {
       });
 
       tx.add({
+        native: true,
         execute: async () => {
           await this.objects.renamePrefix(oldName, name);
         },
@@ -279,9 +286,10 @@ export class StorageService {
 
     let insertedObjects: StorageObjectMeta[];
 
-    const tx = new TransactionExecutor();
+    const tx = new TransactionExecutor(this.transactions);
 
     tx.add({
+      native: true,
       execute: async () => {
         try {
           const stored = await this.objects.insertAll(schemas);
