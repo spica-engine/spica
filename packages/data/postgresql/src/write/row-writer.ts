@@ -1,7 +1,8 @@
 import {BadRequestException} from "@spica-server/bucket-common";
+import {isEncryptedData} from "@spica-server/core-encryption";
 import {quote, Session} from "@spica-server/data-postgresql-orm";
 import {Bucket} from "@spica-server/interface-bucket";
-import {BucketMetadata, TableMetadata} from "../schema/index.js";
+import {BucketMetadata} from "../schema/index.js";
 import {RowSet} from "../shape/index.js";
 import {toColumnValue, valueAt} from "./values.js";
 
@@ -29,17 +30,24 @@ function encryptedPaths(properties: Properties = {}, prefix: string[] = []): str
   });
 }
 
-function assertWritable(bucket: Bucket, metadata: BucketMetadata, document: object) {
-  const unsupported = [
-    ...encryptedPaths(bucket.properties),
-    ...metadata.children.map(table => table.path)
-  ].find(path => isPresent(valueAt(document, path)));
+function assertWritable(metadata: BucketMetadata, document: object) {
+  const unsupported = metadata.children
+    .map(table => table.path)
+    .find(path => isPresent(valueAt(document, path)));
 
   if (unsupported) {
     throw new BadRequestException(
       `The property .${unsupported.join(".")} cannot be written to PostgreSQL yet.`
     );
   }
+}
+
+function encodeEncrypted(path: string[], value: unknown) {
+  if (!isEncryptedData(value)) {
+    throw new BadRequestException(`The property .${path.join(".")} must be an encrypted value.`);
+  }
+  const {encrypted, iv, authTag} = value;
+  return JSON.stringify({encrypted, iv, authTag});
 }
 
 function keyOf(metadata: BucketMetadata, document: object) {
@@ -60,26 +68,33 @@ export async function insertRows(
   metadata: BucketMetadata,
   document: object
 ): Promise<RowSet> {
-  assertWritable(bucket, metadata, document);
+  assertWritable(metadata, document);
   const key = keyOf(metadata, document);
-  const main = await insertMainRow(session, metadata.main, metadata, document, key);
+  const main = await insertMainRow(session, bucket, metadata, document, key);
   await advanceSequence(session, metadata, key);
   return {main, children: {}};
 }
 
 async function insertMainRow(
   session: Session,
-  table: TableMetadata,
+  bucket: Bucket,
   metadata: BucketMetadata,
   document: object,
   key: unknown
 ) {
+  const table = metadata.main;
+  const encrypted = new Set(encryptedPaths(bucket.properties).map(path => path.join("\0")));
   const written = table.columns
     .filter(column => column.name != metadata.primaryKey.column || key !== undefined)
-    .map(column => ({
-      name: column.name,
-      value: toColumnValue(column, valueAt(document, column.path))
-    }));
+    .map(column => {
+      const value = valueAt(document, column.path);
+      const isEncrypted =
+        encrypted.has(column.path.join("\0")) && value !== undefined && value !== null;
+      return {
+        name: column.name,
+        value: isEncrypted ? encodeEncrypted(column.path, value) : toColumnValue(column, value)
+      };
+    });
 
   const names = written.map(({name}) => quote(name)).join(", ");
   const placeholders = written.map((_, index) => `$${index + 1}`).join(", ");

@@ -103,10 +103,16 @@ describe("compileFieldRules", () => {
     expect((await compile({title: "document.author.name == 'ann' || true"})).joins).toEqual([]);
   });
 
+  it("should compare an encrypted field through its hash column", async () => {
+    const compiled = await compile({title: "document.secret == 'x'"});
+    expect(compiled.conditional).toEqual([
+      {property: "title", column: "_visible_0", sql: '"t"."secret__hash" = $1::text'}
+    ]);
+    expect(compiled.values).toEqual(["x"]);
+  });
+
   it("should refuse a rule that cannot be applied on PostgreSQL", async () => {
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
-    await expect(compile({title: "document.secret == 'x'"})).rejects.toThrow(UnsupportedRuleError);
+    await expect(compile({title: "document.note == 'x'"})).rejects.toThrow(UnsupportedRuleError);
   });
 });
 

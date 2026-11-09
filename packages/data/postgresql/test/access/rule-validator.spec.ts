@@ -33,8 +33,6 @@ describe("PostgresBucketRuleValidator", () => {
     properties: {
       id: {type: "uuid", options: {generated: true}},
       title: {type: "string"},
-      // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-      // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
       secret: {type: "encrypted"},
       tags: {type: "array", items: {type: "string"}}
     },
@@ -46,6 +44,7 @@ describe("PostgresBucketRuleValidator", () => {
     "document.title == 'x'",
     "has(document.title) && !(document.title == 'y')",
     "some(document.tags, ['a']) || auth.role == 'admin'",
+    "document.secret == 'x'",
     "regex(document.title, '^a', 'i')"
   ])("should accept %s", async rule => {
     await expect(validator.validateReadRule(bucket(rule))).resolves.toBeUndefined();
@@ -54,9 +53,6 @@ describe("PostgresBucketRuleValidator", () => {
   it.each([
     ["document.title ==", "syntax"],
     ["document.nope == 1", "unknown field"],
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
-    ["document.secret == 'x'", "encrypted field"],
     ["regex(document.title, 'a', 'm')", "unsupported regex flag"],
     ["regex(document.title, '(?<=a)b')", "unsupported regex syntax"],
     ["some(document.tags, document.tags)", "list against a field"],
@@ -94,8 +90,6 @@ describe("PostgresBucketRuleValidator", () => {
         properties: {
           id: {type: "uuid", options: {generated: true}},
           name: {type: "string"},
-          // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-          // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
           secret: {type: "encrypted"}
         }
       } as any);
@@ -125,12 +119,10 @@ describe("PostgresBucketRuleValidator", () => {
       ).rejects.toBeInstanceOf(RuleCompileError);
     });
 
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
-    it("should reject an encrypted field of the related bucket", async () => {
+    it("should accept an encrypted field of the related bucket", async () => {
       await expect(
         validator.validateReadRule(withAuthor("document.author.secret == 'x'"))
-      ).rejects.toBeInstanceOf(RuleCompileError);
+      ).resolves.toBeUndefined();
     });
 
     it("should leave a relation to a missing bucket to the schema manager", async () => {
@@ -148,29 +140,24 @@ describe("PostgresBucketRuleValidator", () => {
         properties: {
           id: {type: "uuid", options: {generated: true}},
           title: {type: "string", acl},
-          // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-          // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
           secret: {type: "encrypted"}
         }
       });
 
-    it.each(["true==true", "document.title == 'x'", "auth.role == 'admin'"])(
-      "should accept %s",
-      async rule => {
-        await expect(validator.validateFieldRules(withFieldRule(rule))).resolves.toBeUndefined();
-      }
-    );
+    it.each([
+      "true==true",
+      "document.title == 'x'",
+      "auth.role == 'admin'",
+      "document.secret == 'x'"
+    ])("should accept %s", async rule => {
+      await expect(validator.validateFieldRules(withFieldRule(rule))).resolves.toBeUndefined();
+    });
 
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
-    it.each(["document.title ==", "document.secret == 'x'", "document.nope == 1"])(
-      "should reject %s",
-      async rule => {
-        await expect(validator.validateFieldRules(withFieldRule(rule))).rejects.toBeInstanceOf(
-          RuleCompileError
-        );
-      }
-    );
+    it.each(["document.title ==", "document.nope == 1"])("should reject %s", async rule => {
+      await expect(validator.validateFieldRules(withFieldRule(rule))).rejects.toBeInstanceOf(
+        RuleCompileError
+      );
+    });
 
     it("should accept a bucket without field rules", async () => {
       await expect(validator.validateFieldRules(bucket("true==true"))).resolves.toBeUndefined();

@@ -2,7 +2,7 @@ import {ColumnType} from "../../schema/metadata/types.js";
 import {coerceConstant} from "./coerce.js";
 import {InvalidRuleError, UnsupportedRuleError} from "./errors.js";
 import {ArrayField, childRows, elementColumn, RuleContext} from "./fields.js";
-import {Column, constant, Expression, Operand, Scalar} from "./operands.js";
+import {Column, constant, Expression, Operand, Property, Scalar} from "./operands.js";
 
 type Node = any;
 
@@ -249,7 +249,12 @@ function foldList(name: ListFunction, target: Item[], compare: Item[]): boolean 
   }
 }
 
-function elementValues(items: Item[], type: ColumnType): {values: unknown[]; dropped: number} {
+function elementValues(
+  items: Item[],
+  type: ColumnType,
+  property?: Property,
+  hashSecret?: string
+): {values: unknown[]; dropped: number} {
   const values: unknown[] = [];
   let dropped = 0;
   for (const item of items) {
@@ -260,7 +265,11 @@ function elementValues(items: Item[], type: ColumnType): {values: unknown[]; dro
     const coerced =
       item.value === null || Array.isArray(item.value)
         ? undefined
-        : coerceConstant(constant(item.value as Scalar, item.literal), {type});
+        : coerceConstant(
+            constant(item.value as Scalar, item.literal),
+            {type, property},
+            hashSecret
+          );
     const fits =
       coerced !== undefined &&
       (type != "integer" ||
@@ -303,7 +312,12 @@ function listFunction(name: ListFunction): Implementation {
     }
 
     const {type} = target.element;
-    const {values, dropped} = elementValues(compare, type);
+    const {values, dropped} = elementValues(
+      compare,
+      type,
+      target.property,
+      host.context.hashSecret
+    );
     const alias = host.alias();
     const element = elementColumn(target, alias);
     const list = () => `${host.param(values, type)}::${type}[]`;

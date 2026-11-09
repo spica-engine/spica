@@ -1,5 +1,6 @@
 import {Global, Module} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
+import {encrypt} from "@spica-server/core-encryption";
 import {contractSuite} from "@spica-server/database-testing";
 import {BUCKET_DATA_LIMIT} from "@spica-server/interface-bucket";
 import {
@@ -57,10 +58,11 @@ function writerOver(engine: Parameters<Parameters<typeof contractSuite>[1]>[0], 
       known.set(String(bucket._id), bucket);
       return bucket;
     },
-    insert(bucket: any, document: object, options: object = {}) {
+    insert(bucket: any, document: object, options: object = {}, extra: object = {}) {
       const context: BucketInsertContext = {
         resolveSchema: id => known.get(String(id)),
-        deleteOne
+        deleteOne,
+        ...extra
       };
       return writes.insert(bucket, document as any, options, context);
     }
@@ -176,6 +178,61 @@ contractSuite("bucket write: insert", engine => {
     });
   });
 
+  describe("encrypted fields", () => {
+    const secrets = {hashSecret: "hash-secret", encryptionSecret: "encryption-secret"};
+    const encrypted = (value: string) =>
+      encrypt(value, secrets.encryptionSecret, secrets.hashSecret);
+    let bucket: any;
+
+    beforeAll(async () => {
+      bucket = await writer.bucket({
+        title: {type: "string"},
+        secret: {type: "encrypted"},
+        profile: {type: "object", properties: {pin: {type: "encrypted"}}}
+      });
+    });
+
+    it("should be answered as the encrypted data with its hash", async () => {
+      const value = encrypted("hello");
+
+      const saved = plain(await writer.insert(bucket, {title: "a", secret: value}));
+
+      expect(saved.secret).toEqual(value);
+    });
+
+    it("should be read back as it was written", async () => {
+      const value = encrypted("hello");
+      const saved = await writer.insert(bucket, {
+        title: "b",
+        secret: value,
+        profile: {pin: encrypted("1234")}
+      });
+
+      const read = await writer.store.read(bucket, saved[writer.keyField]);
+
+      expect(read.secret).toEqual(plain(value));
+      expect(read.profile.pin).toEqual(plain(plain(saved).profile.pin));
+    });
+
+    it("should be answered decrypted when the encryption secret is known", async () => {
+      const saved = await writer.insert(
+        bucket,
+        {title: "c", secret: encrypted("hello"), profile: {pin: encrypted("1234")}},
+        {},
+        secrets
+      );
+
+      expect(saved.secret).toBe("hello");
+      expect(saved.profile.pin).toBe("1234");
+    });
+
+    it("should leave a missing encrypted field out", async () => {
+      const saved = plain(await writer.insert(bucket, {title: "d"}));
+
+      expect(saved.secret ?? null).toBeNull();
+    });
+  });
+
   describe("the write rule", () => {
     const user = {_id: "u"};
 
@@ -192,6 +249,58 @@ contractSuite("bucket write: insert", engine => {
 
       await writer.insert(bucket, {title: "allowed"}, {applyAcl: true, user});
       expect(await writer.store.find(bucket)).toHaveLength(1);
+    });
+
+    it("should compare an encrypted field with a value written in the rule", async () => {
+      const secrets = {hashSecret: "hash-secret", encryptionSecret: "encryption-secret"};
+      const bucket = await writer.bucket(
+        {title: {type: "string"}, secret: {type: "encrypted"}},
+        {acl: {read: "true==true", write: "document.secret == 'open sesame'"}}
+      );
+      const options = {applyAcl: true, user};
+
+      await expect(
+        writer.insert(
+          bucket,
+          {title: "a", secret: encrypt("wrong", secrets.encryptionSecret, secrets.hashSecret)},
+          options,
+          secrets
+        )
+      ).rejects.toMatchObject({status: 401});
+
+      await writer.insert(
+        bucket,
+        {title: "a", secret: encrypt("open sesame", secrets.encryptionSecret, secrets.hashSecret)},
+        options,
+        secrets
+      );
+      expect(await writer.store.find(bucket)).toHaveLength(1);
+    });
+
+    it("should compare an encrypted field of the related document", async () => {
+      const secrets = {hashSecret: "hash-secret", encryptionSecret: "encryption-secret"};
+      const sealed = (value: string) =>
+        encrypt(value, secrets.encryptionSecret, secrets.hashSecret);
+      const authors = await writer.bucket({name: {type: "string"}, pin: {type: "encrypted"}});
+      const ann = plain(await writer.insert(authors, {name: "ann", pin: sealed("1234")}));
+      const bob = plain(await writer.insert(authors, {name: "bob", pin: sealed("0000")}));
+      const posts = await writer.bucket(
+        {
+          title: {type: "string"},
+          author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}
+        },
+        {acl: {read: "true==true", write: "document.author.pin == '1234'"}}
+      );
+      const options = {applyAcl: true, user};
+
+      await expect(
+        writer.insert(posts, {title: "p", author: bob[writer.keyField]}, options, secrets)
+      ).rejects.toMatchObject({status: 401});
+
+      const saved = plain(
+        await writer.insert(posts, {title: "p", author: ann[writer.keyField]}, options, secrets)
+      );
+      expect(saved.author).toBe(ann[writer.keyField]);
     });
 
     it("should not apply the rule unless asked to", async () => {

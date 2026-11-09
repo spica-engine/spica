@@ -184,11 +184,21 @@ describe("relation paths in rules", () => {
       await expect(compile("some(document.editors.boss, [auth.x])", {x: uuid})).rejects.toThrow(
         UnsupportedRuleError
       );
-      // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-      // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
-      await expect(compile("some(document.editors.secret, ['x'])")).rejects.toThrow(
-        UnsupportedRuleError
+    });
+
+    it("should look at the hash of an encrypted field of the related bucket", async () => {
+      const compiled = await compile("some(document.editors.secret, ['x'])", {}, "s");
+
+      expectSql(
+        compiled.sql,
+        `EXISTS (
+           SELECT 1 FROM "${tableOf("editors")}" AS "_a1"
+           JOIN "bucket_${otherId}" AS "_a1_t" ON "_a1_t"."id" = "_a1"."_target"
+           WHERE "_a1"."_parent" = "t"."id"
+             AND "_a1_t"."secret__hash" = ANY($1::text[])
+         )`
       );
+      expect(compiled.values).toEqual([[hash("x", "s")]]);
     });
   });
 
@@ -198,11 +208,16 @@ describe("relation paths in rules", () => {
       await expect(compile("document.title.x == 1")).rejects.toThrow(InvalidRuleError);
     });
 
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
-    it("should refuse encrypted and list fields of the related bucket", async () => {
-      await expect(compile("document.author.secret == 'x'")).rejects.toThrow(UnsupportedRuleError);
+    it("should refuse a list field of the related bucket", async () => {
       await expect(compile("document.author.tags == 'x'")).rejects.toThrow("is a list");
+    });
+
+    it("should compare an encrypted field of the related bucket through its hash column", async () => {
+      const compiled = await compile("document.author.secret == 'x'", {}, "s");
+
+      expect(compiled.sql).toBe(`"${author}"."secret__hash" = $1::text`);
+      expect(compiled.joins).toEqual([authorJoin]);
+      expect(compiled.values).toEqual([hash("x", "s")]);
     });
 
     it("should refuse a related bucket that was not loaded", () => {
