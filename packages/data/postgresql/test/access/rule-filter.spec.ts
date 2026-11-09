@@ -1,3 +1,4 @@
+import {hash} from "@spica-server/core-encryption";
 import {
   compileFilter,
   FILTER_LIMITS,
@@ -45,6 +46,25 @@ describe("compileFilter", () => {
 
   it("should refuse fields the bucket cannot filter on", () => {
     expect(() => compile(`document.nope == 1`)).toThrow(InvalidRuleError);
+  });
+
+  it("should hash the value compared with a hash or an encrypted field when it has a secret", () => {
+    const filter = (text: string) => {
+      const values: unknown[] = [];
+      const {sql} = compileFilter(
+        text,
+        {bucket: ruleBucket, metadata: ruleMetadata, table: "t", related, hashSecret: "s"},
+        values
+      );
+      return {sql, values};
+    };
+
+    expect(filter(`document.password == "p"`).values).toEqual([hash("p", "s")]);
+    expect(filter(`document.secret == "x"`).values).toEqual([hash("x", "s")]);
+    expect(filter(`document.password in ["a", "b"]`).values).toEqual([
+      hash("a", "s"),
+      hash("b", "s")
+    ]);
   });
 
   it("should compare an encrypted field through its hash column", () => {

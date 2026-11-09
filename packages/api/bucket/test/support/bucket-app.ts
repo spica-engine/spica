@@ -48,6 +48,7 @@ export interface BucketApp {
   definition(properties: Record<string, unknown>, extra?: object): any;
   createBucket(properties: Record<string, unknown>, extra?: object): Promise<any>;
   unknownKey(): string;
+  filter(mongodb: object, expression: string): string;
   close(): Promise<void>;
 }
 
@@ -112,6 +113,7 @@ export async function startBucketApp(
       const {body} = await req.post("/bucket", definition(properties, extra));
       return body;
     },
+    filter: (mongodb, expression) => (postgres ? expression : JSON.stringify(mongodb)),
     unknownKey: () => String(module.get<IdTypes>(ID_TYPES).unscoped().generate()),
     close: () => app.close()
   };
