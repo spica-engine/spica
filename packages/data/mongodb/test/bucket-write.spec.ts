@@ -1,12 +1,17 @@
 import {Test} from "@nestjs/testing";
 import {PassthroughResultShaper} from "@spica-server/data";
-import {MongoBucketWriteFacade} from "@spica-server/data-mongodb";
+import {
+  MongoBucketQueryFacade,
+  MongoBucketWriteFacade,
+  MongoIdTypes
+} from "@spica-server/data-mongodb";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {Bucket, LimitExceedBehaviours} from "@spica-server/interface-bucket";
 
 describe("MongoBucketWriteFacade", () => {
   let db: DatabaseService;
   let facade: MongoBucketWriteFacade;
+  let query: MongoBucketQueryFacade;
   let bucket: Bucket;
 
   const context = (overrides: object = {}) => ({
@@ -20,7 +25,8 @@ describe("MongoBucketWriteFacade", () => {
       imports: [DatabaseTestingModule.replicaSet()]
     }).compile();
     db = module.get(DatabaseService);
-    facade = new MongoBucketWriteFacade(db, new PassthroughResultShaper());
+    query = new MongoBucketQueryFacade(db, new PassthroughResultShaper(), new MongoIdTypes());
+    facade = new MongoBucketWriteFacade(db, new PassthroughResultShaper(), query);
     bucket = {
       _id: new ObjectId(),
       title: "Books",
@@ -81,7 +87,7 @@ describe("MongoBucketWriteFacade", () => {
     });
 
     it("should enforce the total bucket data limit", async () => {
-      const limited = new MongoBucketWriteFacade(db, new PassthroughResultShaper(), 1);
+      const limited = new MongoBucketWriteFacade(db, new PassthroughResultShaper(), query, 1);
       await limited.insert(bucket, {title: "a"}, {}, context());
 
       await expect(limited.insert(bucket, {title: "b"}, {}, context())).rejects.toThrow(
@@ -377,7 +383,7 @@ describe("MongoBucketWriteFacade", () => {
 
   it("should pass results through the result shaper as bucket resources", async () => {
     const shaper = {shape: jest.fn((_, result) => result)};
-    const shaped = new MongoBucketWriteFacade(db, shaper);
+    const shaped = new MongoBucketWriteFacade(db, shaper, query);
 
     await shaped.insert(bucket, {title: "a"}, {}, context());
 

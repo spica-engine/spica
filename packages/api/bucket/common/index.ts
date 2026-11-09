@@ -11,3 +11,4 @@ export * from "./src/document-key.js";
 export * from "./src/helpers.js";
 export * from "./src/schema-diff.js";
 export * from "./src/schema-compose.js";
+export * from "./src/write-rule.js";

@@ -1,17 +1,12 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import * as expression from "@spica-server/bucket-expression";
 import {
-  ACLSyntaxException,
   BadRequestException,
-  buildExpressionReplacers,
-  categorizePropertyMap,
-  createRelationMap,
+  checkWriteRule,
   DatabaseException,
-  decryptDocumentFields,
-  ForbiddenException
+  decryptDocumentFields
 } from "@spica-server/bucket-common";
 import {getUpdateQueryForPatch} from "@spica-server/core-patch";
-import {BaseCollection, DatabaseService, ReturnDocument} from "@spica-server/database";
+import {DatabaseService, ReturnDocument} from "@spica-server/database";
 import {
   Bucket,
   BUCKET_DATA_LIMIT,
@@ -19,7 +14,9 @@ import {
   LimitExceedBehaviours
 } from "@spica-server/interface-bucket";
 import {
+  BUCKET_QUERY,
   BucketInsertContext,
+  BucketQueryFacade,
   BucketWriteContext,
   BucketWriteFacade,
   BucketWriteOptions,
@@ -27,7 +24,6 @@ import {
 } from "@spica-server/interface-bucket-common";
 import {ids} from "@spica-server/data";
 import {Id, RESULT_SHAPER, ResultShaper} from "@spica-server/interface-data";
-import {getRelationPipeline} from "./stages.js";
 import {bucketDataCollection} from "./collections.js";
 
 const returnDocuments: {[key in ReturnedDocument]: ReturnDocument} = {
@@ -40,6 +36,7 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
   constructor(
     private readonly db: DatabaseService,
     @Inject(RESULT_SHAPER) private readonly shaper: ResultShaper,
+    @Inject(BUCKET_QUERY) private readonly query: BucketQueryFacade,
     @Optional() @Inject(BUCKET_DATA_LIMIT) private readonly bucketDataLimit?: number
   ) {}
 
@@ -52,15 +49,7 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
     const collection = this.collection(bucket);
 
     if (options.applyAcl) {
-      await executeWriteRule(
-        bucket,
-        document,
-        // unlike others, we have to run this pipeline against buckets in case the target
-        // collection is empty.
-        collection.collection("buckets"),
-        options.user,
-        context
-      );
+      await this.checkWriteRule(bucket, document, options, context);
     }
     if (
       bucket.documentSettings &&
@@ -90,7 +79,7 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
     const collection = this.collection(bucket);
 
     if (options.applyAcl) {
-      await executeWriteRule(bucket, document, collection, options.user, context);
+      await this.checkWriteRule(bucket, document, options, context);
     }
 
     const documentId = document._id;
@@ -114,7 +103,7 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
   ): Promise<BucketDocument | null> {
     const collection = this.collection(bucket);
     if (options.applyAcl) {
-      await executeWriteRule(bucket, document, collection, options.user, context);
+      await this.checkWriteRule(bucket, document, options, context);
     }
 
     delete patch._id;
@@ -151,7 +140,7 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
     }
 
     if (options.applyAcl) {
-      await executeWriteRule(bucket, document, collection, options.user, context);
+      await this.checkWriteRule(bucket, document, options, context);
     }
 
     const deletedCount = await collection.deleteOne({_id: document._id});
@@ -178,76 +167,17 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
     return this.shaper.shape({kind: "bucket", bucketId: bucket._id.toString()}, decrypted);
   }
 
+  private checkWriteRule(
+    bucket: Bucket,
+    document: BucketDocument,
+    options: BucketWriteOptions,
+    context: BucketWriteContext
+  ) {
+    return checkWriteRule({bucket, document, auth: options.user, context, query: this.query});
+  }
+
   private collection(bucket: Bucket) {
     return bucketDataCollection(this.db, bucket, this.bucketDataLimit);
-  }
-}
-
-async function executeWriteRule(
-  bucket: Bucket,
-  document: BucketDocument,
-  collection: {aggregate: BaseCollection<unknown>["aggregate"]},
-  auth: unknown,
-  context: BucketWriteContext
-) {
-  let propertyMap = [];
-
-  try {
-    propertyMap = expression.extractPropertyMap(bucket.acl.write);
-  } catch (error) {
-    throw new ACLSyntaxException(error.message);
-  }
-
-  const {documentPropertyMap} = categorizePropertyMap(propertyMap);
-
-  const documentRelationMap = await createRelationMap({
-    properties: bucket.properties,
-    paths: documentPropertyMap,
-    resolve: context.resolveSchema
-  });
-
-  const documentRelationStage = getRelationPipeline(documentRelationMap, undefined);
-
-  const aggregation = [
-    {$limit: 1},
-    {
-      $replaceWith: {$literal: document}
-    },
-    ...documentRelationStage
-  ];
-
-  const fullDocument = await collection
-    .aggregate(aggregation)
-    .next()
-    .catch(error => {
-      throw new DatabaseException(error.message);
-    });
-
-  const replacers = await buildExpressionReplacers(
-    bucket,
-    documentPropertyMap,
-    context.resolveSchema,
-    context.hashSecret
-  );
-
-  let aclResult;
-
-  try {
-    aclResult = expression.runWithReplacers(
-      bucket.acl.write,
-      {
-        auth,
-        document: fullDocument
-      },
-      "match",
-      replacers
-    );
-  } catch (error) {
-    throw new ACLSyntaxException(error.message);
-  }
-
-  if (!aclResult) {
-    throw new ForbiddenException("ACL rules has rejected this operation.");
   }
 }
 
