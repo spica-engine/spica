@@ -33,6 +33,9 @@ export function withoutNulls<T>(value: T): T {
   return value;
 }
 
+export const keyFieldOf = (engine: ContractEngine): "_id" | "id" =>
+  engine.name == "postgresql" ? "id" : "_id";
+
 export function keyed(engine: ContractEngine, properties: Record<string, unknown>) {
   return engine.name == "postgresql"
     ? {primary: "id", properties: {id: {type: "uuid", options: {generated: true}}, ...properties}}
@@ -109,7 +112,7 @@ export async function startBucketApp(
     app,
     req,
     module,
-    keyField: postgres ? "id" : "_id",
+    keyField: keyFieldOf(engine),
     invalidKeyMessage: postgres
       ? '.id should match format "uuid"'
       : '._id should match format "objectid"',
