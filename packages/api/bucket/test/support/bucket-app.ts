@@ -64,7 +64,11 @@ const DEFAULT_OPTIONS = {
 export async function startBucketApp(
   engine: ContractEngine,
   options: ModuleOptions = {},
-  extra: {passport?: Parameters<typeof PassportTestingModule.initialize>[0]; imports?: any[]} = {}
+  extra: {
+    passport?: Parameters<typeof PassportTestingModule.initialize>[0];
+    imports?: any[];
+    rejectOnError?: boolean;
+  } = {}
 ): Promise<BucketApp> {
   const postgres = engine.name == "postgresql";
 
@@ -85,7 +89,7 @@ export async function startBucketApp(
 
   const app = module.createNestApplication();
   const req = module.get(Request);
-  req.reject = true;
+  req.reject = extra.rejectOnError ?? true;
   app.use(Middlewares.MergePatchJsonParser(10));
   await app.listen(req.socket);
 
