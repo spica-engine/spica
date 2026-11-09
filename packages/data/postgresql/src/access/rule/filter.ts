@@ -58,11 +58,15 @@ export function compileFilterIn(
 
 export function compileFilter(filter: string, scope: FilterScope, values: unknown[]): CompiledRule {
   const {fields, now} = contextOf({...scope, auth: undefined});
-  return compileFilterIn(filter, fields, values, now);
+  return compileFilterIn(filter, fields, values, now, scope.hashSecret);
 }
 
 export function compileFilterNode(node: unknown, scope: FilterScope, values: unknown[]) {
   const {fields, now} = contextOf({...scope, auth: undefined});
   checkSize(node);
-  return compileParsed(node, {auth: undefined, forbidAuth: true, now, fields}, values);
+  return compileParsed(
+    node,
+    {auth: undefined, forbidAuth: true, now, fields, hashSecret: scope.hashSecret},
+    values
+  );
 }

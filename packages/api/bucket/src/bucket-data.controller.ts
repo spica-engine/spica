@@ -375,7 +375,7 @@ export class BucketDataController {
     const currentDocument = withDocumentKey(schema, document, documentId);
 
     if (this.history && schema.history) {
-      await this.history.createHistory(bucketId, previousDocument, currentDocument);
+      await this.history.createHistory(bucketId, documentId, previousDocument, currentDocument);
     }
 
     if (this.changeEmitter) {
@@ -461,7 +461,7 @@ export class BucketDataController {
     }
 
     if (this.history && schema.history) {
-      await this.history.createHistory(bucketId, previousDocument, currentDocument);
+      await this.history.createHistory(bucketId, documentId, previousDocument, currentDocument);
     }
 
     if (this.changeEmitter) {

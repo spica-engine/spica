@@ -157,5 +157,4 @@ Delivered as these PRs:
 
 ### Left for other parts
 
-- `BUCKET_DATA_REPOSITORY` is still not bound on PostgreSQL, so the bucket HTTP module does not boot there. Bucket reads are covered at the facade, not through the controller.
-- The temporary test helpers `access-store.ts` and `row-set-fixtures.ts` (`insertDocument`) wait for Part 9. The resource store and the `fetchRowSet` of the bucket store are gone.
+Closed by Part 9: `BUCKET_DATA_REPOSITORY` and `BUCKET_WRITE` are bound on PostgreSQL, the bucket module boots there, and `bucket-data/index.spec.ts` runs the controller reads on both engines. `access-store.ts` writes its documents through `BUCKET_WRITE`, and `row-set-fixtures.ts` keeps only `fetchRowSet`.

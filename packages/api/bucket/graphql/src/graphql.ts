@@ -456,7 +456,12 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.history && bucket.history) {
-        const promise = this.history.createHistory(bucket._id, previousDocument, currentDocument);
+        const promise = this.history.createHistory(
+          bucket._id,
+          documentId,
+          previousDocument,
+          currentDocument
+        );
       }
 
       const requestedFields = requestedFieldsFromInfo(info);
@@ -537,7 +542,12 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.history && bucket.history) {
-        const promise = this.history.createHistory(bucket._id, previousDocument, currentDocument);
+        const promise = this.history.createHistory(
+          bucket._id,
+          documentId,
+          previousDocument,
+          currentDocument
+        );
       }
 
       if (this.activity) {

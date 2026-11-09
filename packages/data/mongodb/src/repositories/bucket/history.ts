@@ -38,12 +38,17 @@ export class MongoHistoryRepository implements HistoryRepository {
     );
   }
 
-  createHistory(bucketId: Id, previousDocument: BucketDocument, currentDocument: BucketDocument) {
+  createHistory(
+    bucketId: Id,
+    documentId: Id,
+    previousDocument: BucketDocument,
+    currentDocument: BucketDocument
+  ) {
     const changes = diff(currentDocument, previousDocument);
     if (changes.length > 0) {
       const history: History = {
         bucket_id: bucketId,
-        document_id: currentDocument._id,
+        document_id: documentId,
         changes
       };
       return this.insertOne(history);

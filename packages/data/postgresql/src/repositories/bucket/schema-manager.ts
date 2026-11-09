@@ -81,6 +81,11 @@ export class PostgresBucketSchemaManager implements BucketSchemaManager {
       if (error instanceof BucketSchemaError) {
         throw new BadRequestException(error.problems.join("\n"));
       }
+      if (error?.code == "23503") {
+        throw new BadRequestException(
+          `Existing documents refer to documents that the new definition does not allow. ${error.message}`
+        );
+      }
       if (/^2[23]/.test(error?.code)) {
         throw new BadRequestException(error.message);
       }

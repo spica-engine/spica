@@ -268,7 +268,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.history && schema.history) {
-      this.history.createHistory(schema._id, previousDocument, {
+      this.history.createHistory(schema._id, documentId, previousDocument, {
         ...document,
         _id: documentId
       });
@@ -374,7 +374,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.history && schema.history) {
-      this.history.createHistory(schema._id, previousDocument, currentDocument);
+      this.history.createHistory(schema._id, documentId, previousDocument, currentDocument);
     }
 
     if (this.activity) {

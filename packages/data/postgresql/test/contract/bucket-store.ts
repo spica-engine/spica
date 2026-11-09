@@ -1,25 +1,22 @@
 /*
- * TEMPORARY. Gives the contract specs one `createBucket / insert / read` surface over both engines
- * while PostgreSQL has no write facade.
- *
- * Remove it once Part 9 binds BUCKET_WRITE on PostgreSQL: `insert` becomes `BUCKET_WRITE.insert`,
- * on both engines. Then also delete ../shape/row-set-fixtures.ts. `createBucket` stays engine
- * specific, because PostgreSQL buckets need a primary key property.
+ * Gives the contract specs one `createBucket / insert / read` surface over both engines.
+ * `createBucket` stays engine specific, because PostgreSQL buckets need a primary key property.
  */
 import {Provider} from "@nestjs/common";
 import {TestingModule} from "@nestjs/testing";
 import {provideRepository} from "@spica-server/data";
-import {ContractEngine, DatabaseService} from "@spica-server/database-testing";
+import {ContractEngine} from "@spica-server/database-testing";
 import {
   BUCKET_DATA_REPOSITORY,
   BUCKET_REPOSITORY,
   BUCKET_SCHEMA_MANAGER
 } from "@spica-server/interface-bucket";
-import {BUCKET_QUERY, BucketReadSpec} from "@spica-server/interface-bucket-common";
-import {ID_TYPES, IdTypes, PG_POOL} from "@spica-server/interface-data";
-import pg from "pg";
-import {insertDocument} from "../shape/row-set-fixtures.js";
-import {describeAll} from "../shape/support.js";
+import {
+  BUCKET_QUERY,
+  BUCKET_WRITE,
+  BucketReadSpec,
+  BucketWriteFacade
+} from "@spica-server/interface-bucket-common";
 
 type Fixture = Record<string, any>;
 
@@ -60,7 +57,6 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
   let created: Record<string, any> = {};
   let counter = 0;
 
-  const idType = () => module.get<IdTypes>(ID_TYPES).unscoped();
   const context = () => ({
     resolveSchema: id => created[String(id)],
     preferences: async () => preferences
@@ -112,20 +108,15 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
     },
 
     async insert(bucket, document) {
-      const key = idType().generate();
-      if (mongo) {
-        await module
-          .get(DatabaseService)
-          .collection(`bucket_${bucket._id}`)
-          .insertOne({_id: key, ...document} as any);
-      } else {
-        await insertDocument(
-          module.get<pg.Pool>(PG_POOL),
-          describeAll(created)(String(bucket._id)),
-          {id: key, ...document}
+      const saved = await module
+        .get<BucketWriteFacade>(BUCKET_WRITE)
+        .insert(
+          bucket,
+          {...document},
+          {},
+          {resolveSchema: id => created[String(id)], deleteOne: async () => {}}
         );
-      }
-      return key;
+      return saved[mongo ? "_id" : "id"];
     },
 
     async read(bucket, key, {resolve = [], locale} = {}) {

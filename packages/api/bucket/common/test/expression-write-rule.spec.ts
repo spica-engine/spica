@@ -1,23 +1,11 @@
-import {INestApplication} from "@nestjs/common";
-import {Test, TestingModule} from "@nestjs/testing";
-import {BucketModule} from "@spica-server/bucket";
-import {Middlewares} from "@spica-server/core";
-import {SchemaModule} from "@spica-server/core-schema";
-import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
-import {OBJECTID_STRING, OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
-import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId, mongoOnly} from "@spica-server/database-testing";
-import {PassportTestingModule} from "@spica-server/passport-testing";
-import {PreferenceTestingModule} from "@spica-server/preference-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {Request} from "@spica-server/core-testing";
+import {BucketApp, startBucketApp} from "../../test/support/bucket-app";
 
-mongoOnly(
-  "bucket rules and filters over bucket data on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)"
-);
-
-describe("Expression Write Rule Type Construction", () => {
-  let app: INestApplication;
+contractSuite("Expression Write Rule Type Construction", engine => {
+  let api: BucketApp;
   let req: Request;
-  let module: TestingModule;
+  let key: "_id" | "id";
 
   const HASH_SECRET = "test-hash-secret-123";
   const ENCRYPTION_SECRET = "01234567890123456789012345678901";
@@ -28,60 +16,34 @@ describe("Expression Write Rule Type Construction", () => {
   const BOB_DATE = "2024-09-10T00:00:00.000Z";
 
   beforeEach(async () => {
-    module = await Test.createTestingModule({
-      imports: [
-        SchemaModule.forRoot({
-          formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME],
-          defaults: [CREATED_AT, UPDATED_AT]
-        }),
-        CoreTestingModule,
-        PassportTestingModule.initialize({
-          overriddenStrategyType: "USER"
-        }),
-        DatabaseTestingModule.replicaSet(),
-        PreferenceTestingModule,
-        BucketModule.forRoot({
-          hooks: false,
-          history: false,
-          realtime: false,
-          cache: false,
-          graphql: false,
-          hashSecret: HASH_SECRET,
-          encryptionSecret: ENCRYPTION_SECRET
-        })
-      ]
-    }).compile();
-
-    module.enableShutdownHooks();
-    app = module.createNestApplication();
-    req = module.get(Request);
-    app.use(Middlewares.MergePatchJsonParser(10));
-    await app.listen(req.socket);
+    api = await startBucketApp(
+      engine,
+      {hashSecret: HASH_SECRET, encryptionSecret: ENCRYPTION_SECRET},
+      {passport: {overriddenStrategyType: "USER"}, rejectOnError: false}
+    );
+    req = api.req;
+    key = api.keyField;
   });
 
-  afterEach(() => app.close());
+  afterEach(() => api.close());
 
   async function createBucket(writeRule: string) {
-    bucketId = new ObjectId().toHexString();
-
-    await req.post("/bucket", {
-      _id: bucketId,
-      title: "Write Rule Bucket",
-      description: "Bucket with typed write rules",
-      icon: "settings",
-      primary: "name",
-      readOnly: false,
-      acl: {
-        write: writeRule,
-        read: "true==true"
-      },
-      properties: {
-        name: {type: "string", title: "Name"},
-        password: {type: "hash", title: "Password"},
-        secret: {type: "encrypted", title: "Secret"},
-        created: {type: "date", title: "Created"}
-      }
-    });
+    bucketId = (
+      await api.createBucket(
+        {
+          name: {type: "string", title: "Name"},
+          password: {type: "hash", title: "Password"},
+          secret: {type: "encrypted", title: "Secret"},
+          created: {type: "date", title: "Created"}
+        },
+        {
+          title: "Write Rule Bucket",
+          description: "Bucket with typed write rules",
+          icon: "settings",
+          acl: {write: writeRule, read: "true==true"}
+        }
+      )
+    )._id;
   }
 
   // ---------------------------------------------------------------------------
@@ -119,7 +81,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec1",
         created: ALICE_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.put(
         `/bucket/${bucketId}/data/${docId}`,
@@ -137,7 +99,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec2",
         created: BOB_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.put(
         `/bucket/${bucketId}/data/${docId}`,
@@ -154,7 +116,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec1",
         created: ALICE_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.delete(`/bucket/${bucketId}/data/${docId}`, undefined, {
         Authorization: "USER test"
@@ -169,7 +131,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec2",
         created: BOB_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.delete(`/bucket/${bucketId}/data/${docId}`, undefined, {
         Authorization: "USER test"
@@ -213,7 +175,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec1",
         created: ALICE_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.put(
         `/bucket/${bucketId}/data/${docId}`,
@@ -230,7 +192,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec1",
         created: ALICE_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.put(
         `/bucket/${bucketId}/data/${docId}`,
@@ -247,7 +209,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec1",
         created: ALICE_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.delete(`/bucket/${bucketId}/data/${docId}`, undefined, {
         Authorization: "USER test"
@@ -262,7 +224,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec2",
         created: BOB_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.delete(`/bucket/${bucketId}/data/${docId}`, undefined, {
         Authorization: "USER test"
@@ -306,7 +268,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec_alice",
         created: ALICE_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.put(
         `/bucket/${bucketId}/data/${docId}`,
@@ -323,7 +285,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec_alice",
         created: ALICE_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.put(
         `/bucket/${bucketId}/data/${docId}`,
@@ -340,7 +302,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec_alice",
         created: ALICE_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.delete(`/bucket/${bucketId}/data/${docId}`, undefined, {
         Authorization: "USER test"
@@ -355,7 +317,7 @@ describe("Expression Write Rule Type Construction", () => {
         secret: "sec_bob",
         created: BOB_DATE
       });
-      const docId = insertRes.body._id;
+      const docId = insertRes.body[key];
 
       const res = await req.delete(`/bucket/${bucketId}/data/${docId}`, undefined, {
         Authorization: "USER test"
