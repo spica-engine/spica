@@ -6,7 +6,14 @@ import {
   buildUnifiedDiff,
   renderPlan
 } from "@spica-server/sync";
-import {ChangeKind, LocalResource, RemoteResource, ResourceModule} from "@spica-server/sync";
+import {
+  ChangeKind,
+  DEFAULT_CONCURRENCY,
+  LocalResource,
+  RemoteResource,
+  ResourceModule
+} from "@spica-server/sync";
+import {createTrackingHttp} from "./helpers/tracking-http";
 
 function makeMockModule(
   name: string,
@@ -171,13 +178,6 @@ describe("buildPlan", () => {
 
     await buildPlan([mod], mockHttp, "/tmp", {detailed: true});
     expect(renderDetailSpy).toHaveBeenCalledTimes(1);
-  });
-
-  it("forwards the requested concurrency to every module's readRemote", async () => {
-    const mod = makeMockModule("test", [], []);
-
-    await buildPlan([mod], mockHttp, "/tmp", {concurrency: 3});
-    expect(mod.readRemote).toHaveBeenCalledWith(mockHttp, {concurrency: 3});
   });
 });
 
@@ -349,9 +349,9 @@ describe("applyPlan", () => {
 
     await applyPlan(plan, mockHttp, {concurrency: 5});
 
-    expect(mod.delete).toHaveBeenCalledWith(mockHttp, "del-id");
-    expect(mod.update).toHaveBeenCalledWith(mockHttp, updateLocal, "upd-id");
-    expect(mod.create).toHaveBeenCalledWith(mockHttp, createLocal);
+    expect(mod.delete).toHaveBeenCalledWith(expect.anything(), "del-id");
+    expect(mod.update).toHaveBeenCalledWith(expect.anything(), updateLocal, "upd-id");
+    expect(mod.create).toHaveBeenCalledWith(expect.anything(), createLocal);
   });
 
   it("collects errors without throwing when abortOnError is false", async () => {
@@ -440,5 +440,181 @@ describe("fetchToDisk", () => {
     expect(errors).toHaveLength(1);
     expect(errors[0]).toContain("disk error");
     consolewarn.mockRestore();
+  });
+});
+
+describe("request concurrency", () => {
+  const fanOut = (http: any, count: number, method: "get" | "put") =>
+    Promise.all(Array.from({length: count}, (_, i) => http[method](`res/${i}`)));
+
+  it("caps the requests a module issues while reading the remote state", async () => {
+    const tracking = createTrackingHttp();
+    const mod = makeMockModule("test", [], []);
+    mod.readRemote.mockImplementation(async (http: any) => {
+      await fanOut(http, 10, "get");
+      return [];
+    });
+
+    await buildPlan([mod], tracking, "/tmp", {concurrency: 3});
+
+    expect(tracking.calls).toHaveLength(10);
+    expect(tracking.peak).toBe(3);
+  });
+
+  it("caps the requests modules issue while applying, even when each resource fans out", async () => {
+    const tracking = createTrackingHttp();
+    const locals = ["a", "b", "c", "d"].map(name => ({slug: name, data: {name, v: "new"}}));
+    const remotes = ["a", "b", "c", "d"].map(name => ({
+      slug: name,
+      id: `id-${name}`,
+      data: {name, v: "old"}
+    }));
+    const mod = makeMockModule("test", locals, remotes);
+    mod.update.mockImplementation((http: any) => fanOut(http, 5, "put"));
+    const plan = await buildPlan([mod], createTrackingHttp(), "/tmp");
+
+    await applyPlan(plan, tracking, {concurrency: 2});
+
+    expect(tracking.calls).toHaveLength(20);
+    expect(tracking.peak).toBe(2);
+  });
+
+  it("uses the default limit when no concurrency is given", async () => {
+    const tracking = createTrackingHttp();
+    const mod = makeMockModule("test", [], []);
+    mod.readRemote.mockImplementation(async (http: any) => {
+      await fanOut(http, 40, "get");
+      return [];
+    });
+
+    await buildPlan([mod], tracking, "/tmp");
+
+    expect(tracking.peak).toBe(DEFAULT_CONCURRENCY);
+  });
+});
+
+describe("applyPlan scheduling", () => {
+  const tick = () => new Promise(resolve => setTimeout(resolve, 5));
+
+  async function planWithCreates(count: number) {
+    const locals = Array.from({length: count}, (_, i) => ({
+      slug: `r${i}`,
+      data: {name: `r${i}`}
+    }));
+    const mod = makeMockModule("test", locals, []);
+    const plan = await buildPlan([mod], {} as any, "/tmp");
+    return {mod, plan};
+  }
+
+  it("starts every resource of a phase without waiting for a slow one", async () => {
+    const {mod, plan} = await planWithCreates(6);
+    let releaseSlow!: () => void;
+    mod.create.mockImplementation((_http: any, local: LocalResource) =>
+      local.slug === "r0"
+        ? new Promise<void>(resolve => (releaseSlow = resolve))
+        : Promise.resolve()
+    );
+
+    const applying = applyPlan(plan, {} as any, {concurrency: 2});
+    await tick();
+
+    expect(mod.create).toHaveBeenCalledTimes(6);
+
+    releaseSlow();
+    await applying;
+  });
+
+  it("finishes a phase before starting the next one", async () => {
+    const locals = [{slug: "new", data: {name: "new", v: 1}}];
+    const remotes = [
+      {slug: "old", id: "old-id", data: {name: "old"}},
+      {slug: "new", id: "new-id", data: {name: "new", v: 0}}
+    ];
+    const mod = makeMockModule("test", locals, remotes);
+    const plan = await buildPlan([mod], {} as any, "/tmp");
+    let releaseDelete!: () => void;
+    mod.delete.mockImplementation(() => new Promise<void>(resolve => (releaseDelete = resolve)));
+
+    const applying = applyPlan(plan, {} as any);
+    await tick();
+    expect(mod.update).not.toHaveBeenCalled();
+
+    releaseDelete();
+    await applying;
+    expect(mod.update).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not send queued requests after a failure with abortOnError", async () => {
+    const {mod, plan} = await planWithCreates(8);
+    const tracking = createTrackingHttp((_method, url) => {
+      if (url === "r/r0") throw new Error("api error");
+      return {};
+    });
+    mod.create.mockImplementation((http: any, local: LocalResource) =>
+      http.post(`r/${local.slug}`)
+    );
+
+    await expect(applyPlan(plan, tracking, {concurrency: 1, abortOnError: true})).rejects.toThrow(
+      "api error"
+    );
+
+    // The slot freed by the failing request is handed to the next queued one before the abort lands.
+    expect(tracking.calls.map(c => c.url)).toEqual(["r/r0", "r/r1"]);
+  });
+
+  it("waits for resources already running before rejecting with abortOnError", async () => {
+    const {mod, plan} = await planWithCreates(2);
+    let slowFinished = false;
+    let releaseSlow!: () => void;
+    mod.create.mockImplementation((_http: any, local: LocalResource) => {
+      if (local.slug === "r0") return Promise.reject(new Error("api error"));
+      return new Promise<void>(resolve => {
+        releaseSlow = () => {
+          slowFinished = true;
+          resolve();
+        };
+      });
+    });
+
+    let settled = false;
+    const applying = applyPlan(plan, {} as any, {concurrency: 2, abortOnError: true}).catch(() => {
+      settled = true;
+    });
+    await tick();
+    expect(settled).toBe(false);
+
+    releaseSlow();
+    await applying;
+    expect(slowFinished).toBe(true);
+    expect(settled).toBe(true);
+  });
+
+  it("rejects with the first failure, not with the errors it caused", async () => {
+    const {mod, plan} = await planWithCreates(4);
+    const tracking = createTrackingHttp((_method, url) => {
+      if (url === "r/r0") throw new Error("root cause");
+      return {};
+    });
+    mod.create.mockImplementation((http: any, local: LocalResource) =>
+      http.post(`r/${local.slug}`)
+    );
+
+    await expect(applyPlan(plan, tracking, {concurrency: 1, abortOnError: true})).rejects.toThrow(
+      /^Creating test: r0: root cause$/
+    );
+  });
+
+  it("applies every resource and collects errors without abortOnError", async () => {
+    const {mod, plan} = await planWithCreates(6);
+    mod.create.mockImplementation(async (_http: any, local: LocalResource) => {
+      if (local.slug === "r1") throw new Error("api error");
+    });
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    const {errors} = await applyPlan(plan, {} as any, {concurrency: 2});
+
+    expect(mod.create).toHaveBeenCalledTimes(6);
+    expect(errors).toHaveLength(1);
+    warn.mockRestore();
   });
 });

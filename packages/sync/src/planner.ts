@@ -3,6 +3,7 @@ import isEqual from "lodash/isEqual.js";
 import {createTwoFilesPatch} from "diff";
 import yaml from "yaml";
 import {SyncHttpClient} from "./http";
+import {limitConcurrency, mapWithConcurrency} from "./concurrency";
 import {SyncReporter, silentReporter} from "./reporter";
 import {omit} from "./fs-utils";
 import {ResourceSource} from "./source";
@@ -13,14 +14,14 @@ import {
   ModulePlan,
   Plan,
   PlanEntry,
-  ReadRemoteOptions,
   RemoteResource,
   ResourceModule
 } from "./types";
 
 // ─── Build ────────────────────────────────────────────────────────────────────
 
-export interface BuildPlanOptions extends ReadRemoteOptions {
+export interface BuildPlanOptions {
+  concurrency?: number;
   detailed?: boolean;
   detectRenames?: boolean;
   reporter?: SyncReporter;
@@ -30,7 +31,7 @@ export interface BuildPlanOptions extends ReadRemoteOptions {
 
 export async function buildPlan(
   modules: ResourceModule[],
-  http: SyncHttpClient,
+  unlimitedHttp: SyncHttpClient,
   rootDir: string,
   options: BuildPlanOptions = {}
 ): Promise<Plan> {
@@ -41,6 +42,7 @@ export async function buildPlan(
     concurrency = DEFAULT_CONCURRENCY,
     source
   } = options;
+  const http = limitConcurrency(unlimitedHttp, concurrency);
   const modulePlans: ModulePlan[] = [];
 
   for (const mod of modules) {
@@ -49,7 +51,7 @@ export async function buildPlan(
         mod.readLocal(rootDir, source)
       ),
       reporter.task<RemoteResource[]>(`Fetching remote ${mod.displayName}`, () =>
-        mod.readRemote(http, {concurrency})
+        mod.readRemote(http)
       )
     ]);
 
@@ -309,17 +311,24 @@ export interface ApplyOptions {
 
 export async function applyPlan(
   plan: Plan,
-  http: SyncHttpClient,
+  unlimitedHttp: SyncHttpClient,
   opts: ApplyOptions = {}
 ): Promise<{errors: string[]}> {
   const concurrency = opts.concurrency ?? DEFAULT_CONCURRENCY;
   const reporter = opts.reporter ?? silentReporter;
   const errors: string[] = [];
+  const abortController = new AbortController();
+  const http = limitConcurrency(unlimitedHttp, concurrency, abortController.signal);
+  let abortError: Error | undefined;
 
   const handleErr = (label: string, e: unknown) => {
-    const msg = formatError(e);
-    const full = `${label}: ${msg}`;
-    if (opts.abortOnError) throw new Error(full);
+    if (abortError) throw abortError;
+    const full = `${label}: ${formatError(e)}`;
+    if (opts.abortOnError) {
+      abortError = new Error(full);
+      abortController.abort(abortError);
+      throw abortError;
+    }
     reporter.warn(full);
     errors.push(full);
   };
@@ -327,35 +336,26 @@ export async function applyPlan(
   for (const mp of plan.modules) {
     const {module: mod, creates, updates, deletes} = mp;
 
-    if (deletes.length) {
-      await runConcurrently(
-        deletes.map(e => ({slug: e.slug, run: () => mod.delete(http, e.remote!.id)})),
-        concurrency,
-        `Deleting ${mod.displayName}`,
-        handleErr,
-        reporter
-      );
-    }
+    await runAllAtOnce(
+      deletes.map(e => ({slug: e.slug, run: () => mod.delete(http, e.remote!.id)})),
+      `Deleting ${mod.displayName}`,
+      handleErr,
+      reporter
+    );
 
-    if (updates.length) {
-      await runConcurrently(
-        updates.map(e => ({slug: e.slug, run: () => mod.update(http, e.local!, e.remote!.id)})),
-        concurrency,
-        `Updating ${mod.displayName}`,
-        handleErr,
-        reporter
-      );
-    }
+    await runAllAtOnce(
+      updates.map(e => ({slug: e.slug, run: () => mod.update(http, e.local!, e.remote!.id)})),
+      `Updating ${mod.displayName}`,
+      handleErr,
+      reporter
+    );
 
-    if (creates.length) {
-      await runConcurrently(
-        creates.map(e => ({slug: e.slug, run: () => mod.create(http, e.local!)})),
-        concurrency,
-        `Creating ${mod.displayName}`,
-        handleErr,
-        reporter
-      );
-    }
+    await runAllAtOnce(
+      creates.map(e => ({slug: e.slug, run: () => mod.create(http, e.local!)})),
+      `Creating ${mod.displayName}`,
+      handleErr,
+      reporter
+    );
   }
 
   return {errors};
@@ -492,6 +492,15 @@ export function renderSchemaDetail(
   return {schema: buildUnifiedDiff(remoteYaml, localYaml, "schema.yaml")};
 }
 
+function runAllAtOnce(
+  tasks: Array<{slug: string; run: () => Promise<void>}>,
+  label: string,
+  onError: (label: string, e: unknown) => void,
+  reporter: SyncReporter
+): Promise<void> {
+  return runConcurrently(tasks, tasks.length, label, onError, reporter);
+}
+
 async function runConcurrently(
   tasks: Array<{slug: string; run: () => Promise<void>}>,
   concurrency: number,
@@ -509,25 +518,15 @@ async function runConcurrently(
   // renders this with ora; the silent default does nothing.
   const progress = reporter.progress(label, total);
   try {
-    const limit = Math.max(1, Math.min(total, concurrency));
-    let batch: typeof tasks = [];
-    for (let i = 0; i < tasks.length; i++) {
-      batch.push(tasks[i]);
-      if (batch.length === limit || i === tasks.length - 1) {
-        await Promise.all(
-          batch.map(task =>
-            task
-              .run()
-              .catch((e: unknown) => onError(`${label}: ${task.slug}`, e))
-              .finally(() => {
-                done++;
-                progress.update(task.slug, done, total);
-              })
-          )
-        );
-        batch = [];
-      }
-    }
+    await mapWithConcurrency(tasks, concurrency, task =>
+      task
+        .run()
+        .catch((e: unknown) => onError(`${label}: ${task.slug}`, e))
+        .finally(() => {
+          done++;
+          progress.update(task.slug, done, total);
+        })
+    );
     progress.succeed();
   } catch (e) {
     progress.fail();
