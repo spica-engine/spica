@@ -2,8 +2,7 @@ import {
   compileFilter,
   FILTER_LIMITS,
   InvalidRuleError,
-  RuleCompileError,
-  UnsupportedRuleError
+  RuleCompileError
 } from "@spica-server/data-postgresql";
 import {
   bucketId,
@@ -46,8 +45,13 @@ describe("compileFilter", () => {
 
   it("should refuse fields the bucket cannot filter on", () => {
     expect(() => compile(`document.nope == 1`)).toThrow(InvalidRuleError);
-    expect(() => compile(`document.secret == "x"`)).toThrow(UnsupportedRuleError);
-    expect(() => compile(`document.author.secret == "x"`)).toThrow(UnsupportedRuleError);
+  });
+
+  it("should compare an encrypted field through its hash column", () => {
+    expect(compile(`document.secret == "x"`).sql).toBe('"t"."secret__hash" = $1::text');
+    expect(compile(`document.author.secret == "x"`).sql).toMatch(
+      /^"_r[0-9a-f]{12}"\."secret__hash" = \$1::text$/
+    );
   });
 
   describe("auth", () => {

@@ -91,6 +91,7 @@ describe("bucket metadata", () => {
         ["f", "text"],
         ["h", "text"],
         ["e", "text"],
+        ["e__hash", "text"],
         ["n", "double precision"],
         ["b", "boolean"],
         ["d", "timestamptz"],
@@ -327,6 +328,67 @@ describe("bucket metadata", () => {
             targets
           )
         ).toThrow('Relation "owner" refers to the bucket "missing", which does not exist.');
+      });
+    });
+
+    describe("encrypted properties", () => {
+      const secrets = {
+        id: {type: "uuid"},
+        secret: {type: "encrypted"},
+        profile: {type: "object", properties: {pin: {type: "encrypted"}}},
+        list: {type: "array", items: {type: "encrypted"}}
+      };
+
+      it("should add a text column for the hash next to the text column of the value", () => {
+        const metadata = describeBucket(bucketId, bucket({properties: secrets}));
+
+        expect(
+          metadata.main.columns.map(column => [column.name, column.path, column.type])
+        ).toEqual(
+          expect.arrayContaining([
+            ["secret", ["secret"], "text"],
+            ["secret__hash", ["secret", "hash"], "text"],
+            ["profile__pin", ["profile", "pin"], "text"],
+            ["profile__pin__hash", ["profile", "pin", "hash"], "text"]
+          ])
+        );
+        expect(metadata.columnOf(["secret", "hash"])?.name).toBe("secret__hash");
+      });
+
+      it("should not add a hash column for the items of a list", () => {
+        const metadata = describeBucket(bucketId, bucket({properties: secrets}));
+        const items = metadata.children.find(table => table.path.join(".") == "list")!;
+
+        expect(items.columns.map(column => column.name)).toEqual([
+          "_parent",
+          "_position",
+          "_value"
+        ]);
+      });
+
+      it("should require the hash when the value is required", () => {
+        const metadata = describeBucket(
+          bucketId,
+          bucket({properties: secrets, required: ["secret"]})
+        );
+
+        expect(metadata.columnOf(["secret", "hash"])?.notNull).toBe(true);
+        expect(metadata.columnOf(["profile", "pin", "hash"])?.notNull).toBe(false);
+      });
+
+      it("should refuse a property that takes the name of a hash column", () => {
+        expect(() =>
+          describeBucket(
+            bucketId,
+            bucket({
+              properties: {
+                id: {type: "uuid"},
+                secret: {type: "encrypted"},
+                secret__hash: {type: "string"}
+              }
+            })
+          )
+        ).toThrow(BucketSchemaError);
       });
     });
 

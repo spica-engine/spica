@@ -202,6 +202,18 @@ describe("compileRule", () => {
       expect(compile("document.password == 'p'").values).toEqual(["p"]);
     });
 
+    it("should compare an encrypted field through its hash column", () => {
+      expect(compile("document.secret == 'x'", {hashSecret: "s"})).toEqual({
+        sql: '"t"."secret__hash" = $1::text',
+        values: [hash("x", "s")]
+      });
+      expect(compile("document.secret == 'x'").values).toEqual(["x"]);
+      expect(compile("document.secret in ['x', 'y']", {hashSecret: "s"}).values).toEqual([
+        hash("x", "s"),
+        hash("y", "s")
+      ]);
+    });
+
     it("should not hash a value that comes from auth", () => {
       expect(
         compile("document.password == auth.p", {hashSecret: "s", auth: {p: "p"}}).values
@@ -396,9 +408,7 @@ describe("compileRule", () => {
       expect(() => compile("auth == 1")).toThrow(InvalidRuleError);
     });
 
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
-    it.each(["document.secret == 'x'", "document.tags == 'x'", "document.author.id == 'x'"])(
+    it.each(["document.tags == 'x'", "document.author.id == 'x'"])(
       "should refuse %s as unsupported",
       rule => {
         expect(() => compile(rule)).toThrow(UnsupportedRuleError);

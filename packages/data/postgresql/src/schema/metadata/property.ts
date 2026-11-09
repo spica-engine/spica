@@ -21,6 +21,8 @@ export const COLUMN_TYPE_OF_PROPERTY: Record<string, ColumnType> = {
   bigint: "bigint"
 };
 
+export const ENCRYPTED_HASH = "hash";
+
 export const relationTypeOf = (property: Property) =>
   (property as {relationType?: string}).relationType;
 

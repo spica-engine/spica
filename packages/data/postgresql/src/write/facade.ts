@@ -1,5 +1,9 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {checkWriteRule, DatabaseException} from "@spica-server/bucket-common";
+import {
+  checkWriteRule,
+  DatabaseException,
+  decryptDocumentFields
+} from "@spica-server/bucket-common";
 import {Orm, quote, Session} from "@spica-server/data-postgresql-orm";
 import {
   Bucket,
@@ -50,7 +54,7 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
       return insertRows(session, bucket, metadata, document);
     });
 
-    return this.shape(bucket, rowSet);
+    return this.shape(bucket, metadata, rowSet, context);
   }
 
   async replace(): Promise<BucketDocument | null> {
@@ -106,7 +110,24 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
     }
   }
 
-  private shape(bucket: Bucket, rowSet: RowSet): Promise<BucketDocument> {
-    return this.shaper.shape({kind: "bucket", bucketId: String(bucket._id)}, rowSet);
+  private async shape(
+    bucket: Bucket,
+    metadata: BucketMetadata,
+    rowSet: RowSet,
+    context: BucketWriteContext
+  ): Promise<BucketDocument> {
+    const saved = await this.shaper.shape<RowSet, BucketDocument>(
+      {kind: "bucket", bucketId: String(bucket._id)},
+      rowSet
+    );
+    return context.encryptionSecret
+      ? decryptDocumentFields(
+          saved,
+          bucket,
+          context.encryptionSecret,
+          context.resolveSchema,
+          String(saved[metadata.primaryKey.field])
+        )
+      : saved;
   }
 }

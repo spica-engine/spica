@@ -1,5 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {PostgresBucketWriteFacade} from "@spica-server/data-postgresql";
+import {encrypt} from "@spica-server/core-encryption";
 import {provideRepository} from "@spica-server/data";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {BUCKET_REPOSITORY, BUCKET_SCHEMA_MANAGER} from "@spica-server/interface-bucket";
@@ -192,6 +193,48 @@ describe("PostgreSQL bucket write: insert", () => {
     });
   });
 
+  describe("encrypted values", () => {
+    const sealed = (value: string) => encrypt(value, "encryption-secret", "hash-secret");
+
+    it("should store the ciphertext as text and the hash in the column beside it", async () => {
+      const bucket = await createBucket({secret: {type: "encrypted"}});
+      const value = sealed("hello");
+
+      await insert(bucket, {secret: value});
+
+      const [row] = await rows(bucket);
+      expect(JSON.parse(row.secret)).toEqual({
+        encrypted: value.encrypted,
+        iv: value.iv,
+        authTag: value.authTag
+      });
+      expect(row.secret__hash).toBe(value.hash);
+    });
+
+    it("should store an encrypted property of an object in prefixed columns", async () => {
+      const bucket = await createBucket({
+        profile: {type: "object", properties: {pin: {type: "encrypted"}}}
+      });
+      const value = sealed("1234");
+
+      await insert(bucket, {profile: {pin: value}});
+
+      const [row] = await rows(bucket);
+      expect(JSON.parse(row.profile__pin).encrypted).toBe(value.encrypted);
+      expect(row.profile__pin__hash).toBe(value.hash);
+    });
+
+    it("should refuse a value that was not encrypted and write nothing", async () => {
+      const bucket = await createBucket({secret: {type: "encrypted"}});
+
+      await expect(insert(bucket, {secret: "plain"})).rejects.toMatchObject({
+        status: 400,
+        message: "The property .secret must be an encrypted value."
+      });
+      expect(await rows(bucket)).toEqual([]);
+    });
+  });
+
   describe("values that are not written yet", () => {
     it.each([
       ["a list", {tags: {type: "array", items: {type: "string"}}}, {tags: ["a"]}, ".tags"],
@@ -200,8 +243,7 @@ describe("PostgreSQL bucket write: insert", () => {
         {label: {type: "string", options: {translate: true}}},
         {label: {en_US: "a"}},
         ".label"
-      ],
-      ["an encrypted value", {secret: {type: "encrypted"}}, {secret: {encrypted: "x"}}, ".secret"]
+      ]
     ])("should refuse %s and write nothing", async (_name, properties, document, path) => {
       const bucket = await createBucket({title: {type: "string"}, ...properties});
 

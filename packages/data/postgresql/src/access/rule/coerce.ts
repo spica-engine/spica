@@ -33,7 +33,8 @@ function numeric(value: unknown, type: ColumnType): Coerced | undefined {
 
 // Only a literal written in the rule is converted. A value taken from auth is compared as it is.
 function convertLiteral(value: string, property: Property, hashSecret?: string): string {
-  return property.type == "hash" && hashSecret ? hash(value, hashSecret) : value;
+  const hashed = property.type == "hash" || property.type == "encrypted";
+  return hashed && hashSecret ? hash(value, hashSecret) : value;
 }
 
 export function coerceConstant(
