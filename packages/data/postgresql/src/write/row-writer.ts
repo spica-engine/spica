@@ -44,7 +44,7 @@ function keyOf(metadata: BucketMetadata, document: object) {
   return key;
 }
 
-class Converter {
+export class Converter {
   private readonly encrypted: Set<string>;
 
   constructor(bucket: Bucket) {
@@ -106,7 +106,7 @@ async function insertMainRow(
   return rows[0];
 }
 
-function childRows(
+export function childRows(
   table: TableMetadata,
   document: object,
   parent: unknown,
@@ -144,7 +144,11 @@ function childRows(
   });
 }
 
-async function insertMany(session: Session, table: TableMetadata, rows: Row[]): Promise<Row[]> {
+export async function insertMany(
+  session: Session,
+  table: TableMetadata,
+  rows: Row[]
+): Promise<Row[]> {
   if (!rows.length) {
     return [];
   }

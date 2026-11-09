@@ -17,7 +17,8 @@ import {
   BucketQueryFacade,
   BucketWriteContext,
   BucketWriteFacade,
-  BucketWriteOptions
+  BucketWriteOptions,
+  ReturnedDocument
 } from "@spica-server/interface-bucket-common";
 import {Id, RESULT_SHAPER, ResultShaper} from "@spica-server/interface-data";
 import {keyIdType} from "../id.js";
@@ -26,6 +27,7 @@ import {allBucketTables, countDocuments} from "../repositories/bucket/counts.js"
 import {BucketMetadata, describeBucket, resolveRelationTargets} from "../schema/index.js";
 import {RowSet} from "../shape/index.js";
 import {insertRows} from "./row-writer.js";
+import {lockRowSet, patchRows, replaceRows} from "./row-updater.js";
 
 @Injectable()
 export class PostgresBucketWriteFacade implements BucketWriteFacade {
@@ -57,16 +59,57 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
     return this.shape(bucket, metadata, rowSet, context);
   }
 
-  async replace(): Promise<BucketDocument | null> {
-    throw new Error("Replacing documents is not supported on PostgreSQL yet.");
+  async replace(
+    bucket: Bucket,
+    document: BucketDocument,
+    options: BucketWriteOptions & {returnDocument?: ReturnedDocument},
+    context: BucketWriteContext
+  ): Promise<BucketDocument | null> {
+    return this.update(bucket, document, options, context, (session, metadata, previous) =>
+      replaceRows(session, bucket, metadata, document, previous)
+    );
   }
 
-  async patch(): Promise<BucketDocument | null> {
-    throw new Error("Patching documents is not supported on PostgreSQL yet.");
+  async patch(
+    bucket: Bucket,
+    document: BucketDocument,
+    patch: object,
+    options: BucketWriteOptions & {returnDocument?: ReturnedDocument},
+    context: BucketWriteContext
+  ): Promise<BucketDocument | null> {
+    return this.update(bucket, document, options, context, (session, metadata, previous) =>
+      patchRows(session, bucket, metadata, document, patch as Record<string, unknown>, previous)
+    );
   }
 
   async delete(): Promise<BucketDocument | undefined> {
     throw new Error("Deleting documents is not supported on PostgreSQL yet.");
+  }
+
+  private async update(
+    bucket: Bucket,
+    document: BucketDocument,
+    options: BucketWriteOptions & {returnDocument?: ReturnedDocument},
+    context: BucketWriteContext,
+    write: (session: Session, metadata: BucketMetadata, previous: RowSet) => Promise<RowSet>
+  ): Promise<BucketDocument | null> {
+    if (options.applyAcl) {
+      await checkWriteRule({bucket, document, auth: options.user, context, query: this.query});
+    }
+
+    const metadata = await this.describe(bucket, context);
+    const key = document[metadata.primaryKey.field];
+
+    const changed = await this.orm.transaction(async session => {
+      const previous = await lockRowSet(session, metadata, key);
+      return previous && {previous, current: await write(session, metadata, previous)};
+    });
+
+    if (!changed) {
+      return null;
+    }
+    const returned = options.returnDocument == "after" ? changed.current : changed.previous;
+    return this.shape(bucket, metadata, returned, context);
   }
 
   private async describe(bucket: Bucket, context: BucketWriteContext) {

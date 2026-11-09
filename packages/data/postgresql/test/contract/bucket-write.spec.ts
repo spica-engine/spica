@@ -1,6 +1,7 @@
 import {Global, Module} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {encrypt} from "@spica-server/core-encryption";
+import {applyPatch} from "@spica-server/core-patch";
 import {contractSuite} from "@spica-server/database-testing";
 import {BUCKET_DATA_LIMIT} from "@spica-server/interface-bucket";
 import {
@@ -57,6 +58,18 @@ function writerOver(engine: Parameters<Parameters<typeof contractSuite>[1]>[0], 
       const bucket = await store.createBucket(properties, options);
       known.set(String(bucket._id), bucket);
       return bucket;
+    },
+    replace(bucket: any, document: object, options: object = {}, extra: object = {}) {
+      return writes.replace(bucket, document as any, options, {
+        resolveSchema: id => known.get(String(id)),
+        ...extra
+      });
+    },
+    patch(bucket: any, document: object, patch: object, options: object = {}, extra: object = {}) {
+      return writes.patch(bucket, document as any, patch, options, {
+        resolveSchema: id => known.get(String(id)),
+        ...extra
+      });
     },
     insert(bucket: any, document: object, options: object = {}, extra: object = {}) {
       const context: BucketInsertContext = {
@@ -438,5 +451,217 @@ contractSuite("bucket write: insert with a total document limit", engine => {
       "Total bucket-data limit exceeded"
     );
     expect(await writer.store.find(second)).toHaveLength(1);
+  });
+});
+
+contractSuite("bucket write: replace and patch", engine => {
+  const writer = writerOver(engine);
+  const user = {_id: "u"};
+  let authors: any;
+  let ann: string;
+  let bob: string;
+  let bucket: any;
+
+  beforeAll(async () => {
+    authors = await writer.bucket({name: {type: "string"}});
+    ann = plain(await writer.insert(authors, {name: "ann"}))[writer.keyField];
+    bob = plain(await writer.insert(authors, {name: "bob"}))[writer.keyField];
+    bucket = await writer.bucket({
+      title: {type: "string"},
+      age: {type: "number"},
+      address: {type: "object", properties: {city: {type: "string"}, zip: {type: "string"}}},
+      tags: {type: "array", items: {type: "string"}},
+      lines: {
+        type: "array",
+        items: {type: "object", properties: {sku: {type: "string"}, qty: {type: "number"}}}
+      },
+      label: {type: "string", options: {translate: true}},
+      editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"}
+    });
+  });
+
+  const original = () => ({
+    title: "first",
+    age: 30,
+    address: {city: "Rome", zip: "00100"},
+    tags: ["a", "b", "c"],
+    lines: [
+      {sku: "x", qty: 1},
+      {sku: "y", qty: 2}
+    ],
+    label: {en_US: "hello", tr_TR: "merhaba"},
+    editors: [ann, bob]
+  });
+
+  async function stored() {
+    const saved = await writer.insert(bucket, original());
+    return {
+      key: saved[writer.keyField],
+      read: () => writer.store.read(bucket, saved[writer.keyField])
+    };
+  }
+
+  describe("replace", () => {
+    it("should answer with the document before the replacement and store the new one", async () => {
+      const {key, read} = await stored();
+      const next = {
+        [writer.keyField]: key,
+        title: "second",
+        age: 31,
+        address: {city: "Oslo", zip: "0150"},
+        tags: ["z"],
+        lines: [{sku: "q", qty: 9}],
+        label: {en_US: "bye"},
+        editors: [bob]
+      };
+
+      const previous = plain(await writer.replace(bucket, next, {}));
+
+      expect(previous).toMatchObject(original());
+      expect(await read()).toMatchObject(plain(next));
+    });
+
+    it("should answer with the new document when asked for the document after", async () => {
+      const {key, read} = await stored();
+      const next = {...original(), [writer.keyField]: key, title: "after", tags: ["n"]};
+
+      const current = plain(await writer.replace(bucket, next, {returnDocument: "after"}));
+
+      expect(current).toEqual(await read());
+      expect(current).toMatchObject({title: "after", tags: ["n"]});
+    });
+
+    it("should leave a list, a translation and links empty when the new document has none", async () => {
+      const {key, read} = await stored();
+
+      await writer.replace(bucket, {[writer.keyField]: key, title: "bare"}, {});
+
+      const now = await read();
+      expect(now.title).toBe("bare");
+      expect(now.tags ?? []).toEqual([]);
+      expect(now.lines ?? []).toEqual([]);
+      expect(now.editors ?? []).toEqual([]);
+      expect(Object.keys(now.label ?? {})).toEqual([]);
+    });
+
+    it("should change nothing else in the bucket", async () => {
+      const {key} = await stored();
+      const other = await stored();
+
+      await writer.replace(bucket, {[writer.keyField]: key, title: "changed"}, {});
+
+      expect(await other.read()).toMatchObject(original());
+    });
+
+    it("should answer null for a document that does not exist", async () => {
+      const missing = writer.newKey();
+
+      expect(await writer.replace(bucket, {[writer.keyField]: missing, title: "x"}, {})).toBeNull();
+      expect((await writer.store.find(bucket)).some(found => found.title == "x")).toBe(false);
+    });
+
+    it("should refuse a replacement the write rule denies and keep the document", async () => {
+      const guarded = await writer.bucket(
+        {title: {type: "string"}},
+        {acl: {read: "true==true", write: "document.title == 'allowed'"}}
+      );
+      const saved = await writer.insert(guarded, {title: "allowed"});
+      const key = saved[writer.keyField];
+
+      await expect(
+        writer.replace(guarded, {[writer.keyField]: key, title: "other"}, {applyAcl: true, user})
+      ).rejects.toMatchObject({status: 401});
+
+      expect((await writer.store.read(guarded, key)).title).toBe("allowed");
+    });
+  });
+
+  describe("patch", () => {
+    const patching = async (patch: object, options: object = {returnDocument: "after"}) => {
+      const {key, read} = await stored();
+      const merged = {...applyPatch(original(), patch), [writer.keyField]: key};
+      const answered = plain(await writer.patch(bucket, merged, patch, options));
+      return {answered, read, merged};
+    };
+
+    it("should change the given fields and keep the others", async () => {
+      const {answered, read} = await patching({title: "patched", age: 32});
+
+      expect(answered).toMatchObject({...original(), title: "patched", age: 32});
+      expect(await read()).toEqual(answered);
+    });
+
+    it("should change a field of an object and keep its siblings", async () => {
+      const {read} = await patching({address: {city: "Oslo"}});
+
+      expect((await read()).address).toEqual({city: "Oslo", zip: "00100"});
+    });
+
+    it("should remove the fields that are patched to null", async () => {
+      const {read} = await patching({age: null, address: {zip: null}});
+
+      const now = await read();
+      expect(now.age ?? null).toBeNull();
+      expect(now.address.zip ?? null).toBeNull();
+      expect(now.address.city).toBe("Rome");
+    });
+
+    it("should replace a whole list", async () => {
+      const {read} = await patching({tags: ["only"], lines: [{sku: "n", qty: 5}]});
+
+      const now = await read();
+      expect(now.tags).toEqual(["only"]);
+      expect(now.lines).toEqual([{sku: "n", qty: 5}]);
+    });
+
+    it("should change one language of a translation and keep the other", async () => {
+      const {read} = await patching({label: {tr_TR: "selam"}});
+
+      expect((await read()).label).toEqual({en_US: "hello", tr_TR: "selam"});
+    });
+
+    it("should remove a language patched to null", async () => {
+      const {read} = await patching({label: {tr_TR: null}});
+
+      expect((await read()).label).toEqual({en_US: "hello"});
+    });
+
+    it("should replace the links of a relation", async () => {
+      const {read} = await patching({editors: [bob]});
+
+      expect((await read()).editors).toEqual([bob]);
+    });
+
+    it("should answer with the document before the patch by default", async () => {
+      const {answered, read} = await patching({title: "later"}, {});
+
+      expect(answered.title).toBe("first");
+      expect((await read()).title).toBe("later");
+    });
+
+    it("should answer null for a document that does not exist", async () => {
+      const merged = {[writer.keyField]: writer.newKey(), title: "x"};
+
+      expect(await writer.patch(bucket, merged, {title: "x"}, {})).toBeNull();
+    });
+
+    it("should refuse a patch the write rule denies and keep the document", async () => {
+      const guarded = await writer.bucket(
+        {title: {type: "string"}},
+        {acl: {read: "true==true", write: "document.title == 'allowed'"}}
+      );
+      const key = (await writer.insert(guarded, {title: "allowed"}))[writer.keyField];
+
+      await expect(
+        writer.patch(
+          guarded,
+          {[writer.keyField]: key, title: "other"},
+          {title: "other"},
+          {applyAcl: true, user}
+        )
+      ).rejects.toMatchObject({status: 401});
+
+      expect((await writer.store.read(guarded, key)).title).toBe("allowed");
+    });
   });
 });
