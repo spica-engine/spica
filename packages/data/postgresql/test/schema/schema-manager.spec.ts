@@ -768,16 +768,14 @@ describe("PostgreSQL schema manager", () => {
         const table = tableOf(created._id);
         const product = (await orm.table(tableOf(first._id)).insertRow({})).id;
         const parent = (await orm.table(table).insertRow({})).id;
-        await orm
-          .table(`${table}__lines`)
-          .insertRows(
-            ["a", "b"].map((sku, position) => ({
-              _parent: parent,
-              _position: position,
-              sku,
-              product
-            }))
-          );
+        await orm.table(`${table}__lines`).insertRows(
+          ["a", "b"].map((sku, position) => ({
+            _parent: parent,
+            _position: position,
+            sku,
+            product
+          }))
+        );
         return {first, second, created, table, product};
       }
 
