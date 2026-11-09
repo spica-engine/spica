@@ -90,6 +90,20 @@ contractSuite("BucketDataController: history, activity and hooks", engine => {
       expect(restored).toMatchObject({title: "first", tags: ["a"]});
     });
 
+    it("should clear the history of the whole bucket", async () => {
+      const inserted = await insert({title: "first"});
+      const documentId = inserted[key];
+      await api.req.put(`/bucket/${bucketId}/data/${documentId}`, {...inserted, title: "second"});
+      expect(await histories(documentId)).toHaveLength(1);
+
+      const cleared = await api.req.delete(`/bucket/${bucketId}/history`);
+
+      expect(cleared.statusCode).toBe(204);
+      expect(await histories(documentId)).toEqual([]);
+      const again = await api.req.delete(`/bucket/${bucketId}/history`).catch(e => e);
+      expect(again.statusCode).toBe(404);
+    });
+
     it("should drop the history of a document that is deleted", async () => {
       const inserted = await insert({title: "first"});
       const documentId = inserted[key];
