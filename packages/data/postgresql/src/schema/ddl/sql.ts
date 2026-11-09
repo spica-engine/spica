@@ -1,5 +1,5 @@
 import {literalOf, quote} from "@spica-server/data-postgresql-orm";
-import {constraintName} from "../naming.js";
+import {constraintName, SYSTEM_COLUMNS} from "../naming.js";
 import {
   BucketMetadata,
   ColumnMetadata,
@@ -73,6 +73,16 @@ export function foreignKeySql(key: ForeignKeyMetadata) {
 
 export const addForeignKeySql = (table: string, key: ForeignKeyMetadata) =>
   alterTable(table, `ADD ${foreignKeySql(key)}`);
+
+export function clearReferencesSql(table: TableMetadata, column: string): string | undefined {
+  const target = table.columns.find(candidate => candidate.name == column);
+  if (target && !target.notNull) {
+    return `UPDATE ${quote(table.name)} SET ${quote(column)} = NULL WHERE ${quote(column)} IS NOT NULL`;
+  }
+  return table.keyColumns.includes(SYSTEM_COLUMNS.parent)
+    ? `DELETE FROM ${quote(table.name)}`
+    : undefined;
+}
 
 export const addPrimaryKeySql = (table: string, column: string) =>
   alterTable(

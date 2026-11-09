@@ -2,7 +2,13 @@ import {TableMetadata} from "../metadata/index.js";
 import {foreignKeyNamed, isRetyped, sameForeignKey} from "./compare.js";
 import {PlanBuilder} from "./plan.js";
 import {TablePair} from "./scope.js";
-import {addForeignKeySql, createIndexSql, dropConstraintSql, dropIndexSql} from "./sql.js";
+import {
+  addForeignKeySql,
+  clearReferencesSql,
+  createIndexSql,
+  dropConstraintSql,
+  dropIndexSql
+} from "./sql.js";
 
 export function planForeignKeys(plan: PlanBuilder, {before, after}: TablePair) {
   for (const key of before.foreignKeys) {
@@ -13,6 +19,12 @@ export function planForeignKeys(plan: PlanBuilder, {before, after}: TablePair) {
   }
   for (const key of after.foreignKeys) {
     const was = foreignKeyNamed(before, key.name);
+    if (was && was.table != key.table) {
+      const clear = clearReferencesSql(after, key.column);
+      if (clear) {
+        plan.add("clearRetargeted", clear);
+      }
+    }
     if (!was || !sameForeignKey(was, key) || isRetyped(before, after, key.column)) {
       plan.add("addForeignKeys", addForeignKeySql(after.name, key));
     }

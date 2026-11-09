@@ -705,6 +705,74 @@ describe("PostgreSQL schema manager", () => {
       expect(await tablesOfBucket(table)).toEqual([table]);
     });
 
+    it("should clear what referred to the old bucket when a relation is retargeted", async () => {
+      const first = await manager.create(keyed({}), () => {});
+      const second = await manager.create(keyed({}), () => {});
+      const kept = await manager.create(keyed({}), () => {});
+      const created = await manager.create(
+        keyed({
+          one: relation(first._id, "onetoone"),
+          many: relation(first._id, "onetomany"),
+          same: relation(kept._id, "onetoone")
+        }),
+        () => {}
+      );
+      const table = tableOf(created._id);
+      const insertInto = async (target: string) =>
+        (await pool.query(`INSERT INTO "${target}" DEFAULT VALUES RETURNING id`)).rows[0].id;
+      const firstRow = await insertInto(tableOf(first._id));
+      const keptRow = await insertInto(tableOf(kept._id));
+      const row = (
+        await pool.query(`INSERT INTO "${table}" (one, same) VALUES ($1, $2) RETURNING id`, [
+          firstRow,
+          keptRow
+        ])
+      ).rows[0].id;
+      await pool.query(
+        `INSERT INTO "${table}__many" (_parent, _position, _target) VALUES ($1, 0, $2)`,
+        [row, firstRow]
+      );
+
+      await manager.replace(
+        created._id,
+        keyed({
+          one: relation(second._id, "onetoone"),
+          many: relation(second._id, "onetomany"),
+          same: relation(kept._id, "onetoone")
+        }),
+        () => {}
+      );
+
+      const {rows} = await pool.query(`SELECT one, same FROM "${table}"`);
+      expect(rows).toEqual([{one: null, same: keptRow}]);
+      expect((await pool.query(`SELECT * FROM "${table}__many"`)).rows).toEqual([]);
+    });
+
+    it("should refuse to retarget a required relation that has values and change nothing", async () => {
+      const first = await manager.create(keyed({}), () => {});
+      const second = await manager.create(keyed({}), () => {});
+      const created = await manager.create(
+        keyed({one: relation(first._id, "onetoone")}, {required: ["one"]}),
+        () => {}
+      );
+      const table = tableOf(created._id);
+      const firstRow = (
+        await pool.query(`INSERT INTO "${tableOf(first._id)}" DEFAULT VALUES RETURNING id`)
+      ).rows[0].id;
+      await pool.query(`INSERT INTO "${table}" (one) VALUES ($1)`, [firstRow]);
+
+      await expect(
+        manager.replace(
+          created._id,
+          keyed({one: relation(second._id, "onetoone")}, {required: ["one"]}),
+          () => {}
+        )
+      ).rejects.toThrow();
+
+      expect((await foreignKeys(table))[0][1]).toBe(tableOf(first._id));
+      expect((await pool.query(`SELECT one FROM "${table}"`)).rows).toEqual([{one: firstRow}]);
+    });
+
     it("should remove the relations that point at a bucket when it is dropped", async () => {
       const target = await manager.create(keyed({}), () => {});
       const other = await manager.create(keyed({}), () => {});
