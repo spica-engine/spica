@@ -668,6 +668,39 @@ describe("functionModule.renderDetail key order", () => {
   });
 });
 
+describe("functionModule.diffFields trigger array order", () => {
+  const withAuthenticate = (authenticate: string[]) => ({
+    schema: {name: "f", triggers: {h: {type: "http", active: true, options: {authenticate}}}},
+    index: "",
+    dependencies: {}
+  });
+
+  it("ignores a reorder of the http authenticate strategies", () => {
+    const changed = functionModule.diffFields(
+      withAuthenticate(["IDENTITY", "APIKEY"]),
+      withAuthenticate(["APIKEY", "IDENTITY"])
+    );
+    expect(changed).toEqual([]);
+  });
+
+  it("still reports different authenticate strategies", () => {
+    const changed = functionModule.diffFields(
+      withAuthenticate(["IDENTITY"]),
+      withAuthenticate(["IDENTITY", "APIKEY"])
+    );
+    expect(changed).toEqual(["schema"]);
+  });
+
+  it("shows no schema detail when only the authenticate order differs", () => {
+    const toResource = (data: ReturnType<typeof withAuthenticate>) => ({slug: "f", id: "1", data});
+    const detail = functionModule.renderDetail(
+      toResource(withAuthenticate(["IDENTITY", "APIKEY"])),
+      toResource(withAuthenticate(["APIKEY", "IDENTITY"]))
+    );
+    expect(detail).not.toHaveProperty("schema");
+  });
+});
+
 describe("function dependency versions reported by the instance", () => {
   const fn = (dependencies: Record<string, string>) => ({
     schema: {name: "f"},

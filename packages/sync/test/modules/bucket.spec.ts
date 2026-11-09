@@ -177,3 +177,54 @@ describe("bucketModule.renderDetail key order", () => {
     expect(changedLines).toEqual([]);
   });
 });
+
+describe("bucketModule.diffFields array order", () => {
+  it("ignores a reorder of required and indexes", () => {
+    const local = {
+      title: "b",
+      required: ["a", "b"],
+      indexes: [{definition: {a: 1}}, {definition: {b: 1}}]
+    } as any;
+    const remote = {
+      title: "b",
+      required: ["b", "a"],
+      indexes: [{definition: {b: 1}}, {definition: {a: 1}}]
+    } as any;
+    expect(bucketModule.diffFields(local, remote)).toEqual([]);
+  });
+
+  it("ignores a reorder of required in nested object properties", () => {
+    const property = (required: string[]) => ({
+      type: "object",
+      properties: {x: {type: "string"}, y: {type: "string"}},
+      required
+    });
+    const local = {title: "b", properties: {p: property(["x", "y"])}} as any;
+    const remote = {title: "b", properties: {p: property(["y", "x"])}} as any;
+    expect(bucketModule.diffFields(local, remote)).toEqual([]);
+  });
+
+  it("still reports a really different required list", () => {
+    const local = {title: "b", required: ["a", "b"]} as any;
+    const remote = {title: "b", required: ["a", "c"]} as any;
+    expect(bucketModule.diffFields(local, remote)).toEqual(["required"]);
+  });
+
+  it("still reports a reorder of enum, whose order is user-visible", () => {
+    const withEnum = (values: string[]) =>
+      ({title: "b", properties: {a: {type: "string", enum: values}}}) as any;
+    expect(bucketModule.diffFields(withEnum(["x", "y"]), withEnum(["y", "x"]))).toEqual([
+      "properties"
+    ]);
+  });
+
+  it("shows no changed lines in the detail when only the array order differs", () => {
+    const local = {slug: "b", id: "1", data: {title: "b", required: ["a", "b"]}} as any;
+    const remote = {slug: "b", id: "1", data: {title: "b", required: ["b", "a"]}} as any;
+    const changedLines = bucketModule
+      .renderDetail(local, remote)
+      .schema.split("\n")
+      .filter(line => /^[+-]/.test(line) && !/^(\+\+\+|---)/.test(line));
+    expect(changedLines).toEqual([]);
+  });
+});

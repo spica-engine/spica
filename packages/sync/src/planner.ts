@@ -6,6 +6,7 @@ import {SyncHttpClient} from "./http";
 import {limitConcurrency, mapWithConcurrency} from "./concurrency";
 import {SyncReporter, silentReporter} from "./reporter";
 import {omit} from "./fs-utils";
+import {sortUnorderedArrays} from "./unordered";
 import {ResourceSource} from "./source";
 import {
   ChangeKind,
@@ -436,13 +437,16 @@ export async function fetchToDisk(
 
 /**
  * Compute diffed field names between two plain objects,
- * excluding ignoredFields from comparison.
+ * excluding ignoredFields from comparison and ignoring the item order of unorderedPaths arrays.
  */
 export function diffObjectFields(
-  local: Record<string, unknown>,
-  remote: Record<string, unknown>,
-  ignoredFields: string[]
+  rawLocal: Record<string, unknown>,
+  rawRemote: Record<string, unknown>,
+  ignoredFields: string[],
+  unorderedPaths: string[] = []
 ): string[] {
+  const local = sortUnorderedArrays(rawLocal, unorderedPaths);
+  const remote = sortUnorderedArrays(rawRemote, unorderedPaths);
   const allKeys = new Set([...Object.keys(local), ...Object.keys(remote)]);
   const changed: string[] = [];
   for (const key of allKeys) {
@@ -462,12 +466,14 @@ export function diffObjectFields(
 export function diffSchemaFields<T extends object>(
   local: T,
   remote: T,
-  ignoredFields: string[]
+  ignoredFields: string[],
+  unorderedPaths: string[] = []
 ): string[] {
   return diffObjectFields(
     local as Record<string, unknown>,
     remote as Record<string, unknown>,
-    ignoredFields
+    ignoredFields,
+    unorderedPaths
   );
 }
 
@@ -489,10 +495,15 @@ export function buildUnifiedDiff(oldContent: string, newContent: string, filenam
 export function renderSchemaDetail(
   localData: object,
   remoteData: object,
-  ignoredFields: string[]
+  ignoredFields: string[],
+  unorderedPaths: string[] = []
 ): Record<string, string> {
-  const localYaml = stringifyForDiff(omit(localData, ignoredFields));
-  const remoteYaml = stringifyForDiff(omit(remoteData, ignoredFields));
+  const localYaml = stringifyForDiff(
+    sortUnorderedArrays(omit(localData, ignoredFields), unorderedPaths)
+  );
+  const remoteYaml = stringifyForDiff(
+    sortUnorderedArrays(omit(remoteData, ignoredFields), unorderedPaths)
+  );
   return {schema: buildUnifiedDiff(remoteYaml, localYaml, "schema.yaml")};
 }
 

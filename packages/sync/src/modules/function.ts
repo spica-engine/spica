@@ -17,6 +17,7 @@ import {
   writeYaml
 } from "../fs-utils";
 import {diskSource, ResourceSource} from "../source";
+import {sortUnorderedArrays} from "../unordered";
 import {DevEventContext, LocalResource, RemoteResource, ResourceModule} from "../types";
 
 interface FunctionSchema {
@@ -43,6 +44,7 @@ export interface FunctionData {
 }
 
 const SCHEMA_IGNORED = ["_id", "env_vars", "secrets"];
+const SCHEMA_UNORDERED = ["triggers.*.options.authenticate"];
 
 function indexFilename(language?: string): string {
   return language === "typescript" ? "index.ts" : "index.mjs";
@@ -148,6 +150,7 @@ export const functionModule: FunctionModule = {
   displayName: "Function",
   identityField: "name",
   ignoredFields: SCHEMA_IGNORED,
+  unorderedPaths: SCHEMA_UNORDERED,
 
   readSchema(rootDir, slug, source = diskSource) {
     return readSourceYaml<FunctionSchema>(
@@ -338,7 +341,8 @@ export const functionModule: FunctionModule = {
     const schemaChanged = diffObjectFields(
       local.schema as Record<string, unknown>,
       remote.schema as Record<string, unknown>,
-      SCHEMA_IGNORED
+      SCHEMA_IGNORED,
+      SCHEMA_UNORDERED
     );
     if (schemaChanged.length) changed.push("schema");
 
@@ -360,8 +364,12 @@ export const functionModule: FunctionModule = {
   renderDetail(local, remote) {
     const result: Record<string, string> = {};
 
-    const localSchemaYaml = stringifyForDiff(omit(local.data.schema, SCHEMA_IGNORED));
-    const remoteSchemaYaml = stringifyForDiff(omit(remote.data.schema, SCHEMA_IGNORED));
+    const localSchemaYaml = stringifyForDiff(
+      sortUnorderedArrays(omit(local.data.schema, SCHEMA_IGNORED), SCHEMA_UNORDERED)
+    );
+    const remoteSchemaYaml = stringifyForDiff(
+      sortUnorderedArrays(omit(remote.data.schema, SCHEMA_IGNORED), SCHEMA_UNORDERED)
+    );
     if (localSchemaYaml !== remoteSchemaYaml) {
       result["schema"] = buildUnifiedDiff(remoteSchemaYaml, localSchemaYaml, "schema.yaml");
     }
