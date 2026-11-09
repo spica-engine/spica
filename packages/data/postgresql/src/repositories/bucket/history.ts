@@ -7,12 +7,18 @@ import {ChangeKind, ChangePaths} from "@spica-server/interface-core";
 import {Id} from "@spica-server/interface-data";
 import {histories} from "../../entities/index.js";
 import {ORM} from "../../orm.js";
+import {keyedReadContext} from "./read-context.js";
+import {BUCKET_QUERY, BucketQueryFacade} from "@spica-server/interface-bucket-common";
+import {StoredBuckets} from "./stored-buckets.js";
 
 const MAX_HISTORIES_PER_DOCUMENT = 10;
 
 @Injectable()
 export class PostgresHistoryRepository implements HistoryRepository {
-  constructor(@Inject(ORM) private readonly orm: Orm) {}
+  constructor(
+    @Inject(ORM) private readonly orm: Orm,
+    @Inject(BUCKET_QUERY) private readonly query: BucketQueryFacade
+  ) {}
 
   async updateHistories(previousSchema: Bucket, currentSchema: Bucket) {
     const paths = schemaDiff(previousSchema, currentSchema)
@@ -54,6 +60,7 @@ export class PostgresHistoryRepository implements HistoryRepository {
 
   async createHistory(
     bucketId: Id,
+    documentId: Id,
     previousDocument: BucketDocument,
     currentDocument: BucketDocument
   ) {
@@ -62,12 +69,11 @@ export class PostgresHistoryRepository implements HistoryRepository {
       return;
     }
 
-    const documentId = String(currentDocument._id);
     return this.orm.transaction(async session => {
-      await session.lockTransaction(`history:${bucketId}:${documentId}`);
+      await session.lockTransaction(`history:${bucketId}:${String(documentId)}`);
       const stale = await session.findMany(
         histories,
-        {bucket_id: bucketId, document_id: documentId},
+        {bucket_id: bucketId, document_id: String(documentId)},
         {select: ["_id"], orderBy: {_id: "desc"}, offset: MAX_HISTORIES_PER_DOCUMENT - 1}
       );
       if (stale.length) {
@@ -75,14 +81,23 @@ export class PostgresHistoryRepository implements HistoryRepository {
       }
       return session.insert(histories, {
         bucket_id: bucketId,
-        document_id: currentDocument._id,
+        document_id: documentId,
         changes
       });
     });
   }
 
-  async getDocument(_bucketId: Id, _documentId: Id): Promise<BucketDocument | null> {
-    throw new Error("Bucket documents are not stored on PostgreSQL yet.");
+  async getDocument(bucketId: Id, documentId: Id): Promise<BucketDocument | null> {
+    const bucket = await new StoredBuckets(this.orm).find(bucketId);
+    if (!bucket) {
+      return null;
+    }
+    const {result} = await this.query.findOne<BucketDocument>(
+      bucket,
+      {documentId},
+      keyedReadContext
+    );
+    return result ?? null;
   }
 
   async findSummaries(bucketId: Id, documentId: Id) {

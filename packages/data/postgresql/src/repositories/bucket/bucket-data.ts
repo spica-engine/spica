@@ -9,10 +9,9 @@ import {
 import {BUCKET_QUERY, BucketQueryFacade} from "@spica-server/interface-bucket-common";
 import {EntryStatus, Id, ProfilerQuery} from "@spica-server/interface-data";
 import {ORM} from "../../orm.js";
+import {keyedReadContext} from "./read-context.js";
 import {fieldTableName, mainTableName} from "../../schema/index.js";
 import {allBucketTables, countDocuments} from "./counts.js";
-
-const unavailable = () => Promise.reject(new Error("Schemas and preferences are not read here."));
 
 type Properties = NonNullable<Bucket["properties"]>;
 
@@ -44,7 +43,7 @@ export class PostgresBucketDataRepository implements BucketDataRepository {
     const {result} = await this.query.findOne<BucketDocument>(
       bucket,
       {documentId: id},
-      {resolveSchema: unavailable, preferences: unavailable}
+      keyedReadContext
     );
     return result ?? null;
   }

@@ -387,6 +387,7 @@ describe("History Service", () => {
       it("should add new history", async () => {
         const response: InsertOneResult = await historyService.createHistory(
           bucketId,
+          documentId,
           {
             _id: documentId,
             name: "first name"
@@ -421,6 +422,7 @@ describe("History Service", () => {
       it("should update histories", async () => {
         const response: InsertOneResult = await historyService.createHistory(
           bucketId,
+          documentId,
           {
             _id: documentId,
             name: "first name",

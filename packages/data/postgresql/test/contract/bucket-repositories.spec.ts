@@ -231,6 +231,7 @@ contractSuite("bucket repositories", engine => {
     async function record(bucketId: unknown, documentId: unknown, title: string, previous: string) {
       await histories.createHistory(
         bucketId as any,
+        documentId as any,
         document(documentId, {title: previous}),
         document(documentId, {title})
       );
@@ -344,6 +345,7 @@ contractSuite("bucket repositories", engine => {
       ) {
         await histories.createHistory(
           bucketId as any,
+          documentId as any,
           document(documentId, previous),
           document(documentId, current)
         );
