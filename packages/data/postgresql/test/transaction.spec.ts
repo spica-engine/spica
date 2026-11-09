@@ -82,6 +82,67 @@ describe("PostgreSQL transaction runner", () => {
     expect(await stored()).toEqual([]);
   });
 
+  it("should undo only the inner transaction when the work handles its failure", async () => {
+    await runner(async () => {
+      await add("outer");
+      await expect(
+        orm.transaction(async session => {
+          await session.raw("INSERT INTO probe (value) VALUES ('inner')");
+          await session.raw("SELECT 1 / 0");
+        })
+      ).rejects.toThrow("division by zero");
+      await add("after");
+    });
+
+    expect(await stored()).toEqual(["after", "outer"]);
+  });
+
+  it("should keep what a joined transaction wrote when it succeeds", async () => {
+    await runner(async () => {
+      await orm.transaction(async session => {
+        await session.raw("INSERT INTO probe (value) VALUES ('inner')");
+      });
+      await add("outer");
+    });
+
+    expect(await stored()).toEqual(["inner", "outer"]);
+  });
+
+  it("should refuse a database call that is still running when the work has ended", async () => {
+    let late: Promise<unknown> = Promise.resolve();
+
+    await runner(async () => {
+      await add("inside");
+      late = new Promise(resolve => setTimeout(resolve, 20)).then(() => add("late"));
+    });
+
+    await expect(late).rejects.toThrow("The transaction of this call has ended");
+    expect(await stored()).toEqual(["inside"]);
+  });
+
+  it("should roll back by hand through the pool once the database has rolled back", async () => {
+    const executor = new TransactionExecutor(runner)
+      .add({
+        execute: async () => {
+          await add("by hand");
+        },
+        rollback: async () => {
+          await orm.raw("DELETE FROM probe WHERE value = 'by hand'");
+        }
+      })
+      .add({
+        native: true,
+        execute: async () => {
+          await orm.raw("SELECT 1 / 0");
+        },
+        rollback: async () => {}
+      });
+
+    await expect(executor.execute()).rejects.toThrow("division by zero");
+
+    expect(await stored()).toEqual([]);
+  });
+
   it("should keep queries of the orm out of a transaction that no runner started", async () => {
     await orm.transaction(async session => {
       await session.raw("INSERT INTO probe (value) VALUES ('inside')");

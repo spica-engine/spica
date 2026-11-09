@@ -318,9 +318,9 @@ describe("TransactionExecutor", () => {
         "exec-db",
         "exec-file-1",
         "exec-file-2",
+        "abort",
         "rollback-file-2",
-        "rollback-file-1",
-        "abort"
+        "rollback-file-1"
       ]);
     });
 
@@ -332,7 +332,27 @@ describe("TransactionExecutor", () => {
 
       await expect(executor.execute()).rejects.toThrow("failed");
 
-      expect(events).toEqual(["begin", "exec-file", "exec-db", "rollback-file", "abort"]);
+      expect(events).toEqual(["begin", "exec-file", "exec-db", "abort", "rollback-file"]);
+    });
+
+    it("should roll back by hand only after the runner has ended its transaction", async () => {
+      let transactionOpen = false;
+      const seenOpen: boolean[] = [];
+      const tracking: TransactionRunner = async work => {
+        transactionOpen = true;
+        try {
+          return await work();
+        } finally {
+          transactionOpen = false;
+        }
+      };
+      const executor = new TransactionExecutor(tracking)
+        .add(step("file", {rollback: async () => void seenOpen.push(transactionOpen)}))
+        .add(step("broken", {execute: async () => Promise.reject(new Error("failed"))}));
+
+      await expect(executor.execute()).rejects.toThrow("failed");
+
+      expect(seenOpen).toEqual([false]);
     });
 
     it("should roll back the steps that are not native when the commit fails", async () => {

@@ -202,13 +202,31 @@ export class Session {
   }
 }
 
-const ambientTransaction = new AsyncLocalStorage<pg.PoolClient>();
+interface AmbientTransaction {
+  client: pg.PoolClient;
+  ended: boolean;
+}
+
+const ambientTransaction = new AsyncLocalStorage<AmbientTransaction>();
+
+let savepoints = 0;
 
 export class Orm extends Session {
   constructor(private readonly pool: pg.Pool) {
     super({
-      query: (text: string, values?: unknown[]) =>
-        (ambientTransaction.getStore() ?? pool).query(text, values)
+      query: (text: string, values?: unknown[]) => {
+        const ambient = ambientTransaction.getStore();
+        if (!ambient) {
+          return pool.query(text, values);
+        }
+        return ambient.ended
+          ? Promise.reject(
+              new Error(
+                "The transaction of this call has ended. A database call made inside a transaction has to be awaited before it ends."
+              )
+            )
+          : ambient.client.query(text, values);
+      }
     });
   }
 
@@ -217,16 +235,40 @@ export class Orm extends Session {
   }
 
   override transaction<T>(work: (session: Session) => Promise<T>): Promise<T> {
-    const joined = ambientTransaction.getStore();
-    return joined
-      ? work(new Session(joined))
+    const ambient = ambientTransaction.getStore();
+    return ambient
+      ? this.nested(ambient, work)
       : this.withClient(client => work(new Session(client)));
   }
 
   runInTransaction<T>(work: () => Promise<T>): Promise<T> {
-    return ambientTransaction.getStore()
-      ? work()
-      : this.withClient(client => ambientTransaction.run(client, work));
+    if (ambientTransaction.getStore()) {
+      return work();
+    }
+    return this.withClient(async client => {
+      const ambient = {client, ended: false};
+      try {
+        return await ambientTransaction.run(ambient, work);
+      } finally {
+        ambient.ended = true;
+      }
+    });
+  }
+
+  private async nested<T>(
+    {client}: AmbientTransaction,
+    work: (session: Session) => Promise<T>
+  ): Promise<T> {
+    const savepoint = `spica_savepoint_${++savepoints}`;
+    await this.db.query(`SAVEPOINT ${savepoint}`);
+    try {
+      const result = await work(new Session(client));
+      await this.db.query(`RELEASE SAVEPOINT ${savepoint}`);
+      return result;
+    } catch (error) {
+      await this.db.query(`ROLLBACK TO SAVEPOINT ${savepoint}`).catch(() => undefined);
+      throw error;
+    }
   }
 
   private async withClient<T>(work: (client: pg.PoolClient) => Promise<T>): Promise<T> {

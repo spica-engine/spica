@@ -32,35 +32,19 @@ export class TransactionExecutor {
   }
 
   async execute(): Promise<void> {
-    if (!this.runner) {
-      await this.executeSteps();
-      return;
-    }
-
     const succeededSteps: TransactionStep[] = [];
-    let finished = false;
 
-    try {
-      await this.runner(async () => {
-        await this.executeSteps(succeededSteps);
-        finished = true;
-      });
-    } catch (error) {
-      if (finished) {
-        await this.failWith(error, succeededSteps);
-      }
-      throw error;
-    }
-  }
-
-  private async executeSteps(succeededSteps: TransactionStep[] = []): Promise<void> {
-    for (const step of this.steps) {
-      try {
+    const run = async () => {
+      for (const step of this.steps) {
         await step.execute();
         succeededSteps.push(step);
-      } catch (error) {
-        await this.failWith(error, succeededSteps);
       }
+    };
+
+    try {
+      await (this.runner ? this.runner(run) : run());
+    } catch (error) {
+      await this.failWith(error, succeededSteps);
     }
   }
 
