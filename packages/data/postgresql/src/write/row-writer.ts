@@ -2,44 +2,26 @@ import {BadRequestException} from "@spica-server/bucket-common";
 import {isEncryptedData} from "@spica-server/core-encryption";
 import {quote, Session} from "@spica-server/data-postgresql-orm";
 import {Bucket} from "@spica-server/interface-bucket";
-import {BucketMetadata} from "../schema/index.js";
-import {RowSet} from "../shape/index.js";
+import {BucketMetadata, ColumnMetadata, SYSTEM_COLUMNS, TableMetadata} from "../schema/index.js";
+import {fieldKey, Row, RowSet} from "../shape/index.js";
 import {toColumnValue, valueAt} from "./values.js";
 
 type Properties = NonNullable<Bucket["properties"]>;
 
-const isPresent = (value: unknown) => {
-  if (value === undefined || value === null) {
-    return false;
-  }
-  if (Array.isArray(value)) {
-    return value.length > 0;
-  }
-  return typeof value != "object" || value instanceof Date || Object.keys(value).length > 0;
-};
+const MAX_PARAMETERS = 30_000;
 
 function encryptedPaths(properties: Properties = {}, prefix: string[] = []): string[][] {
   return Object.entries(properties).flatMap(([name, property]) => {
     const path = [...prefix, name];
-    if (property.type == "encrypted") {
+    const items = property.items as Properties[string] | undefined;
+    if (property.type == "encrypted" || items?.type == "encrypted") {
       return [path];
     }
-    return property.type == "object" && property.properties
-      ? encryptedPaths(property.properties as Properties, path)
+    const holder = property.type == "object" ? property : items;
+    return holder?.type == "object" && holder.properties
+      ? encryptedPaths(holder.properties as Properties, path)
       : [];
   });
-}
-
-function assertWritable(metadata: BucketMetadata, document: object) {
-  const unsupported = metadata.children
-    .map(table => table.path)
-    .find(path => isPresent(valueAt(document, path)));
-
-  if (unsupported) {
-    throw new BadRequestException(
-      `The property .${unsupported.join(".")} cannot be written to PostgreSQL yet.`
-    );
-  }
 }
 
 function encodeEncrypted(path: string[], value: unknown) {
@@ -62,39 +44,54 @@ function keyOf(metadata: BucketMetadata, document: object) {
   return key;
 }
 
+class Converter {
+  private readonly encrypted: Set<string>;
+
+  constructor(bucket: Bucket) {
+    this.encrypted = new Set(encryptedPaths(bucket.properties).map(path => path.join("\0")));
+  }
+
+  value(column: ColumnMetadata, value: unknown) {
+    const isEncrypted =
+      this.encrypted.has(column.path.join("\0")) && value !== undefined && value !== null;
+    return isEncrypted ? encodeEncrypted(column.path, value) : toColumnValue(column, value);
+  }
+}
+
 export async function insertRows(
   session: Session,
   bucket: Bucket,
   metadata: BucketMetadata,
   document: object
 ): Promise<RowSet> {
-  assertWritable(metadata, document);
+  const converter = new Converter(bucket);
   const key = keyOf(metadata, document);
-  const main = await insertMainRow(session, bucket, metadata, document, key);
+  const main = await insertMainRow(session, metadata, document, key, converter);
   await advanceSequence(session, metadata, key);
-  return {main, children: {}};
+
+  const parent = main[metadata.primaryKey.column];
+  const children: Record<string, Row[]> = {};
+  for (const table of metadata.children) {
+    const rows = childRows(table, document, parent, converter);
+    children[fieldKey(table.path)] = await insertMany(session, table, rows);
+  }
+  return {main, children};
 }
 
 async function insertMainRow(
   session: Session,
-  bucket: Bucket,
   metadata: BucketMetadata,
   document: object,
-  key: unknown
+  key: unknown,
+  converter: Converter
 ) {
   const table = metadata.main;
-  const encrypted = new Set(encryptedPaths(bucket.properties).map(path => path.join("\0")));
   const written = table.columns
     .filter(column => column.name != metadata.primaryKey.column || key !== undefined)
-    .map(column => {
-      const value = valueAt(document, column.path);
-      const isEncrypted =
-        encrypted.has(column.path.join("\0")) && value !== undefined && value !== null;
-      return {
-        name: column.name,
-        value: isEncrypted ? encodeEncrypted(column.path, value) : toColumnValue(column, value)
-      };
-    });
+    .map(column => ({
+      name: column.name,
+      value: converter.value(column, valueAt(document, column.path))
+    }));
 
   const names = written.map(({name}) => quote(name)).join(", ");
   const placeholders = written.map((_, index) => `$${index + 1}`).join(", ");
@@ -107,6 +104,66 @@ async function insertMainRow(
     written.map(({value}) => value)
   );
   return rows[0];
+}
+
+function childRows(
+  table: TableMetadata,
+  document: object,
+  parent: unknown,
+  converter: Converter
+): Row[] {
+  const value = valueAt(document, table.path);
+  if (value === undefined || value === null) {
+    return [];
+  }
+
+  if (table.keyColumns.includes(SYSTEM_COLUMNS.locale)) {
+    const valueColumn = table.columns.find(column => column.name == SYSTEM_COLUMNS.value)!;
+    return Object.entries(value as Record<string, unknown>)
+      .filter(([, translated]) => translated !== undefined && translated !== null)
+      .map(([locale, translated]) => ({
+        [SYSTEM_COLUMNS.parent]: parent,
+        [SYSTEM_COLUMNS.locale]: locale,
+        [SYSTEM_COLUMNS.value]: converter.value(valueColumn, translated)
+      }));
+  }
+
+  return (value as unknown[]).map((item, position) => {
+    const row: Row = {[SYSTEM_COLUMNS.parent]: parent, [SYSTEM_COLUMNS.position]: position};
+    for (const column of table.columns) {
+      if (column.name == SYSTEM_COLUMNS.parent || column.name == SYSTEM_COLUMNS.position) {
+        continue;
+      }
+      const holdsItem = column.name == SYSTEM_COLUMNS.value || column.name == SYSTEM_COLUMNS.target;
+      row[column.name] = converter.value(
+        column,
+        holdsItem ? item : valueAt(item, column.path.slice(table.path.length))
+      );
+    }
+    return row;
+  });
+}
+
+async function insertMany(session: Session, table: TableMetadata, rows: Row[]): Promise<Row[]> {
+  if (!rows.length) {
+    return [];
+  }
+  const names = Object.keys(rows[0]);
+  const perStatement = Math.max(1, Math.floor(MAX_PARAMETERS / names.length));
+  const inserted: Row[] = [];
+
+  for (let start = 0; start < rows.length; start += perStatement) {
+    const batch = rows.slice(start, start + perStatement);
+    const values = batch.map(
+      (_, row) => `(${names.map((_, column) => `$${row * names.length + column + 1}`).join(", ")})`
+    );
+    const result = await session.raw(
+      `INSERT INTO ${quote(table.name)} (${names.map(quote).join(", ")}) VALUES ${values.join(", ")} RETURNING *`,
+      batch.flatMap(row => names.map(name => row[name]))
+    );
+    inserted.push(...result.rows);
+  }
+  return inserted;
 }
 
 async function advanceSequence(session: Session, metadata: BucketMetadata, key: unknown) {

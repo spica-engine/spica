@@ -7,7 +7,7 @@ import {BUCKET_REPOSITORY, BUCKET_SCHEMA_MANAGER} from "@spica-server/interface-
 import {BUCKET_WRITE} from "@spica-server/interface-bucket-common";
 import {PG_POOL} from "@spica-server/interface-data";
 import pg from "pg";
-import {mainTableName} from "@spica-server/data-postgresql";
+import {fieldTableName, mainTableName} from "@spica-server/data-postgresql";
 
 const uuid = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, "0")}`;
 
@@ -235,31 +235,142 @@ describe("PostgreSQL bucket write: insert", () => {
     });
   });
 
-  describe("values that are not written yet", () => {
-    it.each([
-      ["a list", {tags: {type: "array", items: {type: "string"}}}, {tags: ["a"]}, ".tags"],
-      [
-        "a translation",
-        {label: {type: "string", options: {translate: true}}},
-        {label: {en_US: "a"}},
-        ".label"
-      ]
-    ])("should refuse %s and write nothing", async (_name, properties, document, path) => {
-      const bucket = await createBucket({title: {type: "string"}, ...properties});
+  describe("child tables", () => {
+    const rowsOf = async (bucket: any, path: string, order = "1, 2") =>
+      (
+        await pool.query(
+          `SELECT * FROM "${fieldTableName(String(bucket._id), path.split("."))}" ORDER BY ${order}`
+        )
+      ).rows;
 
-      await expect(insert(bucket, {title: "a", ...document})).rejects.toMatchObject({
-        status: 400,
-        message: `The property ${path} cannot be written to PostgreSQL yet.`
-      });
-      expect(await rows(bucket)).toEqual([]);
+    it("should write the items of a list in order, one row each", async () => {
+      const bucket = await createBucket({tags: {type: "array", items: {type: "string"}}});
+
+      const saved = await insert(bucket, {tags: ["b", "a", "b"]});
+
+      expect(
+        (await rowsOf(bucket, "tags")).map(row => [row._parent, row._position, row._value])
+      ).toEqual([
+        [saved.id, 0, "b"],
+        [saved.id, 1, "a"],
+        [saved.id, 2, "b"]
+      ]);
     });
 
-    it("should accept an empty list", async () => {
-      const bucket = await createBucket({tags: {type: "array", items: {type: "string"}}});
+    it("should write the fields of the items of a list of objects into columns", async () => {
+      const bucket = await createBucket({
+        lines: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              sku: {type: "string"},
+              size: {type: "object", properties: {w: {type: "number"}}}
+            }
+          }
+        }
+      });
+
+      await insert(bucket, {lines: [{sku: "a", size: {w: 1}}, {sku: "b"}]});
+
+      expect(
+        (await rowsOf(bucket, "lines")).map(row => [row._position, row.sku, row.size__w])
+      ).toEqual([
+        [0, "a", 1],
+        [1, "b", null]
+      ]);
+    });
+
+    it("should write one row for each language of a translated property", async () => {
+      const bucket = await createBucket({label: {type: "string", options: {translate: true}}});
+
+      await insert(bucket, {label: {en_US: "hello", tr_TR: "merhaba", de_DE: null}});
+
+      expect(
+        (await rowsOf(bucket, "label", "_locale")).map(row => [row._locale, row._value])
+      ).toEqual([
+        ["en_US", "hello"],
+        ["tr_TR", "merhaba"]
+      ]);
+    });
+
+    it("should write the links of a one to many relation in order", async () => {
+      const authors = await createBucket({name: {type: "string"}});
+      const ann = (await insert(authors, {name: "ann"})).id;
+      const bob = (await insert(authors, {name: "bob"})).id;
+      const posts = await createBucket({
+        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"}
+      });
+
+      const saved = await insert(posts, {editors: [bob, ann]});
+
+      expect(saved.editors).toEqual([bob, ann]);
+      expect((await rowsOf(posts, "editors")).map(row => [row._position, row._target])).toEqual([
+        [0, bob],
+        [1, ann]
+      ]);
+    });
+
+    it("should write a list that is inside an object", async () => {
+      const bucket = await createBucket({
+        meta: {type: "object", properties: {tags: {type: "array", items: {type: "string"}}}}
+      });
+
+      const saved = await insert(bucket, {meta: {tags: ["x", "y"]}});
+
+      expect(saved.meta.tags).toEqual(["x", "y"]);
+      expect(await rowsOf(bucket, "meta.tags")).toHaveLength(2);
+    });
+
+    it("should write nothing for an empty or missing list", async () => {
+      const bucket = await createBucket({
+        tags: {type: "array", items: {type: "string"}},
+        more: {type: "array", items: {type: "string"}}
+      });
 
       const saved = await insert(bucket, {tags: []});
 
       expect(saved.tags).toEqual([]);
+      expect(await rowsOf(bucket, "tags")).toEqual([]);
+      expect(await rowsOf(bucket, "more")).toEqual([]);
+    });
+
+    it("should write a list that is too long for one statement", async () => {
+      const bucket = await createBucket({scores: {type: "array", items: {type: "integer"}}});
+      const scores = Array.from({length: 40_000}, (_, index) => index);
+
+      const saved = await insert(bucket, {scores});
+
+      expect(saved.scores).toHaveLength(40_000);
+      expect(saved.scores.slice(0, 3)).toEqual([0, 1, 2]);
+    });
+
+    it("should keep the encrypted items of a list as text", async () => {
+      const bucket = await createBucket({codes: {type: "array", items: {type: "encrypted"}}});
+      const code = encrypt("1234", "encryption-secret", "hash-secret");
+
+      const saved = await insert(bucket, {codes: [code]});
+
+      expect(saved.codes).toEqual([
+        {encrypted: code.encrypted, iv: code.iv, authTag: code.authTag}
+      ]);
+      expect(JSON.parse((await rowsOf(bucket, "codes"))[0]._value).encrypted).toBe(code.encrypted);
+    });
+
+    it("should write nothing when a row of a child table is refused", async () => {
+      const authors = await createBucket({name: {type: "string"}});
+      const posts = await createBucket({
+        title: {type: "string"},
+        tags: {type: "array", items: {type: "string"}},
+        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"}
+      });
+
+      await expect(
+        insert(posts, {title: "p", tags: ["a"], editors: [uuid(404)]})
+      ).rejects.toThrow();
+
+      expect(await rows(posts)).toEqual([]);
+      expect(await rowsOf(posts, "tags")).toEqual([]);
     });
   });
 });
