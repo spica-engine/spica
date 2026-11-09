@@ -22,6 +22,7 @@ export interface IdTypes {
    * resource must still parse with forCollection or forBucket.
    */
   unscoped(): IdType;
+  keyField(bucket: {primary?: string}): string;
 }
 
 export const ID_TYPES = Symbol.for("SPICA_DATA_ID_TYPES");

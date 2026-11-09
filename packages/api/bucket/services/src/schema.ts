@@ -1,6 +1,7 @@
 import {JSONSchema7, JSONSchema7Definition} from "json-schema";
 import {BadRequestException, Logger} from "@nestjs/common";
 import {Bucket, BucketPreferences, ExtendedJSONSchema7Type} from "@spica-server/interface-bucket";
+import {ids} from "@spica-server/data";
 
 const logger = new Logger("BucketSchema");
 
@@ -31,6 +32,16 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
       case "objectid":
         schema.type = "string";
         schema.format = "objectid";
+        break;
+
+      case "uuid":
+        schema.type = "string";
+        schema.format = "uuid";
+        break;
+
+      case "bigint":
+        schema.type = "string";
+        schema.pattern = "^-?\\d+$";
         break;
 
       case "storage":
@@ -129,7 +140,9 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
     return schema;
   }
 
-  bucket = addIdField(bucket);
+  if (ids().keyField(bucket) == "_id") {
+    bucket = addIdField(bucket);
+  }
 
   const schema = map({
     $schema: "http://json-schema.org/draft-07/schema#",

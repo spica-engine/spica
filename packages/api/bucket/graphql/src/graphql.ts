@@ -32,7 +32,9 @@ import {
   findLocale,
   insertActivity,
   decryptDocumentFields,
-  setContentLanguage
+  documentKey,
+  setContentLanguage,
+  withDocumentKey
 } from "@spica-server/bucket-common";
 import {
   BUCKET_QUERY,
@@ -374,7 +376,7 @@ export class GraphqlController implements OnModuleInit {
           context,
           Action.POST,
           bucket._id.toString(),
-          insertedDocument._id,
+          documentKey(bucket, insertedDocument),
           this.activity
         );
       }
@@ -388,7 +390,7 @@ export class GraphqlController implements OnModuleInit {
           user: context.user,
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          documentId: insertedDocument._id,
+          documentId: documentKey(bucket, insertedDocument),
           applyAcl: this.shouldApplyAcl(context)
         },
         this.bucketContext()
@@ -401,7 +403,7 @@ export class GraphqlController implements OnModuleInit {
             bucket: bucket._id.toString(),
             type: "insert"
           },
-          document._id.toString(),
+          documentKey(bucket, document).toString(),
           undefined,
           document
         );
@@ -431,7 +433,7 @@ export class GraphqlController implements OnModuleInit {
       const previousDocument = await this.writes
         .replace(
           bucket,
-          {...input, _id: documentId},
+          withDocumentKey(bucket, input, documentId),
           {applyAcl: this.shouldApplyAcl(context), user: context.user},
           this.bucketContext()
         )
@@ -441,7 +443,7 @@ export class GraphqlController implements OnModuleInit {
         return;
       }
 
-      const currentDocument = {...input, _id: documentId};
+      const currentDocument = withDocumentKey(bucket, input, documentId);
 
       if (this.activity) {
         const _ = insertActivity(
@@ -523,7 +525,7 @@ export class GraphqlController implements OnModuleInit {
       const currentDocument = await this.writes
         .patch(
           bucket,
-          {...patchedDocument, _id: documentId},
+          withDocumentKey(bucket, patchedDocument, documentId),
           input,
           {applyAcl: this.shouldApplyAcl(context), user: context.user, returnDocument: "after"},
           this.bucketContext()
@@ -557,7 +559,7 @@ export class GraphqlController implements OnModuleInit {
           user: context.user,
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          documentId: currentDocument._id,
+          documentId: documentKey(bucket, currentDocument),
           applyAcl: this.shouldApplyAcl(context)
         },
         this.bucketContext()

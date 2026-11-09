@@ -205,4 +205,8 @@ export class PostgresIdTypes implements IdTypes {
   unscoped(): IdType {
     return this.uuid;
   }
+
+  keyField(bucket: {primary?: string}): string {
+    return bucket.primary as string;
+  }
 }

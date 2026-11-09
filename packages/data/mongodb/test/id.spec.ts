@@ -137,4 +137,8 @@ describe("MongoIdTypes", () => {
   it("should use ObjectId for ids whose resource is not known", () => {
     expect(idTypes.unscoped()).toBe(idTypes.forCollection("identity"));
   });
+
+  it("should key bucket documents by _id whatever the primary field is", () => {
+    expect(idTypes.keyField({primary: "title"})).toBe("_id");
+  });
 });
