@@ -17,7 +17,7 @@ interface Bucket {
   [key: string]: unknown;
 }
 
-const IGNORED_FIELDS = ["_id"];
+const IGNORED_FIELDS = ["_id", "order"];
 const UNORDERED_PATHS = ["required", "properties.**.required", "indexes"];
 
 export const bucketModule: ResourceModule<Bucket> = {

@@ -643,11 +643,10 @@ describe("functionModule.renderDetail key order", () => {
   });
 
   it("shows only the really changed key when key order also differs", () => {
-    const local = resource({name: "f", category: "S2", warmWorkers: 1, concurrencyPerWorker: 20});
+    const local = resource({name: "f", timeout: 60, warmWorkers: 1, concurrencyPerWorker: 20});
     const remote = resource({
       name: "f",
-      category: "S2",
-      order: 39,
+      timeout: 30,
       concurrencyPerWorker: 20,
       warmWorkers: 1
     });
@@ -657,7 +656,7 @@ describe("functionModule.renderDetail key order", () => {
       .schema.split("\n")
       .filter(line => /^[+-]/.test(line) && !/^(\+\+\+|---)/.test(line));
 
-    expect(changedLines).toEqual(["-order: 39"]);
+    expect(changedLines).toEqual(["-timeout: 30", "+timeout: 60"]);
   });
 
   it("sorts keys of nested objects as well", () => {
@@ -665,6 +664,35 @@ describe("functionModule.renderDetail key order", () => {
     const remote = resource({name: "f", triggers: {h: {active: true, type: "http"}}});
 
     expect(functionModule.renderDetail(local, remote)).not.toHaveProperty("schema");
+  });
+});
+
+describe("functionModule order field", () => {
+  const fn = (schema: Record<string, unknown>) => ({schema, index: "", dependencies: {}});
+  const resource = (schema: Record<string, unknown>) => ({slug: "f", id: "1", data: fn(schema)});
+
+  it("does not report a function whose only difference is order", () => {
+    expect(functionModule.diffFields(fn({name: "f", order: 39}), fn({name: "f"}))).toEqual([]);
+    expect(functionModule.diffFields(fn({name: "f", order: 1}), fn({name: "f", order: 2}))).toEqual(
+      []
+    );
+  });
+
+  it("still reports the other fields of a function whose order differs", () => {
+    expect(
+      functionModule.diffFields(
+        fn({name: "f", order: 1, timeout: 60}),
+        fn({name: "f", order: 2, timeout: 30})
+      )
+    ).toEqual(["schema"]);
+  });
+
+  it("does not show order in the schema detail", () => {
+    const detail = functionModule.renderDetail(
+      resource({name: "f", timeout: 60}),
+      resource({name: "f", timeout: 30, order: 39})
+    );
+    expect(detail.schema).not.toContain("order");
   });
 });
 

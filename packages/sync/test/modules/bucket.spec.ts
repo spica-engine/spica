@@ -178,6 +178,29 @@ describe("bucketModule.renderDetail key order", () => {
   });
 });
 
+describe("bucketModule order field", () => {
+  it("does not report a bucket whose only difference is order", () => {
+    expect(bucketModule.diffFields({title: "b", order: 39} as any, {title: "b"} as any)).toEqual(
+      []
+    );
+    expect(
+      bucketModule.diffFields({title: "b", order: 1} as any, {title: "b", order: 2} as any)
+    ).toEqual([]);
+  });
+
+  it("still reports the other fields of a bucket whose order differs", () => {
+    const local = {title: "b", order: 1, description: "new"} as any;
+    const remote = {title: "b", order: 2, description: "old"} as any;
+    expect(bucketModule.diffFields(local, remote)).toEqual(["description"]);
+  });
+
+  it("does not show order in the schema detail", () => {
+    const local = {slug: "b", id: "1", data: {title: "b", description: "new"}} as any;
+    const remote = {slug: "b", id: "1", data: {title: "b", description: "old", order: 39}} as any;
+    expect(bucketModule.renderDetail(local, remote).schema).not.toContain("order");
+  });
+});
+
 describe("bucketModule.diffFields array order", () => {
   it("ignores a reorder of required and indexes", () => {
     const local = {

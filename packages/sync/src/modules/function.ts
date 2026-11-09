@@ -43,7 +43,7 @@ export interface FunctionData {
   dependencies: Record<string, string>;
 }
 
-const SCHEMA_IGNORED = ["_id", "env_vars", "secrets"];
+const SCHEMA_IGNORED = ["_id", "env_vars", "secrets", "order"];
 const SCHEMA_UNORDERED = ["triggers.*.options.authenticate"];
 
 function indexFilename(language?: string): string {
