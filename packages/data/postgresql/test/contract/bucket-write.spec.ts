@@ -71,6 +71,12 @@ function writerOver(engine: Parameters<Parameters<typeof contractSuite>[1]>[0], 
         ...extra
       });
     },
+    delete(bucket: any, documentId: unknown, options: object = {}, extra: object = {}) {
+      return writes.delete(bucket, documentId as any, options, {
+        resolveSchema: id => known.get(String(id)),
+        ...extra
+      });
+    },
     insert(bucket: any, document: object, options: object = {}, extra: object = {}) {
       const context: BucketInsertContext = {
         resolveSchema: id => known.get(String(id)),
@@ -662,6 +668,115 @@ contractSuite("bucket write: replace and patch", engine => {
       ).rejects.toMatchObject({status: 401});
 
       expect((await writer.store.read(guarded, key)).title).toBe("allowed");
+    });
+  });
+});
+
+contractSuite("bucket write: delete", engine => {
+  const writer = writerOver(engine);
+  const user = {_id: "u"};
+  const secrets = {hashSecret: "hash-secret", encryptionSecret: "encryption-secret"};
+  let bucket: any;
+
+  beforeAll(async () => {
+    bucket = await writer.bucket({
+      title: {type: "string"},
+      tags: {type: "array", items: {type: "string"}},
+      label: {type: "string", options: {translate: true}},
+      secret: {type: "encrypted"}
+    });
+  });
+
+  const stored = async (title: string, extra: object = {}) => {
+    const saved = await writer.insert(bucket, {title, tags: ["a", "b"], ...extra});
+    return saved[writer.keyField];
+  };
+
+  it("should remove the document and answer with it", async () => {
+    const key = await stored("gone");
+
+    const deleted = plain(await writer.delete(bucket, String(key)));
+
+    expect(deleted).toMatchObject({title: "gone", tags: ["a", "b"]});
+    expect(deleted[writer.keyField]).toBe(String(key));
+    expect((await writer.store.find(bucket)).some(found => found.title == "gone")).toBe(false);
+  });
+
+  it("should leave the other documents as they are", async () => {
+    const key = await stored("delete me");
+    const other = await stored("keep me", {label: {en_US: "hello"}});
+
+    await writer.delete(bucket, String(key));
+
+    expect(await writer.store.read(bucket, other)).toMatchObject({
+      title: "keep me",
+      tags: ["a", "b"],
+      label: {en_US: "hello"}
+    });
+  });
+
+  it("should answer undefined for a document that does not exist or no key", async () => {
+    expect(await writer.delete(bucket, String(writer.newKey()))).toBeUndefined();
+    expect(await writer.delete(bucket, null)).toBeUndefined();
+    expect(await writer.delete(bucket, undefined)).toBeUndefined();
+  });
+
+  it("should answer the encrypted values decrypted when the encryption secret is known", async () => {
+    const key = await stored("secret", {
+      secret: encrypt("hello", secrets.encryptionSecret, secrets.hashSecret)
+    });
+
+    const deleted = await writer.delete(bucket, String(key), {}, secrets);
+
+    expect(deleted.secret).toBe("hello");
+  });
+
+  describe("the write rule", () => {
+    let guarded: any;
+
+    beforeAll(async () => {
+      guarded = await writer.bucket(
+        {title: {type: "string"}},
+        {acl: {read: "true==true", write: "document.title == 'removable'"}}
+      );
+    });
+
+    it("should refuse to delete a document the rule denies and keep it", async () => {
+      const key = (await writer.insert(guarded, {title: "protected"}))[writer.keyField];
+
+      await expect(
+        writer.delete(guarded, String(key), {applyAcl: true, user})
+      ).rejects.toMatchObject({status: 401});
+
+      expect((await writer.store.read(guarded, key)).title).toBe("protected");
+    });
+
+    it("should delete a document the rule allows", async () => {
+      const key = (await writer.insert(guarded, {title: "removable"}))[writer.keyField];
+
+      const deleted = await writer.delete(guarded, String(key), {applyAcl: true, user});
+
+      expect(deleted.title).toBe("removable");
+    });
+
+    it("should evaluate the rule on the related document of the stored one", async () => {
+      const authors = await writer.bucket({name: {type: "string"}});
+      const ann = (await writer.insert(authors, {name: "ann"}))[writer.keyField];
+      const bob = (await writer.insert(authors, {name: "bob"}))[writer.keyField];
+      const posts = await writer.bucket(
+        {
+          title: {type: "string"},
+          author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}
+        },
+        {acl: {read: "true==true", write: "document.author.name == 'ann'"}}
+      );
+      const byBob = (await writer.insert(posts, {title: "b", author: bob}))[writer.keyField];
+      const byAnn = (await writer.insert(posts, {title: "a", author: ann}))[writer.keyField];
+
+      await expect(
+        writer.delete(posts, String(byBob), {applyAcl: true, user})
+      ).rejects.toMatchObject({status: 401});
+      expect((await writer.delete(posts, String(byAnn), {applyAcl: true, user})).title).toBe("a");
     });
   });
 });

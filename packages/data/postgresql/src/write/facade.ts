@@ -27,7 +27,7 @@ import {allBucketTables, countDocuments} from "../repositories/bucket/counts.js"
 import {BucketMetadata, describeBucket, resolveRelationTargets} from "../schema/index.js";
 import {RowSet} from "../shape/index.js";
 import {insertRows} from "./row-writer.js";
-import {lockRowSet, patchRows, replaceRows} from "./row-updater.js";
+import {deleteRow, lockRowSet, patchRows, replaceRows} from "./row-updater.js";
 
 @Injectable()
 export class PostgresBucketWriteFacade implements BucketWriteFacade {
@@ -82,8 +82,32 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
     );
   }
 
-  async delete(): Promise<BucketDocument | undefined> {
-    throw new Error("Deleting documents is not supported on PostgreSQL yet.");
+  async delete(
+    bucket: Bucket,
+    documentId: string | Id,
+    options: BucketWriteOptions,
+    context: BucketWriteContext
+  ): Promise<BucketDocument | undefined> {
+    if (documentId === null || documentId === undefined) {
+      return undefined;
+    }
+
+    const metadata = await this.describe(bucket, context);
+    const key = keyIdType(metadata.primaryKey.type).parse(documentId);
+
+    const deleted = await this.orm.transaction(async session => {
+      const previous = await lockRowSet(session, metadata, key);
+      if (previous && options.applyAcl) {
+        const document = await this.shapeRows(bucket, previous);
+        await checkWriteRule({bucket, document, auth: options.user, context, query: this.query});
+      }
+      if (previous) {
+        await deleteRow(session, metadata, previous);
+      }
+      return previous;
+    });
+
+    return deleted && this.shape(bucket, metadata, deleted, context);
   }
 
   private async update(
@@ -153,16 +177,20 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
     }
   }
 
+  private shapeRows(bucket: Bucket, rowSet: RowSet): Promise<BucketDocument> {
+    return this.shaper.shape<RowSet, BucketDocument>(
+      {kind: "bucket", bucketId: String(bucket._id)},
+      rowSet
+    );
+  }
+
   private async shape(
     bucket: Bucket,
     metadata: BucketMetadata,
     rowSet: RowSet,
     context: BucketWriteContext
   ): Promise<BucketDocument> {
-    const saved = await this.shaper.shape<RowSet, BucketDocument>(
-      {kind: "bucket", bucketId: String(bucket._id)},
-      rowSet
-    );
+    const saved = await this.shapeRows(bucket, rowSet);
     return context.encryptionSecret
       ? decryptDocumentFields(
           saved,
