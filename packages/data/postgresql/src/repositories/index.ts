@@ -22,8 +22,13 @@ import {PostgresDashboardRepository} from "./dashboard/dashboard.js";
 import {PostgresEnvVarRepository} from "./env_var/env-var.js";
 import {PostgresSecretRepository} from "./secret/secret.js";
 import {PostgresStatusRepository} from "./status/status.js";
-import {BUCKET_REPOSITORY, BUCKET_SCHEMA_MANAGER} from "@spica-server/interface-bucket";
+import {
+  BUCKET_DATA_REPOSITORY,
+  BUCKET_REPOSITORY,
+  BUCKET_SCHEMA_MANAGER
+} from "@spica-server/interface-bucket";
 import {HISTORY_REPOSITORY} from "@spica-server/interface-bucket-history";
+import {PostgresBucketDataRepository} from "./bucket/bucket-data.js";
 import {PostgresBucketRepository} from "./bucket/bucket.js";
 import {PostgresHistoryRepository} from "./bucket/history.js";
 import {PostgresBucketSchemaManager} from "./bucket/schema-manager.js";
@@ -68,6 +73,7 @@ export const repositoryClasses: RepositoryClasses = new Map<symbol, RepositoryCl
   [STATUS_REPOSITORY, PostgresStatusRepository],
   [BUCKET_REPOSITORY, PostgresBucketRepository],
   [BUCKET_SCHEMA_MANAGER, PostgresBucketSchemaManager],
+  [BUCKET_DATA_REPOSITORY, PostgresBucketDataRepository],
   [HISTORY_REPOSITORY, PostgresHistoryRepository],
   [ACTIVITY_REPOSITORY, PostgresActivityRepository],
   [COMMAND_REPOSITORY, PostgresCommandRepository],

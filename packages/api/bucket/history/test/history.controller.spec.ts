@@ -13,9 +13,7 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {POLICY_RESOLVER} from "@spica-server/interface-passport-guard";
 
-mongoOnly(
-  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
-);
+mongoOnly("bucket data writes on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)");
 
 describe("History Acceptance", () => {
   let app: INestApplication;

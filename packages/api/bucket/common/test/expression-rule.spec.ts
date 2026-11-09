@@ -10,7 +10,7 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 mongoOnly(
-  "bucket rules and filters over bucket data on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+  "bucket rules and filters over bucket data on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)"
 );
 
 describe("Expression Read Rule Type Construction", () => {

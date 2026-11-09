@@ -50,7 +50,7 @@ const preferences = {
 export const bucketStoreProviders = (engine: ContractEngine): Provider[] => [
   provideRepository(BUCKET_REPOSITORY),
   provideRepository(BUCKET_SCHEMA_MANAGER),
-  ...(engine.name == "mongodb" ? [provideRepository(BUCKET_DATA_REPOSITORY)] : [])
+  provideRepository(BUCKET_DATA_REPOSITORY)
 ];
 
 export function createBucketStore(engine: ContractEngine, module: TestingModule): BucketStore {

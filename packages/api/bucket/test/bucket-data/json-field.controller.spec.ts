@@ -9,9 +9,7 @@ import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
-mongoOnly(
-  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
-);
+mongoOnly("bucket data writes on PostgreSQL, Part 9 (BucketModule needs BUCKET_WRITE)");
 
 describe("BucketDataController json field", () => {
   let app: INestApplication;
