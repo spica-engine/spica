@@ -31,6 +31,7 @@ export interface ReadOptions {
 export interface BucketOptions {
   acl?: {read: string; write: string};
   documentSettings?: {countLimit: number; limitExceedBehaviour: "prevent" | "remove"};
+  indexes?: {definition: Record<string, number>; options?: Record<string, unknown>}[];
 }
 
 export interface BucketStore {
@@ -84,6 +85,7 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
           order: 0,
           acl: options.acl ?? {read: "true==true", write: "true==true"},
           ...(options.documentSettings && {documentSettings: options.documentSettings}),
+          ...(options.indexes && {indexes: options.indexes}),
           properties: mongo
             ? properties
             : {id: {type: "uuid", options: {generated: true}}, ...properties}

@@ -26,6 +26,7 @@ import {ORM} from "../orm.js";
 import {allBucketTables, countDocuments} from "../repositories/bucket/counts.js";
 import {BucketMetadata, describeBucket, resolveRelationTargets} from "../schema/index.js";
 import {RowSet} from "../shape/index.js";
+import {translateWriteError, WriteOperation} from "./errors.js";
 import {insertRows} from "./row-writer.js";
 import {deleteRow, lockRowSet, patchRows, replaceRows} from "./row-updater.js";
 
@@ -51,7 +52,7 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
     const metadata = await this.describe(bucket, context);
     await this.makeRoom(bucket, metadata, context);
 
-    const rowSet = await this.orm.transaction(async session => {
+    const rowSet = await this.transact(metadata, "write", async session => {
       await this.assertWithinLimits(session, bucket, metadata);
       return insertRows(session, bucket, metadata, document);
     });
@@ -95,7 +96,7 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
     const metadata = await this.describe(bucket, context);
     const key = keyIdType(metadata.primaryKey.type).parse(documentId);
 
-    const deleted = await this.orm.transaction(async session => {
+    const deleted = await this.transact(metadata, "delete", async session => {
       const previous = await lockRowSet(session, metadata, key);
       if (previous && options.applyAcl) {
         const document = await this.shapeRows(bucket, previous);
@@ -124,7 +125,7 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
     const metadata = await this.describe(bucket, context);
     const key = document[metadata.primaryKey.field];
 
-    const changed = await this.orm.transaction(async session => {
+    const changed = await this.transact(metadata, "write", async session => {
       const previous = await lockRowSet(session, metadata, key);
       return previous && {previous, current: await write(session, metadata, previous)};
     });
@@ -134,6 +135,18 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
     }
     const returned = options.returnDocument == "after" ? changed.current : changed.previous;
     return this.shape(bucket, metadata, returned, context);
+  }
+
+  private async transact<T>(
+    metadata: BucketMetadata,
+    operation: WriteOperation,
+    work: (session: Session) => Promise<T>
+  ): Promise<T> {
+    try {
+      return await this.orm.transaction(work);
+    } catch (error) {
+      throw translateWriteError(error, metadata, operation);
+    }
   }
 
   private async describe(bucket: Bucket, context: BucketWriteContext) {
