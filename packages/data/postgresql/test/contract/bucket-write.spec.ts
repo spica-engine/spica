@@ -136,6 +136,92 @@ contractSuite("bucket write: insert", engine => {
     });
   });
 
+  describe("lists, translations and links", () => {
+    const secrets = {hashSecret: "hash-secret", encryptionSecret: "encryption-secret"};
+    let authors: any;
+    let ann: string;
+    let bob: string;
+    let bucket: any;
+
+    beforeAll(async () => {
+      authors = await writer.bucket({name: {type: "string"}});
+      ann = plain(await writer.insert(authors, {name: "ann"}))[writer.keyField];
+      bob = plain(await writer.insert(authors, {name: "bob"}))[writer.keyField];
+      bucket = await writer.bucket({
+        title: {type: "string"},
+        tags: {type: "array", items: {type: "string"}},
+        scores: {type: "array", items: {type: "number"}},
+        lines: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              sku: {type: "string"},
+              qty: {type: "number"},
+              size: {type: "object", properties: {w: {type: "number"}, h: {type: "number"}}}
+            }
+          }
+        },
+        label: {type: "string", options: {translate: true}},
+        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"},
+        meta: {type: "object", properties: {tags: {type: "array", items: {type: "string"}}}},
+        codes: {type: "array", items: {type: "encrypted"}}
+      });
+    });
+
+    const document = () => ({
+      title: "all",
+      tags: ["b", "a"],
+      scores: [3, 1, 2],
+      lines: [
+        {sku: "x", qty: 2, size: {w: 1, h: 2}},
+        {sku: "y", qty: 5, size: {w: 3, h: 4}}
+      ],
+      label: {en_US: "hello", tr_TR: "merhaba"},
+      editors: [bob, ann],
+      meta: {tags: ["m", "n"]}
+    });
+
+    it("should be answered with every list, translation and link it was given", async () => {
+      const saved = plain(await writer.insert(bucket, document()));
+
+      expect(saved).toMatchObject(document());
+    });
+
+    it("should be read back as it was written", async () => {
+      const saved = await writer.insert(bucket, document());
+
+      const read = await writer.store.read(bucket, saved[writer.keyField]);
+
+      expect(read).toEqual(plain(saved));
+    });
+
+    it("should keep the order of the items of a list", async () => {
+      const saved = plain(await writer.insert(bucket, {...document(), scores: [9, 8, 7, 8]}));
+
+      expect(saved.scores).toEqual([9, 8, 7, 8]);
+    });
+
+    it("should answer an empty list as an empty list", async () => {
+      const saved = plain(await writer.insert(bucket, {title: "none", tags: []}));
+
+      expect(saved.tags).toEqual([]);
+    });
+
+    it("should decrypt the encrypted items of a list when the encryption secret is known", async () => {
+      const code = (value: string) => encrypt(value, secrets.encryptionSecret, secrets.hashSecret);
+
+      const saved = await writer.insert(
+        bucket,
+        {title: "codes", codes: [code("1234"), code("5678")]},
+        {},
+        secrets
+      );
+
+      expect(saved.codes).toEqual(["1234", "5678"]);
+    });
+  });
+
   describe("the count limit", () => {
     it("should refuse documents beyond it when documents are prevented", async () => {
       const bucket = await writer.bucket(

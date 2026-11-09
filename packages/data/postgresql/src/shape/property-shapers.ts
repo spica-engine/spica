@@ -151,6 +151,9 @@ const arrayShaper: PropertyShaper = {
       });
     }
     const valueType = table.columns.find(column => column.name == SYSTEM_COLUMNS.value)?.type;
+    if (items.type == "encrypted") {
+      return rows.map(row => JSON.parse(row[SYSTEM_COLUMNS.value] as string));
+    }
     return rows.map(row => normalize(row[SYSTEM_COLUMNS.value], valueType));
   }
 };
