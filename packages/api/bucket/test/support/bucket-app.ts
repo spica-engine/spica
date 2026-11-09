@@ -42,6 +42,55 @@ export function keyed(engine: ContractEngine, properties: Record<string, unknown
     : {properties};
 }
 
+const KEY_PROPERTY = {id: {type: "uuid", options: {generated: true}}};
+
+function keyedDefinition(body: any) {
+  if (!body || typeof body != "object" || !body.properties || body.properties.id) {
+    return body;
+  }
+  return {...body, primary: "id", properties: {...KEY_PROPERTY, ...body.properties}};
+}
+
+const METHODS = ["get", "post", "put", "patch", "delete"];
+
+function adaptingRequests(req: Request, omitNulls: boolean): Request {
+  const adapt = (path: string, body: unknown) =>
+    /^\/?bucket(\/[^/]+)?$/.test(path.split("?")[0]) ? keyedDefinition(body) : body;
+
+  return new Proxy(req, {
+    get(target, property) {
+      const value = target[property];
+      if (typeof value != "function") {
+        return value;
+      }
+      if (!METHODS.includes(String(property))) {
+        return value.bind(target);
+      }
+      return async (path: string, ...rest: unknown[]) => {
+        const keyed = property == "post" || property == "put";
+        const args = keyed ? [adapt(path, rest[0]), ...rest.slice(1)] : rest;
+        const response = await value.call(target, path, ...args);
+        return omitNulls ? {...response, body: withoutNulls(response.body)} : response;
+      };
+    }
+  });
+}
+
+export function withoutBlanks<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map(withoutBlanks) as T;
+  }
+  if (value && typeof value == "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, field]) => field !== null && field !== undefined)
+        .filter(([, field]) => !Array.isArray(field) || field.length)
+        .map(([name, field]) => [name, withoutBlanks(field)])
+    ) as T;
+  }
+  return value;
+}
+
 export interface BucketApp {
   app: INestApplication;
   req: Request;
@@ -71,6 +120,7 @@ export async function startBucketApp(
     passport?: Parameters<typeof PassportTestingModule.initialize>[0];
     imports?: any[];
     rejectOnError?: boolean;
+    omitNulls?: boolean;
   } = {}
 ): Promise<BucketApp> {
   const postgres = engine.name == "postgresql";
@@ -91,10 +141,11 @@ export async function startBucketApp(
   }).compile();
 
   const app = module.createNestApplication();
-  const req = module.get(Request);
-  req.reject = extra.rejectOnError ?? true;
+  const request = module.get(Request);
+  const req = postgres ? adaptingRequests(request, extra.omitNulls ?? false) : request;
+  request.reject = extra.rejectOnError ?? true;
   app.use(Middlewares.MergePatchJsonParser(10));
-  await app.listen(req.socket);
+  await app.listen(request.socket);
 
   const definition = (properties: Record<string, unknown>, extra: object = {}) => ({
     title: "New Bucket",
