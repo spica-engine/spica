@@ -46,6 +46,8 @@
     "@nestjs/testing": "^10.4.22",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/database-testing": "workspace:*",
+    "@spica-server/interface-bucket": "workspace:*",
+    "@spica-server/interface-bucket-common": "workspace:*",
     "@spica-server/passport-testing": "workspace:*",
     "@types/json-schema": "^7.0.15"
   }

@@ -347,7 +347,7 @@ export function getDatabaseSchema(
           title: "Operation type",
           description: "Operation type that must be performed in the specified collection",
           type: "string",
-          enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+          enum: collectionNames.changeOperations().map(operation => operation.toUpperCase())
         }
       },
       additionalProperties: false

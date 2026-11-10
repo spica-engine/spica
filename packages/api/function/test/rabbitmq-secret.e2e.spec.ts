@@ -7,15 +7,11 @@ import amqp from "amqplib";
 import {GenericContainer, StartedTestContainer, Wait} from "testcontainers";
 import {FunctionModule} from "@spica-server/function";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {SchemaModule, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
-
-mongoOnly(
-  "needs RabbitMQ and FunctionModule, which subscribes to the change feed (Part 10); it exercises the function engine, not the database"
-);
 
 const RABBITMQ_USER = "spica";
 const RABBITMQ_PASSWORD = "spica-secret-password";
@@ -33,7 +29,7 @@ async function waitFor<T>(probe: () => Promise<T | undefined>, timeoutMs: number
   throw new Error(`Condition was not met in ${timeoutMs}ms`);
 }
 
-describe("RabbitMQ trigger with secret placeholders (e2e)", () => {
+contractSuite("RabbitMQ trigger with secret placeholders (e2e)", engine => {
   let container: StartedTestContainer;
   let port: number;
 
@@ -72,7 +68,7 @@ describe("RabbitMQ trigger with secret placeholders (e2e)", () => {
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),

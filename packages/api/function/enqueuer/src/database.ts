@@ -91,8 +91,14 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     };
 
     if (this.jobReducer) {
-      const {id, ...stored} = rawChange;
-      this.jobReducer.do({...stored, event_id: ev.id, _id: id}, enqueue);
+      this.jobReducer.do(
+        {
+          ...rawChange,
+          event_id: ev.id,
+          _id: `${rawChange.id}-${target.cwd}-${target.handler}`
+        },
+        enqueue
+      );
     } else {
       enqueue();
     }
@@ -112,9 +118,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
           this.logger.error(`Job ${event.id} does not exist!`);
           return;
         }
-        const {_id, ...stored} = job;
-        const newChange = {...stored, id: _id} as ChangeEvent;
-        return this.shift(newChange, event.target.toObject(), event.id);
+        return this.shift(job as unknown as ChangeEvent, event.target.toObject(), event.id);
       });
 
       shiftPromises.push(shift);

@@ -1,3 +1,5 @@
+import {ChangeOperation} from "./change-feed.js";
+
 export type RepositoryClass = new (...args: any[]) => unknown;
 
 export type RepositoryClasses = Map<symbol, RepositoryClass>;
@@ -18,7 +20,14 @@ export interface ProfilerQuery {
 }
 
 export interface CollectionNames {
+  /**
+   * The collections a database trigger can follow.
+   */
   list(): Promise<string[]>;
+  /**
+   * The operations the change feed reports for them.
+   */
+  changeOperations(): ChangeOperation[];
 }
 
 export const COLLECTION_NAMES = Symbol.for("SPICA_DATA_COLLECTION_NAMES");

@@ -3,7 +3,7 @@ import {Validator} from "@spica-server/core-schema";
 import {COLLECTION_NAMES, CollectionNames} from "@spica-server/interface-data";
 import {JSONSchema7} from "json-schema";
 
-export function getSchema(collections: string[]): JSONSchema7 {
+export function getSchema(collections: string[], operations: string[]): JSONSchema7 {
   return {
     $id: "http://spica.internal/webhook",
     type: "object",
@@ -54,7 +54,7 @@ export function getSchema(collections: string[]): JSONSchema7 {
               type: {
                 type: "string",
                 title: "Event type",
-                enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"],
+                enum: operations,
                 description: "Event type that must be performed in the specified collection"
               }
             }
@@ -79,7 +79,12 @@ export class SchemaResolver {
     if (uri == "http://spica.internal/webhook") {
       return this.collectionNames
         .list()
-        .then(names => getSchema(Array.from(new Set(names))))
+        .then(names =>
+          getSchema(
+            Array.from(new Set(names)),
+            this.collectionNames.changeOperations().map(operation => operation.toUpperCase())
+          )
+        )
         .then(schema => {
           // remove schema right after it's used.
           setImmediate(() => this.validator.removeSchema(schema.$id));

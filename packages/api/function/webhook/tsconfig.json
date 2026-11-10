@@ -30,6 +30,12 @@
       "path": "../../passport/testing"
     },
     {
+      "path": "../../../interface/bucket/common"
+    },
+    {
+      "path": "../../../interface/bucket"
+    },
+    {
       "path": "../../../database/testing"
     },
     {

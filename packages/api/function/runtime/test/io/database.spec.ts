@@ -7,7 +7,7 @@ import {MongoFunctionLogSink} from "@spica-server/data-mongodb";
 import {generateLog, getLoggerConsole} from "@spica-server/function-runtime-logger";
 import {LogLevels} from "@spica-server/interface-function-runtime";
 
-mongoOnly("database triggers and commands read the change feed, which PostgreSQL gets in Part 10");
+mongoOnly("it stubs the MongoDB collection that MongoFunctionLogSink writes to");
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));

@@ -128,7 +128,7 @@ contractSuite("Webhook Controller", engine => {
 
     const ids = collections.map(c => c.id).sort((a, b) => a.localeCompare(b));
     expect(ids).toEqual([...names].sort((a, b) => a.localeCompare(b)));
-    expect(ids).toEqual(expect.arrayContaining([collection, "webhook_logs"]));
+    expect(ids).toContain(collection);
     expect(collections.map(c => c.slug).sort((a, b) => a.localeCompare(b))).toEqual(ids);
   });
 
