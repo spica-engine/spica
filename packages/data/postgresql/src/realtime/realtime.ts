@@ -10,6 +10,7 @@ import {fieldRulesOf} from "../access/index.js";
 import {ORM} from "../orm.js";
 import {StoredBuckets} from "../repositories/bucket/stored-buckets.js";
 import {fieldsOfExpression} from "./fields.js";
+import {prefilterOf} from "./prefilter.js";
 import {RealtimeHub} from "./hub.js";
 import {Limiter} from "./limiter.js";
 import {BucketSource} from "./source.js";
@@ -28,6 +29,13 @@ export class RealtimeError extends Error {
 }
 
 const preferences = () => Promise.reject(new Error("Preferences are not read by realtime."));
+
+function rulesOf(bucket: Bucket, options: RealtimeOptions) {
+  return [
+    typeof options.filter == "string" ? options.filter : undefined,
+    options.applyAcl ? bucket.acl?.read : undefined
+  ].filter((rule): rule is string => typeof rule == "string");
+}
 
 function relevantFields(bucket: Bucket, options: RealtimeOptions) {
   const dependencies: (Set<string> | undefined)[] = [];
@@ -103,7 +111,8 @@ export class PostgresRealtime implements Realtime {
             primary: bucket.primary,
             sorted: Boolean(options.sort),
             ranged: Boolean(options.skip || options.limit),
-            relevant: relevantFields(bucket, options)
+            relevant: relevantFields(bucket, options),
+            prefilter: prefilterOf(bucket, rulesOf(bucket, options), options.user)
           })
         );
       };

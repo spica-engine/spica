@@ -22,6 +22,7 @@ export interface WindowShape {
   sorted: boolean;
   ranged: boolean;
   relevant?: ReadonlySet<string>;
+  prefilter?: (document: Document) => boolean;
 }
 
 interface KeyHistory {
@@ -42,12 +43,12 @@ function historyOf(changes: KeyChange[]) {
       fields: new Set<string>()
     };
     history.last = change.operation;
+    history.document = change.document;
     if (change.operation == "insert") {
       history.inserted = true;
     } else if (change.operation == "update") {
       if (change.fields && change.document) {
         change.fields.forEach(field => history.fields.add(field));
-        history.document = change.document;
       } else {
         history.unknown = true;
       }
@@ -102,7 +103,9 @@ export class RealtimeWindow {
       if (history.last == "delete") {
         deleted.push(key);
       } else if (!this.cannotMatter(history)) {
-        touched.push(key);
+        if (!this.cannotEnter(key, history)) {
+          touched.push(key);
+        }
       } else if (this.ids.has(key)) {
         unchanged.push({kind: ChunkKind.Update, document: structuredClone(history.document)});
       }
@@ -139,6 +142,14 @@ export class RealtimeWindow {
       }
     }
     return chunks;
+  }
+
+  private cannotEnter(key: string, history: KeyHistory) {
+    return (
+      !this.ids.has(key) &&
+      history.document !== undefined &&
+      this.shape.prefilter?.(history.document) === true
+    );
   }
 
   private cannotMatter(history: KeyHistory) {

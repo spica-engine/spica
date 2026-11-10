@@ -320,4 +320,69 @@ describe("PostgreSQL realtime", () => {
       expect(sent).toEqual(initial);
     });
   });
+
+  describe("users that each read their own documents", () => {
+    const users = Array.from({length: 20}, (_, index) => `u${index + 1}`);
+    let find: jest.SpyInstance;
+    let streams: Record<string, Awaited<ReturnType<typeof open>>>;
+
+    beforeEach(async () => {
+      bucket = await manager.create(
+        {
+          ...definition(`document.owner == auth._id`),
+          properties: {
+            id: {type: "uuid", options: {generated: true}},
+            owner: {type: "string"},
+            title: {type: "string"}
+          }
+        },
+        () => {}
+      );
+      streams = {};
+      for (const user of users) {
+        streams[user] = await open({applyAcl: true, user: {_id: user}});
+      }
+      find = jest.spyOn(module.get(BUCKET_QUERY), "find");
+    });
+
+    afterEach(() => find.mockRestore());
+
+    it("should ask the database only for the owner when a document is added", async () => {
+      await insert({owner: "u3", title: "Buy milk"});
+      await until(() => streams.u3.live().length > 0);
+      await sleep(SETTLE_MS);
+
+      expect(titles(streams.u3.live(), ChunkKind.Insert)).toEqual(["Buy milk"]);
+      expect(users.filter(user => user != "u3").flatMap(user => streams[user].live())).toEqual([]);
+      expect(find).toHaveBeenCalledTimes(2);
+    });
+
+    it("should take a document from its old owner and give it to the new one", async () => {
+      const saved = await insert({owner: "u3", title: "Buy milk"});
+      await until(() => streams.u3.live().length > 0);
+      find.mockClear();
+
+      await patch({...saved, owner: "u7"}, {owner: "u7"});
+      await until(() => streams.u3.live().length > 1 && streams.u7.live().length > 0);
+      await sleep(SETTLE_MS);
+
+      expect(streams.u3.live().map(chunk => ChunkKind[chunk.kind])).toEqual(["Insert", "Expunge"]);
+      expect(streams.u7.live().map(chunk => ChunkKind[chunk.kind])).toEqual(["Insert"]);
+      expect(streams.u7.live()[0].document.title).toEqual("Buy milk");
+      expect(
+        users.filter(user => !["u3", "u7"].includes(user)).flatMap(user => streams[user].live())
+      ).toEqual([]);
+      expect(find).toHaveBeenCalledTimes(3);
+    });
+
+    it("should still tell the owner about a delete", async () => {
+      const saved = await insert({owner: "u5", title: "Gone soon"});
+      await until(() => streams.u5.live().length > 0);
+
+      await writes.delete(bucket, String(saved.id), {}, context());
+      await until(() => streams.u5.live().length > 1);
+
+      expect(streams.u5.live().map(chunk => ChunkKind[chunk.kind])).toEqual(["Insert", "Delete"]);
+    });
+  });
 });
