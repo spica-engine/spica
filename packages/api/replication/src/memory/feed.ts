@@ -21,7 +21,7 @@ export class FeedMemory<T> implements IPubSub<T> {
   }
 
   subscribe(observer: PartialObserver<T>) {
-    const sub = this.changeStream$.subscribe(change => observer.next(change.fullDocument));
+    const sub = this.changeStream$.subscribe(change => observer.next(change.document));
     return {unsubscribe: () => sub.unsubscribe()};
   }
 }

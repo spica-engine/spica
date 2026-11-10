@@ -38,12 +38,9 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
       .subscribe({
         next: async change => {
           try {
-            const operationType = (change as any).operationType;
-
-            if (operationType === "delete") {
-              // fullDocument is null for delete events; use fullDocumentBeforeChange instead.
-              const prevDoc = (change as any).fullDocumentBeforeChange;
-              const functionName = functionNameFromKey(prevDoc?.key);
+            if (change.operation === "delete") {
+              // The document is null for delete events; use previousDocument instead.
+              const functionName = functionNameFromKey(change.previousDocument?.key);
               if (!functionName) return;
 
               this.logger.log(
@@ -53,7 +50,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
               return;
             }
 
-            const doc = (change as any).fullDocument;
+            const doc = change.document;
             const functionId = doc?.functionId;
             const filename = doc?.filename;
             const hash = doc?.hash;

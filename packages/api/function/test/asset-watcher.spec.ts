@@ -9,7 +9,7 @@ const makeFn = (id = "507f1f77bcf86cd799439011") =>
   ({_id: {toHexString: () => id}, name: "my-function"}) as any;
 
 const makeChange = (overrides: Record<string, unknown> = {}) => ({
-  fullDocument: {
+  document: {
     functionId: {toHexString: () => "507f1f77bcf86cd799439011"},
     filename: "index.ts",
     hash: "abc123",
@@ -39,9 +39,9 @@ const buildWatcher = () =>
   );
 
 const makeDeleteChange = (key = "functions/my-function/index.ts") => ({
-  operationType: "delete",
-  documentKey: {_id: "507f1f77bcf86cd799439011"},
-  fullDocumentBeforeChange: {
+  operation: "delete",
+  key: "507f1f77bcf86cd799439011",
+  previousDocument: {
     functionId: {toHexString: () => "507f1f77bcf86cd799439011"},
     filename: "index.ts",
     hash: "abc123",
@@ -201,11 +201,11 @@ describe("FunctionAssetWatcher — self-write suppression", () => {
 // ---------------------------------------------------------------------------
 
 describe("FunctionAssetWatcher — edge cases", () => {
-  it("should skip the event when fullDocument has no functionId", async () => {
+  it("should skip the event when the document has no functionId", async () => {
     const watcher = buildWatcher();
     watcher.onModuleInit();
 
-    changeSubject.next({fullDocument: {filename: "index.ts", hash: "abc"}});
+    changeSubject.next({document: {filename: "index.ts", hash: "abc"}});
     await new Promise(r => setTimeout(r, 0));
 
     expect(mockFunctionService.findById).not.toHaveBeenCalled();
@@ -315,7 +315,7 @@ describe("FunctionAssetWatcher — lifecycle", () => {
       operations: expect.arrayContaining(["insert", "update", "replace", "delete"]),
       document: "current"
     });
-    // Must request pre-change document so delete events carry fullDocumentBeforeChange
+    // Must request pre-change document so delete events carry previousDocument
     expect(options).toMatchObject({beforeChange: "whenAvailable"});
 
     watcher.onModuleDestroy();
