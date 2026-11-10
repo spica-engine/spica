@@ -39,17 +39,17 @@ BEGIN
   END IF;
 
   payload_ := jsonb_build_object(
-    't', TG_ARGV[0],
-    'op', CASE WHEN field_ <> '' THEN 'update' ELSE lower(TG_OP) END,
-    'k', current_ ->> TG_ARGV[1],
-    'x', pg_current_xact_id()::text,
-    's', nextval('${CHANGE_SEQUENCE}')
+    'table', TG_ARGV[0],
+    'operation', CASE WHEN field_ <> '' THEN 'update' ELSE lower(TG_OP) END,
+    'key', current_ ->> TG_ARGV[1],
+    'transaction', pg_current_xact_id()::text,
+    'sequence', nextval('${CHANGE_SEQUENCE}')
   );
 
   IF field_ <> '' THEN
-    payload_ := payload_ || jsonb_build_object('f', jsonb_build_array(field_));
+    payload_ := payload_ || jsonb_build_object('fields', jsonb_build_array(field_));
   ELSIF changed_ IS NOT NULL THEN
-    payload_ := payload_ || jsonb_build_object('c', to_jsonb(changed_));
+    payload_ := payload_ || jsonb_build_object('columns', to_jsonb(changed_));
   END IF;
 
   IF before_ <> '' AND TG_OP <> 'INSERT' THEN
@@ -57,11 +57,11 @@ BEGIN
     SELECT jsonb_object_agg(entry.key, entry.value) INTO kept_
       FROM jsonb_each(previous_) AS entry
       WHERE entry.key = ANY (string_to_array(before_, ','));
-    payload_ := payload_ || jsonb_build_object('b', kept_);
+    payload_ := payload_ || jsonb_build_object('before', kept_);
   END IF;
 
   IF octet_length(payload_::text) >= ${MAX_PAYLOAD_BYTES} THEN
-    payload_ := payload_ - 'c' - 'b';
+    payload_ := payload_ - 'columns' - 'before';
   END IF;
 
   PERFORM pg_notify('${CHANGE_CHANNEL}', payload_::text);

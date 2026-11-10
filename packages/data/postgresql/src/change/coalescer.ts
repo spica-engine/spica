@@ -1,23 +1,35 @@
 export type NoticeOperation = "insert" | "update" | "delete";
 
 export interface Notification {
-  t: string;
-  op: NoticeOperation;
-  k: string;
-  x: string;
-  s: number;
-  c?: string[];
-  f?: string[];
-  b?: Record<string, unknown>;
+  /** The table the changed row is reported for; child tables report their owner's table. */
+  table: string;
+  /** What happened to the row; child tables always report an update of their owner. */
+  operation: NoticeOperation;
+  /** The row's key as text; child tables report their owner's key. */
+  key: string;
+  /** The writing transaction, shared by all notifications of one commit. */
+  transaction: string;
+  /** Grows with every notification and is the same for every replica, so it identifies the change. */
+  sequence: number;
+  /** The columns whose value changed; only on updates, and left out when the payload is too large. */
+  columns?: string[];
+  /** The top-level fields a child table reports as changed. */
+  fields?: string[];
+  /** Chosen column values of the row before an update or delete, for tables that ask for them. */
+  before?: Record<string, unknown>;
 }
 
 export interface ChangeNotice {
+  /** The same on every replica for the same change. */
   id: string;
   table: string;
   operation: NoticeOperation;
   key: string;
+  /** The columns that changed in any of the merged notifications. */
   columns?: string[];
+  /** The top-level fields that changed in any of the merged notifications. */
   fields?: string[];
+  /** The values the row had before the first merged notification. */
   before?: Record<string, unknown>;
 }
 
@@ -25,11 +37,11 @@ export function parseNotification(payload: string | undefined): Notification | u
   try {
     const parsed = JSON.parse(payload ?? "");
     const valid =
-      typeof parsed?.t == "string" &&
-      typeof parsed.k == "string" &&
-      typeof parsed.x == "string" &&
-      typeof parsed.s == "number" &&
-      ["insert", "update", "delete"].includes(parsed.op);
+      typeof parsed?.table == "string" &&
+      typeof parsed.key == "string" &&
+      typeof parsed.transaction == "string" &&
+      typeof parsed.sequence == "number" &&
+      ["insert", "update", "delete"].includes(parsed.operation);
     return valid ? parsed : undefined;
   } catch {
     return undefined;
@@ -41,11 +53,11 @@ const union = (first?: string[], second?: string[]) =>
 
 function merged(known: ChangeNotice, next: Notification): ChangeNotice | undefined {
   const details = {
-    columns: union(known.columns, next.c),
-    fields: union(known.fields, next.f),
-    before: known.before ?? next.b
+    columns: union(known.columns, next.columns),
+    fields: union(known.fields, next.fields),
+    before: known.before ?? next.before
   };
-  switch (`${known.operation}>${next.op}`) {
+  switch (`${known.operation}>${next.operation}`) {
     case "insert>delete":
       return undefined;
     case "delete>insert":
@@ -64,13 +76,13 @@ function merged(known: ChangeNotice, next: Notification): ChangeNotice | undefin
 }
 
 const noticeOf = (notification: Notification): ChangeNotice => ({
-  id: `${notification.t}:${notification.s}`,
-  table: notification.t,
-  operation: notification.op,
-  key: notification.k,
-  ...(notification.c && {columns: notification.c}),
-  ...(notification.f && {fields: notification.f}),
-  ...(notification.b && {before: notification.b})
+  id: `${notification.table}:${notification.sequence}`,
+  table: notification.table,
+  operation: notification.operation,
+  key: notification.key,
+  ...(notification.columns && {columns: notification.columns}),
+  ...(notification.fields && {fields: notification.fields}),
+  ...(notification.before && {before: notification.before})
 });
 
 export class Coalescer {
@@ -84,12 +96,12 @@ export class Coalescer {
   ) {}
 
   push(notification: Notification) {
-    if (this.transaction !== undefined && this.transaction != notification.x) {
+    if (this.transaction !== undefined && this.transaction != notification.transaction) {
       this.flush();
     }
-    this.transaction = notification.x;
+    this.transaction = notification.transaction;
 
-    const identity = `${notification.t}\0${notification.k}`;
+    const identity = `${notification.table}\0${notification.key}`;
     const known = this.pending.get(identity);
     if (!known) {
       this.pending.set(identity, noticeOf(notification));

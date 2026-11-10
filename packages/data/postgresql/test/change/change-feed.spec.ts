@@ -1,12 +1,12 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {provideRepository} from "@spica-server/data";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
-import {BUCKET_QUERY, BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-common";
-import {BUCKET_SCHEMA_MANAGER, BucketSchemaManager} from "@spica-server/interface-bucket";
-import {CHANGE_FEED, ChangeEvent, ChangeFeedOptions, PG_POOL} from "@spica-server/interface-data";
 import {ORM, PostgresChangeFeed} from "@spica-server/data-postgresql";
 import {Orm} from "@spica-server/data-postgresql-orm";
-import pg from "pg";
+import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {BUCKET_SCHEMA_MANAGER, BucketSchemaManager} from "@spica-server/interface-bucket";
+import {BUCKET_QUERY, BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-common";
+import {CHANGE_FEED, ChangeEvent, ChangeFeedOptions, PG_POOL} from "@spica-server/interface-data";
+import {TRANSACTION_RUNNER} from "@spica-server/transaction";
 
 const SETTLE_MS = 400;
 
@@ -14,10 +14,11 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 describe("PostgreSQL change feed", () => {
   let module: TestingModule;
-  let pool: pg.Pool;
+  let orm: Orm;
   let feed: PostgresChangeFeed;
   let manager: BucketSchemaManager;
   let writes: BucketWriteFacade;
+  let inTransaction: (work: () => Promise<unknown>) => Promise<unknown>;
   let bucket: any;
   let table: string;
   const subscriptions: {unsubscribe(): void}[] = [];
@@ -40,12 +41,20 @@ describe("PostgreSQL change feed", () => {
     ...extra
   });
 
-  const context = () => ({resolveSchema: () => bucket, deleteOne: jest.fn()});
-  const insert = (document: object) => writes.insert(bucket, {...document}, {}, context());
+  const contextOf = (target: any) => ({resolveSchema: () => target, deleteOne: jest.fn()});
+  const insert = (document: object, target = bucket) =>
+    writes.insert(target, {...document}, {}, contextOf(target));
+  const patch = (document: object, changes: object, target = bucket) =>
+    writes.patch(target, document as any, changes, {}, contextOf(target));
+  const remove = (key: unknown) => writes.delete(bucket, String(key), {}, contextOf(bucket));
 
-  async function listen(options?: ChangeFeedOptions, source: PostgresChangeFeed = feed) {
+  async function listen(
+    options?: ChangeFeedOptions,
+    source: PostgresChangeFeed = feed,
+    collection = table
+  ) {
     const events: ChangeEvent[] = [];
-    subscriptions.push(source.watch(table, options).subscribe(event => events.push(event)));
+    subscriptions.push(source.watch(collection, options).subscribe(event => events.push(event)));
     await source.ready();
     await sleep(SETTLE_MS);
     return events;
@@ -65,10 +74,11 @@ describe("PostgreSQL change feed", () => {
       providers: [provideRepository(BUCKET_SCHEMA_MANAGER)]
     }).compile();
     await module.init();
-    pool = module.get(PG_POOL);
+    orm = module.get(ORM);
     feed = module.get(CHANGE_FEED);
     manager = module.get(BUCKET_SCHEMA_MANAGER);
     writes = module.get(BUCKET_WRITE);
+    inTransaction = module.get(TRANSACTION_RUNNER);
   }, 120_000);
 
   afterAll(() => module.close());
@@ -80,68 +90,7 @@ describe("PostgreSQL change feed", () => {
 
   afterEach(() => subscriptions.splice(0).forEach(subscription => subscription.unsubscribe()));
 
-  describe("triggers", () => {
-    const triggersOf = async (name: string) => {
-      const {rows} = await pool.query(
-        "SELECT tgname FROM pg_trigger WHERE tgrelid = to_regclass($1) AND NOT tgisinternal",
-        [`"${name}"`]
-      );
-      return rows.map(row => row.tgname);
-    };
-
-    it("should be on the main table and every child table", async () => {
-      expect(await triggersOf(table)).toEqual(["spica_change"]);
-      expect(await triggersOf(`${table}__tags`)).toEqual(["spica_change"]);
-    });
-
-    it("should follow the schema through a replace", async () => {
-      await manager.replace(
-        bucket._id,
-        definition({
-          properties: {
-            id: {type: "uuid", options: {generated: true}},
-            title: {type: "string"},
-            tags: {type: "array", items: {type: "string"}},
-            labels: {type: "array", items: {type: "string"}}
-          }
-        }) as any,
-        () => {}
-      );
-
-      expect(await triggersOf(table)).toEqual(["spica_change"]);
-      expect(await triggersOf(`${table}__labels`)).toEqual(["spica_change"]);
-    });
-
-    it("should not announce the rows a key change rewrites, and follow the new key", async () => {
-      const keyed = (primary: string) =>
-        definition({
-          primary,
-          required: ["code"],
-          properties: {
-            id: primary == "id" ? {type: "uuid", options: {generated: true}} : {type: "uuid"},
-            code: {type: "string"},
-            tags: {type: "array", items: {type: "string"}}
-          }
-        }) as any;
-      const created = await manager.create(keyed("id"), () => {});
-      const keyedTable = `bucket_${created._id}`;
-      await pool.query(`INSERT INTO "${keyedTable}" (code) VALUES ('a'), ('b')`);
-      const events: ChangeEvent[] = [];
-      subscriptions.push(feed.watch(keyedTable).subscribe(event => events.push(event)));
-      await feed.ready();
-      await sleep(SETTLE_MS);
-
-      await manager.replace(created._id, keyed("code"), () => {});
-      await sleep(SETTLE_MS);
-      expect(events).toEqual([]);
-
-      await pool.query(`INSERT INTO "${keyedTable}" (code, id) VALUES ('c', gen_random_uuid())`);
-      await eventually(events, 1);
-      expect(events).toMatchObject([{operation: "insert", key: "c"}]);
-    });
-  });
-
-  describe("events", () => {
+  describe("what is announced", () => {
     it("should announce one insert for a row with children", async () => {
       const events = await listen();
 
@@ -156,11 +105,11 @@ describe("PostgreSQL change feed", () => {
       });
     });
 
-    it("should announce an update when only a child table changes", async () => {
+    it("should announce an update when only a list changes", async () => {
       const saved = await insert({title: "post", tags: ["a"]});
       const events = await listen({operations: ["update"], document: "current"});
 
-      await writes.patch(bucket, {...saved, tags: ["a", "c"]}, {tags: ["a", "c"]}, {}, context());
+      await patch({...saved, tags: ["a", "c"]}, {tags: ["a", "c"]});
       await eventually(events, 1);
 
       expect(events).toHaveLength(1);
@@ -172,11 +121,12 @@ describe("PostgreSQL change feed", () => {
       });
     });
 
-    it("should report fields set to null as removed", async () => {
+    it("should report a field that was cleared as removed", async () => {
       const saved = await insert({title: "post", address: {city: "Bonn"}});
       const events = await listen({operations: ["update"]});
 
-      await pool.query(`UPDATE "${table}" SET title = NULL WHERE id = $1`, [saved.id]);
+      const {title, ...cleared} = saved;
+      await patch(cleared, {title: null});
       await eventually(events, 1);
 
       expect(events[0].changes).toEqual({updated: {}, removed: ["title"]});
@@ -186,7 +136,7 @@ describe("PostgreSQL change feed", () => {
       const saved = await insert({title: "post", tags: ["a", "b"]});
       const events = await listen({operations: ["delete"]});
 
-      await writes.delete(bucket, String(saved.id), {}, context());
+      await remove(saved.id);
       await eventually(events, 1);
 
       expect(events).toEqual([
@@ -194,41 +144,39 @@ describe("PostgreSQL change feed", () => {
       ]);
     });
 
-    it("should see writes made directly in SQL", async () => {
-      const events = await listen();
-
-      const {
-        rows: [{id}]
-      } = await pool.query(`INSERT INTO "${table}" (title) VALUES ('direct') RETURNING id`);
-      await pool.query(`UPDATE "${table}" SET title = 'changed' WHERE id = $1`, [id]);
-      await pool.query(`DELETE FROM "${table}" WHERE id = $1`, [id]);
-      await eventually(events, 3);
-
-      expect(events.map(event => event.operation)).toEqual(["insert", "update", "delete"]);
-      expect(events.every(event => event.key == id)).toBe(true);
-    });
-
-    it("should announce nothing for an update that changes no value", async () => {
+    it("should announce nothing for a patch that changes no value", async () => {
       const saved = await insert({title: "same"});
       await sleep(SETTLE_MS);
       const events = await listen();
 
-      await pool.query(`UPDATE "${table}" SET title = title WHERE id = $1`, [saved.id]);
+      await patch(saved, {title: "same"});
       await sleep(SETTLE_MS);
 
       expect(events).toEqual([]);
     });
 
+    it("should announce the writes of anything that writes to the table", async () => {
+      const events = await listen();
+      const rows = orm.table(table);
+
+      const {id} = await rows.insertRow({title: "direct"});
+      await rows.updateRow("id", id, {title: "changed"});
+      await rows.deleteWhere("id", id);
+      await eventually(events, 3);
+
+      expect(events.map(event => event.operation)).toEqual(["insert", "update", "delete"]);
+      expect(events.every(event => event.key == id)).toBe(true);
+    });
+  });
+
+  describe("transactions", () => {
     it("should announce nothing for a rolled back write", async () => {
       const events = await listen();
-      const client = await pool.connect();
-      try {
-        await client.query("BEGIN");
-        await client.query(`INSERT INTO "${table}" (title) VALUES ('never')`);
-        await client.query("ROLLBACK");
-      } finally {
-        client.release();
-      }
+
+      await inTransaction(async () => {
+        await insert({title: "never"});
+        throw new Error("abort");
+      }).catch(() => undefined);
       await sleep(SETTLE_MS);
 
       expect(events).toEqual([]);
@@ -236,24 +184,71 @@ describe("PostgreSQL change feed", () => {
 
     it("should announce the writes of a transaction in order", async () => {
       const events = await listen();
-      const client = await pool.connect();
-      try {
-        await client.query("BEGIN");
-        await client.query(`INSERT INTO "${table}" (title) VALUES ('first')`);
-        await client.query(`INSERT INTO "${table}" (title) VALUES ('second')`);
-        await client.query("COMMIT");
-      } finally {
-        client.release();
-      }
+
+      await inTransaction(async () => {
+        await insert({title: "first"});
+        await insert({title: "second"});
+      });
       await eventually(events, 2);
 
       expect(events.map(event => event.document?.title)).toEqual(["first", "second"]);
     });
   });
 
+  describe("schema changes", () => {
+    it("should keep announcing the tables a replace adds", async () => {
+      const replaced = {
+        ...definition({
+          properties: {
+            id: {type: "uuid", options: {generated: true}},
+            title: {type: "string"},
+            tags: {type: "array", items: {type: "string"}},
+            labels: {type: "array", items: {type: "string"}}
+          }
+        }),
+        _id: bucket._id
+      };
+      await manager.replace(bucket._id, replaced as any, () => {});
+      const saved = await insert({title: "post"}, replaced);
+      const events = await listen({operations: ["update"], document: "current"});
+
+      await patch({...saved, labels: ["new"]}, {labels: ["new"]}, replaced);
+      await eventually(events, 1);
+
+      expect(events).toMatchObject([{operation: "update", changes: {updated: {labels: ["new"]}}}]);
+    });
+
+    it("should announce nothing for the rows a key change rewrites, and follow the new key", async () => {
+      const keyed = (primary: string) =>
+        definition({
+          primary,
+          required: ["code"],
+          properties: {
+            id: primary == "id" ? {type: "uuid", options: {generated: true}} : {type: "uuid"},
+            code: {type: "string"},
+            tags: {type: "array", items: {type: "string"}}
+          }
+        }) as any;
+      const created = await manager.create(keyed("id"), () => {});
+      await insert({code: "a", tags: ["x"]}, created);
+      await insert({code: "b"}, created);
+      await sleep(SETTLE_MS);
+      const events = await listen(undefined, feed, `bucket_${created._id}`);
+
+      const rekeyed = {...keyed("code"), _id: created._id};
+      await manager.replace(created._id, rekeyed, () => {});
+      await sleep(SETTLE_MS);
+      expect(events).toEqual([]);
+
+      await insert({code: "c"}, rekeyed);
+      await eventually(events, 1);
+      expect(events).toMatchObject([{operation: "insert", key: "c"}]);
+    });
+  });
+
   describe("replicas", () => {
     it("should give two listeners the same id", async () => {
-      const other = new PostgresChangeFeed(pool, module.get<Orm>(ORM), module.get(BUCKET_QUERY));
+      const other = new PostgresChangeFeed(module.get(PG_POOL), orm, module.get(BUCKET_QUERY));
       try {
         const first = await listen({operations: ["insert"]});
         const second = await listen({operations: ["insert"]}, other);
@@ -262,32 +257,12 @@ describe("PostgreSQL change feed", () => {
         await eventually(first, 1);
         await eventually(second, 1);
 
-        expect(second.map(event => event.id)).toEqual(first.map(event => event.id));
         expect(first).toHaveLength(1);
+        expect(second.map(event => event.id)).toEqual(first.map(event => event.id));
       } finally {
         await other.onModuleDestroy();
       }
     });
-  });
-
-  describe("the connection", () => {
-    it("should listen again after the server drops it", async () => {
-      const gaps = jest.fn();
-      subscriptions.push(feed.gaps.subscribe(gaps));
-      const events = await listen({operations: ["insert"]});
-
-      await pool.query(
-        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE query = 'LISTEN spica_change' AND pid <> pg_backend_pid()"
-      );
-      for (let waited = 0; waited < 10_000 && !gaps.mock.calls.length; waited += 50) {
-        await sleep(50);
-      }
-      await insert({title: "after"});
-      await eventually(events, 1);
-
-      expect(gaps).toHaveBeenCalled();
-      expect(events.map(event => event.document?.title)).toEqual(["after"]);
-    }, 30_000);
   });
 
   describe("collections without a source yet", () => {

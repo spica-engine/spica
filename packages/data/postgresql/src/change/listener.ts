@@ -19,7 +19,11 @@ export class ChangeListener {
   private wake: (() => void) | undefined;
   private timer: NodeJS.Timeout | undefined;
 
-  constructor(private readonly connectionString: string) {}
+  constructor(
+    private readonly connectionString: string,
+    private readonly createClient: (connectionString: string) => pg.Client = connectionString =>
+      new pg.Client({connectionString})
+  ) {}
 
   start() {
     this.connecting ??= this.connect();
@@ -39,7 +43,7 @@ export class ChangeListener {
 
   private async connect() {
     for (let attempt = 0; !this.stopped; attempt++) {
-      const client = new pg.Client({connectionString: this.connectionString});
+      const client = this.createClient(this.connectionString);
       client.on("notification", message => {
         const notification = parseNotification(message.payload);
         if (notification) {
