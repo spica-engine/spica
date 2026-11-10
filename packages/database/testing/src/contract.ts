@@ -1,4 +1,8 @@
 import {DynamicModule} from "@nestjs/common";
+import {TestingModule} from "@nestjs/testing";
+import {DatabaseService} from "@spica-server/database";
+import {PG_POOL} from "@spica-server/interface-data";
+import {getConnectionUri} from "./start";
 import {DatabaseTestingModule} from "./testing.module";
 
 export type ContractEngineName = "mongodb" | "postgresql";
@@ -6,11 +10,22 @@ export type ContractEngineName = "mongodb" | "postgresql";
 export interface ContractEngine {
   name: ContractEngineName;
   module(): DynamicModule;
+  sharing(first: TestingModule): DynamicModule;
 }
 
 const engines: ContractEngine[] = [
-  {name: "mongodb", module: () => DatabaseTestingModule.replicaSet()},
-  {name: "postgresql", module: () => DatabaseTestingModule.postgres()}
+  {
+    name: "mongodb",
+    module: () => DatabaseTestingModule.replicaSet(),
+    sharing: first =>
+      DatabaseTestingModule.connect(getConnectionUri(), first.get(DatabaseService).databaseName)
+  },
+  {
+    name: "postgresql",
+    module: () => DatabaseTestingModule.postgres(),
+    sharing: first =>
+      DatabaseTestingModule.connectPostgres(first.get(PG_POOL).options.connectionString)
+  }
 ];
 
 function isEnabled(name: ContractEngineName) {
@@ -41,8 +56,7 @@ export function contractSuite(name: string, define: (engine: ContractEngine) => 
         }));
     } else {
       describe.skip(`${name} [${engine.name}] (set POSTGRES_URL or SPICA_CONTRACT_ENGINES)`, () =>
-        define(engine)
-      );
+        define(engine));
     }
   }
 }

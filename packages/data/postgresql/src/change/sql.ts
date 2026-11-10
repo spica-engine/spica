@@ -1,12 +1,9 @@
 import {literalOf, quote} from "@spica-server/data-postgresql-orm";
-import pg from "pg";
 
 export const CHANGE_CHANNEL = "spica_change";
 export const CHANGE_TRIGGER = "spica_change";
 export const CHANGE_SEQUENCE = "spica_change_seq";
 export const CHANGE_FUNCTION = "spica_notify_change";
-
-const CHANGE_LOCK = "spica_change_function";
 
 const MAX_PAYLOAD_BYTES = 8000;
 
@@ -90,20 +87,3 @@ export const createChangeTriggerSql = (table: string, args: ChangeTriggerArgumen
 
 export const dropChangeTriggerSql = (table: string) =>
   `DROP TRIGGER IF EXISTS ${quote(CHANGE_TRIGGER)} ON ${quote(table)}`;
-
-export async function installChangeFunction(pool: pg.Pool) {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [CHANGE_LOCK]);
-    for (const statement of changeFunctionStatements) {
-      await client.query(statement);
-    }
-    await client.query("COMMIT");
-  } catch (error) {
-    await client.query("ROLLBACK").catch(() => undefined);
-    throw error;
-  } finally {
-    client.release();
-  }
-}
