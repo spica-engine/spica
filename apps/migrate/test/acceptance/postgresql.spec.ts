@@ -57,8 +57,9 @@ describe("PostgreSQL track", () => {
     fs.rmSync(indexJsonPath, {force: true});
   });
 
-  it("should apply the packaged baseline on a fresh database", async () => {
-    const packagedDir = path.join(process.cwd(), "dist/src/postgresql/migrations");
+  const packagedDir = path.join(process.cwd(), "dist/src/postgresql/migrations");
+
+  function usePackagedMigrations() {
     const packaged = JSON.parse(fs.readFileSync(path.join(packagedDir, "index.json")).toString());
     const manifest = Object.fromEntries(
       Object.entries<string[]>(packaged).map(([version, scripts]) => [
@@ -68,6 +69,10 @@ describe("PostgreSQL track", () => {
     );
     fs.mkdirSync(manifestDir, {recursive: true});
     fs.writeFileSync(indexJsonPath, JSON.stringify(manifest));
+  }
+
+  it("should apply the packaged baseline on a fresh database", async () => {
+    usePackagedMigrations();
 
     await run([...args, "--from", "0.0.0", "--to", "99.0.0"]);
 
@@ -119,5 +124,56 @@ describe("PostgreSQL track", () => {
 
     const {rows} = await client.query("SELECT to_regclass('dry') AS dry");
     expect(rows[0]).toEqual({dry: null});
+  });
+
+  describe("change triggers", () => {
+    const bucketId = "0190f7a0-0000-7000-8000-000000000001";
+    const main = `bucket_${bucketId}`;
+
+    it("should announce the writes of bucket tables that already exist", async () => {
+      await client.query(
+        `CREATE TABLE "${main}" (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), title text)`
+      );
+      await client.query(
+        `CREATE TABLE "${main}__tags" (_parent uuid NOT NULL REFERENCES "${main}" (id) ON DELETE CASCADE, _position integer NOT NULL, _value text, PRIMARY KEY (_parent, _position))`
+      );
+      usePackagedMigrations();
+
+      await run([...args, "--from", "0.0.0", "--to", "99.0.0"]);
+
+      const listener = new pg.Client({connectionString: uri});
+      await listener.connect();
+      const payloads: any[] = [];
+      listener.on("notification", message => payloads.push(JSON.parse(message.payload)));
+      try {
+        await listener.query("LISTEN spica_change");
+        const {
+          rows: [{id}]
+        } = await client.query(`INSERT INTO "${main}" (title) VALUES ('a') RETURNING id`);
+        await client.query(`INSERT INTO "${main}__tags" VALUES ($1, 0, 'x')`, [id]);
+        for (let waited = 0; waited < 5000 && payloads.length < 2; waited += 50) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        expect(payloads).toMatchObject([
+          {t: main, op: "insert", k: id},
+          {t: main, op: "update", k: id, f: ["tags"]}
+        ]);
+      } finally {
+        await listener.end();
+      }
+    });
+
+    it("should be safe to apply twice", async () => {
+      usePackagedMigrations();
+
+      await run([...args, "--from", "0.0.0", "--to", "99.0.0"]);
+      await run([...args, "--from", "0.0.0", "--to", "99.0.0"]);
+
+      const {rows} = await client.query(
+        "SELECT count(*)::int AS count FROM pg_proc WHERE proname = 'spica_notify_change'"
+      );
+      expect(rows[0].count).toBe(1);
+    });
   });
 });

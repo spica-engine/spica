@@ -1,5 +1,6 @@
 import {BucketMetadata, TableMetadata} from "../metadata/index.js";
 import {checkSql, createIndexSql, createTableSql} from "./sql.js";
+import {changeTriggerSql} from "./triggers.js";
 
 export function createTableStatements(
   metadata: BucketMetadata,
@@ -15,6 +16,7 @@ export function createTableStatements(
 export function createStatements(metadata: BucketMetadata): string[] {
   return [
     ...metadata.tables.flatMap(table => createTableStatements(metadata, table)),
-    ...metadata.tables.flatMap(table => table.indexes.map(createIndexSql))
+    ...metadata.tables.flatMap(table => table.indexes.map(createIndexSql)),
+    ...metadata.tables.map(table => changeTriggerSql(metadata, table))
   ];
 }
