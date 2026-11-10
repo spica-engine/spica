@@ -5,15 +5,20 @@ export class Limiter {
   constructor(private readonly max: number) {}
 
   async run<T>(task: () => Promise<T>): Promise<T> {
-    if (this.running >= this.max) {
+    if (this.running < this.max) {
+      this.running++;
+    } else {
       await new Promise<void>(resolve => this.waiting.push(resolve));
     }
-    this.running++;
     try {
       return await task();
     } finally {
-      this.running--;
-      this.waiting.shift()?.();
+      const next = this.waiting.shift();
+      if (next) {
+        next();
+      } else {
+        this.running--;
+      }
     }
   }
 }

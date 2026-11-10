@@ -1,4 +1,4 @@
-import {createHash} from "crypto";
+import {createHash} from "node:crypto";
 import {Bucket} from "@spica-server/interface-bucket";
 import {
   BucketQueryFacade,
@@ -11,14 +11,19 @@ import {WindowSource} from "./window.js";
 
 type Document = Record<string, unknown>;
 
+const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+
 function canonical(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(canonical);
   }
-  if (value && typeof value == "object" && !(value instanceof Date)) {
+  if (value && typeof (value as {toJSON?: unknown}).toJSON == "function") {
+    return canonical((value as {toJSON(): unknown}).toJSON());
+  }
+  if (value && typeof value == "object") {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>)
-        .sort(([a], [b]) => a.localeCompare(b))
+        .sort(([a], [b]) => compare(a, b))
         .map(([key, item]) => [key, canonical(item)])
     );
   }
@@ -34,7 +39,7 @@ export class BucketSource implements WindowSource {
     private readonly context: BucketReadContext,
     private readonly options: RealtimeOptions
   ) {
-    this.identity = createHash("sha1")
+    this.identity = createHash("sha256")
       .update(JSON.stringify(canonical({bucket: String(bucket._id), ...options})))
       .digest("hex");
   }
@@ -52,7 +57,7 @@ export class BucketSource implements WindowSource {
   }
 
   matching(keys: string[], batch?: BatchQueries) {
-    const sorted = [...keys].sort();
+    const sorted = [...keys].sort(compare);
     return this.shared(batch, `matching:${JSON.stringify(sorted)}`, () =>
       this.read({resourceFilter: {include: sorted, exclude: []}})
     );

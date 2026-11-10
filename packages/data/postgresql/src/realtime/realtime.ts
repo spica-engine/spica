@@ -6,6 +6,7 @@ import {CHANGE_FEED} from "@spica-server/interface-data";
 import {Document, Realtime, RealtimeOptions, StreamChunk} from "@spica-server/interface-realtime";
 import {Observable, throwError} from "rxjs";
 import {BUCKET_TABLE_PREFIX, PostgresChangeFeed} from "../change/index.js";
+import {fieldRulesOf} from "../access/index.js";
 import {ORM} from "../orm.js";
 import {StoredBuckets} from "../repositories/bucket/stored-buckets.js";
 import {fieldsOfExpression} from "./fields.js";
@@ -41,7 +42,8 @@ function relevantFields(bucket: Bucket, options: RealtimeOptions) {
   if (options.sort) {
     dependencies.push(new Set(Object.keys(options.sort).map(path => path.split(".")[0])));
   }
-  return dependencies.some(fields => fields === undefined)
+  const hidesFields = options.applyAcl && fieldRulesOf(bucket).length > 0;
+  return hidesFields || dependencies.includes(undefined)
     ? undefined
     : new Set(dependencies.flatMap(fields => [...fields!]));
 }

@@ -189,4 +189,23 @@ describe("RealtimeHub", () => {
     expect(feed.watched).toEqual(["bucket_a", "bucket_a"]);
     expect(feed.watching).toBe(1);
   });
+
+  it("should not count a member twice when it leaves after the connection was interrupted", () => {
+    const leave = hub.join(member().instance);
+
+    feed.gapped.next();
+    leave();
+
+    expect(empty).toHaveBeenCalledTimes(1);
+  });
+
+  it("should watch again for a member that joins after the connection was interrupted", () => {
+    hub.join(member().instance);
+    feed.gapped.next();
+
+    hub.join(member().instance);
+
+    expect(feed.watched).toEqual(["bucket_a", "bucket_a"]);
+    expect(feed.watching).toBe(1);
+  });
 });

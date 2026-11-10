@@ -1,10 +1,8 @@
 import {parseRule} from "../access/rule/compiler.js";
 
-type Node = any;
-
 class Unknown extends Error {}
 
-function pathOf(node: Node): {root: string; path: string[]} {
+function pathOf(node: any): {root: string; path: string[]} {
   const path: string[] = [];
   let current = node;
   while (current.kind == "operator" && current.type == "select") {
@@ -20,7 +18,7 @@ function pathOf(node: Node): {root: string; path: string[]} {
   return {root: current.name, path};
 }
 
-function collect(node: Node, fields: Set<string>) {
+function collect(node: any, fields: Set<string>) {
   if (Array.isArray(node)) {
     node.forEach(item => collect(item, fields));
     return;

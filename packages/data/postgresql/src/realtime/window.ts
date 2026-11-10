@@ -75,42 +75,58 @@ export class RealtimeWindow {
   }
 
   async apply(changes: KeyChange[], batch?: BatchQueries): Promise<StreamChunk<Document>[]> {
-    const chunks: StreamChunk<Document>[] = [];
-    const deleted: string[] = [];
-    const touched: string[] = [];
-
-    for (const [key, history] of historyOf(changes)) {
-      if (history.last == "delete") {
-        deleted.push(key);
-      } else if (this.cannotMatter(history)) {
-        if (this.ids.has(key)) {
-          chunks.push({kind: ChunkKind.Update, document: structuredClone(history.document)});
-        }
-      } else {
-        touched.push(key);
-      }
-    }
-
-    for (const key of deleted) {
-      if (this.ids.delete(key)) {
-        chunks.push({kind: ChunkKind.Delete, document: this.keyDocument(key)});
-      }
-    }
-
+    const {deleted, touched, unchanged} = this.classify(changes);
+    const chunks = [...unchanged, ...this.forget(deleted)];
     if (!touched.length && !deleted.length) {
       return chunks;
     }
 
-    const matching = new Map(
-      (touched.length ? await this.source.matching(touched, batch) : []).map(document => [
-        this.keyOf(document),
-        document
-      ])
-    );
+    const matching = await this.matchingBy(touched, batch);
     const window =
       this.shape.sorted || this.shape.ranged ? await this.source.keys(batch) : undefined;
     const inWindow = window && new Set(window);
 
+    chunks.push(...this.reconcile(touched, matching, inWindow));
+    if (window) {
+      chunks.push(...(await this.settle(window, inWindow, batch)));
+    }
+    return chunks;
+  }
+
+  private classify(changes: KeyChange[]) {
+    const deleted: string[] = [];
+    const touched: string[] = [];
+    const unchanged: StreamChunk<Document>[] = [];
+
+    for (const [key, history] of historyOf(changes)) {
+      if (history.last == "delete") {
+        deleted.push(key);
+      } else if (!this.cannotMatter(history)) {
+        touched.push(key);
+      } else if (this.ids.has(key)) {
+        unchanged.push({kind: ChunkKind.Update, document: structuredClone(history.document)});
+      }
+    }
+    return {deleted, touched, unchanged};
+  }
+
+  private forget(deleted: string[]) {
+    return deleted
+      .filter(key => this.ids.delete(key))
+      .map(key => ({kind: ChunkKind.Delete, document: this.keyDocument(key)}));
+  }
+
+  private async matchingBy(touched: string[], batch?: BatchQueries) {
+    const documents = touched.length ? await this.source.matching(touched, batch) : [];
+    return new Map(documents.map(document => [this.keyOf(document), document]));
+  }
+
+  private reconcile(
+    touched: string[],
+    matching: Map<string, Document>,
+    inWindow: Set<string> | undefined
+  ) {
+    const chunks: StreamChunk<Document>[] = [];
     for (const key of touched) {
       const document = matching.get(key);
       if (!document) {
@@ -121,10 +137,6 @@ export class RealtimeWindow {
         chunks.push({kind: this.ids.has(key) ? ChunkKind.Update : ChunkKind.Insert, document});
         this.ids.add(key);
       }
-    }
-
-    if (window) {
-      chunks.push(...(await this.settle(window, inWindow, batch)));
     }
     return chunks;
   }

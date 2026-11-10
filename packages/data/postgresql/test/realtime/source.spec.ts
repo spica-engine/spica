@@ -99,4 +99,40 @@ describe("BucketSource", () => {
 
     expect(find).toHaveBeenCalledWith(bucket, {applyAcl: true, user: {_id: "1"}}, context);
   });
+
+  it("should never share a result between two users, even for the same filter", async () => {
+    const batch = new BatchQueries();
+    const asker = (id: string) =>
+      source({filter: "document.age > 1", applyAcl: true, user: {_id: id, role: "member"}});
+
+    await asker("1").matching(["a"], batch);
+    await asker("2").matching(["a"], batch);
+
+    expect(find).toHaveBeenCalledTimes(2);
+  });
+
+  it("should tell apart values that only differ inside a class instance", async () => {
+    class Id {
+      constructor(private readonly value: string) {}
+      toJSON() {
+        return this.value;
+      }
+    }
+    const batch = new BatchQueries();
+
+    await source({applyAcl: true, user: {_id: new Id("1")}}).keys(batch);
+    await source({applyAcl: true, user: {_id: new Id("2")}}).keys(batch);
+    await source({applyAcl: true, user: {_id: new Id("2")}}).keys(batch);
+
+    expect(find).toHaveBeenCalledTimes(2);
+  });
+
+  it("should tell apart the hash secrets", async () => {
+    const batch = new BatchQueries();
+
+    await source({hashSecret: "a"}).keys(batch);
+    await source({hashSecret: "b"}).keys(batch);
+
+    expect(find).toHaveBeenCalledTimes(2);
+  });
 });

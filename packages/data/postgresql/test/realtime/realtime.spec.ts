@@ -256,4 +256,68 @@ describe("PostgreSQL realtime", () => {
       expect(find.mock.calls.length).toBeGreaterThan(1);
     });
   });
+
+  describe("the document sent for an update that cannot matter", () => {
+    const created = (properties: object, read = "true==true") =>
+      manager.create(
+        {
+          ...definition(read),
+          properties: {id: {type: "uuid", options: {generated: true}}, ...properties}
+        },
+        () => {}
+      );
+
+    it("should leave out the fields the read rule hides from the user", async () => {
+      bucket = await created({
+        age: {type: "number"},
+        title: {type: "string"},
+        secret: {type: "string", acl: `auth.role == "admin"`}
+      });
+      const saved = await insert({age: 30, title: "first", secret: "hidden"});
+      const member = await open({
+        applyAcl: true,
+        user: {role: "member"},
+        filter: `document.age > 20`
+      });
+      const admin = await open({
+        applyAcl: true,
+        user: {role: "admin"},
+        filter: `document.age > 20`
+      });
+
+      await patch({...saved, title: "second"}, {title: "second"});
+      await until(() => member.live().length > 0 && admin.live().length > 0);
+
+      expect(member.live()).toHaveLength(1);
+      expect(member.live()[0].document).toMatchObject({title: "second"});
+      expect(member.live()[0].document).not.toHaveProperty("secret");
+      expect(admin.live()[0].document).toMatchObject({title: "second", secret: "hidden"});
+    });
+
+    it("should be the document a new subscriber is sent", async () => {
+      bucket = await created({
+        age: {type: "number"},
+        title: {type: "string"},
+        tags: {type: "array", items: {type: "string"}},
+        address: {type: "object", properties: {city: {type: "string"}}},
+        born: {type: "date"}
+      });
+      const saved = await insert({
+        age: 30,
+        title: "first",
+        tags: ["a", "b"],
+        address: {city: "Bonn"},
+        born: new Date("2020-01-02T03:04:05.000Z")
+      });
+      const watcher = await open({filter: `document.age > 20`});
+
+      await patch({...saved, title: "second"}, {title: "second"});
+      await until(() => watcher.live().length > 0);
+      const fresh = await open({filter: `document.age > 20`});
+
+      const sent = watcher.live()[0].document;
+      const initial = fresh.chunks.find(chunk => chunk.kind == ChunkKind.Initial)!.document;
+      expect(sent).toEqual(initial);
+    });
+  });
 });

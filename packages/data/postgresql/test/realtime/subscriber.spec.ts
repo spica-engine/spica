@@ -123,4 +123,15 @@ describe("RealtimeSubscriber", () => {
 
     expect(emitted).toEqual([]);
   });
+
+  it("should drop what was held for it when it fails before it started", async () => {
+    subscriber.deliver(batch("1"));
+    subscriber.fail(new Error("initial"));
+
+    await subscriber.start(window as any);
+    await sleep(20);
+
+    expect(window.apply).not.toHaveBeenCalled();
+    expect(emitted).toEqual([]);
+  });
 });

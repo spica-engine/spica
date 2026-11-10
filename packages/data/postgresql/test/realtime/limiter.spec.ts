@@ -57,4 +57,49 @@ describe("Limiter", () => {
 
     expect(await limiter.run(async () => "next")).toBe("next");
   });
+
+  it("should hand a free place to the first waiting task, not to a task that arrives later", async () => {
+    const limiter = new Limiter(1);
+    const first = gate();
+    const started: string[] = [];
+
+    const running = limiter.run(async () => {
+      started.push("first");
+      await first.opened;
+    });
+    const waiting = limiter.run(async () => {
+      started.push("waiting");
+    });
+    first.open();
+    const later = limiter.run(async () => {
+      started.push("later");
+    });
+    await Promise.all([running, waiting, later]);
+
+    expect(started).toEqual(["first", "waiting", "later"]);
+  });
+
+  it("should keep a place for the waiting task when another one arrives as it is handed over", async () => {
+    const limiter = new Limiter(1);
+    const hold = gate();
+    let running = 0;
+    let most = 0;
+    const tracked = () => async () => {
+      most = Math.max(most, ++running);
+      await hold.opened;
+      running--;
+    };
+
+    const finishing = limiter.run(async () => {
+      queueMicrotask(() => queueMicrotask(() => void limiter.run(tracked())));
+    });
+    const waiting = limiter.run(tracked());
+    await finishing;
+    await new Promise(resolve => setTimeout(resolve, 20));
+    hold.open();
+    await waiting;
+    await new Promise(resolve => setTimeout(resolve, 20));
+
+    expect(most).toBe(1);
+  });
 });

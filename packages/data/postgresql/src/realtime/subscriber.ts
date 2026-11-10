@@ -40,13 +40,14 @@ export class RealtimeSubscriber implements HubMember {
 
   fail(error: Error) {
     if (!this.closed) {
-      this.closed = true;
+      this.close();
       this.onError(error);
     }
   }
 
   close() {
     this.closed = true;
+    this.pending.length = 0;
   }
 
   private enqueue(batch: HubBatch) {
