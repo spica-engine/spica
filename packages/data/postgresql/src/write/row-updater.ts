@@ -65,7 +65,7 @@ export function patchRows(
   previous: RowSet
 ): Promise<RowSet> {
   const touched = touchedPaths((bucket.properties ?? {}) as Properties, patch).filter(
-    path => path.join("\0") != metadata.primaryKey.field
+    path => !(path.length == 1 && path[0] == metadata.primaryKey.field)
   );
   return rewrite(session, bucket, metadata, document, previous, path =>
     touched.some(prefix => startsWith(path, prefix))

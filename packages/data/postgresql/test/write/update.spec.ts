@@ -84,6 +84,28 @@ describe("PostgreSQL bucket write: replace and patch", () => {
       expect(previous).toMatchObject({id: saved.id, title: "a"});
       expect((await rows(bucket))[0].title).toBe("b");
     });
+
+    it("should accept the key as text for an integer key", async () => {
+      const bucket = await createBucket(
+        {},
+        {properties: {id: {type: "integer", options: {generated: true}}, title: {type: "string"}}}
+      );
+      const saved = await insert(bucket, {title: "a"});
+      const asText = String(saved.id);
+
+      const previous = await replace(bucket, {id: asText, title: "b"});
+      const patched = await patch(
+        bucket,
+        {id: asText, title: "c"},
+        {title: "c"},
+        {
+          returnDocument: "after"
+        }
+      );
+
+      expect(previous).toMatchObject({id: saved.id, title: "a"});
+      expect(patched).toMatchObject({id: saved.id, title: "c"});
+    });
   });
 
   describe("patch", () => {
