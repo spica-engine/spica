@@ -115,7 +115,7 @@ export class PostgresChangeFeed implements ChangeFeed, OnModuleDestroy {
     if (options.beforeChange == "whenAvailable" && notice.before) {
       event.previousDocument = source.previousOf(notice.before) as T;
     }
-    if (notice.operation == "delete") {
+    if (notice.operation == "delete" || options.keysOnly) {
       return event;
     }
 

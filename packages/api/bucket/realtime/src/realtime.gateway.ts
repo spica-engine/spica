@@ -25,7 +25,7 @@ import {ChangeEmitter} from "@spica-server/bucket-hooks";
 import {BucketService, bucketIds, getBucketDataCollection} from "@spica-server/bucket-services";
 import {applyPatch, deepCopy} from "@spica-server/core-patch";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ids} from "@spica-server/data";
+import {DATA_ENGINE, ids} from "@spica-server/data";
 import {ChunkKind, REALTIME, Realtime} from "@spica-server/interface-realtime";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {extractStrategyType} from "@spica-server/passport-guard";
@@ -42,6 +42,9 @@ import {
 import {getConnectionHandlers} from "@spica-server/realtime";
 import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
 import {BucketDataOptionsBuilder} from "./bucket-data-options.builder.js";
+import {ExpressionBucketDataOptionsBuilder} from "./expression-bucket-data-options.builder.js";
+
+const POSTGRESQL_ENGINE = "postgresql";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"
@@ -59,7 +62,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @Optional() private hookEmitter: ChangeEmitter,
     @Optional() private bucketCacheService: BucketCacheService,
     @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
-    @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
+    @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string,
+    @Optional() @Inject(DATA_ENGINE) private engine?: string
   ) {
     this.handlers = getConnectionHandlers(
       this.guardService,
@@ -102,6 +106,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     if (!schema) {
       throw new Error(`Could not find the schema with id ${schemaId}.`);
+    }
+
+    if (this.engine == POSTGRESQL_ENGINE) {
+      return ExpressionBucketDataOptionsBuilder.fromBucketQuery(
+        req,
+        this.shouldApplyAcl(req),
+        this.hashSecret
+      );
     }
 
     return BucketDataOptionsBuilder.fromBucketQuery(

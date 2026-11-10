@@ -31,6 +31,10 @@ export interface ChangeFeedOptions {
    * Attaches the document as it was before the change when the collection records it.
    */
   beforeChange?: "whenAvailable";
+  /**
+   * The subscriber needs only the operation and the key, so the engine may skip reading documents.
+   */
+  keysOnly?: boolean;
 }
 
 export interface ChangeFeed {
