@@ -1,22 +1,21 @@
 import {Observable} from "rxjs";
-import {Id} from "./id.js";
 
 export type ChangeOperation = "insert" | "update" | "replace" | "delete" | "drop";
 
 export interface ChangeEvent<T = any> {
   /**
-   * Resumes the feed after this change; equal for the same change on every replica.
+   * Equal for the same change on every replica; replicas deduplicate work on it.
    */
-  _id: {_data: string};
-  operationType: ChangeOperation | string;
-  ns?: {db?: string; coll: string};
-  documentKey?: {_id: Id};
-  updateDescription?: {
-    updatedFields?: {[key: string]: any};
-    removedFields?: string[];
+  id: string;
+  operation: ChangeOperation;
+  collection: string;
+  key?: string;
+  document?: T;
+  previousDocument?: T;
+  changes?: {
+    updated: {[key: string]: any};
+    removed: string[];
   };
-  fullDocument?: T;
-  fullDocumentBeforeChange?: T;
 }
 
 export interface ChangeFeedOptions {

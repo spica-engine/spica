@@ -49,7 +49,7 @@ describe("MongoChangeFeed", () => {
     await db.collection("items").updateOne({_id: insertedId}, {$set: {a: 2}});
     await db.collection("items").deleteOne({_id: insertedId});
 
-    expect((await changes).map(change => change.operationType)).toEqual(["insert", "delete"]);
+    expect((await changes).map(change => change.operation)).toEqual(["insert", "delete"]);
   });
 
   it("should attach the current document to updates only when asked", async () => {
@@ -60,11 +60,11 @@ describe("MongoChangeFeed", () => {
     await db.collection("items").updateOne({_id: insertedId}, {$set: {a: 2}});
 
     const [change] = await withDocument;
-    expect(change.fullDocument).toEqual({_id: insertedId, a: 2});
-    expect(change.documentKey).toEqual({_id: insertedId});
-    expect(change.ns.coll).toEqual("items");
-    expect(change.updateDescription.updatedFields).toEqual({a: 2});
-    expect(change._id._data).toEqual(expect.any(String));
+    expect(change.document).toEqual({_id: insertedId, a: 2});
+    expect(change.key).toEqual(insertedId.toHexString());
+    expect(change.collection).toEqual("items");
+    expect(change.changes).toEqual({updated: {a: 2}, removed: []});
+    expect(change.id).toEqual(expect.any(String));
   });
 
   it("should attach the document before the change when the collection records it", async () => {
@@ -75,7 +75,7 @@ describe("MongoChangeFeed", () => {
 
     await db.collection("items").deleteOne({_id: insertedId});
 
-    expect((await changes)[0].fullDocumentBeforeChange).toEqual({_id: insertedId, a: 1});
+    expect((await changes)[0].previousDocument).toEqual({_id: insertedId, a: 1});
   });
 
   describe("lifecycle", () => {
