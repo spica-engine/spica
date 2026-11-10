@@ -6,6 +6,7 @@ export interface UpdatePlan {
 
 export type PlanStep =
   | "dropForeignKeys"
+  | "dropTriggers"
   | "dropIndexes"
   | "dropChecks"
   | "dropOldKey"
@@ -22,9 +23,11 @@ export type PlanStep =
   | "addChecks"
   | "addForeignKeys"
   | "createIndexes"
-  | "cleanupKey";
+  | "cleanupKey"
+  | "createTriggers";
 
 const APPLY_ORDER: PlanStep[] = [
+  "dropTriggers",
   "dropIndexes",
   "dropChecks",
   "dropOldKey",
@@ -41,7 +44,12 @@ const APPLY_ORDER: PlanStep[] = [
   "addChecks"
 ];
 
-const FINISH_ORDER: PlanStep[] = ["addForeignKeys", "createIndexes", "cleanupKey"];
+const FINISH_ORDER: PlanStep[] = [
+  "addForeignKeys",
+  "createIndexes",
+  "cleanupKey",
+  "createTriggers"
+];
 
 export class PlanBuilder {
   private readonly steps = new Map<PlanStep, string[]>();

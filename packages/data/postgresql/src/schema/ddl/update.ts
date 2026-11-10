@@ -1,3 +1,4 @@
+import {dropChangeTriggerSql} from "../../change/sql.js";
 import {BucketMetadata, TableMetadata} from "../metadata/index.js";
 import {sameKeyColumns} from "./compare.js";
 import {planColumns} from "./columns.js";
@@ -8,6 +9,7 @@ import {keyStatements} from "./key-statements.js";
 import {PlanBuilder, statementsOf, UpdatePlan} from "./plan.js";
 import {UpdateScope} from "./scope.js";
 import {dropTablesStatements} from "./sql.js";
+import {changeTriggerSql} from "./triggers.js";
 
 function diffTables(previous: BucketMetadata, next: BucketMetadata) {
   const before = (table: TableMetadata) =>
@@ -43,6 +45,7 @@ export function planUpdate(
   const {kept, created, dropped} = diffTables(previous, next);
   const plan = new PlanBuilder();
 
+  plan.add("dropTriggers", ...kept.map(({after}) => dropChangeTriggerSql(after.name)));
   plan.add("dropTables", ...dropTablesStatements(dropped.map(table => table.name)));
   plan.add("createTables", ...created.flatMap(table => createTableStatements(next, table, false)));
   for (const pair of kept) {
@@ -54,6 +57,7 @@ export function planUpdate(
   if (ownKey) {
     planKeyChange(plan, scope);
   }
+  plan.add("createTriggers", ...next.tables.map(table => changeTriggerSql(next, table)));
   return plan.build();
 }
 
