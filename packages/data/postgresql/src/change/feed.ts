@@ -9,8 +9,6 @@ import {BUCKET_TABLE_PREFIX, BucketLoader, LoadedBucketRow} from "./bucket-loade
 import {ChangeNotice} from "./coalescer.js";
 import {ChangeListener} from "./listener.js";
 
-const UNKNOWN_FIELD = "*";
-
 @Injectable()
 export class PostgresChangeFeed implements ChangeFeed, OnModuleDestroy {
   private readonly logger = new Logger(PostgresChangeFeed.name);
@@ -106,7 +104,7 @@ function changesOf(
   if (!document) {
     return {updated: {}, removed: []};
   }
-  if ((!notice.columns && !notice.fields) || notice.fields?.includes(UNKNOWN_FIELD)) {
+  if (!notice.columns && !notice.fields) {
     return {updated: document, removed: []};
   }
 

@@ -4,7 +4,7 @@ import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {BUCKET_QUERY, BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-common";
 import {BUCKET_SCHEMA_MANAGER, BucketSchemaManager} from "@spica-server/interface-bucket";
 import {CHANGE_FEED, ChangeEvent, ChangeFeedOptions, PG_POOL} from "@spica-server/interface-data";
-import {createChangeTriggerSql, ORM, PostgresChangeFeed} from "@spica-server/data-postgresql";
+import {ORM, PostgresChangeFeed} from "@spica-server/data-postgresql";
 import {Orm} from "@spica-server/data-postgresql-orm";
 import pg from "pg";
 
@@ -170,20 +170,6 @@ describe("PostgreSQL change feed", () => {
         document: {tags: ["a", "c"]},
         changes: {updated: {tags: ["a", "c"]}, removed: []}
       });
-    });
-
-    it("should report the whole document when the changed field is unknown", async () => {
-      const saved = await insert({title: "post", tags: ["a"]});
-      await pool.query(
-        createChangeTriggerSql(`${table}__tags`, {target: table, keyColumn: "_parent", field: "*"})
-      );
-      const events = await listen({operations: ["update"], document: "current"});
-
-      await writes.patch(bucket, {...saved, tags: ["b"]}, {tags: ["b"]}, {}, context());
-      await eventually(events, 1);
-
-      expect(events[0].changes).toEqual({updated: events[0].document, removed: []});
-      expect(events[0].changes.updated).toMatchObject({title: "post", tags: ["b"]});
     });
 
     it("should report fields set to null as removed", async () => {
