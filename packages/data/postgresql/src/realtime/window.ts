@@ -1,23 +1,60 @@
 import {ChunkKind, StreamChunk} from "@spica-server/interface-realtime";
 import {levenshtein} from "@spica-server/realtime";
+import {BatchQueries} from "./batch.js";
 
 type Document = Record<string, unknown>;
 
 export interface WindowSource {
   documents(): Promise<Document[]>;
-  keys(): Promise<string[]>;
-  matching(keys: string[]): Promise<Document[]>;
+  keys(batch?: BatchQueries): Promise<string[]>;
+  matching(keys: string[], batch?: BatchQueries): Promise<Document[]>;
 }
 
 export interface KeyChange {
   key: string;
   operation: "insert" | "update" | "delete";
+  fields?: string[];
+  document?: Document;
 }
 
 export interface WindowShape {
   primary: string;
   sorted: boolean;
   ranged: boolean;
+  relevant?: ReadonlySet<string>;
+}
+
+interface KeyHistory {
+  last: KeyChange["operation"];
+  inserted: boolean;
+  unknown: boolean;
+  fields: Set<string>;
+  document?: Document;
+}
+
+function historyOf(changes: KeyChange[]) {
+  const histories = new Map<string, KeyHistory>();
+  for (const change of changes) {
+    const history = histories.get(change.key) ?? {
+      last: change.operation,
+      inserted: false,
+      unknown: false,
+      fields: new Set<string>()
+    };
+    history.last = change.operation;
+    if (change.operation == "insert") {
+      history.inserted = true;
+    } else if (change.operation == "update") {
+      if (change.fields && change.document) {
+        change.fields.forEach(field => history.fields.add(field));
+        history.document = change.document;
+      } else {
+        history.unknown = true;
+      }
+    }
+    histories.set(change.key, history);
+  }
+  return histories;
 }
 
 export class RealtimeWindow {
@@ -37,15 +74,22 @@ export class RealtimeWindow {
     ];
   }
 
-  async apply(changes: KeyChange[]): Promise<StreamChunk<Document>[]> {
-    const latest = new Map(changes.map(change => [change.key, change.operation]));
-    const deleted = [...latest]
-      .filter(([, operation]) => operation == "delete")
-      .map(([key]) => key);
-    const touched = [...latest]
-      .filter(([, operation]) => operation != "delete")
-      .map(([key]) => key);
+  async apply(changes: KeyChange[], batch?: BatchQueries): Promise<StreamChunk<Document>[]> {
     const chunks: StreamChunk<Document>[] = [];
+    const deleted: string[] = [];
+    const touched: string[] = [];
+
+    for (const [key, history] of historyOf(changes)) {
+      if (history.last == "delete") {
+        deleted.push(key);
+      } else if (this.cannotMatter(history)) {
+        if (this.ids.has(key)) {
+          chunks.push({kind: ChunkKind.Update, document: structuredClone(history.document)});
+        }
+      } else {
+        touched.push(key);
+      }
+    }
 
     for (const key of deleted) {
       if (this.ids.delete(key)) {
@@ -53,13 +97,18 @@ export class RealtimeWindow {
       }
     }
 
+    if (!touched.length && !deleted.length) {
+      return chunks;
+    }
+
     const matching = new Map(
-      (touched.length ? await this.source.matching(touched) : []).map(document => [
+      (touched.length ? await this.source.matching(touched, batch) : []).map(document => [
         this.keyOf(document),
         document
       ])
     );
-    const window = this.shape.sorted || this.shape.ranged ? await this.source.keys() : undefined;
+    const window =
+      this.shape.sorted || this.shape.ranged ? await this.source.keys(batch) : undefined;
     const inWindow = window && new Set(window);
 
     for (const key of touched) {
@@ -75,15 +124,26 @@ export class RealtimeWindow {
     }
 
     if (window) {
-      chunks.push(...(await this.settle(window, inWindow)));
+      chunks.push(...(await this.settle(window, inWindow, batch)));
     }
     return chunks;
   }
 
-  private async settle(window: string[], inWindow: Set<string>) {
+  private cannotMatter(history: KeyHistory) {
+    const {relevant} = this.shape;
+    return (
+      relevant !== undefined &&
+      !history.inserted &&
+      !history.unknown &&
+      history.document !== undefined &&
+      ![...history.fields].some(field => relevant.has(field))
+    );
+  }
+
+  private async settle(window: string[], inWindow: Set<string>, batch?: BatchQueries) {
     const chunks: StreamChunk<Document>[] = [];
     const entering = window.filter(key => !this.ids.has(key));
-    for (const document of entering.length ? await this.source.matching(entering) : []) {
+    for (const document of entering.length ? await this.source.matching(entering, batch) : []) {
       chunks.push({kind: ChunkKind.Initial, document});
       this.ids.add(this.keyOf(document));
     }
