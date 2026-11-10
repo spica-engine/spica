@@ -394,6 +394,19 @@ contractSuite("collection query", engine => {
       expect(fn.secrets[0].value).toEqual({iv: "i", authTag: "t"});
     });
 
+    it("should still resolve the documents when their id is left out", async () => {
+      await functionWithSecret();
+
+      const [fn] = await queries.find<any>("function", {
+        relations: ["secrets"],
+        fields: {"secrets._id": 0}
+      });
+
+      expect(fn.secrets).toHaveLength(1);
+      expect(fn.secrets[0]).not.toHaveProperty("_id");
+      expect(fn.secrets[0].key).toEqual("S");
+    });
+
     it("should keep every field when nothing is excluded", async () => {
       await functionWithSecret();
 

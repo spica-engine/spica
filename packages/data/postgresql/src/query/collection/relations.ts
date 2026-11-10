@@ -123,8 +123,9 @@ export async function resolveRelations(
     const found = new Map(
       rows.map(row => {
         const record = fromRow(relation.target, row) as Record_;
+        const id = String(record[relation.target.idProperty]);
         hidden.forEach(path => omit(record, path));
-        return [String(record[relation.target.idProperty]), record];
+        return [id, record];
       })
     );
 
