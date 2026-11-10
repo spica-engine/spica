@@ -9,6 +9,7 @@ class MemorySource implements WindowSource {
   order = (a: Row, b: Row) => a.id.localeCompare(b.id);
   skip = 0;
   limit?: number;
+  calls = {matching: 0, keys: 0};
 
   put(id: string, n = 0, live = true) {
     this.rows.set(id, {id, n, live});
@@ -24,10 +25,12 @@ class MemorySource implements WindowSource {
   }
 
   async keys() {
+    this.calls.keys++;
     return this.window().map(row => row.id);
   }
 
   async matching(keys: string[]) {
+    this.calls.matching++;
     return [...this.rows.values()].filter(row => keys.includes(row.id) && this.matches(row));
   }
 }
@@ -40,11 +43,12 @@ const summary = (chunks: {kind: ChunkKind; document?: any}[]) =>
 describe("RealtimeWindow", () => {
   let source: MemorySource;
 
-  const open = async (shape: {sorted?: boolean; ranged?: boolean} = {}) => {
+  const open = async (shape: {sorted?: boolean; ranged?: boolean; relevant?: string[]} = {}) => {
     const window = new RealtimeWindow(source, {
       primary: "id",
       sorted: Boolean(shape.sorted),
-      ranged: Boolean(shape.ranged)
+      ranged: Boolean(shape.ranged),
+      relevant: shape.relevant && new Set(shape.relevant)
     });
     await window.initial();
     return window;
@@ -312,6 +316,122 @@ describe("RealtimeWindow", () => {
       const chunks = await window.apply([change("b", "update")]);
 
       expect(chunks).toEqual([{kind: ChunkKind.Expunge, document: {id: "b"}}]);
+    });
+  });
+
+  describe("updates that cannot matter", () => {
+    const edit = (key: string, fields: string[] | undefined, row?: Partial<Row>) => ({
+      key,
+      operation: "update" as const,
+      ...(fields && {fields}),
+      document: {id: key, n: 0, live: true, ...row}
+    });
+
+    it("should send the document it was given without asking the source", async () => {
+      source.put("a");
+      const window = await open({relevant: ["live"]});
+
+      const chunks = await window.apply([edit("a", ["n"], {n: 5})]);
+
+      expect(chunks).toEqual([{kind: ChunkKind.Update, document: {id: "a", n: 5, live: true}}]);
+      expect(source.calls).toEqual({matching: 0, keys: 0});
+    });
+
+    it("should say nothing about a key it does not have", async () => {
+      source.put("a", 0, false);
+      const window = await open({relevant: ["live"]});
+
+      expect(await window.apply([edit("a", ["n"])])).toEqual([]);
+      expect(source.calls).toEqual({matching: 0, keys: 0});
+    });
+
+    it("should ask the source when a field it depends on changed", async () => {
+      source.put("a");
+      const window = await open({relevant: ["live"]});
+
+      source.put("a", 0, false);
+      const chunks = await window.apply([edit("a", ["live"], {live: false})]);
+
+      expect(chunks).toEqual([{kind: ChunkKind.Expunge, document: {id: "a"}}]);
+      expect(source.calls.matching).toBe(1);
+    });
+
+    it("should ask the source when the key was inserted in the same batch", async () => {
+      const window = await open({relevant: ["live"]});
+
+      source.put("a");
+      const chunks = await window.apply([change("a", "insert"), edit("a", ["n"])]);
+
+      expect(summary(chunks)).toEqual([["Insert", "a"]]);
+    });
+
+    it("should ask the source when an update does not say what changed", async () => {
+      source.put("a");
+      const window = await open({relevant: ["live"]});
+
+      await window.apply([change("a", "update")]);
+
+      expect(source.calls.matching).toBe(1);
+    });
+
+    it("should ask the source when it does not know what matters", async () => {
+      source.put("a");
+      const window = await open();
+
+      await window.apply([edit("a", ["n"])]);
+
+      expect(source.calls.matching).toBe(1);
+    });
+
+    it("should leave a sorted window alone when no sort field changed", async () => {
+      source.order = (a, b) => a.n - b.n;
+      source.put("a", 1);
+      source.put("b", 2);
+      const window = await open({sorted: true, relevant: ["live", "n"]});
+
+      const chunks = await window.apply([edit("a", ["title"])]);
+
+      expect(summary(chunks)).toEqual([["Update", "a"]]);
+      expect(source.calls).toEqual({matching: 0, keys: 0});
+    });
+
+    it("should recompute a sorted window when a sort field changed", async () => {
+      source.order = (a, b) => a.n - b.n;
+      source.put("a", 1);
+      source.put("b", 2);
+      const window = await open({sorted: true, relevant: ["live", "n"]});
+
+      source.put("a", 3);
+      const chunks = await window.apply([edit("a", ["n"], {n: 3})]);
+
+      expect(chunks.map(chunk => ChunkKind[chunk.kind])).toEqual(["Update", "Order"]);
+    });
+
+    it("should still recompute a window for a delete", async () => {
+      source.limit = 1;
+      source.put("a");
+      source.put("b");
+      const window = await open({ranged: true, relevant: ["live"]});
+
+      source.rows.delete("a");
+      const chunks = await window.apply([change("a", "delete"), edit("b", ["n"])]);
+
+      expect(summary(chunks)).toEqual([
+        ["Delete", "a"],
+        ["Initial", "b"]
+      ]);
+      expect(source.calls.keys).toBe(1);
+    });
+
+    it("should hand every recipient its own copy of the document", async () => {
+      source.put("a");
+      const window = await open({relevant: ["live"]});
+      const given = edit("a", ["n"], {n: 5});
+
+      const [chunk] = await window.apply([given]);
+      (chunk.document as Row).n = 99;
+
+      expect(given.document.n).toBe(5);
     });
   });
 });

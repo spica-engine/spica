@@ -2,7 +2,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {FilterLanguageError, provideRepository} from "@spica-server/data";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {BUCKET_SCHEMA_MANAGER, BucketSchemaManager} from "@spica-server/interface-bucket";
-import {BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-common";
+import {BUCKET_QUERY, BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-common";
 import {
   ChunkKind,
   REALTIME,
@@ -174,6 +174,150 @@ describe("PostgreSQL realtime", () => {
 
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchObject({status: 404});
+    });
+  });
+
+  describe("the work behind many subscribers", () => {
+    let find: jest.SpyInstance;
+
+    beforeEach(async () => {
+      bucket = await manager.create(definition("true==true"), () => {});
+      find = jest.spyOn(module.get(BUCKET_QUERY), "find");
+    });
+
+    afterEach(() => find.mockRestore());
+
+    it("should read once for subscribers that ask the same thing", async () => {
+      await insert({age: 10, title: "a"});
+      const options = {filter: `document.age > 20`};
+      const streams = [await open(options), await open(options), await open(options)];
+      find.mockClear();
+
+      await insert({age: 30, title: "b"});
+      await until(() => streams.every(stream => stream.live().length > 0));
+      await sleep(SETTLE_MS);
+
+      expect(streams.map(stream => titles(stream.live(), ChunkKind.Insert))).toEqual([
+        ["b"],
+        ["b"],
+        ["b"]
+      ]);
+      expect(find).toHaveBeenCalledTimes(2);
+    });
+
+    it("should read for each user when the read rule differs", async () => {
+      bucket = await manager.create(
+        definition(`document.age > 20 || auth.role == "admin"`),
+        () => {}
+      );
+      find.mockClear();
+      const users = [{role: "a"}, {role: "b"}, {role: "c"}];
+      const streams = [];
+      for (const user of users) {
+        streams.push(await open({applyAcl: true, user}));
+      }
+      find.mockClear();
+
+      await insert({age: 30, title: "b"});
+      await until(() => streams.every(stream => stream.live().length > 0));
+      await sleep(SETTLE_MS);
+
+      expect(find).toHaveBeenCalledTimes(1 + users.length);
+    });
+
+    it("should not read for an update that leaves out what the subscription depends on", async () => {
+      const saved = await insert({age: 30, title: "first"});
+      find.mockClear();
+      const written = await patch({...saved, title: "second"}, {title: "second"});
+      const costOfTheWrite = find.mock.calls.length;
+      await sleep(SETTLE_MS);
+      const {live} = await open({filter: `document.age > 20`});
+      find.mockClear();
+
+      await patch({...written, title: "third"}, {title: "third"});
+      await until(() => live().length > 0);
+      await sleep(SETTLE_MS);
+
+      expect(live().map(chunk => ChunkKind[chunk.kind])).toEqual(["Update"]);
+      expect(live()[0].document.title).toEqual("third");
+      expect(find).toHaveBeenCalledTimes(costOfTheWrite + 1);
+    });
+
+    it("should read when an update changes what the subscription depends on", async () => {
+      const saved = await insert({age: 30, title: "x"});
+      const {live} = await open({filter: `document.age > 20`});
+      find.mockClear();
+
+      await patch({...saved, age: 5}, {age: 5});
+      await until(() => live().length > 0);
+      await sleep(SETTLE_MS);
+
+      expect(live().map(chunk => ChunkKind[chunk.kind])).toEqual(["Expunge"]);
+      expect(find.mock.calls.length).toBeGreaterThan(1);
+    });
+  });
+
+  describe("the document sent for an update that cannot matter", () => {
+    const created = (properties: object, read = "true==true") =>
+      manager.create(
+        {
+          ...definition(read),
+          properties: {id: {type: "uuid", options: {generated: true}}, ...properties}
+        },
+        () => {}
+      );
+
+    it("should leave out the fields the read rule hides from the user", async () => {
+      bucket = await created({
+        age: {type: "number"},
+        title: {type: "string"},
+        secret: {type: "string", acl: `auth.role == "admin"`}
+      });
+      const saved = await insert({age: 30, title: "first", secret: "hidden"});
+      const member = await open({
+        applyAcl: true,
+        user: {role: "member"},
+        filter: `document.age > 20`
+      });
+      const admin = await open({
+        applyAcl: true,
+        user: {role: "admin"},
+        filter: `document.age > 20`
+      });
+
+      await patch({...saved, title: "second"}, {title: "second"});
+      await until(() => member.live().length > 0 && admin.live().length > 0);
+
+      expect(member.live()).toHaveLength(1);
+      expect(member.live()[0].document).toMatchObject({title: "second"});
+      expect(member.live()[0].document).not.toHaveProperty("secret");
+      expect(admin.live()[0].document).toMatchObject({title: "second", secret: "hidden"});
+    });
+
+    it("should be the document a new subscriber is sent", async () => {
+      bucket = await created({
+        age: {type: "number"},
+        title: {type: "string"},
+        tags: {type: "array", items: {type: "string"}},
+        address: {type: "object", properties: {city: {type: "string"}}},
+        born: {type: "date"}
+      });
+      const saved = await insert({
+        age: 30,
+        title: "first",
+        tags: ["a", "b"],
+        address: {city: "Bonn"},
+        born: new Date("2020-01-02T03:04:05.000Z")
+      });
+      const watcher = await open({filter: `document.age > 20`});
+
+      await patch({...saved, title: "second"}, {title: "second"});
+      await until(() => watcher.live().length > 0);
+      const fresh = await open({filter: `document.age > 20`});
+
+      const sent = watcher.live()[0].document;
+      const initial = fresh.chunks.find(chunk => chunk.kind == ChunkKind.Initial)!.document;
+      expect(sent).toEqual(initial);
     });
   });
 });
