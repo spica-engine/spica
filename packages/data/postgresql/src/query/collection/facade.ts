@@ -55,7 +55,7 @@ export class PostgresCollectionQueryFacade implements CollectionQueryFacade {
   ): Promise<T[]> {
     const rows = await reads.page(plan, spec);
     const records = rows.map(row => fromRow(plan.entity, row)) as Record_[];
-    await resolveRelations(reads, records, plan.relations.resolved);
+    await resolveRelations(reads, records, plan.relations.resolved, spec.fields);
     return records as T[];
   }
 }
