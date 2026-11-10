@@ -22,9 +22,6 @@
       "path": "../../../../interface/passport/user"
     },
     {
-      "path": "../../../../database/realtime"
-    },
-    {
       "path": "../../../../database/testing"
     }
   ]

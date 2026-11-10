@@ -24,9 +24,6 @@
       "path": "../../../interface/data"
     },
     {
-      "path": "../../../database/realtime"
-    },
-    {
       "path": "../../../database"
     },
     {

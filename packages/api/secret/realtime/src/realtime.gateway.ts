@@ -1,8 +1,8 @@
+import {Inject} from "@nestjs/common";
 import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
-import {RealtimeDatabaseService} from "@spica-server/database-realtime";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {getConnectionHandlers, RealtimeOptionsBuilder} from "@spica-server/realtime";
-import {ChunkKind} from "@spica-server/interface-realtime";
+import {ChunkKind, REALTIME, Realtime} from "@spica-server/interface-realtime";
 import {resourceFilterFunction} from "@spica-server/passport-guard";
 
 @WebSocketGateway({
@@ -12,7 +12,7 @@ export class SecretRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
   readonly COLLECTION = "secret";
 
   constructor(
-    private realtime: RealtimeDatabaseService,
+    @Inject(REALTIME) private realtime: Realtime,
     private guardService: GuardService
   ) {}
 

@@ -9085,7 +9085,6 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/data": "workspace:*"
     "@spica-server/database": "workspace:*"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-activity": "workspace:*"
     "@spica-server/interface-bucket": "workspace:*"
@@ -9108,7 +9107,6 @@ __metadata:
     "@nestjs/common": "npm:^10.4.22"
     "@nestjs/testing": "npm:^10.4.22"
     "@nestjs/websockets": "npm:^10.4.22"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-bucket": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
@@ -9304,7 +9302,6 @@ __metadata:
     "@nestjs/common": "npm:^10.4.22"
     "@nestjs/testing": "npm:^10.4.22"
     "@nestjs/websockets": "npm:^10.4.22"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
@@ -9352,6 +9349,7 @@ __metadata:
     "@spica-server/data": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-pipeline": "workspace:*"
+    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/filter": "workspace:*"
     "@spica-server/interface-activity": "workspace:*"
@@ -9377,6 +9375,7 @@ __metadata:
     "@spica-server/interface-passport-refresh_token": "workspace:*"
     "@spica-server/interface-passport-user": "workspace:*"
     "@spica-server/interface-preference": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/interface-replication": "workspace:*"
     "@spica-server/interface-secret": "workspace:*"
     "@spica-server/interface-status": "workspace:*"
@@ -9523,7 +9522,6 @@ __metadata:
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/core-websocket": "workspace:*"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
@@ -9683,7 +9681,6 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/data": "workspace:*"
     "@spica-server/database": "workspace:*"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-data": "workspace:*"
     "@spica-server/interface-function-log": "workspace:*"
@@ -9757,7 +9754,6 @@ __metadata:
     "@nestjs/websockets": "npm:^10.4.22"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/core-websocket": "workspace:*"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
@@ -10273,6 +10269,9 @@ __metadata:
 "@spica-server/interface-realtime@workspace:*, @spica-server/interface-realtime@workspace:packages/interface/realtime":
   version: 0.0.0-use.local
   resolution: "@spica-server/interface-realtime@workspace:packages/interface/realtime"
+  dependencies:
+    "@spica-server/interface-database": "workspace:*"
+    rxjs: "npm:^7.8.2"
   languageName: unknown
   linkType: soft
 
@@ -10348,7 +10347,6 @@ __metadata:
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/core-websocket": "workspace:*"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-passport-apikey": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
@@ -10436,7 +10434,6 @@ __metadata:
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/core-websocket": "workspace:*"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-passport-identity": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
@@ -10497,7 +10494,6 @@ __metadata:
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/core-websocket": "workspace:*"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
@@ -10540,7 +10536,6 @@ __metadata:
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/core-websocket": "workspace:*"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
@@ -10600,7 +10595,6 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.22"
     "@nestjs/websockets": "npm:^10.4.22"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-passport-user": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
@@ -10746,9 +10740,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/realtime@workspace:packages/realtime"
   dependencies:
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/interface-data": "workspace:*"
     "@spica-server/interface-passport-guard": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     rxjs: "npm:^7.8.2"
   languageName: unknown
   linkType: soft
@@ -10792,7 +10786,6 @@ __metadata:
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/core-websocket": "workspace:*"
-    "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"

@@ -19,6 +19,8 @@ import {
   RESULT_SHAPER
 } from "@spica-server/interface-data";
 import {BUCKET_QUERY, BUCKET_WRITE} from "@spica-server/interface-bucket-common";
+import {RealtimeDatabaseService} from "@spica-server/database-realtime";
+import {REALTIME} from "@spica-server/interface-realtime";
 import {BUCKET_RULE_VALIDATOR, BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
 
 @Global()
@@ -46,7 +48,8 @@ describe("MongoDataAdapter", () => {
       REPOSITORY_CLASSES,
       COLLECTION_NAMES,
       DATA_HEALTH,
-      CHANGE_FEED
+      CHANGE_FEED,
+      REALTIME
     ]);
   });
 
@@ -76,6 +79,17 @@ describe("MongoDataAdapter", () => {
     }).compile();
 
     expect(module.get(BUCKET_SCHEMA_EXTENSION)).toBe(mongoBucketSchema);
+  });
+
+  it("should provide the MongoDB realtime service as the realtime source", async () => {
+    const module = await Test.createTestingModule({
+      imports: [
+        ExistingConnectionModule,
+        DataModule.forRoot(MongoDataAdapter.forExistingConnection())
+      ]
+    }).compile();
+
+    expect(module.get(REALTIME)).toBeInstanceOf(RealtimeDatabaseService);
   });
 
   it("should provide the query facade and a passthrough result shaper", async () => {

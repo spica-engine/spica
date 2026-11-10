@@ -7,7 +7,6 @@ import {
 } from "@spica-server/interface-function-log";
 import {provideRepository} from "@spica-server/data";
 import {LogGateway} from "./realtime.gateway.js";
-import {RealtimeDatabaseModule} from "@spica-server/database-realtime";
 
 @Module({})
 export class LogModule {
@@ -27,7 +26,6 @@ export class LogModule {
     };
 
     if (options.realtime) {
-      module.imports.push(RealtimeDatabaseModule);
       module.providers.push(LogGateway as any);
     }
 

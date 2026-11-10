@@ -1,8 +1,8 @@
+import {Inject} from "@nestjs/common";
 import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
-import {RealtimeDatabaseService} from "@spica-server/database-realtime";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {getConnectionHandlers, RealtimeOptionsBuilder} from "@spica-server/realtime";
-import {ChunkKind} from "@spica-server/interface-realtime";
+import {ChunkKind, REALTIME, Realtime} from "@spica-server/interface-realtime";
 import {resourceFilterFunction} from "@spica-server/passport-guard";
 
 @WebSocketGateway({
@@ -11,7 +11,10 @@ import {resourceFilterFunction} from "@spica-server/passport-guard";
 export class PolicyRealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   readonly COLLECTION = "policies";
 
-  constructor(private realtime: RealtimeDatabaseService, private guardService: GuardService) {}
+  constructor(
+    @Inject(REALTIME) private realtime: Realtime,
+    private guardService: GuardService
+  ) {}
 
   private handlers = getConnectionHandlers(
     this.guardService,

@@ -1,6 +1,6 @@
 import {Injectable, OnModuleDestroy} from "@nestjs/common";
 import {ChangeStream, DatabaseService, Document} from "@spica-server/database";
-import {StreamChunk} from "@spica-server/interface-realtime";
+import {Realtime, StreamChunk} from "@spica-server/interface-realtime";
 import {Observable, throwError} from "rxjs";
 import {ids} from "@spica-server/data";
 import {renderResourceFilter} from "@spica-server/database-pipeline";
@@ -12,7 +12,7 @@ import {PassThrough, Readable} from "stream";
 const CURSOR_READY_TIMEOUT_MS = 5000;
 
 @Injectable()
-export class RealtimeDatabaseService implements OnModuleDestroy {
+export class RealtimeDatabaseService implements Realtime, OnModuleDestroy {
   constructor(private database: DatabaseService) {}
 
   private changeStreams = new Map<

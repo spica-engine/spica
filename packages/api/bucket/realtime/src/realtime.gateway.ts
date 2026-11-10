@@ -26,8 +26,7 @@ import {BucketService, bucketIds, getBucketDataCollection} from "@spica-server/b
 import {applyPatch, deepCopy} from "@spica-server/core-patch";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {ids} from "@spica-server/data";
-import {RealtimeDatabaseService} from "@spica-server/database-realtime";
-import {ChunkKind} from "@spica-server/interface-realtime";
+import {ChunkKind, REALTIME, Realtime} from "@spica-server/interface-realtime";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {extractStrategyType} from "@spica-server/passport-guard";
 import {Action} from "@spica-server/interface-activity";
@@ -49,7 +48,7 @@ import {BucketDataOptionsBuilder} from "./bucket-data-options.builder.js";
 })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
-    private realtime: RealtimeDatabaseService,
+    @Inject(REALTIME) private realtime: Realtime,
     private guardService: GuardService,
     private bucketService: BucketService,
     @Inject(BUCKET_DATA_REPOSITORY) private bucketData: BucketDataRepository,
