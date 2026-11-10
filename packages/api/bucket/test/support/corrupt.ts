@@ -1,52 +1,52 @@
-import {fieldTableName, mainTableName} from "@spica-server/data-postgresql";
-import {DatabaseService, ObjectId} from "@spica-server/database-testing";
-import {PG_POOL} from "@spica-server/interface-data";
+import {BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-common";
 import {BucketApp} from "./bucket-app";
 
 const BROKEN = {encrypted: "corrupted", iv: "bad-iv", authTag: "bad-tag"};
 
-export async function corruptEncrypted(
+function withValueAt(document: Record<string, any>, path: string[], value: unknown) {
+  const [head, ...rest] = path;
+  return {
+    ...document,
+    [head]: rest.length ? withValueAt(document[head] ?? {}, rest, value) : value
+  };
+}
+
+async function overwrite(
+  api: BucketApp,
+  bucketId: string,
+  documentId: string,
+  change: (stored: Record<string, any>) => Record<string, any>
+) {
+  const bucket = (await api.req.get(`/bucket/${bucketId}`)).body;
+  const stored = await api.stored(bucketId, documentId);
+  const patch = change(stored);
+  await api.module
+    .get<BucketWriteFacade>(BUCKET_WRITE, {strict: false})
+    .patch(bucket, {...stored, ...patch}, patch, {}, {resolveSchema: () => bucket});
+}
+
+export function corruptEncrypted(
   api: BucketApp,
   bucketId: string,
   documentId: string,
   path: string[]
 ) {
-  if (api.keyField == "id") {
-    const pool = api.module.get(PG_POOL, {strict: false});
-    await pool.query(
-      `UPDATE "${mainTableName(bucketId)}" SET "${path.join("__")}" = $1 WHERE id = $2`,
-      [JSON.stringify(BROKEN), documentId]
-    );
-    return;
-  }
-  const database = api.module.get(DatabaseService, {strict: false});
-  await database.collection(`bucket_${bucketId}`).updateOne(
-    {_id: new ObjectId(documentId)},
-    {
-      $set: Object.fromEntries(
-        Object.entries(BROKEN).map(([property, value]) => [`${path.join(".")}.${property}`, value])
-      )
-    }
-  );
+  return overwrite(api, bucketId, documentId, stored => {
+    const [head, ...rest] = path;
+    return {[head]: rest.length ? withValueAt(stored[head], rest, BROKEN) : BROKEN};
+  });
 }
 
-export async function corruptEncryptedItem(
+export function corruptEncryptedItem(
   api: BucketApp,
   bucketId: string,
   documentId: string,
   field: string,
   position: number
 ) {
-  if (api.keyField == "id") {
-    const pool = api.module.get(PG_POOL, {strict: false});
-    await pool.query(
-      `UPDATE "${fieldTableName(bucketId, [field])}" SET _value = $1 WHERE _parent = $2 AND _position = $3`,
-      [JSON.stringify(BROKEN), documentId, position]
-    );
-    return;
-  }
-  const database = api.module.get(DatabaseService, {strict: false});
-  await database
-    .collection(`bucket_${bucketId}`)
-    .updateOne({_id: new ObjectId(documentId)}, {$set: {[`${field}.${position}`]: BROKEN}});
+  return overwrite(api, bucketId, documentId, stored => ({
+    [field]: stored[field].map((item: unknown, index: number) =>
+      index == position ? BROKEN : item
+    )
+  }));
 }

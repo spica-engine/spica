@@ -9,13 +9,14 @@ import {
   BucketSchemaManager
 } from "@spica-server/interface-bucket";
 import {PG_POOL} from "@spica-server/interface-data";
-import {constraintName} from "@spica-server/data-postgresql";
-import {Session} from "@spica-server/data-postgresql-orm";
+import {constraintName, ORM} from "@spica-server/data-postgresql";
+import {Orm, Session} from "@spica-server/data-postgresql-orm";
 import pg from "pg";
 
 describe("PostgreSQL schema manager", () => {
   let module: TestingModule;
   let pool: pg.Pool;
+  let orm: Orm;
   let manager: BucketSchemaManager;
   let buckets: BucketRepository;
 
@@ -26,6 +27,7 @@ describe("PostgreSQL schema manager", () => {
     }).compile();
     await module.init();
     pool = module.get(PG_POOL);
+    orm = module.get(ORM);
     manager = module.get(BUCKET_SCHEMA_MANAGER);
     buckets = module.get(BUCKET_REPOSITORY);
   }, 120_000);
@@ -718,20 +720,11 @@ describe("PostgreSQL schema manager", () => {
         () => {}
       );
       const table = tableOf(created._id);
-      const insertInto = async (target: string) =>
-        (await pool.query(`INSERT INTO "${target}" DEFAULT VALUES RETURNING id`)).rows[0].id;
+      const insertInto = async (target: string) => (await orm.table(target).insertRow({})).id;
       const firstRow = await insertInto(tableOf(first._id));
       const keptRow = await insertInto(tableOf(kept._id));
-      const row = (
-        await pool.query(`INSERT INTO "${table}" (one, same) VALUES ($1, $2) RETURNING id`, [
-          firstRow,
-          keptRow
-        ])
-      ).rows[0].id;
-      await pool.query(
-        `INSERT INTO "${table}__many" (_parent, _position, _target) VALUES ($1, 0, $2)`,
-        [row, firstRow]
-      );
+      const row = (await orm.table(table).insertRow({one: firstRow, same: keptRow})).id;
+      await orm.table(`${table}__many`).insertRow({_parent: row, _position: 0, _target: firstRow});
 
       await manager.replace(
         created._id,
@@ -743,9 +736,10 @@ describe("PostgreSQL schema manager", () => {
         () => {}
       );
 
-      const {rows} = await pool.query(`SELECT one, same FROM "${table}"`);
-      expect(rows).toEqual([{one: null, same: keptRow}]);
-      expect((await pool.query(`SELECT * FROM "${table}__many"`)).rows).toEqual([]);
+      expect(await orm.table(table).rows()).toEqual([
+        {id: expect.anything(), one: null, same: keptRow}
+      ]);
+      expect(await orm.table(`${table}__many`).rows()).toEqual([]);
     });
 
     describe("a relation inside the items of a list", () => {
@@ -761,22 +755,27 @@ describe("PostgreSQL schema manager", () => {
           }
         });
 
+      const items = async (table: string) =>
+        (await orm.table(`${table}__lines`).rows(["_position"])).map(({sku, product}) => ({
+          sku,
+          product
+        }));
+
       async function itemsAround(required: string[]) {
         const first = await manager.create(keyed({}), () => {});
         const second = await manager.create(keyed({}), () => {});
         const created = await manager.create(lines(required, first._id), () => {});
         const table = tableOf(created._id);
-        const product = (
-          await pool.query(`INSERT INTO "${tableOf(first._id)}" DEFAULT VALUES RETURNING id`)
-        ).rows[0].id;
-        const parent = (await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`))
-          .rows[0].id;
-        for (const [position, sku] of ["a", "b"].entries()) {
-          await pool.query(
-            `INSERT INTO "${table}__lines" (_parent, _position, sku, product) VALUES ($1, $2, $3, $4)`,
-            [parent, position, sku, product]
-          );
-        }
+        const product = (await orm.table(tableOf(first._id)).insertRow({})).id;
+        const parent = (await orm.table(table).insertRow({})).id;
+        await orm.table(`${table}__lines`).insertRows(
+          ["a", "b"].map((sku, position) => ({
+            _parent: parent,
+            _position: position,
+            sku,
+            product
+          }))
+        );
         return {first, second, created, table, product};
       }
 
@@ -785,12 +784,9 @@ describe("PostgreSQL schema manager", () => {
 
         await manager.replace(created._id, lines([], second._id), () => {});
 
-        expect(
-          (await pool.query(`SELECT _position, sku, product FROM "${table}__lines" ORDER BY 1`))
-            .rows
-        ).toEqual([
-          {_position: 0, sku: "a", product: null},
-          {_position: 1, sku: "b", product: null}
+        expect(await items(table)).toEqual([
+          {sku: "a", product: null},
+          {sku: "b", product: null}
         ]);
       });
 
@@ -808,9 +804,7 @@ describe("PostgreSQL schema manager", () => {
           message: expect.stringContaining("Existing documents refer to documents")
         });
 
-        expect(
-          (await pool.query(`SELECT sku, product FROM "${table}__lines" ORDER BY _position`)).rows
-        ).toEqual([
+        expect(await items(table)).toEqual([
           {sku: "a", product},
           {sku: "b", product}
         ]);
@@ -828,10 +822,8 @@ describe("PostgreSQL schema manager", () => {
         () => {}
       );
       const table = tableOf(created._id);
-      const firstRow = (
-        await pool.query(`INSERT INTO "${tableOf(first._id)}" DEFAULT VALUES RETURNING id`)
-      ).rows[0].id;
-      await pool.query(`INSERT INTO "${table}" (one) VALUES ($1)`, [firstRow]);
+      const firstRow = (await orm.table(tableOf(first._id)).insertRow({})).id;
+      await orm.table(table).insertRow({one: firstRow});
 
       await expect(
         manager.replace(
@@ -842,7 +834,7 @@ describe("PostgreSQL schema manager", () => {
       ).rejects.toThrow();
 
       expect((await foreignKeys(table))[0][1]).toBe(tableOf(first._id));
-      expect((await pool.query(`SELECT one FROM "${table}"`)).rows).toEqual([{one: firstRow}]);
+      expect((await orm.table(table).rows()).map(row => row.one)).toEqual([firstRow]);
     });
 
     it("should remove the relations that point at a bucket when it is dropped", async () => {

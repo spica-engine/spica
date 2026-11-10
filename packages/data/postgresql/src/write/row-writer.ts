@@ -1,14 +1,12 @@
 import {BadRequestException} from "@spica-server/bucket-common";
 import {isEncryptedData} from "@spica-server/core-encryption";
-import {quote, Session} from "@spica-server/data-postgresql-orm";
+import {Session} from "@spica-server/data-postgresql-orm";
 import {Bucket} from "@spica-server/interface-bucket";
 import {BucketMetadata, ColumnMetadata, SYSTEM_COLUMNS, TableMetadata} from "../schema/index.js";
 import {fieldKey, Row, RowSet} from "../shape/index.js";
 import {toColumnValue, valueAt} from "./values.js";
 
 type Properties = NonNullable<Bucket["properties"]>;
-
-const MAX_PARAMETERS = 30_000;
 
 function encryptedPaths(properties: Properties = {}, prefix: string[] = []): string[][] {
   return Object.entries(properties).flatMap(([name, property]) => {
@@ -85,25 +83,13 @@ async function insertMainRow(
   key: unknown,
   converter: Converter
 ) {
-  const table = metadata.main;
-  const written = table.columns
-    .filter(column => column.name != metadata.primaryKey.column || key !== undefined)
-    .map(column => ({
-      name: column.name,
-      value: converter.value(column, valueAt(document, column.path))
-    }));
-
-  const names = written.map(({name}) => quote(name)).join(", ");
-  const placeholders = written.map((_, index) => `$${index + 1}`).join(", ");
-  const sql = written.length
-    ? `INSERT INTO ${quote(table.name)} (${names}) VALUES (${placeholders}) RETURNING *`
-    : `INSERT INTO ${quote(table.name)} DEFAULT VALUES RETURNING *`;
-
-  const {rows} = await session.raw(
-    sql,
-    written.map(({value}) => value)
-  );
-  return rows[0];
+  const values: Row = {};
+  for (const column of metadata.main.columns) {
+    if (column.name != metadata.primaryKey.column || key !== undefined) {
+      values[column.name] = converter.value(column, valueAt(document, column.path));
+    }
+  }
+  return session.table(metadata.main.name).insertRow(values);
 }
 
 export function childRows(
@@ -144,40 +130,13 @@ export function childRows(
   });
 }
 
-export async function insertMany(
-  session: Session,
-  table: TableMetadata,
-  rows: Row[]
-): Promise<Row[]> {
-  if (!rows.length) {
-    return [];
-  }
-  const names = Object.keys(rows[0]);
-  const perStatement = Math.max(1, Math.floor(MAX_PARAMETERS / names.length));
-  const inserted: Row[] = [];
-
-  for (let start = 0; start < rows.length; start += perStatement) {
-    const batch = rows.slice(start, start + perStatement);
-    const values = batch.map(
-      (_, row) => `(${names.map((_, column) => `$${row * names.length + column + 1}`).join(", ")})`
-    );
-    const result = await session.raw(
-      `INSERT INTO ${quote(table.name)} (${names.map(quote).join(", ")}) VALUES ${values.join(", ")} RETURNING *`,
-      batch.flatMap(row => names.map(name => row[name]))
-    );
-    inserted.push(...result.rows);
-  }
-  return inserted;
+export function insertMany(session: Session, table: TableMetadata, rows: Row[]): Promise<Row[]> {
+  return session.table(table.name).insertRows(rows);
 }
 
 async function advanceSequence(session: Session, metadata: BucketMetadata, key: unknown) {
   const {generated, type, column} = metadata.primaryKey;
-  if (!generated || key === undefined || (type != "integer" && type != "bigint")) {
-    return;
+  if (generated && key !== undefined && (type == "integer" || type == "bigint")) {
+    await session.table(metadata.main.name).advanceSequence(column, String(key));
   }
-  await session.raw(
-    `SELECT setval(sequence.name, GREATEST($3::bigint, COALESCE(pg_sequence_last_value(sequence.name), 1)))
-     FROM (SELECT pg_get_serial_sequence($1, $2)::regclass AS name) AS sequence`,
-    [quote(metadata.main.name), column, String(key)]
-  );
 }

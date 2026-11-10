@@ -23,8 +23,6 @@ import {
   DatabaseService,
   DatabaseTestingModule
 } from "@spica-server/database-testing";
-import {PG_POOL} from "@spica-server/interface-data";
-import pg from "pg";
 import {
   otherBucket,
   otherMetadata,
@@ -102,7 +100,7 @@ export interface PostgresAccessStore extends AccessStore {
 export async function createPostgresAccessStore(
   module: TestingModule
 ): Promise<PostgresAccessStore> {
-  const pool = module.get<pg.Pool>(PG_POOL);
+  const orm = module.get<Orm>(ORM);
   const uuid = new UuidV7Type();
   const idByLabel = new Map<string, string>();
   let mainLabels: string[] = [];
@@ -116,10 +114,8 @@ export async function createPostgresAccessStore(
   );
 
   for (const {metadata} of [TARGETS.third, TARGETS.other, TARGETS.main]) {
-    for (const statement of createStatements(metadata)) {
-      await pool.query(statement);
-    }
-    await module.get<Orm>(ORM).insert(buckets, storedBuckets[metadata.bucketId]);
+    await orm.executeStatements(createStatements(metadata));
+    await orm.insert(buckets, storedBuckets[metadata.bucketId]);
   }
 
   const idOf = (label: string) => {
@@ -181,7 +177,7 @@ export async function createPostgresAccessStore(
 
   async function reset() {
     const tables = Object.values(TARGETS).flatMap(({metadata}) => metadata.tables.map(t => t.name));
-    await pool.query(`TRUNCATE ${tables.map(table => quote(table)).join(", ")} CASCADE`);
+    await orm.truncate(tables);
     idByLabel.clear();
     mainLabels = [];
   }
@@ -212,7 +208,7 @@ export async function createPostgresAccessStore(
         },
         values
       );
-      const {rows} = await pool.query(
+      const {rows} = await orm.raw(
         `SELECT ${mainId} FROM ${mainTable} ${joins.join(" ")} WHERE ${sql}`,
         values
       );
@@ -227,7 +223,7 @@ export async function createPostgresAccessStore(
         values
       );
       const flags = visibilitySelect(fields).map(flag => `, ${flag}`);
-      const {rows} = await pool.query(
+      const {rows} = await orm.raw(
         `SELECT ${mainId}${flags.join("")} FROM ${mainTable} ${fields.joins.join(" ")}`,
         values
       );

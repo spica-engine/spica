@@ -4,7 +4,7 @@ import {
   DatabaseException,
   decryptDocumentFields
 } from "@spica-server/bucket-common";
-import {Orm, quote, Session} from "@spica-server/data-postgresql-orm";
+import {Orm, Session} from "@spica-server/data-postgresql-orm";
 import {
   Bucket,
   BUCKET_DATA_LIMIT,
@@ -167,11 +167,8 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
     }
 
     const {column, type} = metadata.primaryKey;
-    const {rows} = await this.orm.raw(
-      `SELECT ${quote(column)} AS key FROM ${quote(metadata.main.name)} ORDER BY ${quote(column)} ASC LIMIT $1`,
-      [surplus]
-    );
-    for (const {key} of rows) {
+    const keys = await this.orm.table(metadata.main.name).smallest(column, surplus);
+    for (const key of keys) {
       await context.deleteOne(keyIdType(type).parse(key) as Id);
     }
   }
