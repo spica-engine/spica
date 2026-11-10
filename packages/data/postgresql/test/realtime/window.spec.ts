@@ -48,7 +48,8 @@ describe("RealtimeWindow", () => {
       primary: "id",
       sorted: Boolean(shape.sorted),
       ranged: Boolean(shape.ranged),
-      relevant: shape.relevant && new Set(shape.relevant)
+      relevant: shape.relevant && new Set(shape.relevant),
+      prefilter: shape.prefilter
     });
     await window.initial();
     return window;
@@ -432,6 +433,109 @@ describe("RealtimeWindow", () => {
       (chunk.document as Row).n = 99;
 
       expect(given.document.n).toBe(5);
+    });
+  });
+
+  describe("documents that cannot enter", () => {
+    const never = () => true;
+    const fresh = (key: string, row: Partial<Row> = {}) => ({
+      key,
+      operation: "insert" as const,
+      document: {id: key, n: 0, live: true, ...row}
+    });
+
+    it("should not ask the source about a document it is sure does not match", async () => {
+      const window = await open({prefilter: never});
+
+      source.put("a");
+
+      expect(await window.apply([fresh("a")])).toEqual([]);
+      expect(source.calls).toEqual({matching: 0, keys: 0});
+    });
+
+    it("should ask the source when it is not sure", async () => {
+      const window = await open({prefilter: () => false});
+
+      source.put("a");
+
+      expect(summary(await window.apply([fresh("a")]))).toEqual([["Insert", "a"]]);
+    });
+
+    it("should pass the document of the latest change to the prefilter", async () => {
+      const prefilter = jest.fn(() => false);
+      const window = await open({prefilter});
+
+      source.put("a");
+      await window.apply([
+        fresh("a", {n: 1}),
+        {key: "a", operation: "update", document: {id: "a", n: 2, live: true}}
+      ]);
+
+      expect(prefilter).toHaveBeenCalledWith({id: "a", n: 2, live: true});
+    });
+
+    it("should never skip a document the subscriber already has", async () => {
+      source.put("a");
+      const window = await open({prefilter: never});
+
+      source.put("a", 0, false);
+      const chunks = await window.apply([
+        {key: "a", operation: "update", fields: ["live"], document: {id: "a", n: 0, live: false}}
+      ]);
+
+      expect(chunks).toEqual([{kind: ChunkKind.Expunge, document: {id: "a"}}]);
+    });
+
+    it("should ask the source when the latest change brought no document", async () => {
+      const prefilter = jest.fn(() => true);
+      source.put("a");
+      const window = await open({prefilter});
+
+      await window.apply([fresh("a"), change("a", "update")]);
+
+      expect(prefilter).not.toHaveBeenCalled();
+      expect(source.calls.matching).toBe(1);
+    });
+
+    it("should ask the source when a change brought no document at all", async () => {
+      source.put("a");
+      const window = await open({prefilter: never});
+
+      await window.apply([change("a", "insert")]);
+
+      expect(source.calls.matching).toBe(1);
+    });
+
+    it("should skip only the documents it is sure about", async () => {
+      const window = await open({prefilter: document => document.id == "a"});
+
+      source.put("a");
+      source.put("b");
+      const chunks = await window.apply([fresh("a"), fresh("b")]);
+
+      expect(summary(chunks)).toEqual([["Insert", "b"]]);
+      expect(source.calls.matching).toBe(1);
+    });
+
+    it("should still see deletes", async () => {
+      source.put("a");
+      const window = await open({prefilter: never});
+
+      source.rows.delete("a");
+
+      expect(summary(await window.apply([change("a", "delete")]))).toEqual([["Delete", "a"]]);
+    });
+
+    it("should skip documents that cannot enter a limited window too", async () => {
+      source.limit = 1;
+      source.put("a");
+      const window = await open({ranged: true, prefilter: never});
+
+      source.put("0");
+      const chunks = await window.apply([fresh("0")]);
+
+      expect(chunks).toEqual([]);
+      expect(source.calls.keys).toBe(0);
     });
   });
 });
