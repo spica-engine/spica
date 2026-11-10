@@ -1,3 +1,4 @@
+import {dropChangeTriggerSql} from "../../change/sql.js";
 import {BucketMetadata, TableMetadata} from "../metadata/index.js";
 import {sameKeyColumns} from "./compare.js";
 import {planColumns} from "./columns.js";
@@ -9,7 +10,6 @@ import {PlanBuilder, statementsOf, UpdatePlan} from "./plan.js";
 import {UpdateScope} from "./scope.js";
 import {dropTablesStatements} from "./sql.js";
 import {changeTriggerSql} from "./triggers.js";
-import {dropChangeTriggerSql} from "../../change/sql.js";
 
 function diffTables(previous: BucketMetadata, next: BucketMetadata) {
   const before = (table: TableMetadata) =>

@@ -85,7 +85,7 @@ export const createChangeTriggerSql = (table: string, args: ChangeTriggerArgumen
     args.field ?? "",
     (args.beforeColumns ?? []).join(",")
   ]
-    .map(literalOf)
+    .map(value => literalOf(value))
     .join(", ")})`;
 
 export const dropChangeTriggerSql = (table: string) =>

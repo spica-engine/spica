@@ -85,6 +85,8 @@ const noticeOf = (notification: Notification): ChangeNotice => ({
   ...(notification.before && {before: notification.before})
 });
 
+const IDLE_FLUSH_MS = 25;
+
 export class Coalescer {
   private transaction: string | undefined;
   private pending = new Map<string, ChangeNotice>();
@@ -92,7 +94,7 @@ export class Coalescer {
 
   constructor(
     private readonly emit: (notice: ChangeNotice) => void,
-    private readonly delayMs = 5
+    private readonly delayMs = IDLE_FLUSH_MS
   ) {}
 
   push(notification: Notification) {

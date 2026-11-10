@@ -169,6 +169,59 @@ describe("PostgreSQL change feed", () => {
     });
   });
 
+  describe("large changes", () => {
+    it("should report the whole document when too many columns changed to list them", async () => {
+      const fields = Array.from({length: 250}, (_, index) => `a_rather_long_field_name_${index}`);
+      const wide = {
+        ...definition({
+          properties: {
+            id: {type: "uuid", options: {generated: true}},
+            ...Object.fromEntries(fields.map(field => [field, {type: "string"}]))
+          }
+        }),
+        _id: undefined
+      };
+      const created = await manager.create(wide as any, () => {});
+      const before = Object.fromEntries(fields.map(field => [field, "old"]));
+      const after = Object.fromEntries(fields.map(field => [field, "new"]));
+      const saved = await insert(before, created);
+      await sleep(SETTLE_MS);
+      const events = await listen(
+        {operations: ["update"], document: "current"},
+        feed,
+        `bucket_${created._id}`
+      );
+
+      await patch({...saved, ...after}, after, created);
+      await eventually(events, 1);
+
+      expect(events).toHaveLength(1);
+      expect(events[0].changes.removed).toEqual([]);
+      expect(events[0].changes.updated).toMatchObject({id: saved.id, ...after});
+    });
+  });
+
+  describe("subscribers", () => {
+    it("should read a changed row once however many subscribers wait for it", async () => {
+      const read = jest.spyOn(module.get(BUCKET_QUERY), "findOne");
+      try {
+        const first = await listen({operations: ["insert"]});
+        const second = await listen({operations: ["insert"]});
+        read.mockClear();
+
+        await insert({title: "shared"});
+        await eventually(first, 1);
+        await eventually(second, 1);
+
+        expect(first).toHaveLength(1);
+        expect(second).toHaveLength(1);
+        expect(read).toHaveBeenCalledTimes(1);
+      } finally {
+        read.mockRestore();
+      }
+    });
+  });
+
   describe("transactions", () => {
     it("should announce nothing for a rolled back write", async () => {
       const events = await listen();
