@@ -1,32 +1,28 @@
 /*
- * TEMPORARY. Gives the access rule specs one `replace / select` surface over both engines while
- * PostgreSQL has no write facade.
- *
- * Part 9 binds BUCKET_WRITE on PostgreSQL: `replace` becomes `BUCKET_WRITE.insert` on both
- * engines. BUCKET_QUERY is bound since Part 8 (contract/bucket-query.spec.ts covers it with
- * rules and field rules), but these specs pin the SQL the rule compiler writes against tables
- * they lay out themselves, with no bucket stored behind them, so `select` and `hiddenFields` keep
- * running the compiler's output directly. `PostgresAccessStore` goes when the specs can create
- * their buckets through the facades.
+ * Gives the access rule specs one `replace / select` surface over both engines. These specs pin
+ * the SQL the rule compiler writes against tables they lay out themselves, so on PostgreSQL
+ * `select` and `hiddenFields` run the compiler's output directly, and the documents are written
+ * through BUCKET_WRITE into buckets that are stored next to those tables.
  */
 import {Test, TestingModule} from "@nestjs/testing";
 import {aggregate} from "@spica-server/bucket-expression";
 import {
   applyVisibility,
+  buckets,
   compileFieldRules,
   compileRule,
   createStatements,
+  ORM,
   UuidV7Type,
   visibilitySelect
 } from "@spica-server/data-postgresql";
-import {quote} from "@spica-server/data-postgresql-orm";
+import {Orm, quote} from "@spica-server/data-postgresql-orm";
+import {BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-common";
 import {
   ContractEngine,
   DatabaseService,
   DatabaseTestingModule
 } from "@spica-server/database-testing";
-import {PG_POOL} from "@spica-server/interface-data";
-import pg from "pg";
 import {
   otherBucket,
   otherMetadata,
@@ -104,15 +100,22 @@ export interface PostgresAccessStore extends AccessStore {
 export async function createPostgresAccessStore(
   module: TestingModule
 ): Promise<PostgresAccessStore> {
-  const pool = module.get<pg.Pool>(PG_POOL);
+  const orm = module.get<Orm>(ORM);
   const uuid = new UuidV7Type();
   const idByLabel = new Map<string, string>();
   let mainLabels: string[] = [];
 
+  const writes = module.get<BucketWriteFacade>(BUCKET_WRITE);
+  const storedBuckets = Object.fromEntries(
+    Object.values(TARGETS).map(({bucket, metadata}) => [
+      metadata.bucketId,
+      {...bucket, _id: metadata.bucketId}
+    ])
+  );
+
   for (const {metadata} of [TARGETS.third, TARGETS.other, TARGETS.main]) {
-    for (const statement of createStatements(metadata)) {
-      await pool.query(statement);
-    }
+    await orm.executeStatements(createStatements(metadata));
+    await orm.insert(buckets, storedBuckets[metadata.bucketId]);
   }
 
   const idOf = (label: string) => {
@@ -124,62 +127,48 @@ export async function createPostgresAccessStore(
 
   const labelOf = (id: string) => [...idByLabel].find(([, other]) => other == id)![0];
 
-  async function insertRow(table: string, record: Record<string, unknown>) {
-    const columns = Object.keys(record);
-    await pool.query(
-      `INSERT INTO ${quote(table)} (${columns.map(column => quote(column)).join(", ")})
-       VALUES (${columns.map((_, index) => `$${index + 1}`).join(", ")})`,
-      Object.values(record)
-    );
-  }
+  const documentOf = (fields: Record<string, any>, schema: Record<string, any>) => {
+    const resolve = (
+      values: Record<string, any>,
+      properties: Record<string, any>,
+      path: string[]
+    ) =>
+      Object.fromEntries(
+        Object.entries(values).map(([name, value]) => {
+          const property = properties[name];
+          if (!property) {
+            throw new Error(`"${[...path, name].join(".")}" is not a property of the bucket.`);
+          }
+          if (property.type == "object") {
+            return [name, resolve(value, property.properties, [...path, name])];
+          }
+          if (property.type == "relation") {
+            return [name, property.relationType == "onetomany" ? value.map(idOf) : idOf(value)];
+          }
+          return [name, value];
+        })
+      );
+    return resolve(fields, schema, []);
+  };
 
   async function insert(documents: Documents, into: Target = "main") {
     const {bucket, metadata} = TARGETS[into];
-    const properties = bucket.properties as Record<string, any>;
+    const stored = storedBuckets[metadata.bucketId];
+    const context = {
+      resolveSchema: (id: unknown) => storedBuckets[String(id)],
+      deleteOne: async () => {}
+    };
 
     for (const [label, document] of Object.entries(documents)) {
-      const id = idOf(label);
-      const row: Record<string, unknown> = {[metadata.primaryKey.column]: id};
-      const lists: [path: string[], values: unknown[]][] = [];
-
-      const write = (fields: Record<string, any>, schema: Record<string, any>, path: string[]) => {
-        for (const [name, value] of Object.entries(fields)) {
-          const property = schema[name];
-          const fieldPath = [...path, name];
-          if (!property) {
-            throw new Error(`"${fieldPath.join(".")}" is not a property of the ${into} bucket.`);
-          }
-          if (property.type == "object") {
-            write(value, property.properties, fieldPath);
-          } else if (property.type == "relation" && property.relationType == "onetomany") {
-            lists.push([fieldPath, value.map(idOf)]);
-          } else if (property.type == "relation") {
-            row[metadata.columnOf(fieldPath)!.name] = idOf(value);
-          } else if (property.type == "array") {
-            lists.push([fieldPath, value]);
-          } else {
-            const column = metadata.columnOf(fieldPath)!;
-            row[column.name] = column.type == "jsonb" ? JSON.stringify(value) : value;
-          }
-        }
-      };
-      write(document, properties, []);
-
-      await insertRow(metadata.main.name, row);
-
-      for (const [path, values] of lists) {
-        const table = metadata.tables.find(
-          candidate => candidate.path.join(".") == path.join(".")
-        )!;
-        const element = metadata.columnOf(path)!;
-        for (const [position, value] of values.entries()) {
-          await insertRow(table.name, {
-            _parent: id,
-            _position: position,
-            [element.name]: element.type == "jsonb" ? JSON.stringify(value) : value
-          });
-        }
-      }
+      await writes.insert(
+        stored,
+        {
+          [metadata.primaryKey.field]: idOf(label),
+          ...documentOf(document, bucket.properties as Record<string, any>)
+        },
+        {},
+        context
+      );
     }
     if (into == "main") {
       mainLabels.push(...Object.keys(documents));
@@ -188,7 +177,7 @@ export async function createPostgresAccessStore(
 
   async function reset() {
     const tables = Object.values(TARGETS).flatMap(({metadata}) => metadata.tables.map(t => t.name));
-    await pool.query(`TRUNCATE ${tables.map(table => quote(table)).join(", ")} CASCADE`);
+    await orm.truncate(tables);
     idByLabel.clear();
     mainLabels = [];
   }
@@ -219,7 +208,7 @@ export async function createPostgresAccessStore(
         },
         values
       );
-      const {rows} = await pool.query(
+      const {rows} = await orm.raw(
         `SELECT ${mainId} FROM ${mainTable} ${joins.join(" ")} WHERE ${sql}`,
         values
       );
@@ -234,7 +223,7 @@ export async function createPostgresAccessStore(
         values
       );
       const flags = visibilitySelect(fields).map(flag => `, ${flag}`);
-      const {rows} = await pool.query(
+      const {rows} = await orm.raw(
         `SELECT ${mainId}${flags.join("")} FROM ${mainTable} ${fields.joins.join(" ")}`,
         values
       );

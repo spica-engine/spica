@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceModule} from "@spica-server/preference";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
@@ -7,15 +7,13 @@ import {INestApplication} from "@nestjs/common";
 import {BucketModule, BucketCoreModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
+import {keyed, keyFieldOf} from "../../bucket/test/support/bucket-app";
 
-mongoOnly(
-  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
-);
-
-describe("Preference Integration", () => {
+contractSuite("Preference Integration", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
+  const keyField = keyFieldOf(engine);
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -23,7 +21,7 @@ describe("Preference Integration", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PassportTestingModule.initialize(),
         PreferenceModule.forRoot(),
         CoreTestingModule,
@@ -49,14 +47,7 @@ describe("Preference Integration", () => {
     const bucket = {
       title: "bucket",
       description: "bucket",
-      properties: {
-        title: {
-          type: "string",
-          options: {
-            translate: true
-          }
-        }
-      }
+      ...keyed(engine, {title: {type: "string", options: {translate: true}}})
     };
     const bucketId = await req.post("/bucket", bucket).then(res => res.body._id);
 
@@ -68,7 +59,7 @@ describe("Preference Integration", () => {
     };
     const documentId = await req
       .post(`/bucket/${bucketId}/data`, document)
-      .then(res => res.body._id);
+      .then(res => res.body[keyField]);
 
     await req.put("/preference/bucket", {
       scope: "bucket",
@@ -80,7 +71,7 @@ describe("Preference Integration", () => {
 
     const {body} = await req.get(`/bucket/${bucketId}/data/${documentId}`, {localize: "false"});
     expect(body).toEqual({
-      _id: documentId,
+      [keyField]: documentId,
       title: {
         en_US: "new title"
       }
@@ -91,14 +82,7 @@ describe("Preference Integration", () => {
     const bucket = {
       title: "bucket",
       description: "bucket",
-      properties: {
-        title: {
-          type: "string",
-          options: {
-            translate: true
-          }
-        }
-      }
+      ...keyed(engine, {title: {type: "string", options: {translate: true}}})
     };
     const bucketId = await req.post("/bucket", bucket).then(res => res.body._id);
 

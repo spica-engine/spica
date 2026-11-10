@@ -2,6 +2,7 @@ import {createHash} from "node:crypto";
 import {Bucket} from "@spica-server/interface-bucket";
 import {quote} from "@spica-server/data-postgresql-orm";
 import {SYSTEM_COLUMNS} from "../../schema/naming.js";
+import {ENCRYPTED_HASH} from "../../schema/metadata/property.js";
 import {BucketMetadata, ColumnMetadata} from "../../schema/metadata/types.js";
 import {InvalidRuleError, UnsupportedRuleError} from "./errors.js";
 import {Column, Property} from "./operands.js";
@@ -42,6 +43,7 @@ export interface ArrayField {
   name: string;
   table: string;
   element: ColumnMetadata;
+  property?: Property;
   parent: string;
   via?: {table: string; key: string};
 }
@@ -108,14 +110,9 @@ function leaf(
   name: string,
   locale?: LocaleScope
 ): Column | ArrayField {
-  // Encrypted values have no comparable column until Part 9 stores a hash (docs/postgresql/09-writes.md).
-  if (property.type == "encrypted") {
-    throw new UnsupportedRuleError(
-      `"${name}" is encrypted and cannot be used in a rule on PostgreSQL.`
-    );
-  }
-
-  const column = frame.metadata.columnOf(path);
+  const column = frame.metadata.columnOf(
+    property.type == "encrypted" ? [...path, ENCRYPTED_HASH] : path
+  );
   if (!column) {
     throw new UnsupportedRuleError(`"${name}" cannot be used in a rule on PostgreSQL.`);
   }
@@ -183,19 +180,16 @@ function throughOneToMany(
       `"${name}" has to name a field of the related bucket, not a relation of it, on PostgreSQL.`
     );
   }
-  // Encrypted values have no comparable column until Part 9 stores a hash (docs/postgresql/09-writes.md).
-  if (value.type == "encrypted") {
-    throw new UnsupportedRuleError(
-      `"${name}" is encrypted and cannot be used in a rule on PostgreSQL.`
-    );
-  }
-  const element = target.metadata.columnOf(rest);
+  const element = target.metadata.columnOf(
+    value.type == "encrypted" ? [...rest, ENCRYPTED_HASH] : rest
+  );
   if (!element || element.table != target.metadata.main.name) {
     throw new UnsupportedRuleError(`"${name}" cannot be used in a rule on PostgreSQL.`);
   }
   return {
     ...list,
     element,
+    property: value,
     via: {table: target.metadata.main.name, key: target.metadata.primaryKey.column}
   };
 }

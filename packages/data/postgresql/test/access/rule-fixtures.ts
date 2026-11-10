@@ -18,8 +18,6 @@ export const ruleBucket: any = {
     created: {type: "date"},
     owner: {type: "uuid"},
     password: {type: "hash"},
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
     secret: {type: "encrypted"},
     note: {type: "json"},
     address: {type: "object", properties: {city: {type: "string"}}},
@@ -58,8 +56,6 @@ export const otherBucket: any = {
     level: {type: "integer"},
     joined: {type: "date"},
     pin: {type: "hash"},
-    // [part9-encrypted] Pins the refusal of encrypted fields in rules.
-    // Remove or rewrite when Part 9 stores a comparable hash (docs/postgresql/09-writes.md).
     secret: {type: "encrypted"},
     tags: {type: "array", items: {type: "string"}},
     boss: {type: "relation", bucketId: thirdId, relationType: "onetoone"}

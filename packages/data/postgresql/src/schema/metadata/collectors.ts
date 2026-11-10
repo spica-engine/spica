@@ -3,6 +3,7 @@ import {PrimaryKeyMetadata} from "../primary-key.js";
 import {
   columnTypeOf,
   COLUMN_TYPE_OF_PROPERTY,
+  ENCRYPTED_HASH,
   enumOf,
   isArray,
   isStructuredObject,
@@ -121,6 +122,14 @@ const scalarCollector: PropertyCollector = {
       notNull: required,
       ...enumOf(property)
     });
+    if (property.type == "encrypted" && !visit.insideArray) {
+      table.add({
+        name: columnName([...relativePath(visit), ENCRYPTED_HASH]),
+        path: [...path, ENCRYPTED_HASH],
+        type: "text",
+        notNull: required
+      });
+    }
   }
 };
 

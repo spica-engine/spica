@@ -339,7 +339,7 @@ export class FunctionAssetReconciler {
     }
   }
 
-  async reconcileAll(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
+  async reconcileAll(fns: Array<Function & {_id: Id}>): Promise<void> {
     await forEachWithConcurrency(fns, RECONCILE_CONCURRENCY, async fn => {
       try {
         await this.reconcileFunction(fn);

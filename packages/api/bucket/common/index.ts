@@ -7,6 +7,8 @@ export * from "./src/json.filter.js";
 export * from "./src/expression.filter.js";
 export * from "./src/schema.js";
 export * from "./src/decrypt.js";
+export * from "./src/document-key.js";
 export * from "./src/helpers.js";
 export * from "./src/schema-diff.js";
 export * from "./src/schema-compose.js";
+export * from "./src/write-rule.js";

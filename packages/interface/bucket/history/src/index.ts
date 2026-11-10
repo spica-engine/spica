@@ -21,7 +21,12 @@ export interface HistoryRepository {
   /**
    * Records the changes between the document versions, if any, keeping the latest ten per document.
    */
-  createHistory(bucketId: Id, previous: BucketDocument, current: BucketDocument): Promise<unknown>;
+  createHistory(
+    bucketId: Id,
+    documentId: Id,
+    previous: BucketDocument,
+    current: BucketDocument
+  ): Promise<unknown>;
   /**
    * Drops recorded changes that the schema change made meaningless.
    */

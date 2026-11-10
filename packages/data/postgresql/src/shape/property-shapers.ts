@@ -1,5 +1,6 @@
 import {columnName, ColumnType, SYSTEM_COLUMNS, TableMetadata} from "../schema/index.js";
 import {
+  ENCRYPTED_HASH,
   isArray,
   isStructuredObject,
   itemsOf,
@@ -89,6 +90,21 @@ const translatedShaper: PropertyShaper = {
   }
 };
 
+const encryptedShaper: PropertyShaper = {
+  matches: ({property}) => property.type == "encrypted",
+  shape(visit) {
+    const {scope, path} = visit;
+    const relative = path.slice(scope.table.path.length);
+    const stored = scope.row[columnName(relative)];
+    if (stored === null || stored === undefined) {
+      return null;
+    }
+    const hash = scope.row[columnName([...relative, ENCRYPTED_HASH])];
+    const parsed = typeof stored == "string" ? JSON.parse(stored) : stored;
+    return hash === null || hash === undefined ? parsed : {...parsed, hash};
+  }
+};
+
 const relationShaper: PropertyShaper = {
   matches: ({property}) => property.type == "relation",
   shape(visit, shaping) {
@@ -135,6 +151,9 @@ const arrayShaper: PropertyShaper = {
       });
     }
     const valueType = table.columns.find(column => column.name == SYSTEM_COLUMNS.value)?.type;
+    if (items.type == "encrypted") {
+      return rows.map(row => JSON.parse(row[SYSTEM_COLUMNS.value] as string));
+    }
     return rows.map(row => normalize(row[SYSTEM_COLUMNS.value], valueType));
   }
 };
@@ -157,6 +176,7 @@ export const SCALAR_SHAPER: PropertyShaper = {
 export const PROPERTY_SHAPERS: PropertyShaper[] = [
   objectShaper,
   translatedShaper,
+  encryptedShaper,
   relationShaper,
   arrayShaper
 ];

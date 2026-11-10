@@ -34,7 +34,8 @@ const fakeIdTypes: IdTypes = {
     }
     return fakeIdType(bucketId);
   },
-  unscoped: () => fakeIdType("unscoped")
+  unscoped: () => fakeIdType("unscoped"),
+  keyField: () => "_id"
 };
 
 @Controller()

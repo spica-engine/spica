@@ -1,9 +1,9 @@
+import {hash} from "@spica-server/core-encryption";
 import {
   compileFilter,
   FILTER_LIMITS,
   InvalidRuleError,
-  RuleCompileError,
-  UnsupportedRuleError
+  RuleCompileError
 } from "@spica-server/data-postgresql";
 import {
   bucketId,
@@ -46,8 +46,32 @@ describe("compileFilter", () => {
 
   it("should refuse fields the bucket cannot filter on", () => {
     expect(() => compile(`document.nope == 1`)).toThrow(InvalidRuleError);
-    expect(() => compile(`document.secret == "x"`)).toThrow(UnsupportedRuleError);
-    expect(() => compile(`document.author.secret == "x"`)).toThrow(UnsupportedRuleError);
+  });
+
+  it("should hash the value compared with a hash or an encrypted field when it has a secret", () => {
+    const filter = (text: string) => {
+      const values: unknown[] = [];
+      const {sql} = compileFilter(
+        text,
+        {bucket: ruleBucket, metadata: ruleMetadata, table: "t", related, hashSecret: "s"},
+        values
+      );
+      return {sql, values};
+    };
+
+    expect(filter(`document.password == "p"`).values).toEqual([hash("p", "s")]);
+    expect(filter(`document.secret == "x"`).values).toEqual([hash("x", "s")]);
+    expect(filter(`document.password in ["a", "b"]`).values).toEqual([
+      hash("a", "s"),
+      hash("b", "s")
+    ]);
+  });
+
+  it("should compare an encrypted field through its hash column", () => {
+    expect(compile(`document.secret == "x"`).sql).toBe('"t"."secret__hash" = $1::text');
+    expect(compile(`document.author.secret == "x"`).sql).toMatch(
+      /^"_r[0-9a-f]{12}"\."secret__hash" = \$1::text$/
+    );
   });
 
   describe("auth", () => {

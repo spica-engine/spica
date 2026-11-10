@@ -12,7 +12,7 @@ import {BucketService} from "../src/bucket.service";
 import {BucketChangeDispatcher} from "../src/change-dispatcher";
 
 mongoOnly(
-  "bucket index definitions through the MongoDB schema manager, and the bucket data repository on PostgreSQL, Part 9"
+  "MongoDB index definitions; PostgreSQL indexes are covered by the schema manager specs in data/postgresql"
 );
 
 describe("Bucket Service", () => {

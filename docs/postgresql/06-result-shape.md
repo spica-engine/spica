@@ -109,11 +109,7 @@ Turns PostgreSQL rows back into documents with today's structure. Nested objects
 
 Unit specs in `packages/data/postgresql/test/shape/` cover each rule with hand-built row sets. `test/shape/row-layout.spec.ts` runs on PostgreSQL only and shows the stored rows next to the shaped document for objects, arrays, translations and link rows, with the child rows reordered to prove the shaper sorts by position. `test/contract/result-shape.spec.ts` stores one fixture per field type on both engines and compares them after replacing keys by labels. It only calls `createBucket`, `insert` and `read` of `test/contract/bucket-store.ts`.
 
-**Temporary test files.** `test/contract/bucket-store.ts` and `test/shape/row-set-fixtures.ts` stand in for facades that do not exist on PostgreSQL yet. Remove them when these parts merge:
-
-- **Part 9 (writes):** binds `BUCKET_WRITE` on PostgreSQL. `store.insert` and `insertDocument` become `BUCKET_WRITE.insert`, on both engines.
-- **Part 8 (queries):** binds `BUCKET_QUERY` on PostgreSQL, which calls `RESULT_SHAPER` itself. `store.read`, `fetchRowSet` and the direct `RESULT_SHAPER` call become `BUCKET_QUERY.find`, on both engines.
-- **After both:** delete `bucket-store.ts` and `row-set-fixtures.ts`. `row-layout.spec.ts` then inserts through `BUCKET_WRITE` and keeps its raw SQL row checks. `createBucket` stays engine specific, because PostgreSQL buckets need a primary key property.
+**Test files.** `test/contract/bucket-store.ts` gives the contract specs one `createBucket / insert / read` surface: `insert` calls `BUCKET_WRITE` (Part 9) and `read` calls `BUCKET_QUERY` (Part 8), on both engines. `createBucket` stays engine specific, because PostgreSQL buckets need a primary key property. `test/shape/row-set-fixtures.ts` keeps only `fetchRowSet`, which `row-layout.spec.ts` uses to read and change the stored rows before they are shaped.
 
 ### Requests to other parts
 
@@ -122,5 +118,5 @@ Unit specs in `packages/data/postgresql/test/shape/` cover each rule with hand-b
   - Pass `locale` in the options.
   - Decrypt after shaping.
   - Parse `integer` and `bigint` keys from strings.
-- **Part 9:** return row sets for written rows so results go through the same shaper.
+- **Part 9 (done):** the write facade shapes the saved record from the rows it wrote, without a second read.
 - **Part 10:** carry row sets in change events. `BucketDescriptions` reads the definitions on every call, so a cache needs invalidation from bucket change events.

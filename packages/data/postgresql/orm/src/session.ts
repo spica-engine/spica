@@ -1,4 +1,6 @@
+import {AsyncLocalStorage} from "node:async_hooks";
 import pg from "pg";
+import {DynamicTable, countAllRows} from "./dynamic-table.js";
 import {Entity} from "./entity.js";
 import {translateError} from "./errors.js";
 import {Aggregation, Assignment, isUnconditional, Where} from "./expressions.js";
@@ -37,6 +39,20 @@ export class Session {
 
   async raw<T extends pg.QueryResultRow = any>(text: string, values: unknown[] = []) {
     return (await this.db.query(text, values)) as pg.QueryResult<T>;
+  }
+
+  table(name: string): DynamicTable {
+    return new DynamicTable(this.db, name);
+  }
+
+  async truncate(tables: string[]): Promise<void> {
+    if (tables.length) {
+      await this.db.query(`TRUNCATE ${tables.map(quote).join(", ")} CASCADE`);
+    }
+  }
+
+  countRows(tables: string[]): Promise<number> {
+    return countAllRows(this.db, tables);
   }
 
   async insert<R>(entity: Entity<R>, record: Partial<R>): Promise<R> {
@@ -201,21 +217,81 @@ export class Session {
   }
 }
 
+interface AmbientTransaction {
+  client: pg.PoolClient;
+  ended: boolean;
+}
+
+const ambientTransaction = new AsyncLocalStorage<AmbientTransaction>();
+
+let savepoints = 0;
+
 export class Orm extends Session {
   constructor(private readonly pool: pg.Pool) {
-    super(pool);
+    super({
+      query: (text: string, values?: unknown[]) => {
+        const ambient = ambientTransaction.getStore();
+        if (!ambient) {
+          return pool.query(text, values);
+        }
+        return ambient.ended
+          ? Promise.reject(
+              new Error(
+                "The transaction of this call has ended. A database call made inside a transaction has to be awaited before it ends."
+              )
+            )
+          : ambient.client.query(text, values);
+      }
+    });
   }
 
   override async lockTransaction(_name: string): Promise<void> {
     throw new Error("A transaction lock needs a transaction.");
   }
 
-  override async transaction<T>(work: (session: Session) => Promise<T>): Promise<T> {
+  override transaction<T>(work: (session: Session) => Promise<T>): Promise<T> {
+    const ambient = ambientTransaction.getStore();
+    return ambient
+      ? this.nested(ambient, work)
+      : this.withClient(client => work(new Session(client)));
+  }
+
+  runInTransaction<T>(work: () => Promise<T>): Promise<T> {
+    if (ambientTransaction.getStore()) {
+      return work();
+    }
+    return this.withClient(async client => {
+      const ambient = {client, ended: false};
+      try {
+        return await ambientTransaction.run(ambient, work);
+      } finally {
+        ambient.ended = true;
+      }
+    });
+  }
+
+  private async nested<T>(
+    {client}: AmbientTransaction,
+    work: (session: Session) => Promise<T>
+  ): Promise<T> {
+    const savepoint = `spica_savepoint_${++savepoints}`;
+    await this.db.query(`SAVEPOINT ${savepoint}`);
+    try {
+      const result = await work(new Session(client));
+      await this.db.query(`RELEASE SAVEPOINT ${savepoint}`);
+      return result;
+    } catch (error) {
+      await this.db.query(`ROLLBACK TO SAVEPOINT ${savepoint}`).catch(() => undefined);
+      throw error;
+    }
+  }
+
+  private async withClient<T>(work: (client: pg.PoolClient) => Promise<T>): Promise<T> {
     const client = await this.pool.connect();
     let rollbackFailed = false;
     try {
       await client.query("BEGIN");
-      const result = await work(new Session(client));
+      const result = await work(client);
       await client.query("COMMIT");
       return result;
     } catch (error) {

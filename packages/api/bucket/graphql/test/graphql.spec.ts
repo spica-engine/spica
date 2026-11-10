@@ -11,7 +11,7 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 mongoOnly(
-  "GraphQL over bucket data on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+  "GraphQL types and arguments name every document by _id and the ObjectId scalar, so a PostgreSQL bucket's key and its types need a GraphQL schema change that no part owns yet"
 );
 
 export function getBucketName(id: string | ObjectId) {

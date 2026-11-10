@@ -9,13 +9,14 @@ import {
   BucketSchemaManager
 } from "@spica-server/interface-bucket";
 import {PG_POOL} from "@spica-server/interface-data";
-import {constraintName} from "@spica-server/data-postgresql";
-import {Session} from "@spica-server/data-postgresql-orm";
+import {constraintName, ORM} from "@spica-server/data-postgresql";
+import {Orm, Session} from "@spica-server/data-postgresql-orm";
 import pg from "pg";
 
 describe("PostgreSQL schema manager", () => {
   let module: TestingModule;
   let pool: pg.Pool;
+  let orm: Orm;
   let manager: BucketSchemaManager;
   let buckets: BucketRepository;
 
@@ -26,6 +27,7 @@ describe("PostgreSQL schema manager", () => {
     }).compile();
     await module.init();
     pool = module.get(PG_POOL);
+    orm = module.get(ORM);
     manager = module.get(BUCKET_SCHEMA_MANAGER);
     buckets = module.get(BUCKET_REPOSITORY);
   }, 120_000);
@@ -703,6 +705,136 @@ describe("PostgreSQL schema manager", () => {
       await manager.replace(created._id, keyed({}), () => {});
       expect(await foreignKeys(table)).toEqual([]);
       expect(await tablesOfBucket(table)).toEqual([table]);
+    });
+
+    it("should clear what referred to the old bucket when a relation is retargeted", async () => {
+      const first = await manager.create(keyed({}), () => {});
+      const second = await manager.create(keyed({}), () => {});
+      const kept = await manager.create(keyed({}), () => {});
+      const created = await manager.create(
+        keyed({
+          one: relation(first._id, "onetoone"),
+          many: relation(first._id, "onetomany"),
+          same: relation(kept._id, "onetoone")
+        }),
+        () => {}
+      );
+      const table = tableOf(created._id);
+      const insertInto = async (target: string) => (await orm.table(target).insertRow({})).id;
+      const firstRow = await insertInto(tableOf(first._id));
+      const keptRow = await insertInto(tableOf(kept._id));
+      const row = (await orm.table(table).insertRow({one: firstRow, same: keptRow})).id;
+      await orm.table(`${table}__many`).insertRow({_parent: row, _position: 0, _target: firstRow});
+
+      await manager.replace(
+        created._id,
+        keyed({
+          one: relation(second._id, "onetoone"),
+          many: relation(second._id, "onetomany"),
+          same: relation(kept._id, "onetoone")
+        }),
+        () => {}
+      );
+
+      expect(await orm.table(table).rows()).toEqual([
+        {id: expect.anything(), one: null, same: keptRow}
+      ]);
+      expect(await orm.table(`${table}__many`).rows()).toEqual([]);
+    });
+
+    describe("a relation inside the items of a list", () => {
+      const lines = (required: string[], target: unknown) =>
+        keyed({
+          lines: {
+            type: "array",
+            items: {
+              type: "object",
+              required,
+              properties: {sku: {type: "string"}, product: relation(target, "onetoone")}
+            }
+          }
+        });
+
+      const items = async (table: string) =>
+        (await orm.table(`${table}__lines`).rows(["_position"])).map(({sku, product}) => ({
+          sku,
+          product
+        }));
+
+      async function itemsAround(required: string[]) {
+        const first = await manager.create(keyed({}), () => {});
+        const second = await manager.create(keyed({}), () => {});
+        const created = await manager.create(lines(required, first._id), () => {});
+        const table = tableOf(created._id);
+        const product = (await orm.table(tableOf(first._id)).insertRow({})).id;
+        const parent = (await orm.table(table).insertRow({})).id;
+        await orm.table(`${table}__lines`).insertRows(
+          ["a", "b"].map((sku, position) => ({
+            _parent: parent,
+            _position: position,
+            sku,
+            product
+          }))
+        );
+        return {first, second, created, table, product};
+      }
+
+      it("should clear the relation of each item and keep the items when it is retargeted", async () => {
+        const {second, created, table} = await itemsAround([]);
+
+        await manager.replace(created._id, lines([], second._id), () => {});
+
+        expect(await items(table)).toEqual([
+          {sku: "a", product: null},
+          {sku: "b", product: null}
+        ]);
+      });
+
+      it("should refuse to retarget a required relation and keep every item", async () => {
+        const {first, second, created, table, product} = await itemsAround(["product"]);
+        const required = (target: unknown) => ({
+          ...lines(["product"], target),
+          required: ["lines"]
+        });
+
+        await expect(
+          manager.replace(created._id, required(second._id), () => {})
+        ).rejects.toMatchObject({
+          status: 400,
+          message: expect.stringContaining("Existing documents refer to documents")
+        });
+
+        expect(await items(table)).toEqual([
+          {sku: "a", product},
+          {sku: "b", product}
+        ]);
+        expect((await foreignKeys(`${table}__lines`)).map(key => key[1])).toContain(
+          tableOf(first._id)
+        );
+      });
+    });
+
+    it("should refuse to retarget a required relation that has values and change nothing", async () => {
+      const first = await manager.create(keyed({}), () => {});
+      const second = await manager.create(keyed({}), () => {});
+      const created = await manager.create(
+        keyed({one: relation(first._id, "onetoone")}, {required: ["one"]}),
+        () => {}
+      );
+      const table = tableOf(created._id);
+      const firstRow = (await orm.table(tableOf(first._id)).insertRow({})).id;
+      await orm.table(table).insertRow({one: firstRow});
+
+      await expect(
+        manager.replace(
+          created._id,
+          keyed({one: relation(second._id, "onetoone")}, {required: ["one"]}),
+          () => {}
+        )
+      ).rejects.toThrow();
+
+      expect((await foreignKeys(table))[0][1]).toBe(tableOf(first._id));
+      expect((await orm.table(table).rows()).map(row => row.one)).toEqual([firstRow]);
     });
 
     it("should remove the relations that point at a bucket when it is dropped", async () => {

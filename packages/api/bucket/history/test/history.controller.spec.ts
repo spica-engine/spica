@@ -14,7 +14,7 @@ import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {POLICY_RESOLVER} from "@spica-server/interface-passport-guard";
 
 mongoOnly(
-  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+  "it seeds buckets, documents and history entries with fixed ids straight into MongoDB collections; history through the write endpoints is covered on both engines by bucket-data/side-effects.spec.ts"
 );
 
 describe("History Acceptance", () => {

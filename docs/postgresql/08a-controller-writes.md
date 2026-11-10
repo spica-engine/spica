@@ -166,7 +166,7 @@ Each of these was a real gap, found by a spec that passed on MongoDB, and went i
 | Reason | Specs | Removed by |
 | ------ | ----- | ---------- |
 | Realtime, change feed triggers and commands, `FunctionModule`, RabbitMQ and gRPC (these also need `FunctionModule`) | 27 | Part 10 |
-| `BucketModule` needs `BUCKET_DATA_REPOSITORY` on PostgreSQL: bucket data, encrypted, hash and rule specs, GraphQL, `bucket.controller`, `bucket.module`, `bucket.service`, `bucket.e2e`, history, the hook factory and `preference.integration` | 22 | Part 9 |
+| `BucketModule` needs `BUCKET_DATA_REPOSITORY` on PostgreSQL: bucket data, encrypted, hash and rule specs, GraphQL, `bucket.controller`, `bucket.module`, `bucket.service`, `bucket.e2e`, history, the hook factory and `preference.integration` | 22 | Part 9. Done: 18 of them run on both engines; see "As built" of `09-writes.md` for the rest |
 | The profiler reads MongoDB's `system.profile` | 3 | stays |
 | MongoDB TTL index inspection (`log/service`, `webhook/log.service`); PostgreSQL expires rows with the pg_cron job of Part 4 | 2 | stays |
 | `passport/test/identity.e2e.spec.ts` is an `xdescribe` since 2024 and fails when enabled | 1 | decide: fix or delete |

@@ -15,6 +15,7 @@ export type PlanStep =
   | "prepareNewKey"
   | "dropColumns"
   | "reshapeKey"
+  | "clearRetargeted"
   | "alterTypes"
   | "alterNullability"
   | "promoteKey"
@@ -33,6 +34,7 @@ const APPLY_ORDER: PlanStep[] = [
   "prepareNewKey",
   "dropColumns",
   "reshapeKey",
+  "clearRetargeted",
   "alterTypes",
   "alterNullability",
   "promoteKey",

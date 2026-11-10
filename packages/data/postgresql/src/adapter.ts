@@ -22,9 +22,11 @@ import {repositoryClasses} from "./repositories/index.js";
 import {BucketDescriptions, PostgresResultShaper} from "./shape/index.js";
 import {postgresBucketSchema} from "./schemas/index.js";
 import {BUCKET_RULE_VALIDATOR, BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
-import {BUCKET_QUERY} from "@spica-server/interface-bucket-common";
+import {BUCKET_QUERY, BUCKET_WRITE} from "@spica-server/interface-bucket-common";
 import {PostgresBucketRuleValidator} from "./access/rule-validator.js";
 import {assertSupportedServerVersion} from "./version.js";
+import {TRANSACTION_RUNNER} from "@spica-server/transaction";
+import {PostgresBucketWriteFacade} from "./write/index.js";
 
 export const POSTGRESQL_ENGINE = "postgresql";
 
@@ -89,12 +91,18 @@ export class PostgresDataAdapter {
               connectWithSystemTables(typeof uri == "function" ? await uri() : uri, options)
           },
           {provide: ORM, useFactory: (pool: pg.Pool) => new Orm(pool), inject: [PG_POOL]},
+          {
+            provide: TRANSACTION_RUNNER,
+            useFactory: (orm: Orm) => (work: () => Promise<unknown>) => orm.runInTransaction(work),
+            inject: [ORM]
+          },
           PostgresExpiry,
           {provide: ID_TYPES, useClass: PostgresIdTypes},
           BucketDescriptions,
           {provide: RESULT_SHAPER, useClass: PostgresResultShaper},
           {provide: COLLECTION_QUERY, useClass: PostgresCollectionQueryFacade},
           {provide: BUCKET_QUERY, useClass: PostgresBucketQueryFacade},
+          {provide: BUCKET_WRITE, useClass: PostgresBucketWriteFacade},
           {provide: BUCKET_RULE_VALIDATOR, useClass: PostgresBucketRuleValidator},
           {provide: BUCKET_SCHEMA_EXTENSION, useValue: postgresBucketSchema},
           {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
@@ -104,12 +112,14 @@ export class PostgresDataAdapter {
         exports: [
           PG_POOL,
           ORM,
+          TRANSACTION_RUNNER,
           PostgresExpiry,
           ID_TYPES,
           BucketDescriptions,
           RESULT_SHAPER,
           COLLECTION_QUERY,
           BUCKET_QUERY,
+          BUCKET_WRITE,
           BUCKET_RULE_VALIDATOR,
           BUCKET_SCHEMA_EXTENSION,
           REPOSITORY_CLASSES,

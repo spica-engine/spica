@@ -2,19 +2,17 @@ import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId, mongoOnly} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
+import {keyed} from "./support/bucket-app";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {AssetModule} from "@spica-server/asset";
+import {AssetModule, exporters, operators, validators} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import os from "os";
 import {PreferenceModule} from "@spica-server/preference";
 
-mongoOnly(
-  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
-);
-
-describe("Bucket", () => {
+contractSuite("Bucket", engine => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
   }
@@ -35,10 +33,14 @@ describe("Bucket", () => {
   let app: INestApplication;
 
   beforeEach(async () => {
+    validators.clear();
+    operators.clear();
+    exporters.clear();
+
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceModule.forRoot(),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
@@ -55,6 +57,7 @@ describe("Bucket", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
+    bucketId = String(module.get<IdTypes>(ID_TYPES).unscoped().generate());
 
     await app.listen(req.socket);
   });
@@ -71,7 +74,7 @@ describe("Bucket", () => {
 
   let bucketv1Resource;
   let bucketv1;
-  const bucketId = new ObjectId().toString();
+  let bucketId: string;
 
   let bucketv2Resource;
   let bucketv2;
@@ -88,11 +91,7 @@ describe("Bucket", () => {
         write: "true==true",
         read: "true==true"
       },
-      properties: {
-        name: {
-          type: "string"
-        }
-      },
+      ...keyed(engine, {name: {type: "string"}}),
       history: false,
       icon: "view_stream"
     };
@@ -105,7 +104,7 @@ describe("Bucket", () => {
       }
     };
 
-    bucketv2 = {...bucketv1, properties: {title: {type: "string"}}};
+    bucketv2 = {...bucketv1, ...keyed(engine, {title: {type: "string"}})};
 
     bucketv2Resource = {...bucketv1Resource, contents: {schema: bucketv2}};
   });

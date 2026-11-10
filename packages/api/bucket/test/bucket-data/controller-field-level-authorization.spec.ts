@@ -1,60 +1,17 @@
-import {INestApplication} from "@nestjs/common";
-import {Test, TestingModule} from "@nestjs/testing";
-import {BucketModule} from "@spica-server/bucket";
-import {SchemaModule} from "@spica-server/core-schema";
-import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
-import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
-import {PassportTestingModule} from "@spica-server/passport-testing";
-import {PreferenceTestingModule} from "@spica-server/preference-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {BucketApp, startBucketApp, withoutNulls} from "../support/bucket-app";
 
-mongoOnly(
-  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
-);
-
-describe("BucketDataController", () => {
-  let app: INestApplication;
-  let req: Request;
-  let module: TestingModule;
+contractSuite("BucketDataController: field level authorization", engine => {
+  let api: BucketApp;
+  let bucket: any;
+  let rows = [];
+  let key: "_id" | "id";
 
   beforeEach(async () => {
-    module = await Test.createTestingModule({
-      imports: [
-        SchemaModule.forRoot({
-          formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
-          defaults: [CREATED_AT, UPDATED_AT]
-        }),
-        CoreTestingModule,
-        PassportTestingModule.initialize({
-          overriddenStrategyType: "USER"
-        }),
-        DatabaseTestingModule.replicaSet(),
-        PreferenceTestingModule,
-        BucketModule.forRoot({
-          hooks: false,
-          history: false,
-          realtime: false,
-          cache: false,
-          graphql: false
-        })
-      ]
-    }).compile();
-    app = module.createNestApplication();
-    req = module.get(Request);
-    req.reject = true; /* Reject for non 2xx response codes */
-    await app.listen(req.socket);
-  });
-
-  afterEach(() => app.close());
-
-  describe("index", () => {
-    let bucket: any = {
-      title: "Persons",
-      description: "Person bucket",
-      icon: "view_stream",
-      primary: "title",
-      properties: {
+    api = await startBucketApp(engine, {}, {passport: {overriddenStrategyType: "USER"}});
+    key = api.keyField;
+    bucket = await api.createBucket(
+      {
         name: {
           type: "string",
           title: "Name of the person",
@@ -62,78 +19,63 @@ describe("BucketDataController", () => {
           maxLength: 20,
           minLength: 3
         },
-        age: {
-          type: "number",
-          title: "Age of the person",
-          options: {}
-        },
-        created_at: {
-          type: "date",
-          title: "Creation Timestamp",
-          options: {}
-        }
-      }
-    };
+        age: {type: "number", title: "Age of the person", options: {}},
+        created_at: {type: "date", title: "Creation Timestamp", options: {}}
+      },
+      {title: "Persons", description: "Person bucket"}
+    );
 
-    let rows = [];
+    rows = [
+      await api.req.post(`/bucket/${bucket._id}/data`, {name: "Jim", age: 20}),
+      await api.req.post(`/bucket/${bucket._id}/data`, {name: "Michael", age: 22}),
+      await api.req.post(`/bucket/${bucket._id}/data`, {name: "Kevin", age: 25}),
+      await api.req.post(`/bucket/${bucket._id}/data`, {name: "Dwight", age: 38}),
+      await api.req.post(`/bucket/${bucket._id}/data`, {name: "Toby", age: 30})
+    ].map(r => r.body);
+  });
 
+  afterEach(() => api.close());
+
+  describe("when name is hidden for noop", () => {
     beforeEach(async () => {
-      bucket = await req.post("/bucket", bucket).then(response => response.body);
-      rows = [
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Jim", age: 20}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Michael", age: 22}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Kevin", age: 25}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Dwight", age: 38}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Toby", age: 30})
-      ].map(r => r.body);
+      bucket.properties.name.acl = "auth.identifier != 'noop'";
+      await api.req.put(`/bucket/${bucket._id}`, bucket);
     });
 
-    describe("Field level authorization", () => {
-      describe("when name is hidden for noop", () => {
-        beforeEach(async () => {
-          bucket.properties.name.acl = "auth.identifier != 'noop'";
-          await req.put(`/bucket/${bucket._id}`, bucket);
-        });
-
-        it("shouldn't see name field", async () => {
-          const response = await req.get(
-            `/bucket/${bucket._id}/data`,
-            {},
-            {Authorization: "USER test"}
-          );
-          expect(response.body.length).toBe(5);
-          response.body.forEach((item: any) => {
-            expect(item).not.toHaveProperty("name");
-            expect(item).toHaveProperty("age");
-          });
-        });
+    it("shouldn't see name field", async () => {
+      const response = await api.req.get(
+        `/bucket/${bucket._id}/data`,
+        {},
+        {Authorization: "USER test"}
+      );
+      expect(response.body.length).toBe(5);
+      response.body.forEach((item: any) => {
+        expect(item).not.toHaveProperty("name");
+        expect(item).toHaveProperty("age");
       });
+    });
+  });
 
-      describe("when name is shown only if age > 24", () => {
-        beforeEach(async () => {
-          bucket.properties.name.acl = "document.age > 24";
-          await req.put(`/bucket/${bucket._id}`, bucket);
-        });
+  describe("when name is shown only if age > 24", () => {
+    beforeEach(async () => {
+      bucket.properties.name.acl = "document.age > 24";
+      await api.req.put(`/bucket/${bucket._id}`, bucket);
+    });
 
-        it("should only show name if age > 24", async () => {
-          const response = await req.get(
-            `/bucket/${bucket._id}/data`,
-            {},
-            {
-              Authorization: "USER test"
-            }
-          );
-
-          expect(response.body.length).toBe(5);
-          expect(response.body).toEqual([
-            {_id: rows[0]._id, age: 20},
-            {_id: rows[1]._id, age: 22},
-            {_id: rows[2]._id, name: "Kevin", age: 25},
-            {_id: rows[3]._id, name: "Dwight", age: 38},
-            {_id: rows[4]._id, name: "Toby", age: 30}
-          ]);
-        });
-      });
+    it("should only show name if age > 24", async () => {
+      const response = await api.req.get(
+        `/bucket/${bucket._id}/data`,
+        {},
+        {Authorization: "USER test"}
+      );
+      expect(response.body.length).toBe(5);
+      expect(withoutNulls(response.body)).toEqual([
+        {[key]: rows[0][key], age: 20},
+        {[key]: rows[1][key], age: 22},
+        {[key]: rows[2][key], name: "Kevin", age: 25},
+        {[key]: rows[3][key], name: "Dwight", age: 38},
+        {[key]: rows[4][key], name: "Toby", age: 30}
+      ]);
     });
   });
 });

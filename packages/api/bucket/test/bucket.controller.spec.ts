@@ -11,7 +11,7 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 mongoOnly(
-  "bucket data writes on PostgreSQL, Part 9 (BucketModule needs the bucket data repository)"
+  "MongoDB's bucket model: definitions without a key property, capabilities without uuid and field cleanup in arrays of arrays, which PostgreSQL buckets refuse (Part 5); PostgreSQL buckets are covered by schema-manager.spec, bucket-schema.postgresql.spec and bucket-data/bucket-schema-changes.spec"
 );
 
 describe("BucketController", () => {

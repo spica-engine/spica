@@ -30,17 +30,13 @@ contractSuite("bucket crud insert", engine => {
       properties: {title: {type: "string", options: {}}}
     }) as Bucket;
 
-  // PostgreSQL binds no bucket data repository until Part 9, and its schema manager needs none.
-  const dataRepository =
-    engine.name == "mongodb" ? [provideRepository(BUCKET_DATA_REPOSITORY)] : [];
-
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [engine.module(), PreferenceTestingModule, SchemaModule.forChild()],
       providers: [
         BucketChangeDispatcher,
         provideRepository(BUCKET_REPOSITORY),
-        ...dataRepository,
+        provideRepository(BUCKET_DATA_REPOSITORY),
         provideRepository(BUCKET_SCHEMA_MANAGER),
         BucketService
       ]
