@@ -123,7 +123,11 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
     }
 
     const metadata = await this.describe(bucket, context);
-    const key = document[metadata.primaryKey.field];
+    const given = document[metadata.primaryKey.field];
+    const key =
+      given === null || given === undefined
+        ? given
+        : keyIdType(metadata.primaryKey.type).parse(given);
 
     const changed = await this.transact(metadata, "write", async session => {
       const previous = await lockRowSet(session, metadata, key);

@@ -7,10 +7,13 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../interface/bucket/common"
+      "path": "../../api/bucket/common"
     },
     {
-      "path": "../../api/bucket/common"
+      "path": "../../transaction"
+    },
+    {
+      "path": "../../interface/bucket/common"
     },
     {
       "path": "../../interface/storage"

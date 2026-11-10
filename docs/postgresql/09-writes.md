@@ -139,6 +139,10 @@ Each of these was a gap that a spec passing on MongoDB exposed on PostgreSQL:
 - **History.** `createHistory` read the document id from `_id`, and `getDocument` still threw "not stored on PostgreSQL yet". `createHistory(bucketId, documentId, previous, current)` takes the document id from the caller, and `getDocument` reads through the query facade.
 - **Decryption errors.** `decryptDocumentFields` named the document by `_id`; it asks for the bucket's key.
 
+### Write rule subject
+
+A write rule is evaluated against the document the caller sent for an insert, a replace and a patch (the merged document), and against the stored document for a delete. This is the behaviour MongoDB has always had; it is the same on both engines.
+
 ### Differences between the engines
 
 - A missing scalar is `null` in a PostgreSQL document and absent in a MongoDB one, an empty one-to-many relation is `[]` on PostgreSQL and absent on MongoDB (also noted in document 08). The shared specs drop nulls through a helper where it matters.
