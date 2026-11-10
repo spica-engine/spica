@@ -22,6 +22,8 @@ import {BUCKET_QUERY, BUCKET_WRITE} from "@spica-server/interface-bucket-common"
 import {BUCKET_RULE_VALIDATOR, BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
 import {MongoBucketRuleValidator} from "./bucket/rule-validator.js";
 import {mongoBucketSchema} from "./schemas/index.js";
+import {RealtimeDatabaseService} from "@spica-server/database-realtime";
+import {REALTIME} from "@spica-server/interface-realtime";
 
 export const MONGODB_ENGINE = "mongodb";
 
@@ -39,7 +41,8 @@ const providers = [
   {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
   {provide: COLLECTION_NAMES, useClass: MongoCollectionNames},
   {provide: DATA_HEALTH, useClass: MongoDataHealth},
-  {provide: CHANGE_FEED, useClass: MongoChangeFeed}
+  {provide: CHANGE_FEED, useClass: MongoChangeFeed},
+  {provide: REALTIME, useClass: RealtimeDatabaseService}
 ];
 
 const exported = [
@@ -53,7 +56,8 @@ const exported = [
   REPOSITORY_CLASSES,
   COLLECTION_NAMES,
   DATA_HEALTH,
-  CHANGE_FEED
+  CHANGE_FEED,
+  REALTIME
 ];
 
 export class MongoDataAdapter {

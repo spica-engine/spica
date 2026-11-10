@@ -1,3 +1,6 @@
+import {FindOptions} from "@spica-server/interface-database";
+import {Observable} from "rxjs";
+
 export enum ChunkKind {
   Error = -1,
   Initial = 0,
@@ -33,3 +36,14 @@ export enum SequenceKind {
   Substitute = 1,
   Insert = 2
 }
+
+export interface Realtime {
+  find<T extends Document = any>(
+    name: string,
+    options?: FindOptions<T>
+  ): Observable<StreamChunk<T>>;
+  doesEmitterExist(name: string, options: FindOptions<any>): boolean;
+  removeEmitter(name: string, options: FindOptions<any>): void;
+}
+
+export const REALTIME = Symbol.for("SPICA_REALTIME");

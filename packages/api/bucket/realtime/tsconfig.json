@@ -37,9 +37,6 @@
       "path": "../../../interface/activity"
     },
     {
-      "path": "../../../database/realtime"
-    },
-    {
       "path": "../../../database"
     },
     {
