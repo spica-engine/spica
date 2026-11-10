@@ -350,6 +350,72 @@ contractSuite("collection query", engine => {
     });
   });
 
+  describe("fields of related documents", () => {
+    async function functionWithSecret() {
+      const secret = await secrets.insert({
+        key: "S",
+        value: {encrypted: "x", iv: "i", authTag: "t"} as any
+      });
+      const envVar = await envVars.insert({key: "A", value: "one"});
+      await functions.insert({
+        name: "fn",
+        timeout: 10,
+        language: "javascript",
+        triggers: {},
+        env_vars: [envVar._id],
+        secrets: [secret._id]
+      } as any);
+      return secret;
+    }
+
+    it("should leave out a field of the documents a relation resolves to", async () => {
+      const secret = await functionWithSecret();
+
+      const [fn] = await queries.find<any>("function", {
+        relations: ["env_vars", "secrets"],
+        fields: {"secrets.value": 0}
+      });
+
+      expect(fn.secrets).toHaveLength(1);
+      expect(String(fn.secrets[0]._id)).toEqual(String(secret._id));
+      expect(fn.secrets[0].key).toEqual("S");
+      expect(fn.secrets[0]).not.toHaveProperty("value");
+      expect(fn.env_vars[0].value).toEqual("one");
+    });
+
+    it("should leave out a nested field of the related documents", async () => {
+      await functionWithSecret();
+
+      const [fn] = await queries.find<any>("function", {
+        relations: ["secrets"],
+        fields: {"secrets.value.encrypted": 0}
+      });
+
+      expect(fn.secrets[0].value).toEqual({iv: "i", authTag: "t"});
+    });
+
+    it("should still resolve the documents when their id is left out", async () => {
+      await functionWithSecret();
+
+      const [fn] = await queries.find<any>("function", {
+        relations: ["secrets"],
+        fields: {"secrets._id": 0}
+      });
+
+      expect(fn.secrets).toHaveLength(1);
+      expect(fn.secrets[0]).not.toHaveProperty("_id");
+      expect(fn.secrets[0].key).toEqual("S");
+    });
+
+    it("should keep every field when nothing is excluded", async () => {
+      await functionWithSecret();
+
+      const [fn] = await queries.find<any>("function", {relations: ["secrets"]});
+
+      expect(fn.secrets[0].value).toEqual({encrypted: "x", iv: "i", authTag: "t"});
+    });
+  });
+
   (postgres ? describe : describe.skip)("relations on PostgreSQL", () => {
     it("should show the name of whoever did an activity, and filter by it", async () => {
       const ann = await identities.insert({

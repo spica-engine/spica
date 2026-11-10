@@ -85,12 +85,29 @@ export function nameSql(relation: JoinedName) {
   return `${quote(aliasOf(relation))}.${quote(column)}`;
 }
 
+function hiddenPaths(property: string, fields?: {[path: string]: 0 | 1}) {
+  return Object.entries(fields ?? {})
+    .filter(([path, flag]) => Number(flag) == 0 && path.startsWith(`${property}.`))
+    .map(([path]) => path.slice(property.length + 1).split("."));
+}
+
+function omit(document: Record_, path: string[]) {
+  const [head, ...rest] = path;
+  if (!rest.length) {
+    delete document[head];
+  } else if (document[head] && typeof document[head] == "object") {
+    omit(document[head], rest);
+  }
+}
+
 export async function resolveRelations(
   reads: Pick<CollectionReads, "rowsWithIds">,
   records: Record_[],
-  relations: Resolved[]
+  relations: Resolved[],
+  fields?: {[path: string]: 0 | 1}
 ) {
   for (const relation of relations) {
+    const hidden = relation.kind == "documents" ? hiddenPaths(relation.property, fields) : [];
     const ids = [
       ...new Set(
         records.flatMap(record => {
@@ -106,7 +123,9 @@ export async function resolveRelations(
     const found = new Map(
       rows.map(row => {
         const record = fromRow(relation.target, row) as Record_;
-        return [String(record[relation.target.idProperty]), record];
+        const id = String(record[relation.target.idProperty]);
+        hidden.forEach(path => omit(record, path));
+        return [id, record];
       })
     );
 
