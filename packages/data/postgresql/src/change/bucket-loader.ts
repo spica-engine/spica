@@ -3,13 +3,9 @@ import {Bucket} from "@spica-server/interface-bucket";
 import {BucketQueryFacade, BucketReadContext} from "@spica-server/interface-bucket-common";
 import {StoredBuckets} from "../repositories/bucket/stored-buckets.js";
 import {describeBucket, resolveRelationTargets} from "../schema/index.js";
+import {LoadedRow} from "./loaded-row.js";
 
 export const BUCKET_TABLE_PREFIX = "bucket_";
-
-export interface LoadedBucketRow {
-  document?: Record<string, unknown>;
-  changedFields: string[];
-}
 
 const unavailable = () => Promise.reject(new Error("Preferences are not read for changes."));
 
@@ -23,7 +19,7 @@ export class BucketLoader {
     this.stored = new StoredBuckets(orm);
   }
 
-  async load(table: string, key: string, changedColumns: string[] = []): Promise<LoadedBucketRow> {
+  async load(table: string, key: string, changedColumns: string[] = []): Promise<LoadedRow> {
     const bucketId = table.slice(BUCKET_TABLE_PREFIX.length);
     const bucket = await this.stored.find(bucketId);
     if (!bucket) {

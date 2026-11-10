@@ -12,7 +12,7 @@ import {
   RESULT_SHAPER
 } from "@spica-server/interface-data";
 import pg from "pg";
-import {installChangeFunction, PostgresChangeFeed} from "./change/index.js";
+import {installChangeSupport, PostgresChangeFeed} from "./change/index.js";
 import {PostgresCollectionNames} from "./collection-names.js";
 import {systemEntities} from "./entities/index.js";
 import {PostgresExpiry} from "./expiry/index.js";
@@ -64,7 +64,7 @@ async function connectWithSystemTables(uri: string, options: PostgresConnectionO
   const pool = await connect(uri, options);
   try {
     await createTables(pool, systemEntities);
-    await installChangeFunction(pool);
+    await installChangeSupport(pool);
   } catch (error) {
     await pool.end();
     throw error;

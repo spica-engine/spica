@@ -318,10 +318,10 @@ describe("PostgreSQL change feed", () => {
     });
   });
 
-  describe("collections without a source yet", () => {
+  describe("collections that are not tracked", () => {
     it("should never emit", async () => {
       const events: ChangeEvent[] = [];
-      subscriptions.push(feed.watch("function_assets").subscribe(event => events.push(event)));
+      subscriptions.push(feed.watch("jobs").subscribe(event => events.push(event)));
       await insert({title: "other"});
       await sleep(SETTLE_MS);
 
