@@ -1,4 +1,4 @@
-import {FindOptions} from "@spica-server/interface-database";
+import {ResourceFilterSpec} from "@spica-server/interface-data";
 import {Observable} from "rxjs";
 
 export enum ChunkKind {
@@ -37,13 +37,30 @@ export enum SequenceKind {
   Insert = 2
 }
 
+export interface RealtimeOptions {
+  /**
+   * A MongoDB filter object, or a Spica expression for engines that filter with expressions.
+   */
+  filter?: object | string;
+  resourceFilter?: ResourceFilterSpec;
+  sort?: {[field: string]: -1 | 1};
+  skip?: number;
+  limit?: number;
+  /**
+   * Restricts a bucket's documents to the ones its read rule allows `user`.
+   */
+  applyAcl?: boolean;
+  user?: unknown;
+  hashSecret?: string;
+}
+
 export interface Realtime {
   find<T extends Document = any>(
     name: string,
-    options?: FindOptions<T>
+    options?: RealtimeOptions
   ): Observable<StreamChunk<T>>;
-  doesEmitterExist(name: string, options: FindOptions<any>): boolean;
-  removeEmitter(name: string, options: FindOptions<any>): void;
+  doesEmitterExist(name: string, options: RealtimeOptions): boolean;
+  removeEmitter(name: string, options: RealtimeOptions): void;
 }
 
 export const REALTIME = Symbol.for("SPICA_REALTIME");

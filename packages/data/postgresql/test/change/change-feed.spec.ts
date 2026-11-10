@@ -105,6 +105,20 @@ describe("PostgreSQL change feed", () => {
       });
     });
 
+    it("should leave the documents out when only keys are wanted", async () => {
+      const events = await listen({keysOnly: true});
+
+      const saved = await insert({title: "post", tags: ["a"]});
+      await patch({...saved, title: "again"}, {title: "again"});
+      await eventually(events, 2);
+
+      expect(events.map(event => [event.operation, event.key])).toEqual([
+        ["insert", String(saved.id)],
+        ["update", String(saved.id)]
+      ]);
+      expect(events.every(event => event.document === undefined && !event.changes)).toBe(true);
+    });
+
     it("should announce an update when only a list changes", async () => {
       const saved = await insert({title: "post", tags: ["a"]});
       const events = await listen({operations: ["update"], document: "current"});

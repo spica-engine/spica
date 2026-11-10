@@ -14,6 +14,8 @@ import {
 import pg from "pg";
 import {installChangeSupport, PostgresChangeFeed} from "./change/index.js";
 import {PostgresCollectionNames} from "./collection-names.js";
+import {PostgresRealtime} from "./realtime/index.js";
+import {REALTIME} from "@spica-server/interface-realtime";
 import {systemEntities} from "./entities/index.js";
 import {PostgresExpiry} from "./expiry/index.js";
 import {PostgresDataHealth} from "./health.js";
@@ -110,6 +112,7 @@ export class PostgresDataAdapter {
           {provide: BUCKET_SCHEMA_EXTENSION, useValue: postgresBucketSchema},
           {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
           {provide: CHANGE_FEED, useClass: PostgresChangeFeed},
+          {provide: REALTIME, useClass: PostgresRealtime},
           {provide: COLLECTION_NAMES, useClass: PostgresCollectionNames},
           {provide: DATA_HEALTH, useClass: PostgresDataHealth}
         ],
@@ -128,6 +131,7 @@ export class PostgresDataAdapter {
           BUCKET_SCHEMA_EXTENSION,
           REPOSITORY_CLASSES,
           CHANGE_FEED,
+          REALTIME,
           COLLECTION_NAMES,
           DATA_HEALTH
         ]

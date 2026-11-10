@@ -38,10 +38,12 @@
     "@spica-server/interface-passport-refresh_token": "workspace:*",
     "@spica-server/interface-passport-user": "workspace:*",
     "@spica-server/interface-preference": "workspace:*",
+    "@spica-server/interface-realtime": "workspace:*",
     "@spica-server/interface-replication": "workspace:*",
     "@spica-server/interface-secret": "workspace:*",
     "@spica-server/interface-status": "workspace:*",
     "@spica-server/interface-storage": "workspace:*",
+    "@spica-server/realtime": "workspace:*",
     "pg": "^8.16.3",
     "uuid": "^11.0.5"
   },

@@ -1,0 +1,179 @@
+import {Test, TestingModule} from "@nestjs/testing";
+import {FilterLanguageError, provideRepository} from "@spica-server/data";
+import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {BUCKET_SCHEMA_MANAGER, BucketSchemaManager} from "@spica-server/interface-bucket";
+import {BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-common";
+import {
+  ChunkKind,
+  REALTIME,
+  Realtime,
+  RealtimeOptions,
+  StreamChunk
+} from "@spica-server/interface-realtime";
+
+const SETTLE_MS = 600;
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function until(condition: () => boolean) {
+  for (let waited = 0; waited < 15_000 && !condition(); waited += 25) {
+    await sleep(25);
+  }
+}
+
+describe("PostgreSQL realtime", () => {
+  let module: TestingModule;
+  let realtime: Realtime;
+  let manager: BucketSchemaManager;
+  let writes: BucketWriteFacade;
+  let bucket: any;
+  const subscriptions: {unsubscribe(): void}[] = [];
+
+  const definition = (read: string) =>
+    ({
+      title: "Posts",
+      description: "",
+      icon: "",
+      primary: "id",
+      readOnly: false,
+      history: false,
+      order: 0,
+      acl: {read, write: "true==true"},
+      properties: {
+        id: {type: "uuid", options: {generated: true}},
+        age: {type: "number"},
+        title: {type: "string"}
+      }
+    }) as any;
+
+  const context = () => ({resolveSchema: () => bucket, deleteOne: jest.fn()});
+  const insert = (document: object) => writes.insert(bucket, {...document}, {}, context());
+  const patch = (document: object, changes: object) =>
+    writes.patch(bucket, document as any, changes, {}, context());
+
+  async function open(options: RealtimeOptions = {}, name = `bucket_${bucket._id}`) {
+    const chunks: StreamChunk<any>[] = [];
+    const errors: any[] = [];
+    subscriptions.push(
+      realtime.find(name, options).subscribe({
+        next: chunk => chunks.push(chunk),
+        error: error => errors.push(error)
+      })
+    );
+    await until(
+      () => errors.length > 0 || chunks.some(chunk => chunk.kind == ChunkKind.EndOfInitial)
+    );
+    await sleep(SETTLE_MS);
+    const mark = chunks.length;
+    return {chunks, errors, live: () => chunks.slice(mark)};
+  }
+
+  const titles = (chunks: StreamChunk<any>[], kind: ChunkKind) =>
+    chunks.filter(chunk => chunk.kind == kind).map(chunk => chunk.document.title);
+
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
+      imports: [DatabaseTestingModule.postgres()],
+      providers: [provideRepository(BUCKET_SCHEMA_MANAGER)]
+    }).compile();
+    await module.init();
+    realtime = module.get(REALTIME);
+    manager = module.get(BUCKET_SCHEMA_MANAGER);
+    writes = module.get(BUCKET_WRITE);
+  }, 120_000);
+
+  afterAll(() => module.close());
+
+  afterEach(() => subscriptions.splice(0).forEach(subscription => subscription.unsubscribe()));
+
+  describe("the read rule", () => {
+    beforeEach(async () => {
+      bucket = await manager.create(
+        definition(`document.age > 20 || auth.role == "admin"`),
+        () => {}
+      );
+    });
+
+    it("should send only the documents the user may read", async () => {
+      await insert({age: 10, title: "young"});
+      await insert({age: 30, title: "old"});
+
+      const {chunks} = await open({applyAcl: true, user: {role: "member"}});
+
+      expect(titles(chunks, ChunkKind.Initial)).toEqual(["old"]);
+    });
+
+    it("should send everything to a user the rule lets in", async () => {
+      await insert({age: 10, title: "young"});
+      await insert({age: 30, title: "old"});
+
+      const {chunks} = await open({applyAcl: true, user: {role: "admin"}});
+
+      expect(titles(chunks, ChunkKind.Initial).sort()).toEqual(["old", "young"]);
+    });
+
+    it("should not apply the rule unless asked", async () => {
+      await insert({age: 10, title: "young"});
+
+      const {chunks} = await open({user: {role: "member"}});
+
+      expect(titles(chunks, ChunkKind.Initial)).toEqual(["young"]);
+    });
+
+    it("should keep the rule for the changes that follow", async () => {
+      const {live} = await open({applyAcl: true, user: {role: "member"}});
+
+      const hidden = await insert({age: 10, title: "hidden"});
+      const shown = await insert({age: 40, title: "shown"});
+      await until(() => live().length > 0);
+      await sleep(SETTLE_MS);
+
+      expect(titles(live(), ChunkKind.Insert)).toEqual(["shown"]);
+
+      await patch({...shown, age: 5}, {age: 5});
+      await until(() => live().some(chunk => chunk.kind == ChunkKind.Expunge));
+      expect(live().map(chunk => ChunkKind[chunk.kind])).toEqual(["Insert", "Expunge"]);
+      expect(hidden).toBeDefined();
+    });
+  });
+
+  describe("a filter", () => {
+    beforeEach(async () => {
+      bucket = await manager.create(definition("true==true"), () => {});
+    });
+
+    it("should be an expression", async () => {
+      await insert({age: 10, title: "a"});
+      await insert({age: 30, title: "b"});
+
+      const {chunks} = await open({filter: `document.age > 20`});
+
+      expect(titles(chunks, ChunkKind.Initial)).toEqual(["b"]);
+    });
+
+    it("should be refused when it is a MongoDB filter", async () => {
+      const {errors} = await open({filter: {age: {$gt: 20}}});
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBeInstanceOf(FilterLanguageError);
+    });
+  });
+
+  describe("a collection that is not a bucket", () => {
+    it("should be refused for now", async () => {
+      const {errors} = await open({}, "function");
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchObject({status: 501});
+    });
+  });
+
+  describe("a bucket that does not exist", () => {
+    it("should be answered with a missing bucket", async () => {
+      const {errors} = await open({}, "bucket_01900000-0000-7000-8000-000000000000");
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchObject({status: 404});
+    });
+  });
+});
