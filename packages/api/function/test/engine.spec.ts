@@ -309,7 +309,10 @@ contractSuite("Engine", contract => {
           title: "Operation type",
           description: "Operation type that must be performed in the specified collection",
           type: "string",
-          enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+          enum: module
+            .get<CollectionNames>(COLLECTION_NAMES)
+            .changeOperations()
+            .map(operation => operation.toUpperCase())
         }
       },
       additionalProperties: false
@@ -317,5 +320,15 @@ contractSuite("Engine", contract => {
     const schemaPromise = await engine.getSchema("database");
 
     expect(schemaPromise).toEqual(expectedSchema);
+  });
+
+  it("should offer REPLACE for database triggers only on engines that report replacements", async () => {
+    const schema: any = await engine.getSchema("database");
+
+    expect(schema.properties.type.enum).toEqual(
+      contract.name == "mongodb"
+        ? ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+        : ["INSERT", "UPDATE", "DELETE"]
+    );
   });
 });

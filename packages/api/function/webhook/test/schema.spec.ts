@@ -23,7 +23,9 @@ contractSuite("Schema Resolver", engine => {
   });
 
   it("should resolve the inital schema", async () => {
-    const collections = await module.get<CollectionNames>(COLLECTION_NAMES).list();
+    const names = module.get<CollectionNames>(COLLECTION_NAMES);
+    const collections = await names.list();
+    const operations = names.changeOperations().map(operation => operation.toUpperCase());
     const schema = await resolver.resolve("http://spica.internal/webhook");
 
     expect(schema).toEqual({
@@ -70,7 +72,7 @@ contractSuite("Schema Resolver", engine => {
                 type: {
                   type: "string",
                   title: "Event type",
-                  enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"],
+                  enum: operations,
                   description: "Event type that must be performed in the specified collection"
                 }
               }
@@ -79,5 +81,17 @@ contractSuite("Schema Resolver", engine => {
         }
       }
     });
+  });
+
+  it("should offer REPLACE only on engines that report replacements", async () => {
+    const schema: any = await resolver.resolve("http://spica.internal/webhook");
+
+    const offered = schema.properties.trigger.properties.options.properties.type.enum;
+
+    expect(offered).toEqual(
+      engine.name == "mongodb"
+        ? ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+        : ["INSERT", "UPDATE", "DELETE"]
+    );
   });
 });

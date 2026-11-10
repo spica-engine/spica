@@ -33,7 +33,16 @@
       "path": "../../../core"
     },
     {
+      "path": "../../../interface/bucket/common"
+    },
+    {
+      "path": "../../../interface/bucket"
+    },
+    {
       "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../data"
     },
     {
       "path": "../../../core/testing"

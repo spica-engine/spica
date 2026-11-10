@@ -1,41 +1,52 @@
-import {provideRepository} from "@spica-server/data";
-import {WEBHOOK_LOG_REPOSITORY, WEBHOOK_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {Test, TestingModule} from "@nestjs/testing";
-import {
-  DatabaseService,
-  DatabaseTestingModule,
-  stream,
-  mongoOnly
-} from "@spica-server/database-testing";
-import {WebhookService, WebhookChangeDispatcher} from "@spica-server/function-webhook";
-import {Webhook, WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
+import {provideRepository} from "@spica-server/data";
+import {changeFeedReady, contractSuite} from "@spica-server/database-testing";
+import {WebhookChangeDispatcher, WebhookService} from "@spica-server/function-webhook";
 import {WebhookInvoker} from "@spica-server/function-webhook/src/invoker";
+import {
+  BUCKET_DATA_REPOSITORY,
+  BUCKET_REPOSITORY,
+  BUCKET_SCHEMA_MANAGER
+} from "@spica-server/interface-bucket";
+import {BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-common";
+import {
+  WEBHOOK_LOG_REPOSITORY,
+  WEBHOOK_OPTIONS,
+  WEBHOOK_REPOSITORY,
+  Webhook
+} from "@spica-server/interface-function-webhook";
 import __fetch__ from "node-fetch";
-
-mongoOnly("database triggers and commands read the change feed, which PostgreSQL gets in Part 10");
 
 jest.setTimeout(60_000);
 
-// The webhook collection is no longer watched via a change stream; WebhookService now emits
-// through an in-memory dispatcher, so target (un)registration is driven by promise resolution
-// rather than the `stream` shim. Wait on the invoker's own subscribe/unsubscribe spies to know
-// when a webhook mutation has been applied, then use the `stream` shim only for the target
-// collection stream (purpose #1), which still uses a real change stream.
-async function waitForCall(spy: jest.SpyInstance, times = 1) {
+async function until(condition: () => boolean) {
   const start = Date.now();
-  while (spy.mock.calls.length < times) {
+  while (!condition()) {
     if (Date.now() - start > 20_000) {
-      throw new Error("timed out waiting for spy to be called");
+      throw new Error("timed out waiting for the condition");
     }
     await new Promise(resolve => setTimeout(resolve, 10));
   }
 }
 
-describe("Webhook Invoker", () => {
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const HEADERS = {
+  "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
+  "Content-type": "application/json"
+};
+
+let buckets = 0;
+
+contractSuite("Webhook Invoker", engine => {
+  const mongo = engine.name == "mongodb";
+  const keyField = mongo ? "_id" : "id";
   let invoker: WebhookInvoker;
   let module: TestingModule;
   let service: WebhookService;
-  let db: DatabaseService;
+  let writes: BucketWriteFacade;
+  let bucket: any;
+  let collection: string;
   let logService: any;
 
   let subscribeSpy: jest.SpyInstance;
@@ -45,37 +56,63 @@ describe("Webhook Invoker", () => {
 
   let webhook: Webhook;
 
+  const insert = (document: object) =>
+    writes.insert(bucket, {...document}, {}, {resolveSchema: () => bucket, deleteOne: jest.fn()});
+
+  const requestBody = (call = 0) => fetchSpy.mock.calls[call][1].body as string;
+
+  const subscribed = async (hook: Webhook) => {
+    const saved = await service.insert(hook);
+    await until(() => subscribeSpy.mock.calls.length > 0);
+    await changeFeedReady(module);
+    return saved;
+  };
+
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet()],
+      imports: [engine.module()],
       providers: [
         WebhookInvoker,
         provideRepository(WEBHOOK_REPOSITORY),
         WebhookService,
         WebhookChangeDispatcher,
         provideRepository(WEBHOOK_LOG_REPOSITORY),
-        {
-          provide: WEBHOOK_OPTIONS,
-          useValue: {
-            expireAfterSeconds: 5
-          }
-        }
+        provideRepository(BUCKET_REPOSITORY),
+        provideRepository(BUCKET_SCHEMA_MANAGER),
+        provideRepository(BUCKET_DATA_REPOSITORY),
+        {provide: WEBHOOK_OPTIONS, useValue: {expireAfterSeconds: 5}}
       ]
     }).compile();
     module.enableShutdownHooks();
     service = module.get(WebhookService);
-    db = module.get(DatabaseService);
     logService = module.get(WEBHOOK_LOG_REPOSITORY);
     invoker = module.get(WebhookInvoker);
+    writes = module.get(BUCKET_WRITE);
 
     subscribeSpy = jest.spyOn(invoker, "subscribe" as never);
     unsubscribeSpy = jest.spyOn(invoker, "unsubscribe" as never);
 
     const nodeFetch = {fetch: __fetch__};
     fetchSpy = jest.spyOn(nodeFetch, "fetch");
-    insertLogSpy = jest
-      .spyOn(logService, "insertOne" as never)
-      .mockResolvedValue(undefined as never);
+    insertLogSpy = jest.spyOn(logService, "insert" as never).mockResolvedValue(undefined as never);
+
+    bucket = await module.get(BUCKET_SCHEMA_MANAGER).create(
+      {
+        title: `webhook ${++buckets}`,
+        description: "",
+        icon: "",
+        primary: mongo ? "doc" : "id",
+        readOnly: false,
+        history: false,
+        order: 0,
+        acl: {read: "true==true", write: "true==true"},
+        properties: mongo
+          ? {doc: {type: "string"}}
+          : {id: {type: "uuid", options: {generated: true}}, doc: {type: "string"}}
+      } as any,
+      () => {}
+    );
+    collection = `bucket_${bucket._id}`;
 
     webhook = {
       title: "wh1",
@@ -84,10 +121,7 @@ describe("Webhook Invoker", () => {
       trigger: {
         name: "database",
         active: true,
-        options: {
-          collection: "stream_coll",
-          type: "INSERT"
-        }
+        options: {collection, type: "INSERT"}
       }
     };
   });
@@ -101,107 +135,114 @@ describe("Webhook Invoker", () => {
     await module.close();
   });
 
-  it("should subscribe and open a change stream against the collection", async () => {
-    const {_id, ...hook} = await service.insert(webhook);
-    await waitForCall(subscribeSpy);
-    const subsequentStream = await stream.wait();
+  it("should subscribe to the collection of the webhook", async () => {
+    const {_id, ...hook} = await subscribed(webhook);
+
     expect(subscribeSpy).toHaveBeenCalledTimes(1);
-    expect(subscribeSpy).toHaveBeenCalledWith(_id.toHexString(), hook);
-    expect(subsequentStream[0]).toBe("stream_coll");
-    expect(subsequentStream[1]).toEqual([
-      {
-        $match: {operationType: "insert"}
-      }
-    ]);
-    expect(subsequentStream[2]["fullDocument"]).toBe("updateLookup");
+    expect(subscribeSpy).toHaveBeenCalledWith(String(_id), hook);
   });
 
   it("should unsubscribe after the webhook has deleted", async () => {
-    const hook = await service.insert(webhook);
-    await waitForCall(subscribeSpy);
+    const hook = await subscribed(webhook);
+
     await service.deleteById(hook._id);
-    await waitForCall(unsubscribeSpy);
+    await until(() => unsubscribeSpy.mock.calls.length > 0);
+
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith(hook._id.toHexString());
+    expect(unsubscribeSpy).toHaveBeenCalledWith(String(hook._id));
   });
 
   it("should unsubscribe after the webhook has disabled", async () => {
-    const hook = await service.insert(webhook);
-    await waitForCall(subscribeSpy);
-    await service.replaceById(hook._id, {...webhook, trigger: {...webhook.trigger, active: false}});
-    await waitForCall(unsubscribeSpy);
+    const hook = await subscribed(webhook);
+
+    await service.replaceById(hook._id, {
+      ...webhook,
+      trigger: {...webhook.trigger, active: false}
+    });
+    await until(() => unsubscribeSpy.mock.calls.length > 0);
+
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith(hook._id.toHexString());
+    expect(unsubscribeSpy).toHaveBeenCalledWith(String(hook._id));
+  });
+
+  it("should stop reporting changes after the webhook has deleted", async () => {
+    const hook = await subscribed(webhook);
+    await service.deleteById(hook._id);
+    await until(() => unsubscribeSpy.mock.calls.length > 0);
+
+    await insert({doc: "ignored"});
+    await sleep(500);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("should report changes from the database", async () => {
-    await service.insert(webhook);
-    await waitForCall(subscribeSpy);
-    await stream.wait();
-    stream.change.next();
-    const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
-    await stream.change.wait();
+    await subscribed(webhook);
+
+    const saved = await insert({doc: "fromdb"});
+    await until(() => fetchSpy.mock.calls.length > 0);
+
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(fetchSpy).toHaveBeenCalledWith("http://spica.internal", {
       method: "post",
-      body: JSON.stringify({
-        type: "insert",
-        document: {_id: doc.insertedId.toHexString(), doc: "fromdb"},
-        documentKey: doc.insertedId.toHexString()
-      }),
-      headers: {
-        "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
-        "Content-type": "application/json"
-      }
+      body: expect.any(String),
+      headers: HEADERS
+    });
+    expect(JSON.parse(requestBody())).toEqual({
+      type: "insert",
+      document: expect.objectContaining({doc: "fromdb"}),
+      documentKey: String(saved[keyField])
     });
   });
 
   it("should report changes from the database with mapping", async () => {
     webhook.body = "{{{toJSON document}}}";
-    await service.insert(webhook);
-    await waitForCall(subscribeSpy);
-    await stream.wait();
-    stream.change.next();
-    const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
-    await stream.change.wait();
+    await subscribed(webhook);
+
+    await insert({doc: "fromdb"});
+    await until(() => fetchSpy.mock.calls.length > 0);
+
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy).toHaveBeenCalledWith("http://spica.internal", {
-      method: "post",
-      body: JSON.stringify({_id: doc.insertedId.toHexString(), doc: "fromdb"}),
-      headers: {
-        "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
-        "Content-type": "application/json"
+    expect(JSON.parse(requestBody())).toEqual(expect.objectContaining({doc: "fromdb"}));
+  });
+
+  it("should only report the type of change the webhook asks for", async () => {
+    webhook.trigger.options.type = "DELETE";
+    await subscribed(webhook);
+
+    const saved = await insert({doc: "kept"});
+    await sleep(500);
+    expect(fetchSpy).not.toHaveBeenCalled();
+
+    await writes.delete(
+      bucket,
+      String(saved[keyField]),
+      {},
+      {
+        resolveSchema: () => bucket,
+        deleteOne: jest.fn()
       }
+    );
+    await until(() => fetchSpy.mock.calls.length > 0);
+
+    expect(JSON.parse(requestBody())).toMatchObject({
+      type: "delete",
+      documentKey: String(saved[keyField])
     });
   });
 
   it("should insert a log when hook has been invoked", async () => {
-    const hook = await service.insert(webhook);
-    await waitForCall(subscribeSpy);
-    await stream.wait();
-    stream.change.next();
-    const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
-    await stream.change.wait();
+    const hook = await subscribed(webhook);
+
+    await insert({doc: "fromdb"});
+    await until(() => insertLogSpy.mock.calls.length > 0);
 
     expect(insertLogSpy).toHaveBeenCalledTimes(1);
-
-    let expectedArg: any = insertLogSpy.mock.calls[0][0];
-    expect(expectedArg.created_at).toEqual(expect.any(Date));
-    delete expectedArg.created_at;
-    expect(expectedArg).toEqual({
+    const logged: any = insertLogSpy.mock.calls[0][0];
+    expect(logged.created_at).toEqual(expect.any(Date));
+    expect(logged).toEqual({
       content: {
-        request: {
-          body: JSON.stringify({
-            type: "insert",
-            document: {_id: doc.insertedId.toHexString(), doc: "fromdb"},
-            documentKey: doc.insertedId.toHexString()
-          }),
-          headers: {
-            "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
-            "Content-type": "application/json"
-          },
-          url: "http://spica.internal"
-        },
+        request: {body: expect.any(String), headers: HEADERS, url: "http://spica.internal"},
         response: {
           headers: {key: ["value"]},
           status: 404,
@@ -209,31 +250,25 @@ describe("Webhook Invoker", () => {
           body: "res_body"
         }
       },
-      webhook: hook._id.toHexString(),
-      succeed: false
-    } as any);
+      webhook: String(hook._id),
+      succeed: false,
+      created_at: expect.any(Date)
+    });
   });
 
   it("should insert log when webhook body compilation failed", async () => {
     webhook.body = "{{{document.title}}}";
-    const hook = await service.insert(webhook);
-    await waitForCall(subscribeSpy);
-    await stream.wait();
-    stream.change.next();
-    const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
-    await stream.change.wait();
+    const hook = await subscribed(webhook);
+
+    await insert({doc: "fromdb"});
+    await until(() => insertLogSpy.mock.calls.length > 0);
 
     expect(insertLogSpy).toHaveBeenCalledTimes(1);
-
-    let expectedArg: any = insertLogSpy.mock.calls[0][0];
-    expect(expectedArg.created_at).toEqual(expect.any(Date));
-    delete expectedArg.created_at;
-    expect(expectedArg).toEqual({
-      content: {
-        error: '"title" not defined in [object Object] - 1:3'
-      },
-      webhook: hook._id.toHexString(),
-      succeed: false
-    } as any);
+    expect(insertLogSpy.mock.calls[0][0]).toEqual({
+      content: {error: '"title" not defined in [object Object] - 1:3'},
+      webhook: String(hook._id),
+      succeed: false,
+      created_at: expect.any(Date)
+    });
   });
 });
