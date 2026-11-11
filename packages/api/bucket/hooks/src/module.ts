@@ -9,12 +9,13 @@ import {ChangeEmitter} from "./emitter.js";
 import {ChangeEnqueuer} from "./enqueuer.js";
 import {ChangeQueue} from "./queue.js";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {idOf} from "@spica-server/data";
 
 export function createSchema(bucketRepository: BucketRepository): Promise<JSONSchema7> {
   const slugs = new Map<string, string>();
   return bucketRepository.findAll().then(buckets => {
     for (const bucket of buckets) {
-      slugs.set(bucket._id.toString(), bucket.title);
+      slugs.set(idOf(bucket).toString(), bucket.title);
     }
 
     const schema: JSONSchema7 = {

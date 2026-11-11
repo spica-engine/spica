@@ -2,6 +2,7 @@ import {BucketService, getBucketDataCollection} from "@spica-server/bucket-servi
 import {register} from "@spica-server/status";
 import {Status} from "@spica-server/interface-status";
 import {BucketDataRepository, BucketRepository} from "@spica-server/interface-bucket";
+import {idOf} from "@spica-server/data";
 
 export async function registerStatusProvider(
   bs: BucketService,
@@ -19,7 +20,7 @@ export async function registerStatusProvider(
 
     const bucketSchemas = await bs.findAll();
     for (const schema of bucketSchemas) {
-      const bucketName = getBucketDataCollection(schema._id);
+      const bucketName = getBucketDataCollection(idOf(schema));
       status.status[bucketName] = await bucketData.statusOf(schema);
     }
 

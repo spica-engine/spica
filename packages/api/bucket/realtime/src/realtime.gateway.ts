@@ -25,7 +25,7 @@ import {ChangeEmitter} from "@spica-server/bucket-hooks";
 import {BucketService, bucketIds, getBucketDataCollection} from "@spica-server/bucket-services";
 import {applyPatch, deepCopy} from "@spica-server/core-patch";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {DATA_ENGINE, ids} from "@spica-server/data";
+import {DATA_ENGINE, ids, idOf, withId} from "@spica-server/data";
 import {ChunkKind, REALTIME, Realtime} from "@spica-server/interface-realtime";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {extractStrategyType} from "@spica-server/passport-guard";
@@ -163,7 +163,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     try {
-      await this.validateDocument(schema._id.toString(), document);
+      await this.validateDocument(idOf(schema).toString(), document);
     } catch (error) {
       return this.send(client, ChunkKind.Response, 400, error.message);
     }
@@ -184,7 +184,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (this.hookEmitter) {
       this.hookEmitter.emitChange(
         {
-          bucket: schema._id.toString(),
+          bucket: idOf(schema).toString(),
           type: "insert"
         },
         documentKey(schema, insertedDoc).toString(),
@@ -194,14 +194,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.bucketCacheService) {
-      this.bucketCacheService.invalidate(schema._id.toString());
+      this.bucketCacheService.invalidate(idOf(schema).toString());
     }
 
     if (this.activity) {
       insertActivity(
         client.upgradeReq,
         Action.POST,
-        schema._id.toString(),
+        idOf(schema).toString(),
         documentKey(schema, insertedDoc).toString(),
         this.activity
       );
@@ -226,16 +226,21 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return this.send(client, ChunkKind.Response, error.status || 403, error.message);
     }
 
-    const documentIds = await ids().forBucket(schema._id.toString());
+    const documentIds = await ids().forBucket(idOf(schema).toString());
 
-    if (!documentIds.isValid(document._id)) {
-      return this.send(client, ChunkKind.Response, 400, `${document._id} is an invalid object id`);
+    if (!documentIds.isValid(idOf(document))) {
+      return this.send(
+        client,
+        ChunkKind.Response,
+        400,
+        `${idOf(document)} is an invalid object id`
+      );
     }
 
-    const documentId = documentIds.parse(document._id);
+    const documentId = documentIds.parse(idOf(document));
 
     try {
-      await this.validateDocument(schema._id.toString(), document);
+      await this.validateDocument(idOf(schema).toString(), document);
     } catch (error) {
       return this.send(client, ChunkKind.Response, 400, error.message);
     }
@@ -245,7 +250,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     try {
       previousDocument = await this.writes.replace(
         schema,
-        {...document, _id: documentId},
+        withId({...document}, documentId),
         {applyAcl: this.shouldApplyAcl(client.upgradeReq), user: client.upgradeReq.user},
         this.writeContext()
       );
@@ -265,7 +270,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (this.hookEmitter) {
       this.hookEmitter.emitChange(
         {
-          bucket: schema._id.toString(),
+          bucket: idOf(schema).toString(),
           type: "update"
         },
         documentId.toString(),
@@ -275,21 +280,23 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.bucketCacheService) {
-      this.bucketCacheService.invalidate(schema._id.toString());
+      this.bucketCacheService.invalidate(idOf(schema).toString());
     }
 
     if (this.history && schema.history) {
-      this.history.createHistory(schema._id, documentId, previousDocument, {
-        ...document,
-        _id: documentId
-      });
+      this.history.createHistory(
+        idOf(schema),
+        documentId,
+        previousDocument,
+        withId({...document}, documentId)
+      );
     }
 
     if (this.activity) {
       insertActivity(
         client.upgradeReq,
         Action.PUT,
-        schema._id.toString(),
+        idOf(schema).toString(),
         documentId.toString(),
         this.activity
       );
@@ -314,7 +321,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return this.send(client, ChunkKind.Response, error.status || 403, error.message);
     }
 
-    const documentIds = await ids().forBucket(schema._id.toString());
+    const documentIds = await ids().forBucket(idOf(schema).toString());
 
     if (!documentIds.isValid(document._id)) {
       return this.send(client, ChunkKind.Response, 400, `${document._id} is an invalid object id`);
@@ -336,7 +343,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const patchedDocument = applyPatch(previousDocument, document);
 
     try {
-      await this.validateDocument(schema._id.toString(), patchedDocument);
+      await this.validateDocument(idOf(schema).toString(), patchedDocument);
     } catch (error) {
       return this.send(client, ChunkKind.Response, 400, error.message);
     }
@@ -346,7 +353,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     try {
       currentDocument = await this.writes.patch(
         schema,
-        {...patchedDocument, _id: documentId},
+        withId({...patchedDocument}, documentId),
         document,
         {
           applyAcl: this.shouldApplyAcl(client.upgradeReq),
@@ -371,7 +378,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (this.hookEmitter) {
       this.hookEmitter.emitChange(
         {
-          bucket: schema._id.toString(),
+          bucket: idOf(schema).toString(),
           type: "update"
         },
         documentId.toString(),
@@ -381,18 +388,18 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.bucketCacheService) {
-      this.bucketCacheService.invalidate(schema._id.toString());
+      this.bucketCacheService.invalidate(idOf(schema).toString());
     }
 
     if (this.history && schema.history) {
-      this.history.createHistory(schema._id, documentId, previousDocument, currentDocument);
+      this.history.createHistory(idOf(schema), documentId, previousDocument, currentDocument);
     }
 
     if (this.activity) {
       insertActivity(
         client.upgradeReq,
         Action.PUT,
-        schema._id.toString(),
+        idOf(schema).toString(),
         documentId.toString(),
         this.activity
       );
@@ -419,7 +426,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       }
     }
 
-    const documentIds = await ids().forBucket(schema._id.toString());
+    const documentIds = await ids().forBucket(idOf(schema).toString());
 
     if (!documentIds.isValid(document._id)) {
       return this.send(client, ChunkKind.Response, 400, `${document._id} is an invalid object id`);
@@ -450,7 +457,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (this.hookEmitter) {
       this.hookEmitter.emitChange(
         {
-          bucket: schema._id.toString(),
+          bucket: idOf(schema).toString(),
           type: "delete"
         },
         document._id.toString(),
@@ -460,7 +467,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.bucketCacheService) {
-      this.bucketCacheService.invalidate(schema._id.toString());
+      this.bucketCacheService.invalidate(idOf(schema).toString());
     }
 
     if (this.history) {
@@ -471,13 +478,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       insertActivity(
         client.upgradeReq,
         Action.DELETE,
-        schema._id.toString(),
+        idOf(schema).toString(),
         document._id.toString(),
         this.activity
       );
     }
 
-    clearRelations(this.bucketService, this.bucketData, schema._id, document._id);
+    clearRelations(this.bucketService, this.bucketData, idOf(schema), document._id);
 
     const dependents = getDependents(schema, deletedDocument);
 

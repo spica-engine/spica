@@ -10,6 +10,7 @@ import {CommandType} from "@spica-server/interface-replication";
 import {ChangeOptions} from "@spica-server/interface-bucket-hooks";
 import {Description} from "@spica-server/interface-function-enqueuer";
 import {Logger} from "@nestjs/common";
+import {withId} from "@spica-server/data";
 
 function getChangeType(type: string): hooks.Change.Kind {
   switch (type) {
@@ -102,7 +103,7 @@ export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
     };
 
     if (this.jobReducer) {
-      this.jobReducer.do({...rawChange, event_id: ev.id, _id: ev.id}, enqueue);
+      this.jobReducer.do(withId({...rawChange, event_id: ev.id}, ev.id), enqueue);
     } else {
       enqueue();
     }
@@ -122,8 +123,7 @@ export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
           this.logger.error(`Job ${event.id} does not exist!`);
           return;
         }
-        const newChange = {...job, _id: {_data: job._id}};
-        return this.shift(newChange, event.target.toObject(), event.id);
+        return this.shift(job, event.target.toObject(), event.id);
       });
 
       shiftPromises.push(shift);

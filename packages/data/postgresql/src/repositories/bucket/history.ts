@@ -10,6 +10,7 @@ import {histories} from "../../entities/index.js";
 import {ORM} from "../../orm.js";
 import {keyedReadContext} from "./read-context.js";
 import {StoredBuckets} from "./stored-buckets.js";
+import {idOf} from "@spica-server/data";
 
 const MAX_HISTORIES_PER_DOCUMENT = 10;
 
@@ -41,7 +42,7 @@ export class PostgresHistoryRepository implements HistoryRepository {
     await this.orm.transaction(async session => {
       const stored = await session.findMany(
         histories,
-        {bucket_id: currentSchema._id},
+        {bucket_id: idOf(currentSchema)},
         {orderBy: {_id: "asc"}, lock: "update"}
       );
 
@@ -50,9 +51,9 @@ export class PostgresHistoryRepository implements HistoryRepository {
           change => !paths.some(path => startsWith(change.path, path))
         );
         if (!kept.length) {
-          await session.deleteById(histories, history._id);
+          await session.deleteById(histories, idOf(history));
         } else if (kept.length != history.changes?.length) {
-          await session.updateById(histories, history._id, {changes: kept});
+          await session.updateById(histories, idOf(history), {changes: kept});
         }
       }
     });
@@ -77,7 +78,7 @@ export class PostgresHistoryRepository implements HistoryRepository {
         {select: ["_id"], orderBy: {_id: "desc"}, offset: MAX_HISTORIES_PER_DOCUMENT - 1}
       );
       if (stale.length) {
-        await session.deleteWhere(histories, {_id: stale.map(history => history._id)});
+        await session.deleteWhere(histories, {_id: stale.map(history => idOf(history))});
       }
       return session.insert(histories, {
         bucket_id: bucketId,
@@ -107,7 +108,7 @@ export class PostgresHistoryRepository implements HistoryRepository {
       {select: ["_id", "created_at", "changes"], orderBy: {_id: "desc"}}
     );
     return found.map(history => ({
-      _id: history._id,
+      _id: idOf(history),
       date: history.created_at,
       changes: history.changes?.length ?? 0
     })) as HistorySummary[];

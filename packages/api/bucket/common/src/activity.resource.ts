@@ -2,13 +2,14 @@ import {createActivity, ActivityService} from "@spica-server/activity-services";
 import {deepCopy} from "@spica-server/core-patch";
 import {Action, PreActivity, ModuleActivity} from "@spica-server/interface-activity";
 import {Id} from "@spica-server/interface-data";
+import {idOf} from "@spica-server/data";
 
 export function createBucketActivity(
   preActivity: PreActivity,
   req: any,
   res: any
 ): ModuleActivity[] {
-  const bucketId = (preActivity.action == Action.POST ? res._id : req.params.id).toString();
+  const bucketId = (preActivity.action == Action.POST ? idOf(res) : req.params.id).toString();
 
   const resource = ["bucket", bucketId];
 

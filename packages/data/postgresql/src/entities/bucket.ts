@@ -1,8 +1,9 @@
 import {defineEntity, now} from "@spica-server/data-postgresql-orm";
 import {Bucket} from "@spica-server/interface-bucket";
+import {Id} from "@spica-server/interface-data";
 import {History} from "@spica-server/interface-bucket-history";
 
-export const buckets = defineEntity<Bucket>({
+export const buckets = defineEntity<Bucket & {_id?: Id}>({
   table: "buckets",
   idProperty: "_id",
   columns: {
@@ -25,7 +26,7 @@ export const buckets = defineEntity<Bucket>({
   }
 });
 
-export const histories = defineEntity<History & {created_at?: Date}>({
+export const histories = defineEntity<History & {created_at?: Date; _id?: Id}>({
   table: "histories",
   idProperty: "_id",
   columns: {

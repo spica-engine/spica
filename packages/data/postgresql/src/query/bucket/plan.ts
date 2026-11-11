@@ -1,6 +1,6 @@
 import {BadRequestException} from "@nestjs/common";
 import {ACLSyntaxException, findLocale, hasTranslatedProperties} from "@spica-server/bucket-common";
-import {assertFilterLanguage} from "@spica-server/data";
+import {assertFilterLanguage, idOf} from "@spica-server/data";
 import {bind, quote, ResolvedColumn} from "@spica-server/data-postgresql-orm";
 import {Bucket} from "@spica-server/interface-bucket";
 import {BucketReadContext, BucketReadSpec, Locale} from "@spica-server/interface-bucket-common";
@@ -67,7 +67,7 @@ export async function planRead(
   context: BucketReadContext
 ): Promise<ReadPlan> {
   const filter = userFilterOf(spec.filter);
-  const bucketId = String(bucket._id);
+  const bucketId = String(idOf(bucket));
   const lookup = (id: string) => find(context, id);
   const metadata = describeBucket(bucketId, bucket, await resolveRelationTargets(bucket, lookup));
   const related = await loadRelatedBuckets(

@@ -10,6 +10,7 @@ import {
   RelationResolver
 } from "@spica-server/interface-bucket-common";
 import {Bucket, BucketDataRepository, BucketDocument} from "@spica-server/interface-bucket";
+import {idOf} from "@spica-server/data";
 
 export function findRelations(
   schema: any,
@@ -203,7 +204,7 @@ export async function clearRelations(
   documentId: Id
 ) {
   const buckets = (await bucketService.findAll()).filter(
-    bucket => !bucketIds().equals(bucket._id, bucketId)
+    bucket => !bucketIds().equals(idOf(bucket), bucketId)
   );
 
   for (const bucket of buckets) {

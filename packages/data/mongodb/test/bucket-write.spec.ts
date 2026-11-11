@@ -1,5 +1,5 @@
 import {Test} from "@nestjs/testing";
-import {PassthroughResultShaper} from "@spica-server/data";
+import {PassthroughResultShaper, idOf, withId} from "@spica-server/data";
 import {
   MongoBucketQueryFacade,
   MongoBucketWriteFacade,
@@ -37,7 +37,11 @@ describe("MongoBucketWriteFacade", () => {
     await db.collection("buckets").insertOne(bucket as any);
   });
 
-  const documents = () => db.collection(`bucket_${bucket._id}`).find().toArray();
+  const documents = () =>
+    db
+      .collection(`bucket_${idOf(bucket)}`)
+      .find()
+      .toArray();
 
   describe("insert", () => {
     it("should insert into the bucket's collection and return the document with its id", async () => {
@@ -48,7 +52,7 @@ describe("MongoBucketWriteFacade", () => {
     });
 
     it("should report a unique index violation as a bad request", async () => {
-      await db.collection(`bucket_${bucket._id}`).createIndex({title: 1}, {unique: true});
+      await db.collection(`bucket_${idOf(bucket)}`).createIndex({title: 1}, {unique: true});
       await facade.insert(bucket, {title: "a"}, {}, context());
 
       await expect(facade.insert(bucket, {title: "a"}, {}, context())).rejects.toMatchObject({
@@ -71,11 +75,11 @@ describe("MongoBucketWriteFacade", () => {
         countLimit: 2,
         limitExceedBehaviour: LimitExceedBehaviours.REMOVE
       } as any;
-      const first = await db.collection(`bucket_${bucket._id}`).insertOne({title: "first"});
-      await db.collection(`bucket_${bucket._id}`).insertOne({title: "second"});
+      const first = await db.collection(`bucket_${idOf(bucket)}`).insertOne({title: "first"});
+      await db.collection(`bucket_${idOf(bucket)}`).insertOne({title: "second"});
       const ctx = context({
         deleteOne: jest.fn(async (id: any) => {
-          await db.collection(`bucket_${bucket._id}`).deleteOne({_id: id});
+          await db.collection(`bucket_${idOf(bucket)}`).deleteOne({_id: id});
         })
       });
 
@@ -130,12 +134,12 @@ describe("MongoBucketWriteFacade", () => {
     let _id: ObjectId;
 
     beforeEach(async () => {
-      _id = (await db.collection(`bucket_${bucket._id}`).insertOne({title: "a", owner: "x"}))
+      _id = (await db.collection(`bucket_${idOf(bucket)}`).insertOne({title: "a", owner: "x"}))
         .insertedId;
     });
 
     it("should return the document before the replacement by default", async () => {
-      const previous = await facade.replace(bucket, {_id, title: "b"}, {}, context());
+      const previous = await facade.replace(bucket, withId({title: "b"}, _id), {}, context());
 
       expect(previous).toEqual({_id, title: "a", owner: "x"});
       expect(await documents()).toEqual([{_id, title: "b"}]);
@@ -144,7 +148,7 @@ describe("MongoBucketWriteFacade", () => {
     it("should return the replaced document when asked for the document after", async () => {
       const current = await facade.replace(
         bucket,
-        {_id, title: "b"},
+        withId({title: "b"}, _id),
         {returnDocument: "after"},
         context()
       );
@@ -154,14 +158,14 @@ describe("MongoBucketWriteFacade", () => {
 
     it("should return null when there is nothing to replace", async () => {
       expect(
-        await facade.replace(bucket, {_id: new ObjectId(), title: "b"}, {}, context())
+        await facade.replace(bucket, withId({title: "b"}, new ObjectId()), {}, context())
       ).toBeNull();
     });
 
     it("should apply a merge patch and return the patched document", async () => {
       const current = await facade.patch(
         bucket,
-        {_id, title: "b"},
+        withId({title: "b"}, _id),
         {title: "b", owner: null},
         {returnDocument: "after"},
         context()
@@ -174,7 +178,7 @@ describe("MongoBucketWriteFacade", () => {
 
   describe("delete", () => {
     it("should delete the document and return it", async () => {
-      const {insertedId} = await db.collection(`bucket_${bucket._id}`).insertOne({title: "a"});
+      const {insertedId} = await db.collection(`bucket_${idOf(bucket)}`).insertOne({title: "a"});
 
       const deleted = await facade.delete(bucket, insertedId.toHexString(), {}, context());
 
@@ -183,7 +187,7 @@ describe("MongoBucketWriteFacade", () => {
     });
 
     it("should delete nothing for a missing or null id", async () => {
-      await db.collection(`bucket_${bucket._id}`).insertOne({title: "a"});
+      await db.collection(`bucket_${idOf(bucket)}`).insertOne({title: "a"});
 
       expect(await facade.delete(bucket, new ObjectId(), {}, context())).toBeUndefined();
       expect(await facade.delete(bucket, null, {}, context())).toBeUndefined();
@@ -204,12 +208,12 @@ describe("MongoBucketWriteFacade", () => {
       bucket.acl.write = rule;
       bucket.properties = {
         title: {type: "string"},
-        author: {type: "relation", bucketId: author._id.toString(), relationType: "onetoone"},
-        editors: {type: "relation", bucketId: author._id.toString(), relationType: "onetomany"},
+        author: {type: "relation", bucketId: idOf(author).toString(), relationType: "onetoone"},
+        editors: {type: "relation", bucketId: idOf(author).toString(), relationType: "onetomany"},
         meta: {
           type: "object",
           properties: {
-            author: {type: "relation", bucketId: author._id.toString(), relationType: "onetoone"}
+            author: {type: "relation", bucketId: idOf(author).toString(), relationType: "onetoone"}
           }
         }
       } as any;
@@ -219,7 +223,7 @@ describe("MongoBucketWriteFacade", () => {
 
     const ruleContext = () => ({
       ...context(),
-      resolveSchema: (id: any) => copyOf(buckets().find(b => b._id.toString() == id.toString())!)
+      resolveSchema: (id: any) => copyOf(buckets().find(b => idOf(b).toString() == id.toString())!)
     });
 
     const options = {applyAcl: true, user: {_id: "u"}};
@@ -239,18 +243,18 @@ describe("MongoBucketWriteFacade", () => {
         acl: {read: "true==true", write: "true==true"},
         properties: {
           name: {type: "string"},
-          boss: {type: "relation", bucketId: boss._id.toString(), relationType: "onetoone"}
+          boss: {type: "relation", bucketId: idOf(boss).toString(), relationType: "onetoone"}
         }
       } as any;
       await db.collection("buckets").insertMany([boss as any, author as any]);
 
-      ceo = (await db.collection(`bucket_${boss._id}`).insertOne({title: "ceo"})).insertedId;
+      ceo = (await db.collection(`bucket_${idOf(boss)}`).insertOne({title: "ceo"})).insertedId;
       ann = (
         await db
-          .collection(`bucket_${author._id}`)
+          .collection(`bucket_${idOf(author)}`)
           .insertOne({name: "ann", boss: ceo.toHexString()})
       ).insertedId;
-      bob = (await db.collection(`bucket_${author._id}`).insertOne({name: "bob"})).insertedId;
+      bob = (await db.collection(`bucket_${idOf(author)}`).insertOne({name: "bob"})).insertedId;
     });
 
     const insert = (document: object) => facade.insert(bucket, document, options, ruleContext());
@@ -328,12 +332,17 @@ describe("MongoBucketWriteFacade", () => {
       withRule("document.author.name == 'ann'");
 
       await expect(
-        facade.replace(bucket, {_id, title: "b", author: bob.toHexString()}, options, ruleContext())
+        facade.replace(
+          bucket,
+          withId({title: "b", author: bob.toHexString()}, _id),
+          options,
+          ruleContext()
+        )
       ).rejects.toMatchObject(denied);
 
       await facade.replace(
         bucket,
-        {_id, title: "b", author: ann.toHexString()},
+        withId({title: "b", author: ann.toHexString()}, _id),
         options,
         ruleContext()
       );
@@ -348,7 +357,7 @@ describe("MongoBucketWriteFacade", () => {
       await expect(
         facade.patch(
           bucket,
-          {_id, title: "b", author: bob.toHexString()},
+          withId({title: "b", author: bob.toHexString()}, _id),
           {title: "b"},
           options,
           ruleContext()
@@ -357,7 +366,7 @@ describe("MongoBucketWriteFacade", () => {
 
       await facade.patch(
         bucket,
-        {_id, title: "a", author: ann.toHexString()},
+        withId({title: "a", author: ann.toHexString()}, _id),
         {author: ann.toHexString()},
         options,
         ruleContext()
@@ -388,7 +397,7 @@ describe("MongoBucketWriteFacade", () => {
     await shaped.insert(bucket, {title: "a"}, {}, context());
 
     expect(shaper.shape).toHaveBeenCalledWith(
-      {kind: "bucket", bucketId: bucket._id.toString()},
+      {kind: "bucket", bucketId: idOf(bucket).toString()},
       expect.objectContaining({title: "a"})
     );
   });

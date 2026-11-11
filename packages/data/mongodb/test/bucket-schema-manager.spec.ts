@@ -5,6 +5,7 @@ import {
   MongoBucketSchemaManager
 } from "@spica-server/data-mongodb";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
+import {idOf} from "@spica-server/data";
 
 describe("bucket schema manager", () => {
   let module: TestingModule;
@@ -46,8 +47,8 @@ describe("bucket schema manager", () => {
     const created = await manager.create(bucket([{definition: {title: 1}, options: {}}]), onSaved);
 
     expect(onSaved).toHaveBeenCalledWith(created);
-    expect(await buckets.findById(created._id)).toEqual(created);
-    expect(await indexNames(created._id)).toContain(bucketData.generateIndexName({title: 1}, {}));
+    expect(await buckets.findById(idOf(created))).toEqual(created);
+    expect(await indexNames(idOf(created))).toContain(bucketData.generateIndexName({title: 1}, {}));
   });
 
   it("should tell the observer about the definition before the structure work fails", async () => {
@@ -65,13 +66,13 @@ describe("bucket schema manager", () => {
     const onSaved = jest.fn();
 
     await manager.replace(
-      created._id,
+      idOf(created),
       bucket([{definition: {description: 1}, options: {}}]),
       onSaved
     );
 
-    expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({_id: created._id}));
-    const names = await indexNames(created._id);
+    expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({_id: idOf(created)}));
+    const names = await indexNames(idOf(created));
     expect(names).toContain(bucketData.generateIndexName({description: 1}, {}));
     expect(names).not.toContain(bucketData.generateIndexName({title: 1}, {}));
   });
@@ -80,21 +81,21 @@ describe("bucket schema manager", () => {
     const created = await manager.create(bucket(), () => {});
     const onSaved = jest.fn();
 
-    const dropped = await manager.drop(created._id, onSaved);
+    const dropped = await manager.drop(idOf(created), onSaved);
 
     expect(dropped).toEqual(created);
     expect(onSaved).toHaveBeenCalledWith(created);
-    expect(await buckets.findById(created._id)).toBeNull();
-    const collections = await db.listCollections({name: `bucket_${created._id}`}).toArray();
+    expect(await buckets.findById(idOf(created))).toBeNull();
+    const collections = await db.listCollections({name: `bucket_${idOf(created)}`}).toArray();
     expect(collections).toEqual([]);
   });
 
   it("should resolve to null without notifying when the bucket does not exist", async () => {
     const created = await manager.create(bucket(), () => {});
-    await manager.drop(created._id, () => {});
+    await manager.drop(idOf(created), () => {});
     const onSaved = jest.fn();
 
-    expect(await manager.drop(created._id, onSaved)).toBeNull();
+    expect(await manager.drop(idOf(created), onSaved)).toBeNull();
     expect(onSaved).not.toHaveBeenCalled();
   });
 });

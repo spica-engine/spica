@@ -22,7 +22,7 @@ import {activity} from "@spica-server/activity-services";
 import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
 import {BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ID} from "@spica-server/data";
+import {ID, withId, stripId} from "@spica-server/data";
 import {
   COLLECTION_QUERY,
   CollectionQueryFacade,
@@ -162,10 +162,13 @@ export class BucketController {
     @Param("id", ID(BUCKETS_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    return CRUD.replace(this.bs, this.bucketData, this.history, this.rules, {
-      ...bucket,
-      _id: id
-    }).catch(error => {
+    return CRUD.replace(
+      this.bs,
+      this.bucketData,
+      this.history,
+      this.rules,
+      withId({...bucket}, id)
+    ).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -212,7 +215,7 @@ export class BucketController {
     }
 
     const patchedBucket = applyPatch(previousBucket, patch);
-    delete patchedBucket._id;
+    stripId(patchedBucket);
 
     return this.bs.replaceById(id, patchedBucket);
   }

@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, withId, idOf} from "@spica-server/data";
 import {RuleCompileError} from "@spica-server/data-postgresql";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {
@@ -65,7 +65,7 @@ describe("PostgresBucketRuleValidator", () => {
   it("should check a bucket that was not saved yet", async () => {
     await expect(validator.validateReadRule(bucket("document.title =="))).rejects.toThrow();
     await expect(
-      validator.validateReadRule({...bucket("true==true"), _id: undefined})
+      validator.validateReadRule(withId({...bucket("true==true")}, undefined))
     ).resolves.toBeUndefined();
   });
 
@@ -93,7 +93,7 @@ describe("PostgresBucketRuleValidator", () => {
           secret: {type: "encrypted"}
         }
       } as any);
-      authorId = String(author._id);
+      authorId = String(idOf(author));
     });
 
     const withAuthor = (read: string, bucketId = () => authorId) =>

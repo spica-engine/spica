@@ -29,6 +29,7 @@ import {RowSet} from "../shape/index.js";
 import {translateWriteError, WriteOperation} from "./errors.js";
 import {insertRows} from "./row-writer.js";
 import {deleteRow, lockRowSet, patchRows, replaceRows} from "./row-updater.js";
+import {idOf} from "@spica-server/data";
 
 @Injectable()
 export class PostgresBucketWriteFacade implements BucketWriteFacade {
@@ -155,7 +156,7 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
 
   private async describe(bucket: Bucket, context: BucketWriteContext) {
     const targets = await resolveRelationTargets(bucket, async id => context.resolveSchema(id));
-    return describeBucket(String(bucket._id), bucket, targets);
+    return describeBucket(String(idOf(bucket)), bucket, targets);
   }
 
   private async makeRoom(bucket: Bucket, metadata: BucketMetadata, context: BucketInsertContext) {
@@ -193,7 +194,7 @@ export class PostgresBucketWriteFacade implements BucketWriteFacade {
 
   private shapeRows(bucket: Bucket, rowSet: RowSet): Promise<BucketDocument> {
     return this.shaper.shape<RowSet, BucketDocument>(
-      {kind: "bucket", bucketId: String(bucket._id)},
+      {kind: "bucket", bucketId: String(idOf(bucket))},
       rowSet
     );
   }

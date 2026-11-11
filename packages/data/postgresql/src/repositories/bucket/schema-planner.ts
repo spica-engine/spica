@@ -20,6 +20,7 @@ import {
   withoutRelationsTo
 } from "../../schema/index.js";
 import {StoredBuckets} from "./stored-buckets.js";
+import {idOf, withId} from "@spica-server/data";
 
 export class SchemaPlanner {
   constructor(
@@ -29,12 +30,12 @@ export class SchemaPlanner {
 
   async statementsToCreate(bucket: StoredBucket) {
     return createStatements(
-      describeBucket(String(bucket._id), bucket, await this.targetsOf(bucket))
+      describeBucket(String(idOf(bucket)), bucket, await this.targetsOf(bucket))
     );
   }
 
   async statementsToReplace(previous: StoredBucket, next: StoredBucket) {
-    const bucketId = String(next._id);
+    const bucketId = String(idOf(next));
     if (!(await this.session.tableExists(mainTableName(bucketId)))) {
       return this.statementsToCreate(next);
     }
@@ -59,9 +60,9 @@ export class SchemaPlanner {
     const changed: StoredBucket[] = [];
     const statements: string[] = [];
     for (const other of await this.stored.all()) {
-      const pruned = String(other._id) == bucketId ? null : withoutRelationsTo(other, bucketId);
+      const pruned = String(idOf(other)) == bucketId ? null : withoutRelationsTo(other, bucketId);
       if (pruned) {
-        const next = {...pruned, _id: other._id} as StoredBucket;
+        const next = withId({...pruned}, idOf(other)) as StoredBucket;
         statements.push(...(await this.statementsToReplace(other, next)));
         changed.push(next);
       }
@@ -72,7 +73,7 @@ export class SchemaPlanner {
   private async plansOfReferrers(bucketId: string, keyChange: KeyChange) {
     const plans: UpdatePlan[] = [];
     for (const other of await this.stored.all()) {
-      const otherId = String(other._id);
+      const otherId = String(idOf(other));
       if (otherId == bucketId || !relationTargets(other.properties).includes(bucketId)) {
         continue;
       }

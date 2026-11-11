@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {BUCKET_SCHEMA_MANAGER, BucketSchemaManager} from "@spica-server/interface-bucket";
 import {COLLECTION_NAMES, CollectionNames} from "@spica-server/interface-data";
@@ -42,7 +42,7 @@ describe("PostgreSQL collection names", () => {
 
     const collections = await names.list();
 
-    expect(collections).toContain(`bucket_${created._id}`);
+    expect(collections).toContain(`bucket_${idOf(created)}`);
     expect(collections.filter(name => name.includes("__"))).toEqual([]);
   });
 
