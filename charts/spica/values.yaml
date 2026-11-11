@@ -2,7 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 database:
-  # mongodb | postgresql. The engine is fixed for the life of the instance. PostgreSQL is experimental.
+  # mongodb | postgresql. The engine is fixed for the life of the instance.
   # PostgreSQL runs as a single replica and ignores replicas; replication will need custom scripts or an operator.
   # The root and spica credentials, name, storage, resources, probes and scheduling apply to both engines.
   type: mongodb

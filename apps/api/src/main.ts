@@ -105,7 +105,7 @@ const args = yargsInstance
   .options({
     "database-type": {
       string: true,
-      description: "Database engine of this instance. PostgreSQL is experimental.",
+      description: "Database engine of this instance.",
       default: "mongodb",
       choices: ["mongodb", "postgresql"]
     },
@@ -887,10 +887,6 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   })
   .env()
   .parse() as any;
-
-if (args["database-type"] == "postgresql") {
-  new Logger("Bootstrap").warn("PostgreSQL support is experimental.");
-}
 
 const dataAdapter =
   args["database-type"] == "postgresql"

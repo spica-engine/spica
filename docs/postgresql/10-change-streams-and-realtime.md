@@ -122,7 +122,7 @@ The plan had five PRs. Realtime was split further, because it was a refactor and
 | #2201 | **Sharing and skipping.** One hub per collection, a per-batch query cache, a concurrency limit, and the shortcut for updates that cannot matter. |
 | #2202 | **Prefilter.** Subscriptions rule themselves out in Node when their filter or read rule is certainly false for the changed document. |
 | #2203 | **Realtime for system collections.** `CollectionSource`, `Realtime.filterLanguage`, the language-aware options builder, function logs filtered by conditions. |
-| this PR | **Closing.** This section, the spec sweep, and the experimental warning. |
+| this PR | **Closing.** This section, the spec sweep, and the removal of the experimental marking (its own commit). |
 
 ### The change feed
 

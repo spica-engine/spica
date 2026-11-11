@@ -32,7 +32,7 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 - **MongoDB stays green.** Existing MongoDB test suites pass unchanged in every PR.
 - **New code brings its own tests.** PostgreSQL code adds tests that run on PostgreSQL in CI. Shared behaviour gets contract cases that run on both engines.
 - **Specs of a part's domain are classified.** When a part makes a domain work on PostgreSQL, every spec in that domain either runs through `contractSuite` on both engines or declares `mongoOnly("reason")`. `yarn check:engine-specs --strict --under=<path>/` must list nothing for the domain before the part's last PR merges. Keep the trailing slash, or the prefix also matches sibling directories.
-- **PostgreSQL stays experimental** until Parts 0 to 10 have merged. The API logs a warning when it starts with `--database-type postgresql`.
+- **PostgreSQL was experimental** until Parts 0 to 10 had merged. Part 10 removed the warning and the markings in the options and the chart. The devkit (Part 11) and the admin panel (Part 12) follow the backend and are still to come.
 - **Keep the docs true.** The last PR of a part fills in that part's "As built" section. If a decision changes during review, update it in the part document and in the decisions table below.
 
 ## Prompt for a part session

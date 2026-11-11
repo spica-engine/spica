@@ -560,7 +560,7 @@ export default function (program: Program): Command {
       default: "8.0",
       validator: CaporalValidator.STRING
     })
-    .option("--database-type", "Database engine of the project. PostgreSQL is experimental.", {
+    .option("--database-type", "Database engine of the project.", {
       default: "mongodb",
       validator: DATABASE_TYPES
     })
