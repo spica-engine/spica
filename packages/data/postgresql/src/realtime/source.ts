@@ -8,6 +8,7 @@ import {RealtimeOptions} from "@spica-server/interface-realtime";
 import {BatchQueries} from "./batch.js";
 import {compare, identityOf, sharedDocuments} from "./shared.js";
 import {WindowSource} from "./window.js";
+import {idOf} from "@spica-server/data";
 
 type Document = Record<string, unknown>;
 
@@ -20,7 +21,7 @@ export class BucketSource implements WindowSource {
     private readonly context: BucketReadContext,
     private readonly options: RealtimeOptions
   ) {
-    this.identity = identityOf({bucket: String(bucket._id), ...options});
+    this.identity = identityOf({bucket: String(idOf(bucket)), ...options});
   }
 
   documents() {

@@ -68,7 +68,7 @@ export class PostgresBucketRepository implements BucketRepository {
         Object.entries(properties).filter(([, property]) => property.options?.translate === true)
       );
       return Object.keys(translatable).length ? [{_id, properties: translatable}] : [];
-    }) as StoredBucket[];
+    }) as unknown as StoredBucket[];
   }
 
   async findReferencing(bucketId: string) {

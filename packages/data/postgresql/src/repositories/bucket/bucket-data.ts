@@ -12,6 +12,7 @@ import {ORM} from "../../orm.js";
 import {keyedReadContext} from "./read-context.js";
 import {fieldTableName, mainTableName, SYSTEM_COLUMNS} from "../../schema/index.js";
 import {allBucketTables, countDocuments} from "./counts.js";
+import {idOf} from "@spica-server/data";
 
 type Properties = NonNullable<Bucket["properties"]>;
 
@@ -54,7 +55,7 @@ export class PostgresBucketDataRepository implements BucketDataRepository {
     for (const path of paths) {
       const field = path.slice(0, -1).map(String);
       if (field.length && propertyAt(bucket.properties, field)?.options?.translate) {
-        const table = fieldTableName(String(bucket._id), field);
+        const table = fieldTableName(String(idOf(bucket)), field);
         localesByTable.set(table, [...(localesByTable.get(table) ?? []), String(path.at(-1))]);
       }
     }
@@ -74,7 +75,7 @@ export class PostgresBucketDataRepository implements BucketDataRepository {
   }
 
   async statusOf(bucket: Bucket): Promise<EntryStatus> {
-    const current = await countDocuments(this.orm, [mainTableName(String(bucket._id))]);
+    const current = await countDocuments(this.orm, [mainTableName(String(idOf(bucket)))]);
     return {limit: bucket.documentSettings?.countLimit || undefined, current, unit: "count"};
   }
 

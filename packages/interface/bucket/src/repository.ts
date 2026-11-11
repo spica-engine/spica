@@ -5,12 +5,13 @@ import {
   FindableById,
   Id,
   Insertable,
+  Keyed,
   ProfilerQuery,
   ReplaceableById
 } from "@spica-server/interface-data";
 import {Bucket, BucketDocument} from "./bucket.js";
 
-export type StoredBucket = Bucket & {_id: Id};
+export type StoredBucket = Keyed<Bucket>;
 
 export interface BucketRepository
   extends

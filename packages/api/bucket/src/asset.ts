@@ -10,6 +10,7 @@ import {
   BucketDataRepository,
   BucketRuleValidator
 } from "@spica-server/interface-bucket";
+import {idOf} from "@spica-server/data";
 
 const _module = "bucket";
 
@@ -34,21 +35,22 @@ export function registerAssetHandlers(
     update: (resource: Resource<BucketAsset>) =>
       CRUD.replace(bs, bucketData, history, rules, resource.contents.schema),
 
-    delete: (resource: Resource<BucketAsset>) => CRUD.remove(bs, bucketData, history, resource._id)
+    delete: (resource: Resource<BucketAsset>) =>
+      CRUD.remove(bs, bucketData, history, idOf(resource))
   };
 
   registrar.operator(_module, operator);
 
-  const exporter = async (_id: string) => {
-    if (!bucketIds().isValid(_id)) {
-      return Promise.reject(`${_id} is not a valid object id`);
+  const exporter = async (id: string) => {
+    if (!bucketIds().isValid(id)) {
+      return Promise.reject(`${id} is not a valid object id`);
     }
-    const bucket = await bs.findById(bucketIds().parse(_id));
+    const bucket = await bs.findById(bucketIds().parse(id));
 
     if (!bucket) {
-      return Promise.reject(`Bucket does not exist with _id ${_id}`);
+      return Promise.reject(`Bucket does not exist with id ${id}`);
     }
-    return assetRepManager.write(_module, _id, "schema", bucket, "yaml");
+    return assetRepManager.write(_module, id, "schema", bucket, "yaml");
   };
 
   registrar.exporter(_module, exporter);

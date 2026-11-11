@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {ORM, PostgresChangeFeed} from "@spica-server/data-postgresql";
 import {Orm} from "@spica-server/data-postgresql-orm";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
@@ -203,7 +203,7 @@ describe("PostgreSQL change feed", () => {
       const events = await listen(
         {operations: ["update"], document: "current"},
         feed,
-        `bucket_${created._id}`
+        `bucket_${idOf(created)}`
       );
 
       await patch({...saved, ...after}, after, created);
@@ -300,10 +300,10 @@ describe("PostgreSQL change feed", () => {
       await insert({code: "a", tags: ["x"]}, created);
       await insert({code: "b"}, created);
       await sleep(SETTLE_MS);
-      const events = await listen(undefined, feed, `bucket_${created._id}`);
+      const events = await listen(undefined, feed, `bucket_${idOf(created)}`);
 
-      const rekeyed = {...keyed("code"), _id: created._id};
-      await manager.replace(created._id, rekeyed, () => {});
+      const rekeyed = {...keyed("code"), _id: idOf(created)};
+      await manager.replace(idOf(created), rekeyed, () => {});
       await sleep(SETTLE_MS);
       expect(events).toEqual([]);
 

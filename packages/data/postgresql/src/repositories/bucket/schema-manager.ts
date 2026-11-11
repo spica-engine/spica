@@ -6,6 +6,7 @@ import {ORM} from "../../orm.js";
 import {BucketSchemaError, dropTablesStatements, mainTableName} from "../../schema/index.js";
 import {SchemaPlanner} from "./schema-planner.js";
 import {StoredBuckets} from "./stored-buckets.js";
+import {withId, idOf} from "@spica-server/data";
 
 const SCHEMA_LOCK = "bucket-schema";
 
@@ -30,12 +31,12 @@ export class PostgresBucketSchemaManager implements BucketSchemaManager {
         return null;
       }
       const result = await stored.replace(id, bucket);
-      const statements = await planner.statementsToReplace(previous, {...bucket, _id: id});
+      const statements = await planner.statementsToReplace(previous, withId({...bucket}, id));
       await session.executeStatements(statements);
       return result;
     });
     if (replaced) {
-      onSaved({...bucket, _id: id} as StoredBucket);
+      onSaved(withId({...bucket}, id) as StoredBucket);
     }
     return replaced;
   }
@@ -51,7 +52,7 @@ export class PostgresBucketSchemaManager implements BucketSchemaManager {
       }
       const cleanup = await planner.cleanupOfRelationsTo(String(id));
       for (const other of cleanup.changed) {
-        await stored.replace(other._id, other);
+        await stored.replace(idOf(other), other);
       }
       await session.executeStatements(cleanup.statements);
 

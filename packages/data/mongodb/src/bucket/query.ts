@@ -29,6 +29,7 @@ import {BucketPipelineBuilder} from "./pipeline.builder.js";
 import {markRelationsToResolve} from "./relation-paths.js";
 import {resetNonOverlappingPathsInRelationMap} from "./stages.js";
 import {filterOf} from "./where.js";
+import {idOf} from "@spica-server/data";
 
 interface BucketReadPlan {
   plan: PaginationPlan;
@@ -83,7 +84,7 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
   }
 
   private collection(bucket: Bucket) {
-    return this.db.collection(`bucket_${bucket._id}`);
+    return this.db.collection(`bucket_${idOf(bucket)}`);
   }
 
   private decrypt<T>(bucket: Bucket, documents: T[], context: BucketReadContext): T[] {
@@ -101,7 +102,7 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
   }
 
   private shape<R>(bucket: Bucket, result: R): Promise<R> {
-    return this.shaper.shape({kind: "bucket", bucketId: bucket._id.toString()}, result);
+    return this.shaper.shape({kind: "bucket", bucketId: idOf(bucket).toString()}, result);
   }
 
   private async plan(
@@ -119,7 +120,7 @@ export class MongoBucketQueryFacade implements BucketQueryFacade {
     let locale: Locale;
 
     const resourceIdType =
-      spec.resourceFilter && (await this.idTypes.forBucket(bucket._id.toString()));
+      spec.resourceFilter && (await this.idTypes.forBucket(idOf(bucket).toString()));
 
     let basePipeline = await pipelineBuilder
       .findOneIfRequested(spec.documentId)

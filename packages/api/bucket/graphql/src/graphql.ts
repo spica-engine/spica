@@ -12,7 +12,7 @@ import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-buc
 import {ChangeEmitter} from "@spica-server/bucket-hooks";
 import {BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ids} from "@spica-server/data";
+import {ids, idOf} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {resourceFilterFunction, extractStrategyType} from "@spica-server/passport-guard";
@@ -215,7 +215,7 @@ export class GraphqlController implements OnModuleInit {
       createSchema(
         bucket,
         this.staticTypes,
-        this.buckets.map(b => b._id.toString())
+        this.buckets.map(b => idOf(b).toString())
       )
     );
     const resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
@@ -227,7 +227,7 @@ export class GraphqlController implements OnModuleInit {
   }
 
   createResolver(bucket: Bucket, staticResolvers: object) {
-    const name = getBucketName(bucket._id);
+    const name = getBucketName(idOf(bucket));
     const resolver = {
       ...staticResolvers,
 
@@ -257,7 +257,7 @@ export class GraphqlController implements OnModuleInit {
       await this.authorize(
         context,
         "/bucket/:bucketId/data",
-        {bucketId: bucket._id},
+        {bucketId: idOf(bucket)},
         ["bucket:data:index"],
         {resourceFilter: false}
       );
@@ -301,7 +301,7 @@ export class GraphqlController implements OnModuleInit {
       await this.authorize(
         context,
         "/bucket/:bucketId/data",
-        {bucketId: bucket._id},
+        {bucketId: idOf(bucket)},
         ["bucket:data:show"],
         {resourceFilter: false}
       );
@@ -321,13 +321,13 @@ export class GraphqlController implements OnModuleInit {
           user: context.user,
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          documentId: (await ids().forBucket(bucket._id.toString())).parse(documentId),
+          documentId: (await ids().forBucket(idOf(bucket).toString())).parse(documentId),
           applyAcl: this.shouldApplyAcl(context)
         },
         {
           ...this.bucketContext(),
           resolveSchema: (bucketId: string) =>
-            Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId))
+            Promise.resolve(this.buckets.find(b => idOf(b).toString() == bucketId))
         }
       );
       setContentLanguage(context, locale);
@@ -346,12 +346,12 @@ export class GraphqlController implements OnModuleInit {
       await this.authorize(
         context,
         "/bucket/:bucketId/data",
-        {bucketId: bucket._id},
+        {bucketId: idOf(bucket)},
         ["bucket:data:create"],
         {resourceFilter: false}
       );
 
-      await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
+      await this.validateInput(idOf(bucket), input).catch(error => throwError(error.message, 400));
 
       const insertedDocument = await this.writes
         .insert(
@@ -375,7 +375,7 @@ export class GraphqlController implements OnModuleInit {
         const _ = insertActivity(
           context,
           Action.POST,
-          bucket._id.toString(),
+          idOf(bucket).toString(),
           documentKey(bucket, insertedDocument),
           this.activity
         );
@@ -400,7 +400,7 @@ export class GraphqlController implements OnModuleInit {
       if (this.hookChangeEmitter) {
         this.hookChangeEmitter.emitChange(
           {
-            bucket: bucket._id.toString(),
+            bucket: idOf(bucket).toString(),
             type: "insert"
           },
           documentKey(bucket, document).toString(),
@@ -423,12 +423,12 @@ export class GraphqlController implements OnModuleInit {
       await this.authorize(
         context,
         "/bucket/:bucketId/data",
-        {bucketId: bucket._id},
+        {bucketId: idOf(bucket)},
         ["bucket:data:update"],
         {resourceFilter: false}
       );
 
-      await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
+      await this.validateInput(idOf(bucket), input).catch(error => throwError(error.message, 400));
 
       const previousDocument = await this.writes
         .replace(
@@ -449,7 +449,7 @@ export class GraphqlController implements OnModuleInit {
         const _ = insertActivity(
           context,
           Action.PUT,
-          bucket._id.toString(),
+          idOf(bucket).toString(),
           documentId,
           this.activity
         );
@@ -457,7 +457,7 @@ export class GraphqlController implements OnModuleInit {
 
       if (this.history && bucket.history) {
         const promise = this.history.createHistory(
-          bucket._id,
+          idOf(bucket),
           documentId,
           previousDocument,
           currentDocument
@@ -473,7 +473,7 @@ export class GraphqlController implements OnModuleInit {
           user: context.user,
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          documentId: (await ids().forBucket(bucket._id.toString())).parse(documentId),
+          documentId: (await ids().forBucket(idOf(bucket).toString())).parse(documentId),
           applyAcl: this.shouldApplyAcl(context)
         },
         this.bucketContext()
@@ -483,7 +483,7 @@ export class GraphqlController implements OnModuleInit {
       if (this.hookChangeEmitter) {
         this.hookChangeEmitter.emitChange(
           {
-            bucket: bucket._id.toString(),
+            bucket: idOf(bucket).toString(),
             type: "update"
           },
           documentId,
@@ -506,7 +506,7 @@ export class GraphqlController implements OnModuleInit {
       await this.authorize(
         context,
         "/bucket/:bucketId/data",
-        {bucketId: bucket._id},
+        {bucketId: idOf(bucket)},
         ["bucket:data:update"],
         {resourceFilter: false}
       );
@@ -523,7 +523,7 @@ export class GraphqlController implements OnModuleInit {
 
       const patchedDocument = applyPatch(previousDocument, input);
 
-      await this.validateInput(bucket._id, patchedDocument).catch(error =>
+      await this.validateInput(idOf(bucket), patchedDocument).catch(error =>
         throwError(error.message, 400)
       );
 
@@ -543,7 +543,7 @@ export class GraphqlController implements OnModuleInit {
 
       if (this.history && bucket.history) {
         const promise = this.history.createHistory(
-          bucket._id,
+          idOf(bucket),
           documentId,
           previousDocument,
           currentDocument
@@ -554,7 +554,7 @@ export class GraphqlController implements OnModuleInit {
         const _ = insertActivity(
           context,
           Action.PUT,
-          bucket._id.toString(),
+          idOf(bucket).toString(),
           documentId,
           this.activity
         );
@@ -579,7 +579,7 @@ export class GraphqlController implements OnModuleInit {
       if (this.hookChangeEmitter) {
         this.hookChangeEmitter.emitChange(
           {
-            bucket: bucket._id.toString(),
+            bucket: idOf(bucket).toString(),
             type: "update"
           },
           documentId,
@@ -603,7 +603,7 @@ export class GraphqlController implements OnModuleInit {
         await this.authorize(
           context,
           "/bucket/:bucketId/data",
-          {bucketId: bucket._id},
+          {bucketId: idOf(bucket)},
           ["bucket:data:delete"],
           {resourceFilter: false}
         );
@@ -622,7 +622,7 @@ export class GraphqlController implements OnModuleInit {
         return;
       }
 
-      await clearRelations(this.bs, this.bucketData, bucket._id, documentId);
+      await clearRelations(this.bs, this.bucketData, idOf(bucket), documentId);
 
       if (this.history) {
         await this.history.deleteByDocument(documentId);
@@ -632,7 +632,7 @@ export class GraphqlController implements OnModuleInit {
         const _ = insertActivity(
           context,
           Action.DELETE,
-          bucket._id.toString(),
+          idOf(bucket).toString(),
           documentId,
           this.activity
         );
@@ -641,7 +641,7 @@ export class GraphqlController implements OnModuleInit {
       if (this.hookChangeEmitter) {
         this.hookChangeEmitter.emitChange(
           {
-            bucket: bucket._id.toString(),
+            bucket: idOf(bucket).toString(),
             type: "delete"
           },
           documentId,
@@ -652,7 +652,7 @@ export class GraphqlController implements OnModuleInit {
 
       const dependents = getDependents(bucket, deletedDocument);
       for (const [targetBucketId, targetDocIds] of dependents.entries()) {
-        const schema = this.buckets.find(bucket => bucket._id.toString() == targetBucketId);
+        const schema = this.buckets.find(bucket => idOf(bucket).toString() == targetBucketId);
 
         if (!schema) {
           continue;

@@ -2,7 +2,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {createBucketActivity} from "@spica-server/bucket-common";
 import {BucketChangeDispatcher, BucketService} from "@spica-server/bucket-services";
 import {SchemaModule} from "@spica-server/core-schema";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {contractSuite} from "@spica-server/database-testing";
 import {Action} from "@spica-server/interface-activity";
 import {
@@ -52,9 +52,9 @@ contractSuite("bucket crud insert", engine => {
   it("should answer with the stored bucket", async () => {
     const inserted = await CRUD.insert(buckets, rules, bucket());
 
-    expect(inserted._id).toBeDefined();
+    expect(idOf(inserted)).toBeDefined();
     expect(inserted).toMatchObject({title: "Books", primary: "title"});
-    expect(await buckets.findById(inserted._id)).toEqual(inserted);
+    expect(await buckets.findById(idOf(inserted))).toEqual(inserted);
   });
 
   it("should give the activity the id of the stored bucket", async () => {
@@ -67,7 +67,7 @@ contractSuite("bucket crud insert", engine => {
     );
 
     expect(activities).toEqual([
-      {action: Action.POST, identifier: "tester", resource: ["bucket", String(inserted._id)]}
+      {action: Action.POST, identifier: "tester", resource: ["bucket", String(idOf(inserted))]}
     ]);
   });
 });

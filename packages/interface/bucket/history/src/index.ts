@@ -1,9 +1,8 @@
-import {Id} from "@spica-server/interface-data";
+import {Id, Keyed} from "@spica-server/interface-data";
 import {Change} from "@spica-server/interface-core";
 import {Bucket, BucketDocument} from "@spica-server/interface-bucket";
 
 export interface History {
-  _id?: string | Id;
   bucket_id?: Id;
   document_id?: Id;
   title?: string;
@@ -11,11 +10,10 @@ export interface History {
   date?: any;
 }
 
-export interface HistorySummary {
-  _id: Id;
+export type HistorySummary = Keyed<{
   date: Date;
   changes: number;
-}
+}>;
 
 export interface HistoryRepository {
   /**

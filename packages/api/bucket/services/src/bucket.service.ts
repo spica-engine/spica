@@ -11,7 +11,7 @@ import {Validator} from "@spica-server/core-schema";
 import {Default} from "@spica-server/interface-core";
 import {PreferenceService} from "@spica-server/preference-services";
 import {deepCopy} from "@spica-server/core-patch";
-import {ids} from "@spica-server/data";
+import {ids, idOf, withId} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {BehaviorSubject, Observable, Subscription} from "rxjs";
 import {filter, switchMap} from "rxjs/operators";
@@ -59,7 +59,7 @@ export class BucketService implements OnModuleInit, OnModuleDestroy {
 
   private async warmSchemaCache() {
     const all = await this.buckets.findAll();
-    this.schemaCache = new Map(all.map(bucket => [bucket._id.toString(), bucket]));
+    this.schemaCache = new Map(all.map(bucket => [idOf(bucket).toString(), bucket]));
   }
 
   private startSchemaCacheWatch() {
@@ -68,12 +68,12 @@ export class BucketService implements OnModuleInit, OnModuleDestroy {
     }
     this.cacheSub = this.changeDispatcher.watch().subscribe({
       next: async change => {
-        const id = change.documentKey._id.toString();
+        const id = idOf(change.documentKey).toString();
         if (change.operationType === "delete") {
           this.schemaCache.delete(id);
           return;
         }
-        const bucket = await this.buckets.findById(change.documentKey._id);
+        const bucket = await this.buckets.findById(idOf(change.documentKey));
         if (bucket) {
           this.schemaCache.set(id, bucket);
         } else {
@@ -126,15 +126,21 @@ export class BucketService implements OnModuleInit, OnModuleDestroy {
     );
 
     return this.schemaManager.create(bucket, inserted => {
-      this.schemaCache.set(inserted._id.toString(), deepCopy(inserted));
-      this.changeDispatcher.dispatch({operationType: "insert", documentKey: {_id: inserted._id}});
+      this.schemaCache.set(idOf(inserted).toString(), deepCopy(inserted));
+      this.changeDispatcher.dispatch({
+        operationType: "insert",
+        documentKey: withId({}, idOf(inserted))
+      });
     });
   }
 
   replaceById(id: Id, bucket: Bucket): Promise<StoredBucket | null> {
     return this.schemaManager.replace(id, bucket, replaced => {
-      this.schemaCache.set(replaced._id.toString(), deepCopy(replaced));
-      this.changeDispatcher.dispatch({operationType: "replace", documentKey: {_id: replaced._id}});
+      this.schemaCache.set(idOf(replaced).toString(), deepCopy(replaced));
+      this.changeDispatcher.dispatch({
+        operationType: "replace",
+        documentKey: withId({}, idOf(replaced))
+      });
     });
   }
 
@@ -143,11 +149,17 @@ export class BucketService implements OnModuleInit, OnModuleDestroy {
       bucketIds().parse(id),
       schema => {
         this.schemaCache.delete(id.toString());
-        this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: schema._id}});
+        this.changeDispatcher.dispatch({
+          operationType: "delete",
+          documentKey: withId({}, idOf(schema))
+        });
       },
       changed => {
-        this.schemaCache.set(changed._id.toString(), deepCopy(changed));
-        this.changeDispatcher.dispatch({operationType: "update", documentKey: {_id: changed._id}});
+        this.schemaCache.set(idOf(changed).toString(), deepCopy(changed));
+        this.changeDispatcher.dispatch({
+          operationType: "update",
+          documentKey: withId({}, idOf(changed))
+        });
       }
     );
     if (!dropped) {
@@ -160,25 +172,29 @@ export class BucketService implements OnModuleInit, OnModuleDestroy {
     const affected = await this.buckets.findById(id);
     const result = await this.buckets.unsetProperties(id, paths);
     if (affected) {
-      this.changeDispatcher.dispatch({operationType: "update", documentKey: {_id: affected._id}});
+      this.changeDispatcher.dispatch({
+        operationType: "update",
+        documentKey: withId({}, idOf(affected))
+      });
     }
     return result;
   }
 
   watchBucket(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
-    const _id = bucketIds().parse(bucketId);
+    const watchedId = bucketIds().parse(bucketId);
     return new Observable(observer => {
       if (propagateOnStart) {
-        this.buckets.findById(_id).then(bucket => observer.next(bucket));
+        this.buckets.findById(watchedId).then(bucket => observer.next(bucket));
       }
       const sub = this.changeDispatcher
         .watch()
         .pipe(
           filter(
             change =>
-              bucketIds().equals(change.documentKey._id, _id) && change.operationType !== "delete"
+              bucketIds().equals(idOf(change.documentKey), watchedId) &&
+              change.operationType !== "delete"
           ),
-          switchMap(change => this.buckets.findById(change.documentKey._id))
+          switchMap(change => this.buckets.findById(idOf(change.documentKey)))
         )
         .subscribe(bucket => observer.next(bucket));
       return () => sub.unsubscribe();

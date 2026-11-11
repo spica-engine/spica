@@ -22,7 +22,7 @@ import {
   BucketWriteOptions,
   ReturnedDocument
 } from "@spica-server/interface-bucket-common";
-import {ids} from "@spica-server/data";
+import {ids, idOf, stripId, withId} from "@spica-server/data";
 import {Id, RESULT_SHAPER, ResultShaper} from "@spica-server/interface-data";
 import {bucketDataCollection} from "./collections.js";
 
@@ -61,7 +61,7 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
         const oldestDocument = await collection
           .aggregate<BucketDocument>([{$sort: {_id: 1}}, {$limit: 1}])
           .next();
-        await context.deleteOne(oldestDocument._id);
+        await context.deleteOne(idOf(oldestDocument));
       }
     }
 
@@ -82,11 +82,11 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
       await this.checkWriteRule(bucket, document, options, context);
     }
 
-    const documentId = document._id;
-    delete document._id;
+    const documentId = idOf(document);
+    stripId(document);
 
     const replaced = await collection
-      .findOneAndReplace({_id: documentId}, document, {
+      .findOneAndReplace(withId({}, documentId), document, {
         returnDocument: returnDocuments[options.returnDocument || "before"]
       })
       .catch(handleWriteErrors);
@@ -111,7 +111,7 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
     const updateQuery = getUpdateQueryForPatch(patch, document);
 
     const patched = await collection
-      .findOneAndUpdate({_id: document._id}, updateQuery, {
+      .findOneAndUpdate(withId({}, idOf(document)), updateQuery, {
         returnDocument: returnDocuments[options.returnDocument || "before"]
       })
       .catch(handleWriteErrors);
@@ -132,8 +132,8 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
 
     const collection = this.collection(bucket);
 
-    const documentIdType = await ids().forBucket(bucket._id.toString());
-    const document = await collection.findOne({_id: documentIdType.parse(documentId)});
+    const documentIdType = await ids().forBucket(idOf(bucket).toString());
+    const document = await collection.findOne(withId({}, documentIdType.parse(documentId)));
 
     if (!document) {
       return;
@@ -143,7 +143,7 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
       await this.checkWriteRule(bucket, document, options, context);
     }
 
-    const deletedCount = await collection.deleteOne({_id: document._id});
+    const deletedCount = await collection.deleteOne(withId({}, idOf(document)));
 
     if (deletedCount == 1) {
       return this.result(bucket, document, context);
@@ -164,7 +164,7 @@ export class MongoBucketWriteFacade implements BucketWriteFacade {
             context.resolveSchema
           ) as T)
         : document;
-    return this.shaper.shape({kind: "bucket", bucketId: bucket._id.toString()}, decrypted);
+    return this.shaper.shape({kind: "bucket", bucketId: idOf(bucket).toString()}, decrypted);
   }
 
   private checkWriteRule(

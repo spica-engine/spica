@@ -9,6 +9,7 @@ import {
   BucketPreferences,
   BucketRepository
 } from "@spica-server/interface-bucket";
+import {idOf} from "@spica-server/data";
 
 export function findLocale(language: string, preferences: BucketPreferences): Locale {
   const supportedLocales = new locale.Locales(Object.keys(preferences.language.available));
@@ -64,7 +65,7 @@ export function provideLanguageFinalizer(
 
     for (const bucket of translatableBuckets) {
       if (bucketCacheService) {
-        await bucketCacheService.invalidate(bucket._id.toString());
+        await bucketCacheService.invalidate(idOf(bucket).toString());
       }
 
       const targets: string[][] = [];

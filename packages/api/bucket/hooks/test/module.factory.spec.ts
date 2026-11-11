@@ -5,6 +5,7 @@ import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {collectionSlugFactory} from "@spica-server/bucket-hooks/src/module";
 import {keyed} from "../../test/support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("hook module", engine => {
   describe("factory", () => {
@@ -30,7 +31,7 @@ contractSuite("hook module", engine => {
     it("should return title of bucket", async () => {
       const factory = collectionSlugFactory(bs);
       const bucket = await bs.insert(bucketSchema());
-      const title = await factory(`bucket_${bucket._id}`);
+      const title = await factory(`bucket_${idOf(bucket)}`);
       expect(title).toEqual("bucket title");
     });
 

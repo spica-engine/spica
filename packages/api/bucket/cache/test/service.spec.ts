@@ -3,6 +3,7 @@ import {BucketCacheModule, BucketCacheService} from "@spica-server/bucket-cache"
 import {contractSuite} from "@spica-server/database-testing";
 import {BUCKET_REPOSITORY, BucketRepository} from "@spica-server/interface-bucket";
 import {Cache} from "cache-manager";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Bucket Cache Service", engine => {
   let service: BucketCacheService;
@@ -37,33 +38,39 @@ contractSuite("Bucket Cache Service", engine => {
   });
 
   it("should clear the bucket2 caches when bucket1 caches deleted because of the relation", async () => {
-    const {_id: bucket1} = await buckets.insert({
-      title: "bucket1",
-      properties: {
-        title: {
-          type: "string"
+    const bucket1 = idOf(
+      await buckets.insert({
+        title: "bucket1",
+        properties: {
+          title: {
+            type: "string"
+          }
         }
-      }
-    } as any);
+      } as any)
+    );
 
-    const {_id: bucket2} = await buckets.insert({
-      title: "bucket2",
-      properties: {
-        rel: {
-          type: "relation",
-          bucketId: String(bucket1)
+    const bucket2 = idOf(
+      await buckets.insert({
+        title: "bucket2",
+        properties: {
+          rel: {
+            type: "relation",
+            bucketId: String(bucket1)
+          }
         }
-      }
-    } as any);
+      } as any)
+    );
 
-    const {_id: bucket3} = await buckets.insert({
-      title: "bucket3",
-      properties: {
-        title: {
-          type: "string"
+    const bucket3 = idOf(
+      await buckets.insert({
+        title: "bucket3",
+        properties: {
+          title: {
+            type: "string"
+          }
         }
-      }
-    } as any);
+      } as any)
+    );
 
     await cacheManager.set(`/bucket/${bucket1}/data`, [{title: "test1"}]);
     await cacheManager.set(`/bucket/${bucket2}/data`, [{title: "test2"}]);
