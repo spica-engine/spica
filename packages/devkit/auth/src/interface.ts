@@ -1,11 +1,13 @@
 export interface SignUpStrategy {
-  _id: string;
+  /** @deprecated Read the key with idOf; it is named id on PostgreSQL. */
+  _id?: string;
   title: string;
   type: string;
 }
 
 interface User {
-  _id: string;
+  /** @deprecated Read the key with idOf; it is named id on PostgreSQL. */
+  _id?: string;
   username: string;
   password: string;
   policies: string[];
@@ -59,7 +61,8 @@ export interface PasswordlessLoginCompleteResponse {
 }
 
 export interface VerifiedToken {
-  _id: string;
+  /** @deprecated Read the key with idOf; it is named id on PostgreSQL. */
+  _id?: string;
   username: string;
   [key: string]: any;
 }
