@@ -6,7 +6,7 @@ import {
   PREFERENCE_REPOSITORY,
   PreferenceRepository
 } from "@spica-server/interface-preference";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {Observable} from "rxjs";
 import {take} from "rxjs/operators";
 
@@ -84,7 +84,7 @@ contractSuite("Preference Service", engine => {
 
     const functionPref = await preferenceService.get("function");
 
-    expect(functionPref._id).toBeDefined();
+    expect(idOf(functionPref)).toBeDefined();
     expect(functionPref.scope).toBe("function");
     expect(functionPref.property).toBe("function property");
   });

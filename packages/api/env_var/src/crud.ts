@@ -2,7 +2,7 @@ import {EnvVarService} from "../services";
 import {EnvVar} from "@spica-server/interface-env_var";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
-import {ids} from "@spica-server/data";
+import {ids, idOf, assignId} from "@spica-server/data";
 import {
   CollectionQueryFacade,
   Id,
@@ -48,15 +48,15 @@ export async function insert(evs: EnvVarService, body: EnvVar) {
     updated_at: new Date()
   };
 
-  if (body._id) {
-    envVar._id = envVarIds().parse(body._id);
+  if (idOf(body)) {
+    assignId(envVar, envVarIds().parse(idOf(body)));
   }
 
   return evs.insert(envVar);
 }
 
 export async function replace(evs: EnvVarService, body: EnvVar) {
-  const _id = envVarIds().parse(body._id);
+  const id = envVarIds().parse(idOf(body));
 
   const envVar = {
     key: body.key,
@@ -64,10 +64,10 @@ export async function replace(evs: EnvVarService, body: EnvVar) {
     updated_at: new Date()
   };
 
-  const currentSchema = await evs.replaceById(_id, envVar);
+  const currentSchema = await evs.replaceById(id, envVar);
 
   if (!currentSchema) {
-    throw new NotFoundException(`Environment Variable with ID ${_id} not found`);
+    throw new NotFoundException(`Environment Variable with ID ${id} not found`);
   }
   return currentSchema;
 }

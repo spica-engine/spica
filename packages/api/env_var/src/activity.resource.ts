@@ -1,4 +1,5 @@
 import {Action, PreActivity, ModuleActivity} from "@spica-server/interface-activity";
+import {idOf} from "@spica-server/data";
 
 export function createEnvVarActivity(
   preActivity: PreActivity,
@@ -9,7 +10,7 @@ export function createEnvVarActivity(
 
   switch (preActivity.action) {
     case Action.POST:
-      activities.push({...preActivity, resource: ["env_var", res._id.toString()]});
+      activities.push({...preActivity, resource: ["env_var", idOf(res).toString()]});
       break;
     case Action.PUT:
       activities.push({...preActivity, resource: ["env_var", req.params.id]});

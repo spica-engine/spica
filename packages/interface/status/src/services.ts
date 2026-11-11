@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import {ExpiringRepository, Id} from "@spica-server/interface-data";
+import {ExpiringRepository} from "@spica-server/interface-data";
 
 export interface StatusOptions {
   expireAfterSeconds: number;
@@ -9,7 +9,6 @@ export interface StatusOptions {
 export type AttachStatusTracker = (req: Request, res: Response) => void;
 
 export interface ApiStatus {
-  _id?: Id;
   created_at?: Date;
   count: number;
   request: {
@@ -33,7 +32,7 @@ export interface StatusRepository extends ExpiringRepository {
   /**
    * Counts one request with its payload sizes, adding it to the current minute's totals.
    */
-  record(status: Omit<ApiStatus, "_id" | "count">): Promise<unknown>;
+  record(status: Omit<ApiStatus, "count">): Promise<unknown>;
   summarize(createdBetween?: {from: Date; to: Date}): Promise<ApiStatusSummary>;
 }
 

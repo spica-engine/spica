@@ -4,9 +4,10 @@ import {Id} from "@spica-server/interface-data";
 import {Preference, PreferenceRepository} from "@spica-server/interface-preference";
 import {preferences, StoredPreference} from "../../entities/index.js";
 import {ORM} from "../../orm.js";
+import {withId} from "@spica-server/data";
 
 const toPreference = (stored: StoredPreference | null): Preference | null =>
-  stored && {...stored.value, _id: stored._id, scope: stored.scope};
+  stored && withId({...stored.value, scope: stored.scope}, stored._id);
 
 const toStored = ({_id, scope, ...value}: Preference): StoredPreference => ({_id, scope, value});
 

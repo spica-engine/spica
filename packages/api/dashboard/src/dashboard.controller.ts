@@ -21,7 +21,7 @@ import {
 import {Schema} from "@spica-server/core-schema";
 import {ResourceFilter} from "@spica-server/passport-guard";
 import * as CRUD from "./crud.js";
-import {ID} from "@spica-server/data";
+import {ID, withId} from "@spica-server/data";
 import {
   COLLECTION_QUERY,
   CollectionQueryFacade,
@@ -65,7 +65,7 @@ export class DashboardController {
     @Body(Schema.validate("http://spica.internal/dashboard"))
     dashboard: Dashboard
   ) {
-    return CRUD.replace(this.dashboards, {...dashboard, _id: id}).catch(e => {
+    return CRUD.replace(this.dashboards, withId({...dashboard}, id)).catch(e => {
       throw new HttpException(e.message, e.status || 500);
     });
   }

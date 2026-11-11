@@ -7,6 +7,7 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID} from "@spica-server/core-schema";
 import {SecretModule} from "../src";
 import {PassportTestingModule} from "@spica-server/passport-testing";
+import {idOf, systemKeyField} from "@spica-server/data";
 
 const ENCRYPTION_SECRET = "test-encryption-secret-32chars!!";
 
@@ -50,7 +51,7 @@ contractSuite("Secret", engine => {
       expect(res.body.length).toBe(1);
       expect(res.body[0].key).toBe("SECRET_KEY");
       expect(res.body[0].value).toBeUndefined();
-      expect(res.body[0]._id).toBeDefined();
+      expect(idOf(res.body[0])).toBeDefined();
     });
 
     it("should support limit, skip and sort", async () => {
@@ -73,7 +74,10 @@ contractSuite("Secret", engine => {
       await req.post("/secret", {key: "KEY_2", value: "val_2"});
       await req.post("/secret", {key: "KEY_3", value: "val_3"});
 
-      const res = await req.get(`/secret`, {paginate: true, sort: JSON.stringify({_id: -1})});
+      const res = await req.get(`/secret`, {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
       expect(res.body.meta.total).toBe(3);
       expect(res.body.data.length).toBe(3);
       res.body.data.forEach(s => {
@@ -95,8 +99,8 @@ contractSuite("Secret", engine => {
     it("should return secret by id with value hidden", async () => {
       const {body: inserted} = await req.post("/secret", {key: "MY_SECRET", value: "secret123"});
 
-      const res = await req.get(`/secret/${inserted._id}`);
-      expect(res.body._id).toBe(inserted._id);
+      const res = await req.get(`/secret/${idOf(inserted)}`);
+      expect(idOf(res.body)).toBe(idOf(inserted));
       expect(res.body.key).toBe("MY_SECRET");
       expect(res.body.value).toBeUndefined();
     });
@@ -111,7 +115,7 @@ contractSuite("Secret", engine => {
     it("should create a new secret and return it without value", async () => {
       const {body} = await req.post("/secret", {key: "API_KEY", value: "super-secret"});
 
-      expect(body._id).toBeDefined();
+      expect(idOf(body)).toBeDefined();
       expect(body.key).toBe("API_KEY");
       expect(body.value).toBeUndefined();
     });
@@ -119,7 +123,7 @@ contractSuite("Secret", engine => {
     it("should encrypt the value in the database", async () => {
       const {body} = await req.post("/secret", {key: "DB_PASS", value: "plaintext-password"});
 
-      const found = await req.get(`/secret/${body._id}`);
+      const found = await req.get(`/secret/${idOf(body)}`);
       expect(found.body.value).toBeUndefined();
       expect(found.body.key).toBe("DB_PASS");
     });
@@ -149,12 +153,12 @@ contractSuite("Secret", engine => {
     it("should update secret and return without value", async () => {
       const {body: inserted} = await req.post("/secret", {key: "OLD_KEY", value: "old_val"});
 
-      const {body: updated} = await req.put(`/secret/${inserted._id}`, {
+      const {body: updated} = await req.put(`/secret/${idOf(inserted)}`, {
         key: "NEW_KEY",
         value: "new_val"
       });
 
-      expect(updated._id).toBe(inserted._id);
+      expect(idOf(updated)).toBe(idOf(inserted));
       expect(updated.key).toBe("NEW_KEY");
       expect(updated.value).toBeUndefined();
     });
@@ -173,7 +177,7 @@ contractSuite("Secret", engine => {
       expect(body.updated_at).not.toBeFalsy();
       expect(body.value).toBeUndefined();
 
-      const res = await req.get(`/secret/${body._id}`);
+      const res = await req.get(`/secret/${idOf(body)}`);
       expect(res.body.updated_at).not.toBeFalsy();
       expect(res.body.value).toBeUndefined();
     });
@@ -181,7 +185,7 @@ contractSuite("Secret", engine => {
     it("should advance updated_at on update", async () => {
       const {body: inserted} = await req.post("/secret", {key: "TS_KEY", value: "val"});
 
-      const {body: updated} = await req.put(`/secret/${inserted._id}`, {
+      const {body: updated} = await req.put(`/secret/${idOf(inserted)}`, {
         key: "TS_KEY",
         value: "val2"
       });
@@ -204,7 +208,7 @@ contractSuite("Secret", engine => {
       expect(body.updated_at).not.toBe(clientTimestamp);
       expect(body.injected).toBeUndefined();
 
-      const res = await req.get(`/secret/${body._id}`);
+      const res = await req.get(`/secret/${idOf(body)}`);
       expect(res.body.injected).toBeUndefined();
       expect(Object.keys(res.body).sort()).toEqual(["_id", "key", "updated_at"]);
     });
@@ -214,7 +218,7 @@ contractSuite("Secret", engine => {
     it("should delete secret", async () => {
       const {body} = await req.post("/secret", {key: "TO_DELETE", value: "val"});
 
-      const res = await req.delete(`/secret/${body._id}`);
+      const res = await req.delete(`/secret/${idOf(body)}`);
       expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
 
       const {body: secrets} = await req.get("/secret");

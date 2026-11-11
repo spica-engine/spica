@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {hash} from "@spica-server/core-encryption";
-import {FilterLanguageError, provideRepository} from "@spica-server/data";
+import {FilterLanguageError, provideRepository, idOf} from "@spica-server/data";
 import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {
   COLLECTION_QUERY,
@@ -104,7 +104,7 @@ contractSuite("collection query", engine => {
       ["B", "two"],
       ["C", "three"]
     ]) {
-      inserted[key] = String((await envVars.insert({key, value}))._id);
+      inserted[key] = String(idOf(await envVars.insert({key, value})));
     }
     return inserted;
   }
@@ -362,8 +362,8 @@ contractSuite("collection query", engine => {
         timeout: 10,
         language: "javascript",
         triggers: {},
-        env_vars: [envVar._id],
-        secrets: [secret._id]
+        env_vars: [idOf(envVar)],
+        secrets: [idOf(secret)]
       } as any);
       return secret;
     }
@@ -377,7 +377,7 @@ contractSuite("collection query", engine => {
       });
 
       expect(fn.secrets).toHaveLength(1);
-      expect(String(fn.secrets[0]._id)).toEqual(String(secret._id));
+      expect(String(fn.secrets[0]._id)).toEqual(String(idOf(secret)));
       expect(fn.secrets[0].key).toEqual("S");
       expect(fn.secrets[0]).not.toHaveProperty("value");
       expect(fn.env_vars[0].value).toEqual("one");

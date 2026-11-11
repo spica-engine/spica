@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DuplicateKeyError, provideRepository} from "@spica-server/data";
+import {DuplicateKeyError, provideRepository, idOf} from "@spica-server/data";
 import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {
   ACTIVITY_OPTIONS,
@@ -153,8 +153,8 @@ contractSuite("storage, activity and replication repositories", engine => {
       const first = await assets.insert(asset("a"));
       await assets.insert(asset("b"));
 
-      expect(first._id).toBeDefined();
-      expect(await assets.findById(first._id)).toMatchObject(asset("a"));
+      expect(idOf(first)).toBeDefined();
+      expect(await assets.findById(idOf(first))).toMatchObject(asset("a"));
       expect((await assets.find()).map(a => a.name)).toEqual(["a", "b"]);
       expect((await assets.find({})).map(a => a.name)).toEqual(["a", "b"]);
       expect(await assets.findById(missingId())).toBeNull();
@@ -209,25 +209,25 @@ contractSuite("storage, activity and replication repositories", engine => {
     });
 
     it("updates and replaces an asset, resolving to it as it was", async () => {
-      const {_id} = await assets.insert(asset("a"));
+      const id = idOf(await assets.insert(asset("a")));
 
-      expect(await assets.updateById(_id, {status: "installed"})).toMatchObject({
+      expect(await assets.updateById(id, {status: "installed"})).toMatchObject({
         status: "downloaded"
       });
-      expect(await assets.replaceById(_id, asset("b"))).toMatchObject({
+      expect(await assets.replaceById(id, asset("b"))).toMatchObject({
         name: "a",
         status: "installed"
       });
-      expect(await assets.findById(_id)).toMatchObject({name: "b", status: "downloaded"});
+      expect(await assets.findById(id)).toMatchObject({name: "b", status: "downloaded"});
       expect(await assets.updateById(missingId(), {status: "installed"})).toBeNull();
       expect(await assets.replaceById(missingId(), asset("x"))).toBeNull();
     });
 
     it("deletes an asset and resolves to it", async () => {
-      const {_id} = await assets.insert(asset("a"));
+      const id = idOf(await assets.insert(asset("a")));
 
-      expect(await assets.deleteById(_id)).toMatchObject({name: "a"});
-      expect(await assets.deleteById(_id)).toBeNull();
+      expect(await assets.deleteById(id)).toMatchObject({name: "a"});
+      expect(await assets.deleteById(id)).toBeNull();
     });
   });
 
@@ -251,9 +251,9 @@ contractSuite("storage, activity and replication repositories", engine => {
     it("inserts an object and finds it by id and name", async () => {
       const inserted = await storage.insert(object("a.txt"));
 
-      expect(inserted._id).toBeDefined();
-      expect(await storage.findById(inserted._id)).toMatchObject(object("a.txt"));
-      expect(String((await storage.findByName("a.txt"))._id)).toBe(String(inserted._id));
+      expect(idOf(inserted)).toBeDefined();
+      expect(await storage.findById(idOf(inserted))).toMatchObject(object("a.txt"));
+      expect(String(idOf(await storage.findByName("a.txt")))).toBe(String(idOf(inserted)));
       expect(await storage.findByName("nope")).toBeNull();
       expect(await storage.findById(missingId())).toBeNull();
     });
@@ -273,14 +273,14 @@ contractSuite("storage, activity and replication repositories", engine => {
       const inserted = await storage.insertAll([object("a.txt"), object("b.txt")]);
 
       expect(names(inserted)).toEqual(["a.txt", "b.txt"]);
-      expect(inserted.every(o => o._id !== undefined)).toBe(true);
-      expect(String(inserted[0]._id)).not.toBe(String(inserted[1]._id));
+      expect(inserted.every(o => idOf(o) !== undefined)).toBe(true);
+      expect(String(idOf(inserted[0]))).not.toBe(String(idOf(inserted[1])));
     });
 
     it("finds objects by ids and names", async () => {
       const [a, b] = await storage.insertAll([object("a.txt"), object("b.txt"), object("c.txt")]);
 
-      expect(names(await storage.findByIds([a._id, b._id, missingId()]))).toEqual([
+      expect(names(await storage.findByIds([idOf(a), idOf(b), missingId()]))).toEqual([
         "a.txt",
         "b.txt"
       ]);
@@ -315,11 +315,11 @@ contractSuite("storage, activity and replication repositories", engine => {
     });
 
     it("updates the fields of an object", async () => {
-      const {_id} = await storage.insert(object("a.txt"));
+      const id = idOf(await storage.insert(object("a.txt")));
 
-      await storage.updateById(_id, {content: {type: "text/csv", size: 99}});
+      await storage.updateById(id, {content: {type: "text/csv", size: 99}});
 
-      expect((await storage.findById(_id)).content).toEqual({type: "text/csv", size: 99});
+      expect((await storage.findById(id)).content).toEqual({type: "text/csv", size: 99});
     });
 
     it("renames an object and the objects under it", async () => {
@@ -355,11 +355,11 @@ contractSuite("storage, activity and replication repositories", engine => {
         object("c.txt")
       ]);
 
-      expect(await storage.deleteById(a._id)).toMatchObject({name: "a.txt"});
-      expect(await storage.deleteById(a._id)).toBeNull();
+      expect(await storage.deleteById(idOf(a))).toMatchObject({name: "a.txt"});
+      expect(await storage.deleteById(idOf(a))).toBeNull();
       expect(await storage.deleteByName("b.txt")).toMatchObject({name: "b.txt"});
       expect(await storage.deleteByName("b.txt")).toBeNull();
-      expect(await storage.deleteByIds([c._id, a._id])).toBe(1);
+      expect(await storage.deleteByIds([idOf(c), idOf(a)])).toBe(1);
     });
 
     describe("browse", () => {

@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {changeFeedReady, contractSuite} from "@spica-server/database-testing";
 import {CommandMemory} from "@spica-server/replication";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf, withId} from "@spica-server/data";
 import {
   COMMAND_MEMORY_OPTIONS,
   COMMAND_REPOSITORY,
@@ -37,19 +37,23 @@ contractSuite("Memory", engine => {
       };
       memory.subscribe({
         next: msg => {
-          expect(msg._id).toBeDefined();
-          expect(msg).toEqual({
-            _id: msg._id,
-            created_at: expect.any(Date),
-            source: {
-              id: "replica1",
-              command
-            },
-            target: {
-              commands: [command],
-              id: "replica2"
-            }
-          });
+          expect(idOf(msg)).toBeDefined();
+          expect(msg).toEqual(
+            withId(
+              {
+                created_at: expect.any(Date),
+                source: {
+                  id: "replica1",
+                  command
+                },
+                target: {
+                  commands: [command],
+                  id: "replica2"
+                }
+              },
+              idOf(msg)
+            )
+          );
           done();
         }
       });

@@ -23,7 +23,7 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {BOOLEAN, FILTER, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ID, idTransform, ids} from "@spica-server/data";
+import {ID, idTransform, ids, assignId, idOf} from "@spica-server/data";
 import {Id, ResourceFilterSpec} from "@spica-server/interface-data";
 import {
   ActionGuard,
@@ -146,7 +146,7 @@ export class StorageController {
     const converter = getPutBodyConverter(body);
     const object = converter.convert(body);
 
-    object._id = id;
+    assignId(object, id);
 
     const storageObject = await this.storage.update(id, object).catch(error => {
       throw new HttpException(error.message, error.status || 500);
@@ -349,7 +349,7 @@ export class StorageController {
     const nameToIdMap = new Map<string, Id>();
 
     for (const object of objects) {
-      nameToIdMap.set(object.name, object._id as Id);
+      nameToIdMap.set(object.name, idOf(object) as Id);
     }
 
     return elements.map(element => {

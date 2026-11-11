@@ -2,7 +2,6 @@ import {EncryptedData} from "@spica-server/core-encryption";
 import {DeletableById, Id, Repository} from "@spica-server/interface-data";
 
 export interface Secret {
-  _id?: Id;
   key: string;
   value: EncryptedData<false>;
   updated_at?: Date;

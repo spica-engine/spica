@@ -34,7 +34,7 @@ import {Schema} from "@spica-server/core-schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {AssetRepManager} from "./representative.js";
 import {createReadStream} from "fs";
-import {ID} from "@spica-server/data";
+import {ID, idOf} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 
 const ASSET_COLLECTION = "asset";
@@ -166,9 +166,9 @@ export class AssetController {
 
     const assetsAfterInstall = strategy.afterInstall(resourcesAfterInstall);
 
-    await Promise.all(assetsAfterInstall.map(a => this.assets.replaceById(a._id, a)));
+    await Promise.all(assetsAfterInstall.map(a => this.assets.replaceById(idOf(a), a)));
 
-    return assetsAfterInstall.find(a => a._id == asset._id);
+    return assetsAfterInstall.find(a => idOf(a) == idOf(asset));
   }
 
   @Delete(":id")
@@ -252,7 +252,7 @@ export class AssetController {
           relatedValidators.map(validator =>
             validator(copy).catch(e => {
               throw new BadRequestException(
-                `Module '${copy.module}' resource '${copy._id}' validation has been failed: ${e}`
+                `Module '${copy.module}' resource '${idOf(copy)}' validation has been failed: ${e}`
               );
             })
           )

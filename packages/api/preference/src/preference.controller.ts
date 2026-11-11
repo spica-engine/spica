@@ -18,6 +18,7 @@ import {
   changeFactory
 } from "@spica-server/interface-preference";
 import {createPreferenceActivity} from "./activity.resource.js";
+import {stripId} from "@spica-server/data";
 
 @Controller("preference")
 export class PreferenceController {
@@ -44,7 +45,7 @@ export class PreferenceController {
       await this.bucketFactory(previousPrefs, preference);
     }
 
-    delete preference._id;
+    stripId(preference);
     preference.scope = scope;
 
     return this.preference.replace(scope, preference);

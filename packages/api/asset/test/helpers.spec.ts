@@ -1,6 +1,7 @@
 import {eliminateNonConfigurables, putConfiguration, replaceValue} from "@spica-server/asset";
 import {ObjectId} from "@spica-server/database";
 import {Asset, Config} from "@spica-server/interface-asset";
+import {withId} from "@spica-server/data";
 
 describe("Helpers", () => {
   describe("replaceValue", () => {
@@ -145,34 +146,38 @@ describe("Helpers", () => {
         ],
         status: "downloaded",
         resources: [
-          {
-            _id: bucketId,
-            module: "bucket",
-            contents: {
-              schema: {
-                properties: {
-                  role: {
-                    type: "string",
-                    default: "user"
+          withId(
+            {
+              module: "bucket",
+              contents: {
+                schema: {
+                  properties: {
+                    role: {
+                      type: "string",
+                      default: "user"
+                    }
                   }
                 }
               }
-            }
-          },
-          {
-            _id: fnId,
-            module: "function",
-            contents: {
-              schema: {
-                triggers: {
-                  default: {}
+            },
+            bucketId
+          ),
+          withId(
+            {
+              module: "function",
+              contents: {
+                schema: {
+                  triggers: {
+                    default: {}
+                  }
+                },
+                env: {
+                  CARD: "**** **** **** ****"
                 }
-              },
-              env: {
-                CARD: "**** **** **** ****"
               }
-            }
-          }
+            },
+            fnId
+          )
         ]
       };
     });
@@ -228,34 +233,38 @@ describe("Helpers", () => {
         ],
         status: "downloaded",
         resources: [
-          {
-            _id: bucketId,
-            module: "bucket",
-            contents: {
-              schema: {
-                properties: {
-                  role: {
-                    type: "string",
-                    default: "user"
+          withId(
+            {
+              module: "bucket",
+              contents: {
+                schema: {
+                  properties: {
+                    role: {
+                      type: "string",
+                      default: "user"
+                    }
                   }
                 }
               }
-            }
-          },
-          {
-            _id: fnId,
-            module: "function",
-            contents: {
-              schema: {
-                triggers: {
-                  default: {}
+            },
+            bucketId
+          ),
+          withId(
+            {
+              module: "function",
+              contents: {
+                schema: {
+                  triggers: {
+                    default: {}
+                  }
+                },
+                env: {
+                  CARD: "4242 4242 4242 4242"
                 }
-              },
-              env: {
-                CARD: "4242 4242 4242 4242"
               }
-            }
-          }
+            },
+            fnId
+          )
         ]
       });
     });

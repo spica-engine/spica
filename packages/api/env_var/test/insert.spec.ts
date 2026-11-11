@@ -8,13 +8,14 @@ import {ACTIVITY_REPOSITORY} from "@spica-server/interface-activity";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {EnvVarModule} from "../src";
+import {withId, idOf} from "@spica-server/data";
 
 class IdentifiedUser implements NestInterceptor {
   constructor(private readonly id: string) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
     const request = context.switchToHttp().getRequest();
-    request.user = {...request.user, _id: this.id};
+    request.user = withId({...request.user}, this.id);
     return next.handle();
   }
 }
@@ -59,13 +60,10 @@ contractSuite("Environment Variable insert", engine => {
     const {statusCode, body} = await req.post("/env-var", {key: "ENV_KEY", value: "123"});
 
     expect(statusCode).toBe(201);
-    expect(body).toEqual({
-      _id: expect.any(String),
-      key: "ENV_KEY",
-      value: "123",
-      updated_at: expect.any(String)
-    });
-    expect((await req.get(`/env-var/${body._id}`)).body).toEqual(body);
+    expect(body).toEqual(
+      withId({key: "ENV_KEY", value: "123", updated_at: expect.any(String)}, expect.any(String))
+    );
+    expect((await req.get(`/env-var/${idOf(body)}`)).body).toEqual(body);
   });
 
   it("should write the activity of the new record", async () => {
@@ -74,6 +72,6 @@ contractSuite("Environment Variable insert", engine => {
     const activities = await nextActivity();
 
     expect(activities).toHaveLength(1);
-    expect(activities[0].resource).toEqual(["env_var", body._id]);
+    expect(activities[0].resource).toEqual(["env_var", idOf(body)]);
   });
 });

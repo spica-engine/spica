@@ -4,6 +4,7 @@ import {Id} from "@spica-server/interface-data";
 import {CollectionChangeEvent} from "@spica-server/replication";
 import {Observable} from "rxjs";
 import {EnvVarChangeDispatcher} from "./change-dispatcher.js";
+import {idOf, withId} from "@spica-server/data";
 
 @Injectable()
 export class EnvVarService {
@@ -18,14 +19,20 @@ export class EnvVarService {
 
   async insert(envVar: EnvVar): Promise<EnvVar> {
     const result = await this.envVars.insert(envVar);
-    this.changeDispatcher.dispatch({operationType: "insert", documentKey: {_id: result._id}});
+    this.changeDispatcher.dispatch({
+      operationType: "insert",
+      documentKey: withId({}, idOf(result))
+    });
     return result;
   }
 
   async replaceById(id: Id, envVar: EnvVar): Promise<EnvVar | null> {
     const result = await this.envVars.replaceById(id, envVar);
     if (result) {
-      this.changeDispatcher.dispatch({operationType: "replace", documentKey: {_id: result._id}});
+      this.changeDispatcher.dispatch({
+        operationType: "replace",
+        documentKey: withId({}, idOf(result))
+      });
     }
     return result;
   }
@@ -33,7 +40,10 @@ export class EnvVarService {
   async updateById(id: Id, fields: Partial<EnvVar>): Promise<EnvVar | null> {
     const result = await this.envVars.updateById(id, fields);
     if (result) {
-      this.changeDispatcher.dispatch({operationType: "update", documentKey: {_id: result._id}});
+      this.changeDispatcher.dispatch({
+        operationType: "update",
+        documentKey: withId({}, idOf(result))
+      });
     }
     return result;
   }
@@ -41,7 +51,10 @@ export class EnvVarService {
   async deleteById(id: Id): Promise<EnvVar | null> {
     const result = await this.envVars.deleteById(id);
     if (result) {
-      this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: result._id}});
+      this.changeDispatcher.dispatch({
+        operationType: "delete",
+        documentKey: withId({}, idOf(result))
+      });
     }
     return result;
   }
