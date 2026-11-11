@@ -46,7 +46,6 @@ interface PropertyOptions {
 }
 
 export interface BucketDocument {
-  _id?: Id;
   [key: string]: any | undefined;
 }
 

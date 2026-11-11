@@ -24,7 +24,7 @@ export function createBucketDataActivity(
   const bucketId = req.params.bucketId.toString();
 
   const documentId = (
-    preActivity.action == Action.POST ? (req.documentKey ?? res._id) : req.params.documentId
+    preActivity.action == Action.POST ? req.documentKey : req.params.documentId
   ).toString();
 
   const resource = ["bucket", bucketId, "data", documentId];
@@ -45,6 +45,7 @@ export async function insertActivity(
 
   request.params.bucketId = bucketId;
   request.params.documentId = documentId;
+  request.documentKey = documentId;
   request.method = Action[method];
 
   if (req.user) {
@@ -55,11 +56,7 @@ export async function insertActivity(
     request.body = deepCopy(req.body);
   }
 
-  const response = {
-    _id: documentId
-  };
-
-  const activities = createActivity(request, response, createBucketDataActivity);
+  const activities = createActivity(request, {}, createBucketDataActivity);
 
   if (activities.length) {
     await service.insert(activities);

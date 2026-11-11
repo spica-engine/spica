@@ -57,16 +57,14 @@ describe("Activity Resource", () => {
       const req = {
         params: {
           bucketId: "bucket_id"
-        }
-      };
-      const res = {
-        _id: "bucket_data_id"
+        },
+        documentKey: "bucket_data_id"
       };
 
       const activities = createBucketDataActivity(
         {action: Action.POST, identifier: "test_user"},
         req,
-        res
+        {}
       );
       expect(activities).toEqual([
         {
