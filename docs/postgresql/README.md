@@ -58,6 +58,8 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Mongo operator coverage       | No conversion. A filter in the other engine's language returns 404.                                             |
 | Missed change events          | Not handled for now. Spica doesn't use change stream resume today. The feed is plain LISTEN/NOTIFY.             |
+| Change event shape            | Engine-neutral: `id` (the same on every replica), `operation`, `collection`, `key`, `document`, `previousDocument` and `changes`. PostgreSQL triggers send only the table, the operation and the key; the API reads the row. |
+| Realtime filtering            | PostgreSQL decides, by query, in the engine's own filter language. The work is shared between identical subscriptions, skipped when an update cannot matter, and a Node prefilter may skip a subscriber it is certain a change does not concern. The database stays the authority. |
 | Schema edits on large buckets | All edits run online, however long they take. None are refused, and the user is responsible for them.           |
 | Devkit API shape              | A completely new devkit for PostgreSQL. `@spica-devkit/bucket` stays as it is, and callers write the filter in the expression language. |
 | Existing installs             | Not supported. There is no path for moving a MongoDB instance to PostgreSQL, because MongoDB compatibility and the best key performance can't both be had. |
