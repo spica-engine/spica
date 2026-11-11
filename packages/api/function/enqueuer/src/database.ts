@@ -9,6 +9,7 @@ import {DatabaseOptions, Description} from "@spica-server/interface-function-enq
 import {Logger} from "@nestjs/common";
 import {ChangeEvent, ChangeFeed, ChangeOperation} from "@spica-server/interface-data";
 import {Subscription} from "rxjs";
+import {withId} from "@spica-server/data";
 
 export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   type = event.Type.DATABASE;
@@ -92,11 +93,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
 
     if (this.jobReducer) {
       this.jobReducer.do(
-        {
-          ...rawChange,
-          event_id: ev.id,
-          _id: `${rawChange.id}-${target.cwd}-${target.handler}`
-        },
+        withId({...rawChange, event_id: ev.id}, `${rawChange.id}-${target.cwd}-${target.handler}`),
         enqueue
       );
     } else {

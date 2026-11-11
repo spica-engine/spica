@@ -11,6 +11,7 @@ import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+import {idOf} from "@spica-server/data";
 
 /**
  * Tests for HTTP trigger schema validation on create (POST), read (GET), and update (PUT) operations.
@@ -364,7 +365,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
         })
         .then(r => r.body);
 
-      const found = await request.get(`/function/${created._id}`).then(r => r.body);
+      const found = await request.get(`/function/${idOf(created)}`).then(r => r.body);
 
       expect(found.triggers.default.type).toEqual("http");
       expect(found.triggers.default.options.method).toEqual("Post");
@@ -389,7 +390,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
         })
         .then(r => r.body);
 
-      const found = await request.get(`/function/${created._id}`).then(r => r.body);
+      const found = await request.get(`/function/${idOf(created)}`).then(r => r.body);
       const opts = found.triggers.default.options;
 
       // Schema defaults: preflight=true, authorize=false, authenticate=[]
@@ -420,7 +421,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -443,7 +444,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -473,7 +474,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -509,7 +510,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -532,7 +533,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           language: "typescript"
         });
@@ -540,7 +541,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
         expect(updated.statusCode).toEqual(200);
 
         // PUT response strips language (CRUD.replace deletes it), so verify via GET
-        const found = await request.get(`/function/${created._id}`).then(r => r.body);
+        const found = await request.get(`/function/${idOf(created)}`).then(r => r.body);
         expect(found.language).toEqual(created.language);
       });
     });
@@ -554,7 +555,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -577,7 +578,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -601,7 +602,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -629,7 +630,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -656,7 +657,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -679,7 +680,7 @@ contractSuite("Function HTTP Trigger Schema", engine => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {

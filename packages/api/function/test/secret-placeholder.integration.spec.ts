@@ -11,6 +11,7 @@ import {SchemaModule, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schem
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Function trigger secret placeholders", engine => {
   let app: INestApplication;
@@ -43,13 +44,13 @@ contractSuite("Function trigger secret placeholders", engine => {
   async function insertSecret(key: string, value: string) {
     const res = await request.post("/secret", {key, value});
     expect(res.statusCode).toEqual(201);
-    return res.body._id as string;
+    return idOf(res.body).toString();
   }
 
   async function insertFunction(url = PLACEHOLDER_URL) {
     const res = await request.post("/function", rabbitmqFunction(url));
     expect(res.statusCode).toEqual(201);
-    return res.body._id as string;
+    return idOf(res.body).toString();
   }
 
   async function inject(fnId: string, secretId: string) {

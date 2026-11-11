@@ -1,4 +1,4 @@
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, withId} from "@spica-server/data";
 import {COLLECTION_QUERY, ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {Test, TestingModule} from "@nestjs/testing";
 import {contractSuite, QuietChangeFeedModule} from "@spica-server/database-testing";
@@ -205,18 +205,22 @@ contractSuite("PlanExecutor", engine => {
   });
 
   it("should reconcile warm workers per function, surviving a single-trigger removal", async () => {
-    await functions.insert({
-      _id: functionKey,
-      env_vars: [],
-      language: "js",
-      timeout: 10,
-      name: "multi_fn",
-      warmWorkers: 2,
-      triggers: {
-        a: {active: true, options: {}, type: "http"},
-        b: {active: true, options: {}, type: "http"}
-      }
-    });
+    await functions.insert(
+      withId(
+        {
+          env_vars: [],
+          language: "js",
+          timeout: 10,
+          name: "multi_fn",
+          warmWorkers: 2,
+          triggers: {
+            a: {active: true, options: {}, type: "http"},
+            b: {active: true, options: {}, type: "http"}
+          }
+        },
+        functionKey
+      )
+    );
 
     const reconcileSpy = jest.spyOn(scheduler, "reconcileWarmWorkers");
 
@@ -236,15 +240,19 @@ contractSuite("PlanExecutor", engine => {
   });
 
   it("should roll active-trigger workers over via supersede and refill the reserve", async () => {
-    await functions.insert({
-      _id: functionKey,
-      env_vars: [],
-      language: "js",
-      timeout: 10,
-      name: "warm_fn",
-      warmWorkers: 2,
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
+    await functions.insert(
+      withId(
+        {
+          env_vars: [],
+          language: "js",
+          timeout: 10,
+          name: "warm_fn",
+          warmWorkers: 2,
+          triggers: {test_handler: {active: true, options: {}, type: "http"}}
+        },
+        functionKey
+      )
+    );
 
     const outdateSpy = jest.spyOn(scheduler, "outdateWorkers");
     const supersedeSpy = jest.spyOn(scheduler, "supersedeWorkers");
@@ -273,15 +281,19 @@ contractSuite("PlanExecutor", engine => {
   });
 
   it("should reconcile per-function concurrency from the function", async () => {
-    await functions.insert({
-      _id: functionKey,
-      env_vars: [],
-      language: "js",
-      timeout: 10,
-      name: "conc_fn",
-      concurrencyPerWorker: 4,
-      triggers: {a: {active: true, options: {}, type: "http"}}
-    });
+    await functions.insert(
+      withId(
+        {
+          env_vars: [],
+          language: "js",
+          timeout: 10,
+          name: "conc_fn",
+          concurrencyPerWorker: 4,
+          triggers: {a: {active: true, options: {}, type: "http"}}
+        },
+        functionKey
+      )
+    );
 
     const reconcileSpy = jest.spyOn(scheduler, "reconcileConcurrency");
 
@@ -301,14 +313,18 @@ contractSuite("PlanExecutor", engine => {
   });
 
   it("should stamp the reconciled execution context into the scheduler", async () => {
-    await functions.insert({
-      _id: functionKey,
-      env_vars: [],
-      language: "js",
-      timeout: 10,
-      name: "ctx_fn",
-      triggers: {a: {active: true, options: {}, type: "http"}}
-    });
+    await functions.insert(
+      withId(
+        {
+          env_vars: [],
+          language: "js",
+          timeout: 10,
+          name: "ctx_fn",
+          triggers: {a: {active: true, options: {}, type: "http"}}
+        },
+        functionKey
+      )
+    );
 
     const contextSpy = jest.spyOn(scheduler, "reconcileContext");
 
@@ -319,14 +335,18 @@ contractSuite("PlanExecutor", engine => {
   });
 
   it("should not resolve apply() until the execution context is reconciled", async () => {
-    await functions.insert({
-      _id: functionKey,
-      env_vars: [],
-      language: "js",
-      timeout: 10,
-      name: "await_fn",
-      triggers: {a: {active: true, options: {}, type: "http"}}
-    });
+    await functions.insert(
+      withId(
+        {
+          env_vars: [],
+          language: "js",
+          timeout: 10,
+          name: "await_fn",
+          triggers: {a: {active: true, options: {}, type: "http"}}
+        },
+        functionKey
+      )
+    );
 
     const contextSpy = jest.spyOn(scheduler, "reconcileContext");
 

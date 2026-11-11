@@ -9,6 +9,7 @@ import {
   WebhookRepository
 } from "@spica-server/interface-function-webhook";
 import {WebhookChangeDispatcher} from "./change-dispatcher.js";
+import {idOf, withId} from "@spica-server/data";
 
 @Injectable()
 export class WebhookService {
@@ -25,14 +26,20 @@ export class WebhookService {
 
   async insert(webhook: Webhook): Promise<Webhook> {
     const result = await this.webhooks.insert(webhook);
-    this.changeDispatcher.dispatch({operationType: "insert", documentKey: {_id: result._id}});
+    this.changeDispatcher.dispatch({
+      operationType: "insert",
+      documentKey: withId({}, idOf(result))
+    });
     return result;
   }
 
   async replaceById(id: Id, webhook: Webhook): Promise<Webhook | null> {
     const result = await this.webhooks.replaceById(id, webhook);
     if (result) {
-      this.changeDispatcher.dispatch({operationType: "replace", documentKey: {_id: result._id}});
+      this.changeDispatcher.dispatch({
+        operationType: "replace",
+        documentKey: withId({}, idOf(result))
+      });
     }
     return result;
   }
@@ -40,7 +47,10 @@ export class WebhookService {
   async deleteById(id: Id): Promise<Webhook | null> {
     const result = await this.webhooks.deleteById(id);
     if (result) {
-      this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: result._id}});
+      this.changeDispatcher.dispatch({
+        operationType: "delete",
+        documentKey: withId({}, idOf(result))
+      });
     }
     return result;
   }
@@ -50,7 +60,7 @@ export class WebhookService {
       const emitHook = (hook: Webhook, kind: ChangeKind) => {
         const change: TargetChange = {
           kind: hook.trigger.active ? kind : ChangeKind.Removed,
-          target: hook._id.toString()
+          target: idOf(hook).toString()
         };
         if (change.kind != ChangeKind.Removed) {
           change.webhook = {
@@ -87,14 +97,14 @@ export class WebhookService {
       const sub = this.changeDispatcher.watch().subscribe(change => {
         chain = chain.then(async () => {
           try {
-            const _id = change.documentKey._id;
+            const id = idOf(change.documentKey);
             if (change.operationType === "delete") {
-              observer.next({kind: ChangeKind.Removed, target: _id.toString()});
+              observer.next({kind: ChangeKind.Removed, target: id.toString()});
               return;
             }
-            const hook = await this.webhooks.findById(_id);
+            const hook = await this.webhooks.findById(id);
             if (!hook) {
-              observer.next({kind: ChangeKind.Removed, target: _id.toString()});
+              observer.next({kind: ChangeKind.Removed, target: id.toString()});
               return;
             }
             emitHook(

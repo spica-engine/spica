@@ -12,6 +12,7 @@ import {SchemaModule, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schem
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+import {idOf} from "@spica-server/data";
 
 const RABBITMQ_USER = "spica";
 const RABBITMQ_PASSWORD = "spica-secret-password";
@@ -118,10 +119,10 @@ contractSuite("RabbitMQ trigger with secret placeholders (e2e)", engine => {
   it("should connect to an authenticated broker with the injected secrets and execute the function", async () => {
     const userId = await request
       .post("/secret", {key: "RABBITMQ_USER", value: RABBITMQ_USER})
-      .then(res => res.body._id);
+      .then(res => idOf(res.body));
     const passwordId = await request
       .post("/secret", {key: "RABBITMQ_PASSWORD", value: RABBITMQ_PASSWORD})
-      .then(res => res.body._id);
+      .then(res => idOf(res.body));
 
     const fn = {
       name: "secret_consumer",
@@ -141,10 +142,10 @@ contractSuite("RabbitMQ trigger with secret placeholders (e2e)", engine => {
     };
     const {body: inserted} = await request.post("/function", fn);
 
-    await request.put(`/function/${inserted._id}/secret/${userId}`);
-    await request.put(`/function/${inserted._id}/secret/${passwordId}`);
+    await request.put(`/function/${idOf(inserted)}/secret/${userId}`);
+    await request.put(`/function/${idOf(inserted)}/secret/${passwordId}`);
 
-    await request.post(`/function/${inserted._id}/index`, {
+    await request.post(`/function/${idOf(inserted)}/index`, {
       index: `
         import fs from "fs";
         export default function (message) {
@@ -154,7 +155,7 @@ contractSuite("RabbitMQ trigger with secret placeholders (e2e)", engine => {
     });
 
     fn.triggers.default.active = true;
-    const updated = await request.put(`/function/${inserted._id}`, fn);
+    const updated = await request.put(`/function/${idOf(inserted)}`, fn);
     expect(updated.statusCode).toEqual(200);
     expect(updated.body.triggers.default.options.url).toContain("${SECRET.RABBITMQ_PASSWORD}");
 

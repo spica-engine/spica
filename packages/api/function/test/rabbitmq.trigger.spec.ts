@@ -11,6 +11,7 @@ import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Function RabbitMQ Trigger Schema", engine => {
   let app: INestApplication;
@@ -212,7 +213,7 @@ contractSuite("Function RabbitMQ Trigger Schema", engine => {
     it("should update the trigger options", async () => {
       const {body: created} = await request.post("/function", rabbitmqFunction("updated", {}));
 
-      const res = await request.put(`/function/${created._id}`, {
+      const res = await request.put(`/function/${idOf(created)}`, {
         ...created,
         triggers: {
           default: {

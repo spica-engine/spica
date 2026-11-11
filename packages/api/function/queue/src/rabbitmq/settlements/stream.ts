@@ -17,11 +17,11 @@ export class StreamSettlement implements RabbitMQSettlement {
 
   private readonly consumers = new Map<string, StreamConsumerHandle>();
 
-  track(_id: string, delivery: RabbitMQStreamDelivery) {
+  track(id: string, delivery: RabbitMQStreamDelivery) {
     this.consumers.set(delivery.token, delivery.consumer);
   }
 
-  forget(_id: string) {
+  forget(id: string) {
     // Offsets are stored explicitly by the function, so there is nothing to release per message.
   }
 

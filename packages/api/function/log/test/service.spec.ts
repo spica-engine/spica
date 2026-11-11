@@ -1,4 +1,4 @@
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, systemKeyField} from "@spica-server/data";
 import {FUNCTION_LOG_REPOSITORY} from "@spica-server/interface-function-log";
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
@@ -44,7 +44,7 @@ describe("Function Log Service", () => {
     const indexes = await logService._coll.listIndexes().toArray();
 
     const listingIndex = indexes.find(index => index.name == "function_1__id_-1");
-    expect(listingIndex.key).toEqual({function: 1, _id: -1});
+    expect(listingIndex.key).toEqual({function: 1, [systemKeyField()]: -1});
   });
 
   it("should update existing ttl index expireAfterSeconds value", async () => {

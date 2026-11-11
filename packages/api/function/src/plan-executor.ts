@@ -20,6 +20,7 @@ import {Secret, SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface
 import * as CRUD from "./crud.js";
 import {TriggerSecretResolver} from "./trigger-secret-resolver.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
+import {idOf} from "@spica-server/data";
 
 @Injectable()
 export class PlanExecutor {
@@ -165,7 +166,7 @@ export class PlanExecutor {
     context: event.SchedulingContext
   ): event.Target {
     return new event.Target({
-      id: fn._id.toString(),
+      id: idOf(fn).toString(),
       cwd: path.join(this.options.root, fn.name),
       context
     });

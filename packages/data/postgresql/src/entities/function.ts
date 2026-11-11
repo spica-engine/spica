@@ -1,10 +1,11 @@
 import {defineEntity, now} from "@spica-server/data-postgresql-orm";
+import {Id} from "@spica-server/interface-data";
 import {Function} from "@spica-server/interface-function";
 import {FunctionAsset} from "@spica-server/interface-function-asset-storage";
 import {Log} from "@spica-server/interface-function-log";
 import {Log as WebhookLog, Webhook} from "@spica-server/interface-function-webhook";
 
-export const functions = defineEntity<Function>({
+export const functions = defineEntity<Function & {_id?: Id}>({
   table: "functions",
   idProperty: "_id",
   columns: {

@@ -4,11 +4,12 @@ import {
   FindableAll,
   FindableById,
   Id,
-  Insertable
+  Insertable,
+  Keyed
 } from "@spica-server/interface-data";
 import {Function} from "./function.js";
 
-export type StoredFunction = Function & {_id: Id};
+export type StoredFunction = Keyed<Function>;
 
 /**
  * Inserts and updates reject with DuplicateKeyError when the function name is taken.

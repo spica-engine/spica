@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {changeFeedReady, ContractEngine, contractSuite} from "@spica-server/database-testing";
 import {DatabaseEnqueuer} from "@spica-server/function-enqueuer";
 import {DatabaseQueue, EventQueue} from "@spica-server/function-queue";
@@ -106,7 +106,7 @@ contractSuite("DatabaseEnqueuer", engine => {
       } as any,
       () => {}
     );
-    collection = `bucket_${bucket._id}`;
+    collection = `bucket_${idOf(bucket)}`;
   }, 120_000);
 
   afterAll(async () => {

@@ -1,4 +1,4 @@
-import {ExpiringRepository} from "@spica-server/interface-data";
+import {ExpiringRepository, Keyed} from "@spica-server/interface-data";
 import {PartialObserver} from "rxjs";
 
 interface IPublisher<T> {
@@ -15,11 +15,10 @@ export interface IJobReducer {
   do(meta: JobMeta, job: Function): Promise<boolean>;
 }
 
-export interface JobMeta {
-  _id: string;
+export type JobMeta = Keyed<{
   created_at?: Date;
   [key: string]: any;
-}
+}>;
 
 export interface ICommander {
   register(ctx: Object, fns: Function[], cmdType: CommandType): {unsubscribe: () => void};

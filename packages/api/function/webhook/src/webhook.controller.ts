@@ -17,7 +17,7 @@ import {
 } from "@nestjs/common";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ID} from "@spica-server/data";
+import {ID, systemKeyField} from "@spica-server/data";
 import {
   COLLECTION_NAMES,
   COLLECTION_QUERY,
@@ -75,7 +75,7 @@ export class WebhookController {
     @ResourceFilter({collection: WEBHOOK_COLLECTION}) resourceFilter: ResourceFilterSpec,
     @Query("limit", DEFAULT(10), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
-    @Query("sort", DEFAULT({_id: -1}), JSONP) sort: {[path: string]: 1 | -1}
+    @Query("sort", DEFAULT(() => ({[systemKeyField()]: -1})), JSONP) sort: {[path: string]: 1 | -1}
   ) {
     return this.queries.paginate(WEBHOOK_COLLECTION, {resourceFilter, sort, skip, limit}, "exact");
   }
