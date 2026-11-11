@@ -1,6 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {contractSuite} from "@spica-server/database-testing";
 import {BucketStore, bucketStoreProviders, createBucketStore} from "./bucket-store.js";
+import {idOf} from "@spica-server/data";
 
 const TR = {best: "tr_TR", fallback: "en_US"};
 
@@ -170,8 +171,8 @@ contractSuite("result shape", engine => {
       const second = await insert(target, "second", {name: "second", tags: []});
       const owner = await store.createBucket({
         title: {type: "string"},
-        one: {type: "relation", bucketId: String(target._id), relationType: "onetoone"},
-        many: {type: "relation", bucketId: String(target._id), relationType: "onetomany"}
+        one: {type: "relation", bucketId: String(idOf(target)), relationType: "onetoone"},
+        many: {type: "relation", bucketId: String(idOf(target)), relationType: "onetomany"}
       });
       const key = await insert(owner, "owner", {
         title: "o",

@@ -4,7 +4,7 @@
  */
 import {Provider} from "@nestjs/common";
 import {TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {ContractEngine} from "@spica-server/database-testing";
 import {
   BUCKET_DATA_REPOSITORY,
@@ -88,7 +88,7 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
         } as any,
         () => {}
       );
-      created[String(bucket._id)] = bucket;
+      created[String(idOf(bucket))] = bucket;
       return bucket;
     },
 

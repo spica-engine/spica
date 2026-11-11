@@ -6,7 +6,8 @@ import {
   ids,
   idTransform,
   InvalidIdError,
-  provideRepository
+  provideRepository,
+  idOf
 } from "@spica-server/data";
 import {contractSuite} from "@spica-server/database-testing";
 import {BUCKET_REPOSITORY, BUCKET_SCHEMA_MANAGER} from "@spica-server/interface-bucket";
@@ -109,19 +110,19 @@ contractSuite("id types", engine => {
         () => {}
       );
 
-      const idType = await idTypes.forBucket(String(bucket._id));
+      const idType = await idTypes.forBucket(String(idOf(bucket)));
       expect(idType.name).toBe("integer");
       expect(idType.parse("42")).toBe(42);
 
       const parsed = await new BucketDocumentIdPipe(idTypes).transform({
         documentId: "42",
-        bucketId: String(bucket._id)
+        bucketId: String(idOf(bucket))
       });
       expect(parsed).toBe(42);
       await expect(
         new BucketDocumentIdPipe(idTypes).transform({
           documentId: "01890a5d-ac96-774b-bcce-b302099a8057",
-          bucketId: String(bucket._id)
+          bucketId: String(idOf(bucket))
         })
       ).rejects.toBeInstanceOf(HttpException);
     }

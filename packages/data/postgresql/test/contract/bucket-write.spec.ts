@@ -11,6 +11,7 @@ import {
 } from "@spica-server/interface-bucket-common";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {BucketStore, bucketStoreProviders, createBucketStore} from "./bucket-store.js";
+import {idOf} from "@spica-server/data";
 
 @Global()
 @Module({
@@ -56,7 +57,7 @@ function writerOver(engine: Parameters<Parameters<typeof contractSuite>[1]>[0], 
       options?: Parameters<BucketStore["createBucket"]>[1]
     ) {
       const bucket = await store.createBucket(properties, options);
-      known.set(String(bucket._id), bucket);
+      known.set(String(idOf(bucket)), bucket);
       return bucket;
     },
     replace(bucket: any, document: object, options: object = {}, extra: object = {}) {
@@ -182,7 +183,7 @@ contractSuite("bucket write: insert", engine => {
           }
         },
         label: {type: "string", options: {translate: true}},
-        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"},
+        editors: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetomany"},
         meta: {type: "object", properties: {tags: {type: "array", items: {type: "string"}}}},
         codes: {type: "array", items: {type: "encrypted"}}
       });
@@ -392,7 +393,7 @@ contractSuite("bucket write: insert", engine => {
       const posts = await writer.bucket(
         {
           title: {type: "string"},
-          author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}
+          author: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"}
         },
         {acl: {read: "true==true", write: "document.author.pin == '1234'"}}
       );
@@ -426,7 +427,7 @@ contractSuite("bucket write: insert", engine => {
       const posts = await writer.bucket(
         {
           title: {type: "string"},
-          author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}
+          author: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"}
         },
         {acl: {read: "true==true", write: "document.author.name == 'ann'"}}
       );
@@ -548,7 +549,7 @@ contractSuite("bucket write: replace and patch", engine => {
         items: {type: "object", properties: {sku: {type: "string"}, qty: {type: "number"}}}
       },
       label: {type: "string", options: {translate: true}},
-      editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"}
+      editors: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetomany"}
     });
   });
 
@@ -832,7 +833,7 @@ contractSuite("bucket write: delete", engine => {
       const posts = await writer.bucket(
         {
           title: {type: "string"},
-          author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}
+          author: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"}
         },
         {acl: {read: "true==true", write: "document.author.name == 'ann'"}}
       );

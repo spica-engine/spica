@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {fieldTableName, mainTableName, ORM} from "@spica-server/data-postgresql";
 import {Orm} from "@spica-server/data-postgresql-orm";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {BUCKET_REPOSITORY, BUCKET_SCHEMA_MANAGER} from "@spica-server/interface-bucket";
 import {BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-common";
@@ -45,7 +45,7 @@ export function postgresWriter() {
         } as any,
         () => {}
       );
-      known.set(String(bucket._id), bucket);
+      known.set(String(idOf(bucket)), bucket);
       return bucket;
     },
 
@@ -64,12 +64,12 @@ export function postgresWriter() {
     query: (text: string, values: unknown[] = []) => orm.raw(text, values),
 
     rows: async (bucket: any) => {
-      const rows = await orm.table(mainTableName(String(bucket._id))).rows();
+      const rows = await orm.table(mainTableName(String(idOf(bucket)))).rows();
       return rows.sort((a, b) => compareBy(a, b, [Object.keys(a)[0]]));
     },
 
     rowsOf: async (bucket: any, path: string, order?: string) => {
-      const rows = await orm.table(fieldTableName(String(bucket._id), path.split("."))).rows();
+      const rows = await orm.table(fieldTableName(String(idOf(bucket)), path.split("."))).rows();
       const keys = order
         ? [order]
         : ["_parent", rows[0]?._position === undefined ? "_locale" : "_position"];

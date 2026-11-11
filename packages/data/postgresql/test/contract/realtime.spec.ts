@@ -9,6 +9,7 @@ import {
   StreamChunk
 } from "@spica-server/interface-realtime";
 import {BucketStore, bucketStoreProviders, createBucketStore} from "./bucket-store.js";
+import {idOf} from "@spica-server/data";
 
 const SETTLE_MS = 600;
 
@@ -31,7 +32,7 @@ contractSuite("realtime", engine => {
   const known = new Map<string, any>();
   const subscriptions: {unsubscribe(): void}[] = [];
 
-  const collection = () => `bucket_${bucket._id}`;
+  const collection = () => `bucket_${idOf(bucket)}`;
   const keyOf = (document: any) => String(document?.[store.keyField]);
   const context = () => ({
     resolveSchema: (id: unknown) => known.get(String(id)),
@@ -73,7 +74,7 @@ contractSuite("realtime", engine => {
 
   beforeEach(async () => {
     bucket = await store.createBucket({age: {type: "number"}, title: {type: "string"}});
-    known.set(String(bucket._id), bucket);
+    known.set(String(idOf(bucket)), bucket);
   });
 
   afterEach(() => subscriptions.splice(0).forEach(subscription => subscription.unsubscribe()));

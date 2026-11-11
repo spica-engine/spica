@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DuplicateKeyError, provideRepository} from "@spica-server/data";
+import {DuplicateKeyError, provideRepository, idOf, systemKeyField} from "@spica-server/data";
 import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {ID_TYPES, IdType, IdTypes} from "@spica-server/interface-data";
 import {
@@ -94,14 +94,14 @@ contractSuite("function repositories", engine => {
         })
       );
 
-      expect(inserted._id).toBeDefined();
-      expect(await functions.findById(inserted._id)).toMatchObject({
+      expect(idOf(inserted)).toBeDefined();
+      expect(await functions.findById(idOf(inserted))).toMatchObject({
         name: "hello",
         description: "d",
         timeout: 10,
         triggers: {http: {type: "http", active: true, options: {path: "/a"}}}
       });
-      expect(String((await functions.findByName("hello"))._id)).toBe(String(inserted._id));
+      expect(String(idOf(await functions.findByName("hello")))).toBe(String(idOf(inserted)));
       expect(await functions.findByName("nope")).toBeNull();
       expect(await functions.findById(missingId())).toBeNull();
     });
@@ -113,8 +113,8 @@ contractSuite("function repositories", engine => {
       expect((await functions.findAll()).map(f => f.name)).toEqual(["a", "b"]);
       const summaries = await functions.findSummaries();
       expect(summaries.map(s => Object.keys(s).sort())).toEqual([
-        ["_id", "language", "name"],
-        ["_id", "language", "name"]
+        [systemKeyField(), "language", "name"].sort(),
+        [systemKeyField(), "language", "name"].sort()
       ]);
     });
 
@@ -122,8 +122,8 @@ contractSuite("function repositories", engine => {
       await functions.insert(fn("hello"));
 
       const inserted = await functions.insert(fn("hello")).catch(e => e);
-      const {_id} = await functions.insert(fn("other"));
-      const updated = await functions.updateById(_id, {name: "hello"}).catch(e => e);
+      const id = idOf(await functions.insert(fn("other")));
+      const updated = await functions.updateById(id, {name: "hello"}).catch(e => e);
 
       for (const error of [inserted, updated]) {
         expect(error).toBeInstanceOf(DuplicateKeyError);
@@ -143,12 +143,12 @@ contractSuite("function repositories", engine => {
     });
 
     it("sets fields and resolves to the function as it was before", async () => {
-      const {_id} = await functions.insert(fn("hello", {description: "old"}));
+      const id = idOf(await functions.insert(fn("hello", {description: "old"})));
 
-      const before = await functions.updateById(_id, {description: "new", timeout: 20});
+      const before = await functions.updateById(id, {description: "new", timeout: 20});
 
       expect(before).toMatchObject({description: "old", timeout: 10});
-      expect(await functions.findById(_id)).toMatchObject({description: "new", timeout: 20});
+      expect(await functions.findById(id)).toMatchObject({description: "new", timeout: 20});
       expect(await functions.updateById(missingId(), {timeout: 1})).toBeNull();
     });
 
@@ -165,7 +165,7 @@ contractSuite("function repositories", engine => {
         const patch = {description: "new", triggers: {http: {active: false}}};
         const patched = {...stored, description: "new", triggers: triggers(false)};
 
-        const updated = await functions.applyMergePatch(stored._id, patch, patched);
+        const updated = await functions.applyMergePatch(idOf(stored), patch, patched);
 
         expect(updated).toMatchObject({name: "hello", description: "new", timeout: 10});
         expect(updated.triggers).toEqual(triggers(false));
@@ -179,7 +179,7 @@ contractSuite("function repositories", engine => {
         delete patched.description;
 
         const updated = await functions.applyMergePatch(
-          stored._id,
+          idOf(stored),
           {description: null, triggers: {cron: null}},
           patched
         );
@@ -195,7 +195,7 @@ contractSuite("function repositories", engine => {
         );
         const patched = {...stored, description: "safe"};
 
-        const updated = await functions.applyMergePatch(stored._id, patch, patched);
+        const updated = await functions.applyMergePatch(idOf(stored), patch, patched);
 
         expect(updated).toMatchObject({name: "hello", description: "safe"});
         expect(typeof ({} as any).toString).toBe("function");
@@ -205,7 +205,7 @@ contractSuite("function repositories", engine => {
       it("resolves to undefined when the patch changes nothing and null for a missing function", async () => {
         const stored = await functions.insert(fn("hello"));
 
-        expect(await functions.applyMergePatch(stored._id, {}, stored)).toBeUndefined();
+        expect(await functions.applyMergePatch(idOf(stored), {}, stored)).toBeUndefined();
         expect(
           await functions.applyMergePatch(missingId(), {timeout: 5}, {...stored, timeout: 5})
         ).toBeNull();
@@ -213,41 +213,41 @@ contractSuite("function repositories", engine => {
     });
 
     it("replaces a function and counts the replacement", async () => {
-      const {_id} = await functions.insert(fn("hello", {description: "old"}));
+      const id = idOf(await functions.insert(fn("hello", {description: "old"})));
 
-      expect(await functions.replaceById(_id, fn("renamed"))).toBe(1);
+      expect(await functions.replaceById(id, fn("renamed"))).toBe(1);
 
-      const replaced = await functions.findById(_id);
+      const replaced = await functions.findById(id);
       expect(replaced.name).toBe("renamed");
       expect(replaced).not.toHaveProperty("description");
       expect(await functions.replaceById(missingId(), fn("x"))).toBe(0);
     });
 
     it("deletes a function and resolves to it", async () => {
-      const {_id} = await functions.insert(fn("hello"));
+      const id = idOf(await functions.insert(fn("hello")));
 
-      expect(await functions.deleteById(_id)).toMatchObject({name: "hello"});
-      expect(await functions.deleteById(_id)).toBeNull();
+      expect(await functions.deleteById(id)).toMatchObject({name: "hello"});
+      expect(await functions.deleteById(id)).toBeNull();
     });
 
     it("adds and removes env var and secret references, resolving to the function as it was", async () => {
-      const {_id} = await functions.insert(fn("hello"));
+      const id = idOf(await functions.insert(fn("hello")));
       const [env1, env2, secret] = [missingId(), missingId(), missingId()];
       const idsOf = async (field: "env_vars" | "secrets") =>
-        ((await functions.findById(_id))[field] || []).map(String);
+        ((await functions.findById(id))[field] || []).map(String);
 
-      expect((await functions.addEnvVar(_id, env1)).env_vars || []).toEqual([]);
-      await functions.addEnvVar(_id, env1);
-      await functions.addEnvVar(_id, env2);
-      await functions.addSecret(_id, secret);
+      expect((await functions.addEnvVar(id, env1)).env_vars || []).toEqual([]);
+      await functions.addEnvVar(id, env1);
+      await functions.addEnvVar(id, env2);
+      await functions.addSecret(id, secret);
 
       expect(await idsOf("env_vars")).toEqual([String(env1), String(env2)]);
       expect(await idsOf("secrets")).toEqual([String(secret)]);
-      expect((await functions.removeEnvVar(_id, env1)).env_vars.map(String)).toEqual([
+      expect((await functions.removeEnvVar(id, env1)).env_vars.map(String)).toEqual([
         String(env1),
         String(env2)
       ]);
-      await functions.removeSecret(_id, secret);
+      await functions.removeSecret(id, secret);
       expect(await idsOf("env_vars")).toEqual([String(env2)]);
       expect(await idsOf("secrets")).toEqual([]);
       expect(await functions.addEnvVar(missingId(), env1)).toBeNull();
@@ -259,9 +259,9 @@ contractSuite("function repositories", engine => {
       const b = await functions.insert(fn("b"));
       const env = missingId();
       const secret = missingId();
-      await functions.addEnvVar(a._id, env);
-      await functions.addEnvVar(b._id, env);
-      await functions.addSecret(b._id, secret);
+      await functions.addEnvVar(idOf(a), env);
+      await functions.addEnvVar(idOf(b), env);
+      await functions.addSecret(idOf(b), secret);
 
       expect((await functions.findReferencing("env_vars", env)).map(f => f.name)).toEqual([
         "a",
@@ -339,26 +339,26 @@ contractSuite("function repositories", engine => {
       const first = await webhooks.insert(webhook("a"));
       await webhooks.insert(webhook("b"));
 
-      expect(await webhooks.findById(first._id)).toMatchObject(webhook("a"));
+      expect(await webhooks.findById(idOf(first))).toMatchObject(webhook("a"));
       expect((await webhooks.findAll()).map(w => w.title)).toEqual(["a", "b"]);
       expect(await webhooks.findById(missingId())).toBeNull();
     });
 
     it("replaces a webhook and resolves to the replaced one", async () => {
-      const {_id} = await webhooks.insert(webhook("a"));
+      const id = idOf(await webhooks.insert(webhook("a")));
 
-      const replaced = await webhooks.replaceById(_id, webhook("renamed"));
+      const replaced = await webhooks.replaceById(id, webhook("renamed"));
 
       expect(replaced).toMatchObject({title: "renamed"});
-      expect((await webhooks.findById(_id)).title).toBe("renamed");
+      expect((await webhooks.findById(id)).title).toBe("renamed");
       expect(await webhooks.replaceById(missingId(), webhook("x"))).toBeNull();
     });
 
     it("deletes a webhook and resolves to it", async () => {
-      const {_id} = await webhooks.insert(webhook("a"));
+      const id = idOf(await webhooks.insert(webhook("a")));
 
-      expect(await webhooks.deleteById(_id)).toMatchObject({title: "a"});
-      expect(await webhooks.deleteById(_id)).toBeNull();
+      expect(await webhooks.deleteById(id)).toMatchObject({title: "a"});
+      expect(await webhooks.deleteById(id)).toBeNull();
     });
   });
 
@@ -373,10 +373,10 @@ contractSuite("function repositories", engine => {
     it("inserts logs and deletes them by id", async () => {
       const inserted = await webhookLogs.insert(webhookLog());
 
-      expect(inserted._id).toBeDefined();
+      expect(idOf(inserted)).toBeDefined();
       expect(inserted).toMatchObject({succeed: true, content: {request: {headers: {a: "b"}}}});
-      expect(await webhookLogs.deleteById(inserted._id)).toBe(1);
-      expect(await webhookLogs.deleteById(inserted._id)).toBe(0);
+      expect(await webhookLogs.deleteById(idOf(inserted))).toBe(1);
+      expect(await webhookLogs.deleteById(idOf(inserted))).toBe(0);
     });
 
     it("deletes many logs by their ids", async () => {
@@ -386,8 +386,8 @@ contractSuite("function repositories", engine => {
         await webhookLogs.insert(webhookLog())
       ];
 
-      expect(await webhookLogs.deleteByIds([a._id, b._id])).toBe(2);
-      expect(await webhookLogs.deleteByIds([a._id, b._id, c._id])).toBe(1);
+      expect(await webhookLogs.deleteByIds([idOf(a), idOf(b)])).toBe(2);
+      expect(await webhookLogs.deleteByIds([idOf(a), idOf(b), idOf(c)])).toBe(1);
       expect(await webhookLogs.deleteByIds([])).toBe(0);
     });
   });
@@ -415,7 +415,7 @@ contractSuite("function repositories", engine => {
         size: 1234,
         strategy: "gridfs"
       });
-      expect(String(second._id)).toBe(String(first._id));
+      expect(String(idOf(second))).toBe(String(idOf(first)));
       expect(second).toMatchObject({key: "k2", hash: "hash-k2"});
       expect(await assets.findByFilename(functionId, "index.ts")).toBeNull();
     });
