@@ -7,7 +7,9 @@ import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 
-mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
+mongoOnly(
+  "its documents, ids and filter syntax are MongoDB's; PostgreSQL realtime of this collection is covered by the realtime specs in data-postgresql"
+);
 
 describe("Realtime Authorization", () => {
   let wsc: Websocket;

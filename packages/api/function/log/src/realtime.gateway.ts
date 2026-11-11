@@ -36,6 +36,6 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async prepareOptions(_client, req) {
-    return LogOptionsBuilder.fromLogQuery(req);
+    return LogOptionsBuilder.fromLogQuery(req, this.realtime.filterLanguage);
   }
 }

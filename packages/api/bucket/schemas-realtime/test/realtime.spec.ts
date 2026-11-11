@@ -13,7 +13,9 @@ import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
 import {ChunkKind} from "@spica-server/interface-realtime";
 import {Bucket} from "@spica-server/interface-bucket";
 
-mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
+mongoOnly(
+  "its documents, ids and filter syntax are MongoDB's; PostgreSQL realtime of this collection is covered by the realtime specs in data-postgresql"
+);
 
 function url(path: string, query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL(path, "ws://insteadof");

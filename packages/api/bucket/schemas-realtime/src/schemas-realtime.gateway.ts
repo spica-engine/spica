@@ -39,6 +39,9 @@ export class SchemasRealtimeGateway implements OnGatewayConnection, OnGatewayDis
   }
 
   async prepareOptions(_client, req) {
-    return RealtimeOptionsBuilder.fromQuery(req, {useResourceFilter: true});
+    return RealtimeOptionsBuilder.fromQuery(req, {
+      useResourceFilter: true,
+      language: this.realtime.filterLanguage
+    });
   }
 }

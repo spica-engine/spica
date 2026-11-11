@@ -159,9 +159,9 @@ describe("PostgreSQL realtime", () => {
     });
   });
 
-  describe("a collection that is not a bucket", () => {
-    it("should be refused for now", async () => {
-      const {errors} = await open({}, "function");
+  describe("a collection that reports no changes", () => {
+    it("should be refused", async () => {
+      const {errors} = await open({}, "jobs");
 
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchObject({status: 501});

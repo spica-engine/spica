@@ -39,6 +39,10 @@ export class UserRealtimeGateway implements OnGatewayConnection, OnGatewayDiscon
   }
 
   async prepareOptions(_client, req) {
-    return RealtimeOptionsBuilder.fromQuery(req, {useResourceFilter: true, useFilter: true});
+    return RealtimeOptionsBuilder.fromQuery(req, {
+      useResourceFilter: true,
+      useFilter: true,
+      language: this.realtime.filterLanguage
+    });
   }
 }

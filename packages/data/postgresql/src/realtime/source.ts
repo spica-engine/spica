@@ -1,4 +1,3 @@
-import {createHash} from "node:crypto";
 import {Bucket} from "@spica-server/interface-bucket";
 import {
   BucketQueryFacade,
@@ -7,28 +6,10 @@ import {
 } from "@spica-server/interface-bucket-common";
 import {RealtimeOptions} from "@spica-server/interface-realtime";
 import {BatchQueries} from "./batch.js";
+import {compare, identityOf, sharedDocuments} from "./shared.js";
 import {WindowSource} from "./window.js";
 
 type Document = Record<string, unknown>;
-
-const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-
-function canonical(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(canonical);
-  }
-  if (value && typeof (value as {toJSON?: unknown}).toJSON == "function") {
-    return canonical((value as {toJSON(): unknown}).toJSON());
-  }
-  if (value && typeof value == "object") {
-    return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>)
-        .sort(([a], [b]) => compare(a, b))
-        .map(([key, item]) => [key, canonical(item)])
-    );
-  }
-  return value;
-}
 
 export class BucketSource implements WindowSource {
   private readonly identity: string;
@@ -39,9 +20,7 @@ export class BucketSource implements WindowSource {
     private readonly context: BucketReadContext,
     private readonly options: RealtimeOptions
   ) {
-    this.identity = createHash("sha256")
-      .update(JSON.stringify(canonical({bucket: String(bucket._id), ...options})))
-      .digest("hex");
+    this.identity = identityOf({bucket: String(bucket._id), ...options});
   }
 
   documents() {
@@ -63,13 +42,8 @@ export class BucketSource implements WindowSource {
     );
   }
 
-  private async shared(
-    batch: BatchQueries | undefined,
-    name: string,
-    load: () => Promise<Document[]>
-  ) {
-    const documents = batch ? await batch.once(`${this.identity}:${name}`, load) : await load();
-    return structuredClone(documents);
+  private shared(batch: BatchQueries | undefined, name: string, load: () => Promise<Document[]>) {
+    return sharedDocuments(batch, this.identity, name, load);
   }
 
   private range(): BucketReadSpec {

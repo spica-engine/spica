@@ -2,13 +2,14 @@ import {Inject, Injectable} from "@nestjs/common";
 import {Orm} from "@spica-server/data-postgresql-orm";
 import {Bucket} from "@spica-server/interface-bucket";
 import {BUCKET_QUERY, BucketQueryFacade} from "@spica-server/interface-bucket-common";
-import {CHANGE_FEED} from "@spica-server/interface-data";
+import {CHANGE_FEED, COLLECTION_QUERY, CollectionQueryFacade} from "@spica-server/interface-data";
 import {Document, Realtime, RealtimeOptions, StreamChunk} from "@spica-server/interface-realtime";
 import {Observable, throwError} from "rxjs";
-import {BUCKET_TABLE_PREFIX, PostgresChangeFeed} from "../change/index.js";
+import {BUCKET_TABLE_PREFIX, PostgresChangeFeed, trackedEntityOf} from "../change/index.js";
 import {fieldRulesOf} from "../access/index.js";
 import {ORM} from "../orm.js";
 import {StoredBuckets} from "../repositories/bucket/stored-buckets.js";
+import {CollectionSource} from "./collection-source.js";
 import {fieldsOfExpression} from "./fields.js";
 import {prefilterOf} from "./prefilter.js";
 import {RealtimeHub} from "./hub.js";
@@ -58,6 +59,8 @@ function relevantFields(bucket: Bucket, options: RealtimeOptions) {
 
 @Injectable()
 export class PostgresRealtime implements Realtime {
+  readonly filterLanguage = "expression";
+
   private readonly stored: StoredBuckets;
   private readonly hubs = new Map<string, RealtimeHub>();
   private readonly limiter = new Limiter(MAX_CONCURRENT_EVALUATIONS);
@@ -65,6 +68,7 @@ export class PostgresRealtime implements Realtime {
   constructor(
     @Inject(CHANGE_FEED) private readonly feed: PostgresChangeFeed,
     @Inject(BUCKET_QUERY) private readonly query: BucketQueryFacade,
+    @Inject(COLLECTION_QUERY) private readonly collections: CollectionQueryFacade,
     @Inject(ORM) orm: Orm
   ) {
     this.stored = new StoredBuckets(orm);
@@ -74,7 +78,9 @@ export class PostgresRealtime implements Realtime {
     name: string,
     options: RealtimeOptions = {}
   ): Observable<StreamChunk<T>> {
-    if (!name.startsWith(BUCKET_TABLE_PREFIX)) {
+    const isBucket = name.startsWith(BUCKET_TABLE_PREFIX);
+    const entity = isBucket ? undefined : trackedEntityOf(name);
+    if (!isBucket && !entity) {
       return throwError(
         () => new RealtimeError(501, `Realtime of "${name}" is not available on PostgreSQL.`)
       );
@@ -90,30 +96,17 @@ export class PostgresRealtime implements Realtime {
 
       const start = async () => {
         await this.feed.ready();
-        const bucket = await this.stored.find(name.slice(BUCKET_TABLE_PREFIX.length));
-        if (!bucket) {
-          throw new RealtimeError(404, `The bucket of "${name}" does not exist.`);
-        }
-
-        const context = {
-          resolveSchema: async (id: unknown) => {
-            const found = await this.stored.find(String(id));
-            if (!found) {
-              throw new RealtimeError(404, `The bucket "${id}" does not exist.`);
-            }
-            return found;
-          },
-          preferences,
-          hashSecret: options.hashSecret
-        };
         await subscriber.start(
-          new RealtimeWindow(new BucketSource(this.query, bucket, context, options), {
-            primary: bucket.primary,
-            sorted: Boolean(options.sort),
-            ranged: Boolean(options.skip || options.limit),
-            relevant: relevantFields(bucket, options),
-            prefilter: prefilterOf(bucket, rulesOf(bucket, options), options.user)
-          })
+          entity
+            ? new RealtimeWindow(
+                new CollectionSource(this.collections, name, entity.idProperty, options),
+                {
+                  primary: entity.idProperty,
+                  sorted: Boolean(options.sort),
+                  ranged: Boolean(options.skip || options.limit)
+                }
+              )
+            : await this.bucketWindow(name, options)
         );
       };
       start().catch(error => subscriber.fail(error));
@@ -122,6 +115,32 @@ export class PostgresRealtime implements Realtime {
         subscriber.close();
         leave();
       };
+    });
+  }
+
+  private async bucketWindow(name: string, options: RealtimeOptions) {
+    const bucket = await this.stored.find(name.slice(BUCKET_TABLE_PREFIX.length));
+    if (!bucket) {
+      throw new RealtimeError(404, `The bucket of "${name}" does not exist.`);
+    }
+
+    const context = {
+      resolveSchema: async (id: unknown) => {
+        const found = await this.stored.find(String(id));
+        if (!found) {
+          throw new RealtimeError(404, `The bucket "${id}" does not exist.`);
+        }
+        return found;
+      },
+      preferences,
+      hashSecret: options.hashSecret
+    };
+    return new RealtimeWindow(new BucketSource(this.query, bucket, context, options), {
+      primary: bucket.primary,
+      sorted: Boolean(options.sort),
+      ranged: Boolean(options.skip || options.limit),
+      relevant: relevantFields(bucket, options),
+      prefilter: prefilterOf(bucket, rulesOf(bucket, options), options.user)
     });
   }
 

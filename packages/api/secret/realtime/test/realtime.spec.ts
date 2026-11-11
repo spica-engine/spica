@@ -10,7 +10,9 @@ import {SecretModule} from "@spica-server/secret";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID, OBJECTID_STRING} from "@spica-server/core-schema";
 
-mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
+mongoOnly(
+  "its documents, ids and filter syntax are MongoDB's; PostgreSQL realtime of this collection is covered by the realtime specs in data-postgresql"
+);
 
 function url(path: string, query: Record<string, string> = {}) {
   const u = new URL(path, "ws://insteadof");

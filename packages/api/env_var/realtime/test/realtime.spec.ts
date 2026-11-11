@@ -12,7 +12,9 @@ import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
 import {ChunkKind} from "@spica-server/interface-realtime";
 import {EnvVarModule} from "@spica-server/env_var";
 
-mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
+mongoOnly(
+  "its documents, ids and filter syntax are MongoDB's; the gateway on PostgreSQL is covered by realtime.postgresql.spec.ts"
+);
 
 function url(path, query) {
   const u = new URL(path, "ws://insteadof");
