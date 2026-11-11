@@ -2,6 +2,7 @@ import {Action, ActionParameters, Command, CreateCommandParameters, Program} fro
 import {httpService} from "../../http";
 import {RepresentativeManager} from "../../representative";
 import {Resource} from "@spica-server/interface-asset";
+import {fetchSystemKeyField} from "@spica-server/sync";
 import path from "path";
 import fs from "fs";
 import YAML from "yaml";
@@ -31,7 +32,13 @@ async function apply({options}: ActionParameters) {
   moduleAndFiles.set("dashboard", ["schema.yaml"]);
   moduleAndFiles.set("apikey", ["schema.yaml"]);
 
-  const resourceNameValidator = id => id.match(/^([0-9a-fA-F]{24}$)|identity/);
+  const resourceNameValidator = id =>
+    id.match(
+      /^([0-9a-fA-F]{24}$)|^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$|identity/
+    );
+
+  const client = await httpService.createFromCurrentCtx();
+  const keyField = await fetchSystemKeyField(client);
 
   const resources: Resource[] = [];
 
@@ -39,7 +46,12 @@ async function apply({options}: ActionParameters) {
   console.log("Found Resources:");
 
   for (let [_module, fileNames] of moduleAndFiles.entries()) {
-    let resource: Resource[] = await repManager.read(_module, resourceNameValidator, fileNames);
+    let resource: Resource[] = await repManager.read(
+      _module,
+      resourceNameValidator,
+      keyField,
+      fileNames
+    );
     console.log(` - ${_module}: ${resource.length}`);
 
     resource = resource.map(r => {
@@ -55,8 +67,6 @@ async function apply({options}: ActionParameters) {
     ...assetMeta,
     resources
   };
-
-  const client = await httpService.createFromCurrentCtx();
 
   await client.post("/asset", body);
 

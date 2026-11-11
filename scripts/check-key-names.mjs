@@ -11,6 +11,8 @@ const EXEMPT_PREFIXES = [
   "packages/devkit/database/",
   "packages/devkit/testing/",
   "packages/filter/",
+  "packages/sync/src/record-key.ts",
+  "packages/sync/test/record-key.spec.ts",
   "apps/migrate/",
   "apps/mongoreplicationcontroller/",
   "apps/panel/"

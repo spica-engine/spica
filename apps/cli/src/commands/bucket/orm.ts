@@ -5,6 +5,7 @@ import {config} from "../../config";
 import {context} from "../../context";
 import {spin} from "../../console";
 import {httpService} from "../../http";
+import {recordKey} from "@spica-server/sync";
 
 async function orm({options}: ActionParameters) {
   const PATH = (options.path as string) || "";
@@ -287,13 +288,13 @@ class Cursor<Scheme,Paginate extends boolean = false> extends CRUD<Scheme,Pagina
       const property = prepareNamespace(bucket.title);
       const interfaceName = prepareInterfaceTitle(bucket.title);
 
-      const bucketId = bucket._id;
+      const bucketId = recordKey(bucket);
       const bdService = "Bucket.data";
 
       const relationalFields = getRelationFields(bucket.properties);
       const relationalFieldsDefinition = `[${relationalFields.map(i => `'${i}'`).join(",")}]`;
 
-      const resolveRelationEnums = getResolveRelationEnums(bucket._id, buckets);
+      const resolveRelationEnums = getResolveRelationEnums(recordKey(bucket), buckets);
       const resolveRelationEnumsDefinition = resolveRelationEnums.length
         ? `(${resolveRelationEnums.map(i => `'${i}'`).join("|")})[]`
         : "[]";
@@ -381,7 +382,7 @@ export const ${property} = new ${interfaceName}Cursor('${bucketId}',${bdService}
 
   function replaceRelations(buckets: BucketSchema[], lines: string[]) {
     for (const bucket of buckets) {
-      const target = `<${bucket._id}>`;
+      const target = `<${recordKey(bucket)}>`;
       lines = lines.map(line => {
         if (line.includes(target)) {
           return line.replace(target, prepareInterfaceTitle(bucket.title));
@@ -553,13 +554,13 @@ function getResolveRelationEnums(id: string, buckets: BucketSchema[]): string[] 
           enums.push(paths);
         }
 
-        const relatedBuckets = buckets.filter(b => b._id == value.bucketId);
+        const relatedBuckets = buckets.filter(b => recordKey(b) == value.bucketId);
         relatedBuckets.forEach(b => _getResolveRelationEnums(b, paths));
       }
     });
   };
 
-  const targetBucket = buckets.find(b => b._id == id);
+  const targetBucket = buckets.find(b => recordKey(b) == id);
   _getResolveRelationEnums(targetBucket);
 
   return enums;
@@ -567,7 +568,6 @@ function getResolveRelationEnums(id: string, buckets: BucketSchema[]): string[] 
 
 // INTERFACE
 export interface BucketSchema {
-  _id: string;
   title: string;
   properties: Properties;
   required?: string[];

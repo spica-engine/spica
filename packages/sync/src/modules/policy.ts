@@ -9,9 +9,9 @@ import {
   writeLocalSchema
 } from "../fs-utils";
 import {LocalResource, RemoteResource, ResourceModule} from "../types";
+import {KEY_FIELDS, recordKey} from "../record-key";
 
 interface Policy {
-  _id?: string;
   name: string;
   description?: string;
   actions?: string[];
@@ -19,7 +19,7 @@ interface Policy {
   [key: string]: unknown;
 }
 
-const IGNORED_FIELDS = ["_id", "system"];
+const IGNORED_FIELDS = [...KEY_FIELDS, "system"];
 
 export const policyModule: ResourceModule<Policy> = {
   name: "policy",
@@ -39,7 +39,7 @@ export const policyModule: ResourceModule<Policy> = {
       .filter(p => !p.system)
       .map(p => ({
         slug: sanitizeSlug(p.name),
-        id: p._id!,
+        id: recordKey(p)!,
         data: p
       }));
   },
@@ -80,6 +80,6 @@ export const policyModule: ResourceModule<Policy> = {
   },
 
   extractLocalId(data) {
-    return data._id;
+    return recordKey(data);
   }
 };
