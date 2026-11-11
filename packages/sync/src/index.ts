@@ -11,6 +11,7 @@ export * from "./reporter";
 export * from "./fs-utils";
 export * from "./source";
 export * from "./planner";
+export * from "./record-key";
 export * from "./modules/index";
 
 // Individual resource modules (the barrel above only exposes the aggregate

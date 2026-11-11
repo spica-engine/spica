@@ -7,9 +7,9 @@ import {
   writeLocalSchema
 } from "../fs-utils";
 import {ResourceModule} from "../types";
+import {KEY_FIELDS, recordKey} from "../record-key";
 
 interface Bucket {
-  _id?: string;
   title: string;
   description?: string;
   primary?: string;
@@ -17,7 +17,7 @@ interface Bucket {
   [key: string]: unknown;
 }
 
-const IGNORED_FIELDS = ["_id"];
+const IGNORED_FIELDS = [...KEY_FIELDS];
 
 export const bucketModule: ResourceModule<Bucket> = {
   name: "bucket",
@@ -34,7 +34,7 @@ export const bucketModule: ResourceModule<Bucket> = {
     const buckets = unwrapList(res);
     return buckets.map(b => ({
       slug: sanitizeSlug(b.title),
-      id: b._id!,
+      id: recordKey(b)!,
       data: b
     }));
   },
@@ -73,6 +73,6 @@ export const bucketModule: ResourceModule<Bucket> = {
   },
 
   extractLocalId(data) {
-    return data._id;
+    return recordKey(data);
   }
 };

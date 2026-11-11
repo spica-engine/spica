@@ -7,16 +7,16 @@ import {
   writeLocalSchema
 } from "../fs-utils";
 import {ResourceModule} from "../types";
+import {KEY_FIELDS, recordKey} from "../record-key";
 
 interface EnvVar {
-  _id?: string;
   key: string;
   value?: string;
   [key: string]: unknown;
 }
 
 // "updated_at" is server-managed; ignoring it avoids permanent false-positive diffs.
-const IGNORED_FIELDS = ["_id", "updated_at"];
+const IGNORED_FIELDS = [...KEY_FIELDS, "updated_at"];
 
 export const envVarModule: ResourceModule<EnvVar> = {
   name: "env-var",
@@ -33,7 +33,7 @@ export const envVarModule: ResourceModule<EnvVar> = {
     const items = unwrapList(res);
     return items.map(e => ({
       slug: sanitizeSlug(e.key),
-      id: e._id!,
+      id: recordKey(e)!,
       data: e
     }));
   },
@@ -71,6 +71,6 @@ export const envVarModule: ResourceModule<EnvVar> = {
   },
 
   extractLocalId(data) {
-    return data._id;
+    return recordKey(data);
   }
 };

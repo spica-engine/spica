@@ -82,9 +82,14 @@ describe("check-key-names", () => {
       write("packages/devkit/database/src/a.ts", content);
       write("apps/panel/src/a.ts", content);
       write("packages/filter/src/a.ts", content);
+      write("packages/sync/src/record-key.ts", content);
+      write("packages/sync/src/other.ts", content);
       write("packages/data/postgresql/src/a.ts", content);
 
-      assert.deepEqual(countKeyLiterals(root), {"packages/data/postgresql/src/a.ts": 1});
+      assert.deepEqual(countKeyLiterals(root), {
+        "packages/data/postgresql/src/a.ts": 1,
+        "packages/sync/src/other.ts": 1
+      });
     });
   });
 
