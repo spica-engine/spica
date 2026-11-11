@@ -9,6 +9,7 @@ import {
   FunctionRepository,
   StoredFunction
 } from "@spica-server/interface-function";
+import {idOf} from "@spica-server/data";
 
 // An env-var/secret insert has no functions referencing it yet, so only these operations
 // can affect an existing function's resolved environment.
@@ -47,7 +48,7 @@ export class FunctionService {
       filter(change => isRelevantOperation(change)),
       switchMap(change =>
         this.functions
-          .findReferencing(resourceField, change.documentKey._id)
+          .findReferencing(resourceField, idOf(change.documentKey))
           .then(fns => ({fns, change}))
       )
     );
@@ -57,7 +58,7 @@ export class FunctionService {
     return this.watchFunctionsForResource(this.evs.watchChanges(), "env_vars").pipe(
       map(({fns, change}) => ({
         fns,
-        envVarId: change.documentKey._id,
+        envVarId: idOf(change.documentKey),
         operationType: change.operationType as ResourceOperationType
       }))
     );
@@ -67,7 +68,7 @@ export class FunctionService {
     return this.watchFunctionsForResource(this.ss.watchChanges(), "secrets").pipe(
       map(({fns, change}) => ({
         fns,
-        secretId: change.documentKey._id,
+        secretId: idOf(change.documentKey),
         secretKeys: change.keys,
         operationType: change.operationType as ResourceOperationType
       }))

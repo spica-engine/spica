@@ -8,8 +8,8 @@ import {
   SecretRelation
 } from "@spica-server/interface-function";
 import {createPlan, refreshPlan, secretRefreshPlan} from "./change.js";
-import {DuplicateKeyError, ids} from "@spica-server/data";
-import {CollectionQueryFacade, Id, ResourceFilterSpec} from "@spica-server/interface-data";
+import {DuplicateKeyError, ids, idOf, stripId, assignId, systemKeyField} from "@spica-server/data";
+import {CollectionQueryFacade, Id, Keyed, ResourceFilterSpec} from "@spica-server/interface-data";
 import {FunctionEngine} from "./engine.js";
 import {LogRepository} from "@spica-server/interface-function-log";
 import {BadRequestException, InternalServerErrorException, NotFoundException} from "@nestjs/common";
@@ -34,13 +34,13 @@ async function insertWithChanges(
   engine: FunctionEngine,
   fn: Function
 ) {
-  if (fn._id) {
-    fn._id = functionIds().parse(fn._id);
+  if (idOf(fn)) {
+    assignId(fn, functionIds().parse(idOf(fn)));
   }
 
   try {
     const r = await functions.insert(fn);
-    fn._id = r._id;
+    assignId(fn, idOf(r));
   } catch (error: any) {
     throw toWriteException(error);
   }
@@ -122,7 +122,7 @@ export async function findByName<
   const fn = await functions.findByName(name);
   if (!fn) return null;
   if (options?.resolveEnvRelations || options?.resolveSecretRelations) {
-    return findOne(queries, functionIds().parse(fn._id), {
+    return findOne(queries, functionIds().parse(idOf(fn)), {
       resolveEnvRelations: options?.resolveEnvRelations,
       resolveSecretRelations: options?.resolveSecretRelations
     }) as Promise<Function<ER, SR>>;
@@ -132,7 +132,7 @@ export async function findByName<
 
 export async function insert(functions: FunctionRepository, engine: FunctionEngine, fn: Function) {
   await insertWithChanges(functions, engine, fn);
-  await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
+  await engine.storeAssets(fn as Keyed<Function>, "package.json", async () => {
     await engine.createFunction(fn);
     const pkgContent = await engine.read(fn, "dependency");
     return Buffer.from(pkgContent, "utf-8");
@@ -142,24 +142,24 @@ export async function insert(functions: FunctionRepository, engine: FunctionEngi
 }
 
 export async function replace(functions: FunctionRepository, engine: FunctionEngine, fn: Function) {
-  const _id = functionIds().parse(fn._id);
+  const id = functionIds().parse(idOf(fn));
 
   // not sure that is necessary
-  delete fn._id;
+  stripId(fn);
   delete fn.language;
 
-  const preFn = await functions.updateById(_id, fn).catch(error => {
+  const preFn = await functions.updateById(id, fn).catch(error => {
     throw toWriteException(error);
   });
   if (!preFn) {
-    throw new NotFoundException(`Couldn't find the function with id ${_id}`);
+    throw new NotFoundException(`Couldn't find the function with id ${id}`);
   }
 
-  fn._id = _id;
+  assignId(fn, id);
 
   if (preFn.name != fn.name) {
     await engine.moveAssets(preFn, fn.name).catch(async error => {
-      await functions.replaceById(_id, preFn);
+      await functions.replaceById(id, preFn);
       throw new InternalServerErrorException(
         `Failed to move the files of function ${preFn.name} to ${fn.name}: ${error?.message || error}`
       );
@@ -183,12 +183,12 @@ export async function remove(
     throw new NotFoundException("Couldn't find the function.");
   }
 
-  logs.deleteByFunction(fn._id.toString());
+  logs.deleteByFunction(idOf(fn).toString());
 
   await engine.applyChangePlan(createPlan(fn, null));
 
   await engine.deleteFunction(fn);
-  await engine.removeAssets(fn as Function & {_id: any});
+  await engine.removeAssets(fn as Keyed<Function>);
 }
 
 export namespace index {
@@ -220,7 +220,7 @@ export namespace index {
       throw new NotFoundException("Cannot find function.");
     }
 
-    await engine.storeAssets(fn as Function & {_id: any}, engine.getIndexFilename(fn), async () => {
+    await engine.storeAssets(fn as Keyed<Function>, engine.getIndexFilename(fn), async () => {
       await engine.update(fn, index);
       await engine.build(fn);
       return Buffer.from(index, "utf-8");
@@ -287,7 +287,7 @@ export namespace dependencies {
     fn: Function,
     change: () => Promise<void>
   ) {
-    await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
+    await engine.storeAssets(fn as Keyed<Function>, "package.json", async () => {
       await change();
       const pkgContent = await engine.read(fn, "dependency");
       return Buffer.from(pkgContent, "utf-8");
@@ -295,11 +295,7 @@ export namespace dependencies {
 
     const lockfile = await engine.readLockfile(fn);
     if (lockfile) {
-      await engine.storeAssets(
-        fn as Function & {_id: any},
-        "package-lock.json",
-        async () => lockfile
-      );
+      await engine.storeAssets(fn as Keyed<Function>, "package-lock.json", async () => lockfile);
     }
   }
 
@@ -467,7 +463,7 @@ export function findWithSecrets(
   ids: Id[]
 ): Promise<Function<EnvRelation.NotResolved, SecretRelation.Resolved>[]> {
   return queries.find<Function<EnvRelation.NotResolved, SecretRelation.Resolved>>(collection, {
-    where: ids.length ? {_id: {in: ids}} : undefined,
+    where: ids.length ? {[systemKeyField()]: {in: ids}} : undefined,
     relations: relations(EnvRelation.NotResolved, SecretRelation.Resolved)
   });
 }

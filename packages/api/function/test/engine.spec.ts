@@ -1,4 +1,4 @@
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, withId, idOf} from "@spica-server/data";
 import {
   COLLECTION_NAMES,
   COLLECTION_QUERY,
@@ -152,14 +152,18 @@ contractSuite("Engine", contract => {
   });
 
   it("should unregister triggers on module destroy", async () => {
-    await functions.insert({
-      _id: functionKey,
-      env_vars: [],
-      language: "js",
-      timeout: 10,
-      name: "my_fn",
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
+    await functions.insert(
+      withId(
+        {
+          env_vars: [],
+          language: "js",
+          timeout: 10,
+          name: "my_fn",
+          triggers: {test_handler: {active: true, options: {}, type: "http"}}
+        },
+        functionKey
+      )
+    );
 
     await engine.onModuleDestroy();
 
@@ -178,18 +182,22 @@ contractSuite("Engine", contract => {
     // fresh replacements warm), not a hard outdateWorkers.
     const supersedeSpy = jest.spyOn(scheduler, "supersedeWorkers");
 
-    const env = await evs.insert({_id: undefined, key: "IGNORE_ME", value: "NO"});
+    const env = await evs.insert(withId({key: "IGNORE_ME", value: "NO"}, undefined));
     const fnId = functionKey;
-    await functions.insert({
-      _id: fnId,
-      env_vars: [env._id],
-      language: "js",
-      timeout: 10,
-      name: "my_fn",
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
+    await functions.insert(
+      withId(
+        {
+          env_vars: [idOf(env)],
+          language: "js",
+          timeout: 10,
+          name: "my_fn",
+          triggers: {test_handler: {active: true, options: {}, type: "http"}}
+        },
+        fnId
+      )
+    );
 
-    await evs.updateById(env._id, {value: "YES"});
+    await evs.updateById(idOf(env), {value: "YES"});
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -203,18 +211,22 @@ contractSuite("Engine", contract => {
   it("should clear the env relation and context when an env var is removed", async () => {
     const contextSpy = jest.spyOn(scheduler, "reconcileContext");
 
-    const env = await evs.insert({_id: undefined, key: "IGNORE_ME", value: "NO"});
+    const env = await evs.insert(withId({key: "IGNORE_ME", value: "NO"}, undefined));
     const fnId = functionKey;
-    await functions.insert({
-      _id: fnId,
-      env_vars: [env._id],
-      language: "js",
-      timeout: 10,
-      name: "my_fn",
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
+    await functions.insert(
+      withId(
+        {
+          env_vars: [idOf(env)],
+          language: "js",
+          timeout: 10,
+          name: "my_fn",
+          triggers: {test_handler: {active: true, options: {}, type: "http"}}
+        },
+        fnId
+      )
+    );
 
-    await evs.deleteById(env._id);
+    await evs.deleteById(idOf(env));
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -231,24 +243,24 @@ contractSuite("Engine", contract => {
 
     const encryptionSecret = "test-encryption-secret";
     const encryptedValue = encrypt("secret_value", encryptionSecret);
-    const secret = await ss.insert({
-      _id: undefined,
-      key: "DB_PASSWORD",
-      value: encryptedValue
-    });
+    const secret = await ss.insert(withId({key: "DB_PASSWORD", value: encryptedValue}, undefined));
     const fnId = functionKey;
-    await functions.insert({
-      _id: fnId,
-      env_vars: [],
-      secrets: [secret._id],
-      language: "js",
-      timeout: 10,
-      name: "my_fn",
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
+    await functions.insert(
+      withId(
+        {
+          env_vars: [],
+          secrets: [idOf(secret)],
+          language: "js",
+          timeout: 10,
+          name: "my_fn",
+          triggers: {test_handler: {active: true, options: {}, type: "http"}}
+        },
+        fnId
+      )
+    );
 
     const newEncryptedValue = encrypt("new_secret_value", encryptionSecret);
-    await ss.updateById(secret._id, {value: newEncryptedValue});
+    await ss.updateById(idOf(secret), {value: newEncryptedValue});
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -262,23 +274,25 @@ contractSuite("Engine", contract => {
 
     const encryptionSecret = "test-encryption-secret";
     const encryptedValue = encrypt("secret_value", encryptionSecret);
-    const secret = await ss.insert({
-      _id: undefined,
-      key: "REMOVED_SECRET",
-      value: encryptedValue
-    });
+    const secret = await ss.insert(
+      withId({key: "REMOVED_SECRET", value: encryptedValue}, undefined)
+    );
     const fnId = functionKey;
-    await functions.insert({
-      _id: fnId,
-      env_vars: [],
-      secrets: [secret._id],
-      language: "js",
-      timeout: 10,
-      name: "my_fn",
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
+    await functions.insert(
+      withId(
+        {
+          env_vars: [],
+          secrets: [idOf(secret)],
+          language: "js",
+          timeout: 10,
+          name: "my_fn",
+          triggers: {test_handler: {active: true, options: {}, type: "http"}}
+        },
+        fnId
+      )
+    );
 
-    await ss.deleteById(secret._id);
+    await ss.deleteById(idOf(secret));
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 

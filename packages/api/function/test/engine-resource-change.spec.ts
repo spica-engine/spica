@@ -1,6 +1,7 @@
 import {Subject} from "rxjs";
 import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "@spica-server/function/src/engine";
+import {withId} from "@spica-server/data";
 
 describe("FunctionEngine resource change refresh", () => {
   const fnId = new ObjectId();
@@ -57,7 +58,7 @@ describe("FunctionEngine resource change refresh", () => {
   it.each(sources)(
     "should refresh locally without broadcasting when a %s is updated",
     async (_, source, ids) => {
-      source().next({fns: [{_id: fnId}], ...ids, operationType: "update"});
+      source().next({fns: [withId({}, fnId)], ...ids, operationType: "update"});
       await flush();
 
       expect(executor.apply).toHaveBeenCalledTimes(1);
@@ -72,7 +73,7 @@ describe("FunctionEngine resource change refresh", () => {
   it.each(sources)(
     "should remove the reference before refreshing when a %s is deleted",
     async (_, source, ids) => {
-      source().next({fns: [{_id: fnId}], ...ids, operationType: "delete"});
+      source().next({fns: [withId({}, fnId)], ...ids, operationType: "delete"});
       await flush();
 
       expect(fs.removeReference).toHaveBeenCalledWith(fnId, expect.anything());
@@ -89,7 +90,7 @@ describe("FunctionEngine resource change refresh", () => {
       const other = new ObjectId();
       executor.apply.mockRejectedValueOnce(new Error("boom"));
 
-      source().next({fns: [{_id: fnId}, {_id: other}], ...ids, operationType: "update"});
+      source().next({fns: [withId({}, fnId), withId({}, other)], ...ids, operationType: "update"});
       await flush();
 
       expect(executor.apply).toHaveBeenCalledTimes(2);
@@ -99,7 +100,7 @@ describe("FunctionEngine resource change refresh", () => {
   );
 
   it("should refresh a function with its importers locally without broadcasting", async () => {
-    const fn = {_id: fnId, name: "imported"};
+    const fn = withId({name: "imported"}, fnId);
     const plan = {
       routing: [],
       outdate: [fnId.toString(), "importer"],

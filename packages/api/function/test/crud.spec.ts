@@ -1,10 +1,10 @@
-import {DuplicateKeyError} from "@spica-server/data";
+import {DuplicateKeyError, withId} from "@spica-server/data";
 import {ObjectId} from "@spica-server/database-testing";
 import * as CRUD from "@spica-server/function/src/crud";
 
 describe("CRUD worker refresh", () => {
   const fnId = new ObjectId();
-  const fn = {_id: fnId, name: "my-function", language: "typescript"} as any;
+  const fn = withId({name: "my-function", language: "typescript"}, fnId) as any;
 
   let fs: {findById: jest.Mock};
   let engine: Record<string, jest.Mock>;
@@ -54,7 +54,7 @@ describe("CRUD worker refresh", () => {
 });
 
 describe("CRUD dependency assets", () => {
-  const fn = {_id: new ObjectId(), name: "my-function", language: "typescript"} as any;
+  const fn = withId({name: "my-function", language: "typescript"}, new ObjectId()) as any;
   const lockfile = Buffer.from("lock");
 
   let engine: Record<string, jest.Mock>;
@@ -117,8 +117,8 @@ describe("CRUD resource reference removal", () => {
 
   beforeEach(() => {
     fs = {
-      removeEnvVar: jest.fn().mockResolvedValue({_id: fnId}),
-      removeSecret: jest.fn().mockResolvedValue({_id: fnId})
+      removeEnvVar: jest.fn().mockResolvedValue(withId({}, fnId)),
+      removeSecret: jest.fn().mockResolvedValue(withId({}, fnId))
     };
     engine = {
       applyChangePlan: jest.fn().mockResolvedValue(undefined),
@@ -149,7 +149,7 @@ describe("CRUD resource reference removal", () => {
   });
 
   it("should still broadcast the refresh when ejecting through the endpoint", async () => {
-    const ss = {findById: jest.fn().mockResolvedValue({_id: resourceId, key: "API_KEY"})};
+    const ss = {findById: jest.fn().mockResolvedValue(withId({key: "API_KEY"}, resourceId))};
 
     await CRUD.secret.eject(fs as any, ss as any, fnId, engine as any, resourceId);
 
@@ -159,8 +159,8 @@ describe("CRUD resource reference removal", () => {
 });
 
 describe("CRUD replace rename", () => {
-  const _id = new ObjectId();
-  const previous = {_id, name: "before", language: "javascript", timeout: 10, triggers: {}};
+  const id = new ObjectId();
+  const previous = withId({name: "before", language: "javascript", timeout: 10, triggers: {}}, id);
 
   let fs: {updateById: jest.Mock; replaceById: jest.Mock};
   let engine: {moveAssets: jest.Mock; applyChangePlan: jest.Mock};
@@ -180,7 +180,7 @@ describe("CRUD replace rename", () => {
     CRUD.replace(
       fs as any,
       engine as any,
-      {...previous, _id: _id.toHexString(), ...changes} as any
+      {...previous, ...withId({}, id.toHexString()), ...changes} as any
     );
 
   it("should move the assets before applying a plan that renames the directory", async () => {
@@ -207,7 +207,7 @@ describe("CRUD replace rename", () => {
       "Failed to move the files of function before to after: bucket unavailable"
     );
 
-    expect(fs.replaceById).toHaveBeenCalledWith(_id, expect.objectContaining({name: "before"}));
+    expect(fs.replaceById).toHaveBeenCalledWith(id, expect.objectContaining({name: "before"}));
     expect(engine.applyChangePlan).not.toHaveBeenCalled();
   });
 

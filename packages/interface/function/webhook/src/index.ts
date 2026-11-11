@@ -9,7 +9,6 @@ import {
 } from "@spica-server/interface-data";
 
 export interface Webhook {
-  _id?: Id;
   title: string;
   url: string;
   body: string;
@@ -30,7 +29,6 @@ export interface Trigger {
 }
 
 export interface Log {
-  _id?: Id;
   webhook: string;
   succeed: boolean;
   content: {
@@ -67,7 +65,7 @@ export enum ChangeKind {
 export interface TargetChange {
   kind: ChangeKind;
   target: string;
-  webhook?: Omit<Webhook, "_id">;
+  webhook?: Webhook;
 }
 
 export const WEBHOOK_OPTIONS = Symbol.for("WEBHOOK_OPTIONS");

@@ -12,6 +12,7 @@ import * as CRUD from "./crud.js";
 import {FunctionEngine} from "./engine.js";
 import {LogRepository} from "@spica-server/interface-function-log";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
+import {idOf} from "@spica-server/data";
 
 const _module = "function";
 
@@ -51,7 +52,7 @@ export function registerAssetHandlers(
       const schema = omitRemovedFields(resource.contents.schema);
       const fn: any = await CRUD.insert(functions, engine, schema);
 
-      await CRUD.index.write(functions, engine, fn._id, resource.contents.index);
+      await CRUD.index.write(functions, engine, idOf(fn), resource.contents.index);
 
       await CRUD.dependencies.install(engine, fn, resource.contents.package.dependencies);
     },
@@ -60,36 +61,34 @@ export function registerAssetHandlers(
       const schema = omitRemovedFields(resource.contents.schema);
       const fn: any = await CRUD.replace(functions, engine, schema);
 
-      await CRUD.index.write(functions, engine, fn._id, resource.contents.index);
+      await CRUD.index.write(functions, engine, idOf(fn), resource.contents.index);
 
       fn.dependencies = resource.contents.package.dependencies;
       await CRUD.dependencies.update(engine, fn);
     },
 
     delete: async (resource: Resource<FunctionContents>) => {
-      await CRUD.remove(functions, engine, logs, resource._id);
+      await CRUD.remove(functions, engine, logs, idOf(resource));
     }
   };
 
   registrar.operator(_module, operator);
 
-  const exporter = async (_id: string) => {
-    if (!CRUD.functionIds().isValid(_id)) {
-      return Promise.reject(`${_id} is not a valid id.`);
+  const exporter = async (id: string) => {
+    if (!CRUD.functionIds().isValid(id)) {
+      return Promise.reject(`${id} is not a valid id.`);
     }
 
-    const fn = (await functions.findById(
-      CRUD.functionIds().parse(_id)
-    )) as FunctionWithDependencies;
+    const fn = (await functions.findById(CRUD.functionIds().parse(id))) as FunctionWithDependencies;
 
     if (!fn) {
-      return Promise.reject(`Function does not exist with _id ${_id}`);
+      return Promise.reject(`Function does not exist with id ${id}`);
     }
 
     const promises = [];
 
     // schema
-    promises.push(manager.write(_module, _id, "schema", omitRemovedFields(fn), "yaml"));
+    promises.push(manager.write(_module, id, "schema", omitRemovedFields(fn), "yaml"));
 
     // dependencies
     const dependencies = await engine.getPackages(fn).then(deps => {
@@ -100,13 +99,13 @@ export function registerAssetHandlers(
       return depsDef;
     });
 
-    promises.push(manager.write(_module, _id, "package", {dependencies}, "json"));
+    promises.push(manager.write(_module, id, "package", {dependencies}, "json"));
 
     // index
     const index = await engine.read(fn, "index");
 
     promises.push(
-      manager.write(_module, _id, "index", index, fn.language == "javascript" ? "js" : "ts")
+      manager.write(_module, id, "index", index, fn.language == "javascript" ? "js" : "ts")
     );
 
     Promise.all(promises);

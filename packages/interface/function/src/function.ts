@@ -2,7 +2,7 @@ import {JSONSchema7} from "json-schema";
 import {Observable} from "rxjs";
 import {EnvVar} from "@spica-server/interface-env_var";
 import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface-secret";
-import {Id} from "@spica-server/interface-data";
+import {Id, Keyed} from "@spica-server/interface-data";
 
 export enum EnvRelation {
   Resolved,
@@ -18,7 +18,6 @@ export interface Function<
   ER extends EnvRelation = EnvRelation.NotResolved,
   SR extends SecretRelation = SecretRelation.NotResolved
 > {
-  _id?: any;
   name: string;
   description?: string;
   env_vars?: ER extends EnvRelation.Resolved ? EnvVar[] : Id[];
@@ -52,11 +51,10 @@ export interface Dependency {
 
 export type FunctionWithDependencies = Function & {dependencies: Dependency};
 
-export interface FunctionRepresentative {
-  _id: any;
+export type FunctionRepresentative = Keyed<{
   module?: "function";
   contents: FunctionContents;
-}
+}>;
 
 export interface FunctionContents {
   schema: Function;

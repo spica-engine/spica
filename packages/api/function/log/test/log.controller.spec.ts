@@ -2,7 +2,7 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {LogModule} from "@spica-server/function-log";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {clearStorage, contractSuite} from "@spica-server/database-testing";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {
@@ -48,7 +48,7 @@ contractSuite("Log Controller", engine => {
     const functions = module.get<FunctionRepository>(FUNCTION_REPOSITORY);
     const sink = module.get<LogSink>(FUNCTION_LOG_SINK);
 
-    fnId = String((await functions.insert({name: "my-fn", language: "javascript"} as any))._id);
+    fnId = String(idOf(await functions.insert({name: "my-fn", language: "javascript"} as any)));
     deletedFnId = String(module.get<IdTypes>(ID_TYPES).unscoped().generate());
 
     for (const [content, fn] of [

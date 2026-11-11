@@ -1,8 +1,7 @@
-import {ExpiringRepository, Id} from "@spica-server/interface-data";
+import {ExpiringRepository} from "@spica-server/interface-data";
 import {LogLevels, LogChannels} from "@spica-server/interface-function-runtime";
 
 export interface Log {
-  _id: Id;
   function: string;
   event_id: string;
   content: string;
@@ -31,7 +30,7 @@ export interface LogRepository extends ExpiringRepository {
 export const FUNCTION_LOG_REPOSITORY = Symbol.for("FUNCTION_LOG_REPOSITORY");
 
 export interface LogSink {
-  insert(log: Omit<Log, "_id">): Promise<unknown>;
+  insert(log: Log): Promise<unknown>;
 }
 
 export const FUNCTION_LOG_SINK = Symbol.for("FUNCTION_LOG_SINK");

@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService, ReturnDocument} from "@spica-server/database";
+import {BaseCollection, DatabaseService, ObjectId, ReturnDocument} from "@spica-server/database";
 import {Id} from "@spica-server/interface-data";
 import {
   Log,
@@ -65,6 +65,6 @@ export class MongoWebhookLogRepository
   }
 
   deleteByIds(ids: Id[]) {
-    return this.deleteMany({_id: {$in: ids}});
+    return this.deleteMany({_id: {$in: ids as ObjectId[]}});
   }
 }

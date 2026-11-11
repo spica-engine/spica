@@ -14,6 +14,7 @@ import {ARRAY, DATE, DEFAULT, NUMBER} from "@spica-server/core";
 import {COLLECTION_QUERY, CollectionQueryFacade, ReadSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {FUNCTION_LOG_REPOSITORY, LogRepository} from "@spica-server/interface-function-log";
+import {systemKeyField} from "@spica-server/data";
 
 @Controller("function-logs")
 export class LogController {
@@ -55,7 +56,7 @@ export class LogController {
     return this.queries.find("function_logs", {
       createdBetween: {from: begin, to: end},
       where,
-      sort: {_id: -1},
+      sort: {[systemKeyField()]: -1},
       skip: skip > 0 ? skip : undefined,
       limit: limit > 0 ? limit : undefined,
       relations: ["function"]

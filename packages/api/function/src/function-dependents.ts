@@ -11,6 +11,7 @@ import {
 } from "@spica-server/interface-function";
 import {refreshPlan} from "./change.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
+import {idOf} from "@spica-server/data";
 
 const PACKAGE_READ_CONCURRENCY = 16;
 const LOCAL_DEPENDENCY_PROTOCOL = "file:";
@@ -30,8 +31,8 @@ export class FunctionDependents {
     const dependents = await this.find(fn);
     await this.rebuildBundled(dependents);
     return refreshPlan(
-      fn._id.toString(),
-      dependents.map(dependent => dependent._id.toString())
+      idOf(fn).toString(),
+      dependents.map(dependent => idOf(dependent).toString())
     );
   }
 
