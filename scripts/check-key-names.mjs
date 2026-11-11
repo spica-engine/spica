@@ -8,6 +8,8 @@ const SCANNED_ROOTS = ["packages", "apps"];
 
 const EXEMPT_PREFIXES = [
   "packages/data/mongodb/",
+  "packages/database/",
+  "packages/interface/database/",
   "packages/devkit/database/",
   "packages/devkit/internal_common/src/key.ts",
   "packages/devkit/auth/test/id.spec.ts",

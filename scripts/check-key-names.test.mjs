@@ -79,6 +79,8 @@ describe("check-key-names", () => {
     it("should skip the places where the key name is the engine's own", () => {
       const content = `a._id;\n`;
       write("packages/data/mongodb/src/a.ts", content);
+      write("packages/database/src/a.ts", content);
+      write("packages/interface/database/src/a.ts", content);
       write("packages/devkit/database/src/a.ts", content);
       write("apps/panel/src/a.ts", content);
       write("packages/filter/src/a.ts", content);
