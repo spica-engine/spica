@@ -2,6 +2,7 @@ import {Logger, Module, OnApplicationShutdown, Inject} from "@nestjs/common";
 import {DataAdapter} from "@spica-server/data";
 import {createTables, Orm} from "@spica-server/data-postgresql-orm";
 import {
+  CHANGE_FEED,
   COLLECTION_NAMES,
   COLLECTION_QUERY,
   DATA_HEALTH,
@@ -11,7 +12,10 @@ import {
   RESULT_SHAPER
 } from "@spica-server/interface-data";
 import pg from "pg";
+import {installChangeSupport, PostgresChangeFeed} from "./change/index.js";
 import {PostgresCollectionNames} from "./collection-names.js";
+import {PostgresRealtime} from "./realtime/index.js";
+import {REALTIME} from "@spica-server/interface-realtime";
 import {systemEntities} from "./entities/index.js";
 import {PostgresExpiry} from "./expiry/index.js";
 import {PostgresDataHealth} from "./health.js";
@@ -62,6 +66,7 @@ async function connectWithSystemTables(uri: string, options: PostgresConnectionO
   const pool = await connect(uri, options);
   try {
     await createTables(pool, systemEntities);
+    await installChangeSupport(pool);
   } catch (error) {
     await pool.end();
     throw error;
@@ -106,6 +111,8 @@ export class PostgresDataAdapter {
           {provide: BUCKET_RULE_VALIDATOR, useClass: PostgresBucketRuleValidator},
           {provide: BUCKET_SCHEMA_EXTENSION, useValue: postgresBucketSchema},
           {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
+          {provide: CHANGE_FEED, useClass: PostgresChangeFeed},
+          {provide: REALTIME, useClass: PostgresRealtime},
           {provide: COLLECTION_NAMES, useClass: PostgresCollectionNames},
           {provide: DATA_HEALTH, useClass: PostgresDataHealth}
         ],
@@ -123,6 +130,8 @@ export class PostgresDataAdapter {
           BUCKET_RULE_VALIDATOR,
           BUCKET_SCHEMA_EXTENSION,
           REPOSITORY_CLASSES,
+          CHANGE_FEED,
+          REALTIME,
           COLLECTION_NAMES,
           DATA_HEALTH
         ]

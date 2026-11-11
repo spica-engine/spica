@@ -1,21 +1,20 @@
 import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId, mongoOnly} from "@spica-server/database-testing";
+import {ObjectId, contractSuite} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {AssetModule} from "@spica-server/asset";
 import {FunctionModule} from "@spica-server/function";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
+import {randomUUID} from "crypto";
 import os from "os";
 import fs from "fs";
 import path from "path";
 import {PreferenceModule} from "@spica-server/preference";
 import {SecretModule} from "@spica-server/secret";
 
-mongoOnly("FunctionModule subscribes to the change feed, which PostgreSQL gets in Part 10");
-
-describe("function", () => {
+contractSuite("function", engine => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
   }
@@ -40,7 +39,7 @@ describe("function", () => {
   const moduleMeta: ModuleMetadata = {
     imports: [
       CoreTestingModule,
-      DatabaseTestingModule.replicaSet(),
+      engine.module(),
       PreferenceModule.forRoot(),
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
@@ -101,7 +100,7 @@ describe("function", () => {
 
   let fnv1Resource;
   let fnv1;
-  const fnId = new ObjectId().toString();
+  const fnId = engine.name == "mongodb" ? new ObjectId().toString() : randomUUID();
   let fnv1Created;
 
   let fnv2Resource;

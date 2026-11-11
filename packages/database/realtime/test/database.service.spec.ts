@@ -9,7 +9,9 @@ import {bufferCount, delay, first, skip, take, tap} from "rxjs/operators";
 import {RealtimeDatabaseService} from "@spica-server/database-realtime/src/database.service";
 import {ChunkKind, SequenceKind} from "@spica-server/interface-realtime";
 
-mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
+mongoOnly(
+  "it tests the MongoDB realtime service and its change streams; PostgreSQL realtime is covered by the specs in data-postgresql"
+);
 
 const LATENCY = 500;
 

@@ -1,8 +1,8 @@
+import {Inject} from "@nestjs/common";
 import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
-import {RealtimeDatabaseService} from "@spica-server/database-realtime";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {getConnectionHandlers, RealtimeOptionsBuilder} from "@spica-server/realtime";
-import {ChunkKind} from "@spica-server/interface-realtime";
+import {ChunkKind, REALTIME, Realtime} from "@spica-server/interface-realtime";
 import {resourceFilterFunction} from "@spica-server/passport-guard";
 
 @WebSocketGateway({
@@ -11,7 +11,7 @@ import {resourceFilterFunction} from "@spica-server/passport-guard";
 export class ApikeyRealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   readonly COLLECTION = "apikey";
   constructor(
-    private realtime: RealtimeDatabaseService,
+    @Inject(REALTIME) private realtime: Realtime,
     private guardService: GuardService
   ) {}
 
@@ -38,6 +38,9 @@ export class ApikeyRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
   }
 
   async prepareOptions(_client, req) {
-    return RealtimeOptionsBuilder.fromQuery(req, {useResourceFilter: true});
+    return RealtimeOptionsBuilder.fromQuery(req, {
+      useResourceFilter: true,
+      language: this.realtime.filterLanguage
+    });
   }
 }

@@ -5,14 +5,12 @@ import fs from "fs";
 import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
-
-mongoOnly("FunctionModule subscribes to the change feed, which PostgreSQL gets in Part 10");
 
 /**
  * Tests for HTTP trigger schema validation on create (POST), read (GET), and update (PUT) operations.
@@ -24,7 +22,7 @@ mongoOnly("FunctionModule subscribes to the change feed, which PostgreSQL gets i
  *  - allOf conditional: authorize:true requires authenticate.minItems=1
  *  - additionalProperties: false
  */
-describe("Function HTTP Trigger Schema", () => {
+contractSuite("Function HTTP Trigger Schema", engine => {
   let app: INestApplication;
   let request: Request;
 
@@ -54,7 +52,7 @@ describe("Function HTTP Trigger Schema", () => {
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
@@ -400,7 +398,11 @@ describe("Function HTTP Trigger Schema", () => {
     });
 
     it("should return 404 for a non-existent function id", async () => {
-      const res = await request.get("/function/000000000000000000000000");
+      const unknownId =
+        engine.name == "mongodb"
+          ? "000000000000000000000000"
+          : "00000000-0000-7000-8000-000000000000";
+      const res = await request.get(`/function/${unknownId}`);
 
       expect(res.statusCode).toEqual(404);
     });

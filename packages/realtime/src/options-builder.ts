@@ -1,4 +1,5 @@
 import {ResourceFilterSpec} from "@spica-server/interface-data";
+import {FilterLanguage} from "@spica-server/interface-realtime";
 
 export class RealtimeOptionsError extends Error {
   constructor(
@@ -13,8 +14,10 @@ export class RealtimeOptionsError extends Error {
 export class RealtimeOptionsBuilder {
   protected options: any = {};
 
+  constructor(protected readonly language: FilterLanguage = "json") {}
+
   applyResourceFilter(resourceFilter: ResourceFilterSpec | undefined): this {
-    if (!this.options.filter) {
+    if (this.language == "json" && !this.options.filter) {
       this.options.filter = {$and: []};
     }
 
@@ -24,6 +27,14 @@ export class RealtimeOptionsBuilder {
   }
 
   filter(rawFilter: string): this {
+    if (this.language == "expression") {
+      if (!rawFilter.trim()) {
+        throw new RealtimeOptionsError(400, "Invalid filter: the expression is empty.");
+      }
+      this.options.filter = rawFilter;
+      return this;
+    }
+
     if (!this.options.filter) {
       this.options.filter = {$and: []};
     }
@@ -81,8 +92,11 @@ export class RealtimeOptionsBuilder {
     return this.options;
   }
 
-  static fromQuery(req: any, opts: {useResourceFilter?: boolean; useFilter?: boolean} = {}): any {
-    const builder = new RealtimeOptionsBuilder();
+  static fromQuery(
+    req: any,
+    opts: {useResourceFilter?: boolean; useFilter?: boolean; language?: FilterLanguage} = {}
+  ): any {
+    const builder = new RealtimeOptionsBuilder(opts.language);
 
     if (opts.useResourceFilter) {
       builder.applyResourceFilter(req.resourceFilter);

@@ -13,7 +13,9 @@ import {ChunkKind} from "@spica-server/interface-realtime";
 import {DashboardRealtimeModule} from "../src";
 import {GuardService} from "@spica-server/passport-guard-services";
 
-mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
+mongoOnly(
+  "its documents, ids and filter syntax are MongoDB's; PostgreSQL realtime of this collection is covered by the realtime specs in data-postgresql"
+);
 
 function url(path: string, query?: {[k: string]: string | string[]}) {
   const url = new URL(path, "ws://insteadof");

@@ -1,4 +1,6 @@
 export * from "./src/adapter.js";
+export * from "./src/change/index.js";
+export * from "./src/realtime/index.js";
 export * from "./src/version.js";
 export * from "./src/health.js";
 export * from "./src/id.js";

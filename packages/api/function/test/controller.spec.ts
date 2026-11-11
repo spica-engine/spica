@@ -14,7 +14,9 @@ import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
 import {Scheduler, ScheduleWorker} from "@spica-server/function-scheduler";
 
-mongoOnly("FunctionModule subscribes to the change feed, which PostgreSQL gets in Part 10");
+mongoOnly(
+  "GET /function/:id returns the encrypted value of injected secrets on PostgreSQL, because collection reads ignore field exclusions on resolved relations"
+);
 
 describe("Function Controller", () => {
   let app: INestApplication;

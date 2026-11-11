@@ -310,4 +310,49 @@ describe("RealtimeOptionsBuilder", () => {
       expect(() => RealtimeOptionsBuilder.fromQuery(req)).toThrowError(RealtimeOptionsError);
     });
   });
+
+  describe("when the filter is an expression", () => {
+    const request = (query: Record<string, string>) => ({query: new URLSearchParams(query)});
+
+    it("should keep the filter as the text it is and add no $and", () => {
+      const result = new RealtimeOptionsBuilder("expression")
+        .applyResourceFilter({include: ["a"], exclude: []})
+        .filter(`document.key == "a"`)
+        .result();
+
+      expect(result).toEqual({
+        filter: `document.key == "a"`,
+        resourceFilter: {include: ["a"], exclude: []}
+      });
+    });
+
+    it("should answer 400 for an empty expression", () => {
+      expect(() => new RealtimeOptionsBuilder("expression").filter("  ")).toThrow(
+        RealtimeOptionsError
+      );
+    });
+
+    it("should build the options of a request in the language it is given", () => {
+      const result = RealtimeOptionsBuilder.fromQuery(
+        request({filter: `document.key == "a"`, sort: '{"key":1}', limit: "2", skip: "1"}),
+        {useResourceFilter: true, useFilter: true, language: "expression"}
+      );
+
+      expect(result).toEqual({
+        filter: `document.key == "a"`,
+        resourceFilter: {include: [], exclude: []},
+        sort: {key: 1},
+        limit: 2,
+        skip: 1
+      });
+    });
+
+    it("should still parse a JSON filter when no language is given", () => {
+      const result = RealtimeOptionsBuilder.fromQuery(request({filter: '{"key":"a"}'}), {
+        useFilter: true
+      });
+
+      expect(result).toEqual({filter: {$and: [{key: "a"}]}});
+    });
+  });
 });

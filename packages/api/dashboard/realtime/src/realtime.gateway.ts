@@ -1,6 +1,6 @@
+import {Inject} from "@nestjs/common";
 import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
-import {RealtimeDatabaseService} from "@spica-server/database-realtime";
-import {ChunkKind} from "@spica-server/interface-realtime";
+import {ChunkKind, REALTIME, Realtime} from "@spica-server/interface-realtime";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {getConnectionHandlers} from "@spica-server/realtime";
 
@@ -11,7 +11,7 @@ export class RealtimeDashboardService implements OnGatewayConnection, OnGatewayD
   readonly COLLECTION = "dashboard";
 
   constructor(
-    private realtime: RealtimeDatabaseService,
+    @Inject(REALTIME) private realtime: Realtime,
     private guardService: GuardService
   ) {}
 

@@ -61,6 +61,13 @@ export class DatabaseTestingModule {
     };
   }
 
+  static connectPostgres(connectionUri: string): DynamicModule {
+    return {
+      module: DatabaseTestingModule,
+      imports: [DataModule.forRoot(testingPostgresAdapter(async () => connectionUri))]
+    };
+  }
+
   static connect(connectionUri: string, dbName?: string) {
     return {
       module: DatabaseTestingModule,

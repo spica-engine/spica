@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, ObjectId, stream, mongoOnly} from "@spica-server/database-testing";
+import {changeFeedReady, contractSuite} from "@spica-server/database-testing";
 import {CommandMemory} from "@spica-server/replication";
 import {provideRepository} from "@spica-server/data";
 import {
@@ -8,16 +8,14 @@ import {
   REPLICATION_SERVICE_OPTIONS
 } from "@spica-server/interface-replication";
 
-mongoOnly("database triggers and commands read the change feed, which PostgreSQL gets in Part 10");
-
-describe("Memory", () => {
+contractSuite("Memory", engine => {
   describe("Command", () => {
     let module: TestingModule;
     let memory: CommandMemory;
 
     beforeEach(async () => {
       module = await Test.createTestingModule({
-        imports: [DatabaseTestingModule.replicaSet()],
+        imports: [engine.module()],
         providers: [
           {provide: COMMAND_MEMORY_OPTIONS, useValue: {changeType: ["insert"]}},
           {provide: REPLICATION_SERVICE_OPTIONS, useValue: {expireAfterSeconds: 60}},
@@ -39,7 +37,7 @@ describe("Memory", () => {
       };
       memory.subscribe({
         next: msg => {
-          expect(ObjectId.isValid(msg._id)).toEqual(true);
+          expect(msg._id).toBeDefined();
           expect(msg).toEqual({
             _id: msg._id,
             created_at: expect.any(Date),
@@ -56,7 +54,7 @@ describe("Memory", () => {
         }
       });
 
-      stream.wait().then(() =>
+      changeFeedReady(module).then(() =>
         memory.publish({
           source: {
             id: "replica1",

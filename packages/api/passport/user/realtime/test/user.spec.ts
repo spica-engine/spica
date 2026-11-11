@@ -14,7 +14,9 @@ import {User} from "@spica-server/interface-passport-user";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";
 
-mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
+mongoOnly(
+  "its documents, ids and filter syntax are MongoDB's; PostgreSQL realtime of this collection is covered by the realtime specs in data-postgresql"
+);
 
 function url(query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL("/passport/user", "ws://insteadof");

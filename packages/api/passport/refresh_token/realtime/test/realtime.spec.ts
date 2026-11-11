@@ -13,7 +13,9 @@ import {ChunkKind} from "@spica-server/interface-realtime";
 import {RefreshTokenModule} from "../../src";
 import {REFRESH_TOKEN_REPOSITORY} from "@spica-server/interface-passport-refresh_token";
 
-mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
+mongoOnly(
+  "its documents, ids and filter syntax are MongoDB's; PostgreSQL realtime of this collection is covered by the realtime specs in data-postgresql"
+);
 
 function url(path, query) {
   const u = new URL(path, "ws://insteadof");

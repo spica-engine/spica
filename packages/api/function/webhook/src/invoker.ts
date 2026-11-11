@@ -67,11 +67,11 @@ export class WebhookInvoker implements OnModuleDestroy {
         operations: [trigger.options.type.toLowerCase() as ChangeOperation],
         document: "current"
       })
-      .subscribe((rawChange: any) => {
+      .subscribe(rawChange => {
         const change = {
-          type: rawChange.operationType,
-          document: rawChange.fullDocument || rawChange.fullDocumentBeforeChange,
-          documentKey: rawChange.documentKey._id.toString()
+          type: rawChange.operation,
+          document: rawChange.document || rawChange.previousDocument,
+          documentKey: rawChange.key
         };
 
         let body;

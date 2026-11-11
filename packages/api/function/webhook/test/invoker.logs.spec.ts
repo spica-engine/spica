@@ -32,8 +32,7 @@ describe("Webhook invoker logs", () => {
 
   afterEach(() => jest.restoreAllMocks());
 
-  const emitChange = () =>
-    changes.next({operationType: "insert", fullDocument: {}, documentKey: {_id: "1"}});
+  const emitChange = () => changes.next({operation: "insert", document: {}, key: "1"});
 
   it("should record a template that can not be rendered", async () => {
     inserts.mockResolvedValue(undefined);

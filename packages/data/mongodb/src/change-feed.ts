@@ -22,7 +22,7 @@ export class MongoChangeFeed implements ChangeFeed {
 
     return new Observable<ChangeEvent<T>>(observer => {
       const stream = this.db.collection(collection).watch(pipeline, streamOptions);
-      stream.on("change", change => observer.next(change as unknown as ChangeEvent<T>));
+      stream.on("change", change => observer.next(toChangeEvent<T>(change, collection)));
       stream.on("error", error => observer.error(error));
 
       return () => {
@@ -32,4 +32,22 @@ export class MongoChangeFeed implements ChangeFeed {
       };
     });
   }
+}
+
+function toChangeEvent<T>(change: any, collection: string): ChangeEvent<T> {
+  const event: ChangeEvent<T> = {
+    id: change._id._data,
+    operation: change.operationType,
+    collection: change.ns?.coll ?? collection,
+    key: change.documentKey?._id?.toString(),
+    document: change.fullDocument,
+    previousDocument: change.fullDocumentBeforeChange
+  };
+  if (change.updateDescription) {
+    event.changes = {
+      updated: change.updateDescription.updatedFields ?? {},
+      removed: change.updateDescription.removedFields ?? []
+    };
+  }
+  return event;
 }

@@ -1,22 +1,21 @@
 import {Observable} from "rxjs";
-import {Id} from "./id.js";
 
 export type ChangeOperation = "insert" | "update" | "replace" | "delete" | "drop";
 
 export interface ChangeEvent<T = any> {
   /**
-   * Resumes the feed after this change; equal for the same change on every replica.
+   * Equal for the same change on every replica; replicas deduplicate work on it.
    */
-  _id: {_data: string};
-  operationType: ChangeOperation | string;
-  ns?: {db?: string; coll: string};
-  documentKey?: {_id: Id};
-  updateDescription?: {
-    updatedFields?: {[key: string]: any};
-    removedFields?: string[];
+  id: string;
+  operation: ChangeOperation;
+  collection: string;
+  key?: string;
+  document?: T;
+  previousDocument?: T;
+  changes?: {
+    updated: {[key: string]: any};
+    removed: string[];
   };
-  fullDocument?: T;
-  fullDocumentBeforeChange?: T;
 }
 
 export interface ChangeFeedOptions {
@@ -32,6 +31,10 @@ export interface ChangeFeedOptions {
    * Attaches the document as it was before the change when the collection records it.
    */
   beforeChange?: "whenAvailable";
+  /**
+   * The subscriber needs only the operation and the key, so the engine may skip reading documents.
+   */
+  keysOnly?: boolean;
 }
 
 export interface ChangeFeed {

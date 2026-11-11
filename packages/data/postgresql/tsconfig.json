@@ -16,6 +16,9 @@
       "path": "../../interface/bucket/common"
     },
     {
+      "path": "../../realtime"
+    },
+    {
       "path": "../../interface/storage"
     },
     {
@@ -26,6 +29,9 @@
     },
     {
       "path": "../../interface/replication"
+    },
+    {
+      "path": "../../interface/realtime"
     },
     {
       "path": "../../interface/preference"
