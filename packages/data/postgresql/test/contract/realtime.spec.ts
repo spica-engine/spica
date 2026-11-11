@@ -228,7 +228,7 @@ contractSuite("realtime", engine => {
     it("should stay quiet about an insert beyond the limit", async () => {
       await insert({age: 10, title: "a"});
       await insert({age: 20, title: "b"});
-      const chunks = await open({sort: {age: 1}, limit: 2});
+      const chunks = await open({limit: 2});
 
       await insert({age: 30, title: "c"});
       await sleep(SETTLE_MS);
