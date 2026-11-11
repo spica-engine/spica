@@ -39,6 +39,9 @@ export class RefreshTokenRealtimeGateway implements OnGatewayConnection, OnGatew
   }
 
   async prepareOptions(_client, req) {
-    return RealtimeOptionsBuilder.fromQuery(req, {useResourceFilter: true});
+    return RealtimeOptionsBuilder.fromQuery(req, {
+      useResourceFilter: true,
+      language: this.realtime.filterLanguage
+    });
   }
 }

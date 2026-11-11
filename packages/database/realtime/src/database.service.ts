@@ -13,6 +13,8 @@ const CURSOR_READY_TIMEOUT_MS = 5000;
 
 @Injectable()
 export class RealtimeDatabaseService implements Realtime, OnModuleDestroy {
+  readonly filterLanguage = "json";
+
   constructor(private database: DatabaseService) {}
 
   private changeStreams = new Map<

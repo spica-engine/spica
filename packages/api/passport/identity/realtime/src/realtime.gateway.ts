@@ -39,6 +39,10 @@ export class IdentityRealtimeGateway implements OnGatewayConnection, OnGatewayDi
   }
 
   async prepareOptions(_client, req) {
-    return RealtimeOptionsBuilder.fromQuery(req, {useResourceFilter: true, useFilter: true});
+    return RealtimeOptionsBuilder.fromQuery(req, {
+      useResourceFilter: true,
+      useFilter: true,
+      language: this.realtime.filterLanguage
+    });
   }
 }

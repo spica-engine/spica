@@ -1,4 +1,4 @@
-import {ResourceFilterSpec} from "@spica-server/interface-data";
+import {ResourceFilterSpec, WhereCondition} from "@spica-server/interface-data";
 import {Observable} from "rxjs";
 
 export enum ChunkKind {
@@ -37,6 +37,8 @@ export enum SequenceKind {
   Insert = 2
 }
 
+export type FilterLanguage = "json" | "expression";
+
 export interface RealtimeOptions {
   /**
    * A MongoDB filter object, or a Spica expression for engines that filter with expressions.
@@ -52,9 +54,18 @@ export interface RealtimeOptions {
   applyAcl?: boolean;
   user?: unknown;
   hashSecret?: string;
+  /**
+   * Conditions the gateway builds itself, for collections that are not filtered by clients.
+   */
+  where?: {[field: string]: WhereCondition};
+  createdBetween?: {from: Date; to: Date};
 }
 
 export interface Realtime {
+  /**
+   * What a client's `filter` is written in: a MongoDB filter, or a Spica expression.
+   */
+  readonly filterLanguage: FilterLanguage;
   find<T extends Document = any>(
     name: string,
     options?: RealtimeOptions

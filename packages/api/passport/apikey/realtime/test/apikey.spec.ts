@@ -13,7 +13,9 @@ import {ChunkKind} from "@spica-server/interface-realtime";
 import {ApiKeyModule} from "@spica-server/passport-apikey";
 import {ApiKey} from "@spica-server/interface-passport-apikey";
 
-mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
+mongoOnly(
+  "its documents, ids and filter syntax are MongoDB's; PostgreSQL realtime of this collection is covered by the realtime specs in data-postgresql"
+);
 
 function url(query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL("/passport/apikey", "ws://insteadof");

@@ -12,7 +12,9 @@ import {
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {ChunkKind} from "@spica-server/interface-realtime";
 
-mongoOnly("realtime over database change streams on PostgreSQL, Part 10");
+mongoOnly(
+  "it writes MongoDB log documents directly; the gateway on PostgreSQL is covered by realtime.postgresql.spec.ts"
+);
 
 function url(path: string, query?: {[k: string]: string | string[]}) {
   const url = new URL(path, "ws://insteadof");

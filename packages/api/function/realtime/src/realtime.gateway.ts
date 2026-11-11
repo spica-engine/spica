@@ -36,6 +36,9 @@ export class RealtimeFunctionService implements OnGatewayConnection, OnGatewayDi
   }
 
   async prepareOptions(_client, req) {
-    return RealtimeOptionsBuilder.fromQuery(req, {useFilter: true});
+    return RealtimeOptionsBuilder.fromQuery(req, {
+      useFilter: true,
+      language: this.realtime.filterLanguage
+    });
   }
 }
