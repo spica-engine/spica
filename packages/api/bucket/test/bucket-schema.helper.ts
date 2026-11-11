@@ -1,5 +1,6 @@
 import {composeBucketSchema} from "@spica-server/bucket-common";
 import {OBJECT_ID, OBJECTID_STRING, UUID, DATE_TIME, Validator} from "@spica-server/core-schema";
+import {MongoIdTypes} from "@spica-server/data-mongodb";
 import {BucketSchemaExtension} from "@spica-server/interface-bucket";
 import BaseSchema from "../src/schemas/bucket.schema.json" with {type: "json"};
 import OriginalSchema from "./fixtures/bucket.schema.original.json" with {type: "json"};
@@ -23,7 +24,8 @@ function createValidator(extension?: BucketSchemaExtension) {
       customFields: CUSTOM_FIELDS,
       keywords: extension?.keywords ?? []
     },
-    {}
+    {},
+    new MongoIdTypes()
   );
 }
 

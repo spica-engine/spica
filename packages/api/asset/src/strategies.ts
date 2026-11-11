@@ -1,4 +1,5 @@
 import {compareResourceGroups} from "@spica-server/core-differ";
+import {systemKeyField} from "@spica-server/data";
 import {Asset, Resource, IInstallationStrategy} from "@spica-server/interface-asset";
 
 export abstract class InstallationStrategy implements IInstallationStrategy {
@@ -90,7 +91,7 @@ export class UpgradeInstalledAsset extends InstallationStrategy {
     const desiredResources = this.asset.resources;
 
     this.changes = compareResourceGroups<Resource<object>>(desiredResources, existingResources, {
-      uniqueField: "_id",
+      uniqueField: systemKeyField(),
       ignoredFields: ["installation_status", "failure_message"]
     });
     return this.changes;
@@ -137,7 +138,7 @@ export class InstallAsset extends InstallationStrategy {
     const desiredResources = this.asset.resources;
 
     this.changes = compareResourceGroups<Resource<object>>(desiredResources, existingResources, {
-      uniqueField: "_id",
+      uniqueField: systemKeyField(),
       ignoredFields: ["installation_status", "failure_message"]
     });
     return this.changes;
