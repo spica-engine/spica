@@ -5,6 +5,7 @@ import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DashboardModule} from "@spica-server/dashboard";
 import {contractSuite} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
+import {idOf, withId} from "@spica-server/data";
 
 contractSuite("Dashboard insert", engine => {
   let app: INestApplication;
@@ -39,15 +40,15 @@ contractSuite("Dashboard insert", engine => {
 
     expect(statusCode).toBe(201);
     expect(body).toEqual({_id: expect.any(String), ...dashboard});
-    expect((await req.get(`/dashboard/${body._id}`)).body).toEqual(body);
+    expect((await req.get(`/dashboard/${idOf(body)}`)).body).toEqual(body);
   });
 
   it("should keep the id the caller sends", async () => {
     const first = await req.post("/dashboard", dashboard);
-    await req.delete(`/dashboard/${first.body._id}`);
+    await req.delete(`/dashboard/${idOf(first.body)}`);
 
-    const {body} = await req.post("/dashboard", {...dashboard, _id: first.body._id});
+    const {body} = await req.post("/dashboard", withId({...dashboard}, idOf(first.body)));
 
-    expect(body._id).toBe(first.body._id);
+    expect(idOf(body)).toBe(idOf(first.body));
   });
 });

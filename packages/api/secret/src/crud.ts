@@ -3,7 +3,7 @@ import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface-sec
 import {encrypt} from "@spica-server/core-encryption";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
-import {ids} from "@spica-server/data";
+import {ids, idOf, withId, assignId} from "@spica-server/data";
 import {
   CollectionQueryFacade,
   Id,
@@ -55,8 +55,8 @@ export async function insert(ss: SecretService, body: DecryptedSecret): Promise<
     updated_at: new Date()
   };
 
-  if (body._id) {
-    secret._id = secretIds().parse(body._id);
+  if (idOf(body)) {
+    assignId(secret, secretIds().parse(idOf(body)));
   }
 
   const insertedSecret = await ss.insert(secret);
@@ -71,12 +71,10 @@ export async function replace(
 ): Promise<HiddenSecret> {
   const encrypted = encrypt(body.value, ss.encryptionSecret);
 
-  const result = await ss.replaceById(id, {
-    _id: id,
-    key: body.key,
-    value: encrypted,
-    updated_at: new Date()
-  });
+  const result = await ss.replaceById(
+    id,
+    withId({key: body.key, value: encrypted, updated_at: new Date()}, id)
+  );
 
   if (!result) {
     throw new NotFoundException(`Secret with ID ${id} not found`);

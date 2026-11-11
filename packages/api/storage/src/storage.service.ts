@@ -25,7 +25,7 @@ import {
 } from "@spica-server/transaction";
 
 import fs from "fs";
-import {DuplicateKeyError, ids} from "@spica-server/data";
+import {DuplicateKeyError, ids, stripId, idOf, withId} from "@spica-server/data";
 import {
   COLLECTION_QUERY,
   CollectionQueryFacade,
@@ -201,10 +201,10 @@ export class StorageService {
     }
   }
 
-  async updateMeta(_id: Id, name: string) {
-    const existing = await this.objects.findById(_id);
+  async updateMeta(id: Id, name: string) {
+    const existing = await this.objects.findById(id);
     if (!existing) {
-      throw new NotFoundException(`Storage object ${_id} could not be found`);
+      throw new NotFoundException(`Storage object ${id} could not be found`);
     }
 
     const oldName = existing.name;
@@ -237,10 +237,10 @@ export class StorageService {
     return existing;
   }
 
-  async update(_id: Id, object: StorageObject<fs.ReadStream | Buffer>): Promise<StorageObjectMeta> {
-    const existing = await this.objects.findById(_id);
+  async update(id: Id, object: StorageObject<fs.ReadStream | Buffer>): Promise<StorageObjectMeta> {
+    const existing = await this.objects.findById(id);
     if (!existing) {
-      throw new NotFoundException(`Storage object ${_id} could not be found`);
+      throw new NotFoundException(`Storage object ${id} could not be found`);
     }
 
     await this.validateTotalStorageSize(object.content.size - existing.content.size);
@@ -258,11 +258,11 @@ export class StorageService {
       }
 
       delete object.content.data;
-      delete object._id;
+      stripId(object);
       object.updated_at = new Date();
 
-      return this.objects.updateById(_id, object).then(() => {
-        return {...object, _id: _id};
+      return this.objects.updateById(id, object).then(() => {
+        return withId(object, id);
       });
     } catch (error) {
       this.logger.error(
@@ -305,7 +305,7 @@ export class StorageService {
       },
       rollback: async () => {
         if (insertedObjects) {
-          const idsToDelete = insertedObjects.map(o => o._id as Id);
+          const idsToDelete = insertedObjects.map(o => idOf(o) as Id);
           await this.objects.deleteByIds(idsToDelete);
         }
       }

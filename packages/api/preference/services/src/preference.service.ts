@@ -7,6 +7,7 @@ import {
 import {Observable} from "rxjs";
 import {deepCopy} from "@spica-server/core-patch";
 import {PreferenceChangeDispatcher} from "./change-dispatcher.js";
+import {idOf, withId} from "@spica-server/data";
 
 @Injectable()
 export class PreferenceService {
@@ -42,7 +43,7 @@ export class PreferenceService {
       const sub = this.changeDispatcher.watch().subscribe(change => {
         chain = chain.then(async () => {
           try {
-            const preference = (await this.preferences.findById(change.documentKey._id)) as T;
+            const preference = (await this.preferences.findById(idOf(change.documentKey))) as T;
             if (preference && preference.scope === scope) {
               observer.next(preference);
             }
@@ -66,7 +67,7 @@ export class PreferenceService {
     if (result) {
       this.changeDispatcher.dispatch({
         operationType: "replace",
-        documentKey: {_id: result._id}
+        documentKey: withId({}, idOf(result))
       });
     }
     return result;
@@ -76,7 +77,7 @@ export class PreferenceService {
     const result = await this.preferences.insert(preference);
     this.changeDispatcher.dispatch({
       operationType: "insert",
-      documentKey: {_id: result._id}
+      documentKey: withId({}, idOf(result))
     });
     return result;
   }

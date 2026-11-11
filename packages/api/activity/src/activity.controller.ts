@@ -14,7 +14,7 @@ import {
 import {ActivityService} from "@spica-server/activity-services";
 import {DATE, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
-import {ID, ids} from "@spica-server/data";
+import {ID, ids, systemKeyField} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
 
 const ACTIVITY_COLLECTION = "activity";
@@ -60,7 +60,7 @@ export class ActivityController {
       relations: ["identifier", "username"],
       where: Object.keys(where).length ? where : undefined,
       createdBetween: hasRange ? {from: begin, to: end} : undefined,
-      sort: {_id: -1},
+      sort: {[systemKeyField()]: -1},
       skip,
       limit
     });

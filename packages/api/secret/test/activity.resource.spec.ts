@@ -1,11 +1,10 @@
 import {Action} from "@spica-server/interface-activity";
 import {createSecretActivity} from "../src/activity.resource";
+import {withId} from "@spica-server/data";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {
-    const res = {
-      _id: "secret_id"
-    };
+    const res = withId({}, "secret_id");
 
     const activities = createSecretActivity(
       {action: Action.POST, identifier: "test_user"},

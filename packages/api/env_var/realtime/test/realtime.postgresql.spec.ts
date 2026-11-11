@@ -16,6 +16,7 @@ import {ChunkKind} from "@spica-server/interface-realtime";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
+import {idOf, withId} from "@spica-server/data";
 
 jest.setTimeout(60_000);
 
@@ -126,7 +127,7 @@ describe("EnvVar Realtime on PostgreSQL", () => {
 
     expect(messages).toEqual([
       {kind: ChunkKind.EndOfInitial},
-      {kind: ChunkKind.Insert, document: expect.objectContaining({_id: inserted._id})}
+      {kind: ChunkKind.Insert, document: expect.objectContaining(withId({}, idOf(inserted)))}
     ]);
   });
 
@@ -134,10 +135,10 @@ describe("EnvVar Realtime on PostgreSQL", () => {
     const inserted = await insertEnvVar({key: "GONE", value: "1"});
     const messages = await connect();
 
-    await req.delete(`/env-var/${inserted._id}`);
+    await req.delete(`/env-var/${idOf(inserted)}`);
     await until(() => messages.length > 2);
 
     expect(kinds(messages)).toEqual(["Initial", "EndOfInitial", "Delete"]);
-    expect(messages[2].document).toEqual({_id: inserted._id});
+    expect(messages[2].document).toEqual(withId({}, idOf(inserted)));
   });
 });

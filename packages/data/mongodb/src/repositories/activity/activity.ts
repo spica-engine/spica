@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 import {Id} from "@spica-server/interface-data";
 import {
   Activity,
@@ -29,6 +29,6 @@ export class MongoActivityRepository
   }
 
   deleteByIds(ids: Id[]) {
-    return this.deleteMany({_id: {$in: ids}});
+    return this.deleteMany({_id: {$in: ids as ObjectId[]}});
   }
 }

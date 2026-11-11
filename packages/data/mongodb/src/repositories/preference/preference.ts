@@ -2,6 +2,7 @@ import {Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService, ReturnDocument} from "@spica-server/database";
 import {Id} from "@spica-server/interface-data";
 import {Preference, PreferenceRepository} from "@spica-server/interface-preference";
+import {withId} from "@spica-server/data";
 
 @Injectable()
 export class MongoPreferenceRepository
@@ -13,7 +14,7 @@ export class MongoPreferenceRepository
   }
 
   findById(id: Id) {
-    return this._coll.findOne({_id: id});
+    return this._coll.findOne(withId({}, id));
   }
 
   findByScope(scope: string) {

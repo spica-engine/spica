@@ -9,7 +9,7 @@ export class StatusService {
     return parseFloat((bytes * Math.pow(10, -6)).toFixed(2));
   }
 
-  record(status: Omit<ApiStatus, "_id" | "count">) {
+  record(status: Omit<ApiStatus, "count">) {
     return this.statuses.record(status);
   }
 

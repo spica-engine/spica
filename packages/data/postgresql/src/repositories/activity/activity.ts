@@ -10,6 +10,7 @@ import {
 import {activities} from "../../entities/index.js";
 import {PostgresExpiry} from "../../expiry/index.js";
 import {ORM} from "../../orm.js";
+import {idOf} from "@spica-server/data";
 
 @Injectable()
 export class PostgresActivityRepository implements ActivityRepository {
@@ -25,7 +26,7 @@ export class PostgresActivityRepository implements ActivityRepository {
 
   async insertMany(items: Activity[]) {
     const inserted = await this.orm.insertMany(activities, items);
-    return inserted.map(activity => activity._id);
+    return inserted.map(activity => idOf(activity));
   }
 
   async deleteById(id: Id) {

@@ -8,6 +8,7 @@ import {BucketModule, BucketCoreModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {keyed, keyFieldOf} from "../../bucket/test/support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Preference Integration", engine => {
   let module: TestingModule;
@@ -49,7 +50,7 @@ contractSuite("Preference Integration", engine => {
       description: "bucket",
       ...keyed(engine, {title: {type: "string", options: {translate: true}}})
     };
-    const bucketId = await req.post("/bucket", bucket).then(res => res.body._id);
+    const bucketId = await req.post("/bucket", bucket).then(res => idOf(res.body));
 
     const document = {
       title: {
@@ -84,7 +85,7 @@ contractSuite("Preference Integration", engine => {
       description: "bucket",
       ...keyed(engine, {title: {type: "string", options: {translate: true}}})
     };
-    const bucketId = await req.post("/bucket", bucket).then(res => res.body._id);
+    const bucketId = await req.post("/bucket", bucket).then(res => idOf(res.body));
 
     const document = {title: {en_US: "new title", fr_FR: "nouveau titre"}};
 

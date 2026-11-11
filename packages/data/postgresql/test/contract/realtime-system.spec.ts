@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {clearStorage, contractSuite} from "@spica-server/database-testing";
 import {ENV_VAR_REPOSITORY, EnvVarRepository} from "@spica-server/interface-env_var";
 import {
@@ -81,9 +81,9 @@ contractSuite("realtime of a system collection", engine => {
 
     const inserted = await envVars.insert({key: "A", value: "1"});
     await until(() => chunks.live().length > 0);
-    await envVars.replaceById(inserted._id, {key: "A", value: "2"});
+    await envVars.replaceById(idOf(inserted), {key: "A", value: "2"});
     await until(() => chunks.live().length > 1);
-    await envVars.deleteById(inserted._id);
+    await envVars.deleteById(idOf(inserted));
     await until(() => chunks.live().length > 2);
 
     const [insert, update, remove] = chunks.live();
@@ -92,7 +92,7 @@ contractSuite("realtime of a system collection", engine => {
     expect([ChunkKind.Update, ChunkKind.Replace]).toContain(update.kind);
     expect(update.document.value).toBe("2");
     expect(remove.kind).toBe(ChunkKind.Delete);
-    expect(keyOf(remove.document)).toBe(String(inserted._id));
+    expect(keyOf(remove.document)).toBe(String(idOf(inserted)));
   });
 
   it("should send only what matches the filter, and expunge what stops matching", async () => {
@@ -102,7 +102,7 @@ contractSuite("realtime of a system collection", engine => {
     await envVars.insert({key: "B", value: "1"});
     await until(() => chunks.live().length > 0);
     await sleep(SETTLE_MS);
-    await envVars.replaceById(kept._id, {key: "C", value: "1"});
+    await envVars.replaceById(idOf(kept), {key: "C", value: "1"});
     await until(() => chunks.live().length > 1);
 
     expect(kinds(chunks.live())).toEqual(["Insert", "Expunge"]);
@@ -112,7 +112,7 @@ contractSuite("realtime of a system collection", engine => {
   it("should send only the documents the resource filter lets through", async () => {
     const allowed = await envVars.insert({key: "A", value: "1"});
     await envVars.insert({key: "B", value: "1"});
-    const chunks = await open({resourceFilter: {include: [String(allowed._id)], exclude: []}});
+    const chunks = await open({resourceFilter: {include: [String(idOf(allowed))], exclude: []}});
 
     await envVars.insert({key: "C", value: "1"});
     await sleep(SETTLE_MS);
@@ -141,7 +141,7 @@ contractSuite("realtime of a system collection", engine => {
     await envVars.insert({key: "C", value: "1"});
     const chunks = await open({sort: {key: 1}, limit: 2});
 
-    await envVars.deleteById(first._id);
+    await envVars.deleteById(idOf(first));
     await until(() => chunks.live().some(chunk => chunk.kind == ChunkKind.Initial));
 
     expect(kinds(chunks.live())).toContain("Delete");

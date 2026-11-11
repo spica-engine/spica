@@ -1,5 +1,5 @@
 import {Test} from "@nestjs/testing";
-import {DuplicateKeyError} from "@spica-server/data";
+import {DuplicateKeyError, idOf} from "@spica-server/data";
 import {
   MongoConfigRepository,
   MongoEnvVarRepository,
@@ -97,7 +97,7 @@ describe("system repositories", () => {
 
     expect(stored).toEqual({_id: expect.any(ObjectId), scope: "bucket", a: 1});
     expect(await preferences.findByScope("bucket")).toEqual(stored);
-    expect(await preferences.findById(stored._id)).toEqual(stored);
+    expect(await preferences.findById(idOf(stored))).toEqual(stored);
   });
 
   it("should let only the first claim of a job win", async () => {

@@ -1,7 +1,4 @@
-import {Id} from "@spica-server/interface-data";
-
 export interface StorageObject<DataType> {
-  _id?: string | Id;
   name: string;
   url?: string;
   created_at?: Date;
