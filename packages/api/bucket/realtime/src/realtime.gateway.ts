@@ -13,7 +13,8 @@ import {
   getDependents,
   applyFieldLevelAcl,
   decryptDocumentFields,
-  documentKey
+  documentKey,
+  withDocumentKey
 } from "@spica-server/bucket-common";
 import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
 import {
@@ -175,7 +176,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         schema,
         document,
         {applyAcl: this.shouldApplyAcl(client.upgradeReq), user: client.upgradeReq.user},
-        {...this.writeContext(), deleteOne: id => this.delete(client, {_id: id})}
+        {
+          ...this.writeContext(),
+          deleteOne: id => this.delete(client, withDocumentKey(schema, {}, id))
+        }
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -323,11 +327,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     const documentIds = await ids().forBucket(idOf(schema).toString());
 
-    if (!documentIds.isValid(document._id)) {
-      return this.send(client, ChunkKind.Response, 400, `${document._id} is an invalid object id`);
+    const key = documentKey(schema, document);
+
+    if (!documentIds.isValid(key)) {
+      return this.send(client, ChunkKind.Response, 400, `${key} is an invalid object id`);
     }
 
-    const documentId = documentIds.parse(document._id);
+    const documentId = documentIds.parse(key);
 
     const previousDocument = await this.bucketData.findById(schema, documentId);
 
@@ -428,8 +434,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     const documentIds = await ids().forBucket(idOf(schema).toString());
 
-    if (!documentIds.isValid(document._id)) {
-      return this.send(client, ChunkKind.Response, 400, `${document._id} is an invalid object id`);
+    const key = documentKey(schema, document);
+
+    if (!documentIds.isValid(key)) {
+      return this.send(client, ChunkKind.Response, 400, `${key} is an invalid object id`);
     }
 
     let deletedDocument;
@@ -437,7 +445,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     try {
       deletedDocument = await this.writes.delete(
         schema,
-        document._id,
+        key,
         {applyAcl: this.shouldApplyAcl(client.upgradeReq), user: client.upgradeReq.user},
         this.writeContext()
       );
@@ -450,7 +458,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         client,
         ChunkKind.Response,
         404,
-        `Could not find the document with id ${document._id.toString()}`
+        `Could not find the document with id ${key.toString()}`
       );
     }
 
@@ -460,7 +468,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           bucket: idOf(schema).toString(),
           type: "delete"
         },
-        document._id.toString(),
+        key.toString(),
         deletedDocument,
         undefined
       );
@@ -471,7 +479,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (this.history) {
-      this.history.deleteByDocument(documentIds.parse(document._id));
+      this.history.deleteByDocument(documentIds.parse(key));
     }
 
     if (this.activity) {
@@ -479,12 +487,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         client.upgradeReq,
         Action.DELETE,
         idOf(schema).toString(),
-        document._id.toString(),
+        key.toString(),
         this.activity
       );
     }
 
-    clearRelations(this.bucketService, this.bucketData, idOf(schema), document._id);
+    clearRelations(this.bucketService, this.bucketData, idOf(schema), key);
 
     const dependents = getDependents(schema, deletedDocument);
 
@@ -498,7 +506,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           targetReq.params.id = targetBucketId;
           targetClient.upgradeReq = targetReq;
 
-          await this.delete(targetClient, {_id: targetDocId});
+          const targetSchema = await this.getBucketResolver()(bucketIds().parse(targetBucketId));
+          await this.delete(targetClient, withDocumentKey(targetSchema, {}, targetDocId));
         } catch (error) {
           // Cascade failure should not crash the main delete operation
         }
@@ -580,7 +589,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         schema,
         this.encryptionSecret,
         this.getBucketResolver(),
-        document._id
+        documentKey(schema, document) as unknown as string
       );
     };
   }

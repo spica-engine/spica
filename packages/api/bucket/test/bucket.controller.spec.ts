@@ -9,6 +9,7 @@ import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule, ObjectId, mongoOnly} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
+import {withId, idOf, stripId} from "@spica-server/data";
 
 mongoOnly(
   "MongoDB's bucket model: definitions without a key property, capabilities without uuid and field cleanup in arrays of arrays, which PostgreSQL buckets refuse (Part 5); PostgreSQL buckets are covered by schema-manager.spec, bucket-schema.postgresql.spec and bucket-data/bucket-schema-changes.spec"
@@ -49,50 +50,54 @@ describe("BucketController", () => {
     app.use(Middlewares.MergePatchJsonParser(10));
     await app.listen(req.socket);
 
-    bucket = {
-      _id: new ObjectId().toHexString(),
-      title: "New Bucket",
-      description: "Describe your new bucket",
-      icon: "view_stream",
-      primary: "title",
-      readOnly: false,
-      history: true,
-      acl: {write: "true==true", read: "true==true"},
-      indexes: [],
-      properties: {
-        title: {
-          type: "string",
-          title: "title",
-          description: "Title of the row",
-          options: {}
-        },
-        description: {
-          type: "textarea",
-          title: "description",
-          description: "Description of the row",
-          options: {}
+    bucket = withId(
+      {
+        title: "New Bucket",
+        description: "Describe your new bucket",
+        icon: "view_stream",
+        primary: "title",
+        readOnly: false,
+        history: true,
+        acl: {write: "true==true", read: "true==true"},
+        indexes: [],
+        properties: {
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row",
+            options: {}
+          },
+          description: {
+            type: "textarea",
+            title: "description",
+            description: "Description of the row",
+            options: {}
+          }
         }
-      }
-    };
+      },
+      new ObjectId().toHexString()
+    );
 
-    bucket2 = {
-      ...bucket,
-      _id: new ObjectId().toHexString(),
-      properties: {
-        name: {
-          type: "string",
-          title: "title",
-          description: "Title of the row",
-          options: {}
-        },
-        age: {
-          type: "number",
-          title: "Age",
-          description: "Age of the row",
-          options: {}
+    bucket2 = withId(
+      {
+        ...bucket,
+        properties: {
+          name: {
+            type: "string",
+            title: "title",
+            description: "Title of the row",
+            options: {}
+          },
+          age: {
+            type: "number",
+            title: "Age",
+            description: "Age of the row",
+            options: {}
+          }
         }
-      }
-    };
+      },
+      new ObjectId().toHexString()
+    );
   });
 
   afterEach(() => app.close());
@@ -119,7 +124,7 @@ describe("BucketController", () => {
 
     it("should get specific bucket", async () => {
       const {body: inserted} = await req.post("/bucket", bucket);
-      const {body: bkt} = await req.get(`/bucket/${inserted._id}`);
+      const {body: bkt} = await req.get(`/bucket/${idOf(inserted)}`);
       expect(bkt).toEqual(bucket);
     });
 
@@ -145,18 +150,18 @@ describe("BucketController", () => {
     });
 
     it("should add new bucket and create object id if it's not provided", async () => {
-      delete bucket._id;
+      stripId(bucket);
       const {body: inserted} = await req.post("/bucket", bucket);
 
-      expect(ObjectId.isValid(inserted._id)).toEqual(true);
-      expect(inserted).toEqual({...bucket, _id: inserted._id});
+      expect(ObjectId.isValid(idOf(inserted))).toEqual(true);
+      expect(inserted).toEqual(withId({...bucket}, idOf(inserted)));
 
       const {body: buckets} = await req.get("/bucket");
 
       expect(buckets.length).toBe(1);
 
-      expect(ObjectId.isValid(buckets[0]._id)).toEqual(true);
-      expect(buckets[0]).toEqual({...bucket, _id: buckets[0]._id});
+      expect(ObjectId.isValid(idOf(buckets[0]))).toEqual(true);
+      expect(buckets[0]).toEqual(withId({...bucket}, idOf(buckets[0])));
     });
 
     it("should replace a single bucket", async () => {
@@ -180,7 +185,7 @@ describe("BucketController", () => {
         }
       };
 
-      const {body: updateResult} = await req.put(`/bucket/${updatedBucket._id}`, updatedBucket);
+      const {body: updateResult} = await req.put(`/bucket/${idOf(updatedBucket)}`, updatedBucket);
       expect(updateResult).toEqual(updatedBucket);
 
       const {body: buckets} = await req.get("/bucket");
@@ -193,14 +198,14 @@ describe("BucketController", () => {
       const {body: secondBucket} = await req.post("/bucket", {...bucket2, title: "Second Bucket"});
 
       await req.patch(
-        `/bucket/${firstBucket._id}`,
+        `/bucket/${idOf(firstBucket)}`,
         {order: 2, category: "cat1"},
         {
           "content-type": "application/merge-patch+json"
         }
       );
       await req.patch(
-        `/bucket/${secondBucket._id}`,
+        `/bucket/${idOf(secondBucket)}`,
         {order: 1, category: "cat2"},
         {
           "content-type": "application/merge-patch+json"
@@ -226,14 +231,14 @@ describe("BucketController", () => {
       ]);
 
       await req.patch(
-        `/bucket/${secondBucket._id}`,
+        `/bucket/${idOf(secondBucket)}`,
         {order: null, category: null},
         {
           "content-type": "application/merge-patch+json"
         }
       );
 
-      const patchedBucket = await req.get(`/bucket/${secondBucket._id}`).then(r => r.body);
+      const patchedBucket = await req.get(`/bucket/${idOf(secondBucket)}`).then(r => r.body);
 
       expect(patchedBucket.order).toBeUndefined();
       expect(patchedBucket.category).toBeUndefined();
@@ -245,22 +250,22 @@ describe("BucketController", () => {
       const firstInsertedBukcet = (await req.post("/bucket", bucket)).body;
       const secondInsertedBucket = (await req.post("/bucket", bucket2)).body;
 
-      let {body: insertedDocument} = await req.post(`/bucket/${secondInsertedBucket._id}/data`, {
+      let {body: insertedDocument} = await req.post(`/bucket/${idOf(secondInsertedBucket)}/data`, {
         name: "name",
         age: 18
       });
 
-      let {body: bucketDocuments} = await req.get(`/bucket/${secondInsertedBucket._id}/data`, {});
+      let {body: bucketDocuments} = await req.get(`/bucket/${idOf(secondInsertedBucket)}/data`, {});
       expect(bucketDocuments).toEqual([insertedDocument]);
 
-      let deleteResponse = await req.delete(`/bucket/${secondInsertedBucket._id}`);
+      let deleteResponse = await req.delete(`/bucket/${idOf(secondInsertedBucket)}`);
       expect([deleteResponse.statusCode, deleteResponse.statusText]).toEqual([204, "No Content"]);
 
       const buckets = (await req.get("/bucket", {})).body;
       expect(buckets.length).toBe(1);
       expect(buckets[0]).toEqual(firstInsertedBukcet);
 
-      let getDataResponse = await req.get(`/bucket/${secondInsertedBucket._id}/data`, {});
+      let getDataResponse = await req.get(`/bucket/${idOf(secondInsertedBucket)}/data`, {});
       expect([getDataResponse.statusCode, getDataResponse.statusText]).toEqual([404, "Not Found"]);
     });
   });
@@ -303,7 +308,7 @@ describe("BucketController", () => {
 
     it("should reject a bad rule when the bucket is replaced", async () => {
       const {body: inserted} = await req.post("/bucket", bucket);
-      const response = await req.put(`/bucket/${inserted._id}`, {
+      const response = await req.put(`/bucket/${idOf(inserted)}`, {
         ...bucket,
         acl: {read: "document.title ==", write: "true==true"}
       });
@@ -734,8 +739,8 @@ describe("BucketController", () => {
       root_not_removed_or_updated: "root_not_removed_or_updated"
     };
     beforeEach(async () => {
-      bucketId = (await req.post("/bucket", previousSchema)).body._id;
-      bucketDataId = (await req.post(`/bucket/${bucketId}/data`, bucketData)).body._id;
+      bucketId = idOf((await req.post("/bucket", previousSchema)).body);
+      bucketDataId = idOf((await req.post(`/bucket/${bucketId}/data`, bucketData)).body);
     });
 
     it("should update bucket document when bucket schema updated", async () => {
@@ -744,29 +749,33 @@ describe("BucketController", () => {
         `/bucket/${bucketId}/data/${bucketDataId}`,
         {}
       );
-      expect(updatedBucketDocument).toEqual({
-        _id: bucketDataId,
-        type: "type",
-        nested_object: {
-          nested_object_child: {
+      expect(updatedBucketDocument).toEqual(
+        withId(
+          {
             type: "type",
-            not_removed_or_updated: "not_removed_or_updated"
-          }
-        },
-        nested_array_object: [
-          [
-            {
-              type: "type",
-              not_removed_or_updated: "not_removed_or_updated"
+            nested_object: {
+              nested_object_child: {
+                type: "type",
+                not_removed_or_updated: "not_removed_or_updated"
+              }
             },
-            {
-              type: "type",
-              not_removed_or_updated: "not_removed_or_updated"
-            }
-          ]
-        ],
-        root_not_removed_or_updated: "root_not_removed_or_updated"
-      });
+            nested_array_object: [
+              [
+                {
+                  type: "type",
+                  not_removed_or_updated: "not_removed_or_updated"
+                },
+                {
+                  type: "type",
+                  not_removed_or_updated: "not_removed_or_updated"
+                }
+              ]
+            ],
+            root_not_removed_or_updated: "root_not_removed_or_updated"
+          },
+          bucketDataId
+        )
+      );
 
       const {statusCode} = await req.patch(`/bucket/${bucketId}/data/${bucketDataId}`, {
         root_not_removed_or_updated: "patched"
@@ -822,13 +831,13 @@ describe("BucketController", () => {
             },
             user: {
               type: "relation",
-              bucketId: usersBucket._id,
+              bucketId: idOf(usersBucket),
               relationType: "onetoone",
               options: {}
             },
             setting: {
               type: "relation",
-              bucketId: settingsBucket._id,
+              bucketId: idOf(settingsBucket),
               relationType: "onetoone",
               options: {}
             }
@@ -837,41 +846,41 @@ describe("BucketController", () => {
         .then(res => res.body);
 
       user = await req
-        .post(`/bucket/${usersBucket._id}/data`, {
+        .post(`/bucket/${idOf(usersBucket)}/data`, {
           name: "user1"
         })
         .then(res => res.body);
 
       setting = await req
-        .post(`/bucket/${settingsBucket._id}/data`, {
+        .post(`/bucket/${idOf(settingsBucket)}/data`, {
           setting: "setting1"
         })
         .then(res => res.body);
 
       score = await req
-        .post(`/bucket/${scoresBucket._id}/data`, {
+        .post(`/bucket/${idOf(scoresBucket)}/data`, {
           score: 500,
-          user: user._id,
-          setting: setting._id
+          user: idOf(user),
+          setting: idOf(setting)
         })
         .then(res => res.body);
     });
 
     it("should delete users, update scores bucket schema and data when the users bucket deleted", async () => {
-      const deleteResponse = await req.delete(`/bucket/${usersBucket._id}`);
+      const deleteResponse = await req.delete(`/bucket/${idOf(usersBucket)}`);
       expect([deleteResponse.statusCode, deleteResponse.statusText]).toEqual([204, "No Content"]);
       expect(deleteResponse.body).toEqual(undefined);
 
-      const {body: usersBucketResponse} = await req.get(`/bucket/${usersBucket._id}`, {});
+      const {body: usersBucketResponse} = await req.get(`/bucket/${idOf(usersBucket)}`, {});
       expect(usersBucketResponse).toBeUndefined();
 
-      const usersDocumentResponse = await req.get(`/bucket/${usersBucket._id}/data`, {});
+      const usersDocumentResponse = await req.get(`/bucket/${idOf(usersBucket)}/data`, {});
       expect([usersDocumentResponse.statusCode, usersDocumentResponse.statusText]).toEqual([
         404,
         "Not Found"
       ]);
 
-      const {body: scoresBucketResponse} = await req.get(`/bucket/${scoresBucket._id}`, {});
+      const {body: scoresBucketResponse} = await req.get(`/bucket/${idOf(scoresBucket)}`, {});
       expect(scoresBucketResponse.properties).toEqual({
         score: {
           type: "number",
@@ -879,21 +888,20 @@ describe("BucketController", () => {
         },
         setting: {
           type: "relation",
-          bucketId: settingsBucket._id,
+          bucketId: idOf(settingsBucket),
           relationType: "onetoone",
           options: {},
           dependent: false
         }
       });
 
-      const {body: scoresDocumentResponse} = await req.get(`/bucket/${scoresBucket._id}/data`, {});
+      const {body: scoresDocumentResponse} = await req.get(
+        `/bucket/${idOf(scoresBucket)}/data`,
+        {}
+      );
 
       expect(scoresDocumentResponse).toEqual([
-        {
-          _id: score._id,
-          score: 500,
-          setting: setting._id
-        }
+        withId({score: 500, setting: idOf(setting)}, idOf(score))
       ]);
     });
 
@@ -908,30 +916,24 @@ describe("BucketController", () => {
           },
           user: {
             type: "relation",
-            bucketId: usersBucket._id,
+            bucketId: idOf(usersBucket),
             //relation type changes
             relationType: "onetomany",
             options: {}
           },
           setting: {
             type: "relation",
-            bucketId: settingsBucket._id,
+            bucketId: idOf(settingsBucket),
             relationType: "onetoone",
             options: {}
           }
         }
       };
-      await req.put(`/bucket/${scoresBucket._id}`, updatedScoresBucket);
+      await req.put(`/bucket/${idOf(scoresBucket)}`, updatedScoresBucket);
 
-      const {body} = await req.get(`/bucket/${scoresBucket._id}/data`);
+      const {body} = await req.get(`/bucket/${idOf(scoresBucket)}/data`);
 
-      expect(body).toEqual([
-        {
-          _id: score._id,
-          score: 500,
-          setting: setting._id
-        }
-      ]);
+      expect(body).toEqual([withId({score: 500, setting: idOf(setting)}, idOf(score))]);
     });
 
     it("should update scores when scores bucket schema relational bucket changed", async () => {
@@ -946,29 +948,23 @@ describe("BucketController", () => {
           user: {
             type: "relation",
             //relational bucket changes
-            bucketId: settingsBucket._id,
+            bucketId: idOf(settingsBucket),
             relationType: "onetoone",
             options: {}
           },
           setting: {
             type: "relation",
-            bucketId: settingsBucket._id,
+            bucketId: idOf(settingsBucket),
             relationType: "onetoone",
             options: {}
           }
         }
       };
-      await req.put(`/bucket/${scoresBucket._id}`, updatedScoresBucket);
+      await req.put(`/bucket/${idOf(scoresBucket)}`, updatedScoresBucket);
 
-      const {body} = await req.get(`/bucket/${scoresBucket._id}/data`);
+      const {body} = await req.get(`/bucket/${idOf(scoresBucket)}/data`);
 
-      expect(body).toEqual([
-        {
-          _id: score._id,
-          score: 500,
-          setting: setting._id
-        }
-      ]);
+      expect(body).toEqual([withId({score: 500, setting: idOf(setting)}, idOf(score))]);
     });
   });
 });

@@ -626,13 +626,15 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
 
     const updatePromiseFactories = this.updations.map(
       data => () =>
-        this.targetService.put(`bucket/${recordKey(this.bucket)}/data/${data._id}`, data).catch(e =>
-          handleRejection({
-            action: "update",
-            e,
-            objectName: this.getDisplayableModuleName() + " " + data[this.primaryField]
-          })
-        )
+        this.targetService
+          .put(`bucket/${recordKey(this.bucket)}/data/${recordKey(data)}`, data)
+          .catch(e =>
+            handleRejection({
+              action: "update",
+              e,
+              objectName: this.getDisplayableModuleName() + " " + data[this.primaryField]
+            })
+          )
     );
     await spinUntilPromiseEnd(
       updatePromiseFactories,
@@ -641,13 +643,15 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
 
     const deletePromiseFactories = this.deletions.map(
       data => () =>
-        this.targetService.delete(`bucket/${recordKey(this.bucket)}/data/${data._id}`).catch(e =>
-          handleRejection({
-            action: "delete",
-            objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
-            e
-          })
-        )
+        this.targetService
+          .delete(`bucket/${recordKey(this.bucket)}/data/${recordKey(data)}`)
+          .catch(e =>
+            handleRejection({
+              action: "delete",
+              objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
+              e
+            })
+          )
     );
     await spinUntilPromiseEnd(
       deletePromiseFactories,
