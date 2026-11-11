@@ -34,7 +34,9 @@ describe("Function log Realtime on PostgreSQL", () => {
   let app: INestApplication;
   let sink: LogSink;
   let opened: {readyState: number; close(): Promise<unknown>}[];
-  const [fn1, fn2] = [randomUUID(), randomUUID()];
+
+  let fn1: string;
+  let fn2: string;
 
   const log = (row: object) =>
     sink.insert({
@@ -82,6 +84,7 @@ describe("Function log Realtime on PostgreSQL", () => {
 
   beforeEach(() => {
     opened = [];
+    [fn1, fn2] = [randomUUID(), randomUUID()];
   });
 
   afterEach(() => Promise.all(opened.filter(ws => ws.readyState <= 1).map(ws => ws.close())));
@@ -91,7 +94,7 @@ describe("Function log Realtime on PostgreSQL", () => {
     const begin = new Date(Date.now() - 5000).toISOString();
     await log({content: "after the beginning"});
 
-    const messages = await connect({begin});
+    const messages = await connect({begin, functions: [fn1]});
     await log({content: "live"});
     await until(() => messages.length > 2);
 
@@ -115,7 +118,7 @@ describe("Function log Realtime on PostgreSQL", () => {
   });
 
   it("should send only the logs whose content matches, regardless of case", async () => {
-    const messages = await connect({content: "ABORT"});
+    const messages = await connect({content: "ABORT", functions: [fn1]});
 
     await log({content: "all fine"});
     await log({content: "Function (default) did not finish. Aborting."});
