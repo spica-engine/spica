@@ -83,6 +83,8 @@ describe("check-key-names", () => {
       write("apps/panel/src/a.ts", content);
       write("packages/filter/src/a.ts", content);
       write("packages/sync/src/record-key.ts", content);
+      write("packages/devkit/internal_common/src/key.ts", content);
+      write("packages/devkit/identity/test/id.spec.ts", content);
       write("packages/sync/src/other.ts", content);
       write("packages/data/postgresql/src/a.ts", content);
 
