@@ -17,6 +17,7 @@ import {UserModule} from "@spica-server/passport-user";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {User} from "@spica-server/interface-passport-user";
 import {ConfigModule} from "@spica-server/config";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Passwordless Login", engine => {
   let module: TestingModule;
@@ -339,7 +340,7 @@ contractSuite("Passwordless Login", engine => {
 
       await passwordlessService.verify(username, verificationCode, "email");
 
-      const updatedUser = await users.findById(user._id);
+      const updatedUser = await users.findById(idOf(user));
       expect(updatedUser.lastLogin).toBeDefined();
       expect(updatedUser.lastLogin.getTime()).toBeGreaterThanOrEqual(beforeLogin.getTime());
     });

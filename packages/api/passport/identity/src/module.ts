@@ -9,7 +9,7 @@ import {
   IdentityRepository,
   POLICY_PROVIDER
 } from "@spica-server/interface-passport-identity";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {IdentityController} from "./identity.controller.js";
 import {IdentityService} from "./identity.service.js";
 import {IdentityStrategy} from "./identity.strategy.js";
@@ -169,12 +169,12 @@ export const PolicyProviderFactory = (service: PolicyService) => {
           {
             module: "passport:identity",
             action: "passport:identity:show",
-            resource: {include: [req.user._id], exclude: []}
+            resource: {include: [idOf(req.user)], exclude: []}
           },
           {
             module: "passport:identity",
             action: "passport:identity:update",
-            resource: {include: [req.user._id], exclude: []}
+            resource: {include: [idOf(req.user)], exclude: []}
           }
         ]
       }
@@ -182,7 +182,7 @@ export const PolicyProviderFactory = (service: PolicyService) => {
 
     const actualPolicies = await service._findAll();
     return req.user.policies
-      .map(upi => actualPolicies.find(ap => ap._id == upi))
+      .map(upi => actualPolicies.find(ap => idOf(ap) == upi))
       .concat(identityPolicies);
   };
 };

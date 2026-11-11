@@ -1,7 +1,5 @@
-import {Id} from "@spica-server/interface-data";
 
 export interface Strategy {
-  _id?: Id;
   type: string;
   name: string;
   title: string;

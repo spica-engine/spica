@@ -105,15 +105,40 @@ describe("codemod-key-names", () => {
       );
     });
 
-    it("should leave deletes and assignments for manual work", () => {
+    it("should turn a delete and an assignment statement into stripId and assignId", () => {
       const {text, manual} = rewrite(
         `${header}export function f(thing: Thing) {\n  delete thing._id;\n  thing._id = "x";\n}\n`
       );
 
-      assert.doesNotMatch(text, /idOf/);
+      assert.match(text, /stripId\(thing\);/);
+      assert.match(text, /assignId\(thing, "x"\);/);
+      assert.match(
+        text,
+        /import \{(stripId, assignId|assignId, stripId)\} from "@spica-server\/data";/
+      );
+      assert.deepEqual(manual, []);
+    });
+
+    it("should leave a delete or assignment whose value is used for manual work", () => {
+      const {text, manual} = rewrite(
+        `${header}export const f = (thing: Thing) => [delete thing._id, (thing._id = "x")];\n`
+      );
+
+      assert.doesNotMatch(text, /stripId|assignId/);
       assert.deepEqual(
         manual.map(({kind}) => kind),
         ["delete", "assignment"]
+      );
+    });
+
+    it("should leave a compound assignment for manual work", () => {
+      const {manual} = rewrite(
+        `${header}export function f(thing: Thing) {\n  thing._id += "x";\n}\n`
+      );
+
+      assert.deepEqual(
+        manual.map(({kind}) => kind),
+        ["assignment"]
       );
     });
 
@@ -181,6 +206,19 @@ describe("codemod-key-names", () => {
       assert.deepEqual(
         manual.map(({kind}) => kind),
         ["object literal with a spread after the key"]
+      );
+    });
+
+    it("should rewrite an untyped literal only where untyped means a system record", () => {
+      const source = `export const expected = {_id: "a", name: "n"};\n`;
+
+      assert.deepEqual(
+        rewrite(source).manual.map(({kind}) => kind),
+        ["object literal"]
+      );
+      assert.match(
+        rewrite(source, {anyIsSystem: ["packages/api/thing/"]}).text,
+        /withId\(\{name: "n"\}, "a"\)/
       );
     });
 

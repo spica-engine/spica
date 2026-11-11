@@ -7,6 +7,7 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {ConfigModule} from "@spica-server/config";
+import {idOf} from "@spica-server/data";
 
 contractSuite("User Update Endpoints", engine => {
   let module: TestingModule;
@@ -136,7 +137,7 @@ contractSuite("User Update Endpoints", engine => {
   describe("user self update", () => {
     it("should successfully update own password", async () => {
       const res = await req.put(
-        `/passport/user/${user1._id}/self`,
+        `/passport/user/${idOf(user1)}/self`,
         {
           password: "newPassword123"
         },
@@ -146,7 +147,7 @@ contractSuite("User Update Endpoints", engine => {
       );
 
       expect(res.statusCode).toEqual(200);
-      expect(res.body._id).toEqual(user1._id);
+      expect(idOf(res.body)).toEqual(idOf(user1));
       expect(res.body.username).toEqual("user1");
       expect(res.body.password).toBeUndefined();
 
@@ -168,7 +169,7 @@ contractSuite("User Update Endpoints", engine => {
 
     it("should fail when trying to update not allowed fields", async () => {
       const res = await req.put(
-        `/passport/user/${user1._id}/self`,
+        `/passport/user/${idOf(user1)}/self`,
         {
           password: "anotherPassword",
           bannedUntil: new Date(Date.now() + 10000).toISOString()
@@ -184,7 +185,7 @@ contractSuite("User Update Endpoints", engine => {
 
     it("should fail when trying to update another user's password", async () => {
       const res = await req.put(
-        `/passport/user/${user2._id}/self`,
+        `/passport/user/${idOf(user2)}/self`,
         {
           password: "hackedPassword"
         },
@@ -215,7 +216,7 @@ contractSuite("User Update Endpoints", engine => {
       const banUntil = new Date(Date.now() + 86400000).toISOString();
 
       const res = await req.put(
-        `/passport/user/${user2._id}`,
+        `/passport/user/${idOf(user2)}`,
         {
           bannedUntil: banUntil
         },
@@ -224,13 +225,13 @@ contractSuite("User Update Endpoints", engine => {
         }
       );
       expect(res.statusCode).toEqual(200);
-      expect(res.body._id).toEqual(user2._id);
+      expect(idOf(res.body)).toEqual(idOf(user2));
       expect(res.body.bannedUntil).toBeDefined();
     });
 
     it("should allow identity to update username and password", async () => {
       const res = await req.put(
-        `/passport/user/${user2._id}`,
+        `/passport/user/${idOf(user2)}`,
         {
           username: "user2updated",
           password: "newPassword456"

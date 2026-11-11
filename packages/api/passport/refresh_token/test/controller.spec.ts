@@ -9,6 +9,7 @@ import {OBJECT_ID} from "@spica-server/core-schema";
 import {RefreshTokenModule} from "@spica-server/passport-refresh_token";
 import {REFRESH_TOKEN_REPOSITORY} from "@spica-server/interface-passport-refresh_token";
 import {RefreshToken} from "@spica-server/interface-passport-refresh_token";
+import {withId, idOf} from "@spica-server/data";
 
 const REFRESH_TOKEN_EXPIRES_IN = 1 * 24 * 60 * 60;
 
@@ -60,22 +61,26 @@ contractSuite("RefreshToken", engine => {
     const expired_at = new Date("2000-01-02T00:00:00.000Z");
 
     tokens = [
-      {
-        _id: token1_id,
-        identity: "user1",
-        token: "token1",
-        created_at: created_at1,
-        expired_at: expired_at,
-        last_used_at: created_at1
-      },
-      {
-        _id: token2_id,
-        identity: "user2",
-        token: "token2",
-        created_at: created_at2,
-        expired_at: expired_at,
-        last_used_at: created_at2
-      }
+      withId(
+        {
+          identity: "user1",
+          token: "token1",
+          created_at: created_at1,
+          expired_at: expired_at,
+          last_used_at: created_at1
+        },
+        token1_id
+      ),
+      withId(
+        {
+          identity: "user2",
+          token: "token2",
+          created_at: created_at2,
+          expired_at: expired_at,
+          last_used_at: created_at2
+        },
+        token2_id
+      )
     ];
 
     for (const token of tokens) {
@@ -89,46 +94,54 @@ contractSuite("RefreshToken", engine => {
     it("should return tokens without sensitive fields", async () => {
       const res = await req.get("/passport/refresh-token");
       expect(res.body).toEqual([
-        {
-          _id: id1,
-          identity: "user1",
-          created_at: "2000-01-01T00:00:00.000Z",
-          expired_at: "2000-01-02T00:00:00.000Z",
-          last_used_at: "2000-01-01T00:00:00.000Z"
-        },
-        {
-          _id: id2,
-          identity: "user2",
-          created_at: "2000-01-01T12:00:00.000Z",
-          expired_at: "2000-01-02T00:00:00.000Z",
-          last_used_at: "2000-01-01T12:00:00.000Z"
-        }
+        withId(
+          {
+            identity: "user1",
+            created_at: "2000-01-01T00:00:00.000Z",
+            expired_at: "2000-01-02T00:00:00.000Z",
+            last_used_at: "2000-01-01T00:00:00.000Z"
+          },
+          id1
+        ),
+        withId(
+          {
+            identity: "user2",
+            created_at: "2000-01-01T12:00:00.000Z",
+            expired_at: "2000-01-02T00:00:00.000Z",
+            last_used_at: "2000-01-01T12:00:00.000Z"
+          },
+          id2
+        )
       ]);
     });
 
     it("should limit tokens", async () => {
       const res = await req.get("/passport/refresh-token", {limit: 1});
       expect(res.body).toEqual([
-        {
-          _id: id1,
-          identity: "user1",
-          created_at: "2000-01-01T00:00:00.000Z",
-          expired_at: "2000-01-02T00:00:00.000Z",
-          last_used_at: "2000-01-01T00:00:00.000Z"
-        }
+        withId(
+          {
+            identity: "user1",
+            created_at: "2000-01-01T00:00:00.000Z",
+            expired_at: "2000-01-02T00:00:00.000Z",
+            last_used_at: "2000-01-01T00:00:00.000Z"
+          },
+          id1
+        )
       ]);
     });
 
     it("should skip tokens", async () => {
       const res = await req.get("/passport/refresh-token", {skip: 1});
       expect(res.body).toEqual([
-        {
-          _id: id2,
-          identity: "user2",
-          created_at: "2000-01-01T12:00:00.000Z",
-          expired_at: "2000-01-02T00:00:00.000Z",
-          last_used_at: "2000-01-01T12:00:00.000Z"
-        }
+        withId(
+          {
+            identity: "user2",
+            created_at: "2000-01-01T12:00:00.000Z",
+            expired_at: "2000-01-02T00:00:00.000Z",
+            last_used_at: "2000-01-01T12:00:00.000Z"
+          },
+          id2
+        )
       ]);
     });
 
@@ -137,20 +150,24 @@ contractSuite("RefreshToken", engine => {
         sort: JSON.stringify({created_at: -1})
       });
       expect(res.body).toEqual([
-        {
-          _id: id2,
-          identity: "user2",
-          created_at: "2000-01-01T12:00:00.000Z",
-          expired_at: "2000-01-02T00:00:00.000Z",
-          last_used_at: "2000-01-01T12:00:00.000Z"
-        },
-        {
-          _id: id1,
-          identity: "user1",
-          created_at: "2000-01-01T00:00:00.000Z",
-          expired_at: "2000-01-02T00:00:00.000Z",
-          last_used_at: "2000-01-01T00:00:00.000Z"
-        }
+        withId(
+          {
+            identity: "user2",
+            created_at: "2000-01-01T12:00:00.000Z",
+            expired_at: "2000-01-02T00:00:00.000Z",
+            last_used_at: "2000-01-01T12:00:00.000Z"
+          },
+          id2
+        ),
+        withId(
+          {
+            identity: "user1",
+            created_at: "2000-01-01T00:00:00.000Z",
+            expired_at: "2000-01-02T00:00:00.000Z",
+            last_used_at: "2000-01-01T00:00:00.000Z"
+          },
+          id1
+        )
       ]);
     });
 
@@ -159,13 +176,15 @@ contractSuite("RefreshToken", engine => {
         filter: filterOf({identity: "user2"}, "document.identity == 'user2'")
       });
       expect(res.body).toEqual([
-        {
-          _id: id2,
-          identity: "user2",
-          created_at: "2000-01-01T12:00:00.000Z",
-          expired_at: "2000-01-02T00:00:00.000Z",
-          last_used_at: "2000-01-01T12:00:00.000Z"
-        }
+        withId(
+          {
+            identity: "user2",
+            created_at: "2000-01-01T12:00:00.000Z",
+            expired_at: "2000-01-02T00:00:00.000Z",
+            last_used_at: "2000-01-01T12:00:00.000Z"
+          },
+          id2
+        )
       ]);
     });
 
@@ -176,20 +195,24 @@ contractSuite("RefreshToken", engine => {
       expect(res.body).toEqual({
         meta: {total: 2},
         data: [
-          {
-            _id: id1,
-            identity: "user1",
-            created_at: "2000-01-01T00:00:00.000Z",
-            expired_at: "2000-01-02T00:00:00.000Z",
-            last_used_at: "2000-01-01T00:00:00.000Z"
-          },
-          {
-            _id: id2,
-            identity: "user2",
-            created_at: "2000-01-01T12:00:00.000Z",
-            expired_at: "2000-01-02T00:00:00.000Z",
-            last_used_at: "2000-01-01T12:00:00.000Z"
-          }
+          withId(
+            {
+              identity: "user1",
+              created_at: "2000-01-01T00:00:00.000Z",
+              expired_at: "2000-01-02T00:00:00.000Z",
+              last_used_at: "2000-01-01T00:00:00.000Z"
+            },
+            id1
+          ),
+          withId(
+            {
+              identity: "user2",
+              created_at: "2000-01-01T12:00:00.000Z",
+              expired_at: "2000-01-02T00:00:00.000Z",
+              last_used_at: "2000-01-01T12:00:00.000Z"
+            },
+            id2
+          )
         ]
       });
     });
@@ -198,13 +221,17 @@ contractSuite("RefreshToken", engine => {
   describe("findOne", () => {
     it("should get specific token without sensitive fields", async () => {
       const res = await req.get(`/passport/refresh-token/${id1}`);
-      expect(res.body).toEqual({
-        _id: id1,
-        identity: "user1",
-        created_at: "2000-01-01T00:00:00.000Z",
-        expired_at: "2000-01-02T00:00:00.000Z",
-        last_used_at: "2000-01-01T00:00:00.000Z"
-      });
+      expect(res.body).toEqual(
+        withId(
+          {
+            identity: "user1",
+            created_at: "2000-01-01T00:00:00.000Z",
+            expired_at: "2000-01-02T00:00:00.000Z",
+            last_used_at: "2000-01-01T00:00:00.000Z"
+          },
+          id1
+        )
+      );
     });
 
     it("should throw not found exception if token does not exist", async () => {
@@ -246,14 +273,18 @@ contractSuite("RefreshToken", engine => {
         disabled: true
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual({
-        _id: id1,
-        identity: "user1",
-        created_at: "2000-01-01T00:00:00.000Z",
-        expired_at: "2000-01-02T00:00:00.000Z",
-        last_used_at: "2000-01-01T00:00:00.000Z",
-        disabled: true
-      });
+      expect(res.body).toEqual(
+        withId(
+          {
+            identity: "user1",
+            created_at: "2000-01-01T00:00:00.000Z",
+            expired_at: "2000-01-02T00:00:00.000Z",
+            last_used_at: "2000-01-01T00:00:00.000Z",
+            disabled: true
+          },
+          id1
+        )
+      );
     });
 
     it("should enable token", async () => {
@@ -261,14 +292,18 @@ contractSuite("RefreshToken", engine => {
         disabled: false
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual({
-        _id: id1,
-        identity: "user1",
-        created_at: "2000-01-01T00:00:00.000Z",
-        expired_at: "2000-01-02T00:00:00.000Z",
-        last_used_at: "2000-01-01T00:00:00.000Z",
-        disabled: false
-      });
+      expect(res.body).toEqual(
+        withId(
+          {
+            identity: "user1",
+            created_at: "2000-01-01T00:00:00.000Z",
+            expired_at: "2000-01-02T00:00:00.000Z",
+            last_used_at: "2000-01-01T00:00:00.000Z",
+            disabled: false
+          },
+          id1
+        )
+      );
     });
 
     it("should throw not found exception if token does not exist", async () => {
@@ -289,14 +324,18 @@ contractSuite("RefreshToken", engine => {
         disabled: true
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual({
-        _id: id1,
-        identity: "user1",
-        created_at: "2000-01-01T00:00:00.000Z",
-        expired_at: "2000-01-02T00:00:00.000Z",
-        last_used_at: "2000-01-01T00:00:00.000Z",
-        disabled: true
-      });
+      expect(res.body).toEqual(
+        withId(
+          {
+            identity: "user1",
+            created_at: "2000-01-01T00:00:00.000Z",
+            expired_at: "2000-01-02T00:00:00.000Z",
+            last_used_at: "2000-01-01T00:00:00.000Z",
+            disabled: true
+          },
+          id1
+        )
+      );
     });
 
     it("should throw error if disabled is not boolean", async () => {
@@ -608,82 +647,102 @@ contractSuite("RefreshToken with hash secret", engine => {
   it("should hash filter token value before querying", async () => {
     const rawToken = "my_raw_refresh_token";
     const hashedToken = hash(rawToken, HASH_SECRET);
-    await service.insert({
-      _id: storedId,
-      identity: "user1",
-      token: hashedToken,
-      created_at: new Date("2000-01-01T00:00:00.000Z"),
-      expired_at: new Date("2099-01-01T00:00:00.000Z"),
-      last_used_at: new Date("2000-01-01T00:00:00.000Z")
-    });
+    await service.insert(
+      withId(
+        {
+          identity: "user1",
+          token: hashedToken,
+          created_at: new Date("2000-01-01T00:00:00.000Z"),
+          expired_at: new Date("2099-01-01T00:00:00.000Z"),
+          last_used_at: new Date("2000-01-01T00:00:00.000Z")
+        },
+        storedId
+      )
+    );
 
     const res = await req.get("/passport/refresh-token", {
       filter: filterOf({token: rawToken}, `document.token == '${rawToken}'`)
     });
 
     expect(res.body.length).toEqual(1);
-    expect(res.body[0]).toEqual({
-      _id: storedId,
-      identity: "user1",
-      created_at: "2000-01-01T00:00:00.000Z",
-      expired_at: "2099-01-01T00:00:00.000Z",
-      last_used_at: "2000-01-01T00:00:00.000Z"
-    });
+    expect(res.body[0]).toEqual(
+      withId(
+        {
+          identity: "user1",
+          created_at: "2000-01-01T00:00:00.000Z",
+          expired_at: "2099-01-01T00:00:00.000Z",
+          last_used_at: "2000-01-01T00:00:00.000Z"
+        },
+        storedId
+      )
+    );
   });
 
   it("hash filter should work with token value using $in operator", async () => {
     const rawToken = "my_raw_refresh_token";
     const hashedToken = hash(rawToken, HASH_SECRET);
-    await service.insert({
-      _id: storedId,
-      identity: "user1",
-      token: hashedToken,
-      created_at: new Date("2000-01-01T00:00:00.000Z"),
-      expired_at: new Date("2099-01-01T00:00:00.000Z"),
-      last_used_at: new Date("2000-01-01T00:00:00.000Z")
-    });
+    await service.insert(
+      withId(
+        {
+          identity: "user1",
+          token: hashedToken,
+          created_at: new Date("2000-01-01T00:00:00.000Z"),
+          expired_at: new Date("2099-01-01T00:00:00.000Z"),
+          last_used_at: new Date("2000-01-01T00:00:00.000Z")
+        },
+        storedId
+      )
+    );
 
     const res = await req.get("/passport/refresh-token", {
       filter: filterOf({token: {$in: [rawToken]}}, `document.token in ['${rawToken}']`)
     });
 
     expect(res.body.length).toEqual(1);
-    expect(res.body[0]._id).toEqual(storedId);
+    expect(idOf(res.body[0])).toEqual(storedId);
     expect(res.body[0].token).toBeUndefined();
   });
 
   it("hash filter should work with token value using $or operator", async () => {
     const rawToken = "my_raw_refresh_token";
     const hashedToken = hash(rawToken, HASH_SECRET);
-    await service.insert({
-      _id: storedId,
-      identity: "user1",
-      token: hashedToken,
-      created_at: new Date("2000-01-01T00:00:00.000Z"),
-      expired_at: new Date("2099-01-01T00:00:00.000Z"),
-      last_used_at: new Date("2000-01-01T00:00:00.000Z")
-    });
+    await service.insert(
+      withId(
+        {
+          identity: "user1",
+          token: hashedToken,
+          created_at: new Date("2000-01-01T00:00:00.000Z"),
+          expired_at: new Date("2099-01-01T00:00:00.000Z"),
+          last_used_at: new Date("2000-01-01T00:00:00.000Z")
+        },
+        storedId
+      )
+    );
 
     const res = await req.get("/passport/refresh-token", {
       filter: filterOf({$or: [{token: rawToken}]}, `document.token == '${rawToken}'`)
     });
 
     expect(res.body.length).toEqual(1);
-    expect(res.body[0]._id).toEqual(storedId);
+    expect(idOf(res.body[0])).toEqual(storedId);
     expect(res.body[0].token).toBeUndefined();
   });
 
   it("should not match when filter token does not correspond to stored hash", async () => {
     const hashedToken = hash("real_token", HASH_SECRET);
 
-    await service.insert({
-      _id: storedId,
-      identity: "user1",
-      token: hashedToken,
-      created_at: new Date("2000-01-01T00:00:00.000Z"),
-      expired_at: new Date("2099-01-01T00:00:00.000Z"),
-      last_used_at: new Date("2000-01-01T00:00:00.000Z")
-    });
+    await service.insert(
+      withId(
+        {
+          identity: "user1",
+          token: hashedToken,
+          created_at: new Date("2000-01-01T00:00:00.000Z"),
+          expired_at: new Date("2099-01-01T00:00:00.000Z"),
+          last_used_at: new Date("2000-01-01T00:00:00.000Z")
+        },
+        storedId
+      )
+    );
 
     const res = await req.get("/passport/refresh-token", {
       filter: filterOf({token: "wrong_token"}, "document.token == 'wrong_token'")

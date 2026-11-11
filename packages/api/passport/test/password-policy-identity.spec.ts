@@ -7,6 +7,7 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {ConfigModule, ConfigService} from "@spica-server/config";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Password Policy - Identity", engine => {
   let app: INestApplication;
@@ -23,7 +24,7 @@ contractSuite("Password Policy - Identity", engine => {
       Authorization: `IDENTITY ${adminToken}`
     });
     for (const identity of identities.filter(identity => identity.identifier != "spica")) {
-      await req.delete(`/passport/identity/${identity._id}`, undefined, {
+      await req.delete(`/passport/identity/${idOf(identity)}`, undefined, {
         Authorization: `IDENTITY ${adminToken}`
       });
     }
@@ -199,7 +200,7 @@ contractSuite("Password Policy - Identity", engine => {
         {Authorization: `IDENTITY ${adminToken}`}
       );
       expect(createRes.statusCode).toEqual(201);
-      const id = createRes.body._id;
+      const id = idOf(createRes.body);
 
       const updateRes = await req.put(
         `/passport/identity/${id}`,
@@ -216,7 +217,7 @@ contractSuite("Password Policy - Identity", engine => {
         {Authorization: `IDENTITY ${adminToken}`}
       );
       expect(createRes.statusCode).toEqual(201);
-      const id = createRes.body._id;
+      const id = idOf(createRes.body);
 
       const updateRes = await req.put(
         `/passport/identity/${id}`,

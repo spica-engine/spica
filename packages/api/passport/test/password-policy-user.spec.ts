@@ -7,6 +7,7 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {ConfigModule, ConfigService} from "@spica-server/config";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Password Policy - User", engine => {
   let app: INestApplication;
@@ -188,7 +189,7 @@ contractSuite("Password Policy - User", engine => {
         {Authorization: `IDENTITY ${adminToken}`}
       );
       expect(createRes.statusCode).toEqual(201);
-      const id = createRes.body._id;
+      const id = idOf(createRes.body);
 
       const updateRes = await req.put(
         `/passport/user/${id}`,
@@ -205,7 +206,7 @@ contractSuite("Password Policy - User", engine => {
         {Authorization: `IDENTITY ${adminToken}`}
       );
       expect(createRes.statusCode).toEqual(201);
-      const id = createRes.body._id;
+      const id = idOf(createRes.body);
 
       const updateRes = await req.put(
         `/passport/user/${id}`,
@@ -222,7 +223,7 @@ contractSuite("Password Policy - User", engine => {
         {Authorization: `IDENTITY ${adminToken}`}
       );
       expect(createRes.statusCode).toEqual(201);
-      const id = createRes.body._id;
+      const id = idOf(createRes.body);
 
       const loginRes = await req.post("/passport/login", {
         username: "user_self",
@@ -245,7 +246,7 @@ contractSuite("Password Policy - User", engine => {
         {Authorization: `IDENTITY ${adminToken}`}
       );
       expect(createRes.statusCode).toEqual(201);
-      const id = createRes.body._id;
+      const id = idOf(createRes.body);
 
       const loginRes = await req.post("/passport/login", {
         username: "user_self2",

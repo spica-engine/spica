@@ -3,6 +3,7 @@ import {USER_REPOSITORY, UserRepository} from "@spica-server/interface-passport-
 import {UserService} from "../user.service.js";
 import {VerificationService} from "../verification.service.js";
 import {UserConfigService} from "../config.service.js";
+import {idOf} from "@spica-server/data";
 
 @Injectable()
 export class PasswordlessLoginService {
@@ -26,7 +27,7 @@ export class PasswordlessLoginService {
 
     try {
       const sendResult = await this.verificationService.startVerificationProcess(
-        user._id,
+        idOf(user),
         value,
         providerConfig.strategy,
         provider,
@@ -54,7 +55,7 @@ export class PasswordlessLoginService {
 
     try {
       await this.verificationService.confirmVerificationProcess(
-        user._id,
+        idOf(user),
         code,
         providerConfig.strategy,
         provider,
@@ -63,7 +64,7 @@ export class PasswordlessLoginService {
 
       const [refreshToken] = await Promise.all([
         this.userService.signRefreshToken(user),
-        this.users.setFields(user._id, {lastLogin: new Date()})
+        this.users.setFields(idOf(user), {lastLogin: new Date()})
       ]);
 
       const accessToken = this.userService.sign(user);

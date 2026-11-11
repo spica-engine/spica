@@ -16,6 +16,7 @@ import {
 } from "@spica-server/interface-passport-refresh_token";
 import {v4 as uuidv4} from "uuid";
 import {AuthFactor} from "@spica-server/passport-authfactor";
+import {idOf} from "@spica-server/data";
 
 @Injectable()
 export class IdentityService {
@@ -82,7 +83,7 @@ export class IdentityService {
 
     const tokenSchema = {
       token: hashedToken,
-      identity: String(identity._id),
+      identity: String(idOf(identity)),
       created_at: new Date(),
       expired_at: new Date(Date.now() + expiresIn * 1000),
       last_used_at: undefined
@@ -128,7 +129,7 @@ export class IdentityService {
 
     const identity = await this.findIdentityOfToken(accessToken);
 
-    if (refreshTokenData.identity !== String(identity._id)) {
+    if (refreshTokenData.identity !== String(idOf(identity))) {
       return Promise.reject("Refresh and access token identifiers are mismatched");
     }
 

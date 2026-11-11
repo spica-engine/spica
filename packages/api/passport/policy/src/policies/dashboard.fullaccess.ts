@@ -1,7 +1,6 @@
 import DashboardReadOnlyAccess from "./dashboard.readonly.js";
 
 export default {
-  _id: "DashboardFullAccess",
   name: "Dashboard Full Access",
   description: "Full access to dashboard service.",
   statement: [

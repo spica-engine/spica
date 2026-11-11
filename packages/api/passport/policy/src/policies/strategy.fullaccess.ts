@@ -1,7 +1,6 @@
 import StrategyReadOnlyAccess from "./strategy.readonly.js";
 
 export default {
-  _id: "StrategyFullAccess",
   name: "Strategy Full Access",
   description: "Full access to passport strategy service.",
   statement: [

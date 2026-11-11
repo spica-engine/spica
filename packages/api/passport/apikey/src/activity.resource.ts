@@ -1,4 +1,5 @@
 import {Action, ModuleActivity, PreActivity} from "@spica-server/interface-activity";
+import {idOf} from "@spica-server/data";
 
 export function createApikeyActivity(
   preActivity: PreActivity,
@@ -11,7 +12,7 @@ export function createApikeyActivity(
     case Action.POST:
       activities.push({
         ...preActivity,
-        resource: ["passport", "apikey", res._id.toString()]
+        resource: ["passport", "apikey", idOf(res).toString()]
       });
       break;
     case Action.PUT:

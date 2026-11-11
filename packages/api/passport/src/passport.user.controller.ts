@@ -34,7 +34,7 @@ import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body.js";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ID} from "@spica-server/data";
+import {ID, idOf, withId} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {
   STRATEGIES,
@@ -179,11 +179,11 @@ export class PassportUserController {
         lastPasswords: [],
         failedAttempts: [],
         lastLogin: undefined,
-        signUpStrategy: {_id: strategy._id, title: strategy.title, type: strategy.type},
+        signUpStrategy: withId({title: strategy.title, type: strategy.type}, idOf(strategy)),
         ...(attributeEntries.length ? {attributes: Object.fromEntries(attributeEntries)} : {})
       });
     } else if (attributeEntries.length) {
-      user = await this.users.setAttributes(user._id, Object.fromEntries(attributeEntries));
+      user = await this.users.setAttributes(idOf(user), Object.fromEntries(attributeEntries));
 
       if (!user) {
         throw new UnauthorizedException("User does not exist.");
@@ -214,7 +214,7 @@ export class PassportUserController {
     const tokenSchema = this.userService.sign(user, expiresIn);
     const refreshTokenSchema = await this.userService.signRefreshToken(user);
 
-    const id = user._id.toString();
+    const id = idOf(user).toString();
     // Enforce 2FA from the persisted record, not the in-memory AuthFactor map: that map is
     // per-replica and only synced opportunistically, so a replica that missed the registration
     // broadcast would otherwise skip the challenge and let the user bypass 2FA.
@@ -234,7 +234,7 @@ export class PassportUserController {
       const challenge = await this.authFactor.start(id);
       const factorRes = {
         challenge,
-        answerUrl: `passport/login/${user._id}/factor-authentication`
+        answerUrl: `passport/login/${idOf(user)}/factor-authentication`
       };
       return {factorRes};
     } else {
@@ -429,7 +429,7 @@ export class PassportUserController {
       .then(result =>
         observer.next({
           ...result,
-          strategy: {_id: strategy._id, title: strategy.title, type: strategy.type}
+          strategy: withId({title: strategy.title, type: strategy.type}, idOf(strategy))
         })
       )
       .catch(e => {

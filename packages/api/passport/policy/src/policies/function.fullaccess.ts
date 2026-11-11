@@ -3,7 +3,6 @@ import EnvVarFullAccess from "./env.var.fullaccess.js";
 import SecretFullAccess from "./secret.fullaccess.js";
 
 export default {
-  _id: "FunctionFullAccess",
   name: "Function Full Access",
   description: "Full access to function service.",
   statement: [

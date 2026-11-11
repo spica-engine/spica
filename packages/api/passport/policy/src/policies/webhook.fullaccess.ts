@@ -1,7 +1,6 @@
 import WebhookReadOnlyAccess from "./webhook.readonly.js";
 
 export default {
-  _id: "WebhookFullAccess",
   name: "Webhook Full Access",
   description: "Full acess to webhook service",
   statement: [

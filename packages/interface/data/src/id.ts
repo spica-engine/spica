@@ -28,6 +28,6 @@ export interface IdTypes {
 
 declare const keyedBrand: unique symbol;
 
-export type Keyed<T> = T & {readonly [keyedBrand]: true};
+export type Keyed<T> = T & {readonly [keyedBrand]?: true};
 
 export const ID_TYPES = Symbol.for("SPICA_DATA_ID_TYPES");

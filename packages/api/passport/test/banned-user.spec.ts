@@ -8,6 +8,7 @@ import {OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {Config} from "twilio/lib/twiml/VoiceResponse";
 import {ConfigModule} from "@spica-server/config";
+import {idOf} from "@spica-server/data";
 
 contractSuite("User Ban Logic", engine => {
   let module: TestingModule;
@@ -111,7 +112,7 @@ contractSuite("User Ban Logic", engine => {
         Authorization: `IDENTITY ${identityToken}`
       }
     );
-    testUserId = userListRes.body._id;
+    testUserId = idOf(userListRes.body).toString();
   });
 
   afterEach(() => app.close());

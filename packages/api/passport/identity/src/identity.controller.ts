@@ -24,7 +24,7 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {DEFAULT, FILTER, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {DuplicateKeyError, ID} from "@spica-server/data";
+import {DuplicateKeyError, ID, idOf} from "@spica-server/data";
 import {
   COLLECTION_QUERY,
   CollectionQueryFacade,
@@ -96,7 +96,7 @@ export class IdentityController {
           if (!identity.authFactor) {
             continue;
           }
-          this.authFactor.register(identity._id.toString(), identity.authFactor);
+          this.authFactor.register(idOf(identity).toString(), identity.authFactor);
         }
       })
       .catch(error => {

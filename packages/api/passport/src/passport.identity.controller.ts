@@ -33,7 +33,7 @@ import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body.js";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ID} from "@spica-server/data";
+import {ID, idOf} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {
   STRATEGIES,
@@ -197,7 +197,7 @@ export class PassportIdentityController {
     const tokenSchema = this.identityService.sign(identity, expiresIn);
     const refreshTokenSchema = await this.identityService.signRefreshToken(identity);
 
-    const id = identity._id.toString();
+    const id = idOf(identity).toString();
     // Enforce 2FA from the persisted record, not the in-memory AuthFactor map: that map is
     // per-replica and only synced opportunistically, so a replica that missed the registration
     // broadcast would otherwise skip the challenge and let the user bypass 2FA.
@@ -217,7 +217,7 @@ export class PassportIdentityController {
       const challenge = await this.authFactor.start(id);
       const factorRes = {
         challenge,
-        answerUrl: `passport/identify/${identity._id}/factor-authentication`
+        answerUrl: `passport/identify/${idOf(identity)}/factor-authentication`
       };
       return {factorRes};
     } else {

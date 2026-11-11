@@ -9,6 +9,7 @@ import {AssetModule, exporters, operators, validators} from "@spica-server/asset
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import os from "os";
+import {idOf, stripId, withId} from "@spica-server/data";
 
 contractSuite("Apikey", engine => {
   function downloadAsset(asset) {
@@ -75,22 +76,20 @@ contractSuite("Apikey", engine => {
   let assetv2;
 
   beforeEach(async () => {
-    apikeyv1 = {
-      _id: apikeyId,
-      name: "apikey1",
-      key: "secret",
-      description: "desc1",
-      policies: [],
-      active: true
-    };
+    apikeyv1 = withId(
+      {name: "apikey1", key: "secret", description: "desc1", policies: [], active: true},
+      apikeyId
+    );
 
-    apikeyv1Resource = {
-      _id: apikeyId,
-      module: "apikey",
-      contents: {
-        schema: apikeyv1
-      }
-    };
+    apikeyv1Resource = withId(
+      {
+        module: "apikey",
+        contents: {
+          schema: apikeyv1
+        }
+      },
+      apikeyId
+    );
 
     apikeyv2 = {...apikeyv1, policies: ["policy1"]};
 
@@ -114,18 +113,18 @@ contractSuite("Apikey", engine => {
   // separating these tests cause them failed
   it("insert, update and delete", async () => {
     // INSERT PREVIEW
-    let preview = await previewAssetInstallation(assetv1._id);
+    let preview = await previewAssetInstallation(idOf(assetv1));
 
     expect(preview).toEqual({insertions: [apikeyv1Resource], updations: [], deletions: []});
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
     let apikeys = await getApikeys();
     expect(apikeys).toEqual([]);
 
     // INSERT
-    await installAsset(assetv1._id);
+    await installAsset(idOf(assetv1));
     apikeys = await getApikeys();
     expect(apikeys).toEqual([apikeyv1]);
 
@@ -135,24 +134,24 @@ contractSuite("Apikey", engine => {
     // UPDATE PREVIEW
     assetv2 = await downloadAsset(assetv2);
 
-    preview = await previewAssetInstallation(assetv2._id);
+    preview = await previewAssetInstallation(idOf(assetv2));
     expect(preview).toEqual({insertions: [], updations: [apikeyv2Resource], deletions: []});
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("installed");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("downloaded");
 
     apikeys = await getApikeys();
     expect(apikeys).toEqual([apikeyv1]);
 
     // UPDATE
-    await installAsset(assetv2._id);
-    assetv1 = await getAsset(assetv1._id);
+    await installAsset(idOf(assetv2));
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("installed");
 
     apikeys = await getApikeys();
@@ -160,10 +159,10 @@ contractSuite("Apikey", engine => {
 
     // DELETE PREVIEW
     let assetv3 = {...assetv2, resources: []};
-    delete assetv3._id;
+    stripId(assetv3);
     delete assetv3.status;
     assetv3 = await downloadAsset(assetv3);
-    preview = await previewAssetInstallation(assetv3._id);
+    preview = await previewAssetInstallation(idOf(assetv3));
 
     expect(preview).toEqual({
       insertions: [],
@@ -171,28 +170,28 @@ contractSuite("Apikey", engine => {
       deletions: [{...apikeyv2Resource, installation_status: "installed"}]
     });
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("installed");
 
-    assetv3 = await getAsset(assetv3._id);
+    assetv3 = await getAsset(idOf(assetv3));
     expect(assetv3.status).toEqual("downloaded");
 
     apikeys = await getApikeys();
     expect(apikeys).toEqual([apikeyv2]);
 
     // DELETE
-    await installAsset(assetv3._id);
+    await installAsset(idOf(assetv3));
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("downloaded");
 
-    assetv3 = await getAsset(assetv3._id);
+    assetv3 = await getAsset(idOf(assetv3));
     expect(assetv3.status).toEqual("installed");
 
     apikeys = await getApikeys();

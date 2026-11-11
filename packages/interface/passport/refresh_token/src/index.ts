@@ -1,7 +1,5 @@
-import {Id} from "@spica-server/interface-data";
 
 export interface RefreshToken {
-  _id?: Id;
   identity?: string;
   user?: string;
   token: string;
