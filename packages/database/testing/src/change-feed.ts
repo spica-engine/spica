@@ -11,7 +11,14 @@ import {stream} from "./watch-shim";
 })
 export class QuietChangeFeedModule {}
 
+const MONGODB_STREAM_START_MS = 400;
+
 export async function changeFeedReady(module: TestingModule) {
   const feed = module.get<{ready?: () => Promise<void>}>(CHANGE_FEED);
-  await (feed.ready ? feed.ready() : stream.wait());
+  if (feed.ready) {
+    await feed.ready();
+    return;
+  }
+  await stream.wait();
+  await new Promise(resolve => setTimeout(resolve, MONGODB_STREAM_START_MS));
 }
