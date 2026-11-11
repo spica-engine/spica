@@ -23,6 +23,11 @@ export interface IdTypes {
    */
   unscoped(): IdType;
   keyField(bucket: {primary?: string}): string;
+  systemKeyField(): string;
 }
+
+declare const keyedBrand: unique symbol;
+
+export type Keyed<T> = T & {readonly [keyedBrand]: true};
 
 export const ID_TYPES = Symbol.for("SPICA_DATA_ID_TYPES");

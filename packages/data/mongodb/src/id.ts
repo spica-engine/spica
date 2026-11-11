@@ -60,4 +60,8 @@ export class MongoIdTypes implements IdTypes {
   keyField(): string {
     return "_id";
   }
+
+  systemKeyField(): string {
+    return "_id";
+  }
 }

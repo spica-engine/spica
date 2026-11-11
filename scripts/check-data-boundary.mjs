@@ -172,7 +172,7 @@ function importedNames(clause) {
     .filter(Boolean);
 }
 
-function stripComments(text) {
+export function stripComments(text) {
   return scan(text, {keepStrings: true});
 }
 

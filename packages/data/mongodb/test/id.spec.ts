@@ -141,4 +141,8 @@ describe("MongoIdTypes", () => {
   it("should key bucket documents by _id whatever the primary field is", () => {
     expect(idTypes.keyField({primary: "title"})).toBe("_id");
   });
+
+  it("should key system records by _id", () => {
+    expect(idTypes.systemKeyField()).toBe("_id");
+  });
 });
