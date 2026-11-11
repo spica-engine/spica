@@ -24,6 +24,7 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 | [10 Change streams and realtime](./10-change-streams-and-realtime.md)      | 0, 5, 6, 7, 8 |
 | [11 Devkit](./11-devkit.md)                                                | 1, 5         |
 | [12 Admin panel](./12-panel.md)                                            | 8, 8a, 10    |
+| [13 Key names](./13-key-names.md)                                          | 3, 5, 8a, 9, 10 |
 
 ## Rules for every PR
 
