@@ -4,7 +4,7 @@
   "type": "object",
   "required": ["name"],
   "properties": {
-    "_id": {
+    "$systemKey": {
       "type": "string",
       "format": "objectid",
       "description": "Unique objectid of the apikey"

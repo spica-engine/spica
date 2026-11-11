@@ -9250,6 +9250,7 @@ __metadata:
     "@spica-server/data": "workspace:*"
     "@spica-server/interface-config": "workspace:*"
     "@spica-server/interface-core": "workspace:*"
+    "@spica-server/interface-data": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
     ajv: "npm:^8.17.1"
     ajv-formats: "npm:^3.0.1"

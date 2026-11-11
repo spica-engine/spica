@@ -97,9 +97,6 @@ export function compareResourceGroups<T>(
   comparisonOptions: {
     uniqueField: string;
     ignoredFields: string[];
-  } = {
-    uniqueField: "_id",
-    ignoredFields: []
   }
 ) {
   const {ignoredFields, uniqueField} = comparisonOptions;

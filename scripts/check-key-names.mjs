@@ -10,6 +10,7 @@ const EXEMPT_PREFIXES = [
   "packages/data/mongodb/",
   "packages/devkit/database/",
   "packages/devkit/testing/",
+  "packages/filter/",
   "apps/migrate/",
   "apps/mongoreplicationcontroller/",
   "apps/panel/"

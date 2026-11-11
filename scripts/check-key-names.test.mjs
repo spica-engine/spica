@@ -81,6 +81,7 @@ describe("check-key-names", () => {
       write("packages/data/mongodb/src/a.ts", content);
       write("packages/devkit/database/src/a.ts", content);
       write("apps/panel/src/a.ts", content);
+      write("packages/filter/src/a.ts", content);
       write("packages/data/postgresql/src/a.ts", content);
 
       assert.deepEqual(countKeyLiterals(root), {"packages/data/postgresql/src/a.ts": 1});
