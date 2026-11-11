@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import pg from "pg";
-import {DuplicateKeyError, provideRepository, idOf} from "@spica-server/data";
+import {DuplicateKeyError, provideRepository, idOf, withId} from "@spica-server/data";
 import {contractSuite, DatabaseService} from "@spica-server/database-testing";
 import {ID_TYPES, IdType, IdTypes, PG_POOL} from "@spica-server/interface-data";
 import {STRATEGY_REPOSITORY, StrategyRepository} from "@spica-server/interface-passport";
@@ -555,8 +555,8 @@ contractSuite("passport repositories", engine => {
     });
 
     it("inserts, finds and lists policies in creation order", async () => {
-      const first = await policies.insert({_id: idType.generate(), ...policy("a")} as any);
-      await policies.insert({_id: idType.generate(), ...policy("b")} as any);
+      const first = await policies.insert(withId(policy("a"), idType.generate()) as any);
+      await policies.insert(withId(policy("b"), idType.generate()) as any);
 
       expect(await policies.findById(idOf(first) as any)).toMatchObject(policy("a"));
       expect((await policies.findAll()).map(p => p.name)).toEqual(["a", "b"]);
@@ -564,7 +564,7 @@ contractSuite("passport repositories", engine => {
     });
 
     it("replaces a policy and counts the replacement", async () => {
-      const id = idOf(await policies.insert({_id: idType.generate(), ...policy("a")} as any));
+      const id = idOf(await policies.insert(withId(policy("a"), idType.generate()) as any));
 
       expect(await policies.replaceById(id as any, policy("renamed") as any)).toBe(1);
       expect(await policies.findById(id as any)).toMatchObject({name: "renamed"});
@@ -572,13 +572,13 @@ contractSuite("passport repositories", engine => {
     });
 
     it("counts a replacement that changes nothing", async () => {
-      const id = idOf(await policies.insert({_id: idType.generate(), ...policy("a")} as any));
+      const id = idOf(await policies.insert(withId(policy("a"), idType.generate()) as any));
 
       expect(await policies.replaceById(id as any, policy("a") as any)).toBe(1);
     });
 
     it("deletes a policy", async () => {
-      const id = idOf(await policies.insert({_id: idType.generate(), ...policy("a")} as any));
+      const id = idOf(await policies.insert(withId(policy("a"), idType.generate()) as any));
 
       expect(await policies.deleteById(id as any)).toBe(1);
       expect(await policies.deleteById(id as any)).toBe(0);

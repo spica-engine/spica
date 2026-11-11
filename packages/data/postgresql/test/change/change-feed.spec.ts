@@ -85,7 +85,7 @@ describe("PostgreSQL change feed", () => {
 
   beforeEach(async () => {
     bucket = await manager.create(definition() as any, () => {});
-    table = `bucket_${bucket._id}`;
+    table = `bucket_${idOf(bucket)}`;
   });
 
   afterEach(() => subscriptions.splice(0).forEach(subscription => subscription.unsubscribe()));
@@ -273,9 +273,9 @@ describe("PostgreSQL change feed", () => {
             labels: {type: "array", items: {type: "string"}}
           }
         }),
-        _id: bucket._id
+        _id: idOf(bucket)
       };
-      await manager.replace(bucket._id, replaced as any, () => {});
+      await manager.replace(idOf(bucket), replaced as any, () => {});
       const saved = await insert({title: "post"}, replaced);
       const events = await listen({operations: ["update"], document: "current"});
 

@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DuplicateKeyError, provideRepository, idOf} from "@spica-server/data";
+import {DuplicateKeyError, provideRepository, idOf, withId} from "@spica-server/data";
 import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {
   ACTIVITY_OPTIONS,
@@ -107,33 +107,31 @@ contractSuite("storage, activity and replication repositories", engine => {
     });
 
     it("claims a job once", async () => {
-      expect(await jobs.claim({_id: "job-1"})).toBe(true);
-      expect(await jobs.claim({_id: "job-1"})).toBe(false);
-      expect(await jobs.claim({_id: "job-2"})).toBe(true);
+      expect(await jobs.claim(withId({}, "job-1"))).toBe(true);
+      expect(await jobs.claim(withId({}, "job-1"))).toBe(false);
+      expect(await jobs.claim(withId({}, "job-2"))).toBe(true);
     });
 
     it("lets only one of many concurrent claims win", async () => {
       const results = await Promise.all(
-        Array.from({length: 10}, () => jobs.claim({_id: "contended", event_id: "e"}))
+        Array.from({length: 10}, () => jobs.claim(withId({event_id: "e"}, "contended")))
       );
 
       expect(results.filter(Boolean)).toHaveLength(1);
     });
 
     it("takes the job of an event once, with everything it was claimed with", async () => {
-      await jobs.claim({_id: "job-1", event_id: "event-1", change: {kind: "insert", n: 2}});
-      await jobs.claim({_id: "job-2", event_id: "event-2"});
+      await jobs.claim(withId({event_id: "event-1", change: {kind: "insert", n: 2}}, "job-1"));
+      await jobs.claim(withId({event_id: "event-2"}, "job-2"));
 
       const taken = await jobs.takeByEventId("event-1");
 
-      expect(taken).toMatchObject({
-        _id: "job-1",
-        event_id: "event-1",
-        change: {kind: "insert", n: 2}
-      });
+      expect(taken).toMatchObject(
+        withId({event_id: "event-1", change: {kind: "insert", n: 2}}, "job-1")
+      );
       expect(new Date(taken.created_at).getTime()).not.toBeNaN();
       expect(await jobs.takeByEventId("event-1")).toBeNull();
-      expect(await jobs.takeByEventId("event-2")).toMatchObject({_id: "job-2"});
+      expect(await jobs.takeByEventId("event-2")).toMatchObject(withId({}, "job-2"));
       expect(await jobs.takeByEventId("unknown")).toBeNull();
     });
   });
@@ -145,7 +143,7 @@ contractSuite("storage, activity and replication repositories", engine => {
       url,
       icon: "extension",
       status: "downloaded" as const,
-      resources: [{_id: "1", module: "bucket", contents: {schema: {title: name}}}] as any,
+      resources: [withId({module: "bucket", contents: {schema: {title: name}}}, "1")] as any,
       configs: []
     });
 

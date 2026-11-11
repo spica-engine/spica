@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {FilterLanguageError, provideRepository} from "@spica-server/data";
+import {FilterLanguageError, provideRepository, idOf} from "@spica-server/data";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {BUCKET_SCHEMA_MANAGER, BucketSchemaManager} from "@spica-server/interface-bucket";
 import {BUCKET_QUERY, BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-common";
@@ -51,7 +51,7 @@ describe("PostgreSQL realtime", () => {
   const patch = (document: object, changes: object) =>
     writes.patch(bucket, document as any, changes, {}, context());
 
-  async function open(options: RealtimeOptions = {}, name = `bucket_${bucket._id}`) {
+  async function open(options: RealtimeOptions = {}, name = `bucket_${idOf(bucket)}`) {
     const chunks: StreamChunk<any>[] = [];
     const errors: any[] = [];
     subscriptions.push(
