@@ -32,7 +32,7 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 - **MongoDB stays green.** Existing MongoDB test suites pass unchanged in every PR.
 - **New code brings its own tests.** PostgreSQL code adds tests that run on PostgreSQL in CI. Shared behaviour gets contract cases that run on both engines.
 - **Specs of a part's domain are classified.** When a part makes a domain work on PostgreSQL, every spec in that domain either runs through `contractSuite` on both engines or declares `mongoOnly("reason")`. `yarn check:engine-specs --strict --under=<path>/` must list nothing for the domain before the part's last PR merges. Keep the trailing slash, or the prefix also matches sibling directories.
-- **PostgreSQL stays experimental** until Parts 0 to 10 have merged. The API logs a warning when it starts with `--database-type postgresql`.
+- **PostgreSQL was experimental** until Parts 0 to 10 had merged. Part 10 removed the warning and the markings in the options and the chart. The devkit (Part 11) and the admin panel (Part 12) follow the backend and are still to come.
 - **Keep the docs true.** The last PR of a part fills in that part's "As built" section. If a decision changes during review, update it in the part document and in the decisions table below.
 
 ## Prompt for a part session
@@ -58,6 +58,8 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Mongo operator coverage       | No conversion. A filter in the other engine's language returns 404.                                             |
 | Missed change events          | Not handled for now. Spica doesn't use change stream resume today. The feed is plain LISTEN/NOTIFY.             |
+| Change event shape            | Engine-neutral: `id` (the same on every replica), `operation`, `collection`, `key`, `document`, `previousDocument` and `changes`. PostgreSQL triggers send only the table, the operation and the key; the API reads the row. |
+| Realtime filtering            | PostgreSQL decides, by query, in the engine's own filter language. The work is shared between identical subscriptions, skipped when an update cannot matter, and a Node prefilter may skip a subscriber it is certain a change does not concern. The database stays the authority. |
 | Schema edits on large buckets | All edits run online, however long they take. None are refused, and the user is responsible for them.           |
 | Devkit API shape              | A completely new devkit for PostgreSQL. `@spica-devkit/bucket` stays as it is, and callers write the filter in the expression language. |
 | Existing installs             | Not supported. There is no path for moving a MongoDB instance to PostgreSQL, because MongoDB compatibility and the best key performance can't both be had. |
