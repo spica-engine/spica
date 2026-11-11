@@ -1,4 +1,5 @@
 import {Action, PreActivity, ModuleActivity} from "@spica-server/interface-activity";
+import {idOf} from "@spica-server/data";
 
 export function createPolicyActivity(
   preActivity: PreActivity,
@@ -9,7 +10,7 @@ export function createPolicyActivity(
 
   switch (preActivity.action) {
     case Action.POST:
-      activities.push({...preActivity, resource: ["passport", "policy", res._id.toString()]});
+      activities.push({...preActivity, resource: ["passport", "policy", idOf(res).toString()]});
       break;
     case Action.PUT:
       activities.push({...preActivity, resource: ["passport", "policy", req.params.id]});

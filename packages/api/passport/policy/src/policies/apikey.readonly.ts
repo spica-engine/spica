@@ -1,5 +1,4 @@
 export default {
-  _id: "ApiKeyReadOnlyAccess",
   name: "ApiKey Read Only Access",
   description: "Read only access to passport apikey service.",
   statement: [

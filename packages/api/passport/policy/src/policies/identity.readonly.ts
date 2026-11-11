@@ -1,5 +1,4 @@
 export default {
-  _id: "IdentityReadOnlyAccess",
   name: "Identity Read Only Access",
   description: "Read only access to passport identity service.",
   statement: [

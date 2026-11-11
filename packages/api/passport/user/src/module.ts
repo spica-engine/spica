@@ -10,7 +10,7 @@ import {
   VERIFICATION_PROVIDERS_INITIALIZER,
   VERIFICATION_REPOSITORY
 } from "@spica-server/interface-passport-user";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {UserController} from "./user.controller.js";
 import {UserService} from "./user.service.js";
 import {UserStrategy} from "./user.strategy.js";
@@ -381,12 +381,12 @@ export const PolicyProviderFactory = (service: PolicyService) => {
           {
             module: "passport:user",
             action: "passport:user:show",
-            resource: {include: [req.user._id], exclude: []}
+            resource: {include: [idOf(req.user)], exclude: []}
           },
           {
             module: "passport:user",
             action: "passport:user:update",
-            resource: {include: [req.user._id], exclude: []}
+            resource: {include: [idOf(req.user)], exclude: []}
           }
         ]
       }
@@ -394,7 +394,7 @@ export const PolicyProviderFactory = (service: PolicyService) => {
 
     const actualPolicies = await service._findAll();
     return req.user.policies
-      .map(upi => actualPolicies.find(ap => ap._id == upi))
+      .map(upi => actualPolicies.find(ap => idOf(ap) == upi))
       .concat(userPolicies);
   };
 };

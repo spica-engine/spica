@@ -9,6 +9,7 @@ import {IDENTITY_REPOSITORY, IdentityRepository} from "@spica-server/interface-p
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import cookieParser from "cookie-parser";
+import {idOf} from "@spica-server/data";
 
 const EXPIRES_IN = 60_000;
 
@@ -131,10 +132,10 @@ contractSuite("passport login", engine => {
 
     const {body: verified} = await req.get("/passport/identity/verify", {}, {Authorization: token});
     const idType = module.get<IdTypes>(ID_TYPES).forCollection("identity");
-    expect(idType.isValid(String(verified._id))).toBe(true);
+    expect(idType.isValid(String(idOf(verified)))).toBe(true);
 
     const {statusCode, body: identity} = await req.get(
-      `/passport/identity/${verified._id}`,
+      `/passport/identity/${idOf(verified)}`,
       {},
       authorization()
     );
@@ -191,13 +192,17 @@ contractSuite("passport login", engine => {
     expect(apiKey.key).toEqual(expect.any(String));
 
     const before = await req.get(
-      `/passport/apikey/${apiKey._id}`,
+      `/passport/apikey/${idOf(apiKey)}`,
       {},
       authorization(apiKey.key, "APIKEY")
     );
-    await req.put(`/passport/apikey/${apiKey._id}/policy/PassportFullAccess`, {}, authorization());
+    await req.put(
+      `/passport/apikey/${idOf(apiKey)}/policy/PassportFullAccess`,
+      {},
+      authorization()
+    );
     const after = await req.get(
-      `/passport/apikey/${apiKey._id}`,
+      `/passport/apikey/${idOf(apiKey)}`,
       {},
       authorization(apiKey.key, "APIKEY")
     );
@@ -214,15 +219,19 @@ contractSuite("passport login", engine => {
       {name: "key", active: true},
       authorization()
     );
-    await req.put(`/passport/apikey/${apiKey._id}/policy/PassportFullAccess`, {}, authorization());
     await req.put(
-      `/passport/apikey/${apiKey._id}`,
+      `/passport/apikey/${idOf(apiKey)}/policy/PassportFullAccess`,
+      {},
+      authorization()
+    );
+    await req.put(
+      `/passport/apikey/${idOf(apiKey)}`,
       {name: "key", active: false, key: apiKey.key},
       authorization()
     );
 
     const {statusCode} = await req.get(
-      `/passport/apikey/${apiKey._id}`,
+      `/passport/apikey/${idOf(apiKey)}`,
       {},
       authorization(apiKey.key, "APIKEY")
     );
@@ -243,7 +252,7 @@ contractSuite("passport login", engine => {
     );
     expect(policy.name).toBe("readers");
 
-    const {body: policies} = await req.get(`/passport/policy/${policy._id}`, {}, authorization());
+    const {body: policies} = await req.get(`/passport/policy/${idOf(policy)}`, {}, authorization());
 
     expect(policies).toMatchObject({name: "readers"});
   });

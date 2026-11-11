@@ -22,6 +22,7 @@ import {OBJECT_ID} from "@spica-server/core-schema";
 import {UserModule, UserService} from "@spica-server/passport-user";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";
+import {withId} from "@spica-server/data";
 
 contractSuite("VerificationService", engine => {
   let module: TestingModule;
@@ -731,11 +732,9 @@ contractSuite("VerificationService", engine => {
     let userId: any;
     beforeEach(async () => {
       userId = newUserId();
-      await users.insert({
-        _id: userId,
-        username: "testphoneuser",
-        password: "testpassword"
-      } as any);
+      await users.insert(
+        withId({username: "testphoneuser", password: "testpassword"}, userId) as any
+      );
 
       await userConfigService.updateProviderVerificationConfig([
         {provider: "email", strategy: STRATEGY},
@@ -1110,11 +1109,9 @@ contractSuite("VerificationService", engine => {
 
     beforeEach(async () => {
       userId = newUserId();
-      await users.insert({
-        _id: userId,
-        username: "magiclink-user",
-        password: "testpassword"
-      } as any);
+      await users.insert(
+        withId({username: "magiclink-user", password: "testpassword"}, userId) as any
+      );
 
       await userConfigService.updateProviderVerificationConfig([
         {provider: "email", strategy: "MagicLink"},

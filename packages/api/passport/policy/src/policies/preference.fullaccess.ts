@@ -1,7 +1,6 @@
 import PreferenceReadOnly from "./preference.readonly.js";
 
 export default {
-  _id: "PreferenceFullAccess",
   name: "Preference Full Access",
   description: "Full access to preference service.",
   statement: [

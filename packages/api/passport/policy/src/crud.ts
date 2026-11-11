@@ -1,4 +1,4 @@
-import {ids} from "@spica-server/data";
+import {assignId, ids, idOf, stripId} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {PolicyService} from "./policy.service.js";
 import {changeFactory, Policy} from "@spica-server/interface-passport-policy";
@@ -22,8 +22,8 @@ export async function insert(ps: PolicyService, body: Policy) {
     const message = createDuplicatedActionsErrorMessage(duplicatedActionMaps);
     throw new BadRequestException(message);
   }
-  if (body._id) {
-    body._id = policyIds().parse(body._id);
+  if (idOf(body)) {
+    assignId(body, policyIds().parse(idOf(body)));
   }
   return ps.insert(body);
 }
@@ -36,12 +36,12 @@ export async function replace(ps: PolicyService, policy: Policy) {
     throw new BadRequestException(message);
   }
 
-  const _id = policyIds().parse(policy._id);
-  delete policy._id;
-  const res = await ps.replaceById(_id, policy);
+  const id = policyIds().parse(idOf(policy));
+  stripId(policy);
+  const res = await ps.replaceById(id, policy);
 
   if (!res) {
-    throw new NotFoundException(`Policy with ID ${_id} not found`);
+    throw new NotFoundException(`Policy with ID ${id} not found`);
   }
   return res;
 }

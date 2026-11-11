@@ -12,7 +12,6 @@ export interface IdentitySchema {
 }
 
 export interface Identity {
-  _id?: Id;
   identifier: string;
   password: string;
   deactivateJwtsBefore?: number;

@@ -17,7 +17,7 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ID} from "@spica-server/data";
+import {ID, withId} from "@spica-server/data";
 import {Id, ResourceFilterSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createPolicyActivity} from "./activity.resource.js";
@@ -71,7 +71,7 @@ export class PolicyController {
     @Param("id", ID(POLICIES_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy
   ) {
-    return CRUD.replace(this.policy, {_id: id, ...body});
+    return CRUD.replace(this.policy, {...withId({}, id), ...body});
   }
 
   @UseInterceptors(activity(createPolicyActivity))

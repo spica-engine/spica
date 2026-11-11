@@ -1,20 +1,26 @@
 import {Inject, Injectable} from "@nestjs/common";
+import {withId} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {Policy, POLICY_REPOSITORY, PolicyRepository} from "@spica-server/interface-passport-policy";
 import managedPolicies from "./policies/index.js";
 
 @Injectable()
 export class PolicyService {
-  managedPolicies: Array<PolicyWithType>;
+  private managed: Array<PolicyWithType>;
   customerManagedPolicies: Array<PolicyWithType>;
+
+  get managedPolicies(): Array<PolicyWithType> {
+    this.managed ??= Object.entries(managedPolicies).map(
+      ([id, policy]) => ({...withId(policy, id), system: true}) as PolicyWithType
+    );
+    return this.managed;
+  }
 
   get policies(): Array<PolicyWithType> {
     return [...this.managedPolicies, ...this.customerManagedPolicies];
   }
 
-  constructor(@Inject(POLICY_REPOSITORY) private readonly repository: PolicyRepository) {
-    this.managedPolicies = managedPolicies.map(p => ({...p, system: true}) as PolicyWithType);
-  }
+  constructor(@Inject(POLICY_REPOSITORY) private readonly repository: PolicyRepository) {}
 
   _findAll(): Promise<Policy[]> {
     return this.repository.findAll().then(policies => {

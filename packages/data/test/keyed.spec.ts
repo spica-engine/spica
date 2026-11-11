@@ -1,4 +1,12 @@
-import {bindIdTypes, idOf, omitId, systemKeyField, withId} from "@spica-server/data";
+import {
+  assignId,
+  bindIdTypes,
+  idOf,
+  omitId,
+  stripId,
+  systemKeyField,
+  withId
+} from "@spica-server/data";
 import {IdTypes, Keyed} from "@spica-server/interface-data";
 
 interface Identity {
@@ -46,6 +54,20 @@ describe("system record keys", () => {
       const keyed = withId<Identity>({identifier: "admin"}, "abc");
       omitId(keyed);
       expect(idOf(keyed)).toBe("abc");
+    });
+
+    it("should write the id into the record itself", () => {
+      const record: Identity = {identifier: "admin"};
+
+      expect(assignId(record, "abc")).toBe(record);
+      expect(record).toEqual({[key]: "abc", identifier: "admin"});
+    });
+
+    it("should remove the id from the record itself", () => {
+      const keyed = withId<Identity>({identifier: "admin"}, "abc");
+
+      expect(stripId(keyed)).toBe(keyed);
+      expect(keyed).toEqual({identifier: "admin"});
     });
 
     it("should accept a record that has no id", () => {

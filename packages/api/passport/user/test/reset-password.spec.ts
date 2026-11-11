@@ -16,6 +16,7 @@ import {UserModule, UserService} from "@spica-server/passport-user";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {compare} from "@spica-server/passport-identity/src/hash";
 import {ConfigModule} from "@spica-server/config";
+import {idOf} from "@spica-server/data";
 
 contractSuite("PasswordResetService", engine => {
   let module: TestingModule;
@@ -314,7 +315,7 @@ contractSuite("PasswordResetService", engine => {
         message: "Password has been reset successfully. You can now log in with your new password."
       });
 
-      const updatedUser = await users.findById(user._id);
+      const updatedUser = await users.findById(idOf(user));
       const isMatch = await compare(newPassword, updatedUser.password);
       expect(isMatch).toBe(true);
     });
@@ -457,7 +458,7 @@ contractSuite("PasswordResetService", engine => {
         message: "Password has been reset successfully. You can now log in with your new password."
       });
 
-      const updatedUser = await users.findById(user._id);
+      const updatedUser = await users.findById(idOf(user));
       const isMatch = await compare(newPassword, updatedUser.password);
       expect(isMatch).toBe(true);
     });

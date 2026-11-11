@@ -1,7 +1,6 @@
 import BucketReadOnlyAccess from "./bucket.readonly.js";
 
 export default {
-  _id: "BucketFullAccess",
   name: "Bucket Full Access",
   description: "Full access to bucket service.",
   statement: [

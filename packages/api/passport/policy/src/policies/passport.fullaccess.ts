@@ -6,7 +6,6 @@ import RefreshTokenFullAccess from "./refresh.token.fullaccess.js";
 import UserFullAccess from "./user.fullaccess.js";
 
 export default {
-  _id: "PassportFullAccess",
   name: "Passport Full Access",
   description: "Full access to passport identity service and  policy service.",
   statement: [

@@ -114,7 +114,15 @@ function analyze(sourceFile, relative, {root, checker, systemRecords, anyIsSyste
 
   const readKey = node => {
     const parent = node.parent;
+    const symbol = checker.getSymbolAtLocation(node.name);
+    const untyped =
+      !symbol && (checker.getTypeAtLocation(node.expression).flags & ts.TypeFlags.Any) != 0;
+    const isSystem = isSystemSymbol(symbol) || (untyped && anyAllowed);
+
     if (ts.isDeleteExpression(parent)) {
+      if (isSystem && ts.isExpressionStatement(parent.parent) && !ts.isOptionalChain(node)) {
+        return edit(parent, `stripId(${node.expression.getText()})`, "stripId", "delete");
+      }
       return report(node, "delete");
     }
     if (
@@ -123,13 +131,23 @@ function analyze(sourceFile, relative, {root, checker, systemRecords, anyIsSyste
       parent.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
       parent.operatorToken.kind <= ts.SyntaxKind.LastAssignment
     ) {
+      if (
+        isSystem &&
+        parent.operatorToken.kind == ts.SyntaxKind.EqualsToken &&
+        ts.isExpressionStatement(parent.parent) &&
+        !ts.isOptionalChain(node)
+      ) {
+        return edit(
+          parent,
+          `assignId(${node.expression.getText()}, ${parent.right.getText()})`,
+          "assignId",
+          "assignment"
+        );
+      }
       return report(node, "assignment");
     }
 
-    const symbol = checker.getSymbolAtLocation(node.name);
-    const untyped =
-      !symbol && (checker.getTypeAtLocation(node.expression).flags & ts.TypeFlags.Any) != 0;
-    if (!(isSystemSymbol(symbol) || (untyped && anyAllowed))) {
+    if (!isSystem) {
       return report(node, untyped ? "untyped receiver" : "not a system record");
     }
 
@@ -155,9 +173,10 @@ function analyze(sourceFile, relative, {root, checker, systemRecords, anyIsSyste
     }
     const property = keyed[0];
     const contextual = checker.getContextualType(node);
-    const system =
-      contextual &&
-      isSystemSymbol(checker.getPropertyOfType(checker.getNonNullableType(contextual), KEY));
+    const untypedContext = !contextual || (contextual.flags & ts.TypeFlags.Any) != 0;
+    const system = untypedContext
+      ? anyAllowed
+      : isSystemSymbol(checker.getPropertyOfType(checker.getNonNullableType(contextual), KEY));
     const later = node.properties.slice(node.properties.indexOf(property) + 1);
 
     if (keyed.length > 1 || later.some(ts.isSpreadAssignment)) {

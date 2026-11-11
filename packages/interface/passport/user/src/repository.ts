@@ -3,6 +3,7 @@ import {
   EntryStatus,
   ExpiringRepository,
   Id,
+  Keyed,
   ProfilerQuery,
   Repository,
   UpdatableById
@@ -68,7 +69,7 @@ export interface VerificationRepository extends ExpiringRepository {
   upsertPending(
     target: VerificationTarget,
     pending: {destination: string; provider: string; code: string}
-  ): Promise<UserVerification & {_id: Id}>;
+  ): Promise<Keyed<UserVerification>>;
   deleteById(id: Id): Promise<void>;
 }
 

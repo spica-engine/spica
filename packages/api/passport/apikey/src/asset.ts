@@ -2,7 +2,7 @@ import {Validator, Schema} from "@spica-server/core-schema";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {Resource} from "@spica-server/interface-asset";
 import {registrar} from "@spica-server/asset";
-import {ids} from "@spica-server/data";
+import {assignId, ids, idOf, stripId} from "@spica-server/data";
 import uniqid from "uniqid";
 import ApiKeySchema from "./schemas/apikey.json" with {type: "json"};
 import {ApikeyAsset, ApiKeyRepository} from "@spica-server/interface-passport-apikey";
@@ -25,7 +25,10 @@ export function registerAssetHandlers(
   const operator = {
     insert: (resource: Resource<ApikeyAsset>) => {
       const apikey = resource.contents.schema;
-      apikey._id = apikey._id == null ? apikeyIds().generate() : apikeyIds().parse(apikey._id);
+      assignId(
+        apikey,
+        idOf(apikey) == null ? apikeyIds().generate() : apikeyIds().parse(idOf(apikey))
+      );
 
       apikey.key = apikey.key || uniqid();
 
@@ -34,27 +37,28 @@ export function registerAssetHandlers(
 
     update: (resource: Resource<ApikeyAsset>) => {
       const apikey = resource.contents.schema;
-      const _id = apikeyIds().parse(apikey._id);
+      const id = apikeyIds().parse(idOf(apikey));
 
-      delete apikey._id;
+      stripId(apikey);
 
-      return apiKeys.replaceById(_id, apikey);
+      return apiKeys.replaceById(id, apikey);
     },
 
-    delete: (resource: Resource<ApikeyAsset>) => apiKeys.deleteById(apikeyIds().parse(resource._id))
+    delete: (resource: Resource<ApikeyAsset>) =>
+      apiKeys.deleteById(apikeyIds().parse(idOf(resource)))
   };
   registrar.operator(_module, operator);
 
-  const exporter = async (_id: string) => {
-    if (!apikeyIds().isValid(_id)) {
-      return Promise.reject(`${_id} is not a valid object id`);
+  const exporter = async (id: string) => {
+    if (!apikeyIds().isValid(id)) {
+      return Promise.reject(`${id} is not a valid object id`);
     }
-    const apikey = await apiKeys.findById(apikeyIds().parse(_id));
+    const apikey = await apiKeys.findById(apikeyIds().parse(id));
 
     if (!apikey) {
-      return Promise.reject(`Apikey does not exist with _id ${_id}`);
+      return Promise.reject(`Apikey does not exist with id ${id}`);
     }
-    return assetRepManager.write(_module, _id, "schema", apikey, "yaml");
+    return assetRepManager.write(_module, id, "schema", apikey, "yaml");
   };
   registrar.exporter(_module, exporter);
 }

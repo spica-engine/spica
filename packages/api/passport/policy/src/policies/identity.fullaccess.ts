@@ -1,7 +1,6 @@
 import IdentityReadOnlyAccess from "./identity.readonly.js";
 
 export default {
-  _id: "IdentityFullAccess",
   name: "Identity Full Access",
   description: "Full access to passport identity service.",
   statement: [

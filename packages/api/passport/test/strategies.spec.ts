@@ -7,6 +7,7 @@ import {contractSuite} from "@spica-server/database-testing";
 import {STRATEGY_REPOSITORY, StrategyRepository} from "@spica-server/interface-passport";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
+import {idOf, withId} from "@spica-server/data";
 
 const EXPIRES_IN = 60_000;
 
@@ -90,7 +91,7 @@ contractSuite("passport strategies", engine => {
 
     expect(statusCode).toBe(200);
     expect(body).toEqual([
-      {_id: body[0]._id, type: "saml", name: "saml", title: "saml", icon: "login"}
+      withId({type: "saml", name: "saml", title: "saml", icon: "login"}, idOf(body[0]))
     ]);
   });
 
@@ -99,7 +100,7 @@ contractSuite("passport strategies", engine => {
 
     expect(statusCode).toBe(200);
     expect(body).toEqual([
-      {_id: body[0]._id, type: "oauth", name: "oauth", title: "oauth", icon: "login"}
+      withId({type: "oauth", name: "oauth", title: "oauth", icon: "login"}, idOf(body[0]))
     ]);
   });
 });

@@ -32,6 +32,7 @@ import {
   isEncryptedData
 } from "@spica-server/core-encryption";
 import {AuthFactor} from "@spica-server/passport-authfactor";
+import {idOf} from "@spica-server/data";
 
 const ENCRYPTED_ATTRIBUTES = ["email"];
 
@@ -101,7 +102,7 @@ export class UserService {
 
     const tokenSchema = {
       token: hashedToken,
-      user: String(user._id),
+      user: String(idOf(user)),
       created_at: new Date(),
       expired_at: new Date(Date.now() + expiresIn * 1000),
       last_used_at: undefined
@@ -147,7 +148,7 @@ export class UserService {
 
     const user = await this.findUserOfToken(accessToken);
 
-    if (refreshTokenData.user !== String(user._id)) {
+    if (refreshTokenData.user !== String(idOf(user))) {
       return Promise.reject("Refresh and access token usernames are mismatched");
     }
 
