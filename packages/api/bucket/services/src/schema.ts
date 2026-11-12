@@ -12,14 +12,51 @@ function addIdField(bucket) {
   return bucket;
 }
 
-export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSchema7 {
-  function map(schema: JSONSchema7): JSONSchema7 {
+export interface CompileOptions {
+  /** Optional properties kept in a column may hold null. Everything else stays strict. */
+  nullable?: boolean;
+}
+
+function holdsNull(schema: JSONSchema7) {
+  const kind = schema.type as ExtendedJSONSchema7Type;
+  if (!kind || schema["options"]?.translate) {
+    return false;
+  }
+  switch (kind) {
+    case "array":
+    case "multiselect":
+      return !schema.items;
+    case "relation":
+      return schema["relationType"] != "onetomany";
+    case "object":
+      return typeof schema.properties != "object";
+    default:
+      return true;
+  }
+}
+
+export function compile(
+  bucket: Bucket,
+  preferences: BucketPreferences,
+  options: CompileOptions = {}
+): JSONSchema7 {
+  function map(
+    schema: JSONSchema7,
+    nullable = false,
+    strictKeys: ReadonlySet<string> = new Set()
+  ): JSONSchema7 {
     schema = {...schema};
+    const nullableKind = nullable && holdsNull(schema);
+
     if (typeof schema.properties == "object") {
+      const required = new Set(Array.isArray(schema.required) ? schema.required : []);
       for (const key in schema.properties) {
         const spec = schema.properties[key];
         if (typeof spec == "object") {
-          schema.properties[key] = map(spec);
+          schema.properties[key] = map(
+            spec,
+            Boolean(options.nullable) && !required.has(key) && !strictKeys.has(key)
+          );
         } else {
           logger.debug(`ignoring boolean property at ${key}`);
         }
@@ -137,6 +174,13 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
 
       default:
     }
+
+    if (nullableKind && typeof schema.type == "string") {
+      schema.type = [schema.type, "null"];
+      if (Array.isArray(schema.enum) && !schema.enum.includes(null)) {
+        schema.enum = [...schema.enum, null];
+      }
+    }
     return schema;
   }
 
@@ -145,16 +189,20 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
     bucket = addIdField(bucket);
   }
 
-  const schema = map({
-    $schema: "http://json-schema.org/draft-07/schema#",
-    required: Array.isArray(bucket.required) ? bucket.required : [],
-    readOnly: bucket.readOnly,
-    title: bucket.title,
-    description: bucket.description,
-    type: "object",
-    properties: bucket.properties,
-    additionalProperties: false
-  });
+  const schema = map(
+    {
+      $schema: "http://json-schema.org/draft-07/schema#",
+      required: Array.isArray(bucket.required) ? bucket.required : [],
+      readOnly: bucket.readOnly,
+      title: bucket.title,
+      description: bucket.description,
+      type: "object",
+      properties: bucket.properties,
+      additionalProperties: false
+    },
+    false,
+    new Set(keyField ? [keyField] : [])
+  );
 
   schema.properties = Object.keys(bucket.properties).reduce((accumulator, key) => {
     let property: any = {...bucket.properties[key]};
