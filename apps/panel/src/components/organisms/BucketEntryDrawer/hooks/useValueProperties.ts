@@ -9,40 +9,8 @@ import {
 import {inputKindOf, isHiddenKeyProperty} from "../../../../domain/fields/keyKinds";
 import {useKeyField} from "../../../../hooks/useKeyField";
 import {idOf} from "../../../../utils/recordKey";
+import {collectBucketIds} from "./collectBucketIds";
 
-
-function collectBucketIds(
-  properties: Record<string, Property>,
-  cellValue: any
-): Array<{bucketId: string; value: any}> {
-  const collected: Array<{bucketId: string; value: any}> = [];
-
-  function traverse(property: Property, value: any) {
-    if (!property || typeof property !== "object") return;
-    
-    if (property.type === "relation") {
-      const relationValue = value?.[property.title];
-      collected.push({bucketId: property.bucketId as string, value: relationValue});
-    }
-    
-    if (property.type === "object" || property.type === "array") {
-      for (const prop of Object.values(
-        property.properties || property.items?.properties || {}
-      )) {
-        const childValue = value?.[(prop as Property).title];
-        if (prop && (typeof childValue === "object" || !childValue)) {
-          traverse(prop as Property, childValue);
-        }
-      }
-    }
-  }
-
-  for (const prop of Object.values(properties || {})) {
-    traverse(prop, cellValue);
-  }
-  
-  return collected;
-}
 
 export const useValueProperties = (bucket: BucketType, initialEntry?: Record<string, any> | null) => {
   const keyField = useKeyField(idOf(bucket)!);
@@ -56,7 +24,7 @@ export const useValueProperties = (bucket: BucketType, initialEntry?: Record<str
 
   useEffect(() => {
     for (const b of bucketIds) {
-      ensureHandlers(b.bucketId, b.bucketId);
+      ensureHandlers(b.bucketId, b.stateKey);
     }
   }, [bucketIds, ensureHandlers]);
 
@@ -67,7 +35,7 @@ export const useValueProperties = (bucket: BucketType, initialEntry?: Record<str
       if ((prop as any).type === "relation" && (prop as any).bucketId) {
         const relValue = initialEntry[fieldKey];
         if (relValue !== undefined && relValue !== null && relValue !== "") {
-          initRelationValue((prop as any).bucketId, (prop as any).bucketId, relValue);
+          initRelationValue((prop as any).bucketId, fieldKey, relValue);
         }
       }
     }
@@ -95,11 +63,11 @@ export const useValueProperties = (bucket: BucketType, initialEntry?: Record<str
       
       if (kind === FieldKind.Relation) {
         const relationProps = {
-          getOptions: getOptionsMap.current[prop.bucketId],
-          loadMoreOptions: loadMoreOptionsMap.current[prop.bucketId],
-          searchOptions: searchOptionsMap.current[prop.bucketId],
-          totalOptionsLength: relationStates?.[prop.bucketId]?.total || 0,
-          relationState: relationStates?.[prop.bucketId] as RelationState
+          getOptions: getOptionsMap.current[key],
+          loadMoreOptions: loadMoreOptionsMap.current[key],
+          searchOptions: searchOptionsMap.current[key],
+          totalOptionsLength: relationStates?.[key]?.total || 0,
+          relationState: relationStates?.[key] as RelationState
         };
         base = fieldDefinition.buildValueProperty(prop, relationProps);
       } else if (kind === FieldKind.Object) {
