@@ -16,7 +16,10 @@ const NON_SEARCHABLE_TYPES = new Set([
   "storage",
   "boolean",
   "number",
-  "date"
+  "date",
+  "uuid",
+  "integer",
+  "bigint"
 ]);
 
 interface UseBucketColumnsResult {

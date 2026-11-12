@@ -5,6 +5,7 @@ import type {FilterConditionRow, FilterField} from "./types";
 const fields: FilterField[] = [
   {key: "title", label: "Title", type: "string"},
   {key: "age", label: "Age", type: "number"},
+  {key: "big", label: "Big", type: "bigint"},
   {key: "created", label: "Created", type: "date"},
   {key: "active", label: "Active", type: "boolean"},
   {
@@ -184,5 +185,34 @@ describe("matchesConditions", () => {
 
   it("should ignore a condition on a field the list does not offer", () => {
     expect(matchesConditions(policy, [row("other", "equals", "x")], [{key: "name", label: "Name", type: "string"}])).toBe(true);
+  });
+});
+
+describe("conditionsToExpression for a bigint field", () => {
+  it("should send the digits as a string so nothing is rounded", () => {
+    expect(conditionsToExpression([row("big", "equals", "90071992547409932")], fields)).toBe(
+      '(document.big == "90071992547409932")'
+    );
+    expect(conditionsToExpression([row("big", "not equals", "9007199254740993")], fields)).toBe(
+      '(document.big != "9007199254740993")'
+    );
+  });
+
+  it("should compare an ordered operator against the digits", () => {
+    expect(conditionsToExpression([row("big", "greater than", "90071992547409932")], fields)).toBe(
+      '(document.big > "90071992547409932")'
+    );
+    expect(conditionsToExpression([row("big", "less than or equal", "-5")], fields)).toBe(
+      '(document.big <= "-5")'
+    );
+  });
+
+  it("should ignore a value that is not a whole number", () => {
+    expect(conditionsToExpression([row("big", "equals", "12.5")], fields)).toBeNull();
+    expect(conditionsToExpression([row("big", "greater than", "abc")], fields)).toBeNull();
+  });
+
+  it("should not touch a plain number field", () => {
+    expect(conditionsToExpression([row("age", "equals", "7")], fields)).toBe("(document.age == 7)");
   });
 });

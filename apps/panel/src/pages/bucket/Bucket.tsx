@@ -36,7 +36,7 @@ function keyFilterField(bucket: BucketType, engine?: DataEngine): FilterField {
   return {
     key: keyField,
     label: "ID",
-    type: type === "integer" || type === "bigint" ? "number" : type === "string" ? "string" : "id"
+    type: type === "integer" ? "number" : type === "bigint" ? "bigint" : type === "string" ? "string" : "id"
   };
 }
 
@@ -102,7 +102,9 @@ export default function Bucket() {
         const fieldType: FilterField["type"] =
           prop.type === "relation" ? "relation" :
           strTypes.has(prop.type) ? "string" :
-          prop.type === "number" ? "number" :
+          prop.type === "number" || prop.type === "integer" ? "number" :
+          prop.type === "bigint" ? "bigint" :
+          prop.type === "uuid" ? "id" :
           prop.type === "date" ? "date" :
           prop.type === "boolean" ? "boolean" :
           prop.type === "multiselect" && prop.items?.enum ? "enum" : "string";

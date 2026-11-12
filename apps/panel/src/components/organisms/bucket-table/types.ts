@@ -11,7 +11,10 @@ export type BucketPropertyType =
   | "array"
   | "multiselect"
   | "object"
-  | "color";
+  | "color"
+  | "uuid"
+  | "integer"
+  | "bigint";
 
 export interface BucketProperty {
   type: BucketPropertyType;
