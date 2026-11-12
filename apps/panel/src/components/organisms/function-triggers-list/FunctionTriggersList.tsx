@@ -3,6 +3,7 @@ import type {SpicaFunction} from "../../../store/api/functionApi";
 import type {BucketType} from "../../../store/api/bucketApi";
 import {normalizeTriggers, describeTriggerOptions} from "../../../utils/functionTriggers";
 import styles from "./FunctionTriggersList.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 type FunctionTriggersListProps = {
   functions: SpicaFunction[];
@@ -21,7 +22,7 @@ const TRIGGER_TYPE_CLASS: Record<string, string> = {
 
 const FunctionTriggersList = ({functions, buckets, isLoading}: FunctionTriggersListProps) => {
   const bucketNameById = useMemo(
-    () => new Map(buckets.map(bucket => [bucket._id, bucket.title])),
+    () => new Map(buckets.map(bucket => [idOf(bucket)!, bucket.title])),
     [buckets]
   );
 
@@ -38,7 +39,7 @@ const FunctionTriggersList = ({functions, buckets, isLoading}: FunctionTriggersL
       {functions.map(fn => {
         const triggers = normalizeTriggers(fn);
         return (
-          <section key={fn._id} className={styles.group}>
+          <section key={idOf(fn)!} className={styles.group}>
             <header className={styles.groupHead}>
               <span className={styles.groupName}>{fn.name}</span>
               <span className={styles.groupCount}>{triggers.length}</span>

@@ -8,6 +8,7 @@ import {
 } from "../../../store/api/envVarApi";
 import type { EnvVar } from "../../../store/api/envVarApi";
 import styles from "../SecretsAndVariables.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 type VariableFormProps = {
   isOpen: boolean;
@@ -49,7 +50,7 @@ const VariableForm = ({ isOpen, selectedVariable, onClose }: VariableFormProps) 
         if (isEditMode) {
           if (!selectedVariable) return;
           await updateEnvVar({
-            id: selectedVariable._id,
+            id: idOf(selectedVariable)!,
             key: values.key,
             value: values.value,
           }).unwrap();
