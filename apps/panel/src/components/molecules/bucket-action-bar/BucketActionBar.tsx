@@ -14,7 +14,8 @@ import FilterPanel from "../../prefabs/filter-panel/FilterPanel";
 import SortPanel from "../../prefabs/sort-panel/SortPanel";
 import type {FilterField, FilterConditionRow, SortField} from "../../prefabs/filter-panel/types";
 import {isConditionActive, formatConditionValue} from "../../prefabs/filter-panel/filterPanelUtils";
-import { idOf } from "../../../utils/recordKey";
+import { idOf, keyOf } from "../../../utils/recordKey";
+import { useKeyField } from "../../../hooks/useKeyField";
 
 type BucketActionBarProps = {
   onRefresh: () => Promise<BucketDataType | void>;
@@ -54,18 +55,20 @@ const generateErrorMessage = (failedIds: string[]): string | null => {
 const DeleteWarningParagraph = ({
   selectedEntries,
   dependentRelations,
-  bucketData
+  bucketData,
+  keyField
 }: {
   selectedEntries: Set<string>;
   dependentRelations: Property[];
   bucketData: Record<string, any>[];
+  keyField: string;
 }) => {
   const count = selectedEntries.size;
   const isSingle = count === 1;
 
   const relationTitles = dependentRelations.map(relation => relation.title);
   const dependentEntries =
-    dependentRelations.length > 0 ? bucketData.filter(entry => selectedEntries.has(entry._id)) : [];
+    dependentRelations.length > 0 ? bucketData.filter(entry => selectedEntries.has(keyOf(entry, keyField))) : [];
 
   const relatedIds = dependentEntries.flatMap(entry => {
     return relationTitles.flatMap(title => {
@@ -123,6 +126,8 @@ const BucketActionBar = ({
   deleteBucketEntries
 }: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
+  const keyField = useKeyField(idOf(bucket)!) ?? "_id";
+  const keyColumnKey = (bucket.properties?.[keyField] as {title?: string} | undefined)?.title ?? keyField;
   const {selectedEntries, deselectEntry} = useEntrySelection(idOf(bucket)!);
 
   const [isColumnsOpen, setIsColumnsOpen] = useState(false);
@@ -266,14 +271,14 @@ const BucketActionBar = ({
   };
 
   const {allColumnsVisible, someColumnsVisible, hiddenColumnsCount} = useMemo(() => {
-    const {_id, ...otherColumnsVisibility} = visibleColumns;
+    const {[keyColumnKey]: _keyVisibility, ...otherColumnsVisibility} = visibleColumns;
     const otherColumnsValues = Object.values(otherColumnsVisibility);
     const allColumnsVisible = otherColumnsValues.every(isVisible => isVisible);
     const someColumnsVisible =
       !allColumnsVisible && otherColumnsValues.some(isVisible => isVisible);
     const hiddenColumnsCount = otherColumnsValues.filter(isVisible => !isVisible).length;
     return {allColumnsVisible, someColumnsVisible, hiddenColumnsCount};
-  }, [visibleColumns]);
+  }, [visibleColumns, keyColumnKey]);
 
   return (
     <>
@@ -414,7 +419,7 @@ const BucketActionBar = ({
                 <div className={styles.columnList}>
                   {columns.map(col => {
                     const isVisible = visibleColumns[col.key];
-                    const isLocked = col.key === "_id";
+                    const isLocked = col.key === keyColumnKey;
                     return (
                       <div
                         key={col.key}
@@ -509,6 +514,7 @@ const BucketActionBar = ({
                 selectedEntries={selectedEntries}
                 dependentRelations={dependentRelations}
                 bucketData={bucketData}
+                keyField={keyField}
               />
               <span>
                 Please type <strong>agree</strong> to confirm deletion.

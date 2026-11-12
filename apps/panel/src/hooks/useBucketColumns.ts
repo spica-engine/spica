@@ -29,7 +29,8 @@ interface UseBucketColumnsResult {
 
 export function useBucketColumns(
   bucket: BucketType | undefined,
-  bucketId: string
+  bucketId: string,
+  keyField: string = "_id"
 ): UseBucketColumnsResult {
   const [fieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, []);
 
@@ -42,17 +43,23 @@ export function useBucketColumns(
     ];
     const orderedColumns = orderedKeys.map(key => propertyByKey.get(key)!);
 
+    const keyIsProperty = propertyByKey.has(keyField);
+
     return [
-      {
-        header: "_id",
-        key: "_id",
-        showDropdownIcon: true,
-        sticky: true,
-        width: "230px",
-        resizable: false,
-        fixed: true,
-        selectable: false
-      },
+      ...(keyIsProperty
+        ? []
+        : [
+            {
+              header: keyField,
+              key: keyField,
+              showDropdownIcon: true,
+              sticky: true,
+              width: "230px",
+              resizable: false,
+              fixed: true,
+              selectable: false
+            }
+          ]),
       ...orderedColumns.map(i => ({
         ...i,
         header: i.title,
@@ -60,7 +67,7 @@ export function useBucketColumns(
         showDropdownIcon: true
       }))
     ] as ColumnType[];
-  }, [bucket, fieldsOrder]);
+  }, [bucket, fieldsOrder, keyField]);
 
   const searchableColumns = useMemo(
     () =>
@@ -119,14 +126,15 @@ export function useBucketColumns(
       return;
     }
 
+    const keyColumnKey = (bucket?.properties?.[keyField] as {title?: string} | undefined)?.title ?? keyField;
     const hasHiddenColumns = Object.values(visibleColumns).some(isVisible => !isVisible);
 
     if (hasHiddenColumns) {
       setVisibleColumns(defaultVisibleColumns);
     } else {
-      // Hide all columns except _id
+      // Hide all columns except the key
       setVisibleColumns(
-        Object.fromEntries(formattedColumns.map(col => [col.key, col.key === "_id"]))
+        Object.fromEntries(formattedColumns.map(col => [col.key, col.key === keyColumnKey]))
       );
     }
   };

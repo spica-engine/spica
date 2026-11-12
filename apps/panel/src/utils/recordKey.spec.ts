@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { idOf, omitId, pickId, principalKeyFor, type SystemRecord } from './recordKey';
+import { idOf, omitId, pickId, principalKeyFor, bucketKeyField, keyOf, omitKey, type SystemRecord } from './recordKey';
 
 describe.each([
   ['MongoDB', '_id'],
@@ -44,5 +44,28 @@ describe('principalKeyFor', () => {
 
   it('should default to the MongoDB name until the engine is known', () => {
     expect(principalKeyFor(undefined)).toBe('_id');
+  });
+});
+
+describe('bucket document keys', () => {
+  it('should find the key field the way the engine defines it', () => {
+    expect(bucketKeyField('mongodb', { primary: 'title' })).toBe('_id');
+    expect(bucketKeyField('postgresql', { primary: 'sku' })).toBe('sku');
+    expect(bucketKeyField('postgresql', {})).toBeUndefined();
+    expect(bucketKeyField(undefined, { primary: 'sku' })).toBeUndefined();
+  });
+
+  it('should read a key as a string whatever its type', () => {
+    expect(keyOf({ sku: 7 }, 'sku')).toBe('7');
+    expect(keyOf({ sku: 'a' }, 'sku')).toBe('a');
+    expect(keyOf({ sku: 0 }, 'sku')).toBe('0');
+    expect(keyOf({}, 'sku')).toBe('');
+    expect(keyOf(null, 'sku')).toBe('');
+    expect(keyOf({ sku: 'a' }, undefined)).toBe('');
+  });
+
+  it('should drop only the key field', () => {
+    expect(omitKey({ sku: 7, title: 't' }, 'sku')).toEqual({ title: 't' });
+    expect(omitKey({ sku: 7, title: 't' }, undefined)).toEqual({ sku: 7, title: 't' });
   });
 });

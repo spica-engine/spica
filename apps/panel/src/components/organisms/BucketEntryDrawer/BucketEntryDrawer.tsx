@@ -20,7 +20,8 @@ import RelationFieldInput from "../../atoms/relation-field-input/RelationFieldIn
 import ArrayFieldInput from "../../atoms/array-field-input/ArrayFieldInput";
 import ObjectFieldInput from "../../atoms/object-field-input/ObjectFieldInput";
 import ErrorBoundary from "../../atoms/error-boundary/ErrorBoundary";
-import { idOf } from "../../../utils/recordKey";
+import { idOf, keyOf, omitKey } from "../../../utils/recordKey";
+import { useKeyField } from "../../../hooks/useKeyField";
 
 // oziko <Drawer size> is a raw px number with no design token; 1.25× the previous 380px baseline.
 const DRAWER_WIDTH_PX = 475;
@@ -47,6 +48,8 @@ const BucketEntryDrawer = ({
   onBack,
 }: BucketEntryDrawerProps) => {
   const isEditMode = entry != null;
+  const keyField = useKeyField(idOf(bucket)!) ?? "_id";
+  const entryKey = keyOf(entry, keyField);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -129,14 +132,14 @@ const BucketEntryDrawer = ({
   useEffect(() => {
     if (isOpen && isEditMode && entry) {
       labelReadyReappliedRef.current = false; // reset guard for new edit session
-      const {_id, ...values} = entry;
+      const values = omitKey(entry, keyField);
       formActions.setValue(values);
     }
     if (!isOpen) {
       submitActions.clearError();
       if (!isEditMode) formActions.reset();
     }
-  }, [isOpen, entry?._id]);
+  }, [isOpen, entryKey]);
 
   // useInputRepresenter only re-calls getDisplayValue when `value` changes, not when
   // `properties` change.  Once all relation states have finished loading their labels
@@ -154,7 +157,7 @@ const BucketEntryDrawer = ({
     if (!allReady) return;
 
     labelReadyReappliedRef.current = true;
-    const {_id, ...values} = entry;
+    const values = omitKey(entry, keyField);
 
     // Replace raw relation values (full documents or plain IDs) with the formatted
     // { label, value } objects stored in initialFormattedValues so that RelationInput
@@ -230,11 +233,11 @@ const BucketEntryDrawer = ({
       return;
     }
 
-    if (isEditMode && entry?._id) {
+    if (isEditMode && entryKey) {
       const prepared = service.prepareData(formState.value, formattedProperties, bucket.required || []);
       await updateBucketEntry({
         bucketId: idOf(bucket)!,
-        entryId: entry._id,
+        entryId: entryKey,
         data: prepared
       }).unwrap().then(() => {
         onEntryCreated?.(true);
@@ -257,6 +260,7 @@ const BucketEntryDrawer = ({
     formattedProperties,
     isEditMode,
     entry,
+    entryKey,
     updateBucketEntry,
     onEntryCreated,
     onClose,
@@ -295,7 +299,7 @@ const BucketEntryDrawer = ({
         </div>
 
         <div className={styles.drawerBody} ref={formContainerRef}>
-          <ErrorBoundary onError={onClose} resetKeys={[isOpen, entry?._id]}>
+          <ErrorBoundary onError={onClose} resetKeys={[isOpen, entryKey]}>
             <BucketEntryForm
               inputRepresentation={inputRepresentation}
               errors={formState.errors}

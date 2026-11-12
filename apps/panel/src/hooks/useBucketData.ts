@@ -14,6 +14,7 @@ import {
   seedRelationLabelMap,
   type RelationLabelModeMap
 } from "../components/prefabs/relation-picker/primaryFieldUtils";
+import { keyOf } from "../utils/recordKey";
 
 const DEFAULT_PAGE_SIZE = 25;
 
@@ -82,12 +83,12 @@ function smoothScrollToTop(el: HTMLElement): Promise<void> {
   });
 }
 
-function dedupeById(rows: any[]): any[] {
+function dedupeById(rows: any[], keyField: string | undefined): any[] {
   const seen = new Set<string>();
   const result: any[] = [];
   for (const row of rows) {
-    const id = row?._id;
-    const key = typeof id === "string" ? id : JSON.stringify(row);
+    const id = keyOf(row, keyField);
+    const key = id !== "" ? id : JSON.stringify(row);
     if (seen.has(key)) continue;
     seen.add(key);
     result.push(row);
@@ -178,8 +179,8 @@ export function useBucketData(
   const total = bucketDataResponse?.meta?.total ?? 0;
 
   const combinedData = useMemo(
-    () => dedupeById([...firstPage, ...extraData]),
-    [firstPage, extraData]
+    () => dedupeById([...firstPage, ...extraData], keyField),
+    [firstPage, extraData, keyField]
   );
 
   const hasMore = !!queryArgs && combinedData.length < total;
@@ -206,14 +207,14 @@ export function useBucketData(
       .then(page => {
         const rows = page?.data ?? [];
         if (rows.length) {
-          setExtraData(prev => dedupeById([...prev, ...rows]));
+          setExtraData(prev => dedupeById([...prev, ...rows], keyField));
         }
       })
       .catch(() => {
         // Swallow — the next scroll will retry; the first page is still shown.
       })
       .finally(() => setIsFetchingMore(false));
-  }, [queryArgs, isFetchingMore, combinedData.length, total, fetchMore, pageSize]);
+  }, [queryArgs, isFetchingMore, combinedData.length, total, fetchMore, pageSize, keyField]);
 
   const handleRefresh = useCallback(async () => {
     if (tableRef.current) await smoothScrollToTop(tableRef.current);

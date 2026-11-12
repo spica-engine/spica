@@ -45,7 +45,6 @@ export interface BucketSchema extends SystemRecord {
 }
 
 export interface BucketDataRow {
-  _id: string;
   [key: string]: any;
 }
 

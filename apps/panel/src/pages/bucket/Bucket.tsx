@@ -25,14 +25,16 @@ import {
   encodeFilterConditions,
   isConditionActive
 } from "../../components/prefabs/filter-panel/filterPanelUtils";
-import { idOf } from "../../utils/recordKey";
+import { bucketKeyField, idOf, keyOf } from "../../utils/recordKey";
+import { useKeyField } from "../../hooks/useKeyField";
 
 
 function keyFilterField(bucket: BucketType, engine?: DataEngine): FilterField {
-  if (engine !== "postgresql" || !bucket.primary) return {key: "_id", label: "ID", type: "id"};
-  const type = (bucket.properties as any)?.[bucket.primary]?.type;
+  const keyField = bucketKeyField(engine, bucket);
+  if (engine !== "postgresql" || !keyField) return {key: "_id", label: "ID", type: "id"};
+  const type = (bucket.properties as any)?.[keyField]?.type;
   return {
-    key: bucket.primary,
+    key: keyField,
     label: "ID",
     type: type === "integer" || type === "bigint" ? "number" : type === "string" ? "string" : "id"
   };
@@ -79,8 +81,9 @@ export default function Bucket() {
     }
   }, [bucketId, dispatch]);
 
+  const keyField = useKeyField(bucketId) ?? "_id";
   const {formattedColumns, visibleColumns, searchableColumns, toggleColumn} =
-    useBucketColumns(bucket, bucketId);
+    useBucketColumns(bucket, bucketId, keyField);
 
   const engine = useEngine();
   const {searchQuery, handleSearch} = useBucketSearch(bucketId, searchableColumns, engine);
@@ -145,8 +148,8 @@ export default function Bucket() {
   // is shareable. Prefer the already-loaded row (its relations are resolved); fall
   // back to fetching by id for deep links and for docs outside the current page.
   const loadedEntry = useMemo(
-    () => (entryId ? (bucketData?.data ?? []).find((row: any) => row._id === entryId) ?? null : null),
-    [entryId, bucketData]
+    () => (entryId ? (bucketData?.data ?? []).find((row: any) => keyOf(row, keyField) === entryId) ?? null : null),
+    [entryId, bucketData, keyField]
   );
   const {data: fetchedEntry} = useGetBucketEntryQuery(
     {bucketId, entryId},
@@ -243,7 +246,7 @@ export default function Bucket() {
             );
             return subscription
               .unwrap()
-              .then((entry: any) => Boolean(entry && entry._id))
+              .then((entry: any) => Boolean(entry && keyOf(entry, keyField)))
               .finally(() => subscription.unsubscribe());
           })
         );
@@ -262,16 +265,17 @@ export default function Bucket() {
 
       return {succeeded, failed};
     },
-    [deleteBucketEntry, dispatch]
+    [deleteBucketEntry, dispatch, keyField]
   );
 
   // Preserve the active `?filter=` (and any other search params) when opening the
   // drawer — the filter is the URL-owned source of truth, so dropping it here would
   // wipe it from the list, and handleEditDrawerClose would then re-append nothing.
   const handleExpandRow = useCallback((row: Record<string, any>) => {
-    if (!bucketId || !row?._id) return;
-    navigate(`/bucket/${bucketId}/${row._id}${location.search}`);
-  }, [bucketId, navigate, location.search]);
+    const rowKey = keyOf(row, keyField);
+    if (!bucketId || !rowKey) return;
+    navigate(`/bucket/${bucketId}/${rowKey}${location.search}`);
+  }, [bucketId, navigate, location.search, keyField]);
 
   const handleDataChange = useCallback(
     (rowId: string, propertyKey: string, newValue: any) => {
