@@ -1,6 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {contractSuite} from "@spica-server/database-testing";
 import {BUCKET_DATA_REPOSITORY, BucketDataRepository} from "@spica-server/interface-bucket";
+import {idOf} from "@spica-server/data";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {BucketStore, bucketStoreProviders, createBucketStore} from "./bucket-store.js";
 
@@ -41,6 +42,38 @@ contractSuite("bucket data repository", engine => {
       const unknown = module.get<IdTypes>(ID_TYPES).unscoped().generate();
 
       expect(await repository.findById(bucket, unknown)).toBeNull();
+    });
+
+    it("should find a document of a bucket that has relation properties", async () => {
+      const authors = await store.createBucket({name: {type: "string"}});
+      const ann = String(await store.insert(authors, {name: "ann"}));
+      const bob = String(await store.insert(authors, {name: "bob"}));
+      const target = String(idOf(authors));
+      const posts = await store.createBucket({
+        title: {type: "string"},
+        author: {type: "relation", bucketId: target, relationType: "onetoone"},
+        editors: {type: "relation", bucketId: target, relationType: "onetomany"},
+        meta: {
+          type: "object",
+          properties: {reviewer: {type: "relation", bucketId: target, relationType: "onetoone"}}
+        }
+      });
+      const key = await store.insert(posts, {
+        title: "first",
+        author: ann,
+        editors: [bob, ann],
+        meta: {reviewer: bob}
+      });
+
+      const found = JSON.parse(JSON.stringify(await repository.findById(posts, key as any)));
+
+      expect(found).toEqual({
+        [store.keyField]: String(key),
+        title: "first",
+        author: ann,
+        editors: [bob, ann],
+        meta: {reviewer: bob}
+      });
     });
   });
 
