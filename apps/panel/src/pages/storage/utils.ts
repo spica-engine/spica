@@ -1,5 +1,8 @@
 import type {DirectoryItem, TypeDirectories} from "src/types/storage";
 import { idOf } from "../../utils/recordKey";
+import {compileStorageClause, escapeRegex, matchesName} from "../../utils/storageQuery";
+import type {FilterInput} from "../../utils/serializeFilter";
+import type {DataEngine} from "../../store/api/statusApi";
 
 export function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[]): T | undefined {
   return arr.reduce<T | undefined>((max, obj) => {
@@ -162,7 +165,8 @@ interface StorageUpdateParams {
   oldFullName: string;
   newFullName: string;
   updateStorageName: (params: {id: string; name: string}) => Promise<any>;
-  getStorageItems: (params: {filter: object}) => Promise<any>;
+  getStorageItems: (params: {filter: FilterInput}) => Promise<any>;
+  engine?: DataEngine;
 }
 
 async function updateDirectoryStorage({
@@ -170,15 +174,14 @@ async function updateDirectoryStorage({
   oldFullName,
   newFullName,
   updateStorageName,
-  getStorageItems
+  getStorageItems,
+  engine
 }: StorageUpdateParams): Promise<void> {
   if (!item.fullPath) return;
   const normalizedPath = oldFullName.startsWith("/") ? oldFullName.slice(1) : oldFullName;
   const subResources =
     (await getStorageItems({
-      filter: {
-        name: {$regex: `^${normalizedPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`}
-      }
+      filter: compileStorageClause(engine, matchesName(`^${escapeRegex(normalizedPath)}`))!
     })) || [];
 
   const updates = subResources.map((storage: any) => {
@@ -210,7 +213,8 @@ export async function updateStorageNames(
   oldFullName: string,
   newFullName: string,
   updateStorageName: (params: {id: string; name: string}) => Promise<any>,
-  getStorageItems: (params: {filter: object}) => Promise<any>
+  getStorageItems: (params: {filter: FilterInput}) => Promise<any>,
+  engine?: DataEngine
 ): Promise<void> {
   const isDirectory = item.content?.type === "inode/directory";
 
@@ -220,7 +224,8 @@ export async function updateStorageNames(
       oldFullName,
       newFullName,
       updateStorageName,
-      getStorageItems
+      getStorageItems,
+      engine
     });
   } else {
     await updateFileStorage({

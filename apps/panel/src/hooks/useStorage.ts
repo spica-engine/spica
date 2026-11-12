@@ -9,6 +9,7 @@ import {
 import type {TypeFile} from "oziko-ui-kit";
 import {kitFileKey} from "../types/storage";
 import {idOf} from "../utils/recordKey";
+import {allOf, anyOf, escapeRegex, matchesName, type StorageClause} from "../utils/storageQuery";
 
 function useStorageService() {
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -86,27 +87,21 @@ function useStorageService() {
     [updateStorageName]
   );
 
-  const buildDirectoryFilter = useCallback((directory: string[] = ["/"]) => {
+  const buildDirectoryClause = useCallback((directory: string[] = ["/"]): StorageClause => {
     const currentDirectory = directory.length === 1 ? "/" : directory.slice(1).join("");
 
     if (currentDirectory === "/") {
-      return {
-        $or: [{name: {$regex: "^[^/]+$"}}, {name: {$regex: "^[^/]+/$"}}]
-      };
-    } else {
-      const escapedDirectory = currentDirectory.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      return {
-        $and: [
-          {name: {$regex: `^${escapedDirectory}`}},
-          {
-            $or: [
-              {name: {$regex: `^${escapedDirectory}[^/]+$`}},
-              {name: {$regex: `^${escapedDirectory}[^/]+/$`}}
-            ]
-          }
-        ]
-      };
+      return anyOf([matchesName("^[^/]+$"), matchesName("^[^/]+/$")]);
     }
+
+    const escapedDirectory = escapeRegex(currentDirectory);
+    return allOf([
+      matchesName(`^${escapedDirectory}`),
+      anyOf([
+        matchesName(`^${escapedDirectory}[^/]+$`),
+        matchesName(`^${escapedDirectory}[^/]+/$`)
+      ])
+    ])!;
   }, []);
 
   const convertStorageToTypeFile = useCallback(
@@ -137,7 +132,7 @@ function useStorageService() {
     updateOne,
     deleteOne,
     updateName,
-    buildDirectoryFilter,
+    buildDirectoryClause,
     convertStorageToTypeFile,
 
     uploadLoading: uploadResult.isLoading,
