@@ -43,4 +43,11 @@ export const DATA_HEALTH = Symbol.for("SPICA_DATA_HEALTH");
 
 export const DATA_ENGINE = Symbol.for("SPICA_DATA_ENGINE");
 
+export interface DataCapabilities {
+  /** An unset optional property is a NULL column: it reads back as null and a write may send null. */
+  nullableProperties?: boolean;
+}
+
+export const DATA_CAPABILITIES = Symbol.for("SPICA_DATA_CAPABILITIES");
+
 export const PG_POOL = Symbol.for("SPICA_PG_POOL");

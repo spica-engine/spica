@@ -4,6 +4,7 @@ import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/cor
 import {combineLatest, Observable, Subject} from "rxjs";
 import {map, shareReplay, takeUntil} from "rxjs/operators";
 import {Bucket, BucketPreferences} from "@spica-server/interface-bucket";
+import {DataCapabilities} from "@spica-server/data";
 
 @Injectable()
 export class BucketSchemaResolver implements OnModuleDestroy {
@@ -11,7 +12,10 @@ export class BucketSchemaResolver implements OnModuleDestroy {
   bucketWatchers: Map<string, Observable<Bucket>> = new Map();
   onDestroySubject = new Subject();
 
-  constructor(private bucketService: BucketService) {
+  constructor(
+    private bucketService: BucketService,
+    private nullable = false
+  ) {
     this.preferenceWatcher = this.bucketService.watchPreferences(true).pipe(shareReplay(1));
   }
 
@@ -34,7 +38,7 @@ export class BucketSchemaResolver implements OnModuleDestroy {
             return {};
           }
 
-          let jsonSchema = compile(schema, prefs);
+          let jsonSchema = compile(schema, prefs, {nullable: this.nullable});
           jsonSchema.$id = uri;
           return jsonSchema;
         })
@@ -43,8 +47,12 @@ export class BucketSchemaResolver implements OnModuleDestroy {
   }
 }
 
-export function provideBucketSchemaResolver(validator: Validator, bs: BucketService) {
-  const resolver = new BucketSchemaResolver(bs);
+export function provideBucketSchemaResolver(
+  validator: Validator,
+  bs: BucketService,
+  capabilities?: DataCapabilities
+) {
+  const resolver = new BucketSchemaResolver(bs, Boolean(capabilities?.nullableProperties));
   validator.registerUriResolver(uri => resolver.resolve(uri));
   return resolver;
 }

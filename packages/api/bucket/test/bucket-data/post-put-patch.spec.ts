@@ -6,6 +6,8 @@ contractSuite("BucketDataController: post, put and patch", engine => {
   let api: BucketApp;
   let myBucketId: string;
   let key: string;
+  const mustBeString = (field: string) =>
+    engine.name == "postgresql" ? `.${field} must be string,null` : `.${field} must be string`;
 
   beforeEach(async () => {
     api = await startBucketApp(engine);
@@ -115,7 +117,7 @@ contractSuite("BucketDataController: post, put and patch", engine => {
       expect(response.statusText).toBe("Bad Request");
       expect(response.body).toEqual({
         statusCode: 400,
-        message: ".title must be string",
+        message: mustBeString("title"),
         error: "validation failed"
       });
     });
@@ -174,7 +176,7 @@ contractSuite("BucketDataController: post, put and patch", engine => {
       expect(response.statusText).toBe("Bad Request");
       expect(response.body).toEqual({
         statusCode: 400,
-        message: ".title must be string",
+        message: mustBeString("title"),
         error: "validation failed"
       });
     });
@@ -224,7 +226,7 @@ contractSuite("BucketDataController: post, put and patch", engine => {
     expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
     expect([response.body.error, response.body.message]).toEqual([
       "validation failed",
-      ".description must be string"
+      mustBeString("description")
     ]);
   });
 });
