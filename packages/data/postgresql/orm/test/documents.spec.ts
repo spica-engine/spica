@@ -7,7 +7,7 @@ import {insertSql, updateSql} from "../src/sql.js";
 import {createTables} from "../src/tables.js";
 
 interface Doc {
-  id?: string;
+  ref?: string;
   scope: string;
   hash?: string;
   count?: number;
@@ -17,7 +17,7 @@ interface Doc {
 
 const docs = defineEntity<Doc>({
   table: "docs",
-  idProperty: "id",
+  idProperty: "ref",
   columns: {
     scope: {type: "text", notNull: true},
     hash: {type: "text"},
@@ -40,7 +40,7 @@ describe("document entities", () => {
 
     it("reserves the id property", () => {
       expect(() =>
-        defineEntity({table: "x", idProperty: "id", columns: {id: {type: "uuid"}}})
+        defineEntity({table: "x", idProperty: "ref", columns: {ref: {type: "uuid"}}})
       ).toThrow(/implicit/);
     });
 
@@ -70,15 +70,15 @@ describe("document entities", () => {
 
     it("exposes the primary key under the configured property", async () => {
       const doc = await orm.insert(docs, {scope: "a"});
-      expect(doc.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(doc.ref).toMatch(/^[0-9a-f-]{36}$/);
       expect(doc).not.toHaveProperty("id");
-      expect(await orm.findById(docs, doc.id)).toEqual(doc);
-      expect(await orm.deleteById(docs, doc.id)).toEqual(doc);
+      expect(await orm.findById(docs, doc.ref)).toEqual(doc);
+      expect(await orm.deleteById(docs, doc.ref)).toEqual(doc);
     });
 
     it("accepts a provided key", async () => {
-      const id = "01890a5d-ac96-774b-bcce-b302099a8057";
-      expect(await orm.insert(docs, {id, scope: "a"})).toMatchObject({id});
+      const ref = "01890a5d-ac96-774b-bcce-b302099a8057";
+      expect(await orm.insert(docs, {ref, scope: "a"})).toMatchObject({ref});
     });
 
     it("returns null for NULL columns that ask to keep it", async () => {
@@ -88,8 +88,8 @@ describe("document entities", () => {
     });
 
     it("returns numbers for double precision columns", async () => {
-      const {id} = await orm.insert(docs, {scope: "a", count: 1700000000123});
-      expect((await orm.findById(docs, id)).count).toBe(1700000000123);
+      const {ref} = await orm.insert(docs, {scope: "a", count: 1700000000123});
+      expect((await orm.findById(docs, ref)).count).toBe(1700000000123);
     });
 
     it("updates many rows and returns them", async () => {
