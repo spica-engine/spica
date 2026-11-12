@@ -22,6 +22,7 @@ import styles from "./StorageColumns.module.scss";
 import { DroppableColumn } from "../droppable-column/DroppableColumn";
 import { StorageItem } from "../storage-item/StorageItem";
 import { StorageItemColumn } from "../storage-column/StorageColumn";
+import { idOf } from "../../../../utils/recordKey";
 
 interface StorageColumnsProps {
   readonly setPreviewFile: (file?: DirectoryItem) => void;
@@ -157,7 +158,7 @@ export function StorageItemColumns({
                   setPreviewFile={setPreviewFile}
                   depth={dir.currentDepth || 0}
                   directory={directory}
-                  previewFileId={previewFile?._id}
+                  previewFileId={idOf(previewFile)}
                   prefix=""
                   onUploadComplete={onUploadComplete}
                   isDraggingDisabled
@@ -181,7 +182,7 @@ export function StorageItemColumns({
                 setPreviewFile={setPreviewFile}
                 depth={dir.currentDepth || 0}
                 directory={directory}
-                previewFileId={previewFile?._id}
+                previewFileId={idOf(previewFile)}
                 prefix={folderPath}
                 onUploadComplete={onUploadComplete}
                 isDraggingDisabled={false}

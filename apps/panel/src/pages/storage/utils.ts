@@ -1,4 +1,5 @@
 import type {DirectoryItem, TypeDirectories} from "src/types/storage";
+import { idOf } from "../../utils/recordKey";
 
 export function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[]): T | undefined {
   return arr.reduce<T | undefined>((max, obj) => {
@@ -82,12 +83,12 @@ export function removeItemFromDirectory(
 ): TypeDirectories[0] {
   if (!dir.items) return dir;
 
-  const hasItem = dir.items.some(i => i._id === itemId);
+  const hasItem = dir.items.some(i => idOf(i) === itemId);
 
   if (hasItem) {
     return {
       ...dir,
-      items: dir.items.filter(i => i._id !== itemId)
+      items: dir.items.filter(i => idOf(i) !== itemId)
     };
   }
 
@@ -136,7 +137,7 @@ export function updateDirectoryLists({
   toPath
 }: DirectoryUpdateParams): TypeDirectories {
   return directory.map(dir => {
-    let updatedDir = removeItemFromDirectory(dir, item._id!);
+    let updatedDir = removeItemFromDirectory(dir, idOf(item)!);
     updatedDir = addItemToDirectory(updatedDir, toPath, item);
 
     if (dir.fullPath === item.fullPath) {
@@ -183,7 +184,7 @@ async function updateDirectoryStorage({
   const updates = subResources.map((storage: any) => {
     const updatedName = storage.name.replace(normalizedPath, newFullName);
     return updateStorageName({
-      id: storage._id,
+      id: idOf(storage)!,
       name: updatedName
     });
   });
@@ -196,10 +197,10 @@ async function updateFileStorage({
   newFullName,
   updateStorageName
 }: Omit<StorageUpdateParams, "oldFullName" | "getStorageItems">): Promise<void> {
-  if (!item._id) return;
+  if (!idOf(item)) return;
 
   await updateStorageName({
-    id: item._id,
+    id: idOf(item)!,
     name: newFullName
   });
 }

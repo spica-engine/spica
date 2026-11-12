@@ -8,6 +8,7 @@ import {FileActions} from "./file-actions/FileActions";
 import {FileViewerFrame} from "./file-viewer-frame/FileViewerFrame";
 import {useLayoutEffect, useMemo, useState} from "react";
 import {getTimestampFromObjectId, buildFileUrl} from "./utils";
+import { idOf } from "../../../utils/recordKey";
 
 interface FilePreviewProps {
   handleClosePreview: () => void;
@@ -26,18 +27,18 @@ export const FilePreview = ({
   const [fileUrl, setFileUrl] = useState<string | null>(previewFile?.url || null);
 
   const timestamp = useMemo(
-    () => getTimestampFromObjectId(previewFile?._id),
-    [previewFile?._id]
+    () => getTimestampFromObjectId(idOf(previewFile)),
+    [idOf(previewFile)]
   );
 
   useLayoutEffect(() => {
     const url = buildFileUrl(previewFile?.url, {timestamp});
     setFileUrl(url);
-  }, [previewFile?.url, previewFile?._id, previewFile?.content.type, timestamp]);
+  }, [previewFile?.url, idOf(previewFile), previewFile?.content.type, timestamp]);
 
   const file = useMemo(
     () => ({...previewFile, url: fileUrl || previewFile?.url}),
-    [previewFile?._id, previewFile?.url, fileUrl]
+    [idOf(previewFile), previewFile?.url, fileUrl]
   ) as DirectoryItem;
 
   const fileView = useFileView({file, isLoading, classNames: {doc: styles.wordDocViewer}});

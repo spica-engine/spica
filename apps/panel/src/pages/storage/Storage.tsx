@@ -6,6 +6,7 @@ import { FilePreview } from "../../components/prefabs/file-preview/FilePreview";
 import { useFilePreview } from "./hooks/useFilePreview";
 import { useFileOperations } from "./hooks/useFileOperations";
 import { useDirectoryNavigation } from "./hooks/useDirectoryNavigation";
+import { idOf } from "../../utils/recordKey";
 
 export default function StoragePage() {
   // here is need to be fixed
@@ -37,7 +38,7 @@ export default function StoragePage() {
             className: styles.preview,
             children: (
               <FilePreview
-                key={previewFile?._id}
+                key={idOf(previewFile)}
                 handleClosePreview={handleClosePreview}
                 previewFile={previewFile}
                 onFileDeleted={onFileDeleted}

@@ -5,6 +5,7 @@
  */
 
 import type { TypeFile } from "oziko-ui-kit";
+import { idOf } from "../../../../utils/recordKey";
 
 export function isLocalServerUrl(urlStr?: string): boolean {
   if (!urlStr) return false;
@@ -50,7 +51,7 @@ function getCopyUrl(file?: TypeFile): string {
   const origin = window.location.origin;
 
   if (isLocal) {
-    return `${origin}/storage-view/${file._id}`;
+    return `${origin}/storage-view/${idOf(file)!}`;
   }
 
   const url = new URL(file.url);
@@ -62,7 +63,7 @@ function getCopyUrl(file?: TypeFile): string {
     }
   }
 
-  return `${origin}/storage-view/${file._id}`;
+  return `${origin}/storage-view/${idOf(file)!}`;
 }
 
 interface UrlConfig {
