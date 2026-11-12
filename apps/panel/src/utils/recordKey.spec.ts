@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { idOf, omitId, type SystemRecord } from './recordKey';
+import { idOf, omitId, pickId, type SystemRecord } from './recordKey';
 
 describe.each([
   ['MongoDB', '_id'],
@@ -9,6 +9,10 @@ describe.each([
 
   it('should read the key', () => {
     expect(idOf(record)).toBe('k1');
+  });
+
+  it('should keep only the key under its own name', () => {
+    expect(pickId(record)).toEqual({ [key]: 'k1' });
   });
 
   it('should drop the key and keep the rest', () => {
@@ -21,6 +25,10 @@ describe('idOf', () => {
     expect(idOf({})).toBeUndefined();
     expect(idOf(undefined)).toBeUndefined();
     expect(idOf(null)).toBeUndefined();
+  });
+
+  it('should pick nothing from a record without a key', () => {
+    expect(pickId({})).toEqual({});
   });
 
   it('should prefer the MongoDB name when a record somehow carries both', () => {

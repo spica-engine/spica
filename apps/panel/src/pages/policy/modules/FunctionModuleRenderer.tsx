@@ -15,6 +15,7 @@ import {
   type OnResourceBatchChange,
   type OnResourceChange
 } from "../moduleRendererHelpers";
+import { idOf } from "../../../utils/recordKey";
 
 export interface FunctionModuleProps extends BaseModuleContext {
   functions?: SpicaFunction[];
@@ -56,8 +57,8 @@ export class FunctionModuleRenderer implements ModuleRenderer<FunctionModuleProp
             onResourceBatchChange,
             itemConfig: {
               items: functions,
-              getId: func => func._id || "",
-              getKey: func => func._id || func.name,
+              getId: func => idOf(func) || "",
+              getKey: func => idOf(func) || func.name,
               getLabel: func => func.name,
               getIcon: () => <Icon name="layers" size="md" />
             }
