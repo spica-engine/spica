@@ -140,19 +140,19 @@ describe("compileRule", () => {
     });
 
     it("should treat a missing auth value as null", () => {
-      expect(compile("document.owner == auth._id", {auth: {}}).sql).toBe('"t"."owner" IS NULL');
+      expect(compile("document.owner == auth.id", {auth: {}}).sql).toBe('"t"."owner" IS NULL');
     });
 
     it("should compare with a uuid from auth and lowercase it", () => {
-      expect(compile("document.owner == auth._id", {auth: {_id: uuid.toUpperCase()}})).toEqual({
+      expect(compile("document.owner == auth.id", {auth: {id: uuid.toUpperCase()}})).toEqual({
         sql: '"t"."owner" = $1::uuid',
         values: [uuid]
       });
     });
 
     it("should decide == and != itself when the value cannot be of the field's type", () => {
-      expect(compile("document.owner == auth._id", {auth: {_id: "nope"}}).sql).toBe("FALSE");
-      expect(compile("document.owner != auth._id", {auth: {_id: "nope"}}).sql).toBe("TRUE");
+      expect(compile("document.owner == auth.id", {auth: {id: "nope"}}).sql).toBe("FALSE");
+      expect(compile("document.owner != auth.id", {auth: {id: "nope"}}).sql).toBe("TRUE");
       expect(compile("document.count == 'five'").sql).toBe("FALSE");
       expect(compile("document.active != 1").sql).toBe("TRUE");
     });
@@ -271,8 +271,8 @@ describe("compileRule", () => {
         values: []
       });
       expect(
-        compile("document.owner == auth._id || auth.role == 'admin'", {
-          auth: {_id: uuid, role: "user"}
+        compile("document.owner == auth.id || auth.role == 'admin'", {
+          auth: {id: uuid, role: "user"}
         })
       ).toEqual({sql: '"t"."owner" = $1::uuid', values: [uuid]});
     });

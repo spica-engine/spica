@@ -107,10 +107,10 @@ export async function createPostgresAccessStore(
 
   const writes = module.get<BucketWriteFacade>(BUCKET_WRITE);
   const storedBuckets = Object.fromEntries(
-    Object.values(TARGETS).map(({bucket, metadata}) => [
-      metadata.bucketId,
-      {...bucket, _id: metadata.bucketId}
-    ])
+    Object.values(TARGETS).map(({bucket, metadata}) => {
+      const {_id: _, ...fields} = bucket;
+      return [metadata.bucketId, {...fields, id: metadata.bucketId}];
+    })
   );
 
   for (const {metadata} of [TARGETS.third, TARGETS.other, TARGETS.main]) {

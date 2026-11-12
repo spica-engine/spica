@@ -65,7 +65,7 @@ describe("compileFieldRules", () => {
   });
 
   it("should turn any other rule into a flag", async () => {
-    expect(await compile({age: "document.owner == auth._id"}, {_id: uuid})).toEqual({
+    expect(await compile({age: "document.owner == auth.id"}, {id: uuid})).toEqual({
       hidden: [],
       conditional: [{property: "age", column: "_visible_0", sql: '"t"."owner" = $1::uuid'}],
       joins: [],

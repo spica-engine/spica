@@ -23,7 +23,7 @@ describe("prefilterOf", () => {
     });
 
     it("should rule out a document whose field differs from the user", () => {
-      expect(cannotMatch(`document.owner == auth._id`, {owner: "bob"}, {_id: "alice"})).toBe(true);
+      expect(cannotMatch(`document.owner == auth.id`, {owner: "bob"}, {id: "alice"})).toBe(true);
     });
 
     it("should read a field named without document", () => {
@@ -75,8 +75,8 @@ describe("prefilterOf", () => {
     });
 
     it("should rule out when any of several rules is false", () => {
-      const rules = [`document.age > 1`, `document.owner == auth._id`];
-      expect(cannotMatch("", {age: 5, owner: "bob"}, {_id: "alice"}, rules)).toBe(true);
+      const rules = [`document.age > 1`, `document.owner == auth.id`];
+      expect(cannotMatch("", {age: 5, owner: "bob"}, {id: "alice"}, rules)).toBe(true);
     });
   });
 
@@ -131,9 +131,9 @@ describe("prefilterOf", () => {
     });
 
     it("should keep a document when the user lacks the value the rule needs", () => {
-      expect(cannotMatch(`document.owner == auth._id`, {owner: "bob"}, {})).toBe(false);
-      expect(cannotMatch(`document.owner == auth._id`, {owner: "bob"}, undefined)).toBe(false);
-      expect(cannotMatch(`document.owner == auth._id`, {owner: "bob"}, {_id: null})).toBe(false);
+      expect(cannotMatch(`document.owner == auth.id`, {owner: "bob"}, {})).toBe(false);
+      expect(cannotMatch(`document.owner == auth.id`, {owner: "bob"}, undefined)).toBe(false);
+      expect(cannotMatch(`document.owner == auth.id`, {owner: "bob"}, {id: null})).toBe(false);
       expect(cannotMatch(`document.owner == auth.tags`, {owner: "bob"}, {tags: ["a"]})).toBe(false);
     });
 

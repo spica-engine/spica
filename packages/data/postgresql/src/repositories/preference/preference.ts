@@ -4,12 +4,15 @@ import {Id} from "@spica-server/interface-data";
 import {Preference, PreferenceRepository} from "@spica-server/interface-preference";
 import {preferences, StoredPreference} from "../../entities/index.js";
 import {ORM} from "../../orm.js";
-import {withId} from "@spica-server/data";
+import {idOf, omitId, withId} from "@spica-server/data";
 
 const toPreference = (stored: StoredPreference | null): Preference | null =>
-  stored && withId({...stored.value, scope: stored.scope}, stored._id);
+  stored && withId({...stored.value, scope: stored.scope}, stored.id);
 
-const toStored = ({_id, scope, ...value}: Preference): StoredPreference => ({_id, scope, value});
+const toStored = (preference: Preference): StoredPreference => {
+  const {scope, ...value} = omitId(preference);
+  return {id: idOf(preference), scope, value};
+};
 
 @Injectable()
 export class PostgresPreferenceRepository implements PreferenceRepository {

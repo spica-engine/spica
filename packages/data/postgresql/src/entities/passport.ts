@@ -7,7 +7,7 @@ import {Id} from "@spica-server/interface-data";
 import {Strategy} from "@spica-server/interface-passport";
 import {User, UserVerification} from "@spica-server/interface-passport-user";
 
-export type StoredVerification = UserVerification & {_id?: Id; provider?: string};
+export type StoredVerification = UserVerification & {id?: Id; provider?: string};
 
 const encryptedWithHash = {
   encrypted: {type: "text"},
@@ -36,7 +36,6 @@ const credentials = {
 
 export const identities = defineEntity<Identity>({
   table: "identities",
-  idProperty: "_id",
   columns: {
     identifier: {type: "text", notNull: true},
     ...credentials
@@ -49,7 +48,6 @@ export const identities = defineEntity<Identity>({
 
 export const users = defineEntity<User>({
   table: "users",
-  idProperty: "_id",
   columns: {
     username: {type: "text", notNull: true},
     ...credentials,
@@ -60,7 +58,7 @@ export const users = defineEntity<User>({
     phone_verified_at: {type: "timestamptz"},
     attributes: {type: "jsonb"},
     signUpStrategy: {
-      embedded: {_id: {type: "text", column: "id"}, title: {type: "text"}, type: {type: "text"}}
+      embedded: {id: {type: "text", column: "id"}, title: {type: "text"}, type: {type: "text"}}
     }
   },
   indexes: [
@@ -73,7 +71,6 @@ export const users = defineEntity<User>({
 
 export const verifications = defineEntity<StoredVerification>({
   table: "verifications",
-  idProperty: "_id",
   columns: {
     userId: {type: "uuid", notNull: true},
     destination: {type: "text"},
@@ -99,7 +96,6 @@ export const verifications = defineEntity<StoredVerification>({
 
 export const policies = defineEntity<Policy>({
   table: "policies",
-  idProperty: "_id",
   columns: {
     name: {type: "text", notNull: true},
     description: {type: "text"},
@@ -109,7 +105,6 @@ export const policies = defineEntity<Policy>({
 
 export const apiKeys = defineEntity<ApiKey>({
   table: "apikeys",
-  idProperty: "_id",
   columns: {
     key: {type: "text"},
     name: {type: "text", notNull: true},
@@ -125,7 +120,6 @@ export const apiKeys = defineEntity<ApiKey>({
 
 export const refreshTokens = defineEntity<RefreshToken>({
   table: "refresh_tokens",
-  idProperty: "_id",
   columns: {
     identity: {type: "text", column: "identity_id"},
     user: {type: "text", column: "user_id"},
@@ -140,7 +134,6 @@ export const refreshTokens = defineEntity<RefreshToken>({
 
 export const strategies = defineEntity<Strategy>({
   table: "strategies",
-  idProperty: "_id",
   columns: {
     type: {type: "text", notNull: true},
     name: {type: "text"},

@@ -49,16 +49,16 @@ contractSuite("BucketDataController", engine => {
     beforeEach(async () => {
       bucket = await req.post("/bucket", bucket).then(response => response.body);
       rows = [
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Jim", age: 20}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Michael", age: 22}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Kevin", age: 25}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Dwight", age: 38}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Toby", age: 30})
+        await req.post(`/bucket/${idOf(bucket)}/data`, {name: "Jim", age: 20}),
+        await req.post(`/bucket/${idOf(bucket)}/data`, {name: "Michael", age: 22}),
+        await req.post(`/bucket/${idOf(bucket)}/data`, {name: "Kevin", age: 25}),
+        await req.post(`/bucket/${idOf(bucket)}/data`, {name: "Dwight", age: 38}),
+        await req.post(`/bucket/${idOf(bucket)}/data`, {name: "Toby", age: 30})
       ].map(r => r.body);
     });
 
     it("should have created the bucket and the rows", () => {
-      expect(bucket._id).toBeTruthy();
+      expect(idOf(bucket)).toBeTruthy();
 
       expect(rows).toEqual([
         {[key]: rows[0][key], name: "Jim", age: 20},
@@ -71,7 +71,7 @@ contractSuite("BucketDataController", engine => {
 
     describe("skip and limit", () => {
       it("should work without query", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {});
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {});
         expect(documents.length).toEqual(5);
 
         expect(documents).toEqual([
@@ -84,7 +84,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should work with limit query", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {limit: "3"});
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {limit: "3"});
         expect(documents.length).toEqual(3);
         expect(documents).toEqual([
           {[key]: documents[0][key], name: "Jim", age: 20},
@@ -94,7 +94,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should work with skip query", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {skip: "2"});
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {skip: "2"});
         expect(documents.length).toEqual(3);
         expect(documents).toEqual([
           {[key]: documents[0][key], name: "Kevin", age: 25},
@@ -104,7 +104,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should work with skip and limit query", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           limit: "2",
           skip: "1"
         });
@@ -118,7 +118,7 @@ contractSuite("BucketDataController", engine => {
 
     describe("sort", () => {
       it("ascend by name", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           sort: JSON.stringify({name: 1})
         });
 
@@ -134,7 +134,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("descend by name", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           sort: JSON.stringify({name: -1})
         });
 
@@ -150,7 +150,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("ascend by age", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           sort: JSON.stringify({age: 1})
         });
 
@@ -165,7 +165,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("descend by age", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           sort: JSON.stringify({age: -1})
         });
 
@@ -182,7 +182,7 @@ contractSuite("BucketDataController", engine => {
 
     describe("pagination", () => {
       it("should paginate the results", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {paginate: "true"});
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {paginate: "true"});
         expect(response.meta.total).toBe(5);
         expect(response.data.length).toBe(5);
 
@@ -196,7 +196,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should paginate the results along with the limit", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           limit: "2",
           paginate: "true"
         });
@@ -209,7 +209,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should paginate the results along with the skip", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           skip: "3",
           paginate: "true"
         });
@@ -223,7 +223,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should paginate the results along with the skip and limit", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           limit: "3",
           skip: "2",
           paginate: "true"
@@ -239,7 +239,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should report the real total when the skip goes past the end", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           skip: "100",
           paginate: "true"
         });
@@ -249,7 +249,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should report the real total when a filtered page goes past the end", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({age: {$gt: 21}}, "age > 21"),
           skip: "100",
           paginate: "true"
@@ -260,7 +260,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should report a zero total when nothing matches the filter", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({name: "Nobody"}, 'name == "Nobody"'),
           paginate: "true"
         });
@@ -272,7 +272,7 @@ contractSuite("BucketDataController", engine => {
 
     describe("filter", () => {
       it("should return the persons who has 'i' in their names", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({name: {$regex: "i"}}, 'regex(document.name, "i")')
         });
 
@@ -286,7 +286,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons whose name is Jim", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({name: "Jim"}, 'name == "Jim"')
         });
 
@@ -295,7 +295,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons whose name is Jim (Expression)", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: `name == "Jim"`
         });
 
@@ -304,7 +304,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons whose age is 38", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({age: 38}, "age == 38")
         });
 
@@ -313,7 +313,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons whose age is 38 (Expression)", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: `age == 38`
         });
 
@@ -322,7 +322,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons who is older than 22", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({age: {$gt: 22}}, "age > 22")
         });
 
@@ -335,7 +335,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons who is older than 22 (Expression)", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: `age > 22`
         });
 
@@ -348,7 +348,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons who is younger than 25", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({age: {$lt: 25}}, "age < 25")
         });
 
@@ -360,7 +360,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons who is younger than 25 (Expression)", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: `age < 25`
         });
 
@@ -375,12 +375,12 @@ contractSuite("BucketDataController", engine => {
         let rows;
         beforeEach(async () => {
           rows = [
-            await req.post(`/bucket/${bucket._id}/data`, {
+            await req.post(`/bucket/${idOf(bucket)}/data`, {
               name: "Sherlock",
               age: 28,
               created_at: new Date("2020-04-20T10:00:00.000Z")
             }),
-            await req.post(`/bucket/${bucket._id}/data`, {
+            await req.post(`/bucket/${idOf(bucket)}/data`, {
               name: "Doctor Who",
               age: 25,
               created_at: new Date("2020-05-20T10:00:00.000Z")
@@ -389,7 +389,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should get documents between dates", async () => {
-          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
             filter: api.filter(
               {
                 created_at: {
@@ -412,7 +412,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should get documents whose creation date is the greatest", async () => {
-          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
             filter: api.filter(
               {
                 created_at: {
@@ -960,7 +960,7 @@ contractSuite("BucketDataController", engine => {
           const {body: documents} = await req.get(`/bucket/${idOf(statisticsBucket)}/data`, {
             relation: true,
             filter: api.filter(
-              {"user._id": anotherUser[key]},
+              {[`user.${key}`]: anotherUser[key]},
               `document.user.${key} == "${anotherUser[key]}"`
             )
           });

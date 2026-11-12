@@ -162,9 +162,9 @@ describe("built-in functions against rows in PostgreSQL", () => {
     beforeAll(() => store.replace({ann: {tags: ["a"]}, bob: {owner: bruce}, cem: {}}));
 
     it("should let through the rows either side lets through", async () => {
-      const rule = "some(document.tags, ['a']) || document.owner == auth._id";
+      const rule = "some(document.tags, ['a']) || document.owner == auth.id";
 
-      expect(await store.select(rule, {_id: bruce})).toEqual(["ann", "bob"]);
+      expect(await store.select(rule, {id: bruce})).toEqual(["ann", "bob"]);
     });
   });
 

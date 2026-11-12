@@ -39,7 +39,7 @@ contractSuite("Dashboard insert", engine => {
     const {statusCode, body} = await req.post("/dashboard", dashboard);
 
     expect(statusCode).toBe(201);
-    expect(body).toEqual({_id: expect.any(String), ...dashboard});
+    expect(body).toEqual(withId(dashboard, expect.any(String)));
     expect((await req.get(`/dashboard/${idOf(body)}`)).body).toEqual(body);
   });
 

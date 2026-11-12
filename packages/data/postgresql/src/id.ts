@@ -211,6 +211,6 @@ export class PostgresIdTypes implements IdTypes {
   }
 
   systemKeyField(): string {
-    return "_id";
+    return "id";
   }
 }

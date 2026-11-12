@@ -4,7 +4,6 @@ import {StorageObjectMeta} from "@spica-server/interface-storage";
 
 export const storageObjects = defineEntity<StorageObjectMeta>({
   table: "storage_objects",
-  idProperty: "_id",
   columns: {
     name: {type: "text", notNull: true},
     url: {type: "text"},
@@ -17,7 +16,6 @@ export const storageObjects = defineEntity<StorageObjectMeta>({
 
 export const assets = defineEntity<Asset>({
   table: "assets",
-  idProperty: "_id",
   columns: {
     name: {type: "text"},
     description: {type: "text"},

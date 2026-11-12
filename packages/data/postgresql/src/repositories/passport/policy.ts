@@ -10,7 +10,7 @@ export class PostgresPolicyRepository implements PolicyRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
   findAll() {
-    return this.orm.findMany(policies, {}, {orderBy: {_id: "asc"}});
+    return this.orm.findMany(policies, {}, {orderBy: {id: "asc"}});
   }
 
   findById(id: Id) {

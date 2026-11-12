@@ -59,8 +59,8 @@ contractSuite("Activity Acceptance", engine => {
     users = module.get(USER_REPOSITORY);
     idTypes = module.get(ID_TYPES);
 
-    user1Id = (await identities.insert({identifier: "user1"} as any))._id;
-    user2Id = (await identities.insert({identifier: "user2"} as any))._id;
+    user1Id = idOf(await identities.insert({identifier: "user1"} as any));
+    user2Id = idOf(await identities.insert({identifier: "user2"} as any));
 
     insertedActivityIds = await service.insert([
       {
@@ -318,7 +318,7 @@ contractSuite("Activity Acceptance", engine => {
   });
 
   it("should filter activities by username", async () => {
-    const testUser1Id = (await users.insert({username: "testuser1"} as any))._id;
+    const testUser1Id = idOf(await users.insert({username: "testuser1"} as any));
 
     await service.insert([
       {

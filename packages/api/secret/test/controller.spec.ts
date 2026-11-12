@@ -210,7 +210,7 @@ contractSuite("Secret", engine => {
 
       const res = await req.get(`/secret/${idOf(body)}`);
       expect(res.body.injected).toBeUndefined();
-      expect(Object.keys(res.body).sort()).toEqual(["_id", "key", "updated_at"]);
+      expect(Object.keys(res.body).sort()).toEqual([systemKeyField(), "key", "updated_at"].sort());
     });
   });
 

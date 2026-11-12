@@ -3,7 +3,6 @@ import {CommandMessage} from "@spica-server/interface-replication";
 
 export const commands = defineEntity<CommandMessage>({
   table: "commands",
-  idProperty: "_id",
   columns: {
     source: {type: "jsonb", notNull: true},
     target: {type: "jsonb", notNull: true},

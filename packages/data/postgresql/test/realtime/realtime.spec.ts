@@ -329,7 +329,7 @@ describe("PostgreSQL realtime", () => {
     beforeEach(async () => {
       bucket = await manager.create(
         {
-          ...definition(`document.owner == auth._id`),
+          ...definition(`document.owner == auth.id`),
           properties: {
             id: {type: "uuid", options: {generated: true}},
             owner: {type: "string"},
@@ -340,7 +340,7 @@ describe("PostgreSQL realtime", () => {
       );
       streams = {};
       for (const user of users) {
-        streams[user] = await open({applyAcl: true, user: {_id: user}});
+        streams[user] = await open({applyAcl: true, user: {id: user}});
       }
       find = jest.spyOn(module.get(BUCKET_QUERY), "find");
     });

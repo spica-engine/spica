@@ -5,9 +5,8 @@ import {FunctionAsset} from "@spica-server/interface-function-asset-storage";
 import {Log} from "@spica-server/interface-function-log";
 import {Log as WebhookLog, Webhook} from "@spica-server/interface-function-webhook";
 
-export const functions = defineEntity<Function & {_id?: Id}>({
+export const functions = defineEntity<Function & {id?: Id}>({
   table: "functions",
-  idProperty: "_id",
   columns: {
     name: {type: "text", notNull: true},
     description: {type: "text"},
@@ -30,7 +29,6 @@ export const functions = defineEntity<Function & {_id?: Id}>({
 
 export const functionLogs = defineEntity<Log>({
   table: "function_logs",
-  idProperty: "_id",
   columns: {
     function: {type: "uuid", column: "function_id", notNull: true},
     event_id: {type: "text"},
@@ -50,7 +48,6 @@ export const functionLogs = defineEntity<Log>({
 
 export const functionAssets = defineEntity<FunctionAsset>({
   table: "function_assets",
-  idProperty: "_id",
   columns: {
     functionId: {type: "uuid", notNull: true},
     filename: {type: "text", notNull: true},
@@ -65,7 +62,6 @@ export const functionAssets = defineEntity<FunctionAsset>({
 
 export const webhooks = defineEntity<Webhook>({
   table: "webhooks",
-  idProperty: "_id",
   columns: {
     title: {type: "text"},
     url: {type: "text"},
@@ -82,7 +78,6 @@ export const webhooks = defineEntity<Webhook>({
 
 export const webhookLogs = defineEntity<WebhookLog>({
   table: "webhook_logs",
-  idProperty: "_id",
   columns: {
     webhook: {type: "uuid", column: "webhook_id", notNull: true},
     succeed: {type: "boolean"},

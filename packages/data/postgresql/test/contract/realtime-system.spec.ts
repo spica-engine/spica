@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository, idOf} from "@spica-server/data";
+import {provideRepository, idOf, systemKeyField} from "@spica-server/data";
 import {clearStorage, contractSuite} from "@spica-server/database-testing";
 import {ENV_VAR_REPOSITORY, EnvVarRepository} from "@spica-server/interface-env_var";
 import {
@@ -28,7 +28,7 @@ contractSuite("realtime of a system collection", engine => {
   let envVars: EnvVarRepository;
   const subscriptions: {unsubscribe(): void}[] = [];
 
-  const keyOf = (document: any) => String(document?._id);
+  const keyOf = (document: any) => String(document?.[systemKeyField()]);
   const kinds = (chunks: StreamChunk<any>[]) => chunks.map(chunk => ChunkKind[chunk.kind]);
 
   async function open(options: RealtimeOptions = {}) {

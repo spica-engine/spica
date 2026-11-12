@@ -1,5 +1,6 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {BucketApp, startBucketApp} from "../support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("BucketDataController: unique fields", engine => {
   let api: BucketApp;
@@ -35,12 +36,12 @@ contractSuite("BucketDataController: unique fields", engine => {
       description: "Description of book"
     };
 
-    let response = await api.req.post(`/bucket/${bucket._id}/data`, document);
+    let response = await api.req.post(`/bucket/${idOf(bucket)}/data`, document);
     expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
 
     document.title = "Hawk Without Hate";
 
-    response = await api.req.post(`/bucket/${bucket._id}/data`, document);
+    response = await api.req.post(`/bucket/${idOf(bucket)}/data`, document);
     expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
   });
 
@@ -50,7 +51,7 @@ contractSuite("BucketDataController: unique fields", engine => {
       description: "Description of book"
     };
 
-    let response = await api.req.post(`/bucket/${bucket._id}/data`, document).then(res => {
+    let response = await api.req.post(`/bucket/${idOf(bucket)}/data`, document).then(res => {
       document = res.body;
       return res;
     });
@@ -58,7 +59,7 @@ contractSuite("BucketDataController: unique fields", engine => {
 
     document.title = "Creators Of The Day";
 
-    response = await api.req.put(`/bucket/${bucket._id}/data/${document[key]}`, document);
+    response = await api.req.put(`/bucket/${idOf(bucket)}/data/${document[key]}`, document);
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
   });
 
@@ -73,13 +74,13 @@ contractSuite("BucketDataController: unique fields", engine => {
       description: "Description of book"
     };
 
-    await api.req.post(`/bucket/${bucket._id}/data`, document);
-    document2 = await api.req.post(`/bucket/${bucket._id}/data`, document2).then(r => r.body);
+    await api.req.post(`/bucket/${idOf(bucket)}/data`, document);
+    document2 = await api.req.post(`/bucket/${idOf(bucket)}/data`, document2).then(r => r.body);
 
     document2.title = "Fish And Companions";
 
     const response = await api.req
-      .put(`/bucket/${bucket._id}/data/${document2[key]}`, document2)
+      .put(`/bucket/${idOf(bucket)}/data/${document2[key]}`, document2)
       .catch(e => e);
 
     expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
@@ -94,9 +95,9 @@ contractSuite("BucketDataController: unique fields", engine => {
       description: "Description of book"
     };
 
-    await api.req.post(`/bucket/${bucket._id}/data`, document);
+    await api.req.post(`/bucket/${idOf(bucket)}/data`, document);
 
-    const response = await api.req.post(`/bucket/${bucket._id}/data`, document).catch(e => e);
+    const response = await api.req.post(`/bucket/${idOf(bucket)}/data`, document).catch(e => e);
 
     expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
     expect(response.body.message).toEqual(

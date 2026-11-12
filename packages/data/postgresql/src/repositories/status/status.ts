@@ -23,7 +23,7 @@ export class PostgresStatusRepository implements StatusRepository {
     await this.expiry.expire(statuses, "created_at", this.retention.expireAfterSeconds);
   }
 
-  async record(status: Omit<ApiStatus, "_id" | "count">) {
+  async record(status: Omit<ApiStatus, "count">) {
     const minute = new Date();
     minute.setSeconds(0, 0);
     await this.orm.upsert(

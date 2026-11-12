@@ -33,7 +33,7 @@ describe("EntityFieldResolver", () => {
       sql: `"t"."content_size"`,
       type: "double precision"
     });
-    expect(resolver().locate(["_id"])).toMatchObject({sql: `"t"."id"`, type: "uuid"});
+    expect(resolver().locate(["id"])).toMatchObject({sql: `"t"."id"`, type: "uuid"});
   });
 
   it("should refuse a property the collection does not have", () => {
@@ -66,7 +66,7 @@ describe("orderBy", () => {
   });
 
   it("should not repeat the id", () => {
-    expectSql(orderBy(storageObjects, none, {_id: -1}), `"t"."id" DESC NULLS LAST`);
+    expectSql(orderBy(storageObjects, none, {id: -1}), `"t"."id" DESC NULLS LAST`);
   });
 
   it.each([["nope"], ["content"]])("should refuse to sort by %s", field => {
@@ -97,7 +97,7 @@ describe("projection", () => {
       `"t"."id"`,
       `"t"."name"`
     ]);
-    expect(columns(projection(storageObjects, none, {name: 1, _id: 0}))).toEqual([`"t"."name"`]);
+    expect(columns(projection(storageObjects, none, {name: 1, id: 0}))).toEqual([`"t"."name"`]);
     expect(columns(projection(storageObjects, none, {content: 1})).sort()).toEqual([
       `"t"."content_size"`,
       `"t"."content_type"`,
@@ -106,7 +106,7 @@ describe("projection", () => {
   });
 
   it("should never select nothing", () => {
-    expect(columns(projection(storageObjects, none, {nope: 1, _id: 0}))).toEqual([`"t"."id"`]);
+    expect(columns(projection(storageObjects, none, {nope: 1, id: 0}))).toEqual([`"t"."id"`]);
   });
 });
 

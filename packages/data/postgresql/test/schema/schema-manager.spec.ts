@@ -256,7 +256,7 @@ describe("PostgreSQL schema manager", () => {
         onSaved
       );
 
-      expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({_id: idOf(created)}));
+      expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({id: idOf(created)}));
       expect((await columns(table)).map(c => [c.column_name, c.is_nullable])).toEqual([
         ["fresh", "NO"],
         ["id", "NO"],
@@ -635,7 +635,7 @@ describe("PostgreSQL schema manager", () => {
     it("should allow a bucket to relate to itself", async () => {
       const id = "0198a7e0-7b1c-7d2e-9f3a-4b5c6d7e8f90";
       const created = await manager.create(
-        keyed({parent: relation(id, "onetoone")}, {_id: id}),
+        keyed({parent: relation(id, "onetoone")}, {id}),
         () => {}
       );
 
@@ -879,7 +879,7 @@ describe("PostgreSQL schema manager", () => {
 
       await manager.drop(idOf(target), onSaved, changed);
 
-      expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({_id: idOf(target)}));
+      expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({id: idOf(target)}));
       expect(await tablesOfBucket(tableOf(idOf(target)))).toEqual([]);
       expect(await tablesOfBucket(table)).toEqual([table]);
       expect((await columns(table)).map(c => c.column_name)).toEqual([
@@ -904,7 +904,7 @@ describe("PostgreSQL schema manager", () => {
       expect(stored.required).toEqual(["title"]);
       expect(stored.indexes).toEqual([{definition: {title: 1}, options: {}}]);
       expect(changed).toHaveBeenCalledTimes(1);
-      expect(changed).toHaveBeenCalledWith(expect.objectContaining({_id: idOf(referencing)}));
+      expect(changed).toHaveBeenCalledWith(expect.objectContaining({id: idOf(referencing)}));
     });
 
     it("should leave everything alone when a drop fails", async () => {
@@ -1546,7 +1546,7 @@ describe("PostgreSQL schema manager", () => {
         keyed(
           "id",
           {id: {type}, parent: {type: "relation", bucketId: id, relationType: "onetoone"}},
-          {_id: id}
+          {id}
         );
       const created = await manager.create(definition("uuid"), () => {});
       const table = tableOf(idOf(created));

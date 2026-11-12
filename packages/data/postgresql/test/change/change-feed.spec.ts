@@ -193,7 +193,7 @@ describe("PostgreSQL change feed", () => {
             ...Object.fromEntries(fields.map(field => [field, {type: "string"}]))
           }
         }),
-        _id: undefined
+        id: undefined
       };
       const created = await manager.create(wide as any, () => {});
       const before = Object.fromEntries(fields.map(field => [field, "old"]));
@@ -273,7 +273,7 @@ describe("PostgreSQL change feed", () => {
             labels: {type: "array", items: {type: "string"}}
           }
         }),
-        _id: idOf(bucket)
+        id: idOf(bucket)
       };
       await manager.replace(idOf(bucket), replaced as any, () => {});
       const saved = await insert({title: "post"}, replaced);
@@ -302,7 +302,7 @@ describe("PostgreSQL change feed", () => {
       await sleep(SETTLE_MS);
       const events = await listen(undefined, feed, `bucket_${idOf(created)}`);
 
-      const rekeyed = {...keyed("code"), _id: idOf(created)};
+      const rekeyed = {...keyed("code"), id: idOf(created)};
       await manager.replace(idOf(created), rekeyed, () => {});
       await sleep(SETTLE_MS);
       expect(events).toEqual([]);

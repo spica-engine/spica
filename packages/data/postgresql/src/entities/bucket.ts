@@ -3,9 +3,8 @@ import {Bucket} from "@spica-server/interface-bucket";
 import {Id} from "@spica-server/interface-data";
 import {History} from "@spica-server/interface-bucket-history";
 
-export const buckets = defineEntity<Bucket & {_id?: Id}>({
+export const buckets = defineEntity<Bucket & {id?: Id}>({
   table: "buckets",
-  idProperty: "_id",
   columns: {
     type: {type: "text"},
     category: {type: "text"},
@@ -26,9 +25,8 @@ export const buckets = defineEntity<Bucket & {_id?: Id}>({
   }
 });
 
-export const histories = defineEntity<History & {created_at?: Date; _id?: Id}>({
+export const histories = defineEntity<History & {created_at?: Date; id?: Id}>({
   table: "histories",
-  idProperty: "_id",
   columns: {
     bucket_id: {type: "uuid", notNull: true},
     document_id: {type: "text", notNull: true},

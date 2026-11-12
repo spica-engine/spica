@@ -10,7 +10,7 @@ export class PostgresDashboardRepository implements DashboardRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
   findAll() {
-    return this.orm.findMany(dashboards, {}, {orderBy: {_id: "asc"}});
+    return this.orm.findMany(dashboards, {}, {orderBy: {id: "asc"}});
   }
 
   findById(id: Id) {

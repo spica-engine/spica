@@ -1,5 +1,6 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {BucketApp, startBucketApp} from "../support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("BucketDataController: defaults and readonly", engine => {
   let api: BucketApp;
@@ -18,7 +19,7 @@ contractSuite("BucketDataController: defaults and readonly", engine => {
         readOnly: true
       }
     });
-    bucketId = bucket._id;
+    bucketId = idOf(bucket);
   });
 
   afterEach(() => api.close());

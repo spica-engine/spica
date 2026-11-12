@@ -34,6 +34,6 @@ export class PostgresActivityRepository implements ActivityRepository {
   }
 
   async deleteByIds(ids: Id[]) {
-    return await this.orm.deleteWhere(activities, {_id: ids});
+    return await this.orm.deleteWhere(activities, {id: ids});
   }
 }
