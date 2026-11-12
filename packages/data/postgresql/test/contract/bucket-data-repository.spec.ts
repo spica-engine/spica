@@ -44,21 +44,35 @@ contractSuite("bucket data repository", engine => {
       expect(await repository.findById(bucket, unknown)).toBeNull();
     });
 
-    it("should find a document of a bucket that has a relation property", async () => {
+    it("should find a document of a bucket that has relation properties", async () => {
       const authors = await store.createBucket({name: {type: "string"}});
-      const author = await store.insert(authors, {name: "ann"});
+      const ann = String(await store.insert(authors, {name: "ann"}));
+      const bob = String(await store.insert(authors, {name: "bob"}));
+      const target = String(idOf(authors));
       const posts = await store.createBucket({
         title: {type: "string"},
-        author: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"}
+        author: {type: "relation", bucketId: target, relationType: "onetoone"},
+        editors: {type: "relation", bucketId: target, relationType: "onetomany"},
+        meta: {
+          type: "object",
+          properties: {reviewer: {type: "relation", bucketId: target, relationType: "onetoone"}}
+        }
       });
-      const key = await store.insert(posts, {title: "first", author: String(author)});
+      const key = await store.insert(posts, {
+        title: "first",
+        author: ann,
+        editors: [bob, ann],
+        meta: {reviewer: bob}
+      });
 
       const found = JSON.parse(JSON.stringify(await repository.findById(posts, key as any)));
 
       expect(found).toEqual({
         [store.keyField]: String(key),
         title: "first",
-        author: String(author)
+        author: ann,
+        editors: [bob, ann],
+        meta: {reviewer: bob}
       });
     });
   });
