@@ -95,7 +95,7 @@ Three specs exist (`field-acl.spec.ts`, `filterPanelUtils.spec.ts`, `useBucketSe
 
 1. **API key, activity and policy filters.** Remove the filter UI on Activities and API key, which does nothing today. The server is not changed. Policy filtering stays client-side and is fixed to match plain strings.
 2. **What `bucket.primary` is on PostgreSQL.** It stays the key. The panel picks a label by its own rule on PostgreSQL (the first string property) and ignores `primary` for labels. No schema change.
-3. **The profiler on PostgreSQL.** Hidden. A `pg_stat_statements` equivalent is its own piece of work.
+3. **The profiler on PostgreSQL.** Hidden by the engine until Part 14 builds a `pg_stat_statements` equivalent. Then it follows the server's `features.profiler` (PR 14 below).
 4. **A test runner for the panel.** Jest, with a standalone config, because the specs already import `@jest/globals` and nothing new needs installing. Only pure functions are tested for now.
 5. **The storage expression builder.** One builder shared by the storage call sites.
 6. **Dead code.** `StorageContext.tsx` and `ActivityFilterPopover.tsx` are deleted.
@@ -141,8 +141,9 @@ Three specs exist (`field-acl.spec.ts`, `filterPanelUtils.spec.ts`, `useBucketSe
 11. Relations and labels, with a `uuid` field kind and `encodeIdFilterConditions` using the related key field.
 12. Realtime on PostgreSQL.
 13. The key name ratchet covers the panel, and "As built".
+14. After Part 14's endpoints have merged: the profiler gate reads `features.profiler` from `GET /status/engine` instead of the engine name, and the Observability page shows a statements table on PostgreSQL (query, calls, total, mean, max, rows, cache hit ratio), filtered and sorted in the expression language. The hidden routes and the rail item come back when the server reports the profiler on.
 
-Order: 1 to 3 first. 4 needs 3. 5 needs 2. 6 needs 1 and 2. 7 to 9 are independent. 10 needs 3. 11 and 12 need 10. 13 is last.
+Order: 1 to 3 first. 14 waits for Part 14. 4 needs 3. 5 needs 2. 6 needs 1 and 2. 7 to 9 are independent. 10 needs 3. 11 and 12 need 10. 13 is last.
 
 ## Open questions
 
