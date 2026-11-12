@@ -18,6 +18,7 @@ import Confirmation from "../../molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import type { TableRowClickParams } from "oziko-ui-kit";
 import { CellSelectionProvider } from "./useCellSelection";
+import { idOf } from "../../../utils/recordKey";
 
 interface BucketTableNewProps {
   bucket: BucketSchema;
@@ -271,7 +272,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   hasMore = false,
   isLoadingMore = false
 }) => {
-  const {selectedEntries, selectEntry, deselectEntry, selectEntries, resetSelection} = useEntrySelection(bucket._id);
+  const {selectedEntries, selectEntry, deselectEntry, selectEntries, resetSelection} = useEntrySelection(idOf(bucket)!);
 
   const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
@@ -349,7 +350,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     reset();
     const id = requestAnimationFrame(reset);
     return () => cancelAnimationFrame(id);
-  }, [bucket._id]);
+  }, [idOf(bucket)!]);
 
   const [editingField, setEditingField] = useState<{
     key: string;
@@ -358,7 +359,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   } | null>(null);
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
-    `${bucket?._id}-fields-order`,
+    `${idOf(bucket)}-fields-order`,
     bucket?.properties ? Object.keys(bucket.properties) : []
   );
 
@@ -490,7 +491,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 
       try {
         await deleteBucketField({ 
-          bucketId: bucket._id, 
+          bucketId: idOf(bucket)!, 
           fieldKey, 
           bucket: bucket as unknown as BucketType 
         }).unwrap();
@@ -553,7 +554,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       setFieldsOrder([...validKeys, ...newKeys]);
     }
 
-  }, [bucket?.properties, bucket?._id]);
+  }, [bucket?.properties, idOf(bucket)]);
 
 
   const renderIdCell = useCallback((params: { row: BucketDataRow; isFocused: boolean }) => {
@@ -779,7 +780,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
         columns={columns}
         data={data}
         cellClassName={styles.bucketCell}
-        saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}
+        saveToLocalStorage={{ id: `bucket-table-${idOf(bucket)!}`, save: true }}
         fixedColumns={['checkbox', '__expand__', '_id']}
         noResizeableColumns={['checkbox', '__expand__']}
         loading={loading}

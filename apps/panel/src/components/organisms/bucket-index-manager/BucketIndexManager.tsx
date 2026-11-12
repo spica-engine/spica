@@ -6,6 +6,7 @@ import {
   type BucketType,
   type Properties
 } from "../../../store/api/bucketApi";
+import { idOf } from "../../../utils/recordKey";
 
 // oziko <Drawer size> is a raw px number with no design token; mirrors BucketEntryDrawer's width.
 const DRAWER_WIDTH_PX = 475;
@@ -320,7 +321,7 @@ const BucketIndexManager = ({bucket, isOpen, onClose}: BucketIndexManagerProps) 
     const {section, index, ...rest} = bucket as Record<string, any>;
     try {
       await updateBucket({
-        id: bucket._id,
+        id: idOf(bucket)!,
         body: {...rest, indexes: workingIndexes}
       }).unwrap();
       onClose();

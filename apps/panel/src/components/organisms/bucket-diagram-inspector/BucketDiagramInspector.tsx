@@ -15,6 +15,7 @@ import type {FieldFormState, FieldKind} from "../../../domain/fields/types";
 import {FIELD_REGISTRY, isFieldKind} from "../../../domain/fields/registry";
 import {inferSecurityFromAcl} from "../../../domain/fields/field-acl";
 import type {Field} from "../../../pages/diagram/hooks/useBucketConverter";
+import { idOf } from "../../../utils/recordKey";
 
 export type BucketDiagramInspectorProps = {
   bucket: BucketType;
@@ -568,7 +569,7 @@ const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, 
         </div>
       </div>
 
-      <span className={styles.bucketId}>{bucket._id}</span>
+      <span className={styles.bucketId}>{idOf(bucket)!}</span>
 
       <div className={styles.body}>
         <div className={styles.fields}>

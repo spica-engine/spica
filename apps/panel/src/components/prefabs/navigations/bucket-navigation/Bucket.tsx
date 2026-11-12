@@ -33,14 +33,14 @@ import type {Identifier} from "dnd-core";
 import AddBucketPopup from "../../../molecules/add-bucket-popup/AddBucketPopup";
 import BucketNavigatorPopup from "../../../molecules/bucket-navigator-popup/BucketNavigatorPopup";
 import SortableNavigationItem, {shouldPreventHover} from "../SortableNavigationItem";
+import { idOf, type SystemRecord } from "../../../../utils/recordKey";
 
 const BUCKET_ITEM_TYPE = "BUCKET_NAVIGATION_ITEM";
 const CATEGORY_ITEM_TYPE = "BUCKET_NAVIGATION_CATEGORY";
 const CATEGORY_ORDER_STORAGE_KEY = "bucketNavigationCategoryOrder";
 const UNGROUPED_CATEGORY_KEY = "__ungrouped__";
 
-type BucketNavigationItemData = {
-  _id: string;
+type BucketNavigationItemData = SystemRecord & {
   title: string;
   order?: number;
   category?: string;
@@ -328,7 +328,7 @@ const Bucket = () => {
 
       const reorderedBuckets = (() => {
         const nextBuckets = orderedBuckets.map(bucket => ({...bucket}));
-        const currentIndex = nextBuckets.findIndex(bucket => bucket._id === bucketId);
+        const currentIndex = nextBuckets.findIndex(bucket => idOf(bucket) === bucketId);
 
         if (currentIndex === -1) {
           return nextBuckets;
@@ -348,7 +348,7 @@ const Bucket = () => {
       try {
         await Promise.all(
           reorderedBuckets.map(bucket =>
-            updateBucketOrder({bucketId: bucket._id, order: bucket.order ?? 0}).unwrap()
+            updateBucketOrder({bucketId: idOf(bucket)!, order: bucket.order ?? 0}).unwrap()
           )
         );
       } catch (error) {
@@ -442,15 +442,15 @@ const Bucket = () => {
   const renderBucketItem = useCallback(
     (bucket: BucketNavigationItemData, index: number, groupKey: string) => (
       <SortableNavigationItem
-        key={bucket._id ?? index}
-        id={bucket._id}
+        key={idOf(bucket) ?? index}
+        id={idOf(bucket)!}
         title={bucket.title}
         index={index}
         groupKey={groupKey}
         dndType={BUCKET_ITEM_TYPE}
         iconName="bucket"
         variant="sidebar"
-        isActive={activeBucketId === bucket._id}
+        isActive={activeBucketId === idOf(bucket)}
         activeClassName={bucketNavigationStyles.bucketItemActive}
         moveItem={moveBucket}
         onNavigate={handleNavigateToBucket}
@@ -471,8 +471,8 @@ const Bucket = () => {
               </Button>
             </div>
             <BucketNavigatorPopup
-              isOpen={openBucketId === bucket._id}
-              setIsOpen={state => handleSetBucketPopupOpen(bucket._id, state)}
+              isOpen={openBucketId === idOf(bucket)}
+              setIsOpen={state => handleSetBucketPopupOpen(idOf(bucket)!, state)}
               bucket={bucket as BucketType}
             />
          

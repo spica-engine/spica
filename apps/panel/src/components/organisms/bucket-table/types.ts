@@ -1,4 +1,5 @@
 
+import type { SystemRecord } from "../../../utils/recordKey";
 
 export type BucketPropertyType = 
   | "string" 
@@ -27,8 +28,7 @@ export interface BucketProperty {
   [key: string]: any;
 }
 
-export interface BucketSchema {
-  _id: string;
+export interface BucketSchema extends SystemRecord {
   title: string;
   description?: string;
   icon?: string;

@@ -10,6 +10,7 @@ import {
 } from "../../store/api/statusApi";
 import {formatBytes, formatCount} from "../../components/molecules/chart-kit/chartTheme";
 import type {ChartPanelStatus} from "../../components/molecules/chart-panel/ChartPanel";
+import { idOf } from "../../utils/recordKey";
 
 // A resource is flagged for attention once usage reaches this share of its cap.
 const ATTENTION_THRESHOLD = 0.9;
@@ -117,7 +118,7 @@ export function useDashboardData(): DashboardData {
 
   const bucketTitleById = useMemo(() => {
     const map = new Map<string, string>();
-    for (const bucket of bucketsQuery.data ?? []) map.set(bucket._id, bucket.title);
+    for (const bucket of bucketsQuery.data ?? []) map.set(idOf(bucket)!, bucket.title);
     return map;
   }, [bucketsQuery.data]);
 

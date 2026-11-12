@@ -11,6 +11,7 @@ import styles from "./CategorySelectCreate.module.scss";
 import {memo, useCallback, useMemo, useState} from "react";
 import truncateText from "../../../utils/truncate-text";
 import type {BucketType} from "../../../store/api/bucketApi";
+import { idOf } from "../../../utils/recordKey";
 
 type CategorySelectCreateProps = {
   bucket: BucketType;
@@ -34,7 +35,7 @@ const CategorySelectCreate = ({
   );
 
   const handleSubmit = useCallback((value: string) => {
-    changeCategory(bucket._id, value).then(() => onCancel?.());
+    changeCategory(idOf(bucket)!, value).then(() => onCancel?.());
   }, []);
 
   const truncatedCategoryName = truncateText(textValue, 32);

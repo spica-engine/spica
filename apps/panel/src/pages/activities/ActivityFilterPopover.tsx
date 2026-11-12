@@ -20,6 +20,7 @@ import {buildActivityFilterOptions} from "../../store/api/activitiesApi";
 import {useGetBucketsQuery, useGetBucketDataQuery} from "../../store/api/bucketApi";
 import {ACTION_TYPE_OPTIONS} from "./activityUtils";
 import styles from "./ActivityFilterPopover.module.scss";
+import {idOf} from "../../utils/recordKey";
 
 const MODULE_OPTIONS = [
   {value: "bucket", label: "Bucket"},
@@ -182,7 +183,7 @@ const ActivityFilterPopover: React.FC<ActivityFilterPopoverProps> = ({
 }) => {
   const {data: buckets = []} = useGetBucketsQuery({});
   const bucketOptions = useMemo(
-    () => buckets.map(b => ({value: b._id, label: b.title || b._id})),
+    () => buckets.map(b => ({value: idOf(b)!, label: b.title || idOf(b)!})),
     [buckets]
   );
 
