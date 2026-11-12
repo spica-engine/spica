@@ -22,7 +22,7 @@ export type TypeGetMoreOptionsMap = Record<string, loadMoreOptionsHandler>;
 export type TypeSearchOptionsMap = Record<string, searchOptionsHandler>;
 export type TypeGetOptionsMap = Record<string, getOptionsHandler>;
 
-type FormattedInitialValue = {_id: string; label: string} | {value: string; label: string};
+type FormattedInitialValue = {value: string; label: string};
 
 export type RelationState = {
   skip: number;

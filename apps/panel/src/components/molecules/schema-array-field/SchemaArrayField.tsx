@@ -4,7 +4,7 @@ import type {ConfigSchemaProperty} from "../../../store/api/configApi";
 import {genId, getNestedValue, setNestedValue, humanize} from "../../../pages/config/configHelpers";
 import styles from "../schema-field-shared.module.scss";
 
-type ArrayItemWithId = Record<string, unknown> & {_id: string};
+type ArrayItemWithId = Record<string, unknown> & {rowKey: string};
 
 type BatchUpdater = (updater: (prev: Record<string, unknown>) => Record<string, unknown>) => void;
 
@@ -38,7 +38,7 @@ const SchemaArrayField = ({path, schema, options, onBatchUpdate, isNested = fals
 
   const addItem = useCallback(() => {
     onBatchUpdate(prev => {
-      const defaults: Record<string, unknown> = {_id: genId()};
+      const defaults: Record<string, unknown> = {rowKey: genId()};
       for (const [key, prop] of Object.entries(itemProps)) {
         if (prop.enum && prop.enum.length > 0) {
           defaults[key] = prop.enum[0];
@@ -78,7 +78,7 @@ const SchemaArrayField = ({path, schema, options, onBatchUpdate, isNested = fals
         </div>
       )}
       {items.map((item, index) => (
-        <div key={item._id} className={styles.arrayRow}>
+        <div key={item.rowKey} className={styles.arrayRow}>
           {propKeys.map(propKey => {
             const propSchema = itemProps[propKey];
             if (propSchema.enum && propSchema.enum.length > 0) {

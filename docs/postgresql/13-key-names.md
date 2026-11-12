@@ -146,7 +146,7 @@ Merged as #2208 to #2221 (PRs 1 to 7, 6b) and this PR. A system record is keyed 
 - PR 6 found nothing to move behind the adapter: `packages/database` is the MongoDB wrapper. PR 6b converted the PostgreSQL adapter specs.
 
 **Kept literal on purpose (exempt from the ratchet)**
-- The MongoDB adapter, `packages/database`, `packages/interface/database`, `packages/filter` (the MongoDB filter language), and the MongoDB-shaped `devkit/database`, `devkit/testing`, migrations, the panel and the replica set controller.
+- The MongoDB adapter, `packages/database`, `packages/interface/database`, `packages/filter` (the MongoDB filter language), and the MongoDB-shaped `devkit/database`, `devkit/testing`, migrations and the replica set controller. The panel is covered since Part 12, apart from its key helper (`utils/recordKey.ts`) and the `oziko-ui-kit` file boundary (`types/storage.ts`).
 - GraphQL (`packages/api/bucket/graphql`: no PostgreSQL property types, `mongoOnly` spec), the rule converters `convert.ts` and `builtin_funcs.ts` (they render MongoDB filters), `@spica-devkit/bucket` documents and realtime operators, the CLI's generated ORM and `project start`, the realtime document types of `interface/function/packages`.
 - Files that name both keys by definition: `sync/record-key.ts`, `internal_common/key.ts`, the devkit `idOf` specs, the deprecated `_id?` declarations of the `auth`, `identity` and `storage` devkit types, and the PostgreSQL reserved property name pattern.
 - About 495 `_id` literals remain in specs, mostly MongoDB-shaped fixtures (CLI and sync specs, bucket document fixtures, `mongoOnly` specs) and `keyField` helpers that already choose by engine.

@@ -6,6 +6,7 @@ import {
   referencesScope,
   type FieldSecurity
 } from "./field-acl";
+import {DEFAULT_KEY_FIELD} from "../../utils/recordKey";
 
 describe("field-acl", () => {
   describe("buildAclExpression", () => {
@@ -15,14 +16,14 @@ describe("field-acl", () => {
 
     it("emits the canonical authenticated expression", () => {
       expect(buildAclExpression({mode: "authenticated", expression: ""})).toBe(
-        "auth._id != undefined"
+        `auth.${DEFAULT_KEY_FIELD} != undefined`
       );
     });
 
     it("emits the owner template from ownerField", () => {
       expect(
         buildAclExpression({mode: "owner", expression: "", ownerField: "author"})
-      ).toBe("document.author == auth._id");
+      ).toBe(`document.author == auth.${DEFAULT_KEY_FIELD}`);
     });
 
     it("falls back to undefined for owner without a field", () => {
@@ -48,16 +49,16 @@ describe("field-acl", () => {
     });
 
     it("recognizes the authenticated expression", () => {
-      expect(inferSecurityFromAcl("auth._id != undefined")).toEqual({
+      expect(inferSecurityFromAcl(`auth.${DEFAULT_KEY_FIELD} != undefined`)).toEqual({
         mode: "authenticated",
-        expression: "auth._id != undefined"
+        expression: `auth.${DEFAULT_KEY_FIELD} != undefined`
       });
     });
 
     it("recognizes the owner template and captures the field", () => {
-      expect(inferSecurityFromAcl("document.author == auth._id")).toEqual({
+      expect(inferSecurityFromAcl(`document.author == auth.${DEFAULT_KEY_FIELD}`)).toEqual({
         mode: "owner",
-        expression: "document.author == auth._id",
+        expression: `document.author == auth.${DEFAULT_KEY_FIELD}`,
         ownerField: "author"
       });
     });
@@ -84,7 +85,7 @@ describe("field-acl", () => {
     });
 
     it("keeps a hand-written custom expression as custom", () => {
-      const acl = "document.author == auth._id || auth.role == 'admin'";
+      const acl = `document.author == auth.${DEFAULT_KEY_FIELD} || auth.role == 'admin'`;
       const inferred = inferSecurityFromAcl(acl);
       expect(inferred.mode).toBe("custom");
       expect(buildAclExpression(inferred)).toBe(acl);
@@ -93,9 +94,9 @@ describe("field-acl", () => {
 
   describe("referencesScope", () => {
     it("detects auth and document references", () => {
-      expect(referencesScope("auth._id != undefined", "auth")).toBe(true);
-      expect(referencesScope("auth._id != undefined", "document")).toBe(false);
-      expect(referencesScope("document.author == auth._id", "document")).toBe(true);
+      expect(referencesScope(`auth.${DEFAULT_KEY_FIELD} != undefined`, "auth")).toBe(true);
+      expect(referencesScope(`auth.${DEFAULT_KEY_FIELD} != undefined`, "document")).toBe(false);
+      expect(referencesScope(`document.author == auth.${DEFAULT_KEY_FIELD}`, "document")).toBe(true);
       expect(referencesScope(undefined, "auth")).toBe(false);
     });
   });
@@ -104,15 +105,15 @@ describe("field-acl", () => {
     it("classifies visibility", () => {
       expect(aclStatus(undefined)).toBe("public");
       expect(aclStatus("")).toBe("public");
-      expect(aclStatus("document.author == auth._id")).toBe("conditional");
-      expect(aclStatus("auth._id != undefined")).toBe("restricted");
+      expect(aclStatus(`document.author == auth.${DEFAULT_KEY_FIELD}`)).toBe("conditional");
+      expect(aclStatus(`auth.${DEFAULT_KEY_FIELD} != undefined`)).toBe("restricted");
       expect(aclStatus("false")).toBe("restricted");
     });
   });
 });
 
-describe.each(["_id", "id"])("field-acl presets for principal key %s", key => {
-  const authenticated = key === "_id" ? "auth._id != undefined" : "has(auth.id)";
+describe.each([DEFAULT_KEY_FIELD, "id"])("field-acl presets for principal key %s", key => {
+  const authenticated = key === DEFAULT_KEY_FIELD ? `auth.${DEFAULT_KEY_FIELD} != undefined` : "has(auth.id)";
 
   it("builds the authenticated and owner expressions with the key", () => {
     expect(buildAclExpression({mode: "authenticated", expression: "", principalKey: key})).toBe(
@@ -146,8 +147,8 @@ describe.each(["_id", "id"])("field-acl presets for principal key %s", key => {
   });
 
   it("does not treat the other engine's name as a preset", () => {
-    const other = key === "id" ? "_id" : "id";
-    const otherAuthenticated = other === "_id" ? "auth._id != undefined" : "has(auth.id)";
+    const other = key === "id" ? DEFAULT_KEY_FIELD : "id";
+    const otherAuthenticated = other === DEFAULT_KEY_FIELD ? `auth.${DEFAULT_KEY_FIELD} != undefined` : "has(auth.id)";
     expect(inferSecurityFromAcl(otherAuthenticated, key).mode).toBe("custom");
     expect(inferSecurityFromAcl(`document.author == auth.${other}`, key).mode).toBe("custom");
   });

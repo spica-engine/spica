@@ -20,7 +20,7 @@ import RelationFieldInput from "../../atoms/relation-field-input/RelationFieldIn
 import ArrayFieldInput from "../../atoms/array-field-input/ArrayFieldInput";
 import ObjectFieldInput from "../../atoms/object-field-input/ObjectFieldInput";
 import ErrorBoundary from "../../atoms/error-boundary/ErrorBoundary";
-import { idOf, keyOf, omitKey } from "../../../utils/recordKey";
+import { idOf, keyOf, omitKey, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
 import { useKeyField } from "../../../hooks/useKeyField";
 
 // oziko <Drawer size> is a raw px number with no design token; 1.25× the previous 380px baseline.
@@ -48,7 +48,7 @@ const BucketEntryDrawer = ({
   onBack,
 }: BucketEntryDrawerProps) => {
   const isEditMode = entry != null;
-  const keyField = useKeyField(idOf(bucket)!) ?? "_id";
+  const keyField = useKeyField(idOf(bucket)!) ?? DEFAULT_KEY_FIELD;
   const entryKey = keyOf(entry, keyField);
 
   const navigate = useNavigate();

@@ -25,7 +25,7 @@ import {
   encodeFilterConditions,
   isConditionActive
 } from "../../components/prefabs/filter-panel/filterPanelUtils";
-import { bucketKeyField, idOf, keyOf } from "../../utils/recordKey";
+import { bucketKeyField, idOf, keyOf, DEFAULT_KEY_FIELD } from "../../utils/recordKey";
 import { useKeyField } from "../../hooks/useKeyField";
 import { relationLabelField } from "../../domain/relationTarget";
 import { filterFieldTypeOf } from "../../domain/filterFieldType";
@@ -33,7 +33,7 @@ import { filterFieldTypeOf } from "../../domain/filterFieldType";
 
 function keyFilterField(bucket: BucketType, engine?: DataEngine): FilterField {
   const keyField = bucketKeyField(engine, bucket);
-  if (engine !== "postgresql" || !keyField) return {key: "_id", label: "ID", type: "id"};
+  if (engine !== "postgresql" || !keyField) return {key: DEFAULT_KEY_FIELD, label: "ID", type: "id"};
   const type = (bucket.properties as any)?.[keyField]?.type;
   return {
     key: keyField,
@@ -83,7 +83,7 @@ export default function Bucket() {
     }
   }, [bucketId, dispatch]);
 
-  const keyField = useKeyField(bucketId) ?? "_id";
+  const keyField = useKeyField(bucketId) ?? DEFAULT_KEY_FIELD;
   const {formattedColumns, visibleColumns, searchableColumns, toggleColumn} =
     useBucketColumns(bucket, bucketId, keyField);
 

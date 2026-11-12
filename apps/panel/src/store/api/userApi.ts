@@ -3,8 +3,7 @@ import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
 import type { AuthFactorMeta, StartFactorVerificationResponse } from './identityApi';
 import { type SystemRecord } from "../../utils/recordKey";
 
-export interface ProfilerEntry {
-  _id?: string;
+export interface ProfilerEntry extends SystemRecord {
   op: "command" | "count" | "distinct" | "geoNear" | "getMore" | "group" | "insert" | "mapReduce" | "query" | "remove" | "update";
   ns: string;
   command: Record<string, any>;

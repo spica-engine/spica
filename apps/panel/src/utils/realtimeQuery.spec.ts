@@ -1,10 +1,11 @@
 import {describe, expect, it} from "@jest/globals";
 import {realtimeFilter, realtimeSort} from "./realtimeQuery";
+import {DEFAULT_KEY_FIELD} from "./recordKey";
 
 describe("realtimeSort", () => {
   it("sorts newest first by the bucket's key field", () => {
     expect(realtimeSort(undefined, "id")).toBe('{"id":-1}');
-    expect(realtimeSort(undefined, "_id")).toBe('{"_id":-1}');
+    expect(realtimeSort(undefined, DEFAULT_KEY_FIELD)).toBe(`{"${DEFAULT_KEY_FIELD}":-1}`);
   });
 
   it("keeps a sort the caller chose", () => {

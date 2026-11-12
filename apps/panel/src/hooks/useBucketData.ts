@@ -14,7 +14,7 @@ import {
   seedRelationLabelMap,
   type RelationLabelModeMap
 } from "../components/prefabs/relation-picker/primaryFieldUtils";
-import { keyOf } from "../utils/recordKey";
+import { keyOf, DEFAULT_KEY_FIELD } from "../utils/recordKey";
 
 const DEFAULT_PAGE_SIZE = 25;
 
@@ -142,7 +142,7 @@ export function useBucketData(
       bucketId: resolvedBucketId,
       paginate: true,
       limit: DEFAULT_PAGE_SIZE,
-      sort: {[keyField ?? "_id"]: -1},
+      sort: {[keyField ?? DEFAULT_KEY_FIELD]: -1},
       ...searchQuery,
     };
   }, [resolvedBucketId, searchQuery, keyField]);

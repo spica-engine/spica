@@ -37,7 +37,7 @@ export function setNestedValue(
   return result;
 }
 
-type ArrayItem = Record<string, unknown> & {_id?: string};
+type ArrayItem = Record<string, unknown> & {rowKey?: string};
 
 function addIdsToArrays(obj: unknown, schema: ConfigSchemaProperty | undefined): unknown {
   if (!schema) return obj;
@@ -45,7 +45,7 @@ function addIdsToArrays(obj: unknown, schema: ConfigSchemaProperty | undefined):
   if (schema.type === "array" && Array.isArray(obj)) {
     return (obj as ArrayItem[]).map(item => ({
       ...item,
-      _id: item._id ?? genId()
+      rowKey: item.rowKey ?? genId()
     }));
   }
 
@@ -66,7 +66,7 @@ function stripIdsFromArrays(obj: unknown, schema: ConfigSchemaProperty | undefin
   if (!schema) return obj;
 
   if (schema.type === "array" && Array.isArray(obj)) {
-    return (obj as ArrayItem[]).map(({_id, ...rest}) => rest);
+    return (obj as ArrayItem[]).map(({rowKey, ...rest}) => rest);
   }
 
   if (schema.type === "object" && schema.properties && obj && typeof obj === "object") {

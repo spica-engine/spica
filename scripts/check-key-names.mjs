@@ -32,7 +32,9 @@ const EXEMPT_PREFIXES = [
   "packages/sync/test/record-key.spec.ts",
   "apps/migrate/",
   "apps/mongoreplicationcontroller/",
-  "apps/panel/"
+  "apps/panel/src/utils/recordKey.ts",
+  "apps/panel/src/utils/recordKey.spec.ts",
+  "apps/panel/src/types/storage.ts"
 ];
 
 const SKIPPED_DIRECTORIES = new Set(["node_modules", "dist", "fixtures", ".nx", "coverage"]);
@@ -87,7 +89,7 @@ function isScanned(name) {
   if (name.endsWith(".json")) {
     return !IGNORED_JSON.test(name);
   }
-  return name.endsWith(".ts") && !name.endsWith(".d.ts");
+  return (name.endsWith(".ts") && !name.endsWith(".d.ts")) || name.endsWith(".tsx");
 }
 
 function toPosix(file) {

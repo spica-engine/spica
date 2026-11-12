@@ -1,6 +1,6 @@
 import type {DataEngine} from "../store/api/statusApi";
 import type {FilterInput} from "../utils/serializeFilter";
-import {bucketKeyField} from "../utils/recordKey";
+import {bucketKeyField, DEFAULT_KEY_FIELD} from "../utils/recordKey";
 import {isFieldPath} from "../components/prefabs/filter-panel/filterPanelUtils";
 
 export type RelationTarget = {
@@ -41,7 +41,7 @@ export function relationValueId(value: unknown, keyField?: string): string | und
   if (typeof value !== "object") return undefined;
 
   const record = value as Record<string, any>;
-  const candidates = [keyField ? record[keyField] : undefined, record.value, record.kind === "id" ? record.id : undefined, record._id];
+  const candidates = [keyField ? record[keyField] : undefined, record.value, record.kind === "id" ? record.id : undefined, record[DEFAULT_KEY_FIELD]];
   const found = candidates.find(
     candidate => typeof candidate === "string" || typeof candidate === "number"
   );
@@ -62,5 +62,5 @@ export function relationSearchFilter(
     return `regex(document.${labelField}, ${JSON.stringify(escapeRegex(search))}, "i")`;
   }
 
-  return {$or: [{[labelField || "_id"]: {$regex: search, $options: "i"}}]};
+  return {$or: [{[labelField || DEFAULT_KEY_FIELD]: {$regex: search, $options: "i"}}]};
 }

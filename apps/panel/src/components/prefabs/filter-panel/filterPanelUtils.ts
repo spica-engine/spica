@@ -1,6 +1,7 @@
 import type { FilterConditionRow, FilterField, FilterFieldType } from './types';
 import type { DataEngine } from '../../../store/api/statusApi';
 
+import {DEFAULT_KEY_FIELD} from "../../../utils/recordKey";
 export const OPERATORS_BY_TYPE: Record<FilterFieldType, { label: string; value: string }[]> = {
   string: [
     { label: 'contains', value: 'contains' },
@@ -490,7 +491,7 @@ export function decodeFilterConditions(param: string | null): FilterConditionRow
 // The param value that pins a bucket's list to a single document by id — the
 // target of a relation click, expressed as an ordinary `<key field> equals` condition so
 // it renders as a removable filter chip like any other.
-export function encodeIdFilterConditions(documentId: string, keyField: string = '_id'): string {
+export function encodeIdFilterConditions(documentId: string, keyField: string = DEFAULT_KEY_FIELD): string {
   return JSON.stringify([
     {field: keyField, operator: 'equals', value: documentId, logicalOp: 'AND'} as SerializedCondition
   ]);
