@@ -44,7 +44,7 @@ export class PostgresBucketDataRepository implements BucketDataRepository {
     const {result} = await this.query.findOne<BucketDocument>(
       bucket,
       {documentId: id},
-      keyedReadContext
+      keyedReadContext(this.orm)
     );
     return result ?? null;
   }

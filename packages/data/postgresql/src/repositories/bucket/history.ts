@@ -96,7 +96,7 @@ export class PostgresHistoryRepository implements HistoryRepository {
     const {result} = await this.query.findOne<BucketDocument>(
       bucket,
       {documentId},
-      keyedReadContext
+      keyedReadContext(this.orm)
     );
     return result ?? null;
   }
