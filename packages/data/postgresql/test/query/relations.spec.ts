@@ -26,7 +26,7 @@ const tree = (paths: string[][]) => buildRelationTree(ruleBucket, ruleMetadata, 
 
 describe("buildRelationTree", () => {
   it("should ignore a segment after a relation that names no property", async () => {
-    const root = await tree([["author", "_id"]]);
+    const root = await tree([["author", "id"]]);
 
     expect([...root.edges.keys()]).toEqual(["author"]);
     expect(root.edges.get("author").target.edges.size).toBe(0);
@@ -68,7 +68,7 @@ describe("buildRelationTree", () => {
 
   describe("depth", () => {
     const selfBucket: any = {
-      _id: bucketId,
+      id: bucketId,
       primary: "id",
       properties: {
         id: {type: "uuid", options: {generated: true}},

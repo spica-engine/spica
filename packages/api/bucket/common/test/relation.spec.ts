@@ -1,3 +1,4 @@
+import {idOf, systemKeyField} from "@spica-server/data";
 import {
   findRelations,
   isArray,
@@ -133,7 +134,7 @@ describe("Relation", () => {
       };
 
       userSchema = {
-        _id: "user_bucket_id",
+        [systemKeyField()]: "user_bucket_id",
         properties: {
           name: {
             type: "string"
@@ -147,7 +148,7 @@ describe("Relation", () => {
       };
 
       walletSchema = {
-        _id: "wallet_bucket_id",
+        [systemKeyField()]: "wallet_bucket_id",
         properties: {
           brand: {
             type: "string"
@@ -158,7 +159,7 @@ describe("Relation", () => {
       schemas = [userSchema, walletSchema];
 
       resolve = id => {
-        return Promise.resolve(schemas.find(s => s._id == id) as any);
+        return Promise.resolve(schemas.find(s => idOf(s) == id) as any);
       };
     });
 
@@ -201,9 +202,9 @@ describe("Relation", () => {
         expect(relationMap).toEqual([]);
       });
 
-      it("should create relation map if _id of user is requested", async () => {
+      it("should create relation map if the key of user is requested", async () => {
         const relationMap = await createRelationMap({
-          paths: [["user", "_id"]],
+          paths: [["user", systemKeyField()]],
           properties: mainSchema.properties,
           resolve: resolve
         });

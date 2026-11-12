@@ -3,7 +3,7 @@ import {bindIdTypes} from "@spica-server/data";
 import {IdTypes} from "@spica-server/interface-data";
 
 describe("document key", () => {
-  const mongoLike = {keyField: () => "_id"} as unknown as IdTypes;
+  const fixedKey = {keyField: () => "ref"} as unknown as IdTypes;
   const primaryKeyed = {
     keyField: (bucket: {primary?: string}) => bucket.primary
   } as unknown as IdTypes;
@@ -11,19 +11,19 @@ describe("document key", () => {
 
   afterEach(() => bindIdTypes(undefined as unknown as IdTypes));
 
-  describe("when the engine keys documents by _id", () => {
-    beforeEach(() => bindIdTypes(mongoLike));
+  describe("when the engine keys documents by a fixed field", () => {
+    beforeEach(() => bindIdTypes(fixedKey));
 
-    it("should name _id as the key field whatever the bucket's primary field is", () => {
-      expect(documentKeyField(bucket)).toBe("_id");
+    it("should name the fixed field as the key field whatever the bucket's primary field is", () => {
+      expect(documentKeyField(bucket)).toBe("ref");
     });
 
-    it("should read the key from _id", () => {
-      expect(documentKey(bucket, {_id: "1", sku: "a"})).toBe("1");
+    it("should read the key from the fixed field", () => {
+      expect(documentKey(bucket, {ref: "1", sku: "a"})).toBe("1");
     });
 
-    it("should set the key on _id", () => {
-      expect(withDocumentKey(bucket, {title: "t"}, "1")).toEqual({_id: "1", title: "t"});
+    it("should set the key on the fixed field", () => {
+      expect(withDocumentKey(bucket, {title: "t"}, "1")).toEqual({ref: "1", title: "t"});
     });
   });
 
@@ -35,10 +35,10 @@ describe("document key", () => {
     });
 
     it("should read the key from the primary field", () => {
-      expect(documentKey(bucket, {_id: "1", sku: "a"})).toBe("a");
+      expect(documentKey(bucket, {ref: "1", sku: "a"})).toBe("a");
     });
 
-    it("should set the key on the primary field and leave _id alone", () => {
+    it("should set the key on the primary field and leave the fixed field alone", () => {
       expect(withDocumentKey(bucket, {title: "t"}, "a")).toEqual({sku: "a", title: "t"});
     });
   });

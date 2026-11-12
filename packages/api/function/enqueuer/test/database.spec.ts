@@ -1,6 +1,11 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {provideRepository, idOf} from "@spica-server/data";
-import {changeFeedReady, ContractEngine, contractSuite} from "@spica-server/database-testing";
+import {
+  changeFeedReady,
+  ContractEngine,
+  contractSuite,
+  keyFieldOf
+} from "@spica-server/database-testing";
 import {DatabaseEnqueuer} from "@spica-server/function-enqueuer";
 import {DatabaseQueue, EventQueue} from "@spica-server/function-queue";
 import {Database, event} from "@spica-server/function-queue-proto";
@@ -45,7 +50,7 @@ contractSuite("DatabaseEnqueuer", engine => {
   let enqueuer: DatabaseEnqueuer;
   const enqueuers = new Map<DatabaseEnqueuer, TestingModule>();
 
-  const keyField = mongo ? "_id" : "id";
+  const keyField = keyFieldOf(engine);
   const context = () => ({resolveSchema: () => bucket, deleteOne: jest.fn()});
   const insert = (document: object) => writes.insert(bucket, {...document}, {}, context());
   const patch = (document: object, changes: object) =>

@@ -11,7 +11,7 @@ import {
   UPDATED_AT
 } from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {ContractEngine} from "@spica-server/database-testing";
+import {ContractEngine, keyFieldOf} from "@spica-server/database-testing";
 import {BUCKET_DATA_REPOSITORY, BucketOptions} from "@spica-server/interface-bucket";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {PassportTestingModule} from "@spica-server/passport-testing";
@@ -32,9 +32,6 @@ export function withoutNulls<T>(value: T): T {
   }
   return value;
 }
-
-export const keyFieldOf = (engine: ContractEngine): "_id" | "id" =>
-  engine.name == "postgresql" ? "id" : "_id";
 
 export function keyed(engine: ContractEngine, properties: Record<string, unknown>) {
   return engine.name == "postgresql"
@@ -95,7 +92,7 @@ export interface BucketApp {
   app: INestApplication;
   req: Request;
   module: TestingModule;
-  keyField: "_id" | "id";
+  keyField: string;
   invalidKeyMessage: string;
   definition(properties: Record<string, unknown>, extra?: object): any;
   createBucket(properties: Record<string, unknown>, extra?: object): Promise<any>;
@@ -166,7 +163,7 @@ export async function startBucketApp(
     keyField: keyFieldOf(engine),
     invalidKeyMessage: postgres
       ? '.id should match format "uuid"'
-      : '._id should match format "objectid"',
+      : `.${keyFieldOf(engine)} should match format "objectid"`,
     definition,
     async createBucket(properties, extra) {
       const {body} = await req.post("/bucket", definition(properties, extra));

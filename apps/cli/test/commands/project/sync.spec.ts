@@ -9,30 +9,33 @@ import {
   PolicySynchronizer,
   ResourceGroupComparisor
 } from "@spica/cli/src/commands/project/sync";
+import {SYSTEM_KEY_FIELDS} from "@spica-server/sync";
 
-describe("Synchronize", () => {
+const SHAPES = Object.entries(SYSTEM_KEY_FIELDS);
+
+describe.each(SHAPES)("Synchronize (%s records)", (_shape, key) => {
   describe("ResourceGroupComparisor", () => {
     it("should get insert object", () => {
-      const sourceObjects = [{_id: "1"}];
+      const sourceObjects = [{[key]: "1"}];
       const targetObjects = [];
 
       const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
-      expect(decider.insertions()).toEqual([{_id: "1"}]);
+      expect(decider.insertions()).toEqual([{[key]: "1"}]);
     });
 
     it("should get update objects", () => {
-      const sourceObjects = [{_id: "1", test: "a"}];
-      const targetObjects = [{_id: "1", test: "b"}];
+      const sourceObjects = [{[key]: "1", test: "a"}];
+      const targetObjects = [{[key]: "1", test: "b"}];
 
       const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
-      expect(decider.updations()).toEqual([{_id: "1", test: "a"}]);
+      expect(decider.updations()).toEqual([{[key]: "1", test: "a"}]);
     });
 
     it("should not get any update object if they are same", () => {
-      const sourceObjects = [{_id: "1", test: "a"}];
-      const targetObjects = [{_id: "1", test: "a"}];
+      const sourceObjects = [{[key]: "1", test: "a"}];
+      const targetObjects = [{[key]: "1", test: "a"}];
 
       const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
@@ -41,37 +44,37 @@ describe("Synchronize", () => {
 
     it("should get delete objects", () => {
       const sourceObjects = [];
-      const targetObjects = [{_id: "2"}];
+      const targetObjects = [{[key]: "2"}];
 
       const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
-      expect(decider.deletions()).toEqual([{_id: "2"}]);
+      expect(decider.deletions()).toEqual([{[key]: "2"}]);
     });
 
     it("should get all of them correctly", () => {
       const sourceObjects = [
         // insert
-        {_id: "1", test: "a"},
+        {[key]: "1", test: "a"},
         // update
-        {_id: "2", test: "b"},
+        {[key]: "2", test: "b"},
         // not update
-        {_id: "3", test: "c"}
+        {[key]: "3", test: "c"}
       ];
 
       const targetObjects = [
         // update
-        {_id: "2", test: "z"},
+        {[key]: "2", test: "z"},
         // not update
-        {_id: "3", test: "c"},
+        {[key]: "3", test: "c"},
         // delete
-        {_id: "4", test: "d"}
+        {[key]: "4", test: "d"}
       ];
 
       const decider = new ResourceGroupComparisor(sourceObjects, targetObjects);
 
-      expect(decider.insertions()).toEqual([{_id: "1", test: "a"}]);
-      expect(decider.updations()).toEqual([{_id: "2", test: "b"}]);
-      expect(decider.deletions()).toEqual([{_id: "4", test: "d"}]);
+      expect(decider.insertions()).toEqual([{[key]: "1", test: "a"}]);
+      expect(decider.updations()).toEqual([{[key]: "2", test: "b"}]);
+      expect(decider.deletions()).toEqual([{[key]: "4", test: "d"}]);
     });
 
     it("should not get any insert, update, delete object", () => {
@@ -89,14 +92,14 @@ describe("Synchronize", () => {
   describe("CoreModules", () => {
     describe("Bucket and Function", () => {
       const sourceObjects = [
-        {_id: "1", prop: "dont_update_me"},
-        {_id: "2", prop: "update_me"},
-        {_id: "3", prop: "insert_me"}
+        {[key]: "1", prop: "dont_update_me"},
+        {[key]: "2", prop: "update_me"},
+        {[key]: "3", prop: "insert_me"}
       ];
       const targetObjects = [
-        {_id: "1", prop: "dont_update_me"},
-        {_id: "2", prop: "update_me_pls"},
-        {_id: "4", prop: "delete_me"}
+        {[key]: "1", prop: "dont_update_me"},
+        {[key]: "2", prop: "update_me_pls"},
+        {[key]: "4", prop: "delete_me"}
       ];
       const sourceService = {
         get: jest.fn().mockImplementation(url => {
@@ -104,7 +107,7 @@ describe("Synchronize", () => {
             return Promise.resolve(sourceObjects);
           }
           const id = url.split("/")[1];
-          return Promise.resolve(sourceObjects.find(b => b._id == id));
+          return Promise.resolve(sourceObjects.find(b => b[key] == id));
         }),
 
         put: jest.fn().mockImplementation(() => Promise.resolve()),
@@ -118,7 +121,7 @@ describe("Synchronize", () => {
             return Promise.resolve(targetObjects);
           }
           const id = url.split("/")[1];
-          return Promise.resolve(targetObjects.find(b => b._id == id));
+          return Promise.resolve(targetObjects.find(b => b[key] == id));
         }),
 
         put: jest.fn().mockImplementation(() => Promise.resolve()),
@@ -145,13 +148,13 @@ describe("Synchronize", () => {
 
         it("should analyze buckets", async () => {
           const {insertions, updations, deletions} = await synchronizer.analyze();
-          expect(insertions).toEqual([{_id: "3", prop: "insert_me"}]);
-          expect(updations).toEqual([{_id: "2", prop: "update_me"}]);
-          expect(deletions).toEqual([{_id: "4", prop: "delete_me"}]);
+          expect(insertions).toEqual([{[key]: "3", prop: "insert_me"}]);
+          expect(updations).toEqual([{[key]: "2", prop: "update_me"}]);
+          expect(deletions).toEqual([{[key]: "4", prop: "delete_me"}]);
 
-          expect(synchronizer.insertions).toEqual([{_id: "3", prop: "insert_me"}]);
-          expect(synchronizer.updations).toEqual([{_id: "2", prop: "update_me"}]);
-          expect(synchronizer.deletions).toEqual([{_id: "4", prop: "delete_me"}]);
+          expect(synchronizer.insertions).toEqual([{[key]: "3", prop: "insert_me"}]);
+          expect(synchronizer.updations).toEqual([{[key]: "2", prop: "update_me"}]);
+          expect(synchronizer.deletions).toEqual([{[key]: "4", prop: "delete_me"}]);
 
           expect(sourceService.get).toHaveBeenCalledWith("bucket");
           expect(sourceService.put).not.toHaveBeenCalled();
@@ -171,11 +174,11 @@ describe("Synchronize", () => {
           expect(sourceService.delete).not.toHaveBeenCalled();
 
           expect(targetService.put).toHaveBeenCalledWith("bucket/2", {
-            _id: "2",
+            [key]: "2",
             prop: "update_me"
           });
           expect(targetService.post).toHaveBeenCalledWith("bucket", {
-            _id: "3",
+            [key]: "3",
             prop: "insert_me"
           });
           expect(targetService.delete).toHaveBeenCalledWith("bucket/4");
@@ -189,11 +192,11 @@ describe("Synchronize", () => {
           it("should analyze buckets", async () => {
             const {insertions, updations, deletions} = await synchronizer.analyze();
             expect(insertions).toEqual([]);
-            expect(updations).toEqual([{_id: "2", prop: "update_me"}]);
+            expect(updations).toEqual([{[key]: "2", prop: "update_me"}]);
             expect(deletions).toEqual([]);
 
             expect(synchronizer.insertions).toEqual([]);
-            expect(synchronizer.updations).toEqual([{_id: "2", prop: "update_me"}]);
+            expect(synchronizer.updations).toEqual([{[key]: "2", prop: "update_me"}]);
             expect(synchronizer.deletions).toEqual([]);
 
             expect(sourceService.get).toHaveBeenCalledWith("bucket");
@@ -214,7 +217,7 @@ describe("Synchronize", () => {
             expect(sourceService.delete).not.toHaveBeenCalled();
 
             expect(targetService.put).toHaveBeenCalledWith("bucket/2", {
-              _id: "2",
+              [key]: "2",
               prop: "update_me"
             });
             expect(targetService.post).not.toHaveBeenCalledWith();
@@ -230,13 +233,13 @@ describe("Synchronize", () => {
 
         it("should analyze function", async () => {
           const {insertions, updations, deletions} = await synchronizer.analyze();
-          expect(insertions).toEqual([{_id: "3", prop: "insert_me"}]);
-          expect(updations).toEqual([{_id: "2", prop: "update_me"}]);
-          expect(deletions).toEqual([{_id: "4", prop: "delete_me"}]);
+          expect(insertions).toEqual([{[key]: "3", prop: "insert_me"}]);
+          expect(updations).toEqual([{[key]: "2", prop: "update_me"}]);
+          expect(deletions).toEqual([{[key]: "4", prop: "delete_me"}]);
 
-          expect(synchronizer.insertions).toEqual([{_id: "3", prop: "insert_me"}]);
-          expect(synchronizer.updations).toEqual([{_id: "2", prop: "update_me"}]);
-          expect(synchronizer.deletions).toEqual([{_id: "4", prop: "delete_me"}]);
+          expect(synchronizer.insertions).toEqual([{[key]: "3", prop: "insert_me"}]);
+          expect(synchronizer.updations).toEqual([{[key]: "2", prop: "update_me"}]);
+          expect(synchronizer.deletions).toEqual([{[key]: "4", prop: "delete_me"}]);
 
           expect(sourceService.get).toHaveBeenCalledWith("function");
           expect(sourceService.put).not.toHaveBeenCalled();
@@ -256,11 +259,11 @@ describe("Synchronize", () => {
           expect(sourceService.delete).not.toHaveBeenCalled();
 
           expect(targetService.put).toHaveBeenCalledWith("function/2", {
-            _id: "2",
+            [key]: "2",
             prop: "update_me"
           });
           expect(targetService.post).toHaveBeenCalledWith("function", {
-            _id: "3",
+            [key]: "3",
             prop: "insert_me"
           });
           expect(targetService.delete).toHaveBeenCalledWith("function/4");
@@ -276,11 +279,11 @@ describe("Synchronize", () => {
           it("should analyze function", async () => {
             const {insertions, updations, deletions} = await synchronizer.analyze();
             expect(insertions).toEqual([]);
-            expect(updations).toEqual([{_id: "2", prop: "update_me"}]);
+            expect(updations).toEqual([{[key]: "2", prop: "update_me"}]);
             expect(deletions).toEqual([]);
 
             expect(synchronizer.insertions).toEqual([]);
-            expect(synchronizer.updations).toEqual([{_id: "2", prop: "update_me"}]);
+            expect(synchronizer.updations).toEqual([{[key]: "2", prop: "update_me"}]);
             expect(synchronizer.deletions).toEqual([]);
 
             expect(sourceService.get).toHaveBeenCalledWith("function");
@@ -301,7 +304,7 @@ describe("Synchronize", () => {
             expect(sourceService.delete).not.toHaveBeenCalled();
 
             expect(targetService.put).toHaveBeenCalledWith("function/2", {
-              _id: "2",
+              [key]: "2",
               prop: "update_me"
             });
             expect(targetService.post).not.toHaveBeenCalledWith();
@@ -314,14 +317,14 @@ describe("Synchronize", () => {
     describe("ApikeySynchronizer", () => {
       const moduleUrl = "passport/apikey";
       const sourceObjects = [
-        {_id: "1", name: "dont_update_me", policies: []},
-        {_id: "2", name: "update_me", policies: ["new_policy_id"]},
-        {_id: "3", name: "insert_me", policies: ["brand_new_policy_id"]}
+        {[key]: "1", name: "dont_update_me", policies: []},
+        {[key]: "2", name: "update_me", policies: ["new_policy_id"]},
+        {[key]: "3", name: "insert_me", policies: ["brand_new_policy_id"]}
       ];
       const targetObjects = [
-        {_id: "1", name: "dont_update_me", policies: []},
-        {_id: "2", name: "update_me_pls", policies: ["old_policy_id"]},
-        {_id: "4", name: "delete_me"}
+        {[key]: "1", name: "dont_update_me", policies: []},
+        {[key]: "2", name: "update_me_pls", policies: ["old_policy_id"]},
+        {[key]: "4", name: "delete_me"}
       ];
       const sourceService = {
         get: jest.fn().mockImplementation(url => {
@@ -329,7 +332,7 @@ describe("Synchronize", () => {
             return Promise.resolve({meta: {total: sourceObjects.length}, data: sourceObjects});
           }
           const id = url.split("/")[2];
-          return Promise.resolve(sourceObjects.find(b => b._id == id));
+          return Promise.resolve(sourceObjects.find(b => b[key] == id));
         }),
 
         put: jest.fn().mockImplementation(() => Promise.resolve()),
@@ -343,7 +346,7 @@ describe("Synchronize", () => {
             return Promise.resolve({meta: {total: targetObjects.length}, data: targetObjects});
           }
           const id = url.split("/")[2];
-          return Promise.resolve(targetObjects.find(b => b._id == id));
+          return Promise.resolve(targetObjects.find(b => b[key] == id));
         }),
 
         put: jest.fn().mockImplementation(apikey => Promise.resolve(apikey)),
@@ -371,9 +374,9 @@ describe("Synchronize", () => {
         const result = await synchronizer.analyze();
 
         const expecteds = {
-          insertions: [{_id: "3", name: "insert_me", policies: ["brand_new_policy_id"]}],
-          updations: [{_id: "2", name: "update_me", policies: ["new_policy_id"]}],
-          deletions: [{_id: "4", name: "delete_me"}]
+          insertions: [{[key]: "3", name: "insert_me", policies: ["brand_new_policy_id"]}],
+          updations: [{[key]: "2", name: "update_me", policies: ["new_policy_id"]}],
+          deletions: [{[key]: "4", name: "delete_me"}]
         };
         expect(result).toEqual(expecteds);
 
@@ -403,14 +406,14 @@ describe("Synchronize", () => {
           [
             "passport/apikey",
             {
-              _id: "3",
+              [key]: "3",
               name: "insert_me"
             }
           ],
           [
             "passport/apikey",
             {
-              _id: "2",
+              [key]: "2",
               name: "update_me"
             }
           ]
@@ -439,7 +442,7 @@ describe("Synchronize", () => {
 
           const expecteds = {
             insertions: [],
-            updations: [{_id: "2", name: "update_me", policies: ["new_policy_id"]}],
+            updations: [{[key]: "2", name: "update_me", policies: ["new_policy_id"]}],
             deletions: []
           };
           expect(result).toEqual(expecteds);
@@ -470,7 +473,7 @@ describe("Synchronize", () => {
             [
               "passport/apikey",
               {
-                _id: "2",
+                [key]: "2",
                 name: "update_me"
               }
             ]
@@ -490,14 +493,14 @@ describe("Synchronize", () => {
     describe("PolicySynchronizer", () => {
       const moduleUrl = "passport/policy";
       const sourceObjects = [
-        {_id: "1", name: "dont_update_me", statements: []},
-        {_id: "2", name: "update_me", statements: []},
-        {_id: "3", name: "insert_me", statements: []}
+        {[key]: "1", name: "dont_update_me", statements: []},
+        {[key]: "2", name: "update_me", statements: []},
+        {[key]: "3", name: "insert_me", statements: []}
       ];
       const targetObjects = [
-        {_id: "1", name: "dont_update_me", statements: []},
-        {_id: "2", name: "update_me_pls", statements: []},
-        {_id: "4", name: "delete_me"}
+        {[key]: "1", name: "dont_update_me", statements: []},
+        {[key]: "2", name: "update_me_pls", statements: []},
+        {[key]: "4", name: "delete_me"}
       ];
       const sourceService = {
         get: jest.fn().mockImplementation(url => {
@@ -505,7 +508,7 @@ describe("Synchronize", () => {
             return Promise.resolve({meta: {total: sourceObjects.length}, data: sourceObjects});
           }
           const id = url.split("/")[2];
-          return Promise.resolve(sourceObjects.find(b => b._id == id));
+          return Promise.resolve(sourceObjects.find(b => b[key] == id));
         }),
 
         put: jest.fn().mockImplementation(() => Promise.resolve()),
@@ -519,7 +522,7 @@ describe("Synchronize", () => {
             return Promise.resolve({meta: {total: targetObjects.length}, data: targetObjects});
           }
           const id = url.split("/")[2];
-          return Promise.resolve(targetObjects.find(b => b._id == id));
+          return Promise.resolve(targetObjects.find(b => b[key] == id));
         }),
 
         put: jest.fn().mockImplementation(policy => Promise.resolve(policy)),
@@ -547,9 +550,9 @@ describe("Synchronize", () => {
         const result = await synchronizer.analyze();
 
         const expecteds = {
-          insertions: [{_id: "3", name: "insert_me", statements: []}],
-          updations: [{_id: "2", name: "update_me", statements: []}],
-          deletions: [{_id: "4", name: "delete_me"}]
+          insertions: [{[key]: "3", name: "insert_me", statements: []}],
+          updations: [{[key]: "2", name: "update_me", statements: []}],
+          deletions: [{[key]: "4", name: "delete_me"}]
         };
         expect(result).toEqual(expecteds);
 
@@ -575,12 +578,12 @@ describe("Synchronize", () => {
         expect(sourceService.delete).not.toHaveBeenCalled();
 
         expect(targetService.put).toHaveBeenCalledWith("passport/policy/2", {
-          _id: "2",
+          [key]: "2",
           name: "update_me",
           statements: []
         });
         expect(targetService.post).toHaveBeenCalledWith("passport/policy", {
-          _id: "3",
+          [key]: "3",
           name: "insert_me",
           statements: []
         });
@@ -597,7 +600,7 @@ describe("Synchronize", () => {
 
           const expecteds = {
             insertions: [],
-            updations: [{_id: "2", name: "update_me", statements: []}],
+            updations: [{[key]: "2", name: "update_me", statements: []}],
             deletions: []
           };
           expect(result).toEqual(expecteds);
@@ -624,7 +627,7 @@ describe("Synchronize", () => {
           expect(sourceService.delete).not.toHaveBeenCalled();
 
           expect(targetService.put).toHaveBeenCalledWith("passport/policy/2", {
-            _id: "2",
+            [key]: "2",
             name: "update_me",
             statements: []
           });
@@ -636,14 +639,14 @@ describe("Synchronize", () => {
 
     describe("EnvironmentVariableSynchronizer", () => {
       const sourceObjects = [
-        {_id: "1", key: "dont_update_me", value: "val"},
-        {_id: "2", key: "update_me", value: "val_2"},
-        {_id: "3", key: "insert_me", value: "new_val"}
+        {[key]: "1", key: "dont_update_me", value: "val"},
+        {[key]: "2", key: "update_me", value: "val_2"},
+        {[key]: "3", key: "insert_me", value: "new_val"}
       ];
       const targetObjects = [
-        {_id: "1", key: "dont_update_me", value: "val"},
-        {_id: "2", key: "update_me", value: "updated_val_2"},
-        {_id: "4", key: "delete_me", value: "val"}
+        {[key]: "1", key: "dont_update_me", value: "val"},
+        {[key]: "2", key: "update_me", value: "updated_val_2"},
+        {[key]: "4", key: "delete_me", value: "val"}
       ];
 
       const sourceService = {
@@ -652,7 +655,7 @@ describe("Synchronize", () => {
             return Promise.resolve(sourceObjects);
           }
           const id = url.split("/")[1];
-          return Promise.resolve(sourceObjects.find(b => b._id == id));
+          return Promise.resolve(sourceObjects.find(b => b[key] == id));
         }),
 
         put: jest.fn().mockImplementation(() => Promise.resolve()),
@@ -666,7 +669,7 @@ describe("Synchronize", () => {
             return Promise.resolve(targetObjects);
           }
           const id = url.split("/")[1];
-          return Promise.resolve(targetObjects.find(b => b._id == id));
+          return Promise.resolve(targetObjects.find(b => b[key] == id));
         }),
 
         put: jest.fn().mockImplementation(() => Promise.resolve()),
@@ -696,13 +699,13 @@ describe("Synchronize", () => {
 
       it("should analyze env vars", async () => {
         const {insertions, updations, deletions} = await synchronizer.analyze();
-        expect(insertions).toEqual([{_id: "3", key: "insert_me", value: "new_val"}]);
-        expect(updations).toEqual([{_id: "2", key: "update_me", value: "val_2"}]);
-        expect(deletions).toEqual([{_id: "4", key: "delete_me", value: "val"}]);
+        expect(insertions).toEqual([{[key]: "3", key: "insert_me", value: "new_val"}]);
+        expect(updations).toEqual([{[key]: "2", key: "update_me", value: "val_2"}]);
+        expect(deletions).toEqual([{[key]: "4", key: "delete_me", value: "val"}]);
 
-        expect(synchronizer.insertions).toEqual([{_id: "3", key: "insert_me", value: "new_val"}]);
-        expect(synchronizer.updations).toEqual([{_id: "2", key: "update_me", value: "val_2"}]);
-        expect(synchronizer.deletions).toEqual([{_id: "4", key: "delete_me", value: "val"}]);
+        expect(synchronizer.insertions).toEqual([{[key]: "3", key: "insert_me", value: "new_val"}]);
+        expect(synchronizer.updations).toEqual([{[key]: "2", key: "update_me", value: "val_2"}]);
+        expect(synchronizer.deletions).toEqual([{[key]: "4", key: "delete_me", value: "val"}]);
 
         expect(sourceService.get).toHaveBeenCalledWith("env-var");
         expect(sourceService.put).not.toHaveBeenCalled();
@@ -722,12 +725,12 @@ describe("Synchronize", () => {
         expect(sourceService.delete).not.toHaveBeenCalled();
 
         expect(targetService.put).toHaveBeenCalledWith("env-var/2", {
-          _id: "2",
+          [key]: "2",
           key: "update_me",
           value: "val_2"
         });
         expect(targetService.post).toHaveBeenCalledWith("env-var", {
-          _id: "3",
+          [key]: "3",
           key: "insert_me",
           value: "new_val"
         });
@@ -746,11 +749,11 @@ describe("Synchronize", () => {
         it("should analyze env vars", async () => {
           const {insertions, updations, deletions} = await synchronizer.analyze();
           expect(insertions).toEqual([]);
-          expect(updations).toEqual([{_id: "2", key: "update_me", value: "val_2"}]);
+          expect(updations).toEqual([{[key]: "2", key: "update_me", value: "val_2"}]);
           expect(deletions).toEqual([]);
 
           expect(synchronizer.insertions).toEqual([]);
-          expect(synchronizer.updations).toEqual([{_id: "2", key: "update_me", value: "val_2"}]);
+          expect(synchronizer.updations).toEqual([{[key]: "2", key: "update_me", value: "val_2"}]);
           expect(synchronizer.deletions).toEqual([]);
 
           expect(sourceService.get).toHaveBeenCalledWith("env-var");
@@ -771,7 +774,7 @@ describe("Synchronize", () => {
           expect(sourceService.delete).not.toHaveBeenCalled();
 
           expect(targetService.put).toHaveBeenCalledWith("env-var/2", {
-            _id: "2",
+            [key]: "2",
             key: "update_me",
             value: "val_2"
           });
@@ -814,7 +817,7 @@ describe("Synchronize", () => {
       const synchronizer = new FunctionDependencySynchronizer(
         sourceService as any,
         targetService as any,
-        {_id: "1", name: "fn1"}
+        {[key]: "1", name: "fn1"}
       );
 
       beforeEach(() => {
@@ -863,32 +866,32 @@ describe("Synchronize", () => {
     });
     describe("FunctionIndex", () => {
       const sourceFns = [
-        {_id: "1", name: "fn1"},
-        {_id: "2", name: "fn2"},
-        {_id: "3", name: "fn3"}
+        {[key]: "1", name: "fn1"},
+        {[key]: "2", name: "fn2"},
+        {[key]: "3", name: "fn3"}
       ];
       const sourceObjects = [
         {
-          _id: "1",
+          [key]: "1",
           index: "console.log(1)"
         },
         {
-          _id: "2",
+          [key]: "2",
           index: "console.log('update')"
         },
         {
-          _id: "3",
+          [key]: "3",
           index: "console.log(3)"
         }
       ];
 
       const targetObjects = [
         {
-          _id: "1",
+          [key]: "1",
           index: "console.log(1)"
         },
         {
-          _id: "2",
+          [key]: "2",
           index: "console.log(2)"
         }
       ];
@@ -899,7 +902,7 @@ describe("Synchronize", () => {
             return Promise.resolve(sourceFns);
           }
           const id = url.split("/")[1];
-          const fn = sourceObjects.filter(f => f._id == id);
+          const fn = sourceObjects.filter(f => f[key] == id);
           if (!fn.length) {
             return Promise.reject({statusCode: 404});
           }
@@ -912,7 +915,7 @@ describe("Synchronize", () => {
       const targetService = {
         get: jest.fn().mockImplementation(url => {
           const id = url.split("/")[1];
-          const fn = targetObjects.filter(f => f._id == id);
+          const fn = targetObjects.filter(f => f[key] == id);
           if (!fn.length) {
             return Promise.reject({statusCode: 404});
           }
@@ -942,7 +945,7 @@ describe("Synchronize", () => {
 
         const expectedinsertions = [
           {
-            _id: "3",
+            [key]: "3",
             name: "fn3",
             index: "console.log(3)"
           }
@@ -950,7 +953,7 @@ describe("Synchronize", () => {
 
         const expectedupdations = [
           {
-            _id: "2",
+            [key]: "2",
             name: "fn2",
             index: "console.log('update')"
           }
@@ -1013,17 +1016,17 @@ describe("Synchronize", () => {
     describe("Bucket Data", () => {
       const sourceObjects = [
         // put
-        {_id: "dataid2", title: "updated_title2", description: "updated_description2"},
+        {[key]: "dataid2", title: "updated_title2", description: "updated_description2"},
         // no-op
-        {_id: "dataid3", title: "title3", description: "description3"},
+        {[key]: "dataid3", title: "title3", description: "description3"},
         // post
-        {_id: "dataid4", title: "added_title4", description: "added_description4"}
+        {[key]: "dataid4", title: "added_title4", description: "added_description4"}
       ];
       const targetObjects = [
         // delete
-        {_id: "dataid1", title: "title1", description: "description1"},
-        {_id: "dataid2", title: "title2", description: "description2"},
-        {_id: "dataid3", title: "title3", description: "description3"}
+        {[key]: "dataid1", title: "title1", description: "description1"},
+        {[key]: "dataid2", title: "title2", description: "description2"},
+        {[key]: "dataid3", title: "title3", description: "description3"}
       ];
 
       const sourceService = {
@@ -1045,7 +1048,7 @@ describe("Synchronize", () => {
       };
 
       const synchronizer = new BucketDataSynchronizer(sourceService as any, targetService as any, {
-        _id: "bucket_id",
+        [key]: "bucket_id",
         title: "title1",
         primary: "title"
       });
@@ -1066,11 +1069,13 @@ describe("Synchronize", () => {
         const {insertions, updations, deletions} = await synchronizer.analyze();
 
         const expectations = {
-          insertions: [{_id: "dataid4", title: "added_title4", description: "added_description4"}],
-          updations: [
-            {_id: "dataid2", title: "updated_title2", description: "updated_description2"}
+          insertions: [
+            {[key]: "dataid4", title: "added_title4", description: "added_description4"}
           ],
-          deletions: [{_id: "dataid1", title: "title1", description: "description1"}]
+          updations: [
+            {[key]: "dataid2", title: "updated_title2", description: "updated_description2"}
+          ],
+          deletions: [{[key]: "dataid1", title: "title1", description: "description1"}]
         };
 
         expect(insertions).toEqual(expectations.insertions);
@@ -1105,12 +1110,12 @@ describe("Synchronize", () => {
         expect(sourceService.delete).not.toHaveBeenCalled();
 
         expect(targetService.post).toHaveBeenCalledWith("bucket/bucket_id/data", {
-          _id: "dataid4",
+          [key]: "dataid4",
           title: "added_title4",
           description: "added_description4"
         });
         expect(targetService.put).toHaveBeenCalledWith("bucket/bucket_id/data/dataid2", {
-          _id: "dataid2",
+          [key]: "dataid2",
           title: "updated_title2",
           description: "updated_description2"
         });

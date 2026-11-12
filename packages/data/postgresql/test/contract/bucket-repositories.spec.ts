@@ -230,7 +230,7 @@ contractSuite("bucket repositories", engine => {
   });
 
   describe("history", () => {
-    const document = (id: unknown, fields: object) => ({_id: id, ...fields});
+    const document = (id: unknown, fields: object) => withId(fields, id as never);
 
     async function record(bucketId: unknown, documentId: unknown, title: string, previous: string) {
       await histories.createHistory(

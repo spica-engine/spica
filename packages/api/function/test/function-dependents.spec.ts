@@ -22,7 +22,7 @@ describe("FunctionDependents", () => {
     imports: string[] = [],
     extra: Record<string, string> = {}
   ) => {
-    fns.push(withId({name, language: "typescript"}, `${name}_id`));
+    fns.push(withId({name, language: "typescript"}, `${name}-key`));
     const dependencies = {...extra};
     for (const imported of imports) {
       dependencies[`@spica-fn/${imported}`] = imported.startsWith("file:")
@@ -138,8 +138,8 @@ describe("FunctionDependents", () => {
 
       expect(plan).toEqual({
         routing: [],
-        outdate: ["x_id", "a_id", "b_id"],
-        reconcile: ["x_id", "a_id", "b_id"]
+        outdate: ["x-key", "a-key", "b-key"],
+        reconcile: ["x-key", "a-key", "b-key"]
       });
     });
 
@@ -171,7 +171,7 @@ describe("FunctionDependents", () => {
 
       const plan = await dependents.refreshPlan(fns[0] as any);
 
-      expect(plan.outdate).toEqual(["x_id", "a_id"]);
+      expect(plan.outdate).toEqual(["x-key", "a-key"]);
     });
   });
 });

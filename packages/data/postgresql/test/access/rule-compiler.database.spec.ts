@@ -1,4 +1,5 @@
 import {hash} from "@spica-server/core-encryption";
+import {ENGINE_KEY_FIELDS} from "@spica-server/database-testing";
 import {HASH_SECRET, usePostgresAccessStore} from "../contract/access-store";
 
 const alice = "0192f3a0-0000-7000-8000-0000000000c1";
@@ -133,7 +134,7 @@ describe("compileRule against rows in PostgreSQL", () => {
     });
 
     it("should not read the caller's key under the MongoDB name", async () => {
-      const mongoName = ["auth", "_id"].join(".");
+      const mongoName = ["auth", ENGINE_KEY_FIELDS.mongodb].join(".");
 
       expect(await store.select(`document.owner == ${mongoName}`, {id: alice})).toEqual(["cem"]);
     });

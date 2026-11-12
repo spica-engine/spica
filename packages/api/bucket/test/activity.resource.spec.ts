@@ -1,3 +1,4 @@
+import {systemKeyField} from "@spica-server/data";
 import {createBucketActivity, createBucketDataActivity} from "@spica-server/bucket-common";
 import {Action} from "@spica-server/interface-activity";
 
@@ -5,7 +6,7 @@ describe("Activity Resource", () => {
   describe("bucket", () => {
     it("should return activity from post request", () => {
       const res = {
-        _id: "bucket_id"
+        [systemKeyField()]: "bucket_id"
       };
 
       const activities = createBucketActivity(

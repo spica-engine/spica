@@ -9,7 +9,7 @@ import {idOf} from "@spica-server/data";
 contractSuite("BucketDataController: history, activity and hooks", engine => {
   let api: BucketApp;
   let bucketId: string;
-  let key: "_id" | "id";
+  let key: string;
   let emitted: unknown[][];
 
   beforeEach(async () => {

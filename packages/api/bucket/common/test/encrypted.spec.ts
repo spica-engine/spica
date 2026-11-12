@@ -8,7 +8,7 @@ contractSuite("Encrypted Field", engine => {
   const HASH_SECRET = "test-hash-secret-123";
 
   let api: BucketApp;
-  let key: "_id" | "id";
+  let key: string;
   let bucketId: string;
   let nestedBucketId: string;
   let mixedBucketId: string;

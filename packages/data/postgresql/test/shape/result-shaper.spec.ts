@@ -36,7 +36,7 @@ describe("PostgresResultShaper", () => {
   });
 
   it("should leave collection resources untouched", async () => {
-    const result = [{_id: "1"}];
+    const result = [{id: "1"}];
 
     await expect(shaper.shape({kind: "collection", name: "identity"}, result)).resolves.toBe(
       result

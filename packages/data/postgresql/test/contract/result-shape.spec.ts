@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {contractSuite} from "@spica-server/database-testing";
+import {contractSuite, ENGINE_KEY_FIELDS} from "@spica-server/database-testing";
 import {BucketStore, bucketStoreProviders, createBucketStore} from "./bucket-store.js";
 import {idOf} from "@spica-server/data";
 
@@ -45,7 +45,7 @@ contractSuite("result shape", engine => {
     if (value && typeof value == "object") {
       return Object.fromEntries(
         Object.entries(value)
-          .filter(([name]) => name != "_id" && name != "id")
+          .filter(([name]) => !Object.values(ENGINE_KEY_FIELDS).includes(name))
           .map(([name, inner]) => [name, normalize(inner)])
       );
     }
@@ -263,6 +263,7 @@ contractSuite("result shape", engine => {
     const document = await store.read(bucket, key);
 
     expect(document).toHaveProperty(store.keyField);
-    expect(document).not.toHaveProperty(store.keyField == "_id" ? "id" : "_id");
+    const foreignKeys = Object.values(ENGINE_KEY_FIELDS).filter(name => name != store.keyField);
+    foreignKeys.forEach(name => expect(document).not.toHaveProperty(name));
   });
 });

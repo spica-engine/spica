@@ -1,9 +1,10 @@
+import {systemKeyField} from "@spica-server/data";
 import {provideLanguageFinalizer} from "@spica-server/bucket-common";
 
 describe("provideLanguageChangeUpdater", () => {
   const translatableBuckets = [
-    {_id: "bucket1", properties: {title: {}, description: {}}},
-    {_id: "bucket2", properties: {name: {}}}
+    {[systemKeyField()]: "bucket1", properties: {title: {}, description: {}}},
+    {[systemKeyField()]: "bucket2", properties: {name: {}}}
   ];
 
   const bucketData: any = {

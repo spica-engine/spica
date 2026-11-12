@@ -4,11 +4,11 @@ import {CollectionSource} from "../../src/realtime/collection-source.js";
 describe("CollectionSource", () => {
   let find: jest.Mock;
   const source = (options: object = {}) =>
-    new CollectionSource({find} as any, "env_var", "_id", options);
+    new CollectionSource({find} as any, "env_var", "id", options);
 
   beforeEach(() => {
     find = jest.fn(async (_collection, spec) =>
-      (spec.where?._id?.in ?? ["a", "b"]).map((_id: string) => ({_id}))
+      (spec.where?.id?.in ?? ["a", "b"]).map((id: string) => ({id}))
     );
   });
 
@@ -29,7 +29,7 @@ describe("CollectionSource", () => {
   it("should read only the key when it reads keys", async () => {
     const keys = await source({sort: {key: 1}}).keys();
 
-    expect(find).toHaveBeenCalledWith("env_var", {sort: {key: 1}, fields: {_id: 1}});
+    expect(find).toHaveBeenCalledWith("env_var", {sort: {key: 1}, fields: {id: 1}});
     expect(keys).toEqual(["a", "b"]);
   });
 
@@ -40,10 +40,10 @@ describe("CollectionSource", () => {
     const documents = await source({where, createdBetween} as any).matching(["b", "a"]);
 
     expect(find).toHaveBeenCalledWith("env_var", {
-      where: {function: {in: ["f1"]}, _id: {in: ["a", "b"]}},
+      where: {function: {in: ["f1"]}, id: {in: ["a", "b"]}},
       createdBetween
     });
-    expect(documents).toEqual([{_id: "a"}, {_id: "b"}]);
+    expect(documents).toEqual([{id: "a"}, {id: "b"}]);
   });
 
   it("should not read the window or the range when it only looks the keys up", async () => {
@@ -68,7 +68,7 @@ describe("CollectionSource", () => {
 
     await source({resourceFilter: {include: ["a"], exclude: []}}).keys(batch);
     await source({resourceFilter: {include: ["b"], exclude: []}}).keys(batch);
-    await new CollectionSource({find} as any, "secret", "_id", {
+    await new CollectionSource({find} as any, "secret", "id", {
       resourceFilter: {include: ["a"], exclude: []}
     }).keys(batch);
 
@@ -82,6 +82,6 @@ describe("CollectionSource", () => {
     (first as any).changed = true;
     const [second] = await source().matching(["a"], batch);
 
-    expect(second).toEqual({_id: "a"});
+    expect(second).toEqual({id: "a"});
   });
 });
