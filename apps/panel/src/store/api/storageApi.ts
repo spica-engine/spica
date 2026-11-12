@@ -4,6 +4,7 @@
  */
 
 import { baseApi } from './baseApi';
+import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
 import axios, { type AxiosProgressEvent } from 'axios';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import type { RootState } from '../index';
@@ -42,7 +43,7 @@ export interface StorageListResponse {
 }
 
 export interface StorageOptions {
-  filter?: object;
+  filter?: FilterInput;
   limit?: number;
   skip?: number;
   sort?: object;
@@ -75,7 +76,7 @@ export const storageApi = baseApi.injectEndpoints({
         if (limit != null) params.append('limit', String(limit));
         if (skip != null) params.append('skip', String(skip));
         if (sort) params.append('sort', JSON.stringify(sort));
-        if (filter) params.append('filter', JSON.stringify(filter));
+        if (filter) params.append('filter', serializeFilter(filter));
         params.append('paginate', JSON.stringify(paginate ?? false));
 
         const qs = params.toString();
@@ -193,7 +194,7 @@ export const storageApi = baseApi.injectEndpoints({
         if (limit != null) params.append('limit', String(limit));
         if (skip != null) params.append('skip', String(skip));
         if (sort) params.append('sort', JSON.stringify(sort));
-        if (filter) params.append('filter', JSON.stringify(filter));
+        if (filter) params.append('filter', serializeFilter(filter));
         params.append('paginate', JSON.stringify(paginate ?? false));
 
         const qs = params.toString();

@@ -1,4 +1,5 @@
 import { baseApi } from './baseApi';
+import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
 import type { AuthFactorMeta, StartFactorVerificationResponse } from './identityApi';
 
 export interface ProfilerEntry {
@@ -74,7 +75,7 @@ export const userApi = baseApi.injectEndpoints({
       limit?: number;
       skip?: number;
       sort?: Record<string, 1 | -1>;
-      filter?: Record<string, any>;
+      filter?: FilterInput;
       paginate?: boolean;
     } | void>({
       query: (options = {}) => {
@@ -85,7 +86,7 @@ export const userApi = baseApi.injectEndpoints({
         if (limit != null) params.append('limit', String(limit));
         if (skip != null) params.append('skip', String(skip));
         if (sort) params.append('sort', JSON.stringify(sort));
-        if (filter) params.append('filter', JSON.stringify(filter));
+        if (filter) params.append('filter', serializeFilter(filter));
 
         const qs = params.toString();
         return qs ? `passport/user?${qs}` : 'passport/user';
