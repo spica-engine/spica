@@ -29,6 +29,7 @@ import {
   type AddStrategyFormValues
 } from "../utils/strategyFormUtils";
 import styles from "./StrategyForm.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 type StrategyFormProps = {
   isOpen: boolean;
@@ -66,7 +67,7 @@ const StrategyForm = ({ isOpen, selectedStrategy, onClose }: StrategyFormProps) 
         if (selectedStrategy) {
           await updateStrategy({
             ...payload,
-            _id: selectedStrategy._id,
+            id: idOf(selectedStrategy)!,
             _hasChanges: true
           }).unwrap();
         } else {

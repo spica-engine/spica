@@ -1,4 +1,5 @@
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from '../../utils/recordKey';
 
 export interface WebhookTrigger {
   name: 'database';
@@ -9,8 +10,7 @@ export interface WebhookTrigger {
   };
 }
 
-export interface Webhook {
-  _id?: string;
+export interface Webhook extends SystemRecord {
   title: string;
   url: string;
   body: string;
@@ -20,8 +20,7 @@ export interface Webhook {
   [key: string]: any;
 }
 
-export interface WebhookLog {
-  _id?: string;
+export interface WebhookLog extends SystemRecord {
   webhook: string;
   succeed: boolean;
   content: {
@@ -107,7 +106,7 @@ export const webhookApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: WEBHOOK_TAG, id: _id })),
+              ...result.data.map((item) => ({ type: WEBHOOK_TAG, id: idOf(item) })),
               WEBHOOK_TAGS.LIST,
             ]
           : [WEBHOOK_TAGS.LIST],

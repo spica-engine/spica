@@ -1,7 +1,7 @@
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from '../../utils/recordKey';
 
-export interface Activity {
-  _id?: string;
+export interface Activity extends SystemRecord {
   [key: string]: any;
 }
 
@@ -117,7 +117,7 @@ export const activitiesApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.length
           ? [
-              ...result.map(({ _id }) => ({ type: ACTIVITY_TAG, id: _id })),
+              ...result.map((item) => ({ type: ACTIVITY_TAG, id: idOf(item) })),
               ACTIVITY_TAGS.LIST,
             ]
           : [ACTIVITY_TAGS.LIST],

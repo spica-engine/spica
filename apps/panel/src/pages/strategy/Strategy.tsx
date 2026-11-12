@@ -13,6 +13,7 @@ import StrategyList from "./components/StrategyList";
 import StrategyForm from "./components/StrategyForm";
 import DeleteStrategyConfirmation from "./components/DeleteStrategyConfirmation";
 import styles from "./Strategy.module.scss";
+import { idOf } from "../../utils/recordKey";
 
 const Strategy = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -41,7 +42,7 @@ const Strategy = () => {
 
   const requestedStrategyId = searchParams.get("id");
   useEffect(() => {
-    const requested = strategies?.find((strategy) => strategy._id === requestedStrategyId);
+    const requested = strategies?.find((strategy) => idOf(strategy) === requestedStrategyId);
     if (requested) {
       setSelectedStrategy(requested);
       setIsDrawerOpen(true);
@@ -56,7 +57,7 @@ const Strategy = () => {
   const handleConfirmDelete = useCallback(async () => {
     if (!strategyToDelete) return;
     try {
-      await deleteStrategy(strategyToDelete._id).unwrap();
+      await deleteStrategy(idOf(strategyToDelete)!).unwrap();
       setStrategyToDelete(null);
     } catch {
       // Error handled by mutation

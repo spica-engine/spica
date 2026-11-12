@@ -1,7 +1,7 @@
 import { baseApi } from './baseApi';
+import type { SystemRecord } from '../../utils/recordKey';
 
-export interface ConfigItem {
-  _id?: string;
+export interface ConfigItem extends SystemRecord {
   module: string;
   options: Record<string, unknown>;
 }
