@@ -1,8 +1,8 @@
 import { baseApi } from './baseApi';
 import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
+import { idOf, type SystemRecord } from "../../utils/recordKey";
 
-export interface RefreshToken {
-  _id: string;
+export interface RefreshToken extends SystemRecord {
   identity?: string;
   user?: string;
   created_at: string;
@@ -50,7 +50,7 @@ export const refreshTokenApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: REFRESH_TOKEN_TAG, id: _id })),
+              ...result.data.map((token) => ({ type: REFRESH_TOKEN_TAG, id: idOf(token) })),
               REFRESH_TOKEN_TAGS.LIST,
             ]
           : [REFRESH_TOKEN_TAGS.LIST],

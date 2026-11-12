@@ -1,5 +1,6 @@
 import { baseApi } from './baseApi';
 import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
+import type { SystemRecord } from '../../utils/recordKey';
 
 export interface AuthFactorMeta {
   type: string;
@@ -26,8 +27,7 @@ export interface StartFactorVerificationResponse {
   answerUrl: string;
 }
 
-export interface Identity {
-  _id?: string;
+export interface Identity extends SystemRecord {
   identifier: string;
   password?: string;
   policies?: string[];

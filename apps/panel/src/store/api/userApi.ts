@@ -1,6 +1,7 @@
 import { baseApi } from './baseApi';
 import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
 import type { AuthFactorMeta, StartFactorVerificationResponse } from './identityApi';
+import { type SystemRecord } from "../../utils/recordKey";
 
 export interface ProfilerEntry {
   _id?: string;
@@ -27,14 +28,12 @@ export interface ProfilerQueryParams {
   sort?: Record<string, 1 | -1>;
 }
 
-export interface SignUpStrategy {
-  _id: string;
+export interface SignUpStrategy extends SystemRecord {
   title: string;
   type: string;
 }
 
-export interface User {
-  _id?: string;
+export interface User extends SystemRecord {
   username: string;
   password?: string;
   policies?: string[];
