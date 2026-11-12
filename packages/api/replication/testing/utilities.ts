@@ -8,6 +8,7 @@ import {
 } from "@spica-server/interface-replication";
 import {EventEmitter} from "events";
 import {PartialObserver} from "rxjs";
+import {idOf} from "@spica-server/data";
 
 export const replicationServiceOptions: ReplicationServiceOptions = {
   expireAfterSeconds: 60
@@ -46,7 +47,7 @@ export class MockJobReducer implements IJobReducer {
   jobsDone: JobMeta[] = [];
 
   do(meta: JobMeta, job: Function) {
-    const isFirst = this.jobsDone.findIndex(j => j._id == meta._id) == -1;
+    const isFirst = this.jobsDone.findIndex(j => idOf(j) == idOf(meta)) == -1;
 
     if (!isFirst) {
       return Promise.resolve(false);

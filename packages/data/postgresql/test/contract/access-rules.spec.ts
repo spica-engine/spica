@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {contractSuite} from "@spica-server/database-testing";
+import {contractSuite, keyFieldOf} from "@spica-server/database-testing";
 import {AccessStore, createAccessStore} from "./access-store";
 
 const alice = "0192f3a0-0000-7000-8000-0000000000c1";
@@ -10,6 +10,7 @@ const bruce = "0192f3a0-0000-7000-8000-0000000000c2";
  * admin panel, plus one or more per built-in function.
  */
 contractSuite("access rules", engine => {
+  const principal = keyFieldOf(engine);
   let module: TestingModule;
   let store: AccessStore;
 
@@ -63,10 +64,9 @@ contractSuite("access rules", engine => {
     );
 
     it("should let through the documents the caller owns", async () => {
-      expect(await store.select("document.owner == auth._id", {_id: alice})).toEqual([
-        "ann",
-        "dee"
-      ]);
+      expect(
+        await store.select(`document.owner == auth.${principal}`, {[principal]: alice})
+      ).toEqual(["ann", "dee"]);
     });
 
     it("should decide a rule that depends on the caller only", async () => {
@@ -77,18 +77,18 @@ contractSuite("access rules", engine => {
     });
 
     describe.each([
-      ["an admin", {_id: alice, role: "admin"}, ["ann", "bob", "cem", "dee"]],
-      ["a user", {_id: alice, role: "user"}, ["ann", "dee"]]
+      ["an admin", {[principal]: alice, role: "admin"}, ["ann", "bob", "cem", "dee"]],
+      ["a user", {[principal]: alice, role: "user"}, ["ann", "dee"]]
     ])("when the rule also lets admins through, for %s", (_, auth, expected) => {
       it("should let through what they are allowed to", async () => {
-        const rule = "document.owner == auth._id || auth.role == 'admin'";
+        const rule = `document.owner == auth.${principal} || auth.role == 'admin'`;
 
         expect(await store.select(rule, auth)).toEqual(expected);
       });
     });
 
     it.each([
-      ["document.owner != auth._id", {_id: alice}, ["bob", "cem"]],
+      [`document.owner != auth.${principal}`, {[principal]: alice}, ["bob", "cem"]],
       ["auth.identifier != 'noop'", {identifier: "someone"}, ["ann", "bob", "cem", "dee"]],
       ["auth.identifier != 'noop'", {identifier: "noop"}, []]
     ])("%s lets through %j for %j", async (rule, auth, expected) => {

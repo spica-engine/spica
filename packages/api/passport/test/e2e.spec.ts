@@ -17,6 +17,7 @@ import samlp from "samlp";
 import cookieParser from "cookie-parser";
 import {jwtDecode} from "jwt-decode";
 import {ConfigModule} from "@spica-server/config";
+import {idOf, stripId, withId} from "@spica-server/data";
 
 const EXPIRES_IN = 60_000;
 
@@ -339,7 +340,7 @@ contractSuite("E2E Tests", engine => {
       const {body: identities} = await getIdentities();
       expect(identities.length).toBe(1);
 
-      const identityId = identities[0]._id;
+      const identityId = idOf(identities[0]);
       await req.put(
         `/passport/identity/${identityId}`,
         {identifier: "spica", password: "spica2"},
@@ -483,7 +484,7 @@ contractSuite("E2E Tests", engine => {
       let {
         body: [identity]
       } = await getIdentities();
-      expect(identity._id).toEqual(refreshToken.identity);
+      expect(idOf(identity)).toEqual(refreshToken.identity);
     });
 
     it("should not refresh with expired refresh token", async () => {
@@ -553,7 +554,7 @@ contractSuite("E2E Tests", engine => {
       );
 
       await req.put(
-        `/passport/refresh-token/${refreshToken._id}`,
+        `/passport/refresh-token/${idOf(refreshToken)}`,
         {disabled: true},
         {
           Authorization: `IDENTITY ${token}`
@@ -646,13 +647,10 @@ contractSuite("E2E Tests", engine => {
       it("should list strategies with public properties", async () => {
         const {body: strategies} = await req.get("/passport/identity/strategies");
         expect(strategies).toEqual([
-          {
-            _id: strategies[0]._id,
-            type: "saml",
-            name: "strategy1",
-            title: "strategy1",
-            icon: "login"
-          }
+          withId(
+            {type: "saml", name: "strategy1", title: "strategy1", icon: "login"},
+            idOf(strategies[0])
+          )
         ]);
       });
 
@@ -669,20 +667,22 @@ contractSuite("E2E Tests", engine => {
         delete strategies[0].options.sp;
 
         expect(strategies).toEqual([
-          {
-            _id: strategies[0]._id,
-            type: "saml",
-            name: "strategy1",
-            title: "strategy1",
-            icon: "login",
-            options: {
-              ip: {
-                login_url: "/idp/login",
-                logout_url: "/idp/logout",
-                certificate: CERTIFICATE
+          withId(
+            {
+              type: "saml",
+              name: "strategy1",
+              title: "strategy1",
+              icon: "login",
+              options: {
+                ip: {
+                  login_url: "/idp/login",
+                  logout_url: "/idp/logout",
+                  certificate: CERTIFICATE
+                }
               }
-            }
-          }
+            },
+            idOf(strategies[0])
+          )
         ]);
         expect(sp.certificate).toBeDefined();
         expect(sp.private_key).toBeDefined();
@@ -697,8 +697,8 @@ contractSuite("E2E Tests", engine => {
           }
         );
 
-        const id = strategies[0]._id;
-        delete strategies[0]._id;
+        const id = idOf(strategies[0]);
+        stripId(strategies[0]);
 
         strategies[0].title = "new strategy title";
 
@@ -706,13 +706,13 @@ contractSuite("E2E Tests", engine => {
           Authorization: `IDENTITY ${token}`
         });
 
-        expect(updatedStrategy).toEqual({...strategies[0], _id: id});
+        expect(updatedStrategy).toEqual(withId({...strategies[0]}, id));
       });
 
       it("should get strategy login url", async () => {
         const {body: strategies} = await req.get("/passport/identity/strategies");
         const {body: strategy} = await req.get(
-          `/passport/identity/strategy/${strategies[0]._id}/url`
+          `/passport/identity/strategy/${idOf(strategies[0])}/url`
         );
 
         expect(strategy.state).toBeDefined();
@@ -722,7 +722,7 @@ contractSuite("E2E Tests", engine => {
       it("should complete SSO with success", done => {
         req.get("/passport/identity/strategies").then(({body: strategies}) => {
           req
-            .get(`/passport/identity/strategy/${strategies[0]._id}/url`)
+            .get(`/passport/identity/strategy/${idOf(strategies[0])}/url`)
             .then(({body: strategy}) => {
               req.post("/passport/identify", {state: strategy.state}).then(async res => {
                 expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
@@ -764,7 +764,7 @@ contractSuite("E2E Tests", engine => {
             Authorization: `IDENTITY ${token}`
           }
         );
-        const id = strategies[0]._id;
+        const id = idOf(strategies[0]);
         const {statusCode, body} = await req.get(`/passport/user/strategy/${id}/url`);
         expect(statusCode).toEqual(400);
         expect(body.message).toBe("Strategy type is not supported for users.");
@@ -863,7 +863,7 @@ contractSuite("E2E Tests", engine => {
 
       async function getCustomStrategyId() {
         const {body: strategies} = await req.get("/passport/user/strategies");
-        return strategies.find(s => s.name == strategy.name)._id as string;
+        return idOf(strategies.find(s => s.name == strategy.name)).toString();
       }
 
       function updateStrategy(id: string, body: object) {
@@ -873,31 +873,27 @@ contractSuite("E2E Tests", engine => {
       it("should list strategies", async () => {
         const {body: strategies} = await req.get("/passport/user/strategies");
         expect(strategies).toEqual([
-          {
-            _id: strategies[0]._id,
-            type: "oauth",
-            name: "oauth",
-            title: "oauth",
-            icon: "login"
-          }
+          withId({type: "oauth", name: "oauth", title: "oauth", icon: "login"}, idOf(strategies[0]))
         ]);
       });
 
       it("should get strategy login url", async () => {
         const {body: strategies} = await req.get("/passport/user/strategies");
-        const {body: strategy} = await req.get(`/passport/user/strategy/${strategies[0]._id}/url`);
+        const {body: strategy} = await req.get(
+          `/passport/user/strategy/${idOf(strategies[0])}/url`
+        );
 
         expect(strategy.state).toBeDefined();
         expect(
           strategy.url.startsWith(
-            `${publicUrl}/oauth/code?client_id=client_id&redirect_uri=${publicUrl}/passport/user/strategy/${strategies[0]._id}/complete&state=`
+            `${publicUrl}/oauth/code?client_id=client_id&redirect_uri=${publicUrl}/passport/user/strategy/${idOf(strategies[0])}/complete&state=`
           )
         ).toBe(true);
       });
 
       it("should complete SSO with success", done => {
         req.get("/passport/user/strategies").then(({body: strategies}) => {
-          req.get(`/passport/user/strategy/${strategies[0]._id}/url`).then(({body: strategy}) => {
+          req.get(`/passport/user/strategy/${idOf(strategies[0])}/url`).then(({body: strategy}) => {
             const _ = req.get("/passport/login", {state: strategy.state}).then(async res => {
               expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
               expect(res.body.scheme).toEqual("USER");
@@ -945,7 +941,7 @@ contractSuite("E2E Tests", engine => {
       it("should return error when sending OAuth to identity endpoints", async () => {
         const {body: strategies} = await req.get("/passport/user/strategies");
         const {statusCode, body} = await req.get(
-          `/passport/identity/strategy/${strategies[0]._id}/url`
+          `/passport/identity/strategy/${idOf(strategies[0])}/url`
         );
         expect(statusCode).toEqual(400);
         expect(body.message).toBe("Strategy type is not supported for identities.");
@@ -1007,7 +1003,7 @@ contractSuite("E2E Tests", engine => {
           await loginWithStrategy(id);
 
           const user = await getUser("testuser@testuser.com");
-          expect(user.signUpStrategy).toEqual({_id: id, title: "oauth", type: "oauth"});
+          expect(user.signUpStrategy).toEqual(withId({title: "oauth", type: "oauth"}, id));
         });
 
         it("should keep the original snapshot when the strategy is renamed and user logs in again", async () => {
@@ -1018,7 +1014,7 @@ contractSuite("E2E Tests", engine => {
           await loginWithStrategy(id);
 
           const user = await getUser("testuser@testuser.com");
-          expect(user.signUpStrategy).toEqual({_id: id, title: "oauth", type: "oauth"});
+          expect(user.signUpStrategy).toEqual(withId({title: "oauth", type: "oauth"}, id));
         });
 
         it("should not set it for users created with a password", async () => {
@@ -1033,7 +1029,7 @@ contractSuite("E2E Tests", engine => {
         });
 
         it("should reject it on user create and update", async () => {
-          const signUpStrategy = {_id: "1", title: "forged", type: "oauth"};
+          const signUpStrategy = withId({title: "forged", type: "oauth"}, "1");
 
           const create = await req.post(
             "/passport/user",
@@ -1048,7 +1044,7 @@ contractSuite("E2E Tests", engine => {
             {Authorization: `IDENTITY ${token}`}
           );
           const update = await req.put(
-            `/passport/user/${created._id}`,
+            `/passport/user/${idOf(created)}`,
             {signUpStrategy},
             {Authorization: `IDENTITY ${token}`}
           );
@@ -1069,7 +1065,7 @@ contractSuite("E2E Tests", engine => {
             Authorization: `IDENTITY ${token}`
           });
 
-          const {statusCode, body} = await updateStrategy(inserted._id, {
+          const {statusCode, body} = await updateStrategy(idOf(inserted).toString(), {
             ...preset,
             options: {...preset.options, client_id: "new_client_id"}
           });
@@ -1077,7 +1073,7 @@ contractSuite("E2E Tests", engine => {
           expect(statusCode).toEqual(200);
           expect(body.options.code.params.client_id).toEqual("new_client_id");
           expect(body.options.code.params.redirect_uri).toEqual(
-            `${publicUrl}/passport/user/strategy/${inserted._id}/complete`
+            `${publicUrl}/passport/user/strategy/${idOf(inserted)}/complete`
           );
         });
 
@@ -1119,7 +1115,7 @@ contractSuite("E2E Tests", engine => {
             },
             {Authorization: `IDENTITY ${token}`}
           );
-          strategyId = body._id;
+          strategyId = idOf(body).toString();
         });
 
         const loginWithGoogle = () => loginWithStrategy(strategyId);
@@ -1199,7 +1195,7 @@ contractSuite("E2E Tests", engine => {
           .then(r => r.body.find(f => f.type == "totp"));
 
         return req
-          .post(`/passport/identity/${identity._id}/start-factor-verification`, totpSchema, {
+          .post(`/passport/identity/${idOf(identity)}/start-factor-verification`, totpSchema, {
             Authorization: `IDENTITY ${token}`
           })
           .then(r => r.body as {challenge: string; answerUrl: string});
@@ -1249,7 +1245,7 @@ contractSuite("E2E Tests", engine => {
           });
           expect(res.body).toEqual({
             challenge: "Please enter the 6 digit code",
-            answerUrl: `passport/identify/${identity._id}/factor-authentication`
+            answerUrl: `passport/identify/${idOf(identity)}/factor-authentication`
           });
 
           const totp = generateTotp(challenge);
@@ -1265,8 +1261,8 @@ contractSuite("E2E Tests", engine => {
           // Reproduce a second replica that never received the registration broadcast:
           // the factor is persisted in the database but absent from this instance's in-memory map.
           const authFactor = module.get(AuthFactor);
-          authFactor.unregister(identity._id);
-          expect(authFactor.hasFactor(identity._id)).toEqual(false);
+          authFactor.unregister(idOf(identity));
+          expect(authFactor.hasFactor(idOf(identity))).toEqual(false);
 
           let res = await req.post("/passport/identify", {
             identifier: "identityWith2fa",
@@ -1275,7 +1271,7 @@ contractSuite("E2E Tests", engine => {
 
           expect(res.body).toEqual({
             challenge: "Please enter the 6 digit code",
-            answerUrl: `passport/identify/${identity._id}/factor-authentication`
+            answerUrl: `passport/identify/${idOf(identity)}/factor-authentication`
           });
           expect(res.body.token).not.toBeDefined();
 
@@ -1299,7 +1295,7 @@ contractSuite("E2E Tests", engine => {
             .then(r => r.body.find(f => f.type == "totp"));
 
           const {answerUrl: activationAnswerUrl, challenge} = await req
-            .post(`/passport/user/${user._id}/start-factor-verification`, totpSchema, {
+            .post(`/passport/user/${idOf(user)}/start-factor-verification`, totpSchema, {
               Authorization: `IDENTITY ${token}`
             })
             .then(r => r.body as {challenge: string; answerUrl: string});
@@ -1310,8 +1306,8 @@ contractSuite("E2E Tests", engine => {
           // Reproduce a second replica that never received the registration broadcast:
           // the factor is persisted in the database but absent from this instance's in-memory map.
           const authFactor = module.get(AuthFactor);
-          authFactor.unregister(user._id);
-          expect(authFactor.hasFactor(user._id)).toEqual(false);
+          authFactor.unregister(idOf(user));
+          expect(authFactor.hasFactor(idOf(user))).toEqual(false);
 
           let res = await req.post("/passport/login", {
             username: "userWith2fa",
@@ -1320,7 +1316,7 @@ contractSuite("E2E Tests", engine => {
 
           expect(res.body).toEqual({
             challenge: "Please enter the 6 digit code",
-            answerUrl: `passport/login/${user._id}/factor-authentication`
+            answerUrl: `passport/login/${idOf(user)}/factor-authentication`
           });
           expect(res.body.token).not.toBeDefined();
 
@@ -1351,14 +1347,14 @@ contractSuite("E2E Tests", engine => {
           await activate2fa(identity);
 
           await req.delete(
-            `/passport/identity/${identity._id}/factors`,
+            `/passport/identity/${idOf(identity)}/factors`,
             {},
             {Authorization: `IDENTITY ${token}`}
           );
 
           // Prove deactivation is persisted, not just cleared from this instance's in-memory map:
           // a replica without that state must also see 2fa as deactivated.
-          module.get(AuthFactor).unregister(identity._id);
+          module.get(AuthFactor).unregister(idOf(identity));
 
           const res = await req.post("/passport/identify", {
             identifier: "identityWith2fa",
@@ -1372,7 +1368,7 @@ contractSuite("E2E Tests", engine => {
         it("should throw error if complete factor verification is called before started", async () => {
           const res = await completeVerification(
             "000000",
-            `/passport/identity/${identity._id}/complete-factor-verification`
+            `/passport/identity/${idOf(identity)}/complete-factor-verification`
           );
 
           expect(res.statusCode).toEqual(400);
@@ -1529,7 +1525,7 @@ contractSuite("E2E Tests", engine => {
 
       identityID = await req
         .get("/passport/identity", {}, {Authorization: `IDENTITY ${token}`})
-        .then(r => r.body[0]._id);
+        .then(r => idOf(r.body[0]).toString());
     });
 
     const updatePassword = (newPassword: string) =>

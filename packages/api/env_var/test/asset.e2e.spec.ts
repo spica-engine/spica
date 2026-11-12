@@ -10,6 +10,7 @@ import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import os from "os";
 import {PreferenceModule} from "@spica-server/preference";
 import {EnvVarModule} from "@spica-server/env_var";
+import {withId, idOf, stripId} from "@spica-server/data";
 
 contractSuite("EnvVar", engine => {
   function downloadAsset(asset) {
@@ -81,19 +82,17 @@ contractSuite("EnvVar", engine => {
   let assetv2;
 
   beforeEach(async () => {
-    envVarv1 = {
-      _id: envVarId,
-      key: "API_KEY",
-      value: "123"
-    };
+    envVarv1 = withId({key: "API_KEY", value: "123"}, envVarId);
 
-    envVarv1Resource = {
-      _id: envVarId,
-      module: "env_var",
-      contents: {
-        schema: envVarv1
-      }
-    };
+    envVarv1Resource = withId(
+      {
+        module: "env_var",
+        contents: {
+          schema: envVarv1
+        }
+      },
+      envVarId
+    );
 
     envVarv2 = {...envVarv1, value: "false"};
 
@@ -117,18 +116,18 @@ contractSuite("EnvVar", engine => {
   // separating these tests cause them failed
   it("insert, update and delete", async () => {
     // INSERT PREVIEW
-    let preview = await previewAssetInstallation(assetv1._id);
+    let preview = await previewAssetInstallation(idOf(assetv1));
 
     expect(preview).toEqual({insertions: [envVarv1Resource], updations: [], deletions: []});
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
     let envVars = await getEnvVars();
     expect(envVars).toEqual([]);
 
     // INSERT
-    await installAsset(assetv1._id);
+    await installAsset(idOf(assetv1));
     envVars = await getEnvVars();
     expect(envVars).toEqual([envVarv1]);
 
@@ -138,25 +137,25 @@ contractSuite("EnvVar", engine => {
     // UPDATE PREVIEW
     assetv2 = await downloadAsset(assetv2);
 
-    preview = await previewAssetInstallation(assetv2._id);
+    preview = await previewAssetInstallation(idOf(assetv2));
     expect(preview).toEqual({insertions: [], updations: [envVarv2Resource], deletions: []});
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("installed");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("downloaded");
 
     envVars = await getEnvVars();
     expect(envVars).toEqual([envVarv1]);
 
     // UPDATE
-    await installAsset(assetv2._id);
+    await installAsset(idOf(assetv2));
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("installed");
 
     envVars = await getEnvVars();
@@ -164,10 +163,10 @@ contractSuite("EnvVar", engine => {
 
     // DELETE PREVIEW
     let assetv3 = {...assetv2, resources: []};
-    delete assetv3._id;
+    stripId(assetv3);
     delete assetv3.status;
     assetv3 = await downloadAsset(assetv3);
-    preview = await previewAssetInstallation(assetv3._id);
+    preview = await previewAssetInstallation(idOf(assetv3));
 
     expect(preview).toEqual({
       insertions: [],
@@ -175,28 +174,28 @@ contractSuite("EnvVar", engine => {
       deletions: [{...envVarv2Resource, installation_status: "installed"}]
     });
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("installed");
 
-    assetv3 = await getAsset(assetv3._id);
+    assetv3 = await getAsset(idOf(assetv3));
     expect(assetv3.status).toEqual("downloaded");
 
     envVars = await getEnvVars();
     expect(envVars).toEqual([envVarv2]);
 
     // DELETE
-    await installAsset(assetv3._id);
+    await installAsset(idOf(assetv3));
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("downloaded");
 
-    assetv3 = await getAsset(assetv3._id);
+    assetv3 = await getAsset(idOf(assetv3));
     expect(assetv3.status).toEqual("installed");
 
     envVars = await getEnvVars();

@@ -13,7 +13,8 @@ import {
   initialize as _initialize,
   checkInitialized,
   Axios,
-  Batch
+  Batch,
+  idOf
 } from "@spica-devkit/internal_common";
 import {Strategy} from "./interface";
 import {Observable} from "rxjs";
@@ -234,7 +235,7 @@ export async function insert(identity: IdentityCreate, headers?: object): Promis
 
   const insertedIdentity = await service.post<IdentityGet>(identitySegment, identity, {headers});
 
-  return policy.attach(insertedIdentity._id, desiredPolicies).then(policies => {
+  return policy.attach(idOf(insertedIdentity), desiredPolicies).then(policies => {
     insertedIdentity.policies = policies;
     return insertedIdentity;
   });

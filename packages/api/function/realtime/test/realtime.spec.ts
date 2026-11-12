@@ -12,6 +12,7 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 import {ChunkKind} from "@spica-server/interface-realtime";
 import {FunctionRealtimeModule} from "../src";
 import {GuardService} from "@spica-server/passport-guard-services";
+import {withId} from "@spica-server/data";
 
 mongoOnly(
   "its documents, ids and filter syntax are MongoDB's; PostgreSQL realtime of this collection is covered by the realtime specs in data-postgresql"
@@ -140,20 +141,24 @@ describe("Function Realtime", () => {
       });
 
       const insertData = [
-        {
-          _id: functionId1,
-          name: "test-function-1",
-          description: "Test function 1",
-          language: "javascript",
-          timeout: 60
-        },
-        {
-          _id: functionId2,
-          name: "test-function-2",
-          description: "Test function 2",
-          language: "javascript",
-          timeout: 12
-        }
+        withId(
+          {
+            name: "test-function-1",
+            description: "Test function 1",
+            language: "javascript",
+            timeout: 60
+          },
+          functionId1
+        ),
+        withId(
+          {
+            name: "test-function-2",
+            description: "Test function 2",
+            language: "javascript",
+            timeout: 12
+          },
+          functionId2
+        )
       ];
       rows = await db
         .collection("function")

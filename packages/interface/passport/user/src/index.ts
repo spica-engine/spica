@@ -1,15 +1,13 @@
-import {Id} from "@spica-server/interface-data";
+import {Id, Keyed} from "@spica-server/interface-data";
 import {EncryptedData} from "@spica-server/core-encryption";
 import {FactorMeta} from "@spica-server/interface-passport-authfactor";
 
-export interface SignUpStrategy {
-  _id: Id;
+export type SignUpStrategy = Keyed<{
   title: string;
   type: string;
-}
+}>;
 
 export interface User {
-  _id?: Id;
   username: string;
   password: string;
   deactivateJwtsBefore?: number;

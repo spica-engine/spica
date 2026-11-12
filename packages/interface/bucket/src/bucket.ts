@@ -3,7 +3,6 @@ import {Preference} from "@spica-server/interface-preference";
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 
 export interface Bucket {
-  _id?: Id;
   type?: "object";
   category?: string;
   title?: string;
@@ -47,12 +46,10 @@ interface PropertyOptions {
 }
 
 export interface BucketDocument {
-  _id?: Id;
   [key: string]: any | undefined;
 }
 
 export interface BucketPreferences extends Preference {
-  _id?: any;
   language: {
     available: {
       [code: string]: string;

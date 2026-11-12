@@ -1,11 +1,12 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {Request} from "@spica-server/core-testing";
 import {BucketApp, startBucketApp} from "../../test/support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Expression Write Rule Type Construction", engine => {
   let api: BucketApp;
   let req: Request;
-  let key: "_id" | "id";
+  let key: string;
 
   const HASH_SECRET = "test-hash-secret-123";
   const ENCRYPTION_SECRET = "01234567890123456789012345678901";
@@ -28,7 +29,7 @@ contractSuite("Expression Write Rule Type Construction", engine => {
   afterEach(() => api.close());
 
   async function createBucket(writeRule: string) {
-    bucketId = (
+    bucketId = idOf(
       await api.createBucket(
         {
           name: {type: "string", title: "Name"},
@@ -43,7 +44,7 @@ contractSuite("Expression Write Rule Type Construction", engine => {
           acl: {write: writeRule, read: "true==true"}
         }
       )
-    )._id;
+    );
   }
 
   // ---------------------------------------------------------------------------

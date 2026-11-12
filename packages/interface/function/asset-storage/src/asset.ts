@@ -10,7 +10,6 @@ export const FUNCTION_ASSET_FILENAMES: FunctionAssetFilename[] = [
 ];
 
 export interface FunctionAsset {
-  _id?: Id;
   functionId: Id;
   filename: FunctionAssetFilename;
   key: string;
@@ -26,12 +25,9 @@ export interface FunctionAssetRepository {
   upsertAsset(
     functionId: Id,
     filename: FunctionAssetFilename,
-    fields: Omit<FunctionAsset, "functionId" | "filename" | "_id">
+    fields: Omit<FunctionAsset, "functionId" | "filename">
   ): Promise<void>;
-  upsertMany(
-    functionId: Id,
-    assets: Array<Omit<FunctionAsset, "functionId" | "_id">>
-  ): Promise<void>;
+  upsertMany(functionId: Id, assets: Array<Omit<FunctionAsset, "functionId">>): Promise<void>;
   /**
    * Moves the asset's key only when it still is `from`, resolving to whether it moved.
    */

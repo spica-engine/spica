@@ -1,6 +1,7 @@
 import {USER_REPOSITORY, VERIFICATION_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
 import {INestApplication} from "@nestjs/common";
+import {idOf, systemKeyField, withId} from "@spica-server/data";
 import {clearStorage, contractSuite} from "@spica-server/database-testing";
 import {
   COLLECTION_QUERY,
@@ -43,7 +44,7 @@ contractSuite("Provider Verification E2E with MailHog", engine => {
 
   const newUserId = () => module.get<IdTypes>(ID_TYPES).forCollection("user").generate();
 
-  const findVerification = async (criteria: Record<string, unknown>) => {
+  const findVerification = async (criteria: Record<string, unknown>): Promise<any> => {
     const where = Object.fromEntries(
       Object.entries(criteria).map(([field, value]) => [field, {eq: value}])
     ) as any;
@@ -155,11 +156,7 @@ contractSuite("Provider Verification E2E with MailHog", engine => {
 
   beforeEach(async () => {
     testUserId = newUserId();
-    await users.insert({
-      _id: testUserId,
-      username: "testuser",
-      password: "testpassword"
-    } as any);
+    await users.insert(withId({username: "testuser", password: "testpassword"}, testUserId) as any);
   });
 
   afterEach(async () => {
@@ -244,7 +241,7 @@ contractSuite("Provider Verification E2E with MailHog", engine => {
         provider: EMAIL_PROVIDER
       });
 
-      const updatedVerification = await findVerification({_id: verification._id});
+      const updatedVerification = await findVerification({[systemKeyField()]: idOf(verification)});
 
       expect(updatedVerification.is_used).toBe(true);
 
@@ -300,7 +297,7 @@ contractSuite("Provider Verification E2E with MailHog", engine => {
       expect(verifyResponse.statusCode).toBe(400);
       expect(verifyResponse.body.message).toBe("Invalid verification code");
 
-      const updatedVerification = await findVerification({_id: verification._id});
+      const updatedVerification = await findVerification({[systemKeyField()]: idOf(verification)});
 
       expect(updatedVerification.is_used).toBe(true);
 
@@ -372,7 +369,7 @@ contractSuite("Provider Verification E2E with MailHog", engine => {
       expect(firstVerifyResponse.statusCode).toBe(400);
       expect(firstVerifyResponse.body.message).toBe("Invalid verification code");
 
-      const updatedVerification = await findVerification({_id: verification._id});
+      const updatedVerification = await findVerification({[systemKeyField()]: idOf(verification)});
 
       expect(updatedVerification.is_used).toBe(true);
 
@@ -474,7 +471,7 @@ contractSuite("Provider Verification E2E with MailHog", engine => {
         provider: EMAIL_PROVIDER
       });
 
-      const updatedVerification = await findVerification({_id: verification._id});
+      const updatedVerification = await findVerification({[systemKeyField()]: idOf(verification)});
       expect(updatedVerification.is_used).toBe(true);
 
       const userResponse = await req.get(`/passport/user/${testUserId}`);

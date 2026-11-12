@@ -1,7 +1,6 @@
 import {
   DeletableById,
   FindableAll,
-  Id,
   ReplaceableById,
   Repository
 } from "@spica-server/interface-data";
@@ -11,7 +10,6 @@ export interface DashboardAsset {
 }
 
 export interface Dashboard {
-  _id?: Id;
   name: string;
   icon: string;
   components: Component[];

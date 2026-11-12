@@ -167,7 +167,7 @@ export class PostgresVerificationRepository implements VerificationRepository {
         set: {requestCount: increment(1)}
       }
     );
-    return verification as StoredVerification & {_id: Id};
+    return verification as StoredVerification & {id: Id};
   }
 
   async deleteById(id: Id) {

@@ -7,6 +7,7 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID} from "@spica-server/core-schema";
 import {EnvVarModule} from "../src";
 import {PassportTestingModule} from "@spica-server/passport-testing";
+import {idOf, stripId, systemKeyField, omitId} from "@spica-server/data";
 
 contractSuite("Environment Variable", engine => {
   let req: Request;
@@ -48,7 +49,7 @@ contractSuite("Environment Variable", engine => {
       await req.post("/env-var", envVar);
 
       const res = await req.get("/env-var");
-      const bodyWithoutIds = res.body.map(({_id, updated_at, ...rest}) => rest);
+      const bodyWithoutIds = res.body.map(({updated_at, ...rest}) => omitId(rest));
       expect(bodyWithoutIds).toEqual([envVar]);
     });
 
@@ -66,7 +67,7 @@ contractSuite("Environment Variable", engine => {
         limit: 1,
         sort: JSON.stringify({value: -1})
       });
-      const bodySkip = resSkip.body.map(({_id, updated_at, ...rest}) => rest);
+      const bodySkip = resSkip.body.map(({updated_at, ...rest}) => omitId(rest));
       expect(bodySkip).toEqual([envVar1]);
     });
 
@@ -79,10 +80,13 @@ contractSuite("Environment Variable", engine => {
         await req.post("/env-var", envVar);
       }
 
-      const res = await req.get(`/env-var`, {paginate: true, sort: JSON.stringify({_id: -1})});
+      const res = await req.get(`/env-var`, {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
       const bodyWithoutIds = {
         ...res.body,
-        data: res.body.data.map(({_id, updated_at, ...rest}) => rest)
+        data: res.body.data.map(({updated_at, ...rest}) => omitId(rest))
       };
       expect(bodyWithoutIds).toEqual({
         meta: {total: 3},
@@ -102,12 +106,12 @@ contractSuite("Environment Variable", engine => {
       ]);
 
       const res = await req.get(`/env-var`, {filter: filterOn("key", "ENV_KEY_3")});
-      const bodyWithoutIds = res.body.map(({_id, updated_at, ...rest}) => rest);
+      const bodyWithoutIds = res.body.map(({updated_at, ...rest}) => omitId(rest));
       expect(bodyWithoutIds.length).toBe(1);
       expect(bodyWithoutIds).toEqual([envVar3]);
 
       const res2 = await req.get(`/env-var`, {filter: filterOn("value", "val_2")});
-      const bodyWithoutIds2 = res2.body.map(({_id, updated_at, ...rest}) => rest);
+      const bodyWithoutIds2 = res2.body.map(({updated_at, ...rest}) => omitId(rest));
       expect(bodyWithoutIds2).toEqual([envVar2]);
     });
 
@@ -128,8 +132,8 @@ contractSuite("Environment Variable", engine => {
 
       const {body} = await req.post("/env-var", envVar);
 
-      const res = await req.get(`/env-var/${body._id}`);
-      delete res.body._id;
+      const res = await req.get(`/env-var/${idOf(body)}`);
+      stripId(res.body);
       delete res.body.updated_at;
       expect(res.body).toEqual(envVar);
     });
@@ -141,12 +145,12 @@ contractSuite("Environment Variable", engine => {
     it("should add new env", async () => {
       const {body} = await req.post("/env-var", envVar);
 
-      expect(body._id).not.toBeFalsy();
+      expect(idOf(body)).not.toBeFalsy();
       expect(body.key).toBe("ENV_KEY");
       expect(body.value).toBe("123");
 
-      const res = await req.get(`/env-var/${body._id}`);
-      delete res.body._id;
+      const res = await req.get(`/env-var/${idOf(body)}`);
+      stripId(res.body);
       delete res.body.updated_at;
       expect(res.body).toEqual(envVar);
     });
@@ -170,9 +174,11 @@ contractSuite("Environment Variable", engine => {
       expect(body.updated_at).not.toBe(clientTimestamp);
       expect(body.injected).toBeUndefined();
 
-      const res = await req.get(`/env-var/${body._id}`);
+      const res = await req.get(`/env-var/${idOf(body)}`);
       expect(res.body.injected).toBeUndefined();
-      expect(Object.keys(res.body).sort()).toEqual(["_id", "key", "updated_at", "value"]);
+      expect(Object.keys(res.body).sort()).toEqual(
+        [systemKeyField(), "key", "updated_at", "value"].sort()
+      );
     });
 
     it("should return validation errors", async () => {
@@ -192,14 +198,14 @@ contractSuite("Environment Variable", engine => {
     it("should update env", async () => {
       const {body} = await req.post("/env-var", {key: "ENV_KEY", value: "123"});
 
-      await req.put(`/env-var/${body._id}`, {
+      await req.put(`/env-var/${idOf(body)}`, {
         key: "ENV_KEY",
         value: "456"
       });
 
-      const res = await req.get(`/env-var/${body._id}`);
+      const res = await req.get(`/env-var/${idOf(body)}`);
 
-      expect(res.body._id).not.toBeFalsy();
+      expect(idOf(res.body)).not.toBeFalsy();
       expect(res.body.key).toBe("ENV_KEY");
       expect(res.body.value).toBe("456");
     });
@@ -207,7 +213,7 @@ contractSuite("Environment Variable", engine => {
     it("should advance updated_at on update", async () => {
       const {body} = await req.post("/env-var", {key: "ENV_KEY", value: "123"});
 
-      const {body: updated} = await req.put(`/env-var/${body._id}`, {
+      const {body: updated} = await req.put(`/env-var/${idOf(body)}`, {
         key: "ENV_KEY",
         value: "456"
       });
@@ -236,7 +242,7 @@ contractSuite("Environment Variable", engine => {
         value: "123"
       });
 
-      const res = await req.delete(`/env-var/${body._id}`);
+      const res = await req.delete(`/env-var/${idOf(body)}`);
       expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
 
       const {body: envVars} = await req.get("/env-var");

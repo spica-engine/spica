@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {hash} from "@spica-server/core-encryption";
-import {FilterLanguageError, provideRepository} from "@spica-server/data";
+import {FilterLanguageError, provideRepository, idOf, systemKeyField} from "@spica-server/data";
 import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {
   COLLECTION_QUERY,
@@ -104,7 +104,7 @@ contractSuite("collection query", engine => {
       ["B", "two"],
       ["C", "three"]
     ]) {
-      inserted[key] = String((await envVars.insert({key, value}))._id);
+      inserted[key] = String(idOf(await envVars.insert({key, value})));
     }
     return inserted;
   }
@@ -124,7 +124,7 @@ contractSuite("collection query", engine => {
       const inserted = await seedEnvVars();
       const [first] = await queries.find<any>("env_var", {sort: {key: 1}, limit: 1});
 
-      expect(String(first._id)).toBe(inserted.A);
+      expect(String(idOf(first))).toBe(inserted.A);
       expect(first).toMatchObject({key: "A", value: "one"});
     });
 
@@ -144,9 +144,12 @@ contractSuite("collection query", engine => {
       expect(without).not.toHaveProperty("value");
 
       const [only] = await queries.find<any>("env_var", {fields: {key: 1}, limit: 1});
-      expect(Object.keys(only).sort()).toEqual(["_id", "key"]);
+      expect(Object.keys(only).sort()).toEqual([systemKeyField(), "key"].sort());
 
-      const [noId] = await queries.find<any>("env_var", {fields: {key: 1, _id: 0}, limit: 1});
+      const [noId] = await queries.find<any>("env_var", {
+        fields: {key: 1, [systemKeyField()]: 0},
+        limit: 1
+      });
       expect(Object.keys(noId)).toEqual(["key"]);
     });
 
@@ -248,7 +251,7 @@ contractSuite("collection query", engine => {
       const found = await queries.find<any>("function_logs", {
         where: {function: {in: [fn]}, level: {in: [3]}},
         createdBetween: {from: new Date(Date.now() - hour), to: new Date(Date.now() + hour)},
-        sort: {_id: -1}
+        sort: {[systemKeyField()]: -1}
       });
       expect(found.map(log => log.content)).toEqual(["failed again", "Failed hard"]);
 
@@ -263,7 +266,7 @@ contractSuite("collection query", engine => {
 
       const found = await queries.find<any>("function_logs", {
         where: {content: {matches: "FAILED", caseInsensitive: true}, channel: {eq: "stderr"}},
-        sort: {_id: 1}
+        sort: {[systemKeyField()]: 1}
       });
       expect(found).toHaveLength(2);
     });
@@ -362,8 +365,8 @@ contractSuite("collection query", engine => {
         timeout: 10,
         language: "javascript",
         triggers: {},
-        env_vars: [envVar._id],
-        secrets: [secret._id]
+        env_vars: [idOf(envVar)],
+        secrets: [idOf(secret)]
       } as any);
       return secret;
     }
@@ -377,7 +380,7 @@ contractSuite("collection query", engine => {
       });
 
       expect(fn.secrets).toHaveLength(1);
-      expect(String(fn.secrets[0]._id)).toEqual(String(secret._id));
+      expect(String(idOf(fn.secrets[0]))).toEqual(String(idOf(secret)));
       expect(fn.secrets[0].key).toEqual("S");
       expect(fn.secrets[0]).not.toHaveProperty("value");
       expect(fn.env_vars[0].value).toEqual("one");
@@ -399,11 +402,11 @@ contractSuite("collection query", engine => {
 
       const [fn] = await queries.find<any>("function", {
         relations: ["secrets"],
-        fields: {"secrets._id": 0}
+        fields: {[`secrets.${systemKeyField()}`]: 0}
       });
 
       expect(fn.secrets).toHaveLength(1);
-      expect(fn.secrets[0]).not.toHaveProperty("_id");
+      expect(fn.secrets[0]).not.toHaveProperty(systemKeyField());
       expect(fn.secrets[0].key).toEqual("S");
     });
 
@@ -434,14 +437,19 @@ contractSuite("collection query", engine => {
       } as any);
       const gone = ids.unscoped().generate();
       await activities.insertMany([
-        {action: 1, identifier: String(ann._id), resource: ["bucket", "1"], created_at: new Date()},
-        {action: 2, username: String(bob._id), resource: ["bucket", "2"], created_at: new Date()},
+        {
+          action: 1,
+          identifier: String(idOf(ann)),
+          resource: ["bucket", "1"],
+          created_at: new Date()
+        },
+        {action: 2, username: String(idOf(bob)), resource: ["bucket", "2"], created_at: new Date()},
         {action: 3, identifier: String(gone), resource: ["bucket", "3"], created_at: new Date()}
       ] as any);
 
       const all = await queries.find<any>("activity", {
         relations: ["identifier", "username"],
-        sort: {_id: 1}
+        sort: {[systemKeyField()]: 1}
       });
       expect(all.map(({identifier, username}) => ({identifier, username}))).toEqual([
         {identifier: "ann"},
@@ -488,7 +496,7 @@ contractSuite("collection query", engine => {
         triggers: {}
       } as any);
       const gone = String(ids.unscoped().generate());
-      for (const target of [String(fn._id), gone]) {
+      for (const target of [String(idOf(fn)), gone]) {
         await logSink.insert({
           function: target,
           event_id: "e",
@@ -501,7 +509,7 @@ contractSuite("collection query", engine => {
 
       const found = await queries.find<any>("function_logs", {
         relations: ["function"],
-        sort: {_id: 1}
+        sort: {[systemKeyField()]: 1}
       });
       expect(found.map(log => log.function)).toEqual(["named", gone]);
     });

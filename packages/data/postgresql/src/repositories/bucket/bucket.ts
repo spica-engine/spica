@@ -12,7 +12,7 @@ export class PostgresBucketRepository implements BucketRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
   async findAll() {
-    const found = await this.orm.findMany(buckets, {}, {orderBy: {_id: "asc"}});
+    const found = await this.orm.findMany(buckets, {}, {orderBy: {id: "asc"}});
     return found.map(decodeBucket) as StoredBucket[];
   }
 
@@ -63,12 +63,12 @@ export class PostgresBucketRepository implements BucketRepository {
 
   async findTranslatable() {
     const withProperties = await this.findWithProperties();
-    return withProperties.flatMap(({_id, properties}) => {
+    return withProperties.flatMap(({id, properties}) => {
       const translatable = Object.fromEntries(
         Object.entries(properties).filter(([, property]) => property.options?.translate === true)
       );
-      return Object.keys(translatable).length ? [{_id, properties: translatable}] : [];
-    }) as StoredBucket[];
+      return Object.keys(translatable).length ? [{id, properties: translatable}] : [];
+    }) as unknown as StoredBucket[];
   }
 
   async findReferencing(bucketId: string) {
@@ -77,16 +77,16 @@ export class PostgresBucketRepository implements BucketRepository {
       .filter(({properties}) =>
         Object.values(properties).some(property => (property as any).bucketId == bucketId)
       )
-      .map(({_id}) => String(_id));
+      .map(({id}) => String(id));
   }
 
   private async findWithProperties() {
     const found = await this.orm.findMany(
       buckets,
       {properties: isNotNull()},
-      {select: ["_id", "properties"], orderBy: {_id: "asc"}}
+      {select: ["id", "properties"], orderBy: {id: "asc"}}
     );
-    return found as {_id: Id; properties: NonNullable<Bucket["properties"]>}[];
+    return found as {id: Id; properties: NonNullable<Bucket["properties"]>}[];
   }
 
   status() {

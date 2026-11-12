@@ -3,6 +3,7 @@ import {Secret, SECRET_REPOSITORY, SecretRepository} from "@spica-server/interfa
 import {Observable} from "rxjs";
 import {SecretChangeDispatcher, SecretChangeEvent} from "./change-dispatcher.js";
 import {Id} from "@spica-server/interface-data";
+import {idOf, withId} from "@spica-server/data";
 
 export const SECRET_ENCRYPTION_SECRET = Symbol.for("SECRET_ENCRYPTION_SECRET");
 
@@ -20,7 +21,7 @@ export class SecretService {
 
   async insert(secret: Secret): Promise<Secret> {
     const result = await this.secrets.insert(secret);
-    this.dispatchChange("insert", result._id, [secret]);
+    this.dispatchChange("insert", idOf(result), [secret]);
     return result;
   }
 
@@ -29,8 +30,8 @@ export class SecretService {
     if (!previous) {
       return previous;
     }
-    const current = {...secret, _id: previous._id};
-    this.dispatchChange("replace", previous._id, [previous, current]);
+    const current = withId({...secret}, idOf(previous));
+    this.dispatchChange("replace", idOf(previous), [previous, current]);
     return current;
   }
 
@@ -39,15 +40,15 @@ export class SecretService {
     if (!previous) {
       return previous;
     }
-    const current = await this.secrets.findById(previous._id);
-    this.dispatchChange("update", previous._id, [previous, current]);
+    const current = await this.secrets.findById(idOf(previous));
+    this.dispatchChange("update", idOf(previous), [previous, current]);
     return current;
   }
 
   async deleteById(id: Id): Promise<Secret | null> {
     const result = await this.secrets.deleteById(id);
     if (result) {
-      this.dispatchChange("delete", result._id, [result]);
+      this.dispatchChange("delete", idOf(result), [result]);
     }
     return result;
   }
@@ -58,10 +59,10 @@ export class SecretService {
 
   private dispatchChange(
     operationType: SecretChangeEvent["operationType"],
-    _id: Id,
+    id: Id,
     secrets: Pick<Secret, "key">[]
   ) {
     const keys = Array.from(new Set(secrets.filter(Boolean).map(secret => secret.key)));
-    this.changeDispatcher.dispatch({operationType, documentKey: {_id}, keys});
+    this.changeDispatcher.dispatch({operationType, documentKey: withId({}, id), keys});
   }
 }

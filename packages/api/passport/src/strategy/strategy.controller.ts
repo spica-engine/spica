@@ -14,7 +14,7 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core-schema";
-import {ID} from "@spica-server/data";
+import {ID, idOf, stripId} from "@spica-server/data";
 import {
   COLLECTION_QUERY,
   CollectionQueryFacade,
@@ -54,7 +54,7 @@ export class StrategyController {
     return this.strategy.findById(id).then(strategy => {
       const scope = strategy.type === "oauth" ? "user" : "identity";
       strategy["callbackUrl"] =
-        `${this.options.publicUrl}/passport/${scope}/strategy/${strategy._id}/complete`;
+        `${this.options.publicUrl}/passport/${scope}/strategy/${idOf(strategy)}/complete`;
       return strategy;
     });
   }
@@ -69,7 +69,7 @@ export class StrategyController {
   @Post()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:insert"))
   async insertOne(@Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy) {
-    delete strategy._id;
+    stripId(strategy);
 
     const service = this.strategies.find(strategy.type, strategy.options.idp);
 
@@ -96,7 +96,7 @@ export class StrategyController {
     @Param("id", ID(STRATEGY_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy
   ) {
-    delete strategy._id;
+    stripId(strategy);
 
     const existingStrategy = await this.strategy.findById(id);
 

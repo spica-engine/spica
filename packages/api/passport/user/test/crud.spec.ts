@@ -10,6 +10,7 @@ import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {UserService} from "../src/user.service";
 import {ConfigModule} from "@spica-server/config";
+import {withId} from "@spica-server/data";
 
 contractSuite("User Email Hashing and Encryption", engine => {
   let module: TestingModule;
@@ -100,17 +101,21 @@ contractSuite("User Email Hashing and Encryption", engine => {
     createdAt = new Date();
     const encryptedEmail = userService.encryptField("test@example.com");
 
-    await users.insert({
-      _id: userId,
-      username: "testuser",
-      password: "password123",
-      email: encryptedEmail,
-      email_verified_at: createdAt,
-      policies: [],
-      lastLogin: null,
-      failedAttempts: [],
-      lastPasswords: []
-    });
+    await users.insert(
+      withId(
+        {
+          username: "testuser",
+          password: "password123",
+          email: encryptedEmail,
+          email_verified_at: createdAt,
+          policies: [],
+          lastLogin: null,
+          failedAttempts: [],
+          lastPasswords: []
+        },
+        userId
+      )
+    );
   });
 
   afterEach(async () => {
@@ -123,15 +128,19 @@ contractSuite("User Email Hashing and Encryption", engine => {
     });
 
     expect(getRes.statusCode).toBe(200);
-    expect(getRes.body).toEqual({
-      _id: testUserId,
-      username: "testuser",
-      email: "test@example.com",
-      email_verified_at: createdAt.toISOString(),
-      policies: [],
-      lastLogin: null,
-      failedAttempts: []
-    });
+    expect(getRes.body).toEqual(
+      withId(
+        {
+          username: "testuser",
+          email: "test@example.com",
+          email_verified_at: createdAt.toISOString(),
+          policies: [],
+          lastLogin: null,
+          failedAttempts: []
+        },
+        testUserId
+      )
+    );
   });
 
   it("should find user by email", async () => {
@@ -144,15 +153,19 @@ contractSuite("User Email Hashing and Encryption", engine => {
     );
     expect(listRes.statusCode).toBe(200);
     expect(listRes.body.length).toBe(1);
-    expect(listRes.body[0]).toEqual({
-      _id: testUserId,
-      username: "testuser",
-      email: "test@example.com",
-      email_verified_at: createdAt.toISOString(),
-      policies: [],
-      lastLogin: null,
-      failedAttempts: []
-    });
+    expect(listRes.body[0]).toEqual(
+      withId(
+        {
+          username: "testuser",
+          email: "test@example.com",
+          email_verified_at: createdAt.toISOString(),
+          policies: [],
+          lastLogin: null,
+          failedAttempts: []
+        },
+        testUserId
+      )
+    );
   });
 
   it("should return empty result when searching with wrong email", async () => {
@@ -184,15 +197,19 @@ contractSuite("User Email Hashing and Encryption", engine => {
 
     expect(listRes.statusCode).toBe(200);
     expect(listRes.body.length).toBe(1);
-    expect(listRes.body[0]).toEqual({
-      _id: testUserId,
-      username: "testuser",
-      email: "test@example.com",
-      email_verified_at: createdAt.toISOString(),
-      policies: [],
-      lastLogin: null,
-      failedAttempts: []
-    });
+    expect(listRes.body[0]).toEqual(
+      withId(
+        {
+          username: "testuser",
+          email: "test@example.com",
+          email_verified_at: createdAt.toISOString(),
+          policies: [],
+          lastLogin: null,
+          failedAttempts: []
+        },
+        testUserId
+      )
+    );
   });
 
   it("should work with nested logical operators using email", async () => {
@@ -216,14 +233,18 @@ contractSuite("User Email Hashing and Encryption", engine => {
 
     expect(listRes.statusCode).toBe(200);
     expect(listRes.body.length).toBe(1);
-    expect(listRes.body[0]).toEqual({
-      _id: testUserId,
-      username: "testuser",
-      email: "test@example.com",
-      email_verified_at: createdAt.toISOString(),
-      policies: [],
-      lastLogin: null,
-      failedAttempts: []
-    });
+    expect(listRes.body[0]).toEqual(
+      withId(
+        {
+          username: "testuser",
+          email: "test@example.com",
+          email_verified_at: createdAt.toISOString(),
+          policies: [],
+          lastLogin: null,
+          failedAttempts: []
+        },
+        testUserId
+      )
+    );
   });
 });

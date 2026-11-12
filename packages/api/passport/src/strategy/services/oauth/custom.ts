@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {ids} from "@spica-server/data";
+import {ids, idOf} from "@spica-server/data";
 import {
   IncomingCustomOAuth,
   IncomingOAuthPreset,
@@ -106,9 +106,9 @@ export class CustomOAuthService implements OAuthStrategyService {
   }
 
   afterInsert(strategy: OAuthStrategy): Promise<Strategy> {
-    const redirectUri = `${this.options.publicUrl}/passport/user/strategy/${strategy._id}/complete`;
+    const redirectUri = `${this.options.publicUrl}/passport/user/strategy/${idOf(strategy)}/complete`;
     return this.strategies.setOAuthRedirectUri(
-      ids().forCollection(STRATEGY_COLLECTION).parse(strategy._id),
+      ids().forCollection(STRATEGY_COLLECTION).parse(idOf(strategy)),
       redirectUri
     );
   }

@@ -4,11 +4,12 @@ import {contractSuite} from "@spica-server/database-testing";
 import {Action} from "@spica-server/interface-activity";
 import {BucketApp, startBucketApp} from "../support/bucket-app";
 import {IdentifiedUserModule} from "../support/test-user";
+import {idOf} from "@spica-server/data";
 
 contractSuite("BucketDataController: history, activity and hooks", engine => {
   let api: BucketApp;
   let bucketId: string;
-  let key: "_id" | "id";
+  let key: string;
   let emitted: unknown[][];
 
   beforeEach(async () => {
@@ -19,12 +20,12 @@ contractSuite("BucketDataController: history, activity and hooks", engine => {
     );
     key = api.keyField;
 
-    bucketId = (
+    bucketId = idOf(
       await api.createBucket(
         {title: {type: "string"}, tags: {type: "array", items: {type: "string"}}},
         {title: "Tracked", description: "Tracked bucket", history: true}
       )
-    )._id;
+    );
 
     emitted = [];
     const emitter = api.module.get(ChangeEmitter, {strict: false});
@@ -83,7 +84,7 @@ contractSuite("BucketDataController: history, activity and hooks", engine => {
 
       const restored = (
         await api.req.get(
-          `/bucket/${bucketId}/history/${documentId}/${entries[entries.length - 1]._id}`
+          `/bucket/${bucketId}/history/${documentId}/${idOf(entries[entries.length - 1])}`
         )
       ).body;
 

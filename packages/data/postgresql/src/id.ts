@@ -209,4 +209,8 @@ export class PostgresIdTypes implements IdTypes {
   keyField(bucket: {primary?: string}): string {
     return bucket.primary as string;
   }
+
+  systemKeyField(): string {
+    return "id";
+  }
 }

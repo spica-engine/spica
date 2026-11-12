@@ -8,6 +8,7 @@ import {
 } from "@spica-server/database-testing";
 import {MongoHistoryRepository} from "@spica-server/data-mongodb";
 import {diff} from "@spica-server/core-differ";
+import {withId} from "@spica-server/data";
 
 describe("History Service", () => {
   let module: TestingModule;
@@ -388,14 +389,8 @@ describe("History Service", () => {
         const response: InsertOneResult = await historyService.createHistory(
           bucketId,
           documentId,
-          {
-            _id: documentId,
-            name: "first name"
-          },
-          {
-            _id: documentId,
-            name: "updated name"
-          }
+          withId({name: "first name"}, documentId),
+          withId({name: "updated name"}, documentId)
         );
         expect(response.acknowledged).toBe(true);
 
@@ -423,45 +418,41 @@ describe("History Service", () => {
         const response: InsertOneResult = await historyService.createHistory(
           bucketId,
           documentId,
-          {
-            _id: documentId,
-            name: "first name",
-            age: 22
-          },
-          {
-            _id: documentId,
-            name: "updated name",
-            age: 33
-          }
+          withId({name: "first name", age: 22}, documentId),
+          withId({name: "updated name", age: 33}, documentId)
         );
 
         await historyService.updateHistories(
-          {
-            _id: bucketId,
-            primary: "",
-            acl: {write: "", read: ""},
-            properties: {
-              name: {
-                type: "string",
-                options: {}
-              },
-              age: {
-                type: "number",
-                options: {}
+          withId(
+            {
+              primary: "",
+              acl: {write: "", read: ""},
+              properties: {
+                name: {
+                  type: "string",
+                  options: {}
+                },
+                age: {
+                  type: "number",
+                  options: {}
+                }
               }
-            }
-          },
-          {
-            _id: bucketId,
-            primary: "",
-            acl: {write: "", read: ""},
-            properties: {
-              name: {
-                type: "string",
-                options: {}
+            },
+            bucketId
+          ),
+          withId(
+            {
+              primary: "",
+              acl: {write: "", read: ""},
+              properties: {
+                name: {
+                  type: "string",
+                  options: {}
+                }
               }
-            }
-          }
+            },
+            bucketId
+          )
         );
 
         await new Promise(resolve => setTimeout(resolve, 3000));

@@ -2,6 +2,7 @@ import {encrypt} from "@spica-server/core-encryption";
 import {fieldTableName} from "@spica-server/data-postgresql";
 import {applyPatch} from "@spica-server/core-patch";
 import {postgresWriter, uuid} from "./support.js";
+import {idOf} from "@spica-server/data";
 
 describe("PostgreSQL bucket write: replace and patch", () => {
   const {createBucket, insert, replace, patch, query, rows, rowsOf} = postgresWriter();
@@ -22,7 +23,7 @@ describe("PostgreSQL bucket write: replace and patch", () => {
   const xminsOf = async (bucket: any, path: string) =>
     (
       await query(
-        `SELECT xmin::text AS xmin FROM "${fieldTableName(String(bucket._id), path.split("."))}" ORDER BY 1`
+        `SELECT xmin::text AS xmin FROM "${fieldTableName(String(idOf(bucket)), path.split("."))}" ORDER BY 1`
       )
     ).rows.map(row => row.xmin);
 
@@ -59,7 +60,7 @@ describe("PostgreSQL bucket write: replace and patch", () => {
       const posts = await createBucket({
         title: {type: "string"},
         tags: {type: "array", items: {type: "string"}},
-        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"}
+        editors: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetomany"}
       });
       const saved = await insert(posts, {title: "p", tags: ["a", "b"], editors: [ann]});
 
@@ -180,7 +181,7 @@ describe("PostgreSQL bucket write: replace and patch", () => {
       const ann = (await insert(authors, {name: "ann"})).id;
       const posts = await createBucket({
         title: {type: "string"},
-        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"}
+        editors: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetomany"}
       });
       const saved = await insert(posts, {title: "p", editors: [ann]});
 

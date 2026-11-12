@@ -1,4 +1,5 @@
 import {compareResourceGroups} from "@spica-server/core-differ";
+import {systemKeyField, idOf} from "@spica-server/data";
 import {Asset, Resource, IInstallationStrategy} from "@spica-server/interface-asset";
 
 export abstract class InstallationStrategy implements IInstallationStrategy {
@@ -25,12 +26,12 @@ export abstract class InstallationStrategy implements IInstallationStrategy {
   protected updateResources(resourcesAfterInstall: Resource[]) {
     for (let resource of this.asset.resources) {
       let resourceWithStatus: Resource<object> = resourcesAfterInstall.find(
-        r => r._id.toString() == resource._id.toString()
+        r => idOf(r).toString() == idOf(resource).toString()
       );
 
       if (!resourceWithStatus && this.previousAsset) {
         resourceWithStatus = this.previousAsset.resources.find(
-          r => r._id.toString() == resource._id.toString()
+          r => idOf(r).toString() == idOf(resource).toString()
         );
       }
 
@@ -52,7 +53,7 @@ export class UpgradePartiallyInstalledAsset extends InstallationStrategy {
   isMyTask(currentAsset: Asset, allVersions: Asset[]) {
     this.asset = currentAsset;
     this.previousAsset = allVersions
-      .filter(asset => asset._id.toString() != currentAsset._id.toString())
+      .filter(asset => idOf(asset).toString() != idOf(currentAsset).toString())
       .find(asset => asset.status == "partially_installed");
 
     return !!this.previousAsset;
@@ -77,7 +78,7 @@ export class UpgradeInstalledAsset extends InstallationStrategy {
   isMyTask(currentAsset: Asset, allVersions: Asset[]) {
     this.asset = currentAsset;
     this.previousAsset = allVersions
-      .filter(asset => asset._id.toString() != currentAsset._id.toString())
+      .filter(asset => idOf(asset).toString() != idOf(currentAsset).toString())
       .find(asset => asset.status == "installed");
 
     return !!this.previousAsset;
@@ -90,7 +91,7 @@ export class UpgradeInstalledAsset extends InstallationStrategy {
     const desiredResources = this.asset.resources;
 
     this.changes = compareResourceGroups<Resource<object>>(desiredResources, existingResources, {
-      uniqueField: "_id",
+      uniqueField: systemKeyField(),
       ignoredFields: ["installation_status", "failure_message"]
     });
     return this.changes;
@@ -117,11 +118,11 @@ export class InstallAsset extends InstallationStrategy {
   isMyTask(currentAsset: Asset, allVersions: Asset[]): boolean {
     this.asset = currentAsset;
     this.previousAsset = allVersions.find(
-      asset => asset._id.toString() == currentAsset._id.toString()
+      asset => idOf(asset).toString() == idOf(currentAsset).toString()
     );
 
     const otherVersionsInstalled = allVersions
-      .filter(asset => asset._id.toString() != currentAsset._id.toString())
+      .filter(asset => idOf(asset).toString() != idOf(currentAsset).toString())
       .some(asset => asset.status == "installed" || asset.status == "partially_installed");
 
     return !otherVersionsInstalled;
@@ -137,7 +138,7 @@ export class InstallAsset extends InstallationStrategy {
     const desiredResources = this.asset.resources;
 
     this.changes = compareResourceGroups<Resource<object>>(desiredResources, existingResources, {
-      uniqueField: "_id",
+      uniqueField: systemKeyField(),
       ignoredFields: ["installation_status", "failure_message"]
     });
     return this.changes;

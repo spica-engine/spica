@@ -3,6 +3,7 @@ import {USER_REPOSITORY, UserRepository} from "@spica-server/interface-passport-
 import {UserService} from "../user.service.js";
 import {VerificationService} from "../verification.service.js";
 import {UserConfigService} from "../config.service.js";
+import {idOf} from "@spica-server/data";
 
 @Injectable()
 export class PasswordResetService {
@@ -31,7 +32,7 @@ export class PasswordResetService {
     });
 
     await this.verificationService.startVerificationProcess(
-      user._id,
+      idOf(user),
       decryptedValue,
       strategy,
       provider,
@@ -55,7 +56,7 @@ export class PasswordResetService {
       await this.userService.isUserVerifiedProvider(user, provider);
 
       const response = await this.verificationService.confirmVerificationProcess(
-        user._id,
+        idOf(user),
         code,
         strategy,
         provider,

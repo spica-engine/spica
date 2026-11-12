@@ -11,6 +11,7 @@ import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Function RabbitMQ Stream Trigger Schema", engine => {
   let app: INestApplication;
@@ -190,7 +191,7 @@ contractSuite("Function RabbitMQ Stream Trigger Schema", engine => {
       const fn = created.body;
       fn.triggers.default.options.consumer = {offset: {type: "first"}, consumerRef: "ref"};
 
-      const res = await request.put(`/function/${fn._id}`, fn);
+      const res = await request.put(`/function/${idOf(fn)}`, fn);
 
       expect(res.statusCode).toEqual(200);
       expect(res.body.triggers.default.options.consumer).toEqual({

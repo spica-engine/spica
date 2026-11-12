@@ -1,5 +1,5 @@
 import {bucketIds} from "@spica-server/bucket-services";
-import {ids} from "@spica-server/data";
+import {ids, idOf} from "@spica-server/data";
 import {conditionPaths, FilterCondition, FilterNode} from "@spica-server/interface-bucket-common";
 import {Id} from "@spica-server/interface-data";
 import {GraphQLResolveInfo} from "graphql";
@@ -13,8 +13,8 @@ export function validateBuckets(buckets: Bucket[]) {
   for (const bucket of buckets) {
     validateProperties(
       bucket,
-      getBucketName(bucket._id),
-      buckets.map(bucket => bucket._id.toString()),
+      getBucketName(idOf(bucket)),
+      buckets.map(bucket => idOf(bucket).toString()),
       warnings
     );
   }
@@ -170,7 +170,7 @@ function validateDefinition(
 }
 
 export function createSchema(bucket: Bucket, staticTypes: string, bucketIds: string[]) {
-  const name = getBucketName(bucket._id);
+  const name = getBucketName(idOf(bucket));
   let schema = `
       ${staticTypes}
       
@@ -476,7 +476,7 @@ function parseConditions(
       const property = properties[key];
       const nested =
         property?.type == "relation"
-          ? buckets.find(bucket => bucket._id == property.bucketId)
+          ? buckets.find(bucket => idOf(bucket) == property.bucketId)
           : property;
       if (nested?.properties) {
         nodes.push(...parseConditions(nested, value, buckets, [...prefix, key]));

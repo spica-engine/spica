@@ -5,7 +5,6 @@ import {Secret} from "@spica-server/interface-secret";
 
 export const envVars = defineEntity<EnvVar>({
   table: "env_vars",
-  idProperty: "_id",
   columns: {
     key: {type: "text", notNull: true},
     value: {type: "text"},
@@ -16,7 +15,6 @@ export const envVars = defineEntity<EnvVar>({
 
 export const secrets = defineEntity<Secret>({
   table: "secrets",
-  idProperty: "_id",
   columns: {
     key: {type: "text", notNull: true},
     value: {embedded: {encrypted: {type: "text"}, iv: {type: "text"}, authTag: {type: "text"}}},
@@ -27,7 +25,6 @@ export const secrets = defineEntity<Secret>({
 
 export const dashboards = defineEntity<Dashboard>({
   table: "dashboards",
-  idProperty: "_id",
   columns: {
     name: {type: "text"},
     icon: {type: "text"},

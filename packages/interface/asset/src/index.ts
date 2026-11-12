@@ -1,7 +1,6 @@
-import {DeletableById, Id, ReplaceableById, Repository} from "@spica-server/interface-data";
+import {DeletableById, Id, Keyed, ReplaceableById, Repository} from "@spica-server/interface-data";
 
 export interface Asset {
-  _id?: any;
   name: string;
   description: string;
   resources: Resource[];
@@ -23,13 +22,12 @@ export interface Config {
   type: string;
 }
 
-export interface Resource<C = object> {
-  _id: any;
+export type Resource<C = object> = Keyed<{
   module: string;
   contents: C;
   installation_status?: "installed" | "failed";
   failure_message?: string;
-}
+}>;
 
 export type Validator = (resource: Resource) => Promise<void>;
 
@@ -39,7 +37,7 @@ export interface Operator {
   delete(resource: Resource): Promise<any>;
 }
 
-export type Exporter = (_id: string) => Promise<void>;
+export type Exporter = (id: string) => Promise<void>;
 
 export interface ExportMeta {
   name: string;
@@ -48,7 +46,7 @@ export interface ExportMeta {
   configs: Config[];
 }
 
-export type ResourceLister = () => Promise<{_id: string; title: string}[]>;
+export type ResourceLister = () => Promise<Keyed<{title: string}>[]>;
 
 export interface AssetOptions {
   persistentPath: string;

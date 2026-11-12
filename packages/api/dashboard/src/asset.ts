@@ -3,7 +3,7 @@ import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {Resource} from "@spica-server/interface-asset";
 import {registrar} from "@spica-server/asset";
 import {DashboardAsset, DashboardRepository} from "@spica-server/interface-dashboard";
-import {ids} from "@spica-server/data";
+import {ids, idOf, stripId, assignId, withId} from "@spica-server/data";
 
 const dashboardIds = () => ids().forCollection("dashboard");
 
@@ -23,44 +23,43 @@ export function registerAssetHandlers(
   const operator = {
     insert: (resource: Resource<DashboardAsset>) => {
       const dashboard = resource.contents.schema;
-      dashboard._id =
-        dashboard._id == null ? dashboardIds().generate() : dashboardIds().parse(dashboard._id);
+      assignId(
+        dashboard,
+        idOf(dashboard) == null ? dashboardIds().generate() : dashboardIds().parse(idOf(dashboard))
+      );
 
       return dashboards.insert(dashboard);
     },
 
     update: (resource: Resource<DashboardAsset>) => {
       const dashboard = resource.contents.schema;
-      const _id = dashboardIds().parse(dashboard._id);
-      delete dashboard._id;
-      return dashboards.replaceById(_id, dashboard);
+      const id = dashboardIds().parse(idOf(dashboard));
+      stripId(dashboard);
+      return dashboards.replaceById(id, dashboard);
     },
 
     delete: (resource: Resource<DashboardAsset>) =>
-      dashboards.deleteById(dashboardIds().parse(resource._id))
+      dashboards.deleteById(dashboardIds().parse(idOf(resource)))
   };
   registrar.operator(_module, operator);
 
-  const exporter = async (_id: string) => {
-    if (!dashboardIds().isValid(_id)) {
-      return Promise.reject(`${_id} is not a valid object id`);
+  const exporter = async (id: string) => {
+    if (!dashboardIds().isValid(id)) {
+      return Promise.reject(`${id} is not a valid object id`);
     }
-    const dashboard = await dashboards.findById(dashboardIds().parse(_id));
+    const dashboard = await dashboards.findById(dashboardIds().parse(id));
 
     if (!dashboard) {
-      return Promise.reject(`Dashboard does not exist with _id ${_id}`);
+      return Promise.reject(`Dashboard does not exist with id ${id}`);
     }
-    return assetRepManager.write(_module, _id, "schema", dashboard, "yaml");
+    return assetRepManager.write(_module, id, "schema", dashboard, "yaml");
   };
   registrar.exporter(_module, exporter);
 
   const lister = () =>
     dashboards.findAll().then(all => {
       return all.map(d => {
-        return {
-          _id: d._id.toString(),
-          title: d.name
-        };
+        return withId({title: d.name}, idOf(d).toString());
       });
     });
 }

@@ -1,9 +1,10 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {BucketApp, startBucketApp, withoutNulls} from "../support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("BucketDataController: relation disposal", engine => {
   let api: BucketApp;
-  let key: "_id" | "id";
+  let key: string;
 
   beforeEach(async () => {
     api = await startBucketApp(engine);
@@ -13,7 +14,7 @@ contractSuite("BucketDataController: relation disposal", engine => {
   afterEach(() => api.close());
 
   const bucketOf = async (title: string, properties: Record<string, unknown>) =>
-    (await api.createBucket(properties, {title, description: title}))._id as string;
+    idOf(await api.createBucket(properties, {title, description: title})) as string;
 
   describe("clear relations", () => {
     let userBucket: string;

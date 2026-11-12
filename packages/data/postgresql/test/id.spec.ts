@@ -188,4 +188,8 @@ describe("PostgresIdTypes", () => {
     expect(await idTypes.forBucket("any")).toBeInstanceOf(UuidV7Type);
     expect(findById).not.toHaveBeenCalled();
   });
+
+  it("keys system records by id", () => {
+    expect(idTypesFor(null).idTypes.systemKeyField()).toBe("id");
+  });
 });

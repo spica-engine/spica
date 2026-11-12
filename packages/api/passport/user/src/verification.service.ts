@@ -1,5 +1,5 @@
 import {Injectable, NotFoundException, Inject, BadRequestException, Logger} from "@nestjs/common";
-import {ids} from "@spica-server/data";
+import {ids, idOf} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {
   UserOptions,
@@ -74,7 +74,7 @@ export class VerificationService {
     await this.enforceAttemptLimit(record);
 
     const sendPayload = handler.buildSendPayload(rawCode, value, provider);
-    return this.sendVerification(verificationProvider, value, provider, sendPayload, record._id);
+    return this.sendVerification(verificationProvider, value, provider, sendPayload, idOf(record));
   }
 
   async confirmVerificationProcess(

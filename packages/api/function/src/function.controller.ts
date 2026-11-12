@@ -24,7 +24,7 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ID} from "@spica-server/data";
+import {ID, withId, stripId} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
@@ -159,7 +159,7 @@ export class FunctionController {
     @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
     @Body(Schema.validate(generate)) fn: Function
   ) {
-    return CRUD.replace(this.functions, this.engine, {...fn, _id: id}).catch(error => {
+    return CRUD.replace(this.functions, this.engine, withId({...fn}, id)).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }
@@ -207,7 +207,7 @@ export class FunctionController {
     }
 
     const patchedFn = applyPatch(previousFn, patch);
-    delete patchedFn._id;
+    stripId(patchedFn);
 
     const updatedFn = await this.functions.applyMergePatch(id, patch, patchedFn);
 

@@ -21,7 +21,8 @@ import {BUCKET_WRITE, BucketWriteFacade} from "@spica-server/interface-bucket-co
 import {
   ContractEngine,
   DatabaseService,
-  DatabaseTestingModule
+  DatabaseTestingModule,
+  ENGINE_KEY_FIELDS
 } from "@spica-server/database-testing";
 import {
   otherBucket,
@@ -62,14 +63,14 @@ function mongoStore(module: TestingModule): AccessStore {
       labels = Object.keys(documents);
       await collection().deleteMany({});
       await collection().insertMany(
-        labels.map(label => ({_id: label as never, ...documents[label]}))
+        labels.map(label => ({[ENGINE_KEY_FIELDS.mongodb]: label as never, ...documents[label]}))
       );
     },
     async select(rule, auth = {}) {
       const found = await collection()
         .aggregate([{$match: aggregate(rule, {auth}, "match")}])
         .toArray();
-      const matched = new Set(found.map(document => String(document._id)));
+      const matched = new Set(found.map(document => String(document[ENGINE_KEY_FIELDS.mongodb])));
       return labels.filter(label => matched.has(label));
     }
   };
@@ -107,10 +108,9 @@ export async function createPostgresAccessStore(
 
   const writes = module.get<BucketWriteFacade>(BUCKET_WRITE);
   const storedBuckets = Object.fromEntries(
-    Object.values(TARGETS).map(({bucket, metadata}) => [
-      metadata.bucketId,
-      {...bucket, _id: metadata.bucketId}
-    ])
+    Object.values(TARGETS).map(({bucket, metadata}) => {
+      return [metadata.bucketId, {...bucket, id: metadata.bucketId}];
+    })
   );
 
   for (const {metadata} of [TARGETS.third, TARGETS.other, TARGETS.main]) {

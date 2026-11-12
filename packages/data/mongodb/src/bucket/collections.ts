@@ -1,5 +1,6 @@
 import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {Bucket, BucketDocument} from "@spica-server/interface-bucket";
+import {idOf} from "@spica-server/data";
 
 export function bucketDataCollectionName(bucketId: {toString(): string}) {
   return `bucket_${bucketId}`;
@@ -41,7 +42,7 @@ export function bucketDataCollection(
   bucket: Bucket,
   bucketDataLimit?: number
 ) {
-  const Collection = BaseCollection<BucketDocument>(bucketDataCollectionName(bucket._id));
+  const Collection = BaseCollection<BucketDocument>(bucketDataCollectionName(idOf(bucket)));
   const options: {entryLimit?: number} = {};
 
   if (bucket.documentSettings && bucket.documentSettings.countLimit) {

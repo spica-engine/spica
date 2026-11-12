@@ -166,7 +166,7 @@
     }
   },
   "properties": {
-    "_id": {
+    "$systemKey": {
       "$ref": "#/definitions/id"
     },
     "type": {

@@ -4,6 +4,7 @@ import {ChangeKind, TargetChange} from "@spica-server/interface-function";
 import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
 import * as CRUD from "./crud.js";
 import {extractSecretKeys, resolveSecretPlaceholders} from "./secret-placeholder.js";
+import {idOf} from "@spica-server/data";
 
 // Plans travel between replicas with placeholders only; secret values are resolved per replica,
 // right before subscribing, so they never leave the replica's memory.
@@ -52,7 +53,7 @@ export class TriggerSecretResolver {
 
     return new Map(
       fns.map(fn => [
-        fn._id.toString(),
+        idOf(fn).toString(),
         new Map(
           (fn.secrets || []).map(secret => {
             const decrypted = this.secretDecryptor(secret);

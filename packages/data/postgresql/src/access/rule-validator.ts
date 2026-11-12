@@ -6,6 +6,7 @@ import {StoredBuckets} from "../repositories/bucket/stored-buckets.js";
 import {BucketSchemaError, describeBucket, resolveRelationTargets} from "../schema/index.js";
 import {fieldRulesOf} from "./field-rules.js";
 import {compileRule, loadRelatedBuckets} from "./rule/index.js";
+import {idOf} from "@spica-server/data";
 
 const UNSAVED_BUCKET_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -33,7 +34,7 @@ export class PostgresBucketRuleValidator implements BucketRuleValidator {
       return;
     }
 
-    const bucketId = bucket._id ? String(bucket._id) : UNSAVED_BUCKET_ID;
+    const bucketId = idOf(bucket) ? String(idOf(bucket)) : UNSAVED_BUCKET_ID;
     let metadata;
     try {
       const targets = await resolveRelationTargets(bucket, id => this.stored.find(id));

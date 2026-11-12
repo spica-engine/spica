@@ -7,6 +7,7 @@ import {HistoryRepository} from "@spica-server/interface-bucket-history";
 import * as expression from "@spica-server/bucket-expression";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {Bucket, BucketDataRepository, BucketRuleValidator} from "@spica-server/interface-bucket";
+import {idOf, stripId, assignId} from "@spica-server/data";
 
 export async function find(
   queries: CollectionQueryFacade,
@@ -25,8 +26,8 @@ export function findOne(bs: BucketService, id: Id): Promise<Bucket> {
 export async function insert(bs: BucketService, rules: BucketRuleValidator, bucket: Bucket) {
   await ruleValidation(rules, bucket);
 
-  if (bucket._id) {
-    bucket._id = bucketIds().parse(bucket._id);
+  if (idOf(bucket)) {
+    assignId(bucket, bucketIds().parse(idOf(bucket)));
   }
 
   const inserted = await bs.insert(bucket);
@@ -46,15 +47,15 @@ export async function replace(
   await ruleValidation(rules, bucket);
 
   // check whether we need to delete bucket id
-  const _id = bucketIds().parse(bucket._id);
-  delete bucket._id;
+  const id = bucketIds().parse(idOf(bucket));
+  stripId(bucket);
 
-  const previousSchema = await bs.findById(_id);
+  const previousSchema = await bs.findById(id);
   if (!previousSchema) {
-    throw new NotFoundException(`Bucket with ID ${_id} does not exist.`);
+    throw new NotFoundException(`Bucket with ID ${id} does not exist.`);
   }
 
-  const currentSchema = await bs.replaceById(_id, bucket);
+  const currentSchema = await bs.replaceById(id, bucket);
 
   await updateDocumentsOnChange(bucketData, previousSchema, currentSchema);
 
@@ -78,9 +79,9 @@ export async function remove(
   if (schema) {
     const promises = [];
 
-    promises.push(clearRelationsOnDrop(bs, bucketData, schema._id));
+    promises.push(clearRelationsOnDrop(bs, bucketData, idOf(schema)));
     if (history) {
-      promises.push(history.deleteByBucket(schema._id));
+      promises.push(history.deleteByBucket(idOf(schema)));
     }
 
     await Promise.all(promises);
@@ -168,7 +169,7 @@ async function clearRelationsOnDrop(
     if (targets.length) {
       updatePromises.push(
         bucketService.unsetProperties(
-          bucket._id,
+          idOf(bucket),
           targets.map(target => "properties." + target.replace(/\./g, ".properties."))
         )
       );

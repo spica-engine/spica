@@ -6,6 +6,7 @@ import {RESULT_SHAPER} from "@spica-server/interface-data";
 import {BucketStore, bucketStoreProviders, createBucketStore} from "../contract/bucket-store.js";
 import {fetchRowSet} from "./row-set-fixtures.js";
 import {describeAll} from "./support.js";
+import {idOf} from "@spica-server/data";
 
 describe("PostgreSQL row layout", () => {
   const engine = {name: "postgresql", module: () => DatabaseTestingModule.postgres()} as const;
@@ -33,7 +34,7 @@ describe("PostgreSQL row layout", () => {
 
   async function create(properties: object) {
     const bucket = await store.createBucket(properties);
-    described[String(bucket._id)] = bucket;
+    described[String(idOf(bucket))] = bucket;
     return bucket;
   }
 
@@ -46,11 +47,11 @@ describe("PostgreSQL row layout", () => {
     change?: (rowSet: any) => void,
     locale?: any
   ) {
-    const rowSet = await fetchRowSet(orm, describeAll(described), String(bucket._id), key);
+    const rowSet = await fetchRowSet(orm, describeAll(described), String(idOf(bucket)), key);
     change?.(rowSet);
     const shaped = await module
       .get(RESULT_SHAPER)
-      .shape({kind: "bucket", bucketId: String(bucket._id)}, rowSet, {locale});
+      .shape({kind: "bucket", bucketId: String(idOf(bucket))}, rowSet, {locale});
     return JSON.parse(JSON.stringify(shaped));
   }
 
@@ -72,7 +73,7 @@ describe("PostgreSQL row layout", () => {
       place: {type: "Point", coordinates: [29, 41]}
     });
 
-    expect(await rows(mainTableName(String(bucket._id)), "id")).toEqual([
+    expect(await rows(mainTableName(String(idOf(bucket))), "id")).toEqual([
       {
         id: key,
         title: "a",
@@ -98,7 +99,7 @@ describe("PostgreSQL row layout", () => {
         items: {type: "object", properties: {name: {type: "string"}}}
       }
     });
-    const id = String(bucket._id);
+    const id = String(idOf(bucket));
     const key = await store.insert(bucket, {
       tags: ["b", "a"],
       lines: [{name: "one"}, {name: "two"}]
@@ -126,9 +127,9 @@ describe("PostgreSQL row layout", () => {
     const second = await store.insert(target, {name: "second"});
     const owner = await create({
       title: {type: "string", options: {translate: true}},
-      many: {type: "relation", bucketId: String(target._id), relationType: "onetomany"}
+      many: {type: "relation", bucketId: String(idOf(target)), relationType: "onetomany"}
     });
-    const id = String(owner._id);
+    const id = String(idOf(owner));
     const key = await store.insert(owner, {
       title: {en_US: "hello", tr_TR: "merhaba"},
       many: [second, first]

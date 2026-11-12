@@ -42,7 +42,7 @@ export class PostgresFunctionLogRepository implements LogRepository {
 export class PostgresFunctionLogSink implements LogSink {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
-  insert(log: Omit<Log, "_id">) {
+  insert(log: Log) {
     return this.orm.insert(functionLogs, log);
   }
 }

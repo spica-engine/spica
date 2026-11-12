@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 import {assertFilterLanguage} from "@spica-server/data";
 import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {Id} from "@spica-server/interface-data";
@@ -43,7 +43,7 @@ export class MongoStorageRepository
   }
 
   findByIds(ids: Id[]) {
-    return this._coll.find({_id: {$in: ids}}).toArray();
+    return this._coll.find({_id: {$in: ids as ObjectId[]}}).toArray();
   }
 
   findByNames(names: string[]) {
@@ -130,7 +130,7 @@ export class MongoStorageRepository
   }
 
   deleteByIds(ids: Id[]) {
-    return this._coll.deleteMany({_id: {$in: ids}}).then(r => r.deletedCount);
+    return this._coll.deleteMany({_id: {$in: ids as ObjectId[]}}).then(r => r.deletedCount);
   }
 
   deleteByNamePrefix(prefix: string) {

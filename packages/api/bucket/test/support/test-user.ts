@@ -1,15 +1,16 @@
 import {CallHandler, ExecutionContext, Injectable, Module, NestInterceptor} from "@nestjs/common";
 import {APP_INTERCEPTOR} from "@nestjs/core";
-import {ids} from "@spica-server/data";
+import {ids, withId} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
 
 @Injectable()
 class IdentifiedUser implements NestInterceptor {
-  private _id?: unknown;
+  private userId?: Id;
 
   intercept(context: ExecutionContext, next: CallHandler) {
     const request = context.switchToHttp().getRequest();
-    this._id ??= ids().forCollection("identity").generate();
-    request.user = {...request.user, _id: this._id};
+    this.userId ??= ids().forCollection("identity").generate();
+    request.user = withId({...request.user}, this.userId);
     return next.handle();
   }
 }

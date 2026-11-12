@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {contractSuite, DatabaseService} from "@spica-server/database-testing";
 import {CONFIG_REPOSITORY, ConfigRepository} from "@spica-server/interface-config";
 import {ID_TYPES, IdTypes, PG_POOL} from "@spica-server/interface-data";
@@ -37,12 +37,12 @@ contractSuite("preference and config repositories", engine => {
     it("inserts a preference and finds it by id and scope", async () => {
       const inserted = await preferences.insert({scope: "bucket", language: {default: "en"}});
 
-      expect(inserted._id).toBeDefined();
-      expect(await preferences.findById(inserted._id)).toMatchObject({
+      expect(idOf(inserted)).toBeDefined();
+      expect(await preferences.findById(idOf(inserted))).toMatchObject({
         scope: "bucket",
         language: {default: "en"}
       });
-      expect(String((await preferences.findByScope("bucket"))._id)).toBe(String(inserted._id));
+      expect(String(idOf(await preferences.findByScope("bucket")))).toBe(String(idOf(inserted)));
       expect(await preferences.findByScope("nothing")).toBeNull();
       expect(
         await preferences.findById(module.get<IdTypes>(ID_TYPES).unscoped().generate())
@@ -53,7 +53,7 @@ contractSuite("preference and config repositories", engine => {
       const stored = await preferences.replaceByScope("passport", {scope: "passport", a: 1});
 
       expect(stored).toMatchObject({scope: "passport", a: 1});
-      expect(stored._id).toBeDefined();
+      expect(idOf(stored)).toBeDefined();
     });
 
     it("replaces the preference of a scope and drops its previous properties", async () => {
@@ -61,7 +61,7 @@ contractSuite("preference and config repositories", engine => {
 
       const second = await preferences.replaceByScope("passport", {scope: "passport", c: 3});
 
-      expect(String(second._id)).toBe(String(first._id));
+      expect(String(idOf(second))).toBe(String(idOf(first)));
       expect(second).toMatchObject({scope: "passport", c: 3});
       expect(second).not.toHaveProperty("a");
       expect(second).not.toHaveProperty("b");

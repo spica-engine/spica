@@ -1,5 +1,6 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {BucketApp, startBucketApp} from "../support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("BucketDataController: delete requests", engine => {
   let api: BucketApp;
@@ -17,7 +18,7 @@ contractSuite("BucketDataController: delete requests", engine => {
         options: {}
       }
     });
-    myBucketId = bucket._id;
+    myBucketId = idOf(bucket);
 
     keys = [];
     for (const document of [

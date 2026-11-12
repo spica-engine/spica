@@ -1,7 +1,7 @@
 import {BatchQueries} from "../../src/realtime/batch.js";
 import {BucketSource} from "../../src/realtime/source.js";
 
-const bucket = {_id: "b1", primary: "id"} as any;
+const bucket = {id: "b1", primary: "id"} as any;
 const context = {resolveSchema: jest.fn(), preferences: jest.fn()} as any;
 
 describe("BucketSource", () => {
@@ -29,11 +29,11 @@ describe("BucketSource", () => {
 
     await source({filter: "document.age > 1"}).matching(["a"], batch);
     await source({filter: "document.age > 2"}).matching(["a"], batch);
-    await source({filter: "document.age > 1", applyAcl: true, user: {_id: "1"}}).matching(
+    await source({filter: "document.age > 1", applyAcl: true, user: {id: "1"}}).matching(
       ["a"],
       batch
     );
-    await source({filter: "document.age > 1", applyAcl: true, user: {_id: "2"}}).matching(
+    await source({filter: "document.age > 1", applyAcl: true, user: {id: "2"}}).matching(
       ["a"],
       batch
     );
@@ -45,8 +45,8 @@ describe("BucketSource", () => {
   it("should share for the same user whatever order the properties come in", async () => {
     const batch = new BatchQueries();
 
-    await source({applyAcl: true, user: {_id: "1", role: "a"}}).keys(batch);
-    await source({user: {role: "a", _id: "1"}, applyAcl: true}).keys(batch);
+    await source({applyAcl: true, user: {id: "1", role: "a"}}).keys(batch);
+    await source({user: {role: "a", id: "1"}, applyAcl: true}).keys(batch);
 
     expect(find).toHaveBeenCalledTimes(1);
   });
@@ -95,15 +95,15 @@ describe("BucketSource", () => {
   });
 
   it("should let the read rule apply for the user it was given", async () => {
-    await source({applyAcl: true, user: {_id: "1"}}).documents();
+    await source({applyAcl: true, user: {id: "1"}}).documents();
 
-    expect(find).toHaveBeenCalledWith(bucket, {applyAcl: true, user: {_id: "1"}}, context);
+    expect(find).toHaveBeenCalledWith(bucket, {applyAcl: true, user: {id: "1"}}, context);
   });
 
   it("should never share a result between two users, even for the same filter", async () => {
     const batch = new BatchQueries();
     const asker = (id: string) =>
-      source({filter: "document.age > 1", applyAcl: true, user: {_id: id, role: "member"}});
+      source({filter: "document.age > 1", applyAcl: true, user: {id: id, role: "member"}});
 
     await asker("1").matching(["a"], batch);
     await asker("2").matching(["a"], batch);
@@ -120,9 +120,9 @@ describe("BucketSource", () => {
     }
     const batch = new BatchQueries();
 
-    await source({applyAcl: true, user: {_id: new Id("1")}}).keys(batch);
-    await source({applyAcl: true, user: {_id: new Id("2")}}).keys(batch);
-    await source({applyAcl: true, user: {_id: new Id("2")}}).keys(batch);
+    await source({applyAcl: true, user: {id: new Id("1")}}).keys(batch);
+    await source({applyAcl: true, user: {id: new Id("2")}}).keys(batch);
+    await source({applyAcl: true, user: {id: new Id("2")}}).keys(batch);
 
     expect(find).toHaveBeenCalledTimes(2);
   });

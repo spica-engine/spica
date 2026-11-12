@@ -1,7 +1,6 @@
 import ActivityReadOnlyAccess from "./activity.readonly.js";
 
 export default {
-  _id: "ActivityFullAccess",
   name: "Activity Full Access",
   description: "Full access to activity service.",
   statement: [

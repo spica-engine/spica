@@ -3,6 +3,7 @@ import {RelationTarget, RelationTargets} from "./metadata/types.js";
 import {mainTableName} from "./naming.js";
 import {tryPrimaryKeyMetadata} from "./primary-key.js";
 import {relationTargets} from "./relations.js";
+import {idOf} from "@spica-server/data";
 
 export async function resolveRelationTargets(
   bucket: Bucket,
@@ -10,7 +11,7 @@ export async function resolveRelationTargets(
 ): Promise<RelationTargets> {
   const resolved = new Map<string, RelationTarget>();
   for (const targetId of relationTargets(bucket.properties)) {
-    if (targetId == String(bucket._id)) {
+    if (targetId == String(idOf(bucket))) {
       continue;
     }
     const target = await find(targetId);

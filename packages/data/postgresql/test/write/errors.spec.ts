@@ -1,5 +1,6 @@
 import {describeBucket, translateWriteError} from "@spica-server/data-postgresql";
 import {postgresWriter, uuid} from "./support.js";
+import {idOf} from "@spica-server/data";
 
 describe("PostgreSQL bucket write: errors", () => {
   const {createBucket, insert, replace, patch, remove, rows, rowsOf} = postgresWriter();
@@ -28,8 +29,8 @@ describe("PostgreSQL bucket write: errors", () => {
       ann = (await insert(authors, {name: "ann"})).id;
       posts = await createBucket({
         title: {type: "string"},
-        author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"},
-        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"}
+        author: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"},
+        editors: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetomany"}
       });
     });
 
@@ -67,7 +68,7 @@ describe("PostgreSQL bucket write: errors", () => {
       const authors = await createBucket({name: {type: "string"}});
       const ann = await insert(authors, {name: "ann"});
       const posts = await createBucket(
-        {author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}},
+        {author: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"}},
         {required: ["author"]}
       );
       await insert(posts, {author: ann.id});

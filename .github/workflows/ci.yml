@@ -96,6 +96,8 @@ jobs:
         run: yarn nx sync:check
       - name: Verify data access boundary
         run: yarn check:data-boundary
+      - name: Verify system record key names
+        run: yarn test:key-names && yarn check:key-names
       - name: Test engine spec checker
         run: yarn test:engine-specs
       - name: Test CI matrix builder

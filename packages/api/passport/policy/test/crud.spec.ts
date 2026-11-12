@@ -1,6 +1,6 @@
 import {NotFoundException} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
+import {idOf, provideRepository, withId} from "@spica-server/data";
 import {contractSuite} from "@spica-server/database-testing";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {POLICY_REPOSITORY} from "@spica-server/interface-passport-policy";
@@ -29,23 +29,23 @@ contractSuite("policy crud replace", engine => {
   afterEach(() => module.close());
 
   it("should accept a replacement that changes nothing", async () => {
-    const {_id} = await CRUD.insert(policies, policy("a") as any);
+    const id = idOf(await CRUD.insert(policies, policy("a") as any));
 
-    await expect(CRUD.replace(policies, {_id, ...policy("a")} as any)).resolves.toBeTruthy();
+    await expect(CRUD.replace(policies, withId(policy("a"), id) as any)).resolves.toBeTruthy();
   });
 
   it("should replace the policy", async () => {
-    const {_id} = await CRUD.insert(policies, policy("a") as any);
+    const id = idOf(await CRUD.insert(policies, policy("a") as any));
 
-    await CRUD.replace(policies, {_id, ...policy("renamed")} as any);
+    await CRUD.replace(policies, withId(policy("renamed"), id) as any);
 
-    expect(await policies.findById(_id)).toMatchObject({name: "renamed"});
+    expect(await policies.findById(id)).toMatchObject({name: "renamed"});
   });
 
   it("should answer 404 for a policy that does not exist", async () => {
     const missing = module.get<IdTypes>(ID_TYPES).forCollection("policies").generate();
 
-    await expect(CRUD.replace(policies, {_id: missing, ...policy("a")} as any)).rejects.toThrow(
+    await expect(CRUD.replace(policies, withId(policy("a"), missing) as any)).rejects.toThrow(
       NotFoundException
     );
   });

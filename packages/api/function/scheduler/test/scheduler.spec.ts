@@ -117,9 +117,9 @@ contractSuite("Scheduler", engine => {
 
   // A real worker signals readiness by opening its event stream (subscribe); simulate that
   // for a spawned Initial/Fresh worker.
-  function triggerGotWorker(_id?: string) {
+  function triggerGotWorker(wanted?: string) {
     const [workerId] = Array.from(scheduler.workers.entries()).find(([id, worker]) => {
-      if (_id) return _id == id;
+      if (wanted) return wanted == id;
       return worker.state == WorkerState.Initial || worker.state == WorkerState.Fresh;
     });
     scheduler.workerSubscribed(workerId, () => {});

@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["name", "timeout", "language"],
   "properties": {
-    "_id": {
+    "$systemKey": {
       "type": "string",
       "format": "objectid",
       "description": "Unique objectid id of schema."

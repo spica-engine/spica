@@ -1,5 +1,5 @@
 import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
-import {COLLECTION_NAMES, CollectionNames, Id} from "@spica-server/interface-data";
+import {COLLECTION_NAMES, CollectionNames, Id, Keyed} from "@spica-server/interface-data";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {
   FUNCTION_ASSET_REPOSITORY,
@@ -46,6 +46,7 @@ import * as CRUD from "./crud.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
 import {Package} from "@spica-server/interface-function-pkgmanager";
+import {idOf} from "@spica-server/data";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -106,27 +107,27 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   private onEnvVarChange({fns, envVarId, operationType}: EnvVarFunctionsChange) {
     return this.forEachFunction(fns, async fn => {
       if (operationType == "delete") {
-        await CRUD.environment.removeReference(this.functions, fn._id, envVarId);
+        await CRUD.environment.removeReference(this.functions, idOf(fn), envVarId);
       }
-      await this.refreshLocally(fn._id.toString());
+      await this.refreshLocally(idOf(fn).toString());
     });
   }
 
   private onSecretChange({fns, secretId, secretKeys, operationType}: SecretFunctionsChange) {
     return this.forEachFunction(fns, async fn => {
       if (operationType == "delete") {
-        await CRUD.secret.removeReference(this.functions, fn._id, secretId);
+        await CRUD.secret.removeReference(this.functions, idOf(fn), secretId);
       }
       await this.applyLocally(secretRefreshPlan(fn, secretKeys));
     });
   }
 
-  private forEachFunction<F extends {_id: Id}>(fns: F[], handle: (fn: F) => Promise<void>) {
+  private forEachFunction<F extends Keyed<object>>(fns: F[], handle: (fn: F) => Promise<void>) {
     return Promise.all(
       fns.map(fn =>
         handle(fn).catch(err =>
           this.logger.error(
-            `Failed to refresh function ${fn._id} after a resource change. Reason: ${err instanceof Error ? err.message : err}`
+            `Failed to refresh function ${idOf(fn)} after a resource change. Reason: ${err instanceof Error ? err.message : err}`
           )
         )
       )
@@ -204,7 +205,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   async storeAssets(
-    fn: Function & {_id: Id},
+    fn: Keyed<Function>,
     filename: FunctionAssetFilename,
     op: () => Promise<Buffer>
   ): Promise<void> {
@@ -215,11 +216,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return this.getFunctionBuilder(fn).description.entrypoints.build as FunctionAssetFilename;
   }
 
-  async removeAssets(fn: Function & {_id: Id}): Promise<void> {
+  async removeAssets(fn: Keyed<Function>): Promise<void> {
     return this.reconciler.deleteAll(fn);
   }
 
-  moveAssets(fn: Function & {_id: Id}, toName: string): Promise<void> {
+  moveAssets(fn: Keyed<Function>, toName: string): Promise<void> {
     return this.reconciler.moveAssets(fn, toName);
   }
 

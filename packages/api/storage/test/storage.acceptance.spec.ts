@@ -11,6 +11,7 @@ import os from "os";
 import path from "path";
 import {StorageObject} from "@spica-server/interface-storage";
 import {GuardService} from "@spica-server/passport-guard-services";
+import {withId, idOf, stripId, systemKeyField} from "@spica-server/data";
 
 contractSuite("Storage Acceptance", engine => {
   let app: INestApplication;
@@ -99,22 +100,24 @@ contractSuite("Storage Acceptance", engine => {
       const {body} = await req.get("/storage", {
         paginate: false,
         limit: "1",
-        sort: JSON.stringify({_id: -1})
+        sort: JSON.stringify({[systemKeyField()]: -1})
       });
 
-      expect(isId(body[0]._id)).toEqual(true);
+      expect(isId(idOf(body[0]))).toEqual(true);
       expect(body).toEqual([
-        {
-          _id: body[0]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(body[0])
+        )
       ]);
     });
 
@@ -122,23 +125,25 @@ contractSuite("Storage Acceptance", engine => {
       const {body} = await req.get("/storage", {
         paginate: true,
         limit: "1",
-        sort: JSON.stringify({_id: -1})
+        sort: JSON.stringify({[systemKeyField()]: -1})
       });
 
       expect(body.meta).toEqual({total: 3});
-      expect(isId(body.data[0]._id)).toEqual(true);
+      expect(isId(idOf(body.data[0]))).toEqual(true);
       expect(body.data).toEqual([
-        {
-          _id: body.data[0]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: body.data[0].created_at,
-          updated_at: body.data[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: body.data[0].created_at,
+            updated_at: body.data[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(body.data[0])
+        )
       ]);
     });
 
@@ -168,19 +173,21 @@ contractSuite("Storage Acceptance", engine => {
         filter: nameFilter("third.txt")
       });
 
-      expect(isId(body[0]._id)).toEqual(true);
+      expect(isId(idOf(body[0]))).toEqual(true);
       expect(body).toEqual([
-        {
-          _id: body[0]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(body[0])
+        )
       ]);
     });
 
@@ -195,28 +202,33 @@ contractSuite("Storage Acceptance", engine => {
       expect(browse.statusCode).toEqual(404);
     });
 
-    it("should work with _id filter", async () => {
+    it("should work with the key filter", async () => {
       const {body} = await req.get("/storage", {
         filter: nameFilter("third.txt")
       });
 
       const response = await req.get("/storage", {
-        filter: filterOf({_id: body[0]._id}, `document._id == '${body[0]._id}'`)
+        filter: filterOf(
+          {[systemKeyField()]: idOf(body[0])},
+          `document.${systemKeyField()} == '${idOf(body[0])}'`
+        )
       });
 
-      expect(isId(response.body[0]._id)).toEqual(true);
+      expect(isId(idOf(response.body[0]))).toEqual(true);
       expect(body).toEqual([
-        {
-          _id: response.body[0]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(response.body[0])
+        )
       ]);
     });
 
@@ -251,53 +263,61 @@ contractSuite("Storage Acceptance", engine => {
       });
 
       expect(gteRes.body).toEqual([
-        {
-          _id: gteRes.body[0]._id,
-          name: "newData.txt",
-          url: `http://insteadof/storage/newData.txt/view`,
-          created_at: gteRes.body[0].created_at,
-          updated_at: gteRes.body[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 7
-          }
-        }
+        withId(
+          {
+            name: "newData.txt",
+            url: `http://insteadof/storage/newData.txt/view`,
+            created_at: gteRes.body[0].created_at,
+            updated_at: gteRes.body[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 7
+            }
+          },
+          idOf(gteRes.body[0])
+        )
       ]);
 
       expect(ltRes.body).toEqual([
-        {
-          _id: ltRes.body[0]._id,
-          name: "first.txt",
-          url: `http://insteadof/storage/first.txt/view`,
-          created_at: ltRes.body[0].created_at,
-          updated_at: ltRes.body[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        },
-        {
-          _id: ltRes.body[1]._id,
-          name: "second.txt",
-          url: `http://insteadof/storage/second.txt/view`,
-          created_at: ltRes.body[1].created_at,
-          updated_at: ltRes.body[1].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 6
-          }
-        },
-        {
-          _id: ltRes.body[2]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: ltRes.body[2].created_at,
-          updated_at: ltRes.body[2].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "first.txt",
+            url: `http://insteadof/storage/first.txt/view`,
+            created_at: ltRes.body[0].created_at,
+            updated_at: ltRes.body[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(ltRes.body[0])
+        ),
+        withId(
+          {
+            name: "second.txt",
+            url: `http://insteadof/storage/second.txt/view`,
+            created_at: ltRes.body[1].created_at,
+            updated_at: ltRes.body[1].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 6
+            }
+          },
+          idOf(ltRes.body[1])
+        ),
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: ltRes.body[2].created_at,
+            updated_at: ltRes.body[2].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(ltRes.body[2])
+        )
       ]);
     });
   });
@@ -306,56 +326,70 @@ contractSuite("Storage Acceptance", engine => {
     it("should work with limit", async () => {
       const {
         body: {meta, data}
-      } = await req.get("/storage", {paginate: true, limit: "1", sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        limit: "1",
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
 
       expect(meta.total).toBe(3);
-      expect(isId(data[0]._id)).toEqual(true);
+      expect(isId(idOf(data[0]))).toEqual(true);
       expect(data).toEqual([
-        {
-          _id: data[0]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: data[0].created_at,
-          updated_at: data[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: data[0].created_at,
+            updated_at: data[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(data[0])
+        )
       ]);
     });
 
     it("should work with skip", async () => {
       const {
         body: {meta, data}
-      } = await req.get("/storage", {paginate: true, skip: "1", sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        skip: "1",
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
 
       expect(meta.total).toBe(3);
-      expect(isId(data[0]._id)).toEqual(true);
-      expect(isId(data[1]._id)).toEqual(true);
+      expect(isId(idOf(data[0]))).toEqual(true);
+      expect(isId(idOf(data[1]))).toEqual(true);
       expect(data).toEqual([
-        {
-          _id: data[0]._id,
-          name: "second.txt",
-          url: `http://insteadof/storage/second.txt/view`,
-          created_at: data[0].created_at,
-          updated_at: data[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 6
-          }
-        },
-        {
-          _id: data[1]._id,
-          name: "first.txt",
-          url: `http://insteadof/storage/first.txt/view`,
-          created_at: data[1].created_at,
-          updated_at: data[1].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "second.txt",
+            url: `http://insteadof/storage/second.txt/view`,
+            created_at: data[0].created_at,
+            updated_at: data[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 6
+            }
+          },
+          idOf(data[0])
+        ),
+        withId(
+          {
+            name: "first.txt",
+            url: `http://insteadof/storage/first.txt/view`,
+            created_at: data[1].created_at,
+            updated_at: data[1].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(data[1])
+        )
       ]);
     });
 
@@ -366,23 +400,25 @@ contractSuite("Storage Acceptance", engine => {
         paginate: true,
         skip: "1",
         limit: "1",
-        sort: JSON.stringify({_id: -1})
+        sort: JSON.stringify({[systemKeyField()]: -1})
       });
 
       expect(meta.total).toBe(3);
-      expect(isId(data[0]._id)).toEqual(true);
+      expect(isId(idOf(data[0]))).toEqual(true);
       expect(data).toEqual([
-        {
-          _id: data[0]._id,
-          name: "second.txt",
-          url: `http://insteadof/storage/second.txt/view`,
-          created_at: data[0].created_at,
-          updated_at: data[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 6
-          }
-        }
+        withId(
+          {
+            name: "second.txt",
+            url: `http://insteadof/storage/second.txt/view`,
+            created_at: data[0].created_at,
+            updated_at: data[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 6
+            }
+          },
+          idOf(data[0])
+        )
       ]);
     });
     describe("sort", () => {
@@ -395,43 +431,49 @@ contractSuite("Storage Acceptance", engine => {
         });
 
         expect(meta.total).toBe(3);
-        expect(isId(data[0]._id)).toEqual(true);
-        expect(isId(data[1]._id)).toEqual(true);
-        expect(isId(data[2]._id)).toEqual(true);
+        expect(isId(idOf(data[0]))).toEqual(true);
+        expect(isId(idOf(data[1]))).toEqual(true);
+        expect(isId(idOf(data[2]))).toEqual(true);
         expect(data).toEqual([
-          {
-            _id: data[0]._id,
-            name: "first.txt",
-            url: `http://insteadof/storage/first.txt/view`,
-            created_at: data[0].created_at,
-            updated_at: data[0].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 5
-            }
-          },
-          {
-            _id: data[1]._id,
-            name: "second.txt",
-            url: `http://insteadof/storage/second.txt/view`,
-            created_at: data[1].created_at,
-            updated_at: data[1].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 6
-            }
-          },
-          {
-            _id: data[2]._id,
-            name: "third.txt",
-            url: `http://insteadof/storage/third.txt/view`,
-            created_at: data[2].created_at,
-            updated_at: data[2].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 5
-            }
-          }
+          withId(
+            {
+              name: "first.txt",
+              url: `http://insteadof/storage/first.txt/view`,
+              created_at: data[0].created_at,
+              updated_at: data[0].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 5
+              }
+            },
+            idOf(data[0])
+          ),
+          withId(
+            {
+              name: "second.txt",
+              url: `http://insteadof/storage/second.txt/view`,
+              created_at: data[1].created_at,
+              updated_at: data[1].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 6
+              }
+            },
+            idOf(data[1])
+          ),
+          withId(
+            {
+              name: "third.txt",
+              url: `http://insteadof/storage/third.txt/view`,
+              created_at: data[2].created_at,
+              updated_at: data[2].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 5
+              }
+            },
+            idOf(data[2])
+          )
         ]);
       });
 
@@ -444,43 +486,49 @@ contractSuite("Storage Acceptance", engine => {
         });
 
         expect(meta.total).toBe(3);
-        expect(isId(data[0]._id)).toEqual(true);
-        expect(isId(data[1]._id)).toEqual(true);
-        expect(isId(data[2]._id)).toEqual(true);
+        expect(isId(idOf(data[0]))).toEqual(true);
+        expect(isId(idOf(data[1]))).toEqual(true);
+        expect(isId(idOf(data[2]))).toEqual(true);
         expect(data).toEqual([
-          {
-            _id: data[0]._id,
-            name: "third.txt",
-            url: `http://insteadof/storage/third.txt/view`,
-            created_at: data[0].created_at,
-            updated_at: data[0].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 5
-            }
-          },
-          {
-            _id: data[1]._id,
-            name: "second.txt",
-            url: `http://insteadof/storage/second.txt/view`,
-            created_at: data[1].created_at,
-            updated_at: data[1].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 6
-            }
-          },
-          {
-            _id: data[2]._id,
-            name: "first.txt",
-            url: `http://insteadof/storage/first.txt/view`,
-            created_at: data[2].created_at,
-            updated_at: data[2].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 5
-            }
-          }
+          withId(
+            {
+              name: "third.txt",
+              url: `http://insteadof/storage/third.txt/view`,
+              created_at: data[0].created_at,
+              updated_at: data[0].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 5
+              }
+            },
+            idOf(data[0])
+          ),
+          withId(
+            {
+              name: "second.txt",
+              url: `http://insteadof/storage/second.txt/view`,
+              created_at: data[1].created_at,
+              updated_at: data[1].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 6
+              }
+            },
+            idOf(data[1])
+          ),
+          withId(
+            {
+              name: "first.txt",
+              url: `http://insteadof/storage/first.txt/view`,
+              created_at: data[2].created_at,
+              updated_at: data[2].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 5
+              }
+            },
+            idOf(data[2])
+          )
         ]);
       });
     });
@@ -493,8 +541,8 @@ contractSuite("Storage Acceptance", engine => {
           data: [row]
         }
       } = await req.get("/storage", {paginate: true});
-      const {body: response} = await req.get(`/storage/${row._id}`);
-      expect(response._id).toEqual(row._id);
+      const {body: response} = await req.get(`/storage/${idOf(row)}`);
+      expect(idOf(response)).toEqual(idOf(row));
       expect(response.url).toEqual(row.url);
       expect(response.name).toEqual(row.name);
     });
@@ -506,10 +554,13 @@ contractSuite("Storage Acceptance", engine => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
-      const {headers: initialHeaders} = await req.get(`/storage/${row._id}/view`);
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
+      const {headers: initialHeaders} = await req.get(`/storage/${idOf(row)}/view`);
       const {statusCode, statusText} = await req.get(
-        `/storage/${row._id}/view`,
+        `/storage/${idOf(row)}/view`,
         {},
         {"If-None-Match": initialHeaders["etag"]}
       );
@@ -522,9 +573,12 @@ contractSuite("Storage Acceptance", engine => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
       const {headers, body} = await req.get(
-        `/storage/${row._id}/view`,
+        `/storage/${idOf(row)}/view`,
         {},
         {"If-None-Match": '"stale-etag"'}
       );
@@ -538,8 +592,11 @@ contractSuite("Storage Acceptance", engine => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
-      const {headers} = await req.get(`/storage/${row._id}/view`);
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
+      const {headers} = await req.get(`/storage/${idOf(row)}/view`);
       expect(headers["content-type"]).toBe("text/plain; charset=utf-8");
       expect(headers["etag"]).toBeDefined();
     });
@@ -551,12 +608,15 @@ contractSuite("Storage Acceptance", engine => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
 
       row.content.data = new Binary(Buffer.from("new data"));
 
-      const id = row._id;
-      delete row._id;
+      const id = idOf(row);
+      stripId(row);
       delete row.url;
       delete row.created_at;
       delete row.updated_at;
@@ -575,18 +635,21 @@ contractSuite("Storage Acceptance", engine => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
       const {
         statusCode,
         statusText,
         body: __
-      } = await req.put(`/storage/${row._id}`, serialize(row), {
+      } = await req.put(`/storage/${idOf(row)}`, serialize(row), {
         "Content-Type": "application/bson"
       });
       expect(statusCode).toEqual(400);
       expect(statusText).toEqual("Bad Request");
 
-      const {body} = await req.get(`/storage/${row._id}/view`);
+      const {body} = await req.get(`/storage/${idOf(row)}/view`);
       expect(body).toBe("third");
     });
 
@@ -598,7 +661,7 @@ contractSuite("Storage Acceptance", engine => {
       } = await req.get("/storage", {paginate: true});
       const size = 0.2 * 1024 * 1024;
       row.content.data = new Binary(Buffer.alloc(size, "f"));
-      const {statusCode, statusText} = await req.put(`/storage/${row._id}`, serialize(row), {
+      const {statusCode, statusText} = await req.put(`/storage/${idOf(row)}`, serialize(row), {
         "Content-Type": "application/bson"
       });
       expect(statusCode).toBe(413);
@@ -618,34 +681,40 @@ contractSuite("Storage Acceptance", engine => {
         filter: nameFilter("first.txt")
       });
 
-      let res = await req.patch(`/storage/${first._id}`, {name: "updated_first.txt"});
-      const expectedObject = {
-        _id: res.body._id,
-        name: "updated_first.txt",
-        url: `http://insteadof/storage/updated_first.txt/view`,
-        created_at: res.body.created_at,
-        updated_at: res.body.updated_at,
-        content: {
-          type: `text/plain`,
-          size: 5
-        }
-      };
-      expect(isId(res.body._id)).toEqual(true);
+      let res = await req.patch(`/storage/${idOf(first)}`, {name: "updated_first.txt"});
+      const expectedObject = withId(
+        {
+          name: "updated_first.txt",
+          url: `http://insteadof/storage/updated_first.txt/view`,
+          created_at: res.body.created_at,
+          updated_at: res.body.updated_at,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        },
+        idOf(res.body)
+      );
+      expect(isId(idOf(res.body))).toEqual(true);
       expect(res.body).toEqual(expectedObject);
 
-      res = await req.get(`storage/${first._id}`);
-      expect(isId(res.body._id)).toEqual(true);
-      expect(res.body).toEqual({
-        _id: res.body._id,
-        name: "updated_first.txt",
-        url: `http://insteadof/storage/updated_first.txt/view`,
-        created_at: res.body.created_at,
-        updated_at: res.body.updated_at,
-        content: {
-          type: `text/plain`,
-          size: 5
-        }
-      });
+      res = await req.get(`storage/${idOf(first)}`);
+      expect(isId(idOf(res.body))).toEqual(true);
+      expect(res.body).toEqual(
+        withId(
+          {
+            name: "updated_first.txt",
+            url: `http://insteadof/storage/updated_first.txt/view`,
+            created_at: res.body.created_at,
+            updated_at: res.body.updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(res.body)
+        )
+      );
     });
   });
 
@@ -653,7 +722,7 @@ contractSuite("Storage Acceptance", engine => {
     afterEach(async () => {
       const res = await req.get("/storage");
       for (let obj of res.body) {
-        await req.delete("/storage", obj._id);
+        await req.delete("/storage", idOf(obj));
       }
     });
 
@@ -673,20 +742,22 @@ contractSuite("Storage Acceptance", engine => {
         }
       );
 
-      expect(isId(body[0]._id)).toEqual(true);
+      expect(isId(idOf(body[0]))).toEqual(true);
       expect(urlRegex.test(body[0].url)).toEqual(true);
       expect(body).toEqual([
-        {
-          _id: body[0]._id,
-          name: "remoteconfig.json",
-          url: body[0].url,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            type: "application/json",
-            size: 2
-          }
-        }
+        withId(
+          {
+            name: "remoteconfig.json",
+            url: body[0].url,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              type: "application/json",
+              size: 2
+            }
+          },
+          idOf(body[0])
+        )
       ]);
       expect(statusCode).toBe(201);
       expect(statusText).toBe("Created");
@@ -717,35 +788,39 @@ contractSuite("Storage Acceptance", engine => {
         }
       );
 
-      expect(isId(body[0]._id)).toEqual(true);
-      expect(isId(body[1]._id)).toEqual(true);
+      expect(isId(idOf(body[0]))).toEqual(true);
+      expect(isId(idOf(body[1]))).toEqual(true);
 
       expect(urlRegex.test(body[0].url)).toEqual(true);
       expect(urlRegex.test(body[1].url)).toEqual(true);
 
       expect(body).toEqual([
-        {
-          _id: body[0]._id,
-          name: "remote config.json",
-          url: body[0].url,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            size: 2,
-            type: "application/json"
-          }
-        },
-        {
-          _id: body[1]._id,
-          name: "remote config backup.json",
-          url: body[1].url,
-          created_at: body[1].created_at,
-          updated_at: body[1].updated_at,
-          content: {
-            size: 2,
-            type: "application/json"
-          }
-        }
+        withId(
+          {
+            name: "remote config.json",
+            url: body[0].url,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              size: 2,
+              type: "application/json"
+            }
+          },
+          idOf(body[0])
+        ),
+        withId(
+          {
+            name: "remote config backup.json",
+            url: body[1].url,
+            created_at: body[1].created_at,
+            updated_at: body[1].updated_at,
+            content: {
+              size: 2,
+              type: "application/json"
+            }
+          },
+          idOf(body[1])
+        )
       ]);
 
       expect(statusCode).toBe(201);
@@ -834,7 +909,7 @@ contractSuite("Storage Acceptance", engine => {
         }
       } = await req.get("/storage", {paginate: true});
 
-      const response = await req.delete(`/storage/${row._id}`);
+      const response = await req.delete(`/storage/${idOf(row)}`);
       expect(response.statusCode).toBe(204);
       expect(response.statusText).toBe("No Content");
       expect(response.body).toBe(undefined);
@@ -843,7 +918,7 @@ contractSuite("Storage Acceptance", engine => {
       expect(storageObjects.meta.total).toBe(2);
       expect(storageObjects.data.length).toEqual(2);
 
-      const deletedStorageObjectResponse = await req.get(`/storage/${row._id}`);
+      const deletedStorageObjectResponse = await req.get(`/storage/${idOf(row)}`);
       expect(deletedStorageObjectResponse.statusCode).toBe(404);
       expect(deletedStorageObjectResponse.statusText).toBe("Not Found");
     });
@@ -880,7 +955,7 @@ contractSuite("Storage Acceptance", engine => {
         body: {data: objects}
       } = await req.get("/storage", {paginate: true});
 
-      const idsToDelete = [objects[0]._id.toString(), objects[1]._id.toString()];
+      const idsToDelete = [idOf(objects[0]).toString(), idOf(objects[1]).toString()];
       const response = await req.delete("/storage", idsToDelete);
 
       expect(response.statusCode).toBe(204);
@@ -890,7 +965,7 @@ contractSuite("Storage Acceptance", engine => {
       const {body: storageObjects} = await req.get("/storage", {paginate: true});
       expect(storageObjects.meta.total).toBe(objects.length - 2);
 
-      const remainingIds = storageObjects.data.map((obj: any) => obj._id.toString());
+      const remainingIds = storageObjects.data.map((obj: any) => idOf(obj).toString());
       expect(remainingIds.some((id: string) => idsToDelete.includes(id))).toBe(false);
     });
 
@@ -918,7 +993,7 @@ contractSuite("Storage Acceptance", engine => {
         body: {data: objects}
       } = await req.get("/storage", {paginate: true});
 
-      const mixedIdentifiers = [objects[0]._id.toString(), objects[1].name];
+      const mixedIdentifiers = [idOf(objects[0]).toString(), objects[1].name];
       const response = await req.delete("/storage", mixedIdentifiers);
 
       expect(response.statusCode).toBe(204);
@@ -929,10 +1004,12 @@ contractSuite("Storage Acceptance", engine => {
       expect(storageObjects.meta.total).toBe(objects.length - 2);
 
       const remainingData = storageObjects.data.map((obj: any) => ({
-        id: obj._id.toString(),
+        id: idOf(obj).toString(),
         name: obj.name
       }));
-      expect(remainingData.some((item: any) => item.id === objects[0]._id.toString())).toBe(false);
+      expect(remainingData.some((item: any) => item.id === idOf(objects[0]).toString())).toBe(
+        false
+      );
       expect(remainingData.some((item: any) => item.name === objects[1].name)).toBe(false);
     });
 
@@ -964,7 +1041,7 @@ contractSuite("Storage Acceptance", engine => {
       } = await req.get("/storage", {paginate: true});
 
       const unauthorizedId = String(ids.generate());
-      const idsToDelete = [objects[0]._id.toString(), unauthorizedId];
+      const idsToDelete = [idOf(objects[0]).toString(), unauthorizedId];
 
       const originalCheckAuthorization = guardService.checkAuthorization;
       jest.spyOn(guardService, "checkAuthorization").mockImplementation((args: any) => {
@@ -999,7 +1076,7 @@ contractSuite("Storage Acceptance", engine => {
 
       const originalCheckAuthorization = guardService.checkAuthorization;
       jest.spyOn(guardService, "checkAuthorization").mockImplementation((args: any) => {
-        if (args.request?.params?.id === objects[1]._id.toString()) {
+        if (args.request?.params?.id === idOf(objects[1]).toString()) {
           throw new ForbiddenException(
             `You don't have permission to delete storage object: ${unauthorizedName}`
           );
@@ -1032,21 +1109,23 @@ contractSuite("Storage Acceptance", engine => {
       };
       const {body, statusCode, statusText} = await req.post("/storage", [object]);
 
-      expect(isId(body[0]._id)).toEqual(true);
+      expect(isId(idOf(body[0]))).toEqual(true);
       expect(urlRegex.test(body[0].url)).toEqual(true);
 
       expect(body).toEqual([
-        {
-          _id: body[0]._id,
-          name: "remoteconfig.json",
-          url: body[0].url,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            type: "application/json",
-            size: 2
-          }
-        }
+        withId(
+          {
+            name: "remoteconfig.json",
+            url: body[0].url,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              type: "application/json",
+              size: 2
+            }
+          },
+          idOf(body[0])
+        )
       ]);
       expect(statusCode).toBe(201);
       expect(statusText).toBe("Created");
@@ -1058,12 +1137,15 @@ contractSuite("Storage Acceptance", engine => {
           data: [row]
         },
         headers: {["etag"]: prevETag}
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
 
       row.content.data = Buffer.from("new data").toString("base64");
 
-      const id = row._id;
-      delete row._id;
+      const id = idOf(row);
+      stripId(row);
       delete row.url;
       delete row.created_at;
       delete row.updated_at;
@@ -1087,7 +1169,7 @@ contractSuite("Storage Acceptance", engine => {
       } = await req.get("/storage", {paginate: true});
       const size = 0.2 * 1024 * 1024;
       row.content.data = Buffer.alloc(size, "f").toString("base64");
-      const {statusCode, statusText, body} = await req.put(`/storage/${row._id}`, [row]);
+      const {statusCode, statusText, body} = await req.put(`/storage/${idOf(row)}`, [row]);
       expect(statusCode).toBe(413);
       expect(statusText).toBe("Payload Too Large");
     });
@@ -1120,35 +1202,39 @@ contractSuite("Storage Acceptance", engine => {
       );
       const {body: resBody, statusCode, statusText} = await req.post("/storage", body, headers);
 
-      expect(isId(resBody[0]._id)).toEqual(true);
-      expect(isId(resBody[1]._id)).toEqual(true);
+      expect(isId(idOf(resBody[0]))).toEqual(true);
+      expect(isId(idOf(resBody[1]))).toEqual(true);
 
       expect(urlRegex.test(resBody[0].url)).toEqual(true);
       expect(urlRegex.test(resBody[1].url)).toEqual(true);
 
       expect(resBody).toEqual([
-        {
-          _id: resBody[0]._id,
-          name: "data.json",
-          url: resBody[0].url,
-          created_at: resBody[0].created_at,
-          updated_at: resBody[0].updated_at,
-          content: {
-            type: "application/json",
-            size: 2
-          }
-        },
-        {
-          _id: resBody[1]._id,
-          name: "test.txt",
-          url: resBody[1].url,
-          created_at: resBody[1].created_at,
-          updated_at: resBody[1].updated_at,
-          content: {
-            type: "text/plain",
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "data.json",
+            url: resBody[0].url,
+            created_at: resBody[0].created_at,
+            updated_at: resBody[0].updated_at,
+            content: {
+              type: "application/json",
+              size: 2
+            }
+          },
+          idOf(resBody[0])
+        ),
+        withId(
+          {
+            name: "test.txt",
+            url: resBody[1].url,
+            created_at: resBody[1].created_at,
+            updated_at: resBody[1].updated_at,
+            content: {
+              type: "text/plain",
+              size: 5
+            }
+          },
+          idOf(resBody[1])
+        )
       ]);
       expect(statusCode).toBe(201);
       expect(statusText).toBe("Created");
@@ -1160,7 +1246,10 @@ contractSuite("Storage Acceptance", engine => {
           data: [row]
         },
         headers: {["etag"]: prevETag}
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
 
       const {body, headers} = getMultipartFormDataMeta(
         [
@@ -1173,7 +1262,7 @@ contractSuite("Storage Acceptance", engine => {
         "put"
       );
 
-      const id = row._id;
+      const id = idOf(row);
 
       await req.put(`/storage/${id}`, body, headers);
 
@@ -1190,7 +1279,7 @@ contractSuite("Storage Acceptance", engine => {
   describe("resumable upload", () => {
     beforeEach(async () => {
       const res = await req.get("/storage");
-      await Promise.all(res.body.map((obj: any) => req.delete("/storage", obj._id)));
+      await Promise.all(res.body.map((obj: any) => req.delete("/storage", idOf(obj))));
     });
 
     it("should return upload url", async () => {
@@ -1243,7 +1332,7 @@ contractSuite("Storage Acceptance", engine => {
       const uploadedObject = body.at(-1);
       expect(uploadedObject.name).toBe(object.name);
 
-      const {body: obj} = await req.get(`/storage/${uploadedObject._id}/view`);
+      const {body: obj} = await req.get(`/storage/${idOf(uploadedObject)}/view`);
       expect(obj).toBe("new data");
     });
 
@@ -1429,7 +1518,7 @@ contractSuite("Storage Acceptance", engine => {
         }
       } = await req.get("/storage", {paginate: true});
       const {body: response} = await req.get(`/storage/${row.name}`);
-      expect(response._id).toEqual(row._id);
+      expect(idOf(response)).toEqual(idOf(row));
       expect(response.url).toEqual(row.url);
       expect(response.name).toEqual(row.name);
     });
@@ -1439,7 +1528,10 @@ contractSuite("Storage Acceptance", engine => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
       const {headers, body} = await req.get(`/storage/${row.name}/view`);
       expect(headers["content-type"]).toEqual("text/plain; charset=utf-8");
       expect(headers["etag"]).toBeDefined();
@@ -1489,7 +1581,7 @@ contractSuite("Storage Acceptance", engine => {
       const {body: folderResponse} = await req.get("/storage", {
         filter: nameFilter("folder/subfolder/")
       });
-      const subfolderId = folderResponse[0]._id;
+      const subfolderId = idOf(folderResponse[0]);
 
       await req.patch(`/storage/${subfolderId}`, {
         name: "folder/subfolder_renamed/"

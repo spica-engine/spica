@@ -1,7 +1,6 @@
 import SecretReadOnlyAccess from "./secret.readonly.js";
 
 export default {
-  _id: "SecretFullAccess",
   name: "Secrets Full Access",
   description: "Full access to secrets service.",
   statement: [

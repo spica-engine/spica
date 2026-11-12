@@ -1,6 +1,6 @@
 import {BadRequestException} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {
   BUCKET_REPOSITORY,
@@ -100,8 +100,8 @@ describe("PostgreSQL schema manager", () => {
       );
 
       expect(onSaved).toHaveBeenCalledWith(created);
-      expect(await buckets.findById(created._id)).toEqual(created);
-      expect(await columns(tableOf(created._id))).toEqual([
+      expect(await buckets.findById(idOf(created))).toEqual(created);
+      expect(await columns(tableOf(idOf(created)))).toEqual([
         expect.objectContaining({
           column_name: "id",
           data_type: "uuid",
@@ -114,8 +114,8 @@ describe("PostgreSQL schema manager", () => {
         expect.objectContaining({column_name: "released", data_type: "timestamp with time zone"}),
         expect.objectContaining({column_name: "title", data_type: "text", is_nullable: "NO"})
       ]);
-      expect(await constraints(tableOf(created._id))).toEqual([
-        {conname: `${tableOf(created._id)}_id_pk`, contype: "p"}
+      expect(await constraints(tableOf(idOf(created)))).toEqual([
+        {conname: `${tableOf(idOf(created))}_id_pk`, contype: "p"}
       ]);
     });
 
@@ -131,7 +131,7 @@ describe("PostgreSQL schema manager", () => {
         () => {}
       );
 
-      expect(await columns(tableOf(created._id))).toEqual([
+      expect(await columns(tableOf(idOf(created)))).toEqual([
         expect.objectContaining({column_name: "n", data_type: dataType, is_identity: "YES"})
       ]);
     });
@@ -145,7 +145,7 @@ describe("PostgreSQL schema manager", () => {
         () => {}
       );
 
-      expect(await columns(tableOf(created._id))).toEqual([
+      expect(await columns(tableOf(idOf(created)))).toEqual([
         expect.objectContaining({
           column_name: "slug",
           data_type: "text",
@@ -164,7 +164,7 @@ describe("PostgreSQL schema manager", () => {
         }),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       await pool.query(`INSERT INTO "${table}" (title) VALUES ('a'), ('b')`);
 
@@ -189,7 +189,7 @@ describe("PostgreSQL schema manager", () => {
         }),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       expect(await constraints(table)).toEqual([
         {conname: `${table}_id_pk`, contype: "p"},
@@ -237,11 +237,11 @@ describe("PostgreSQL schema manager", () => {
         }),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const onSaved = jest.fn();
 
       await manager.replace(
-        created._id,
+        idOf(created),
         bucket({
           required: ["fresh"],
           properties: {
@@ -256,7 +256,7 @@ describe("PostgreSQL schema manager", () => {
         onSaved
       );
 
-      expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({_id: created._id}));
+      expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({id: idOf(created)}));
       expect((await columns(table)).map(c => [c.column_name, c.is_nullable])).toEqual([
         ["fresh", "NO"],
         ["id", "NO"],
@@ -274,13 +274,13 @@ describe("PostgreSQL schema manager", () => {
     it("should leave the definition and the structure alone when the change fails", async () => {
       const original = bucket();
       const created = await manager.create(original, () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       await pool.query(`INSERT INTO "${table}" (title) VALUES ('a')`);
       const onSaved = jest.fn();
 
       await expect(
         manager.replace(
-          created._id,
+          idOf(created),
           bucket({
             required: ["extra"],
             properties: {
@@ -294,7 +294,7 @@ describe("PostgreSQL schema manager", () => {
       ).rejects.toBeInstanceOf(BadRequestException);
 
       expect(onSaved).not.toHaveBeenCalled();
-      expect(await buckets.findById(created._id)).toEqual(created);
+      expect(await buckets.findById(idOf(created))).toEqual(created);
       expect((await columns(table)).map(c => c.column_name)).toEqual(["id", "title"]);
     });
 
@@ -305,22 +305,28 @@ describe("PostgreSQL schema manager", () => {
       );
 
       await manager.replace(
-        created._id,
+        idOf(created),
         bucket({
           properties: {id: {type: "uuid", options: {generated: true}}, n: {type: "textarea"}}
         }),
         () => {}
       );
 
-      expect((await columns(tableOf(created._id))).map(c => c.data_type)).toEqual(["uuid", "text"]);
+      expect((await columns(tableOf(idOf(created)))).map(c => c.data_type)).toEqual([
+        "uuid",
+        "text"
+      ]);
     });
 
     it("should create the table of a bucket that was saved before it had one", async () => {
       const legacy = await buckets.insert(bucket());
 
-      await manager.replace(legacy._id, bucket(), () => {});
+      await manager.replace(idOf(legacy), bucket(), () => {});
 
-      expect((await columns(tableOf(legacy._id))).map(c => c.column_name)).toEqual(["id", "title"]);
+      expect((await columns(tableOf(idOf(legacy)))).map(c => c.column_name)).toEqual([
+        "id",
+        "title"
+      ]);
     });
 
     it("should resolve to null for a bucket that does not exist", async () => {
@@ -363,7 +369,7 @@ describe("PostgreSQL schema manager", () => {
 
     it("should create prefixed columns and a child table per array", async () => {
       const created = await manager.create(withShape(shape), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       expect((await columns(table)).map(c => c.column_name)).toEqual([
         "address__city",
@@ -398,7 +404,7 @@ describe("PostgreSQL schema manager", () => {
 
     it("should keep array items with their parent, in order, and remove them with it", async () => {
       const created = await manager.create(withShape({tags: shape.tags}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
       await pool.query(
         `INSERT INTO "${table}__tags" (_parent, _position, _value) VALUES ($1, 1, 'b'), ($1, 0, 'a')`,
@@ -420,7 +426,7 @@ describe("PostgreSQL schema manager", () => {
 
     it("should check the enum of a multiselect", async () => {
       const created = await manager.create(withShape({kinds: shape.kinds}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
 
       await expect(
@@ -430,10 +436,10 @@ describe("PostgreSQL schema manager", () => {
 
     it("should add and drop columns and child tables as properties come and go", async () => {
       const created = await manager.create(withShape({tags: shape.tags}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       await manager.replace(
-        created._id,
+        idOf(created),
         withShape({address: shape.address, lines: shape.lines}),
         () => {}
       );
@@ -446,7 +452,7 @@ describe("PostgreSQL schema manager", () => {
       ]);
 
       await manager.replace(
-        created._id,
+        idOf(created),
         withShape({
           address: {...shape.address, properties: {city: {type: "string"}}},
           lines: {
@@ -471,10 +477,10 @@ describe("PostgreSQL schema manager", () => {
 
     it("should follow a change of the required object and of the item enum", async () => {
       const created = await manager.create(withShape(shape), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       await manager.replace(
-        created._id,
+        idOf(created),
         withShape(
           {...shape, kinds: {type: "multiselect", items: {type: "string", enum: ["a", "b", "c"]}}},
           {required: ["address"]}
@@ -498,13 +504,13 @@ describe("PostgreSQL schema manager", () => {
         ),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       expect((await indexes(`${table}__tags`)).map(index => index.indexname)).toEqual([
         constraintName(`${table}__tags`, ["_value"], "uq")
       ]);
 
-      await manager.replace(created._id, withShape({tags: shape.tags}), () => {});
+      await manager.replace(idOf(created), withShape({tags: shape.tags}), () => {});
 
       expect(await indexes(`${table}__tags`)).toEqual([]);
     });
@@ -512,9 +518,9 @@ describe("PostgreSQL schema manager", () => {
     it("should drop the child tables together with the bucket", async () => {
       const created = await manager.create(withShape(shape), () => {});
 
-      await manager.drop(created._id, () => {});
+      await manager.drop(idOf(created), () => {});
 
-      expect(await tablesOfBucket(tableOf(created._id))).toEqual([]);
+      expect(await tablesOfBucket(tableOf(idOf(created)))).toEqual([]);
     });
   });
 
@@ -550,40 +556,44 @@ describe("PostgreSQL schema manager", () => {
       );
 
       const created = await manager.create(
-        keyed({owner: relation(target._id, "onetoone")}),
+        keyed({owner: relation(idOf(target), "onetoone")}),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       expect((await columns(table)).find(c => c.column_name == "owner")).toMatchObject({
         data_type: "bigint",
         is_nullable: "YES"
       });
       expect(await foreignKeys(table)).toEqual([
-        [constraintName(table, ["owner"], "fk"), tableOf(target._id), "n"]
+        [constraintName(table, ["owner"], "fk"), tableOf(idOf(target)), "n"]
       ]);
     });
 
     it("should set the reference to null when the related row goes, unless it is required", async () => {
       const target = await manager.create(keyed({}), () => {});
-      const targetTable = tableOf(target._id);
+      const targetTable = tableOf(idOf(target));
       const optional = await manager.create(
-        keyed({owner: relation(target._id, "onetoone")}),
+        keyed({owner: relation(idOf(target), "onetoone")}),
         () => {}
       );
       const required = await manager.create(
-        keyed({owner: relation(target._id, "onetoone")}, {required: ["owner"]}),
+        keyed({owner: relation(idOf(target), "onetoone")}, {required: ["owner"]}),
         () => {}
       );
       const {rows} = await pool.query(`INSERT INTO "${targetTable}" DEFAULT VALUES RETURNING id`);
-      await pool.query(`INSERT INTO "${tableOf(optional._id)}" (owner) VALUES ($1)`, [rows[0].id]);
+      await pool.query(`INSERT INTO "${tableOf(idOf(optional))}" (owner) VALUES ($1)`, [
+        rows[0].id
+      ]);
 
       await pool.query(`DELETE FROM "${targetTable}" WHERE id = $1`, [rows[0].id]);
 
-      const left = await pool.query(`SELECT owner FROM "${tableOf(optional._id)}"`);
+      const left = await pool.query(`SELECT owner FROM "${tableOf(idOf(optional))}"`);
       expect(left.rows).toEqual([{owner: null}]);
       await pool.query(`INSERT INTO "${targetTable}" (id) VALUES ($1)`, [rows[0].id]);
-      await pool.query(`INSERT INTO "${tableOf(required._id)}" (owner) VALUES ($1)`, [rows[0].id]);
+      await pool.query(`INSERT INTO "${tableOf(idOf(required))}" (owner) VALUES ($1)`, [
+        rows[0].id
+      ]);
       await expect(
         pool.query(`DELETE FROM "${targetTable}" WHERE id = $1`, [rows[0].id])
       ).rejects.toMatchObject({code: "23503"});
@@ -592,10 +602,10 @@ describe("PostgreSQL schema manager", () => {
     it("should link a onetomany relation through an ordered link table", async () => {
       const target = await manager.create(keyed({}), () => {});
       const created = await manager.create(
-        keyed({friends: relation(target._id, "onetomany")}),
+        keyed({friends: relation(idOf(target), "onetomany")}),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const link = `${table}__friends`;
 
       expect((await columns(link)).map(c => [c.column_name, c.data_type])).toEqual([
@@ -606,30 +616,30 @@ describe("PostgreSQL schema manager", () => {
       expect(await foreignKeys(link)).toEqual(
         [
           [constraintName(link, ["_parent"], "fk"), table, "c"],
-          [constraintName(link, ["_target"], "fk"), tableOf(target._id), "c"]
+          [constraintName(link, ["_target"], "fk"), tableOf(idOf(target)), "c"]
         ].sort((a, b) => (a[0] < b[0] ? -1 : 1))
       );
 
       const targets = await pool.query(
-        `INSERT INTO "${tableOf(target._id)}" DEFAULT VALUES RETURNING id`
+        `INSERT INTO "${tableOf(idOf(target))}" DEFAULT VALUES RETURNING id`
       );
       const parent = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
       await pool.query(`INSERT INTO "${link}" VALUES ($1, 0, $2)`, [
         parent.rows[0].id,
         targets.rows[0].id
       ]);
-      await pool.query(`DELETE FROM "${tableOf(target._id)}"`);
+      await pool.query(`DELETE FROM "${tableOf(idOf(target))}"`);
       expect((await pool.query(`SELECT 1 FROM "${link}"`)).rowCount).toBe(0);
     });
 
     it("should allow a bucket to relate to itself", async () => {
       const id = "0198a7e0-7b1c-7d2e-9f3a-4b5c6d7e8f90";
       const created = await manager.create(
-        keyed({parent: relation(id, "onetoone")}, {_id: id}),
+        keyed({parent: relation(id, "onetoone")}, {id}),
         () => {}
       );
 
-      expect(await foreignKeys(tableOf(created._id))).toEqual([
+      expect(await foreignKeys(tableOf(idOf(created)))).toEqual([
         [constraintName(tableOf(id), ["parent"], "fk"), tableOf(id), "n"]
       ]);
     });
@@ -650,16 +660,16 @@ describe("PostgreSQL schema manager", () => {
       const target = await manager.create(keyed({}), () => {});
       const created = await manager.create(
         keyed({
-          boss: {type: "object", properties: {who: relation(target._id, "onetoone")}},
+          boss: {type: "object", properties: {who: relation(idOf(target), "onetoone")}},
           lines: {
             type: "array",
-            items: {type: "object", properties: {product: relation(target._id, "onetoone")}}
+            items: {type: "object", properties: {product: relation(idOf(target), "onetoone")}}
           },
-          crew: {type: "object", properties: {members: relation(target._id, "onetomany")}}
+          crew: {type: "object", properties: {members: relation(idOf(target), "onetomany")}}
         }),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       expect((await columns(table)).map(c => c.column_name)).toEqual(["boss__who", "id"]);
       expect((await columns(`${table}__lines`)).map(c => c.column_name)).toEqual([
@@ -678,31 +688,31 @@ describe("PostgreSQL schema manager", () => {
       const first = await manager.create(keyed({}), () => {});
       const second = await manager.create(keyed({}), () => {});
       const created = await manager.create(keyed({}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       await manager.replace(
-        created._id,
-        keyed({one: relation(first._id, "onetoone"), many: relation(first._id, "onetomany")}),
+        idOf(created),
+        keyed({one: relation(idOf(first), "onetoone"), many: relation(idOf(first), "onetomany")}),
         () => {}
       );
       expect(await foreignKeys(table)).toEqual([
-        [constraintName(table, ["one"], "fk"), tableOf(first._id), "n"]
+        [constraintName(table, ["one"], "fk"), tableOf(idOf(first)), "n"]
       ]);
       expect(await tablesOfBucket(table)).toEqual([table, `${table}__many`]);
 
       await manager.replace(
-        created._id,
-        keyed({one: relation(second._id, "onetoone"), many: relation(second._id, "onetomany")}),
+        idOf(created),
+        keyed({one: relation(idOf(second), "onetoone"), many: relation(idOf(second), "onetomany")}),
         () => {}
       );
       expect(await foreignKeys(table)).toEqual([
-        [constraintName(table, ["one"], "fk"), tableOf(second._id), "n"]
+        [constraintName(table, ["one"], "fk"), tableOf(idOf(second)), "n"]
       ]);
       expect((await foreignKeys(`${table}__many`)).map(key => key[1]).sort()).toEqual(
-        [table, tableOf(second._id)].sort()
+        [table, tableOf(idOf(second))].sort()
       );
 
-      await manager.replace(created._id, keyed({}), () => {});
+      await manager.replace(idOf(created), keyed({}), () => {});
       expect(await foreignKeys(table)).toEqual([]);
       expect(await tablesOfBucket(table)).toEqual([table]);
     });
@@ -713,25 +723,25 @@ describe("PostgreSQL schema manager", () => {
       const kept = await manager.create(keyed({}), () => {});
       const created = await manager.create(
         keyed({
-          one: relation(first._id, "onetoone"),
-          many: relation(first._id, "onetomany"),
-          same: relation(kept._id, "onetoone")
+          one: relation(idOf(first), "onetoone"),
+          many: relation(idOf(first), "onetomany"),
+          same: relation(idOf(kept), "onetoone")
         }),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const insertInto = async (target: string) => (await orm.table(target).insertRow({})).id;
-      const firstRow = await insertInto(tableOf(first._id));
-      const keptRow = await insertInto(tableOf(kept._id));
+      const firstRow = await insertInto(tableOf(idOf(first)));
+      const keptRow = await insertInto(tableOf(idOf(kept)));
       const row = (await orm.table(table).insertRow({one: firstRow, same: keptRow})).id;
       await orm.table(`${table}__many`).insertRow({_parent: row, _position: 0, _target: firstRow});
 
       await manager.replace(
-        created._id,
+        idOf(created),
         keyed({
-          one: relation(second._id, "onetoone"),
-          many: relation(second._id, "onetomany"),
-          same: relation(kept._id, "onetoone")
+          one: relation(idOf(second), "onetoone"),
+          many: relation(idOf(second), "onetomany"),
+          same: relation(idOf(kept), "onetoone")
         }),
         () => {}
       );
@@ -764,9 +774,9 @@ describe("PostgreSQL schema manager", () => {
       async function itemsAround(required: string[]) {
         const first = await manager.create(keyed({}), () => {});
         const second = await manager.create(keyed({}), () => {});
-        const created = await manager.create(lines(required, first._id), () => {});
-        const table = tableOf(created._id);
-        const product = (await orm.table(tableOf(first._id)).insertRow({})).id;
+        const created = await manager.create(lines(required, idOf(first)), () => {});
+        const table = tableOf(idOf(created));
+        const product = (await orm.table(tableOf(idOf(first))).insertRow({})).id;
         const parent = (await orm.table(table).insertRow({})).id;
         await orm.table(`${table}__lines`).insertRows(
           ["a", "b"].map((sku, position) => ({
@@ -782,7 +792,7 @@ describe("PostgreSQL schema manager", () => {
       it("should clear the relation of each item and keep the items when it is retargeted", async () => {
         const {second, created, table} = await itemsAround([]);
 
-        await manager.replace(created._id, lines([], second._id), () => {});
+        await manager.replace(idOf(created), lines([], idOf(second)), () => {});
 
         expect(await items(table)).toEqual([
           {sku: "a", product: null},
@@ -798,7 +808,7 @@ describe("PostgreSQL schema manager", () => {
         });
 
         await expect(
-          manager.replace(created._id, required(second._id), () => {})
+          manager.replace(idOf(created), required(idOf(second)), () => {})
         ).rejects.toMatchObject({
           status: 400,
           message: expect.stringContaining("Existing documents refer to documents")
@@ -809,7 +819,7 @@ describe("PostgreSQL schema manager", () => {
           {sku: "b", product}
         ]);
         expect((await foreignKeys(`${table}__lines`)).map(key => key[1])).toContain(
-          tableOf(first._id)
+          tableOf(idOf(first))
         );
       });
     });
@@ -818,22 +828,22 @@ describe("PostgreSQL schema manager", () => {
       const first = await manager.create(keyed({}), () => {});
       const second = await manager.create(keyed({}), () => {});
       const created = await manager.create(
-        keyed({one: relation(first._id, "onetoone")}, {required: ["one"]}),
+        keyed({one: relation(idOf(first), "onetoone")}, {required: ["one"]}),
         () => {}
       );
-      const table = tableOf(created._id);
-      const firstRow = (await orm.table(tableOf(first._id)).insertRow({})).id;
+      const table = tableOf(idOf(created));
+      const firstRow = (await orm.table(tableOf(idOf(first))).insertRow({})).id;
       await orm.table(table).insertRow({one: firstRow});
 
       await expect(
         manager.replace(
-          created._id,
-          keyed({one: relation(second._id, "onetoone")}, {required: ["one"]}),
+          idOf(created),
+          keyed({one: relation(idOf(second), "onetoone")}, {required: ["one"]}),
           () => {}
         )
       ).rejects.toThrow();
 
-      expect((await foreignKeys(table))[0][1]).toBe(tableOf(first._id));
+      expect((await foreignKeys(table))[0][1]).toBe(tableOf(idOf(first)));
       expect((await orm.table(table).rows()).map(row => row.one)).toEqual([firstRow]);
     });
 
@@ -844,13 +854,13 @@ describe("PostgreSQL schema manager", () => {
         keyed(
           {
             title: {type: "string"},
-            one: relation(target._id, "onetoone"),
-            keep: relation(other._id, "onetoone"),
-            many: relation(target._id, "onetomany"),
+            one: relation(idOf(target), "onetoone"),
+            keep: relation(idOf(other), "onetoone"),
+            many: relation(idOf(target), "onetomany"),
             boss: {
               type: "object",
               required: ["who"],
-              properties: {who: relation(target._id, "onetoone"), name: {type: "string"}}
+              properties: {who: relation(idOf(target), "onetoone"), name: {type: "string"}}
             }
           },
           {
@@ -863,14 +873,14 @@ describe("PostgreSQL schema manager", () => {
         ),
         () => {}
       );
-      const table = tableOf(referencing._id);
+      const table = tableOf(idOf(referencing));
       const changed = jest.fn();
       const onSaved = jest.fn();
 
-      await manager.drop(target._id, onSaved, changed);
+      await manager.drop(idOf(target), onSaved, changed);
 
-      expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({_id: target._id}));
-      expect(await tablesOfBucket(tableOf(target._id))).toEqual([]);
+      expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({id: idOf(target)}));
+      expect(await tablesOfBucket(tableOf(idOf(target)))).toEqual([]);
       expect(await tablesOfBucket(table)).toEqual([table]);
       expect((await columns(table)).map(c => c.column_name)).toEqual([
         "boss__name",
@@ -879,9 +889,9 @@ describe("PostgreSQL schema manager", () => {
         "title"
       ]);
       expect(await foreignKeys(table)).toEqual([
-        [constraintName(table, ["keep"], "fk"), tableOf(other._id), "n"]
+        [constraintName(table, ["keep"], "fk"), tableOf(idOf(other)), "n"]
       ]);
-      const stored = await buckets.findById(referencing._id);
+      const stored = await buckets.findById(idOf(referencing));
       expect(Object.keys(stored.properties)).toEqual(
         expect.arrayContaining(["id", "title", "keep", "boss"])
       );
@@ -894,17 +904,17 @@ describe("PostgreSQL schema manager", () => {
       expect(stored.required).toEqual(["title"]);
       expect(stored.indexes).toEqual([{definition: {title: 1}, options: {}}]);
       expect(changed).toHaveBeenCalledTimes(1);
-      expect(changed).toHaveBeenCalledWith(expect.objectContaining({_id: referencing._id}));
+      expect(changed).toHaveBeenCalledWith(expect.objectContaining({id: idOf(referencing)}));
     });
 
     it("should leave everything alone when a drop fails", async () => {
       const target = await manager.create(keyed({}), () => {});
       const referencing = await manager.create(
-        keyed({one: relation(target._id, "onetoone")}),
+        keyed({one: relation(idOf(target), "onetoone")}),
         () => {}
       );
-      await pool.query(`ALTER TABLE "${tableOf(referencing._id)}" ADD COLUMN stray text`);
-      await pool.query(`CREATE TABLE "${tableOf(target._id)}__blocker" (x int)`);
+      await pool.query(`ALTER TABLE "${tableOf(idOf(referencing))}" ADD COLUMN stray text`);
+      await pool.query(`CREATE TABLE "${tableOf(idOf(target))}__blocker" (x int)`);
       await pool.query(
         `CREATE FUNCTION fail_drop() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'no drops'; END $$`
       );
@@ -913,15 +923,15 @@ describe("PostgreSQL schema manager", () => {
       );
 
       try {
-        await expect(manager.drop(target._id, () => {})).rejects.toBeDefined();
+        await expect(manager.drop(idOf(target), () => {})).rejects.toBeDefined();
       } finally {
         await pool.query(`DROP EVENT TRIGGER fail_drop_trigger`);
         await pool.query(`DROP FUNCTION fail_drop()`);
       }
 
-      expect(await buckets.findById(target._id)).toBeTruthy();
-      expect((await buckets.findById(referencing._id)).properties).toHaveProperty("one");
-      expect((await columns(tableOf(referencing._id))).map(c => c.column_name)).toContain("one");
+      expect(await buckets.findById(idOf(target))).toBeTruthy();
+      expect((await buckets.findById(idOf(referencing))).properties).toHaveProperty("one");
+      expect((await columns(tableOf(idOf(referencing)))).map(c => c.column_name)).toContain("one");
     });
   });
 
@@ -936,7 +946,7 @@ describe("PostgreSQL schema manager", () => {
         withShape({name: translated, note: {type: "string"}}),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       expect((await columns(table)).map(c => c.column_name)).toEqual(["id", "note"]);
       expect(await columns(`${table}__name`)).toEqual([
@@ -959,12 +969,12 @@ describe("PostgreSQL schema manager", () => {
 
     it("should add and drop the table as the translated property comes and goes", async () => {
       const created = await manager.create(withShape({}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
-      await manager.replace(created._id, withShape({name: translated}), () => {});
+      await manager.replace(idOf(created), withShape({name: translated}), () => {});
       expect(await tablesOfBucket(table)).toEqual([table, `${table}__name`]);
 
-      await manager.replace(created._id, withShape({}), () => {});
+      await manager.replace(idOf(created), withShape({}), () => {});
       expect(await tablesOfBucket(table)).toEqual([table]);
     });
   });
@@ -984,7 +994,7 @@ describe("PostgreSQL schema manager", () => {
         ),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       expect((await columns(table)).find(c => c.column_name == "place").data_type).toBe("point");
       expect(
@@ -1003,10 +1013,10 @@ describe("PostgreSQL schema manager", () => {
 
     it("should add and drop a spatial index on edit", async () => {
       const created = await manager.create(withShape({place: {type: "location"}}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       await manager.replace(
-        created._id,
+        idOf(created),
         withShape(
           {place: {type: "location"}},
           {indexes: [{definition: {place: "2dsphere"}, options: {}}]}
@@ -1015,7 +1025,7 @@ describe("PostgreSQL schema manager", () => {
       );
       expect(await indexes(table)).toHaveLength(1);
 
-      await manager.replace(created._id, withShape({place: {type: "location"}}), () => {});
+      await manager.replace(idOf(created), withShape({place: {type: "location"}}), () => {});
       expect(await indexes(table)).toEqual([]);
     });
   });
@@ -1032,10 +1042,10 @@ describe("PostgreSQL schema manager", () => {
 
     it("should convert existing values to the new column type and clear what does not fit", async () => {
       const created = await manager.create(withShape({n: {type: "string"}}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       await pool.query(`INSERT INTO "${table}" (n) VALUES ('12'), ('abc'), ('4.5'), (NULL)`);
 
-      await manager.replace(created._id, withShape({n: {type: "number"}}), () => {});
+      await manager.replace(idOf(created), withShape({n: {type: "number"}}), () => {});
 
       expect((await columns(table)).find(c => c.column_name == "n").data_type).toBe(
         "double precision"
@@ -1050,10 +1060,10 @@ describe("PostgreSQL schema manager", () => {
       ["string", "date", "text", "2024-02-03T04:05:06Z", new Date("2024-02-03T04:05:06Z")]
     ])("should convert %s to %s", async (from, to, sqlType, input, output) => {
       const created = await manager.create(withShape({v: {type: from}}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       await pool.query(`INSERT INTO "${table}" (v) VALUES ($1::${sqlType})`, [input]);
 
-      await manager.replace(created._id, withShape({v: {type: to}}), () => {});
+      await manager.replace(idOf(created), withShape({v: {type: to}}), () => {});
 
       expect((await rowsOf(table, "v"))[0].v).toEqual(output);
     });
@@ -1063,11 +1073,11 @@ describe("PostgreSQL schema manager", () => {
         withShape({kind: {type: "string", enum: ["a", "b"]}}),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       await pool.query(`INSERT INTO "${table}" (kind) VALUES ('a')`);
 
       await manager.replace(
-        created._id,
+        idOf(created),
         withShape({kind: {type: "textarea", enum: ["a", "b"]}}),
         () => {}
       );
@@ -1083,10 +1093,10 @@ describe("PostgreSQL schema manager", () => {
         withShape({kind: {type: "string", enum: ["1", "2"]}}),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       await manager.replace(
-        created._id,
+        idOf(created),
         withShape({kind: {type: "number", enum: [1, 2]}}),
         () => {}
       );
@@ -1102,14 +1112,14 @@ describe("PostgreSQL schema manager", () => {
         withShape({scores: {type: "array", items: {type: "string"}}}),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
       await pool.query(`INSERT INTO "${table}__scores" VALUES ($1, 0, '3'), ($1, 1, '4.5')`, [
         rows[0].id
       ]);
 
       await manager.replace(
-        created._id,
+        idOf(created),
         withShape({scores: {type: "array", items: {type: "number"}}}),
         () => {}
       );
@@ -1122,7 +1132,7 @@ describe("PostgreSQL schema manager", () => {
         withShape({scores: {type: "array", items: {type: "string"}}}),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
       await pool.query(`INSERT INTO "${table}__scores" VALUES ($1, 0, '3'), ($1, 1, 'x')`, [
         rows[0].id
@@ -1130,7 +1140,7 @@ describe("PostgreSQL schema manager", () => {
 
       await expect(
         manager.replace(
-          created._id,
+          idOf(created),
           withShape({scores: {type: "array", items: {type: "number"}}}),
           () => {}
         )
@@ -1140,7 +1150,7 @@ describe("PostgreSQL schema manager", () => {
         "3",
         "x"
       ]);
-      expect((await buckets.findById(created._id)).properties.scores.items.type).toBe("string");
+      expect((await buckets.findById(idOf(created))).properties.scores.items.type).toBe("string");
     });
 
     it("should drop what a structure change leaves behind and keep the other data", async () => {
@@ -1151,11 +1161,11 @@ describe("PostgreSQL schema manager", () => {
         }),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       await pool.query(`INSERT INTO "${table}" (note, address__city) VALUES ('keep', 'Rome')`);
 
       await manager.replace(
-        created._id,
+        idOf(created),
         withShape({note: {type: "string"}, address: {type: "string"}}),
         () => {}
       );
@@ -1168,17 +1178,17 @@ describe("PostgreSQL schema manager", () => {
       const target = await manager.create(withShape({}), () => {});
       const relation = (relationType: string) => ({
         type: "relation",
-        bucketId: String(target._id),
+        bucketId: String(idOf(target)),
         relationType
       });
       const created = await manager.create(withShape({link: relation("onetoone")}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
-      await manager.replace(created._id, withShape({link: relation("onetomany")}), () => {});
+      await manager.replace(idOf(created), withShape({link: relation("onetomany")}), () => {});
       expect(await tablesOfBucket(table)).toEqual([table, `${table}__link`]);
       expect((await columns(table)).map(c => c.column_name)).toEqual(["id"]);
 
-      await manager.replace(created._id, withShape({link: relation("onetoone")}), () => {});
+      await manager.replace(idOf(created), withShape({link: relation("onetoone")}), () => {});
       expect(await tablesOfBucket(table)).toEqual([table]);
       expect((await columns(table)).map(c => c.column_name)).toEqual(["id", "link"]);
     });
@@ -1188,12 +1198,12 @@ describe("PostgreSQL schema manager", () => {
         withShape({tags: {type: "array", items: {type: "string"}}, note: {type: "string"}}),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const {rows} = await pool.query(`INSERT INTO "${table}" (note) VALUES ('keep') RETURNING id`);
       await pool.query(`INSERT INTO "${table}__tags" VALUES ($1, 0, 'a')`, [rows[0].id]);
 
       await manager.replace(
-        created._id,
+        idOf(created),
         withShape({tags: {type: "string", options: {translate: true}}, note: {type: "string"}}),
         () => {}
       );
@@ -1209,16 +1219,16 @@ describe("PostgreSQL schema manager", () => {
 
     it("should translate and untranslate a property", async () => {
       const created = await manager.create(withShape({name: {type: "string"}}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
       await manager.replace(
-        created._id,
+        idOf(created),
         withShape({name: {type: "string", options: {translate: true}}}),
         () => {}
       );
       expect(await tablesOfBucket(table)).toEqual([table, `${table}__name`]);
 
-      await manager.replace(created._id, withShape({name: {type: "string"}}), () => {});
+      await manager.replace(idOf(created), withShape({name: {type: "string"}}), () => {});
       expect(await tablesOfBucket(table)).toEqual([table]);
       expect((await columns(table)).map(c => c.column_name)).toEqual(["id", "name"]);
     });
@@ -1228,7 +1238,7 @@ describe("PostgreSQL schema manager", () => {
       const execute = jest.spyOn(Session.prototype, "executeStatements");
 
       await manager.replace(
-        created._id,
+        idOf(created),
         {...withShape({n: {type: "string", title: "N"}}), title: "Renamed", description: "x"},
         () => {}
       );
@@ -1261,26 +1271,26 @@ describe("PostgreSQL schema manager", () => {
 
     it("should turn the generation of a uuid key off and on", async () => {
       const created = await manager.create(keyed("id", {id: generatedUuid}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
-      await manager.replace(created._id, keyed("id", {id: {type: "uuid"}}), () => {});
+      await manager.replace(idOf(created), keyed("id", {id: {type: "uuid"}}), () => {});
       expect((await columnOf(table, "id")).column_default).toBeNull();
       await expect(pool.query(`INSERT INTO "${table}" DEFAULT VALUES`)).rejects.toMatchObject({
         code: "23502"
       });
 
-      await manager.replace(created._id, keyed("id", {id: generatedUuid}), () => {});
+      await manager.replace(idOf(created), keyed("id", {id: generatedUuid}), () => {});
       expect((await columnOf(table, "id")).column_default).toBe("uuidv7()");
       expect(await keyColumn(table)).toEqual(["id"]);
     });
 
     it("should continue an identity key after the existing rows when generation is turned on", async () => {
       const created = await manager.create(keyed("n", {n: {type: "integer"}}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       await pool.query(`INSERT INTO "${table}" (n) VALUES (5), (9)`);
 
       await manager.replace(
-        created._id,
+        idOf(created),
         keyed("n", {n: {type: "integer", options: {generated: true}}}),
         () => {}
       );
@@ -1289,7 +1299,7 @@ describe("PostgreSQL schema manager", () => {
       const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING n`);
       expect(rows[0].n).toBe(10);
 
-      await manager.replace(created._id, keyed("n", {n: {type: "integer"}}), () => {});
+      await manager.replace(idOf(created), keyed("n", {n: {type: "integer"}}), () => {});
       expect((await columnOf(table, "n")).is_identity).toBe("NO");
     });
 
@@ -1297,7 +1307,7 @@ describe("PostgreSQL schema manager", () => {
       const created = await manager.create(keyed("id", {id: generatedUuid}), () => {});
       const execute = jest.spyOn(Session.prototype, "executeStatements");
 
-      await manager.replace(created._id, keyed("id", {id: {type: "uuid"}}), () => {});
+      await manager.replace(idOf(created), keyed("id", {id: {type: "uuid"}}), () => {});
 
       const statements = execute.mock.calls[0][0];
       expect(statements.some(statement => statement.includes("PRIMARY KEY"))).toBe(false);
@@ -1313,16 +1323,16 @@ describe("PostgreSQL schema manager", () => {
       const definition = (type: string) =>
         keyed("id", {id: {type}, tags: {type: "array", items: {type: "string"}}});
       const created = await manager.create(definition(from), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const referrer = await manager.create(
         keyed("rid", {
           rid: generatedUuid,
-          owner: {type: "relation", bucketId: String(created._id), relationType: "onetoone"},
-          owners: {type: "relation", bucketId: String(created._id), relationType: "onetomany"}
+          owner: {type: "relation", bucketId: String(idOf(created)), relationType: "onetoone"},
+          owners: {type: "relation", bucketId: String(idOf(created)), relationType: "onetomany"}
         }),
         () => {}
       );
-      const referrerTable = tableOf(referrer._id);
+      const referrerTable = tableOf(idOf(referrer));
       await pool.query(`INSERT INTO "${table}" (id) VALUES ($1)`, [id]);
       await pool.query(`INSERT INTO "${table}__tags" VALUES ($1, 0, 'a')`, [id]);
       await pool.query(`INSERT INTO "${referrerTable}" (owner) VALUES ($1)`, [id]);
@@ -1332,7 +1342,7 @@ describe("PostgreSQL schema manager", () => {
         id
       ]);
 
-      await manager.replace(created._id, definition(to), () => {});
+      await manager.replace(idOf(created), definition(to), () => {});
 
       const expectedType = to == "string" ? "text" : "uuid";
       expect((await columnOf(table, "id")).data_type).toBe(expectedType);
@@ -1354,29 +1364,29 @@ describe("PostgreSQL schema manager", () => {
     it("should widen and narrow an integer key", async () => {
       const definition = (type: string) => keyed("n", {n: {type, options: {generated: true}}});
       const created = await manager.create(definition("integer"), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       await pool.query(`INSERT INTO "${table}" DEFAULT VALUES`);
 
-      await manager.replace(created._id, definition("bigint"), () => {});
+      await manager.replace(idOf(created), definition("bigint"), () => {});
       expect((await columnOf(table, "n")).data_type).toBe("bigint");
       const {rows} = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING n`);
       expect(Number(rows[0].n)).toBe(2);
 
-      await manager.replace(created._id, definition("integer"), () => {});
+      await manager.replace(idOf(created), definition("integer"), () => {});
       expect((await columnOf(table, "n")).data_type).toBe("integer");
     });
 
     it("should refuse a key type that existing keys cannot be converted to, and change nothing", async () => {
       const definition = (type: string) => keyed("id", {id: {type}});
       const created = await manager.create(definition("uuid"), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       await pool.query(`INSERT INTO "${table}" (id) VALUES (uuidv7())`);
 
       await expect(
-        manager.replace(created._id, definition("bigint"), () => {})
+        manager.replace(idOf(created), definition("bigint"), () => {})
       ).rejects.toBeInstanceOf(BadRequestException);
 
-      expect((await buckets.findById(created._id)).properties.id.type).toBe("uuid");
+      expect((await buckets.findById(idOf(created))).properties.id.type).toBe("uuid");
       expect((await columnOf(table, "id")).data_type).toBe("uuid");
       expect(await keyColumn(table)).toEqual(["id"]);
     });
@@ -1385,12 +1395,12 @@ describe("PostgreSQL schema manager", () => {
       const created = await manager.create(keyed("id", {id: {type: "uuid"}}), () => {});
 
       await manager.replace(
-        created._id,
+        idOf(created),
         keyed("id", {id: {type: "bigint", options: {generated: true}}}),
         () => {}
       );
 
-      expect((await columnOf(tableOf(created._id), "id")).data_type).toBe("bigint");
+      expect((await columnOf(tableOf(idOf(created)), "id")).data_type).toBe("bigint");
     });
 
     it("should make another property the key and carry the references along", async () => {
@@ -1405,15 +1415,15 @@ describe("PostgreSQL schema manager", () => {
           {required: ["code"]}
         );
       const created = await manager.create(definition("id"), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const referrer = await manager.create(
         keyed("rid", {
           rid: generatedUuid,
-          owner: {type: "relation", bucketId: String(created._id), relationType: "onetoone"}
+          owner: {type: "relation", bucketId: String(idOf(created)), relationType: "onetoone"}
         }),
         () => {}
       );
-      const referrerTable = tableOf(referrer._id);
+      const referrerTable = tableOf(idOf(referrer));
       const first = await pool.query(`INSERT INTO "${table}" (code) VALUES ('a') RETURNING id`);
       const second = await pool.query(`INSERT INTO "${table}" (code) VALUES ('b') RETURNING id`);
       await pool.query(`INSERT INTO "${table}__tags" VALUES ($1, 0, 'x'), ($2, 0, 'y')`, [
@@ -1422,7 +1432,7 @@ describe("PostgreSQL schema manager", () => {
       ]);
       await pool.query(`INSERT INTO "${referrerTable}" (owner) VALUES ($1)`, [second.rows[0].id]);
 
-      await manager.replace(created._id, definition("code"), () => {});
+      await manager.replace(idOf(created), definition("code"), () => {});
 
       expect(await keyColumn(table)).toEqual(["code"]);
       expect(
@@ -1457,13 +1467,13 @@ describe("PostgreSQL schema manager", () => {
         }),
         () => {}
       );
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const first = await pool.query(`INSERT INTO "${table}" DEFAULT VALUES RETURNING id`);
       await pool.query(`INSERT INTO "${table}" DEFAULT VALUES`);
       await pool.query(`INSERT INTO "${table}__tags" VALUES ($1, 0, 'x')`, [first.rows[0].id]);
 
       await manager.replace(
-        created._id,
+        idOf(created),
         keyed("n", {
           id: {type: "uuid"},
           n: {type: "bigint", options: {generated: true}},
@@ -1483,11 +1493,11 @@ describe("PostgreSQL schema manager", () => {
 
     it("should use a property added in the same edit as the new key", async () => {
       const created = await manager.create(keyed("id", {id: generatedUuid}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       await pool.query(`INSERT INTO "${table}" DEFAULT VALUES`);
 
       await manager.replace(
-        created._id,
+        idOf(created),
         keyed("uid", {id: {type: "uuid"}, uid: generatedUuid}),
         () => {}
       );
@@ -1499,9 +1509,9 @@ describe("PostgreSQL schema manager", () => {
 
     it("should use a property that replaces the old key property", async () => {
       const created = await manager.create(keyed("id", {id: generatedUuid}), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
 
-      await manager.replace(created._id, keyed("slug", {slug: {type: "string"}}), () => {});
+      await manager.replace(idOf(created), keyed("slug", {slug: {type: "string"}}), () => {});
 
       expect(await keyColumn(table)).toEqual(["slug"]);
       expect((await columns(table)).map(c => c.column_name)).toEqual(["slug"]);
@@ -1514,15 +1524,15 @@ describe("PostgreSQL schema manager", () => {
           code: {type: "string"}
         });
       const created = await manager.create(definition("id"), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       await pool.query(`INSERT INTO "${table}" (code) VALUES ('same'), ('same')`);
 
       await expect(
-        manager.replace(created._id, definition("code"), () => {})
+        manager.replace(idOf(created), definition("code"), () => {})
       ).rejects.toBeInstanceOf(BadRequestException);
 
       expect(await keyColumn(table)).toEqual(["id"]);
-      expect((await buckets.findById(created._id)).primary).toBe("id");
+      expect((await buckets.findById(idOf(created))).primary).toBe("id");
       expect((await rowsOf(table, "code")).map(row => row.code)).toEqual(["same", "same"]);
       const leftovers = await pool.query(
         "SELECT proname FROM pg_proc WHERE proname = 'spica_map_key'"
@@ -1536,15 +1546,15 @@ describe("PostgreSQL schema manager", () => {
         keyed(
           "id",
           {id: {type}, parent: {type: "relation", bucketId: id, relationType: "onetoone"}},
-          {_id: id}
+          {id}
         );
       const created = await manager.create(definition("uuid"), () => {});
-      const table = tableOf(created._id);
+      const table = tableOf(idOf(created));
       const key = "0198a7e0-7b1c-7d2e-9f3a-4b5c6d7e8f90";
       await pool.query(`INSERT INTO "${table}" (id) VALUES ($1)`, [key]);
       await pool.query(`INSERT INTO "${table}" (id, parent) VALUES (uuidv7(), $1)`, [key]);
 
-      await manager.replace(created._id, definition("string"), () => {});
+      await manager.replace(idOf(created), definition("string"), () => {});
 
       expect((await columnOf(table, "parent")).data_type).toBe("text");
       const linked = await pool.query(`SELECT 1 FROM "${table}" WHERE parent = $1`, [key]);
@@ -1557,20 +1567,20 @@ describe("PostgreSQL schema manager", () => {
       const created = await manager.create(bucket(), () => {});
       const onSaved = jest.fn();
 
-      const dropped = await manager.drop(created._id, onSaved);
+      const dropped = await manager.drop(idOf(created), onSaved);
 
       expect(dropped).toEqual(created);
       expect(onSaved).toHaveBeenCalledWith(created);
-      expect(await buckets.findById(created._id)).toBeNull();
-      expect(await tables()).not.toContain(tableOf(created._id));
+      expect(await buckets.findById(idOf(created))).toBeNull();
+      expect(await tables()).not.toContain(tableOf(idOf(created)));
     });
 
     it("should resolve to null without notifying when the bucket does not exist", async () => {
       const created = await manager.create(bucket(), () => {});
-      await manager.drop(created._id, () => {});
+      await manager.drop(idOf(created), () => {});
       const onSaved = jest.fn();
 
-      expect(await manager.drop(created._id, onSaved)).toBeNull();
+      expect(await manager.drop(idOf(created), onSaved)).toBeNull();
       expect(onSaved).not.toHaveBeenCalled();
     });
   });

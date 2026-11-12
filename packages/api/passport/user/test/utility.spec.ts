@@ -2,6 +2,7 @@ import {
   registerPolicyAttacher,
   providePolicyFinalizer
 } from "@spica-server/passport-user/src/utility";
+import {withId} from "@spica-server/data";
 
 describe("Utilities", () => {
   let request;
@@ -11,10 +12,7 @@ describe("Utilities", () => {
       params: {
         id: "test_user"
       },
-      user: {
-        _id: "test_user",
-        policies: []
-      },
+      user: withId({policies: []}, "test_user"),
       body: {},
       method: "PUT"
     };

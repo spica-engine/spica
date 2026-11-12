@@ -3,10 +3,11 @@ import {Resource} from "@spica-server/interface-asset";
 import {PreferenceService} from "@spica-server/preference-services";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {IdentitySettingsContents} from "@spica-server/interface-passport-identity";
+import {idOf} from "@spica-server/data";
 
 /**
  * Preference has 2 sub modules named bucket(not yet) and identity
- * So we should also check the _id of the resource since it explains that preference for identity or bucket
+ * So we should also check the id of the resource since it explains that preference for identity or bucket
  * It's a bit different than the other modules
  */
 const _module = "preference";
@@ -14,7 +15,7 @@ const _module = "preference";
 function isIdentityPreference(resourceOrId: Resource<IdentitySettingsContents> | string) {
   return typeof resourceOrId == "string"
     ? resourceOrId == "identity"
-    : resourceOrId._id == "identity";
+    : idOf(resourceOrId).toString() == "identity";
 }
 
 export function registerAssetHandlers(
@@ -51,8 +52,8 @@ export function registerAssetHandlers(
 
   registrar.operator(_module, operator);
 
-  const exporter = async (_id: string) => {
-    if (!isIdentityPreference(_id)) {
+  const exporter = async (id: string) => {
+    if (!isIdentityPreference(id)) {
       return;
     }
 

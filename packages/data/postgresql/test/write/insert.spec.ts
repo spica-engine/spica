@@ -1,5 +1,6 @@
 import {encrypt} from "@spica-server/core-encryption";
 import {postgresWriter, uuid} from "./support.js";
+import {idOf} from "@spica-server/data";
 
 describe("PostgreSQL bucket write: insert", () => {
   const {createBucket, insert, rows, rowsOf} = postgresWriter();
@@ -236,7 +237,7 @@ describe("PostgreSQL bucket write: insert", () => {
       const ann = (await insert(authors, {name: "ann"})).id;
       const bob = (await insert(authors, {name: "bob"})).id;
       const posts = await createBucket({
-        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"}
+        editors: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetomany"}
       });
 
       const saved = await insert(posts, {editors: [bob, ann]});
@@ -299,7 +300,7 @@ describe("PostgreSQL bucket write: insert", () => {
       const posts = await createBucket({
         title: {type: "string"},
         tags: {type: "array", items: {type: "string"}},
-        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"}
+        editors: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetomany"}
       });
 
       await expect(

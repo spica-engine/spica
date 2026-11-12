@@ -1,6 +1,7 @@
 import {Subject} from "rxjs";
 import {StorageService} from "@spica-server/storage";
 import {StorageObject, StorageObjectMeta} from "@spica-server/interface-storage";
+import {withId} from "@spica-server/data";
 
 describe("Storage Service insert", () => {
   const object = (name: string): StorageObject<Buffer> => ({
@@ -9,12 +10,11 @@ describe("Storage Service insert", () => {
     content: {data: Buffer.from(name), type: "text/plain", size: name.length}
   });
 
-  const stored = (name: string, id: string): StorageObjectMeta => ({
-    _id: id,
-    name,
-    url: `http://insteadof/${name}`,
-    content: {type: "text/plain", size: name.length}
-  });
+  const stored = (name: string, id: string): StorageObjectMeta =>
+    withId(
+      {name, url: `http://insteadof/${name}`, content: {type: "text/plain", size: name.length}},
+      id
+    );
 
   function serviceWith(insertAll: jest.Mock) {
     const strategy = {

@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {ActivityModule} from "@spica-server/activity";
 import {ActivityService} from "@spica-server/activity-services";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf, withId} from "@spica-server/data";
 import {contractSuite} from "@spica-server/database-testing";
 import {Action} from "@spica-server/interface-activity";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
@@ -59,8 +59,8 @@ contractSuite("Activity Acceptance", engine => {
     users = module.get(USER_REPOSITORY);
     idTypes = module.get(ID_TYPES);
 
-    user1Id = (await identities.insert({identifier: "user1"} as any))._id;
-    user2Id = (await identities.insert({identifier: "user2"} as any))._id;
+    user1Id = idOf(await identities.insert({identifier: "user1"} as any));
+    user2Id = idOf(await identities.insert({identifier: "user2"} as any));
 
     insertedActivityIds = await service.insert([
       {
@@ -89,32 +89,38 @@ contractSuite("Activity Acceptance", engine => {
     const {body: activities} = await request.get("/activity", {});
 
     activities.forEach(activity => {
-      expect(isActivityId(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.PUT,
-        identifier: "user2",
-        resource: ["test_module", "test_id3"],
-        created_at: activities[0].created_at
-      },
-      {
-        _id: activities[1]._id,
-        action: Action.POST,
-        identifier: "user2",
-        resource: ["test_module", "test_id2"],
-        created_at: activities[1].created_at
-      },
-      {
-        _id: activities[2]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[2].created_at
-      }
+      withId(
+        {
+          action: Action.PUT,
+          identifier: "user2",
+          resource: ["test_module", "test_id3"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      ),
+      withId(
+        {
+          action: Action.POST,
+          identifier: "user2",
+          resource: ["test_module", "test_id2"],
+          created_at: activities[1].created_at
+        },
+        idOf(activities[1])
+      ),
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[2].created_at
+        },
+        idOf(activities[2])
+      )
     ]);
   });
 
@@ -122,18 +128,20 @@ contractSuite("Activity Acceptance", engine => {
     const {body: activities} = await request.get("/activity", {identifier: "user1"});
 
     activities.forEach(activity => {
-      expect(isActivityId(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[0].created_at
-      }
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      )
     ]);
   });
 
@@ -141,18 +149,20 @@ contractSuite("Activity Acceptance", engine => {
     const {body: activities} = await request.get("/activity", {action: Action.POST});
 
     activities.forEach(activity => {
-      expect(isActivityId(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.POST,
-        identifier: "user2",
-        resource: ["test_module", "test_id2"],
-        created_at: activities[0].created_at
-      }
+      withId(
+        {
+          action: Action.POST,
+          identifier: "user2",
+          resource: ["test_module", "test_id2"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      )
     ]);
   });
 
@@ -162,25 +172,29 @@ contractSuite("Activity Acceptance", engine => {
     });
 
     activities.forEach(activity => {
-      expect(isActivityId(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.POST,
-        identifier: "user2",
-        resource: ["test_module", "test_id2"],
-        created_at: activities[0].created_at
-      },
-      {
-        _id: activities[1]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[1].created_at
-      }
+      withId(
+        {
+          action: Action.POST,
+          identifier: "user2",
+          resource: ["test_module", "test_id2"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      ),
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[1].created_at
+        },
+        idOf(activities[1])
+      )
     ]);
   });
 
@@ -191,25 +205,29 @@ contractSuite("Activity Acceptance", engine => {
     });
 
     activities.forEach(activity => {
-      expect(isActivityId(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.PUT,
-        identifier: "user2",
-        resource: ["test_module", "test_id3"],
-        created_at: activities[0].created_at
-      },
-      {
-        _id: activities[1]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[1].created_at
-      }
+      withId(
+        {
+          action: Action.PUT,
+          identifier: "user2",
+          resource: ["test_module", "test_id3"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      ),
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[1].created_at
+        },
+        idOf(activities[1])
+      )
     ]);
   });
 
@@ -248,18 +266,20 @@ contractSuite("Activity Acceptance", engine => {
     });
 
     activities.forEach(activity => {
-      expect(isActivityId(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[0].created_at
-      }
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      )
     ]);
   });
 
@@ -271,30 +291,34 @@ contractSuite("Activity Acceptance", engine => {
     const {body: activities} = await request.get("/activity");
 
     activities.forEach(activity => {
-      expect(isActivityId(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.POST,
-        identifier: "user2",
-        resource: ["test_module", "test_id2"],
-        created_at: activities[0].created_at
-      },
-      {
-        _id: activities[1]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[1].created_at
-      }
+      withId(
+        {
+          action: Action.POST,
+          identifier: "user2",
+          resource: ["test_module", "test_id2"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      ),
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[1].created_at
+        },
+        idOf(activities[1])
+      )
     ]);
   });
 
   it("should filter activities by username", async () => {
-    const testUser1Id = (await users.insert({username: "testuser1"} as any))._id;
+    const testUser1Id = idOf(await users.insert({username: "testuser1"} as any));
 
     await service.insert([
       {
@@ -307,18 +331,20 @@ contractSuite("Activity Acceptance", engine => {
     const {body: activities} = await request.get("/activity", {username: "testuser1"});
 
     activities.forEach(activity => {
-      expect(isActivityId(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.POST,
-        username: "testuser1",
-        resource: ["test_module", "test_id_username"],
-        created_at: activities[0].created_at
-      }
+      withId(
+        {
+          action: Action.POST,
+          username: "testuser1",
+          resource: ["test_module", "test_id_username"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      )
     ]);
   });
 

@@ -10,6 +10,7 @@ import {OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";
+import {idOf, withId} from "@spica-server/data";
 
 contractSuite("Identity Controller", engine => {
   let module: TestingModule;
@@ -61,11 +62,9 @@ contractSuite("Identity Controller", engine => {
         password: "password1"
       });
       expect(res.statusCode).toEqual(201);
-      expect(res.body).toMatchObject({
-        _id: expect.any(String),
-        identifier: "user1",
-        policies: []
-      });
+      expect(res.body).toMatchObject(
+        withId({identifier: "user1", policies: []}, expect.any(String))
+      );
     });
 
     it("should fail if identifier is missing", async () => {
@@ -109,21 +108,21 @@ contractSuite("Identity Controller", engine => {
         identifier: "user1",
         password: "password1"
       });
-      identity1Id = res1.body._id;
+      identity1Id = idOf(res1.body).toString();
 
       const res2 = await req.post("/passport/identity", {
         identifier: "user2",
         password: "password2"
       });
-      identity2Id = res2.body._id;
+      identity2Id = idOf(res2.body).toString();
     });
 
     it("should list all identities without password fields", async () => {
       const res = await req.get("/passport/identity", {sort: JSON.stringify({identifier: 1})});
       expect(res.statusCode).toEqual(200);
       expect(res.body).toMatchObject([
-        {_id: identity1Id, identifier: "user1", policies: []},
-        {_id: identity2Id, identifier: "user2", policies: []}
+        withId({identifier: "user1", policies: []}, identity1Id),
+        withId({identifier: "user2", policies: []}, identity2Id)
       ]);
     });
 
@@ -133,7 +132,7 @@ contractSuite("Identity Controller", engine => {
         limit: 1
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toMatchObject([{_id: identity1Id, identifier: "user1", policies: []}]);
+      expect(res.body).toMatchObject([withId({identifier: "user1", policies: []}, identity1Id)]);
     });
 
     it("should filter by identifier", async () => {
@@ -143,7 +142,7 @@ contractSuite("Identity Controller", engine => {
           : "document.identifier == 'user2'";
       const res = await req.get("/passport/identity", {filter});
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toMatchObject([{_id: identity2Id, identifier: "user2", policies: []}]);
+      expect(res.body).toMatchObject([withId({identifier: "user2", policies: []}, identity2Id)]);
     });
 
     it("should answer 404 for a filter in the language of the other engine", async () => {
@@ -161,7 +160,7 @@ contractSuite("Identity Controller", engine => {
         skip: 1
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toMatchObject([{_id: identity2Id, identifier: "user2", policies: []}]);
+      expect(res.body).toMatchObject([withId({identifier: "user2", policies: []}, identity2Id)]);
     });
 
     it("should sort results", async () => {
@@ -170,8 +169,8 @@ contractSuite("Identity Controller", engine => {
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toMatchObject([
-        {_id: identity2Id, identifier: "user2", policies: []},
-        {_id: identity1Id, identifier: "user1", policies: []}
+        withId({identifier: "user2", policies: []}, identity2Id),
+        withId({identifier: "user1", policies: []}, identity1Id)
       ]);
     });
 
@@ -184,8 +183,8 @@ contractSuite("Identity Controller", engine => {
       expect(res.body).toMatchObject({
         meta: {total: 2},
         data: [
-          {_id: identity1Id, identifier: "user1", policies: []},
-          {_id: identity2Id, identifier: "user2", policies: []}
+          withId({identifier: "user1", policies: []}, identity1Id),
+          withId({identifier: "user2", policies: []}, identity2Id)
         ]
       });
     });
@@ -200,7 +199,7 @@ contractSuite("Identity Controller", engine => {
       expect(res.statusCode).toEqual(200);
       expect(res.body).toMatchObject({
         meta: {total: 2},
-        data: [{_id: identity2Id, identifier: "user2", policies: []}]
+        data: [withId({identifier: "user2", policies: []}, identity2Id)]
       });
     });
   });
@@ -213,17 +212,13 @@ contractSuite("Identity Controller", engine => {
         identifier: "user1",
         password: "password1"
       });
-      identityId = res.body._id;
+      identityId = idOf(res.body).toString();
     });
 
     it("should return an identity by id without password fields", async () => {
       const res = await req.get(`/passport/identity/${identityId}`);
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toMatchObject({
-        _id: identityId,
-        identifier: "user1",
-        policies: []
-      });
+      expect(res.body).toMatchObject(withId({identifier: "user1", policies: []}, identityId));
     });
 
     it("should return 404 for non-existing identity", async () => {
@@ -246,7 +241,7 @@ contractSuite("Identity Controller", engine => {
         identifier: "user1",
         password: "password1"
       });
-      identityId = res.body._id;
+      identityId = idOf(res.body).toString();
     });
 
     it("should update an identity's identifier", async () => {
@@ -254,11 +249,9 @@ contractSuite("Identity Controller", engine => {
         identifier: "updated_user1"
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toMatchObject({
-        _id: identityId,
-        identifier: "updated_user1",
-        policies: []
-      });
+      expect(res.body).toMatchObject(
+        withId({identifier: "updated_user1", policies: []}, identityId)
+      );
     });
 
     it("should update an identity's password without exposing password fields", async () => {
@@ -267,12 +260,12 @@ contractSuite("Identity Controller", engine => {
         password: "new_password"
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toMatchObject({
-        _id: identityId,
-        identifier: "user1",
-        policies: [],
-        deactivateJwtsBefore: expect.any(Number)
-      });
+      expect(res.body).toMatchObject(
+        withId(
+          {identifier: "user1", policies: [], deactivateJwtsBefore: expect.any(Number)},
+          identityId
+        )
+      );
     });
 
     it("should fail when updating to a duplicate identifier", async () => {
@@ -316,13 +309,13 @@ contractSuite("Identity Controller", engine => {
         identifier: "user1",
         password: "password1"
       });
-      identity1Id = res1.body._id;
+      identity1Id = idOf(res1.body).toString();
 
       const res2 = await req.post("/passport/identity", {
         identifier: "user2",
         password: "password2"
       });
-      identity2Id = res2.body._id;
+      identity2Id = idOf(res2.body).toString();
     });
 
     it("should delete an identity", async () => {
@@ -346,11 +339,7 @@ contractSuite("Identity Controller", engine => {
 
       const getRes = await req.get(`/passport/identity/${identity2Id}`);
       expect(getRes.statusCode).toEqual(200);
-      expect(getRes.body).toMatchObject({
-        _id: identity2Id,
-        identifier: "user2",
-        policies: []
-      });
+      expect(getRes.body).toMatchObject(withId({identifier: "user2", policies: []}, identity2Id));
     });
   });
 
@@ -363,7 +352,7 @@ contractSuite("Identity Controller", engine => {
         identifier: "user1",
         password: "password1"
       });
-      identityId = identityRes.body._id;
+      identityId = idOf(identityRes.body).toString();
 
       const policyRes = await req.post("/passport/policy", {
         name: "test_policy",
@@ -376,7 +365,7 @@ contractSuite("Identity Controller", engine => {
           }
         ]
       });
-      policyId = policyRes.body._id;
+      policyId = idOf(policyRes.body).toString();
     });
 
     it("should add a policy to an identity", async () => {
@@ -385,11 +374,9 @@ contractSuite("Identity Controller", engine => {
 
       const getRes = await req.get(`/passport/identity/${identityId}`);
       expect(getRes.statusCode).toEqual(200);
-      expect(getRes.body).toMatchObject({
-        _id: identityId,
-        identifier: "user1",
-        policies: [policyId]
-      });
+      expect(getRes.body).toMatchObject(
+        withId({identifier: "user1", policies: [policyId]}, identityId)
+      );
     });
 
     it("should not duplicate when adding same policy twice", async () => {
@@ -398,11 +385,9 @@ contractSuite("Identity Controller", engine => {
 
       const getRes = await req.get(`/passport/identity/${identityId}`);
       expect(getRes.statusCode).toEqual(200);
-      expect(getRes.body).toMatchObject({
-        _id: identityId,
-        identifier: "user1",
-        policies: [policyId]
-      });
+      expect(getRes.body).toMatchObject(
+        withId({identifier: "user1", policies: [policyId]}, identityId)
+      );
     });
 
     it("should remove a policy from an identity", async () => {
@@ -413,11 +398,7 @@ contractSuite("Identity Controller", engine => {
 
       const getRes = await req.get(`/passport/identity/${identityId}`);
       expect(getRes.statusCode).toEqual(200);
-      expect(getRes.body).toMatchObject({
-        _id: identityId,
-        identifier: "user1",
-        policies: []
-      });
+      expect(getRes.body).toMatchObject(withId({identifier: "user1", policies: []}, identityId));
     });
 
     it("should return 404 when adding policy to non-existing identity", async () => {

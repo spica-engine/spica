@@ -1,12 +1,13 @@
 import {Subject} from "rxjs";
 import {FunctionAssetWatcher} from "@spica-server/function/src/asset-watcher";
+import {withId, idOf} from "@spica-server/data";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 const makeFn = (id = "507f1f77bcf86cd799439011") =>
-  ({_id: {toHexString: () => id}, name: "my-function"}) as any;
+  withId({name: "my-function"}, {toHexString: () => id} as any) as any;
 
 const makeChange = (overrides: Record<string, unknown> = {}) => ({
   document: {
@@ -79,8 +80,8 @@ beforeEach(() => {
   mockDependents = {
     refreshPlan: jest.fn().mockImplementation(async fn => ({
       routing: [],
-      outdate: [fn._id.toHexString()],
-      reconcile: [fn._id.toHexString()]
+      outdate: [(idOf(fn) as any).toHexString()],
+      reconcile: [(idOf(fn) as any).toHexString()]
     }))
   };
 });
@@ -106,7 +107,7 @@ describe("FunctionAssetWatcher — happy path", () => {
     watcher.onModuleDestroy();
   });
 
-  it("should call functionService.findOne with the correct {_id: functionId} query", async () => {
+  it("should call functionService.findOne with the key of the function", async () => {
     const watcher = buildWatcher();
     watcher.onModuleInit();
 

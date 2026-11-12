@@ -2,7 +2,9 @@ import os from "os";
 import path from "path";
 import fs from "fs";
 import yaml from "yaml";
-import {bucketModule} from "@spica-server/sync";
+import {bucketModule, SYSTEM_KEY_FIELDS} from "@spica-server/sync";
+
+const SHAPES = Object.entries(SYSTEM_KEY_FIELDS);
 
 function makeTmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "spica-bucket-test-"));
@@ -65,11 +67,11 @@ describe("bucketModule.readLocal", () => {
   });
 });
 
-describe("bucketModule.readRemote", () => {
+describe.each(SHAPES)("bucketModule.readRemote (%s records)", (_shape, key) => {
   it("maps remote buckets to slugged resources using title", async () => {
     mockHttp.get.mockResolvedValue([
-      {_id: "id1", title: "Pages", properties: {}},
-      {_id: "id2", title: "Users", properties: {}}
+      {[key]: "id1", title: "Pages", properties: {}},
+      {[key]: "id2", title: "Users", properties: {}}
     ]);
 
     const result = await bucketModule.readRemote(mockHttp);
@@ -140,12 +142,12 @@ describe("bucketModule.deleteLocal", () => {
   });
 });
 
-describe("bucketModule.diffFields", () => {
-  it("returns changed field names excluding _id", () => {
-    const local = {title: "Pages", description: "old", _id: "local"} as any;
-    const remote = {title: "Pages", description: "new", _id: "remote"} as any;
+describe.each(SHAPES)("bucketModule.diffFields (%s records)", (_shape, key) => {
+  it("returns changed field names excluding key", () => {
+    const local = {title: "Pages", description: "old", [key]: "local"} as any;
+    const remote = {title: "Pages", description: "new", [key]: "remote"} as any;
     const changed = bucketModule.diffFields(local, remote);
     expect(changed).toContain("description");
-    expect(changed).not.toContain("_id");
+    expect(changed).not.toContain(key);
   });
 });

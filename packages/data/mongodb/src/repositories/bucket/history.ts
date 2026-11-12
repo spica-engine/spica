@@ -4,9 +4,10 @@ import {
   DatabaseService,
   DeleteResult,
   Filter,
-  InsertOneResult
+  InsertOneResult,
+  ObjectId
 } from "@spica-server/database";
-import {ids} from "@spica-server/data";
+import {ids, idOf, withId} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {diff, schemaDiff} from "@spica-server/core-differ";
 import {ChangePaths, ChangeKind} from "@spica-server/interface-core";
@@ -34,7 +35,7 @@ export class MongoHistoryRepository implements HistoryRepository {
               (lastPath[0] == "options" && lastPath[1] == "translate"))))
     );
     return Promise.all(
-      changes.map(change => this.deleteHistoryAtPath(currentSchema._id, change.path))
+      changes.map(change => this.deleteHistoryAtPath(idOf(currentSchema), change.path))
     );
   }
 
@@ -56,7 +57,7 @@ export class MongoHistoryRepository implements HistoryRepository {
   }
 
   getDocument(bucketId: Id, documentId: Id) {
-    return this.db.collection<BucketDocument>(`bucket_${bucketId}`).findOne({_id: documentId});
+    return this.db.collection<BucketDocument>(`bucket_${bucketId}`).findOne(withId({}, documentId));
   }
 
   findBetweenNow(bucketId: Id, documentId: Id, id: Id) {
@@ -136,7 +137,9 @@ export class MongoHistoryRepository implements HistoryRepository {
 
     return this.collection.insertOne({
       ...history,
-      _id: history._id == null ? historyIds().generate() : historyIds().parse(history._id)
+      _id: (idOf(history) == null
+        ? historyIds().generate()
+        : historyIds().parse(idOf(history))) as ObjectId
     });
   }
 

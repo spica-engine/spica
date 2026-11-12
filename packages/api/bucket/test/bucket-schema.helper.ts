@@ -1,6 +1,8 @@
 import {composeBucketSchema} from "@spica-server/bucket-common";
 import {OBJECT_ID, OBJECTID_STRING, UUID, DATE_TIME, Validator} from "@spica-server/core-schema";
+import {MongoIdTypes} from "@spica-server/data-mongodb";
 import {BucketSchemaExtension} from "@spica-server/interface-bucket";
+import {IdTypes} from "@spica-server/interface-data";
 import BaseSchema from "../src/schemas/bucket.schema.json" with {type: "json"};
 import OriginalSchema from "./fixtures/bucket.schema.original.json" with {type: "json"};
 
@@ -16,19 +18,20 @@ const CUSTOM_FIELDS = [
   "acl"
 ];
 
-function createValidator(extension?: BucketSchemaExtension) {
+function createValidator(extension?: BucketSchemaExtension, idTypes: IdTypes = new MongoIdTypes()) {
   return new Validator(
     {
       formats: [OBJECT_ID, OBJECTID_STRING, UUID, DATE_TIME],
       customFields: CUSTOM_FIELDS,
       keywords: extension?.keywords ?? []
     },
-    {}
+    {},
+    idTypes
   );
 }
 
-export function validatorFor(extension: BucketSchemaExtension) {
-  const validator = createValidator(extension);
+export function validatorFor(extension: BucketSchemaExtension, idTypes?: IdTypes) {
+  const validator = createValidator(extension, idTypes);
   validator.registerSchema(composeBucketSchema(BaseSchema, extension.schema) as {$id: string});
   return validator;
 }

@@ -12,7 +12,7 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {ARRAY, DATE, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
-import {ID, ids} from "@spica-server/data";
+import {ID, ids, systemKeyField} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id, ReadSpec} from "@spica-server/interface-data";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {
@@ -56,7 +56,7 @@ export class WebhookLogController {
     return this.queries.find(WEBHOOK_LOGS_COLLECTION, {
       createdBetween: hasRange ? {from: begin, to: end} : undefined,
       where,
-      sort: {_id: -1},
+      sort: {[systemKeyField()]: -1},
       skip,
       limit
     });

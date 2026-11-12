@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DuplicateKeyError, provideRepository} from "@spica-server/data";
+import {DuplicateKeyError, provideRepository, idOf} from "@spica-server/data";
 import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {DASHBOARD_REPOSITORY, DashboardRepository} from "@spica-server/interface-dashboard";
 import {ID_TYPES, IdType, IdTypes} from "@spica-server/interface-data";
@@ -52,7 +52,7 @@ contractSuite("system repositories", engine => {
       const updated_at = new Date("2024-01-01T00:00:00Z");
       const inserted = await envVars.insert({key: "A", value: "1", updated_at});
 
-      expect(await envVars.findById(inserted._id)).toMatchObject({
+      expect(await envVars.findById(idOf(inserted))).toMatchObject({
         key: "A",
         value: "1",
         updated_at
@@ -62,11 +62,11 @@ contractSuite("system repositories", engine => {
 
     it("reports duplicate keys as DuplicateKeyError", async () => {
       await envVars.insert({key: "A", value: "1"});
-      const {_id} = await envVars.insert({key: "B", value: "2"});
+      const id = idOf(await envVars.insert({key: "B", value: "2"}));
 
       const inserted = await envVars.insert({key: "A", value: "3"}).catch(e => e);
-      const replaced = await envVars.replaceById(_id, {key: "A", value: "3"}).catch(e => e);
-      const updated = await envVars.updateById(_id, {key: "A"}).catch(e => e);
+      const replaced = await envVars.replaceById(id, {key: "A", value: "3"}).catch(e => e);
+      const updated = await envVars.updateById(id, {key: "A"}).catch(e => e);
 
       for (const error of [inserted, replaced, updated]) {
         expect(error).toBeInstanceOf(DuplicateKeyError);
@@ -75,19 +75,19 @@ contractSuite("system repositories", engine => {
     });
 
     it("resolves to the env var as it is after a replacement or an update", async () => {
-      const {_id} = await envVars.insert({key: "A", value: "1"});
+      const id = idOf(await envVars.insert({key: "A", value: "1"}));
 
-      expect(await envVars.replaceById(_id, {key: "A", value: "2"})).toMatchObject({value: "2"});
-      expect(await envVars.updateById(_id, {value: "3"})).toMatchObject({key: "A", value: "3"});
+      expect(await envVars.replaceById(id, {key: "A", value: "2"})).toMatchObject({value: "2"});
+      expect(await envVars.updateById(id, {value: "3"})).toMatchObject({key: "A", value: "3"});
       expect(await envVars.replaceById(missingId(), {key: "Z", value: "1"})).toBeNull();
       expect(await envVars.updateById(missingId(), {value: "1"})).toBeNull();
     });
 
     it("deletes an env var and resolves to it", async () => {
-      const {_id} = await envVars.insert({key: "A", value: "1"});
+      const id = idOf(await envVars.insert({key: "A", value: "1"}));
 
-      expect(await envVars.deleteById(_id)).toMatchObject({key: "A"});
-      expect(await envVars.deleteById(_id)).toBeNull();
+      expect(await envVars.deleteById(id)).toMatchObject({key: "A"});
+      expect(await envVars.deleteById(id)).toBeNull();
     });
   });
 
@@ -97,16 +97,19 @@ contractSuite("system repositories", engine => {
     it("inserts a secret and finds it by id", async () => {
       const inserted = await secrets.insert({key: "S", value: encrypted("x")});
 
-      expect(await secrets.findById(inserted._id)).toMatchObject({key: "S", value: encrypted("x")});
+      expect(await secrets.findById(idOf(inserted))).toMatchObject({
+        key: "S",
+        value: encrypted("x")
+      });
       expect(await secrets.findById(missingId())).toBeNull();
     });
 
     it("reports duplicate keys as DuplicateKeyError", async () => {
       await secrets.insert({key: "S", value: encrypted("x")});
-      const {_id} = await secrets.insert({key: "T", value: encrypted("y")});
+      const id = idOf(await secrets.insert({key: "T", value: encrypted("y")}));
 
       const inserted = await secrets.insert({key: "S", value: encrypted("z")}).catch(e => e);
-      const updated = await secrets.updateById(_id, {key: "S"}).catch(e => e);
+      const updated = await secrets.updateById(id, {key: "S"}).catch(e => e);
 
       for (const error of [inserted, updated]) {
         expect(error).toBeInstanceOf(DuplicateKeyError);
@@ -115,24 +118,24 @@ contractSuite("system repositories", engine => {
     });
 
     it("resolves to the secret as it was before a replacement or an update", async () => {
-      const {_id} = await secrets.insert({key: "S", value: encrypted("one")});
+      const id = idOf(await secrets.insert({key: "S", value: encrypted("one")}));
 
-      expect(await secrets.replaceById(_id, {key: "S", value: encrypted("two")})).toMatchObject({
+      expect(await secrets.replaceById(id, {key: "S", value: encrypted("two")})).toMatchObject({
         value: encrypted("one")
       });
-      expect(await secrets.updateById(_id, {value: encrypted("three")})).toMatchObject({
+      expect(await secrets.updateById(id, {value: encrypted("three")})).toMatchObject({
         value: encrypted("two")
       });
-      expect((await secrets.findById(_id)).value).toEqual(encrypted("three"));
+      expect((await secrets.findById(id)).value).toEqual(encrypted("three"));
       expect(await secrets.replaceById(missingId(), {key: "Z", value: encrypted("x")})).toBeNull();
       expect(await secrets.updateById(missingId(), {key: "Z"})).toBeNull();
     });
 
     it("deletes a secret and resolves to it", async () => {
-      const {_id} = await secrets.insert({key: "S", value: encrypted("x")});
+      const id = idOf(await secrets.insert({key: "S", value: encrypted("x")}));
 
-      expect(await secrets.deleteById(_id)).toMatchObject({key: "S"});
-      expect(await secrets.deleteById(_id)).toBeNull();
+      expect(await secrets.deleteById(id)).toMatchObject({key: "S"});
+      expect(await secrets.deleteById(id)).toBeNull();
     });
   });
 
@@ -147,15 +150,15 @@ contractSuite("system repositories", engine => {
       const first = await dashboards.insert(dashboard("a"));
       await dashboards.insert(dashboard("b"));
 
-      expect(await dashboards.findById(first._id)).toMatchObject(dashboard("a"));
+      expect(await dashboards.findById(idOf(first))).toMatchObject(dashboard("a"));
       expect((await dashboards.findAll()).map(d => d.name)).toEqual(["a", "b"]);
       expect(await dashboards.findById(missingId())).toBeNull();
     });
 
     it("replaces a dashboard and resolves to the replaced one", async () => {
-      const {_id} = await dashboards.insert(dashboard("a"));
+      const id = idOf(await dashboards.insert(dashboard("a")));
 
-      expect(await dashboards.replaceById(_id, {...dashboard("b"), components: []})).toMatchObject({
+      expect(await dashboards.replaceById(id, {...dashboard("b"), components: []})).toMatchObject({
         name: "b",
         components: []
       });
@@ -163,10 +166,10 @@ contractSuite("system repositories", engine => {
     });
 
     it("deletes a dashboard and resolves to it", async () => {
-      const {_id} = await dashboards.insert(dashboard("a"));
+      const id = idOf(await dashboards.insert(dashboard("a")));
 
-      expect(await dashboards.deleteById(_id)).toMatchObject({name: "a"});
-      expect(await dashboards.deleteById(_id)).toBeNull();
+      expect(await dashboards.deleteById(id)).toMatchObject({name: "a"});
+      expect(await dashboards.deleteById(id)).toBeNull();
     });
   });
 

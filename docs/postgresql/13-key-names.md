@@ -1,0 +1,159 @@
+# Part 13: Key names
+
+## How to use this document
+
+- Plan and implement only this part. Read the code on master and the "As built" sections of the parts under "Depends on".
+- Follow the PR breakdown. Each PR is either a behaviour-neutral refactor or new engine code, never both.
+- Existing MongoDB suites stay green and unchanged in behaviour in every PR.
+- After the last PR, fill in "As built" and update the README's "Key name in responses" row if anything differs.
+
+## Purpose
+
+The system should run without knowing which engine is under it. Key names are one of the last places where it does not. The primary key of a record is `_id` on MongoDB and `id` on PostgreSQL, and today the services, interfaces, schemas and tests hard-code `_id`. On PostgreSQL the ORM maps the `id` column back to a property called `_id` so that code keeps working, which means a PostgreSQL user sees `_id` holding a UUID v7. This part removes the hard-coding. After it, MongoDB records and responses carry `_id` and PostgreSQL ones carry `id`, with no rename anywhere in between.
+
+## Rules that apply
+
+- Two kinds of collection, two resolvers:
+  - **System collections** (buckets, activity, API keys, identities, and every collection known before runtime). Key name and type are fixed per engine. The name is a boot-time constant: `ids().systemKeyField()`.
+  - **Bucket data collections.** The key is chosen by the bucket's owner on PostgreSQL and is `_id` on MongoDB. Already resolved by `ids().keyField(bucket)` and the `documentKey` helpers in `bucket-common`.
+- No code outside the MongoDB adapter writes the literal `_id`, in implementations, interfaces, schemas, responses or tests. Code that must name a key calls a resolver or a helper.
+- The backend defines the contract. Clients (panel, devkit packages, sync) follow it.
+- No conversion layer. Records are engine-native from the storage up to the response.
+- PostgreSQL has no existing installs, so nothing is migrated. MongoDB data and behaviour are untouched.
+- Moving data between engines is out of scope.
+
+## Depends on
+
+- **Part 3 (merged):** system entities and the ORM (`idProperty`).
+- **Part 5 (merged):** bucket primary key metadata.
+- **Part 8a (merged):** controller writes return the stored record.
+- **Part 9 (merged):** `keyField` and `documentKey` for bucket data.
+- **Part 10 (merged):** neutral `ChangeEvent` with `key`.
+
+## Provides
+
+| Contract                         | What it gives                                                                                              |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `ids().systemKeyField()`         | `"_id"` on MongoDB, `"id"` on PostgreSQL.                                                                  |
+| `Keyed<T>`, `idOf`, `withId`, `assignId`, `stripId`, `omitId` | Typed access to a record's key, so no code spells the property name. `withId` and `omitId` return copies; `assignId` and `stripId` change the record in place. |
+| `scripts/check-key-names.mjs`    | A ratchet that counts `_id` literals outside the MongoDB adapter and fails when a file's count grows.     |
+| Devkit `idOf(record)`            | Exported by the REST-based devkit packages (`auth`, `identity`, `storage`). Their record types no longer declare the key; this helper reads it.   |
+| Test helpers                     | `idOf`, `withId` and `systemKeyField()` usable from specs, so one spec runs on both engines.               |
+
+## Not this part
+
+- The admin panel. Its follow-up is listed under "Requests to other parts".
+- **`@spica-devkit/database` and `@spica-devkit/testing`.** They are not changed. `database` hands out a MongoDB client and has nothing to do with the REST record types; its `_id` uses are MongoDB's own and are allowlisted in the ratchet. `testing` is allowlisted the same way unless it turns out to read system records.
+- **A PostgreSQL database package.** Whether Part 11 writes one is undecided, and nothing here depends on it. Function code on PostgreSQL can use a PostgreSQL driver directly.
+- Bucket data primary keys. They are done; only the leftovers in "Bucket data leftovers" are here.
+- Anything inside `packages/data/mongodb`, which keeps `_id` because that is MongoDB's name.
+
+## Today (before this part)
+
+- System entities in `packages/data/postgresql/src/entities` all set `idProperty: "_id"`. The ORM default is `id`, so the override is what makes PostgreSQL records carry `_id`. One nested copy exists too: `users.signUpStrategy` embeds `_id` over a column named `id`.
+- Outside tests, outside the MongoDB adapter and outside the panel there are about 450 uses in `packages/api`, `sync`, `database`, `core` and `filter`, and about 28 more in the REST-based devkit packages (`auth` 6, `identity` 4, `storage` 1, `bucket` 17):
+  - about 265 property reads (`identity._id`),
+  - about 130 interface and type declarations (`_id?: Id`),
+  - about 120 object literals that build or match a record,
+  - about 20 string literals (`uniqueField: "_id"` in assets and the differ, `IGNORED_FIELDS` in sync, `key == "_id"` in the filter validator and the bucket expression functions),
+  - eight system JSON schemas that declare `_id`.
+- Another 2,463 uses are in specs.
+- `packages/database` (`pipeline/resource-filter.ts`, `realtime/stream.ts`, `collection.ts`) builds MongoDB queries and change stream reads. Each use has to be classified as MongoDB-only (allowlisted) or reachable from engine-agnostic code (moved behind the adapter, as Part 0 planned for `resourceFilterFunction`).
+- Bucket data leftovers named by Parts 9 and 10: GraphQL (names every document by `_id` and the `ObjectId` scalar), the realtime gateway's wire format, rule expressions that use `document._id`, and `bucket/services/src/schema.ts`, which branches on `keyField == "_id"`.
+
+## Target architecture
+
+### Components
+
+| Component              | Responsibility                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `IdTypes.systemKeyField()` | Added to the `IdTypes` contract next to `keyField`. Each adapter answers with its own name.                         |
+| Record helpers         | In `@spica-server/data`: `idOf`, `withId`, `assignId`, `stripId`, `omitId`. Only these read the property by computed name. |
+| `Keyed<T>`             | Marks a record that carries its key. Interfaces such as `Identity` stop declaring `_id`; the brand is optional, so repositories keep returning the plain interface. |
+| Schema hook            | The eight system schemas declare the key as `$systemKey`. `Validator` swaps it for `ids().systemKeyField()` when a schema is registered, validated or given as an option, and refuses a schema that names it when no id types are available. |
+| Persisted field names  | Asset and differ `uniqueField`, sync `IGNORED_FIELDS`, the filter validator and the expression functions read the name from the resolver. |
+| Devkit record types    | Published types are fixed per release, not per instance, so they cannot name the key. In `auth`, `identity` and `storage`, `_id` becomes optional and `@deprecated`, pointing to `idOf`; it is `undefined` on PostgreSQL. It is removed in a later major version. Each package exports `idOf(record)`, which returns `_id` when the record has one and `id` otherwise; that is safe for system records because a record has exactly one of the two. Bucket documents keep using the bucket's `primary`. |
+| Ratchet                | A script that fails on any `_id` literal outside an allowlist of the MongoDB adapter, MongoDB-only packages and `mongoOnly` specs. It started with a per-file baseline that only went down; the baseline reached zero and was deleted. |
+
+### The two-phase flip
+
+PostgreSQL keeps reporting `_id` from `systemKeyField()` until the last refactor merges. That makes every refactor PR behaviour-neutral on both engines. One small PR then changes the answer to `id` and drops the ORM overrides. If the flip came per domain, a consumer in another domain (the action guard reading policies, the activity interceptor) would see a half-converted world.
+
+### Typing
+
+TypeScript cannot name a property from a runtime value, so `idOf`, `withId`, `assignId`, `stripId` and `omitId` are the only places that index a record by `systemKeyField()`, and the record interfaces stop declaring `_id`. `Keyed<T>` is `T` plus an optional brand. The first design made the brand required, so that a payload without a key could not reach `idOf`. It was dropped in PR 4a: every repository of both adapters would have had to cast its results to return a branded record, and the PostgreSQL ORM would have had to depend on `interface-data`. The check it gave (`idOf` on a payload with no key) is the same one `_id?: Id` never gave, so nothing is lost. Helpers that change a record in place (`assignId`, `stripId`) exist because asset installation and several controllers rely on the mutation: the asset operators work on copies that are stored afterwards.
+
+### Wire
+
+- MongoDB responses are byte-identical to today.
+- PostgreSQL system responses carry `id`. Bucket documents keep the bucket's own key.
+- `GET /status/engine` does not change. A client reads a record's key from the record itself. A client that has to name the key before it has a record (a sort, a filter) already knows the engine, which it needs for the filter language, and maps `mongodb` to `_id` and `postgresql` to `id`, the same way it maps the engine to a filter language.
+
+## PR breakdown
+
+Each PR runs on both engines in CI. Specs of a domain are moved to the test helpers in the same PR as the domain's code, and classified as `contractSuite` or `mongoOnly` as the README requires.
+
+| #  | PR                                  | Content                                                                                                                                                                      |
+| -- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1  | **Foundation** (new code)           | `systemKeyField()` on both adapters (PostgreSQL still `_id`), `Keyed`, `idOf`, `withId`, `omitId`, test helpers, the ratchet with its baseline and CI step. Type spike on passport. |
+| 2  | **Codemod**                         | `yarn codemod:key-names --project=<tsconfig>... --only=<path>/ [--any-is-system=<path>/] [--write]`, built on the TypeScript compiler API. It rewrites `x._id` to `idOf(x)` and a literal typed as a system record to `withId(...)` (several passes, so nested uses work) when the declared type comes from `packages/interface`, and lists the rest for manual edits: deletes, assignments, destructuring, strings, untyped receivers, literals without a system record type. `--any-is-system` treats untyped receivers under a path as system records. It is a dry run unless `--write` is given. |
+| 3  | **Shared code** (refactor)          | The eight system schemas (asset, function, API key, policy, dashboard, bucket, secret, env var) declare the key as `$systemKey`, and `Validator` names it from the engine's id types; the asset strategies and the differ's required `uniqueField` take the key from `systemKeyField()`; `packages/filter` (the MongoDB filter language) joins the ratchet's exemptions. The `interface/*` record types move with their domain in PRs 4a to 4e, because changing one forces every consumer of it to change in the same PR. |
+| 4a | **Passport** (refactor)             | Identity, user, policy, API key, strategy, refresh token, verification, including nested `signUpStrategy`. The built-in policies lose their `_id` line and become a registry keyed by name; `PolicyService` adds the key when it first reads them, because the files are evaluated before the data layer is bound. |
+| 4b | **Function** (refactor)             | Function, webhook, logs, enqueuer, trigger payloads and the asset reconciler. `StoredFunction` and the inline `Function & {_id: Id}` become `Keyed<Function>`; the sort defaults of the webhook and log lists use a `DEFAULT` factory so the key is read per request; `JobMeta` and the in-process change event's `documentKey` become keyed types, so the replication and env var domains read them through `idOf` in 4d. |
+| 4c | **Bucket system side** (refactor)   | Bucket records, history, activity resource builders, hooks, `bucket/services/src/schema.ts`. `Bucket` and `History` stop declaring `_id`, which also moves every read of a bucket's own id in the GraphQL, realtime and expression code, and in the MongoDB and PostgreSQL adapters. Bucket documents stay for PR 5: `BucketDocument`, the data activity helper and the document reads and filters. |
+| 4d | **Other system domains** (refactor) | Storage, secret, env var, dashboard, preference, status, replication, activity, asset. `Resource` (the asset resource), `ResourceLister`'s items and the stored `Asset` are keyed types, so asset resources carry the key under `systemKeyField()` like the records they describe; sort defaults and the activity list sort read the key per request; the change events of env var, secret and preference are built with `withId`. The PostgreSQL contract specs of the earlier domains still read `_id` off typed records; they are converted with the adapters in PR 6b. |
+| 4e | **Sync and representative** (refactor) | `packages/sync` and `apps/cli` have no data layer, so they cannot call `idOf`. `packages/sync/src/record-key.ts` is the one place that names both keys: `recordKey` reads whichever of `_id` and `id` a record carries, `KEY_FIELDS` is what update detection ignores, and `fetchSystemKeyField` asks `GET /status/engine` where a key has to be named before any record exists (`asset apply`, which also accepts UUID resource folders). The CLI's document-level `_id` (bucket data, the generated ORM) stays for PR 5. The file and its spec are exempt from the ratchet. |
+| 4f | **Devkit** (refactor)               | `_id` is optional and `@deprecated` in the `auth`, `identity` and `storage` record types and in the `bucket` package's `Bucket` definition type. `@spica-devkit/internal_common` has one `idOf`, which `auth`, `identity` and `storage` re-export (the bundled declaration inlines it). `auth` and `identity` read the key through it. Not breaking: existing function code still compiles. The bucket package's documents and realtime operators (`document._id`, the `{_id: {$in}}` relation filter) are bucket data and stay for PR 5: they need the bucket's own key and a filter in the engine's language, which `README.md` says this package does not get. `database` and `testing` are untouched. |
+| 5  | **Bucket data leftovers**           | The realtime gateway reads and writes a document's key with `documentKey` and `withDocumentKey` (including the cascade delete of dependents, which resolves the target bucket first); the data activity builder takes the inserted key from `req.documentKey`, which every insert path sets; `BucketDocument` stops declaring `_id`; the server-side representative keys its resource with `withId`. Kept literal because they are MongoDB-shaped and join the ratchet's exemptions: GraphQL (its generator has no PostgreSQL property types and its spec is `mongoOnly`), the rule converters `convert.ts` and `builtin_funcs.ts` (they render MongoDB filters), the devkit bucket package's documents and realtime operators and the CLI's generated ORM (both sit on the MongoDB client the README keeps as is), `project start` (the replica set config), and the deprecated `_id?` declarations of the `auth`, `identity` and `storage` devkit types. |
+| 6  | **Database package triage**         | `packages/database` (the MongoDB wrapper: collections, pipelines, the change stream emitter, the testing helpers) and `packages/interface/database` are MongoDB-only. Nothing outside the MongoDB adapter and the two rule converters imports them (`check:data-boundary` enforces it), so their `_id` is MongoDB's own and the packages join the ratchet's permanent exemptions. Nothing moves behind the adapter. |
+| 6b | **Adapter specs** (refactor)         | The PostgreSQL adapter specs read a record's key through `idOf`, build jobs and assets with `withId`, and name the key in query `fields`, `sort` and projections with `systemKeyField()` (about 80 sites). The MongoDB adapter is exempt, so its specs keep `_id`. What stays for PR 7 because it is a decision and not a rename: the principal's key in the rule engine (`auth._id` in rule text and `{_id: ...}` auth objects in the rule compiler and realtime specs), bucket document fixtures, and the specs that assert the bridge itself. |
+| 7  | **Flip**                            | `PostgresIdTypes.systemKeyField()` answers `id`; the entities lose their `idProperty: "_id"` overrides (the ORM default is `id`) and `signUpStrategy` embeds `id`; the repositories order, select and delete by `id`; the record types of the adapter carry `id`. Nothing is converted on the way out, so a PostgreSQL response carries `id` and a MongoDB response `_id`. The rule engine reads `auth` as an object, so a PostgreSQL rule writes `auth.id` and a MongoDB rule `auth._id`, with no alias (a spec pins that `auth._id` finds nothing on PostgreSQL). PostgreSQL has no installs and MongoDB moving to `id` is a separate, later decision. |
+| 8  | **Close**                           | Ratchet `--strict` over the whole tree, README and part documents updated, the bridge in step 1 removed.                                                                      |
+
+## Requests to other parts
+
+- **Part 12 (panel):** `useKeyField()` without a bucket id maps `useEngine()` to `_id` or `id`. Drop the "system records keep `_id`" rule. Included for reference only; the backend does not wait for it.
+- **Part 11 (devkit):** nothing is requested. The REST-based packages (`auth`, `identity`, `storage`, `bucket`) are changed here, in PR 4f.
+
+## Risks and open items
+
+- **The `Keyed` brand.** Decided by the spike in PR 1.
+- **Devkit types keep a deprecated `_id`.** Dropping it would fail the build (422) of every TypeScript function that reads `identity._id`, the next time it is saved. The cost of keeping it is that the types still name `_id` on PostgreSQL, where it is `undefined`. PostgreSQL has no existing installs, so no old code depends on it, and the deprecation points new code to `idOf`. Removing `_id` is a later major version.
+- **Cross-domain readers.** The action guard, activity interceptor and realtime code read other domains' records. Covered by the two-phase flip.
+- **Stored JSON that mentions a key.** `histories.changes`, `dashboards.components`, `functions.triggers` and `assets` are JSONB. Audit them for key names that were written by the system rather than by a user, in PR 7.
+- **Event payloads.** Change events delivered to user functions and webhooks must keep their documented shape (Part 10). Check that none of them copies a system record's key under a fixed name.
+- **Mongo-only specs.** Specs that write to MongoDB collections directly keep `_id`; they declare `mongoOnly(...)`, and the script skips any file that does.
+- **Clients that still assume `_id` on PostgreSQL.** The admin panel (system lists sort and filter by `_id`, the rule editor offers `auth._id` and `document._id`), `@spica-devkit/bucket` documents and the CLI's generated ORM are MongoDB-shaped. A PostgreSQL instance now answers `id` for system records, so the panel needs `useKeyField()` without a bucket id to map the engine to the key and the rule editor to offer `auth.id`. The plan lists the panel under "Requests to other parts".
+- **Docs drift.** The README says PostgreSQL responses use `id`, but the code does not yet. PR 8 makes the docs true.
+
+## As built
+
+Merged as #2208 to #2221 (PRs 1 to 7, 6b) and this PR. A system record is keyed `_id` on MongoDB and `id` on PostgreSQL from storage to response, and no code outside the MongoDB adapter, the MongoDB wrapper and the exempt MongoDB-shaped code names the key. `yarn check:key-names` fails when any file outside the exemptions below names the key literally, source and specs alike. There is no baseline.
+
+**What exists**
+- `ids().systemKeyField()` (`_id` or `id`), and in `@spica-server/data`: `idOf`, `withId`, `assignId`, `stripId`, `omitId`, `systemKeyField`. `Keyed<T>` is `T` plus an optional brand.
+- The eight system JSON schemas declare the key as `$systemKey`; `Validator` swaps it for `systemKeyField()` of the id types it is given and refuses a schema that names it when none are available.
+- `yarn codemod:key-names` (TypeScript compiler API): `x._id` to `idOf(x)`, typed literals to `withId`, `delete`/assignment statements to `stripId`/`assignId`, and with `--any-is-system` untyped receivers and literals under a path. It recognises a system record by where its `_id` is declared, so it runs before the interface type is edited.
+- `packages/sync/src/record-key.ts` for clients without a data layer (`recordKey`, `KEY_FIELDS`, `fetchSystemKeyField` over `GET /status/engine`), used by the sync modules and the CLI; `idOf` in `@spica-devkit/internal_common`, re-exported by `auth`, `identity` and `storage`.
+- Rules name the principal's key as the engine does: `auth.id` on PostgreSQL, `auth._id` on MongoDB, with no alias.
+
+**Where it differs from the plan**
+- The `Keyed` brand is optional (PR 4a): a required one made every repository of both adapters cast.
+- The `interface/*` types did not move in one PR; each moved with its domain (4a to 4e). `assignId` and `stripId` were added because the asset operators change copies that are stored afterwards.
+- PostgreSQL system collections answered `_id` until PR 7, so every refactor PR was behaviour-neutral on both engines.
+- The built-in policies became a registry keyed by name that `PolicyService` keys on first read, because the files load before the data layer is bound.
+- `PUT /passport/policy/:id` let a body id override the URL id the action guard had checked. Fixed on `master` in #2212 and in the stack.
+- PR 6 found nothing to move behind the adapter: `packages/database` is the MongoDB wrapper. PR 6b converted the PostgreSQL adapter specs.
+
+**Kept literal on purpose (exempt from the ratchet)**
+- The MongoDB adapter, `packages/database`, `packages/interface/database`, `packages/filter` (the MongoDB filter language), and the MongoDB-shaped `devkit/database`, `devkit/testing`, migrations, the panel and the replica set controller.
+- GraphQL (`packages/api/bucket/graphql`: no PostgreSQL property types, `mongoOnly` spec), the rule converters `convert.ts` and `builtin_funcs.ts` (they render MongoDB filters), `@spica-devkit/bucket` documents and realtime operators, the CLI's generated ORM and `project start`, the realtime document types of `interface/function/packages`.
+- Files that name both keys by definition: `sync/record-key.ts`, `internal_common/key.ts`, the devkit `idOf` specs, the deprecated `_id?` declarations of the `auth`, `identity` and `storage` devkit types, and the PostgreSQL reserved property name pattern.
+- About 495 `_id` literals remain in specs, mostly MongoDB-shaped fixtures (CLI and sync specs, bucket document fixtures, `mongoOnly` specs) and `keyField` helpers that already choose by engine.
+- `packages/sync/src/record-key.ts`, the devkit `id` helpers and their specs, which exist to name both keys. Specs elsewhere run over both shapes (`SYSTEM_KEY_FIELDS`, `KEY_FIELDS`) or take the name from `keyFieldOf`/`ENGINE_KEY_FIELDS` in `@spica-server/database-testing`.
+
+**Still open**
+- The admin panel: on PostgreSQL its system lists sort and filter by `_id` and its rule editor offers `auth._id`. It needs `useKeyField()` without a bucket id to map the engine to the key (Part 12).
+- GraphQL, the devkit bucket documents and the CLI's generated ORM on PostgreSQL. GraphQL needs PostgreSQL property types; the other two sit on the MongoDB client the README keeps as is.
+- Moving MongoDB from `_id` to `id` is a separate decision, as is a script that moves an instance between engines.
+- The MailHog specs of `api/passport/user` and the MongoDB halves of every contract suite run on CI only.

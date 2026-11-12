@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {contractSuite} from "@spica-server/database-testing";
 import {JobReducer} from "@spica-server/replication";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, withId} from "@spica-server/data";
 import {
   JOB_REPOSITORY,
   JobRepository,
@@ -28,7 +28,7 @@ contractSuite("Job reducer", engine => {
     reducer = module.get(JobReducer);
 
     job.mockReset();
-    meta = {_id: "1", user: "user66", age: 2, type: "insert"};
+    meta = withId({user: "user66", age: 2, type: "insert"}, "1");
   });
 
   it("should reduce jobs if they are identical", async () => {
@@ -38,7 +38,7 @@ contractSuite("Job reducer", engine => {
   });
 
   it("should not reduce jobs if they are not identical", async () => {
-    await Promise.all([reducer.do(meta, job), reducer.do({...meta, _id: "2"}, job)]);
+    await Promise.all([reducer.do(meta, job), reducer.do(withId({...meta}, "2"), job)]);
 
     expect(job).toHaveBeenCalledTimes(2);
   });

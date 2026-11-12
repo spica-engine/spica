@@ -1,4 +1,5 @@
 import * as expression from "@spica-server/bucket-expression";
+import {assignId, idOf} from "@spica-server/data";
 
 export function applyFieldLevelAcl(
   document: any,
@@ -27,8 +28,8 @@ export function applyFieldLevelAcl(
 }
 
 export function authIdToString(req: any) {
-  if (req.user && req.user._id) {
-    req.user._id = req.user._id.toString();
+  if (req.user && idOf(req.user)) {
+    assignId(req.user, idOf(req.user).toString());
   }
   return req;
 }

@@ -6,7 +6,7 @@ import {ids} from "@spica-server/data";
 const logger = new Logger("BucketSchema");
 
 function addIdField(bucket) {
-  bucket.properties._id = {
+  bucket.properties[ids().keyField(bucket)] = {
     type: "objectid"
   };
   return bucket;
@@ -140,7 +140,8 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
     return schema;
   }
 
-  if (ids().keyField(bucket) == "_id") {
+  const keyField = ids().keyField(bucket);
+  if (keyField && !(keyField in bucket.properties)) {
     bucket = addIdField(bucket);
   }
 

@@ -7,6 +7,7 @@ import {
   StatusOptions,
   StatusRepository
 } from "@spica-server/interface-status";
+import {withId} from "@spica-server/data";
 
 @Injectable()
 export class MongoStatusRepository
@@ -44,10 +45,7 @@ export class MongoStatusRepository
               "request.size": status.request.size,
               "response.size": status.response.size
             },
-            $setOnInsert: {
-              _id: currentMinuteObjectId,
-              created_at: new Date()
-            }
+            $setOnInsert: withId({created_at: new Date()}, currentMinuteObjectId)
           },
           {upsert: true}
         );

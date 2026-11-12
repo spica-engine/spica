@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import pg from "pg";
-import {DuplicateKeyError, provideRepository} from "@spica-server/data";
+import {DuplicateKeyError, provideRepository, idOf, withId} from "@spica-server/data";
 import {contractSuite, DatabaseService} from "@spica-server/database-testing";
 import {ID_TYPES, IdType, IdTypes, PG_POOL} from "@spica-server/interface-data";
 import {STRATEGY_REPOSITORY, StrategyRepository} from "@spica-server/interface-passport";
@@ -144,22 +144,22 @@ contractSuite("passport repositories", engine => {
     it("inserts and finds an identity by id and identifier", async () => {
       const inserted = await identities.insert(identity("spica"));
 
-      expect(inserted._id).toBeDefined();
-      expect(await identities.findById(inserted._id)).toMatchObject({
+      expect(idOf(inserted)).toBeDefined();
+      expect(await identities.findById(idOf(inserted))).toMatchObject({
         identifier: "spica",
         password: "hashed",
         policies: [],
         lastPasswords: ["old"]
       });
-      expect(String((await identities.findByIdentifier("spica"))._id)).toBe(String(inserted._id));
+      expect(String(idOf(await identities.findByIdentifier("spica")))).toBe(String(idOf(inserted)));
       expect(await identities.findByIdentifier("nobody")).toBeNull();
       expect(await identities.findById(missingId())).toBeNull();
     });
 
     it("hides the requested fields of findById", async () => {
-      const {_id} = await identities.insert(identity("spica"));
+      const id = idOf(await identities.insert(identity("spica")));
 
-      const found = await identities.findById(_id, {password: 0, lastPasswords: 0});
+      const found = await identities.findById(id, {password: 0, lastPasswords: 0});
 
       expect(found.identifier).toBe("spica");
       expect(found).not.toHaveProperty("password");
@@ -167,14 +167,14 @@ contractSuite("passport repositories", engine => {
     });
 
     it("hides dotted fields of findById", async () => {
-      const {_id} = await identities.insert(identity("spica"));
-      await identities.setAuthFactor(_id, {
+      const id = idOf(await identities.insert(identity("spica")));
+      await identities.setAuthFactor(id, {
         type: "totp",
         config: {},
         secret: "s3cret"
       } as any);
 
-      const found = await identities.findById(_id, {"authFactor.secret": 0});
+      const found = await identities.findById(id, {"authFactor.secret": 0});
 
       expect(found.authFactor).toMatchObject({type: "totp"});
       expect(found.authFactor).not.toHaveProperty("secret");
@@ -197,9 +197,9 @@ contractSuite("passport repositories", engine => {
     });
 
     it("updates an identity and resolves to the updated one", async () => {
-      const {_id} = await identities.insert(identity("spica"));
+      const id = idOf(await identities.insert(identity("spica")));
 
-      const updated = await identities.updateById(_id, {deactivateJwtsBefore: 1700000000123});
+      const updated = await identities.updateById(id, {deactivateJwtsBefore: 1700000000123});
 
       expect(updated).toMatchObject({identifier: "spica", deactivateJwtsBefore: 1700000000123});
       expect(await identities.updateById(missingId(), {password: "x"})).toBeNull();
@@ -207,44 +207,44 @@ contractSuite("passport repositories", engine => {
 
     it("reports duplicate identifiers raised by updates", async () => {
       await identities.insert(identity("a"));
-      const {_id} = await identities.insert(identity("b"));
+      const id = idOf(await identities.insert(identity("b")));
 
-      const error = await identities.updateById(_id, {identifier: "a"}).catch(e => e);
+      const error = await identities.updateById(id, {identifier: "a"}).catch(e => e);
 
       expect(error).toBeInstanceOf(DuplicateKeyError);
     });
 
     it("stores the login state", async () => {
-      const {_id} = await identities.insert(identity("spica"));
+      const id = idOf(await identities.insert(identity("spica")));
       const failedAttempts = [new Date("2024-01-01T00:00:00Z"), new Date("2024-01-02T00:00:00Z")];
       const lastLogin = new Date("2024-02-01T00:00:00Z");
 
       await identities.updateLoginState("spica", {failedAttempts, lastLogin});
 
-      expect(await identities.findById(_id)).toMatchObject({failedAttempts, lastLogin});
+      expect(await identities.findById(id)).toMatchObject({failedAttempts, lastLogin});
     });
 
     it("sets an auth factor and resolves to the identity as it was when removing it", async () => {
-      const {_id} = await identities.insert(identity("spica"));
+      const id = idOf(await identities.insert(identity("spica")));
       const authFactor = {type: "totp", config: {issuer: "spica"}, secret: "s3cret"} as any;
 
-      await identities.setAuthFactor(_id, authFactor);
+      await identities.setAuthFactor(id, authFactor);
       expect((await identities.findWithAuthFactor()).map(i => i.identifier)).toEqual(["spica"]);
 
-      const before = await identities.removeAuthFactor(_id);
+      const before = await identities.removeAuthFactor(id);
 
       expect(before.authFactor).toEqual(authFactor);
-      expect((await identities.findById(_id)).authFactor).toBeUndefined();
+      expect((await identities.findById(id)).authFactor).toBeUndefined();
       expect(await identities.findWithAuthFactor()).toEqual([]);
       expect(await identities.removeAuthFactor(missingId())).toBeNull();
     });
 
     it("adds and removes policies without duplicating them or exposing passwords", async () => {
-      const {_id} = await identities.insert(identity("spica", ["p1"]));
+      const id = idOf(await identities.insert(identity("spica", ["p1"])));
 
-      const added = await identities.addPolicy(_id, "p2");
-      const addedAgain = await identities.addPolicy(_id, "p2");
-      const removed = await identities.removePolicy(_id, "p1");
+      const added = await identities.addPolicy(id, "p2");
+      const addedAgain = await identities.addPolicy(id, "p2");
+      const removed = await identities.removePolicy(id, "p1");
 
       expect(added.policies).toEqual(["p1", "p2"]);
       expect(addedAgain.policies).toEqual(["p1", "p2"]);
@@ -274,11 +274,11 @@ contractSuite("passport repositories", engine => {
     });
 
     it("deletes an identity and counts the deletion", async () => {
-      const {_id} = await identities.insert(identity("spica"));
+      const id = idOf(await identities.insert(identity("spica")));
 
-      expect(await identities.deleteById(_id)).toBe(1);
-      expect(await identities.deleteById(_id)).toBe(0);
-      expect(await identities.findById(_id)).toBeNull();
+      expect(await identities.deleteById(id)).toBe(1);
+      expect(await identities.deleteById(id)).toBe(0);
+      expect(await identities.findById(id)).toBeNull();
     });
 
     it("reports its status and refuses inserts beyond the entry limit", async () => {
@@ -300,11 +300,11 @@ contractSuite("passport repositories", engine => {
     it("inserts and finds a user by id and username", async () => {
       const inserted = await users.insert(user("alice", {attributes: {color: "red"}}));
 
-      expect(await users.findById(inserted._id)).toMatchObject({
+      expect(await users.findById(idOf(inserted))).toMatchObject({
         username: "alice",
         attributes: {color: "red"}
       });
-      expect(String((await users.findByUsername("alice"))._id)).toBe(String(inserted._id));
+      expect(String(idOf(await users.findByUsername("alice")))).toBe(String(idOf(inserted)));
       expect(await users.findByUsername("nobody")).toBeNull();
     });
 
@@ -336,10 +336,10 @@ contractSuite("passport repositories", engine => {
     });
 
     it("updates a user and resolves to the updated one", async () => {
-      const {_id} = await users.insert(user("alice"));
+      const id = idOf(await users.insert(user("alice")));
 
       expect(
-        await users.updateById(_id, {bannedUntil: new Date("2030-01-01T00:00:00Z")})
+        await users.updateById(id, {bannedUntil: new Date("2030-01-01T00:00:00Z")})
       ).toMatchObject({
         username: "alice",
         bannedUntil: new Date("2030-01-01T00:00:00Z")
@@ -348,16 +348,16 @@ contractSuite("passport repositories", engine => {
     });
 
     it("sets fields, including dotted paths, without reading the user", async () => {
-      const {_id} = await users.insert(user("alice", {attributes: {color: "red"}}));
+      const id = idOf(await users.insert(user("alice", {attributes: {color: "red"}})));
       const verifiedAt = new Date("2024-03-01T00:00:00Z");
 
-      await users.setFields(_id, {
+      await users.setFields(id, {
         email: email("h1"),
         email_verified_at: verifiedAt,
         "attributes.size": 3
       });
 
-      expect(await users.findById(_id)).toMatchObject({
+      expect(await users.findById(id)).toMatchObject({
         email: email("h1"),
         email_verified_at: verifiedAt,
         attributes: {color: "red", size: 3}
@@ -365,49 +365,49 @@ contractSuite("passport repositories", engine => {
     });
 
     it("merges attributes and resolves to the updated user", async () => {
-      const {_id} = await users.insert(user("alice", {attributes: {color: "red", size: 1}}));
+      const id = idOf(await users.insert(user("alice", {attributes: {color: "red", size: 1}})));
 
-      const updated = await users.setAttributes(_id, {size: 2, shape: "round"});
+      const updated = await users.setAttributes(id, {size: 2, shape: "round"});
 
       expect(updated.attributes).toEqual({color: "red", size: 2, shape: "round"});
       expect(await users.setAttributes(missingId(), {a: 1})).toBeNull();
     });
 
     it("stores the login state and auth factor", async () => {
-      const {_id} = await users.insert(user("alice"));
+      const id = idOf(await users.insert(user("alice")));
       const failedAttempts = [new Date("2024-01-01T00:00:00Z")];
       const lastLogin = new Date("2024-02-01T00:00:00Z");
       const authFactor = {type: "totp", config: {}, secret: "s"} as any;
 
       await users.updateLoginState("alice", {failedAttempts, lastLogin});
-      await users.setAuthFactor(_id, authFactor);
+      await users.setAuthFactor(id, authFactor);
 
-      expect(await users.findById(_id)).toMatchObject({failedAttempts, lastLogin, authFactor});
+      expect(await users.findById(id)).toMatchObject({failedAttempts, lastLogin, authFactor});
       expect((await users.findWithAuthFactor()).map(u => u.username)).toEqual(["alice"]);
-      expect((await users.removeAuthFactor(_id)).authFactor).toEqual(authFactor);
-      expect((await users.findById(_id)).authFactor).toBeUndefined();
+      expect((await users.removeAuthFactor(id)).authFactor).toEqual(authFactor);
+      expect((await users.findById(id)).authFactor).toBeUndefined();
     });
 
     it("adds and removes policies without exposing passwords", async () => {
-      const {_id} = await users.insert(user("alice"));
+      const id = idOf(await users.insert(user("alice")));
 
-      const added = await users.addPolicy(_id, "p1");
-      await users.addPolicy(_id, "p2");
-      const removed = await users.removePolicy(_id, "p1");
+      const added = await users.addPolicy(id, "p1");
+      await users.addPolicy(id, "p2");
+      const removed = await users.removePolicy(id, "p1");
 
       expect(added.policies).toEqual(["p1"]);
       expect(added).not.toHaveProperty("password");
       expect(removed.policies).toEqual(["p2"]);
       expect(await users.removePolicyFromAll("p2")).toBe(1);
-      expect((await users.findById(_id)).policies).toEqual([]);
+      expect((await users.findById(id)).policies).toEqual([]);
     });
 
     it("deletes a user and reports its status", async () => {
-      const {_id} = await users.insert(user("alice"));
+      const id = idOf(await users.insert(user("alice")));
 
       expect(await users.status()).toEqual({limit: 5, current: 1, unit: "count"});
-      expect(await users.deleteById(_id)).toBe(1);
-      expect(await users.deleteById(_id)).toBe(0);
+      expect(await users.deleteById(id)).toBe(1);
+      expect(await users.deleteById(id)).toBe(0);
     });
   });
 
@@ -421,7 +421,7 @@ contractSuite("passport repositories", engine => {
       const first = await verifications.upsertPending(t, pending);
       const second = await verifications.upsertPending(t, {...pending, code: "222"});
 
-      expect(String(second._id)).toBe(String(first._id));
+      expect(String(idOf(second))).toBe(String(idOf(first)));
       expect(first.requestCount).toBe(1);
       expect(second).toMatchObject({
         code: "222",
@@ -437,7 +437,7 @@ contractSuite("passport repositories", engine => {
       const a = await verifications.upsertPending(target(), pending);
       const b = await verifications.upsertPending(target(), pending);
 
-      expect(String(a._id)).not.toBe(String(b._id));
+      expect(String(idOf(a))).not.toBe(String(idOf(b)));
     });
 
     it("consumes an unused verification once and resolves to it as it was", async () => {
@@ -464,15 +464,15 @@ contractSuite("passport repositories", engine => {
 
       const next = await verifications.upsertPending(t, {...pending, code: "333"});
 
-      expect(String(next._id)).not.toBe(String(first._id));
+      expect(String(idOf(next))).not.toBe(String(idOf(first)));
       expect(next.requestCount).toBe(1);
     });
 
     it("deletes a verification", async () => {
       const t = target();
-      const {_id} = await verifications.upsertPending(t, pending);
+      const id = idOf(await verifications.upsertPending(t, pending));
 
-      await verifications.deleteById(_id);
+      await verifications.deleteById(id);
 
       expect(await verifications.consume({...t, provider: "email"})).toBeNull();
     });
@@ -491,10 +491,10 @@ contractSuite("passport repositories", engine => {
       const active = await apiKeys.insert(apiKey("k1"));
       await apiKeys.insert(apiKey("k2", {active: false}));
 
-      expect(String((await apiKeys.findActiveByKey("k1"))._id)).toBe(String(active._id));
+      expect(String(idOf(await apiKeys.findActiveByKey("k1")))).toBe(String(idOf(active)));
       expect(await apiKeys.findActiveByKey("k2")).toBeNull();
       expect(await apiKeys.findActiveByKey("nope")).toBeNull();
-      expect(await apiKeys.findById(active._id)).toMatchObject({key: "k1", active: true});
+      expect(await apiKeys.findById(idOf(active))).toMatchObject({key: "k1", active: true});
     });
 
     it("reports a duplicate key as DuplicateKeyError", async () => {
@@ -502,8 +502,8 @@ contractSuite("passport repositories", engine => {
       const other = await apiKeys.insert(apiKey("k2"));
 
       const inserted = await apiKeys.insert(apiKey("k1", {name: "again"})).catch(e => e);
-      const updated = await apiKeys.updateById(other._id, {key: "k1"}).catch(e => e);
-      const replaced = await apiKeys.replaceById(other._id, apiKey("k1")).catch(e => e);
+      const updated = await apiKeys.updateById(idOf(other), {key: "k1"}).catch(e => e);
+      const replaced = await apiKeys.replaceById(idOf(other), apiKey("k1")).catch(e => e);
 
       expect(inserted).toBeInstanceOf(DuplicateKeyError);
       expect(inserted.keyValue).toEqual({key: "k1"});
@@ -512,13 +512,13 @@ contractSuite("passport repositories", engine => {
     });
 
     it("updates and replaces an api key", async () => {
-      const {_id} = await apiKeys.insert(apiKey("k1", {description: "first"}));
+      const id = idOf(await apiKeys.insert(apiKey("k1", {description: "first"})));
 
-      expect(await apiKeys.updateById(_id, {name: "renamed"})).toMatchObject({
+      expect(await apiKeys.updateById(id, {name: "renamed"})).toMatchObject({
         name: "renamed",
         description: "first"
       });
-      const replaced = await apiKeys.replaceById(_id, apiKey("k1", {name: "replaced"}));
+      const replaced = await apiKeys.replaceById(id, apiKey("k1", {name: "replaced"}));
       expect(replaced).toMatchObject({name: "replaced"});
       expect(replaced).not.toHaveProperty("description");
       expect(await apiKeys.updateById(missingId(), {name: "x"})).toBeNull();
@@ -529,19 +529,19 @@ contractSuite("passport repositories", engine => {
       const a = await apiKeys.insert(apiKey("k1", {policies: ["p1"]}));
       const b = await apiKeys.insert(apiKey("k2", {policies: ["p1", "p2"]}));
 
-      expect((await apiKeys.addPolicy(a._id, "p2")).policies).toEqual(["p1", "p2"]);
-      expect((await apiKeys.addPolicy(a._id, "p2")).policies).toEqual(["p1", "p2"]);
-      expect((await apiKeys.removePolicy(a._id, "p1")).policies).toEqual(["p2"]);
+      expect((await apiKeys.addPolicy(idOf(a), "p2")).policies).toEqual(["p1", "p2"]);
+      expect((await apiKeys.addPolicy(idOf(a), "p2")).policies).toEqual(["p1", "p2"]);
+      expect((await apiKeys.removePolicy(idOf(a), "p1")).policies).toEqual(["p2"]);
       expect(await apiKeys.removePolicyFromAll("p2")).toBe(2);
-      expect((await apiKeys.findById(a._id)).policies).toEqual([]);
-      expect((await apiKeys.findById(b._id)).policies).toEqual(["p1"]);
+      expect((await apiKeys.findById(idOf(a))).policies).toEqual([]);
+      expect((await apiKeys.findById(idOf(b))).policies).toEqual(["p1"]);
     });
 
     it("deletes an api key", async () => {
-      const {_id} = await apiKeys.insert(apiKey("k1"));
+      const id = idOf(await apiKeys.insert(apiKey("k1")));
 
-      expect(await apiKeys.deleteById(_id)).toBe(1);
-      expect(await apiKeys.deleteById(_id)).toBe(0);
+      expect(await apiKeys.deleteById(id)).toBe(1);
+      expect(await apiKeys.deleteById(id)).toBe(0);
     });
   });
 
@@ -555,33 +555,33 @@ contractSuite("passport repositories", engine => {
     });
 
     it("inserts, finds and lists policies in creation order", async () => {
-      const first = await policies.insert({_id: idType.generate(), ...policy("a")} as any);
-      await policies.insert({_id: idType.generate(), ...policy("b")} as any);
+      const first = await policies.insert(withId(policy("a"), idType.generate()) as any);
+      await policies.insert(withId(policy("b"), idType.generate()) as any);
 
-      expect(await policies.findById(first._id as any)).toMatchObject(policy("a"));
+      expect(await policies.findById(idOf(first) as any)).toMatchObject(policy("a"));
       expect((await policies.findAll()).map(p => p.name)).toEqual(["a", "b"]);
       expect(await policies.findById(missingId())).toBeNull();
     });
 
     it("replaces a policy and counts the replacement", async () => {
-      const {_id} = await policies.insert({_id: idType.generate(), ...policy("a")} as any);
+      const id = idOf(await policies.insert(withId(policy("a"), idType.generate()) as any));
 
-      expect(await policies.replaceById(_id as any, policy("renamed") as any)).toBe(1);
-      expect(await policies.findById(_id as any)).toMatchObject({name: "renamed"});
+      expect(await policies.replaceById(id as any, policy("renamed") as any)).toBe(1);
+      expect(await policies.findById(id as any)).toMatchObject({name: "renamed"});
       expect(await policies.replaceById(missingId(), policy("x") as any)).toBe(0);
     });
 
     it("counts a replacement that changes nothing", async () => {
-      const {_id} = await policies.insert({_id: idType.generate(), ...policy("a")} as any);
+      const id = idOf(await policies.insert(withId(policy("a"), idType.generate()) as any));
 
-      expect(await policies.replaceById(_id as any, policy("a") as any)).toBe(1);
+      expect(await policies.replaceById(id as any, policy("a") as any)).toBe(1);
     });
 
     it("deletes a policy", async () => {
-      const {_id} = await policies.insert({_id: idType.generate(), ...policy("a")} as any);
+      const id = idOf(await policies.insert(withId(policy("a"), idType.generate()) as any));
 
-      expect(await policies.deleteById(_id as any)).toBe(1);
-      expect(await policies.deleteById(_id as any)).toBe(0);
+      expect(await policies.deleteById(id as any)).toBe(1);
+      expect(await policies.deleteById(id as any)).toBe(0);
     });
   });
 
@@ -615,9 +615,9 @@ contractSuite("passport repositories", engine => {
     });
 
     it("disables a token and resolves to it without the token value", async () => {
-      const {_id} = await refreshTokens.insert(token("t1"));
+      const id = idOf(await refreshTokens.insert(token("t1")));
 
-      const disabled = await refreshTokens.setDisabled(_id, true);
+      const disabled = await refreshTokens.setDisabled(id, true);
 
       expect(disabled.disabled).toBe(true);
       expect(disabled).not.toHaveProperty("token");
@@ -626,9 +626,9 @@ contractSuite("passport repositories", engine => {
     });
 
     it("deletes a token", async () => {
-      const {_id} = await refreshTokens.insert(token("t1"));
+      const id = idOf(await refreshTokens.insert(token("t1")));
 
-      expect(await refreshTokens.deleteById(_id)).toBe(1);
+      expect(await refreshTokens.deleteById(id)).toBe(1);
       expect(await refreshTokens.findByToken("t1")).toBeNull();
     });
   });
@@ -647,19 +647,19 @@ contractSuite("passport repositories", engine => {
     });
 
     it("inserts, finds, replaces and deletes a strategy", async () => {
-      const {_id} = await strategies.insert(strategy());
+      const id = idOf(await strategies.insert(strategy()));
 
-      expect(await strategies.findById(_id)).toMatchObject(strategy());
-      const replaced = await strategies.replaceById(_id, {...strategy(), title: "Renamed"});
+      expect(await strategies.findById(id)).toMatchObject(strategy());
+      const replaced = await strategies.replaceById(id, {...strategy(), title: "Renamed"});
       expect(replaced).toMatchObject({title: "Renamed"});
-      expect(await strategies.deleteById(_id)).toBe(1);
-      expect(await strategies.deleteById(_id)).toBe(0);
+      expect(await strategies.deleteById(id)).toBe(1);
+      expect(await strategies.deleteById(id)).toBe(0);
     });
 
     it("sets the redirect uri of both oauth requests", async () => {
-      const {_id} = await strategies.insert(strategy());
+      const id = idOf(await strategies.insert(strategy()));
 
-      const updated = await strategies.setOAuthRedirectUri(_id, "https://spica/callback");
+      const updated = await strategies.setOAuthRedirectUri(id, "https://spica/callback");
 
       expect(updated.options.code.params).toEqual({
         client_id: "c",

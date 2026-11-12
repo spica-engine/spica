@@ -9,6 +9,7 @@ import {
   BucketSchemaManager,
   StoredBucket
 } from "@spica-server/interface-bucket";
+import {withId, idOf} from "@spica-server/data";
 
 @Injectable()
 export class MongoBucketSchemaManager implements BucketSchemaManager {
@@ -27,7 +28,7 @@ export class MongoBucketSchemaManager implements BucketSchemaManager {
 
   async replace(id: Id, bucket: Bucket, onSaved: (saved: StoredBucket) => void) {
     const result = await this.buckets.replaceById(id, bucket);
-    const replaced = {...bucket, _id: id} as StoredBucket;
+    const replaced = withId({...bucket}, id) as StoredBucket;
     onSaved(replaced);
     await this.bucketData.syncIndexes(replaced);
     return result;
@@ -39,7 +40,7 @@ export class MongoBucketSchemaManager implements BucketSchemaManager {
       return null;
     }
     onSaved(dropped);
-    await this.bucketData.dropStorage(dropped._id);
+    await this.bucketData.dropStorage(idOf(dropped));
     return dropped;
   }
 }

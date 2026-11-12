@@ -10,7 +10,7 @@ import {
   ACTIVITY_REPOSITORY,
   ActivityRepository
 } from "@spica-server/interface-activity";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, withId} from "@spica-server/data";
 
 const TestPredict: Predict = (): ModuleActivity[] => {
   return [
@@ -35,9 +35,7 @@ export class TestController {
   @UseInterceptors(activity(TestPredict))
   @Post("withuser")
   insertWithUser(@Req() req) {
-    req.user = {
-      _id: "test"
-    };
+    req.user = withId({}, "test");
     return "test";
   }
 }

@@ -13,12 +13,12 @@ describe("compile", () => {
 
   afterEach(() => bindIdTypes(undefined as unknown as IdTypes));
 
-  describe("on an engine that keys documents by _id", () => {
-    beforeEach(() => bindIdTypes({keyField: () => "_id"} as unknown as IdTypes));
+  describe("on an engine that keys documents by a fixed field", () => {
+    beforeEach(() => bindIdTypes({keyField: () => "ref"} as unknown as IdTypes));
 
-    it("should add an objectid _id property", () => {
+    it("should add an objectid property named by the key", () => {
       const schema = compile(bucketOf("title", {title: {type: "string"}}), preferences);
-      expect(schema.properties._id).toEqual({type: "string", format: "objectid"});
+      expect(schema.properties.ref).toEqual({type: "string", format: "objectid"});
     });
   });
 
@@ -27,9 +27,9 @@ describe("compile", () => {
       bindIdTypes({keyField: (bucket: {primary?: string}) => bucket.primary} as unknown as IdTypes)
     );
 
-    it("should not add an _id property", () => {
+    it("should not add a property when the primary field is the key", () => {
       const schema = compile(bucketOf("id", {id: {type: "uuid" as any}}), preferences);
-      expect(schema.properties._id).toBeUndefined();
+      expect(Object.keys(schema.properties)).toEqual(["id"]);
     });
 
     it("should compile a uuid property to a uuid string", () => {

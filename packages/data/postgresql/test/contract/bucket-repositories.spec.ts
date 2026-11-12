@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf, withId} from "@spica-server/data";
 import {contractSuite, clearStorage} from "@spica-server/database-testing";
 import {BUCKET_REPOSITORY, BucketRepository} from "@spica-server/interface-bucket";
 import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
@@ -51,7 +51,7 @@ contractSuite("bucket repositories", engine => {
 
       const inserted = await buckets.insert(bucket("Indexed", {indexes}));
 
-      const found = await buckets.findById(inserted._id);
+      const found = await buckets.findById(idOf(inserted));
       expect(found?.indexes?.map(index => Object.keys(index.definition))).toEqual([
         ["b", "a", "c"],
         ["z", "y"]
@@ -72,8 +72,8 @@ contractSuite("bucket repositories", engine => {
         })
       );
 
-      expect(inserted._id).toBeDefined();
-      expect(await buckets.findById(inserted._id)).toMatchObject({
+      expect(idOf(inserted)).toBeDefined();
+      expect(await buckets.findById(idOf(inserted))).toMatchObject({
         title: "Books",
         icon: "book",
         primary: "title",
@@ -97,9 +97,9 @@ contractSuite("bucket repositories", engine => {
     });
 
     it("replaces a bucket and resolves to the replaced one", async () => {
-      const {_id} = await buckets.insert(bucket("a", {description: "old"}));
+      const id = idOf(await buckets.insert(bucket("a", {description: "old"})));
 
-      const replaced = await buckets.replaceById(_id, bucket("renamed"));
+      const replaced = await buckets.replaceById(id, bucket("renamed"));
 
       expect(replaced).toMatchObject({title: "renamed"});
       expect(replaced).not.toHaveProperty("description");
@@ -107,34 +107,36 @@ contractSuite("bucket repositories", engine => {
     });
 
     it("deletes a bucket and resolves to it", async () => {
-      const {_id} = await buckets.insert(bucket("a"));
+      const id = idOf(await buckets.insert(bucket("a")));
 
-      expect(await buckets.deleteById(_id)).toMatchObject({title: "a"});
-      expect(await buckets.deleteById(_id)).toBeNull();
+      expect(await buckets.deleteById(id)).toMatchObject({title: "a"});
+      expect(await buckets.deleteById(id)).toBeNull();
     });
 
     it("removes schema properties by their dotted paths", async () => {
-      const {_id} = await buckets.insert(
-        bucket("a", {
-          properties: {
-            title: {type: "string", options: {}},
-            author: {
-              type: "object",
-              options: {},
-              properties: {name: {type: "string"}, born: {type: "number"}}
-            },
-            extra: {type: "string", options: {}}
-          }
-        })
+      const id = idOf(
+        await buckets.insert(
+          bucket("a", {
+            properties: {
+              title: {type: "string", options: {}},
+              author: {
+                type: "object",
+                options: {},
+                properties: {name: {type: "string"}, born: {type: "number"}}
+              },
+              extra: {type: "string", options: {}}
+            }
+          })
+        )
       );
 
-      const modified = await buckets.unsetProperties(_id, [
+      const modified = await buckets.unsetProperties(id, [
         "properties.author.properties.born",
         "properties.extra"
       ]);
 
       expect(modified).toBe(1);
-      expect((await buckets.findById(_id)).properties).toEqual({
+      expect((await buckets.findById(id)).properties).toEqual({
         title: {type: "string", options: {}},
         author: {type: "object", options: {}, properties: {name: {type: "string"}}}
       });
@@ -142,11 +144,11 @@ contractSuite("bucket repositories", engine => {
     });
 
     it("removes other bucket fields given as paths", async () => {
-      const {_id} = await buckets.insert(bucket("a", {description: "d", icon: "i"}));
+      const id = idOf(await buckets.insert(bucket("a", {description: "d", icon: "i"})));
 
-      await buckets.unsetProperties(_id, ["description", "acl.write"]);
+      await buckets.unsetProperties(id, ["description", "acl.write"]);
 
-      const stored = await buckets.findById(_id);
+      const stored = await buckets.findById(id);
       expect(stored).not.toHaveProperty("description");
       expect(stored.acl).toEqual({read: "true==true"});
       expect(stored.icon).toBe("i");
@@ -184,7 +186,7 @@ contractSuite("bucket repositories", engine => {
       const found = await buckets.findTranslatable();
 
       expect(found).toHaveLength(1);
-      expect(String(found[0]._id)).toBe(String(translatable._id));
+      expect(String(idOf(found[0]))).toBe(String(idOf(translatable)));
       expect(found[0].properties).toEqual({
         title: {type: "string", options: {translate: true}},
         body: {type: "string", options: {translate: true}}
@@ -197,7 +199,7 @@ contractSuite("bucket repositories", engine => {
         bucket("a", {
           properties: {
             title: {type: "string", options: {}},
-            author: {type: "relation", bucketId: String(target._id), relationType: "onetoone"}
+            author: {type: "relation", bucketId: String(idOf(target)), relationType: "onetoone"}
           }
         })
       );
@@ -206,14 +208,16 @@ contractSuite("bucket repositories", engine => {
           properties: {
             group: {
               type: "object",
-              properties: {author: {type: "relation", bucketId: String(target._id)}}
+              properties: {author: {type: "relation", bucketId: String(idOf(target))}}
             }
           }
         })
       );
       await buckets.insert(bucket("unrelated"));
 
-      expect(await buckets.findReferencing(String(target._id))).toEqual([String(referencing._id)]);
+      expect(await buckets.findReferencing(String(idOf(target)))).toEqual([
+        String(idOf(referencing))
+      ]);
       expect(await buckets.findReferencing(String(missingId()))).toEqual([]);
     });
 
@@ -226,7 +230,7 @@ contractSuite("bucket repositories", engine => {
   });
 
   describe("history", () => {
-    const document = (id: unknown, fields: object) => ({_id: id, ...fields});
+    const document = (id: unknown, fields: object) => withId(fields, id as never);
 
     async function record(bucketId: unknown, documentId: unknown, title: string, previous: string) {
       await histories.createHistory(
@@ -247,7 +251,7 @@ contractSuite("bucket repositories", engine => {
       expect(summaries).toHaveLength(1);
       expect(summaries[0].changes).toBe(1);
       expect(summaries[0].date).toBeInstanceOf(Date);
-      expect(summaries[0]._id).toBeDefined();
+      expect(idOf(summaries[0])).toBeDefined();
     });
 
     it("records nothing when the document did not change", async () => {
@@ -280,12 +284,14 @@ contractSuite("bucket repositories", engine => {
       for (let index = 0; index < 10; index++) {
         await record(bucketId, documentId, `title ${index}`, "a");
       }
-      const full = (await histories.findSummaries(bucketId, documentId)).map(s => String(s._id));
+      const full = (await histories.findSummaries(bucketId, documentId)).map(s => String(idOf(s)));
       expect(full).toHaveLength(10);
 
       await record(bucketId, documentId, "one more", "a");
 
-      const trimmed = (await histories.findSummaries(bucketId, documentId)).map(s => String(s._id));
+      const trimmed = (await histories.findSummaries(bucketId, documentId)).map(s =>
+        String(idOf(s))
+      );
       expect(trimmed).toHaveLength(10);
       expect(trimmed).not.toContain(full[full.length - 1]);
       expect(full.slice(0, 9).every(id => trimmed.includes(id))).toBe(true);
@@ -298,12 +304,12 @@ contractSuite("bucket repositories", engine => {
         await record(bucketId, documentId, title, "a");
       }
       const summaries = await histories.findSummaries(bucketId, documentId);
-      const second = summaries[2]._id;
+      const second = idOf(summaries[2]);
 
       const since = await histories.findSince(bucketId, documentId, second);
 
-      expect(since.map(history => String(history._id))).toEqual(
-        summaries.slice(0, 3).map(summary => String(summary._id))
+      expect(since.map(history => String(idOf(history)))).toEqual(
+        summaries.slice(0, 3).map(summary => String(idOf(summary)))
       );
       expect(since[0]).toMatchObject({changes: expect.any(Array)});
       expect(String(since[0].bucket_id)).toBe(String(bucketId));
@@ -327,15 +333,18 @@ contractSuite("bucket repositories", engine => {
     });
 
     describe("when the schema changes", () => {
-      const schema = (id: unknown, descriptionType: string) => ({
-        _id: id,
-        primary: "title",
-        acl: {read: "true==true", write: "true==true"},
-        properties: {
-          title: {type: "string", options: {}},
-          description: {type: descriptionType, options: {}}
-        }
-      });
+      const schema = (id: unknown, descriptionType: string) =>
+        withId(
+          {
+            primary: "title",
+            acl: {read: "true==true", write: "true==true"},
+            properties: {
+              title: {type: "string", options: {}},
+              description: {type: descriptionType, options: {}}
+            }
+          },
+          id as any
+        );
 
       async function recordFields(
         bucketId: unknown,

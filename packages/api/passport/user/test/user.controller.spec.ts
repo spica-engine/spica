@@ -8,6 +8,7 @@ import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {PassportModule} from "@spica-server/passport";
 import {ConfigModule} from "@spica-server/config";
+import {idOf} from "@spica-server/data";
 
 contractSuite("User Controller CRUD Operations", engine => {
   let module: TestingModule;
@@ -99,7 +100,7 @@ contractSuite("User Controller CRUD Operations", engine => {
       );
 
       expect(res.statusCode).toBe(201);
-      expect(res.body._id).toBeDefined();
+      expect(idOf(res.body)).toBeDefined();
       expect(res.body.username).toBe("newuser");
       expect(res.body.password).toBeUndefined();
       expect(res.body.lastPasswords).toBeUndefined();
@@ -286,7 +287,7 @@ contractSuite("User Controller CRUD Operations", engine => {
         {username: "finduser", password: "password123"},
         {Authorization: `IDENTITY ${adminToken}`}
       );
-      userId = createRes.body._id;
+      userId = idOf(createRes.body).toString();
 
       userToken = await req
         .post("/passport/login", {username: "finduser", password: "password123"})
@@ -299,7 +300,7 @@ contractSuite("User Controller CRUD Operations", engine => {
       });
 
       expect(res.statusCode).toBe(200);
-      expect(res.body._id).toBe(userId);
+      expect(idOf(res.body)).toBe(userId);
       expect(res.body.username).toBe("finduser");
       expect(res.body.password).toBeUndefined();
       expect(res.body.lastPasswords).toBeUndefined();
@@ -311,7 +312,7 @@ contractSuite("User Controller CRUD Operations", engine => {
       });
 
       expect(res.statusCode).toBe(200);
-      expect(res.body._id).toBe(userId);
+      expect(idOf(res.body)).toBe(userId);
       expect(res.body.username).toBe("finduser");
     });
 
@@ -322,7 +323,7 @@ contractSuite("User Controller CRUD Operations", engine => {
           {username: "another", password: "test123"},
           {Authorization: `IDENTITY ${adminToken}`}
         )
-        .then(r => r.body._id);
+        .then(r => idOf(r.body));
 
       const res = await req.get(`/passport/user/${user2Id}`, undefined, {
         Authorization: `USER ${userToken}`
@@ -357,7 +358,7 @@ contractSuite("User Controller CRUD Operations", engine => {
         {username: "updateuser", password: "password123"},
         {Authorization: `IDENTITY ${adminToken}`}
       );
-      userId = createRes.body._id;
+      userId = idOf(createRes.body).toString();
 
       userToken = await req
         .post("/passport/login", {username: "updateuser", password: "password123"})
@@ -463,8 +464,8 @@ contractSuite("User Controller CRUD Operations", engine => {
         )
       ]);
 
-      user1Id = res1.body._id;
-      user2Id = res2.body._id;
+      user1Id = idOf(res1.body).toString();
+      user2Id = idOf(res2.body).toString();
 
       user1Token = await req
         .post("/passport/login", {username: "selfuser1", password: "password1"})
@@ -479,7 +480,7 @@ contractSuite("User Controller CRUD Operations", engine => {
       );
 
       expect(res.statusCode).toBe(200);
-      expect(res.body._id).toBe(user1Id);
+      expect(idOf(res.body)).toBe(user1Id);
       expect(res.body.password).toBeUndefined();
 
       const loginRes = await req.post("/passport/login", {
@@ -568,7 +569,7 @@ contractSuite("User Controller CRUD Operations", engine => {
         {username: "deleteuser", password: "password123"},
         {Authorization: `IDENTITY ${adminToken}`}
       );
-      userId = createRes.body._id;
+      userId = idOf(createRes.body).toString();
 
       userToken = await req
         .post("/passport/login", {username: "deleteuser", password: "password123"})
@@ -600,7 +601,7 @@ contractSuite("User Controller CRUD Operations", engine => {
         Authorization: `IDENTITY ${adminToken}`
       });
       expect(findRes.statusCode).toBe(200);
-      expect(findRes.body._id).toBe(userId);
+      expect(idOf(findRes.body)).toBe(userId);
     });
 
     it("should reject deleting user without authorization", async () => {
@@ -620,7 +621,7 @@ contractSuite("User Controller CRUD Operations", engine => {
         {username: "policyuser", password: "password123"},
         {Authorization: `IDENTITY ${adminToken}`}
       );
-      userId = createRes.body._id;
+      userId = idOf(createRes.body).toString();
 
       userToken = await req
         .post("/passport/login", {username: "policyuser", password: "password123"})
@@ -670,7 +671,7 @@ contractSuite("User Controller CRUD Operations", engine => {
         {username: "rmpolicyuser", password: "password123"},
         {Authorization: `IDENTITY ${adminToken}`}
       );
-      userId = createRes.body._id;
+      userId = idOf(createRes.body).toString();
 
       await req.put(`/passport/user/${userId}/policy/RemovablePolicy`, undefined, {
         Authorization: `IDENTITY ${adminToken}`

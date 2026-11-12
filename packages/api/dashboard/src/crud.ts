@@ -1,6 +1,6 @@
 import {Dashboard, DashboardRepository} from "@spica-server/interface-dashboard";
 import {NotFoundException} from "@nestjs/common";
-import {ids} from "@spica-server/data";
+import {ids, idOf, assignId, omitId} from "@spica-server/data";
 import {CollectionQueryFacade, Id, ResourceFilterSpec} from "@spica-server/interface-data";
 
 const dashboardIds = () => ids().forCollection("dashboard");
@@ -17,20 +17,19 @@ export function findOne(dashboards: DashboardRepository, id: Id): Promise<Dashbo
 }
 
 export async function insert(dashboards: DashboardRepository, dashboard: Dashboard) {
-  if (dashboard._id) {
-    dashboard._id = dashboardIds().parse(dashboard._id);
+  if (idOf(dashboard)) {
+    assignId(dashboard, dashboardIds().parse(idOf(dashboard)));
   }
   return dashboards.insert(dashboard);
 }
 
 export async function replace(dashboards: DashboardRepository, dashboard: Dashboard) {
-  const _id = dashboardIds().parse(dashboard._id);
-  const {_id: _, ...dashboardWithoutId} = dashboard;
+  const id = dashboardIds().parse(idOf(dashboard));
 
-  const currentDashboard = await dashboards.replaceById(_id, dashboardWithoutId);
+  const currentDashboard = await dashboards.replaceById(id, omitId(dashboard));
 
   if (!currentDashboard) {
-    throw new NotFoundException(`Dashboard with ID ${_id} not found`);
+    throw new NotFoundException(`Dashboard with ID ${id} not found`);
   }
   return currentDashboard;
 }

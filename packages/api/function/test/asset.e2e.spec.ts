@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
 import {ObjectId, contractSuite} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {AssetModule} from "@spica-server/asset";
+import {AssetModule, exporters, listers, operators, validators} from "@spica-server/asset";
 import {FunctionModule} from "@spica-server/function";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
@@ -13,6 +13,7 @@ import fs from "fs";
 import path from "path";
 import {PreferenceModule} from "@spica-server/preference";
 import {SecretModule} from "@spica-server/secret";
+import {withId, idOf, stripId} from "@spica-server/data";
 
 contractSuite("function", engine => {
   function downloadAsset(asset) {
@@ -75,6 +76,9 @@ contractSuite("function", engine => {
   };
 
   beforeEach(async () => {
+    // The asset registries are process-wide and only ever grow, so the validators and operators of
+    // the other engine's modules would otherwise run against this engine's resources.
+    [validators, operators, exporters, listers].forEach(registry => registry.clear());
     process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     const module = await Test.createTestingModule(moduleMeta).compile();
     module.enableShutdownHooks();
@@ -111,39 +115,42 @@ contractSuite("function", engine => {
   let assetv2;
 
   beforeEach(async () => {
-    fnv1 = {
-      _id: fnId,
-      name: "function",
-      timeout: 120,
-      language: "javascript",
-      triggers: {
-        test: {
-          type: "http",
-          active: false,
-          options: {
-            method: "Get",
-            path: "/",
-            preflight: true
+    fnv1 = withId(
+      {
+        name: "function",
+        timeout: 120,
+        language: "javascript",
+        triggers: {
+          test: {
+            type: "http",
+            active: false,
+            options: {
+              method: "Get",
+              path: "/",
+              preflight: true
+            }
           }
-        }
+        },
+        memoryLimit: 100
       },
-      // exported by an older version, before memoryLimit was dropped from the schema
-      memoryLimit: 100
-    };
+      fnId
+    );
     fnv1Created = {...fnv1, env_vars: [], secrets: []};
     delete fnv1Created.memoryLimit;
 
-    fnv1Resource = {
-      _id: fnId,
-      module: "function",
-      contents: {
-        schema: fnv1,
-        index: "console.log('Hi')",
-        package: {
-          dependencies: {}
+    fnv1Resource = withId(
+      {
+        module: "function",
+        contents: {
+          schema: fnv1,
+          index: "console.log('Hi')",
+          package: {
+            dependencies: {}
+          }
         }
-      }
-    };
+      },
+      fnId
+    );
 
     fnv2 = {...fnv1, timeout: 60};
     fnv2Created = {...fnv2, env_vars: [], secrets: []};
@@ -177,18 +184,18 @@ contractSuite("function", engine => {
 
   it("should insert, update and delete", async () => {
     // INSERT PREVIEW
-    let preview = await previewAssetInstallation(assetv1._id);
+    let preview = await previewAssetInstallation(idOf(assetv1));
 
     expect(preview).toEqual({insertions: [fnv1Resource], updations: [], deletions: []});
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
     let fns = await getFns();
     expect(fns).toEqual([]);
 
     // INSERT
-    await installAsset(assetv1._id);
+    await installAsset(idOf(assetv1));
 
     fns = await getFns();
     expect(fns).toEqual([fnv1Created]);
@@ -198,25 +205,25 @@ contractSuite("function", engine => {
 
     // UPDATE PREVIEW
     assetv2 = await downloadAsset(assetv2);
-    preview = await previewAssetInstallation(assetv2._id);
+    preview = await previewAssetInstallation(idOf(assetv2));
     expect(preview).toEqual({insertions: [], updations: [fnv2Resource], deletions: []});
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("installed");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("downloaded");
 
     fns = await getFns();
     expect(fns).toEqual([fnv1Created]);
 
     // UPDATE
-    const res = await installAsset(assetv2._id);
+    const res = await installAsset(idOf(assetv2));
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("installed");
 
     fns = await getFns();
@@ -224,40 +231,40 @@ contractSuite("function", engine => {
 
     // DELETE PREVIEW
     let assetv3 = {...assetv2, resources: []};
-    delete assetv3._id;
+    stripId(assetv3);
     delete assetv3.status;
 
     assetv3 = await downloadAsset(assetv3);
 
-    preview = await previewAssetInstallation(assetv3._id);
+    preview = await previewAssetInstallation(idOf(assetv3));
     expect(preview).toEqual({
       insertions: [],
       updations: [],
       deletions: [{...fnv2Resource, installation_status: "installed"}]
     });
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("installed");
 
-    assetv3 = await getAsset(assetv3._id);
+    assetv3 = await getAsset(idOf(assetv3));
     expect(assetv3.status).toEqual("downloaded");
 
     fns = await getFns();
     expect(fns).toEqual([fnv2Created]);
 
     // DELETE
-    await installAsset(assetv3._id);
+    await installAsset(idOf(assetv3));
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("downloaded");
 
-    assetv3 = await getAsset(assetv3._id);
+    assetv3 = await getAsset(idOf(assetv3));
     expect(assetv3.status).toEqual("installed");
 
     fns = await getFns();

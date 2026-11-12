@@ -1,7 +1,8 @@
 import {Observable} from "rxjs";
 
 interface Identity {
-  _id: string;
+  /** @deprecated Read the key with idOf; it is named id on PostgreSQL. */
+  _id?: string;
   identifier: string;
   password: string;
   policies: string[];
@@ -15,7 +16,8 @@ export type IdentityCreate = Omit<Identity, "_id">;
 export type IdentityGet = Omit<Identity, "password">;
 
 export interface Strategy {
-  _id: string;
+  /** @deprecated Read the key with idOf; it is named id on PostgreSQL. */
+  _id?: string;
   type: string;
   name: string;
   title: string;

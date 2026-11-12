@@ -1,3 +1,4 @@
+import {idOf} from "@spica-server/data";
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket/src";
@@ -42,11 +43,11 @@ describe("Realtime on PostgreSQL", () => {
   let opened: {readyState: number; close(): Promise<unknown>}[];
 
   const insertRow = (document: object) =>
-    req.post(`/bucket/${bucket._id}/data`, document).then(response => response.body);
+    req.post(`/bucket/${idOf(bucket)}/data`, document).then(response => response.body);
 
   async function connect(query?: {[k: string]: string | number}) {
     const messages: any[] = [];
-    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, query));
+    const ws = wsc.get(url(`/bucket/${idOf(bucket)}/data`, query));
     opened.push(ws);
     ws.onmessage = event => messages.push(JSON.parse(event.data as string));
     await ws.connect;

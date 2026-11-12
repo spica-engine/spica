@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {InvalidIdError, provideRepository} from "@spica-server/data";
+import {InvalidIdError, provideRepository, idOf, systemKeyField} from "@spica-server/data";
 import {contractSuite, clearStorage, waitForMongoIndexes} from "@spica-server/database-testing";
 import {
   COLLECTION_QUERY,
@@ -38,7 +38,7 @@ contractSuite("resource filter", engine => {
     await clearStorage(engine, module, {mongodb: ["env_var"], postgresql: ["env_vars"]});
     const inserted: string[] = [];
     for (const key of ["a", "b", "c", "d"]) {
-      inserted.push(String((await envVars.insert({key, value: key}))._id));
+      inserted.push(String(idOf(await envVars.insert({key, value: key}))));
     }
     [a, b, c, d] = inserted;
   });
@@ -46,8 +46,8 @@ contractSuite("resource filter", engine => {
   const store = {
     newId: () => ids.forCollection("env_var").serialize(ids.forCollection("env_var").generate()),
     async allowed(resourceFilter: ResourceFilterSpec | undefined) {
-      const found = await queries.find<{_id: unknown}>("env_var", {resourceFilter});
-      return found.map(document => String(document._id)).sort();
+      const found = await queries.find<Record<string, unknown>>("env_var", {resourceFilter});
+      return found.map(document => String(document[systemKeyField()])).sort();
     }
   };
 

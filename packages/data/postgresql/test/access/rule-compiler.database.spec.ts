@@ -1,4 +1,5 @@
 import {hash} from "@spica-server/core-encryption";
+import {ENGINE_KEY_FIELDS} from "@spica-server/database-testing";
 import {HASH_SECRET, usePostgresAccessStore} from "../contract/access-store";
 
 const alice = "0192f3a0-0000-7000-8000-0000000000c1";
@@ -129,32 +130,35 @@ describe("compileRule against rows in PostgreSQL", () => {
     );
 
     it("should let through the rows the caller owns", async () => {
-      expect(await store.select("document.owner == auth._id", {_id: alice})).toEqual([
-        "ann",
-        "dee"
-      ]);
+      expect(await store.select("document.owner == auth.id", {id: alice})).toEqual(["ann", "dee"]);
+    });
+
+    it("should not read the caller's key under the MongoDB name", async () => {
+      const mongoName = ["auth", ENGINE_KEY_FIELDS.mongodb].join(".");
+
+      expect(await store.select(`document.owner == ${mongoName}`, {id: alice})).toEqual(["cem"]);
     });
 
     it("should let through the rows without an owner when the caller has no id", async () => {
-      expect(await store.select("document.owner == auth._id", {})).toEqual(["cem"]);
+      expect(await store.select("document.owner == auth.id", {})).toEqual(["cem"]);
     });
 
     it("should let through everything for an admin, and the caller's rows for a user", async () => {
-      const rule = "document.owner == auth._id || auth.role == 'admin'";
+      const rule = "document.owner == auth.id || auth.role == 'admin'";
 
-      expect(await store.select(rule, {_id: alice, role: "admin"})).toEqual(everyone);
-      expect(await store.select(rule, {_id: alice, role: "user"})).toEqual(["ann", "dee"]);
+      expect(await store.select(rule, {id: alice, role: "admin"})).toEqual(everyone);
+      expect(await store.select(rule, {id: alice, role: "user"})).toEqual(["ann", "dee"]);
     });
 
     describe("when the caller's id cannot be an id of the field", () => {
-      const auth = {_id: "not-a-uuid"};
+      const auth = {id: "not-a-uuid"};
 
       it("should let nothing through for ==", async () => {
-        expect(await store.select("document.owner == auth._id", auth)).toEqual([]);
+        expect(await store.select("document.owner == auth.id", auth)).toEqual([]);
       });
 
       it("should let everything through for !=", async () => {
-        expect(await store.select("document.owner != auth._id", auth)).toEqual(everyone);
+        expect(await store.select("document.owner != auth.id", auth)).toEqual(everyone);
       });
     });
   });

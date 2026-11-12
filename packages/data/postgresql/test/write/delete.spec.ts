@@ -1,4 +1,5 @@
 import {postgresWriter, uuid} from "./support.js";
+import {idOf} from "@spica-server/data";
 
 describe("PostgreSQL bucket write: delete", () => {
   const {createBucket, insert, remove, rows, rowsOf} = postgresWriter();
@@ -42,7 +43,7 @@ describe("PostgreSQL bucket write: delete", () => {
       const authors = await createBucket({name: {type: "string"}});
       const ann = await insert(authors, {name: "ann"});
       const posts = await createBucket({
-        author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}
+        author: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"}
       });
       const post = await insert(posts, {author: ann.id});
 
@@ -57,7 +58,7 @@ describe("PostgreSQL bucket write: delete", () => {
       const bob = await insert(authors, {name: "bob"});
       const cem = await insert(authors, {name: "cem"});
       const posts = await createBucket({
-        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"}
+        editors: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetomany"}
       });
       const first = await insert(posts, {editors: [ann.id, bob.id, cem.id]});
       const second = await insert(posts, {editors: [ann.id]});
@@ -77,7 +78,7 @@ describe("PostgreSQL bucket write: delete", () => {
       const authors = await createBucket({name: {type: "string"}});
       const ann = await insert(authors, {name: "ann"});
       const posts = await createBucket(
-        {author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}},
+        {author: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"}},
         {required: ["author"]}
       );
       await insert(posts, {author: ann.id});
@@ -92,7 +93,7 @@ describe("PostgreSQL bucket write: delete", () => {
       const ann = await insert(authors, {name: "ann"});
       const bob = await insert(authors, {name: "bob"});
       const posts = await createBucket({
-        author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}
+        author: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"}
       });
       const post = await insert(posts, {author: ann.id});
 

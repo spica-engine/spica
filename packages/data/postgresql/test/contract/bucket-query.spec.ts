@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {FilterLanguageError} from "@spica-server/data";
-import {contractSuite} from "@spica-server/database-testing";
+import {FilterLanguageError, idOf} from "@spica-server/data";
+import {contractSuite, ENGINE_KEY_FIELDS} from "@spica-server/database-testing";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {BucketStore, bucketStoreProviders, createBucketStore} from "./bucket-store.js";
 
@@ -369,7 +369,9 @@ contractSuite("bucket query", engine => {
       if (value && typeof value == "object") {
         return Object.fromEntries(
           Object.entries(value)
-            .filter(([name, inner]) => name != "_id" && name != "id" && inner != null)
+            .filter(
+              ([name, inner]) => !Object.values(ENGINE_KEY_FIELDS).includes(name) && inner != null
+            )
             .map(([name, inner]) => [name, label(inner)])
         );
       }
@@ -391,7 +393,7 @@ contractSuite("bucket query", engine => {
 
       authors = await store.createBucket({
         name: {type: "string"},
-        company: {type: "relation", bucketId: String(companies._id), relationType: "onetoone"}
+        company: {type: "relation", bucketId: String(idOf(companies)), relationType: "onetoone"}
       });
       const ann = await insertLabeled(authors, "ann", {name: "Ann", company: acme});
       const bob = await insertLabeled(authors, "bob", {name: "Bob", company: globex});
@@ -399,12 +401,12 @@ contractSuite("bucket query", engine => {
 
       posts = await store.createBucket({
         title: {type: "string"},
-        author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"},
-        editors: {type: "relation", bucketId: String(authors._id), relationType: "onetomany"},
+        author: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"},
+        editors: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetomany"},
         meta: {
           type: "object",
           properties: {
-            reviewer: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}
+            reviewer: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"}
           }
         }
       });
@@ -474,7 +476,7 @@ contractSuite("bucket query", engine => {
     });
 
     it("should filter by a field of a related document through conditions", async () => {
-      const found = await read([["author", "_id"]], {
+      const found = await read([["author", store.keyField]], {
         where: {path: ["author", "name"], operator: "eq", value: "Bob"}
       });
 
@@ -498,7 +500,7 @@ contractSuite("bucket query", engine => {
         title: {type: "string"},
         author: {
           type: "relation",
-          bucketId: String(authors._id),
+          bucketId: String(idOf(authors)),
           relationType: "onetoone",
           acl: `auth.role == "admin"`
         }
@@ -629,14 +631,14 @@ contractSuite("bucket query", engine => {
       const ann = String(keys.ann);
       const posts = await store.createBucket({
         title: {type: "string", options: {translate: true}},
-        author: {type: "relation", bucketId: String(authors._id), relationType: "onetoone"}
+        author: {type: "relation", bucketId: String(idOf(authors)), relationType: "onetoone"}
       });
       await store.insert(posts, {title: {en_US: "p"}, author: ann});
 
       const {result} = await store.localized(posts, {
         localize: true,
         language: "tr",
-        relationPaths: [["author", "_id"]]
+        relationPaths: [["author", store.keyField]]
       });
       expect(result[0].author.bio).toBe("yazar");
     });

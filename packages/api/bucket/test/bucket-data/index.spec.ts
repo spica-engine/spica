@@ -2,11 +2,12 @@ import {contractSuite} from "@spica-server/database-testing";
 import {Request} from "@spica-server/core-testing";
 import {Bucket, BucketDocument} from "@spica-server/interface-bucket";
 import {BucketApp, startBucketApp, withoutBlanks} from "../support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("BucketDataController", engine => {
   let api: BucketApp;
   let req: Request;
-  let key: "_id" | "id";
+  let key: string;
 
   beforeEach(async () => {
     api = await startBucketApp(engine, {}, {omitNulls: true});
@@ -48,16 +49,16 @@ contractSuite("BucketDataController", engine => {
     beforeEach(async () => {
       bucket = await req.post("/bucket", bucket).then(response => response.body);
       rows = [
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Jim", age: 20}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Michael", age: 22}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Kevin", age: 25}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Dwight", age: 38}),
-        await req.post(`/bucket/${bucket._id}/data`, {name: "Toby", age: 30})
+        await req.post(`/bucket/${idOf(bucket)}/data`, {name: "Jim", age: 20}),
+        await req.post(`/bucket/${idOf(bucket)}/data`, {name: "Michael", age: 22}),
+        await req.post(`/bucket/${idOf(bucket)}/data`, {name: "Kevin", age: 25}),
+        await req.post(`/bucket/${idOf(bucket)}/data`, {name: "Dwight", age: 38}),
+        await req.post(`/bucket/${idOf(bucket)}/data`, {name: "Toby", age: 30})
       ].map(r => r.body);
     });
 
     it("should have created the bucket and the rows", () => {
-      expect(bucket._id).toBeTruthy();
+      expect(idOf(bucket)).toBeTruthy();
 
       expect(rows).toEqual([
         {[key]: rows[0][key], name: "Jim", age: 20},
@@ -70,7 +71,7 @@ contractSuite("BucketDataController", engine => {
 
     describe("skip and limit", () => {
       it("should work without query", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {});
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {});
         expect(documents.length).toEqual(5);
 
         expect(documents).toEqual([
@@ -83,7 +84,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should work with limit query", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {limit: "3"});
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {limit: "3"});
         expect(documents.length).toEqual(3);
         expect(documents).toEqual([
           {[key]: documents[0][key], name: "Jim", age: 20},
@@ -93,7 +94,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should work with skip query", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {skip: "2"});
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {skip: "2"});
         expect(documents.length).toEqual(3);
         expect(documents).toEqual([
           {[key]: documents[0][key], name: "Kevin", age: 25},
@@ -103,7 +104,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should work with skip and limit query", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           limit: "2",
           skip: "1"
         });
@@ -117,7 +118,7 @@ contractSuite("BucketDataController", engine => {
 
     describe("sort", () => {
       it("ascend by name", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           sort: JSON.stringify({name: 1})
         });
 
@@ -133,7 +134,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("descend by name", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           sort: JSON.stringify({name: -1})
         });
 
@@ -149,7 +150,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("ascend by age", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           sort: JSON.stringify({age: 1})
         });
 
@@ -164,7 +165,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("descend by age", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           sort: JSON.stringify({age: -1})
         });
 
@@ -181,7 +182,7 @@ contractSuite("BucketDataController", engine => {
 
     describe("pagination", () => {
       it("should paginate the results", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {paginate: "true"});
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {paginate: "true"});
         expect(response.meta.total).toBe(5);
         expect(response.data.length).toBe(5);
 
@@ -195,7 +196,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should paginate the results along with the limit", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           limit: "2",
           paginate: "true"
         });
@@ -208,7 +209,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should paginate the results along with the skip", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           skip: "3",
           paginate: "true"
         });
@@ -222,7 +223,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should paginate the results along with the skip and limit", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           limit: "3",
           skip: "2",
           paginate: "true"
@@ -238,7 +239,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should report the real total when the skip goes past the end", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           skip: "100",
           paginate: "true"
         });
@@ -248,7 +249,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should report the real total when a filtered page goes past the end", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({age: {$gt: 21}}, "age > 21"),
           skip: "100",
           paginate: "true"
@@ -259,7 +260,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should report a zero total when nothing matches the filter", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({name: "Nobody"}, 'name == "Nobody"'),
           paginate: "true"
         });
@@ -271,7 +272,7 @@ contractSuite("BucketDataController", engine => {
 
     describe("filter", () => {
       it("should return the persons who has 'i' in their names", async () => {
-        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: response} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({name: {$regex: "i"}}, 'regex(document.name, "i")')
         });
 
@@ -285,7 +286,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons whose name is Jim", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({name: "Jim"}, 'name == "Jim"')
         });
 
@@ -294,7 +295,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons whose name is Jim (Expression)", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: `name == "Jim"`
         });
 
@@ -303,7 +304,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons whose age is 38", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({age: 38}, "age == 38")
         });
 
@@ -312,7 +313,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons whose age is 38 (Expression)", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: `age == 38`
         });
 
@@ -321,7 +322,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons who is older than 22", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({age: {$gt: 22}}, "age > 22")
         });
 
@@ -334,7 +335,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons who is older than 22 (Expression)", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: `age > 22`
         });
 
@@ -347,7 +348,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons who is younger than 25", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: api.filter({age: {$lt: 25}}, "age < 25")
         });
 
@@ -359,7 +360,7 @@ contractSuite("BucketDataController", engine => {
       });
 
       it("should return the persons who is younger than 25 (Expression)", async () => {
-        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+        const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
           filter: `age < 25`
         });
 
@@ -374,12 +375,12 @@ contractSuite("BucketDataController", engine => {
         let rows;
         beforeEach(async () => {
           rows = [
-            await req.post(`/bucket/${bucket._id}/data`, {
+            await req.post(`/bucket/${idOf(bucket)}/data`, {
               name: "Sherlock",
               age: 28,
               created_at: new Date("2020-04-20T10:00:00.000Z")
             }),
-            await req.post(`/bucket/${bucket._id}/data`, {
+            await req.post(`/bucket/${idOf(bucket)}/data`, {
               name: "Doctor Who",
               age: 25,
               created_at: new Date("2020-05-20T10:00:00.000Z")
@@ -388,7 +389,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should get documents between dates", async () => {
-          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
             filter: api.filter(
               {
                 created_at: {
@@ -411,7 +412,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should get documents whose creation date is the greatest", async () => {
-          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, {
             filter: api.filter(
               {
                 created_at: {
@@ -463,26 +464,26 @@ contractSuite("BucketDataController", engine => {
           .then(r => r.body);
 
         rows = [
-          await req.post(`/bucket/${bucket._id}/data`, {
+          await req.post(`/bucket/${idOf(bucket)}/data`, {
             title: {en_US: "english words", tr_TR: "türkçe kelimeler"},
             description: "description"
           }),
-          await req.post(`/bucket/${bucket._id}/data`, {
+          await req.post(`/bucket/${idOf(bucket)}/data`, {
             title: {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
             description: "description"
           }),
-          await req.post(`/bucket/${bucket._id}/data`, {
+          await req.post(`/bucket/${idOf(bucket)}/data`, {
             title: {en_US: "only english words"},
             description: "description"
           })
         ].map(r => r.body);
       });
 
-      afterEach(async () => await req.delete(`/bucket/${bucket._id}`));
+      afterEach(async () => await req.delete(`/bucket/${idOf(bucket)}`));
 
       describe("find requests", () => {
         it("should return english titles", async () => {
-          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, undefined, {
+          const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, undefined, {
             "accept-language": "en_US"
           });
           expect(documents).toEqual([
@@ -493,7 +494,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should return turkish titles and fallback to default language", async () => {
-          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, undefined, {
+          const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, undefined, {
             "accept-language": "tr_TR"
           });
 
@@ -506,7 +507,7 @@ contractSuite("BucketDataController", engine => {
 
         it("should return documents as is when localize parameter is false", async () => {
           const {body: documents} = await req.get(
-            `/bucket/${bucket._id}/data`,
+            `/bucket/${idOf(bucket)}/data`,
             {localize: "false"},
             {"accept-language": "tr_TR"}
           );
@@ -531,7 +532,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should return fallback language's titles when the titles are not available in requested language", async () => {
-          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, undefined, {
+          const {body: documents} = await req.get(`/bucket/${idOf(bucket)}/data`, undefined, {
             "accept-language": "fr_FR"
           });
           expect(documents).toEqual([
@@ -545,7 +546,7 @@ contractSuite("BucketDataController", engine => {
       describe("findOne requests", () => {
         it("should return English title ", async () => {
           const {body: document} = await req.get(
-            `/bucket/${bucket._id}/data/${rows[0][key]}`,
+            `/bucket/${idOf(bucket)}/data/${rows[0][key]}`,
             undefined,
             {"accept-language": "en_US"}
           );
@@ -558,7 +559,7 @@ contractSuite("BucketDataController", engine => {
 
         it("should return Turkish title ", async () => {
           const {body: document} = await req.get(
-            `/bucket/${bucket._id}/data/${rows[0][key]}`,
+            `/bucket/${idOf(bucket)}/data/${rows[0][key]}`,
             undefined,
             {"accept-language": "tr_TR"}
           );
@@ -571,7 +572,7 @@ contractSuite("BucketDataController", engine => {
 
         it("should return document as is when localize parameter is false", async () => {
           const {body: document} = await req.get(
-            `/bucket/${bucket._id}/data/${rows[0][key]}`,
+            `/bucket/${idOf(bucket)}/data/${rows[0][key]}`,
             {localize: "false"},
             {"accept-language": "tr_TR"}
           );
@@ -584,7 +585,7 @@ contractSuite("BucketDataController", engine => {
 
         it("should return fallback language's titles when the titles are not available in requested language", async () => {
           const {body: document} = await req.get(
-            `/bucket/${bucket._id}/data/${rows[2][key]}`,
+            `/bucket/${idOf(bucket)}/data/${rows[2][key]}`,
             undefined,
             {"accept-language": "tr_TR"}
           );
@@ -646,7 +647,7 @@ contractSuite("BucketDataController", engine => {
               },
               wallet: {
                 type: "relation",
-                bucketId: walletBucket._id,
+                bucketId: idOf(walletBucket),
                 relationType: "onetomany"
               }
             }
@@ -661,13 +662,13 @@ contractSuite("BucketDataController", engine => {
               achievement: {
                 type: "relation",
                 options: {},
-                bucketId: achievementsBucket._id,
+                bucketId: idOf(achievementsBucket),
                 relationType: "onetoone"
               },
               user: {
                 type: "relation",
                 options: {},
-                bucketId: usersBucket._id,
+                bucketId: idOf(usersBucket),
                 relationType: "onetoone"
               }
             }
@@ -675,51 +676,51 @@ contractSuite("BucketDataController", engine => {
           .then(r => r.body);
 
         user = await req
-          .post(`/bucket/${usersBucket._id}/data`, {
+          .post(`/bucket/${idOf(usersBucket)}/data`, {
             name: "user66"
           })
           .then(r => r.body);
 
         achievement = await req
-          .post(`/bucket/${achievementsBucket._id}/data`, {
+          .post(`/bucket/${idOf(achievementsBucket)}/data`, {
             name: "do something until something else happens"
           })
           .then(r => r.body);
 
         anotherUser = await req
-          .post(`/bucket/${usersBucket._id}/data`, {
+          .post(`/bucket/${idOf(usersBucket)}/data`, {
             name: "user33"
           })
           .then(r => r.body);
 
         wallets = [
-          await req.post(`/bucket/${walletBucket._id}/data`, {
+          await req.post(`/bucket/${idOf(walletBucket)}/data`, {
             name: "GNB"
           }),
-          await req.post(`/bucket/${walletBucket._id}/data`, {
+          await req.post(`/bucket/${idOf(walletBucket)}/data`, {
             name: "FNB"
           })
         ].map(r => r.body);
 
         userWithWallet = await req
-          .post(`/bucket/${usersBucket._id}/data`, {
+          .post(`/bucket/${idOf(usersBucket)}/data`, {
             name: "wealthy user",
             wallet: wallets.map(wallet => wallet[key])
           })
           .then(r => r.body);
 
-        await req.post(`/bucket/${statisticsBucket._id}/data`, {
+        await req.post(`/bucket/${idOf(statisticsBucket)}/data`, {
           user: user[key],
           achievement: achievement[key]
         });
 
-        await req.post(`/bucket/${statisticsBucket._id}/data`, {
+        await req.post(`/bucket/${idOf(statisticsBucket)}/data`, {
           user: anotherUser[key],
           achievement: achievement[key]
         });
 
         userWithWalletStats = await req
-          .post(`/bucket/${statisticsBucket._id}/data`, {
+          .post(`/bucket/${idOf(statisticsBucket)}/data`, {
             user: userWithWallet[key],
             achievement: achievement[key]
           })
@@ -727,15 +728,17 @@ contractSuite("BucketDataController", engine => {
       });
 
       afterEach(async () => {
-        await req.delete(`/bucket/${statisticsBucket._id}`);
-        await req.delete(`/bucket/${usersBucket._id}`);
-        await req.delete(`/bucket/${achievementsBucket._id}`);
-        await req.delete(`/bucket/${walletBucket._id}`);
+        await req.delete(`/bucket/${idOf(statisticsBucket)}`);
+        await req.delete(`/bucket/${idOf(usersBucket)}`);
+        await req.delete(`/bucket/${idOf(achievementsBucket)}`);
+        await req.delete(`/bucket/${idOf(walletBucket)}`);
       });
 
       describe("findAll", () => {
         it("should return users with wallets", async () => {
-          const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {relation: true});
+          const {body: users} = await req.get(`/bucket/${idOf(usersBucket)}/data`, {
+            relation: true
+          });
           expect(users).toEqual([
             {[key]: users[0][key], name: "user66", wallet: []},
             {[key]: users[1][key], name: "user33", wallet: []},
@@ -751,7 +754,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should return users by their wallet name", async () => {
-          const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {
+          const {body: users} = await req.get(`/bucket/${idOf(usersBucket)}/data`, {
             relation: true,
             filter: api.filter({"wallet.name": "GNB"}, 'some(document.wallet.name, ["GNB"])')
           });
@@ -768,7 +771,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should get statistics with username and achievement name", async () => {
-          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          const {body: documents} = await req.get(`/bucket/${idOf(statisticsBucket)}/data`, {
             relation: true
           });
           expect(withoutBlanks(documents)).toEqual([
@@ -810,7 +813,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should get statistics with achievement,user and their wallets", async () => {
-          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          const {body: documents} = await req.get(`/bucket/${idOf(statisticsBucket)}/data`, {
             relation: ["user.wallet", "achievement"]
           });
           expect(documents).toEqual([
@@ -857,7 +860,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should filter statistics by user wallet", async () => {
-          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          const {body: documents} = await req.get(`/bucket/${idOf(statisticsBucket)}/data`, {
             relation: ["user.wallet", "achievement"],
             filter: api.filter(
               {"user.wallet.name": "GNB"},
@@ -884,7 +887,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should get statistics with only id", async () => {
-          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          const {body: documents} = await req.get(`/bucket/${idOf(statisticsBucket)}/data`, {
             relation: false
           });
 
@@ -908,8 +911,8 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should return the documents including those which does not have the relation field filled", async () => {
-          const {body: newRow} = await req.post(`/bucket/${statisticsBucket._id}/data`, {});
-          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          const {body: newRow} = await req.post(`/bucket/${idOf(statisticsBucket)}/data`, {});
+          const {body: documents} = await req.get(`/bucket/${idOf(statisticsBucket)}/data`, {
             relation: true
           });
           expect(withoutBlanks(documents)).toEqual([
@@ -954,10 +957,10 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should filter by relation", async () => {
-          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          const {body: documents} = await req.get(`/bucket/${idOf(statisticsBucket)}/data`, {
             relation: true,
             filter: api.filter(
-              {"user._id": anotherUser[key]},
+              {[`user.${key}`]: anotherUser[key]},
               `document.user.${key} == "${anotherUser[key]}"`
             )
           });
@@ -978,7 +981,7 @@ contractSuite("BucketDataController", engine => {
         });
 
         it("should not resolve relation and apply the filter correctly", async () => {
-          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          const {body: documents} = await req.get(`/bucket/${idOf(statisticsBucket)}/data`, {
             filter: api.filter({user: anotherUser[key]}, `document.user == "${anotherUser[key]}"`)
           });
 
@@ -993,7 +996,7 @@ contractSuite("BucketDataController", engine => {
 
         describe("Multiple relational request", () => {
           afterEach(async () => {
-            await req.put(`/bucket/${statisticsBucket._id}`, {
+            await req.put(`/bucket/${idOf(statisticsBucket)}`, {
               ...statisticsBucket,
               acl: {
                 write: "true==true",
@@ -1003,7 +1006,7 @@ contractSuite("BucketDataController", engine => {
           });
 
           it("should run with rule and filter", async () => {
-            await req.put(`/bucket/${statisticsBucket._id}`, {
+            await req.put(`/bucket/${idOf(statisticsBucket)}`, {
               ...statisticsBucket,
               acl: {
                 write: "true==true",
@@ -1013,7 +1016,7 @@ contractSuite("BucketDataController", engine => {
 
             const filter = api.filter({user: user[key]}, `document.user == "${user[key]}"`);
 
-            const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+            const {body: documents} = await req.get(`/bucket/${idOf(statisticsBucket)}/data`, {
               filter
             });
 
@@ -1037,7 +1040,7 @@ contractSuite("BucketDataController", engine => {
             );
             const relation = ["user.wallet", "achievement"];
 
-            const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+            const {body: documents} = await req.get(`/bucket/${idOf(statisticsBucket)}/data`, {
               filter,
               relation
             });
@@ -1066,7 +1069,7 @@ contractSuite("BucketDataController", engine => {
       describe("find", () => {
         it("should get statistic with achievement,user and own wallets", async () => {
           const {body: document} = await req.get(
-            `/bucket/${statisticsBucket._id}/data/${userWithWalletStats[key]}`,
+            `/bucket/${idOf(statisticsBucket)}/data/${userWithWalletStats[key]}`,
             {
               relation: true
             }
@@ -1087,7 +1090,7 @@ contractSuite("BucketDataController", engine => {
 
         it("should get statistic with username id and achievement id", async () => {
           const {body: document} = await req.get(
-            `/bucket/${statisticsBucket._id}/data/${userWithWalletStats[key]}`,
+            `/bucket/${idOf(statisticsBucket)}/data/${userWithWalletStats[key]}`,
             {
               relation: false
             }
@@ -1101,7 +1104,7 @@ contractSuite("BucketDataController", engine => {
 
         it("should get statistic with user and own wallet", async () => {
           const {body: document} = await req.get(
-            `/bucket/${statisticsBucket._id}/data/${userWithWalletStats[key]}`,
+            `/bucket/${idOf(statisticsBucket)}/data/${userWithWalletStats[key]}`,
             {
               relation: ["user.wallet"]
             }

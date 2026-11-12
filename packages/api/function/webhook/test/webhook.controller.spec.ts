@@ -1,4 +1,4 @@
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf, stripId, withId} from "@spica-server/data";
 import {WEBHOOK_LOG_REPOSITORY, WEBHOOK_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
@@ -82,13 +82,10 @@ contractSuite("Webhook Controller", engine => {
   it("should insert a new webhook", async () => {
     const {body: hook} = await req.post("/webhook", webhook);
 
-    const expected = {
-      ...webhook,
-      _id: hook._id
-    };
+    const expected = withId({...webhook}, idOf(hook));
     expected.trigger.active = true;
 
-    expect(module.get<IdTypes>(ID_TYPES).forCollection("webhook").isValid(expected._id)).toEqual(
+    expect(module.get<IdTypes>(ID_TYPES).forCollection("webhook").isValid(idOf(expected))).toEqual(
       true
     );
     expect(hook).toEqual(expected);
@@ -98,8 +95,8 @@ contractSuite("Webhook Controller", engine => {
     const {body: hook} = await req.post("/webhook", webhook);
 
     const body = {...hook, title: "wh2"};
-    const id = body._id;
-    delete body._id;
+    const id = idOf(body);
+    stripId(body);
 
     const {body: updatedHook} = await req.put(`/webhook/${id}`, body);
 
@@ -109,7 +106,7 @@ contractSuite("Webhook Controller", engine => {
   it("should delete existing webhook", async () => {
     const {body: hook} = await req.post("/webhook", webhook);
 
-    const result = await req.delete(`/webhook/${hook._id}`);
+    const result = await req.delete(`/webhook/${idOf(hook)}`);
 
     expect(result.body).not.toBeTruthy();
     expect(result.statusCode).toBe(204);
@@ -118,7 +115,7 @@ contractSuite("Webhook Controller", engine => {
   it("should show existing webhook", async () => {
     const {body: hook} = await req.post("/webhook", webhook);
 
-    const {body: existingWebhook} = await req.get(`/webhook/${hook._id}`, undefined);
+    const {body: existingWebhook} = await req.get(`/webhook/${idOf(hook)}`, undefined);
     expect(existingWebhook).toEqual(hook);
   });
 
@@ -166,8 +163,8 @@ contractSuite("Webhook Controller", engine => {
       const {body: insertedWh} = await req.post("/webhook", webhook);
 
       insertedWh.body = "{{invali_body}";
-      const id = insertedWh._id;
-      delete insertedWh._id;
+      const id = idOf(insertedWh);
+      stripId(insertedWh);
 
       const {body: validationErrors} = await req.put(`/webhook/${id}`, insertedWh).catch(e => e);
       expect(validationErrors.statusCode).toBe(400);

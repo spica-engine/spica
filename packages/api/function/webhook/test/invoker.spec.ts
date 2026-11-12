@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
-import {changeFeedReady, contractSuite} from "@spica-server/database-testing";
+import {provideRepository, idOf, omitId} from "@spica-server/data";
+import {changeFeedReady, contractSuite, keyFieldOf} from "@spica-server/database-testing";
 import {WebhookChangeDispatcher, WebhookService} from "@spica-server/function-webhook";
 import {WebhookInvoker} from "@spica-server/function-webhook/src/invoker";
 import {
@@ -40,7 +40,7 @@ let buckets = 0;
 
 contractSuite("Webhook Invoker", engine => {
   const mongo = engine.name == "mongodb";
-  const keyField = mongo ? "_id" : "id";
+  const keyField = keyFieldOf(engine);
   let invoker: WebhookInvoker;
   let module: TestingModule;
   let service: WebhookService;
@@ -112,7 +112,7 @@ contractSuite("Webhook Invoker", engine => {
       } as any,
       () => {}
     );
-    collection = `bucket_${bucket._id}`;
+    collection = `bucket_${idOf(bucket)}`;
 
     webhook = {
       title: "wh1",
@@ -136,38 +136,38 @@ contractSuite("Webhook Invoker", engine => {
   });
 
   it("should subscribe to the collection of the webhook", async () => {
-    const {_id, ...hook} = await subscribed(webhook);
+    const stored = await subscribed(webhook);
 
     expect(subscribeSpy).toHaveBeenCalledTimes(1);
-    expect(subscribeSpy).toHaveBeenCalledWith(String(_id), hook);
+    expect(subscribeSpy).toHaveBeenCalledWith(String(idOf(stored)), omitId(stored));
   });
 
   it("should unsubscribe after the webhook has deleted", async () => {
     const hook = await subscribed(webhook);
 
-    await service.deleteById(hook._id);
+    await service.deleteById(idOf(hook));
     await until(() => unsubscribeSpy.mock.calls.length > 0);
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith(String(hook._id));
+    expect(unsubscribeSpy).toHaveBeenCalledWith(String(idOf(hook)));
   });
 
   it("should unsubscribe after the webhook has disabled", async () => {
     const hook = await subscribed(webhook);
 
-    await service.replaceById(hook._id, {
+    await service.replaceById(idOf(hook), {
       ...webhook,
       trigger: {...webhook.trigger, active: false}
     });
     await until(() => unsubscribeSpy.mock.calls.length > 0);
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith(String(hook._id));
+    expect(unsubscribeSpy).toHaveBeenCalledWith(String(idOf(hook)));
   });
 
   it("should stop reporting changes after the webhook has deleted", async () => {
     const hook = await subscribed(webhook);
-    await service.deleteById(hook._id);
+    await service.deleteById(idOf(hook));
     await until(() => unsubscribeSpy.mock.calls.length > 0);
 
     await insert({doc: "ignored"});
@@ -250,7 +250,7 @@ contractSuite("Webhook Invoker", engine => {
           body: "res_body"
         }
       },
-      webhook: String(hook._id),
+      webhook: String(idOf(hook)),
       succeed: false,
       created_at: expect.any(Date)
     });
@@ -266,7 +266,7 @@ contractSuite("Webhook Invoker", engine => {
     expect(insertLogSpy).toHaveBeenCalledTimes(1);
     expect(insertLogSpy.mock.calls[0][0]).toEqual({
       content: {error: '"title" not defined in [object Object] - 1:3'},
-      webhook: String(hook._id),
+      webhook: String(idOf(hook)),
       succeed: false,
       created_at: expect.any(Date)
     });

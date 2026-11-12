@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {ORM, PostgresChangeFeed} from "@spica-server/data-postgresql";
 import {Orm} from "@spica-server/data-postgresql-orm";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
@@ -85,7 +85,7 @@ describe("PostgreSQL change feed", () => {
 
   beforeEach(async () => {
     bucket = await manager.create(definition() as any, () => {});
-    table = `bucket_${bucket._id}`;
+    table = `bucket_${idOf(bucket)}`;
   });
 
   afterEach(() => subscriptions.splice(0).forEach(subscription => subscription.unsubscribe()));
@@ -193,7 +193,7 @@ describe("PostgreSQL change feed", () => {
             ...Object.fromEntries(fields.map(field => [field, {type: "string"}]))
           }
         }),
-        _id: undefined
+        id: undefined
       };
       const created = await manager.create(wide as any, () => {});
       const before = Object.fromEntries(fields.map(field => [field, "old"]));
@@ -203,7 +203,7 @@ describe("PostgreSQL change feed", () => {
       const events = await listen(
         {operations: ["update"], document: "current"},
         feed,
-        `bucket_${created._id}`
+        `bucket_${idOf(created)}`
       );
 
       await patch({...saved, ...after}, after, created);
@@ -273,9 +273,9 @@ describe("PostgreSQL change feed", () => {
             labels: {type: "array", items: {type: "string"}}
           }
         }),
-        _id: bucket._id
+        id: idOf(bucket)
       };
-      await manager.replace(bucket._id, replaced as any, () => {});
+      await manager.replace(idOf(bucket), replaced as any, () => {});
       const saved = await insert({title: "post"}, replaced);
       const events = await listen({operations: ["update"], document: "current"});
 
@@ -300,10 +300,10 @@ describe("PostgreSQL change feed", () => {
       await insert({code: "a", tags: ["x"]}, created);
       await insert({code: "b"}, created);
       await sleep(SETTLE_MS);
-      const events = await listen(undefined, feed, `bucket_${created._id}`);
+      const events = await listen(undefined, feed, `bucket_${idOf(created)}`);
 
-      const rekeyed = {...keyed("code"), _id: created._id};
-      await manager.replace(created._id, rekeyed, () => {});
+      const rekeyed = {...keyed("code"), id: idOf(created)};
+      await manager.replace(idOf(created), rekeyed, () => {});
       await sleep(SETTLE_MS);
       expect(events).toEqual([]);
 

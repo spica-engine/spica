@@ -1,4 +1,5 @@
 import {getUser, getAction} from "@spica-server/activity-services";
+import {withId} from "@spica-server/data";
 
 describe("Interceptor Unit Test", () => {
   it("should get action from method", () => {
@@ -10,7 +11,7 @@ describe("Interceptor Unit Test", () => {
   });
 
   it("should get identifier from user object", () => {
-    expect(getUser({_id: "user_id"})).toEqual("user_id");
+    expect(getUser(withId({}, "user_id"))).toEqual("user_id");
     expect(getUser(undefined)).toEqual(undefined);
   });
 });

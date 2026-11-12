@@ -1,4 +1,6 @@
+import {ENGINE_KEY_FIELDS} from "@spica-server/database-testing";
 import {postgresBucketSchema} from "@spica-server/data-postgresql";
+import {IdTypes} from "@spica-server/interface-data";
 import {SCHEMA_ID, validatorFor, violations} from "./bucket-schema.helper";
 
 describe("PostgreSQL bucket schema", () => {
@@ -20,7 +22,9 @@ describe("PostgreSQL bucket schema", () => {
   let validator: ReturnType<typeof validatorFor>;
 
   beforeAll(() => {
-    validator = validatorFor(postgresBucketSchema);
+    validator = validatorFor(postgresBucketSchema, {
+      systemKeyField: () => "id"
+    } as unknown as IdTypes);
   });
 
   const check = (definition: object) => violations(validator, SCHEMA_ID, definition);
@@ -66,8 +70,8 @@ describe("PostgreSQL bucket schema", () => {
 
   describe("id", () => {
     it("should be a uuid", async () => {
-      await accepted(bucket({_id: id}));
-      await rejected(bucket({_id: "507f1f77bcf86cd799439011"}));
+      await accepted(bucket({id}));
+      await rejected(bucket({id: "507f1f77bcf86cd799439011"}));
     });
   });
 
@@ -194,10 +198,15 @@ describe("PostgreSQL bucket schema", () => {
   });
 
   describe("property names", () => {
-    it.each(["_id", "_parent", "_position", "_locale", "_value", "_source", "_target"])(
-      "should reserve %s",
-      name => rejected(bucket({}, {[name]: {type: "string"}}))
-    );
+    it.each([
+      ENGINE_KEY_FIELDS.mongodb,
+      "_parent",
+      "_position",
+      "_locale",
+      "_value",
+      "_source",
+      "_target"
+    ])("should reserve %s", name => rejected(bucket({}, {[name]: {type: "string"}})));
 
     it("should reserve the names inside objects and array items too", async () => {
       await rejected(bucket({}, {o: {type: "object", properties: {_parent: {type: "string"}}}}));
@@ -365,13 +374,18 @@ describe("PostgreSQL bucket schema", () => {
         "loose"
       ])("should index %s", field => accepted(withIndex({definition: {[field]: 1}}, nested)));
 
-      it.each(["missing", "address.zip", "title.x", "constructor", "toString.x", "_id"])(
-        "should reject %s, which is not a property",
-        field =>
-          rejected(
-            withIndex({definition: {[field]: 1}}, nested),
-            "which is not a property of the bucket"
-          )
+      it.each([
+        "missing",
+        "address.zip",
+        "title.x",
+        "constructor",
+        "toString.x",
+        ENGINE_KEY_FIELDS.mongodb
+      ])("should reject %s, which is not a property", field =>
+        rejected(
+          withIndex({definition: {[field]: 1}}, nested),
+          "which is not a property of the bucket"
+        )
       );
 
       it.each(["address", "address.geo", "lines"])(

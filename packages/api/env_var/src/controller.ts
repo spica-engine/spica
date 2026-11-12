@@ -23,7 +23,7 @@ import {EnvVar} from "@spica-server/interface-env_var";
 import * as CRUD from "./crud.js";
 import {activity} from "@spica-server/activity-services";
 import {createEnvVarActivity} from "./activity.resource.js";
-import {ID} from "@spica-server/data";
+import {ID, withId} from "@spica-server/data";
 import {
   COLLECTION_QUERY,
   CollectionQueryFacade,
@@ -79,7 +79,7 @@ export class EnvVarController {
     @Body(Schema.validate("http://spica.internal/env_var"))
     envVar: EnvVar
   ) {
-    return CRUD.replace(this.evs, {...envVar, _id: id}).catch(error => {
+    return CRUD.replace(this.evs, withId({...envVar}, id)).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });
   }

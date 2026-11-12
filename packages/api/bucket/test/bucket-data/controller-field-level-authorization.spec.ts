@@ -1,11 +1,12 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {BucketApp, startBucketApp, withoutNulls} from "../support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("BucketDataController: field level authorization", engine => {
   let api: BucketApp;
   let bucket: any;
   let rows = [];
-  let key: "_id" | "id";
+  let key: string;
 
   beforeEach(async () => {
     api = await startBucketApp(engine, {}, {passport: {overriddenStrategyType: "USER"}});
@@ -26,11 +27,11 @@ contractSuite("BucketDataController: field level authorization", engine => {
     );
 
     rows = [
-      await api.req.post(`/bucket/${bucket._id}/data`, {name: "Jim", age: 20}),
-      await api.req.post(`/bucket/${bucket._id}/data`, {name: "Michael", age: 22}),
-      await api.req.post(`/bucket/${bucket._id}/data`, {name: "Kevin", age: 25}),
-      await api.req.post(`/bucket/${bucket._id}/data`, {name: "Dwight", age: 38}),
-      await api.req.post(`/bucket/${bucket._id}/data`, {name: "Toby", age: 30})
+      await api.req.post(`/bucket/${idOf(bucket)}/data`, {name: "Jim", age: 20}),
+      await api.req.post(`/bucket/${idOf(bucket)}/data`, {name: "Michael", age: 22}),
+      await api.req.post(`/bucket/${idOf(bucket)}/data`, {name: "Kevin", age: 25}),
+      await api.req.post(`/bucket/${idOf(bucket)}/data`, {name: "Dwight", age: 38}),
+      await api.req.post(`/bucket/${idOf(bucket)}/data`, {name: "Toby", age: 30})
     ].map(r => r.body);
   });
 
@@ -39,12 +40,12 @@ contractSuite("BucketDataController: field level authorization", engine => {
   describe("when name is hidden for noop", () => {
     beforeEach(async () => {
       bucket.properties.name.acl = "auth.identifier != 'noop'";
-      await api.req.put(`/bucket/${bucket._id}`, bucket);
+      await api.req.put(`/bucket/${idOf(bucket)}`, bucket);
     });
 
     it("shouldn't see name field", async () => {
       const response = await api.req.get(
-        `/bucket/${bucket._id}/data`,
+        `/bucket/${idOf(bucket)}/data`,
         {},
         {Authorization: "USER test"}
       );
@@ -59,12 +60,12 @@ contractSuite("BucketDataController: field level authorization", engine => {
   describe("when name is shown only if age > 24", () => {
     beforeEach(async () => {
       bucket.properties.name.acl = "document.age > 24";
-      await api.req.put(`/bucket/${bucket._id}`, bucket);
+      await api.req.put(`/bucket/${idOf(bucket)}`, bucket);
     });
 
     it("should only show name if age > 24", async () => {
       const response = await api.req.get(
-        `/bucket/${bucket._id}/data`,
+        `/bucket/${idOf(bucket)}/data`,
         {},
         {Authorization: "USER test"}
       );

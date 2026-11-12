@@ -11,6 +11,7 @@ import {
 } from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {ChunkKind} from "@spica-server/interface-realtime";
+import {systemKeyField} from "@spica-server/data";
 
 mongoOnly(
   "it writes MongoDB log documents directly; the gateway on PostgreSQL is covered by realtime.postgresql.spec.ts"
@@ -214,9 +215,7 @@ describe("Realtime", () => {
     const ws = wsc.get(
       url("/function-logs", {
         begin: created_at.toString(),
-        sort: JSON.stringify({
-          _id: -1
-        })
+        sort: JSON.stringify({[systemKeyField()]: -1})
       })
     );
     const message = jest.fn();

@@ -15,6 +15,7 @@ import {
   bucketDataStatus
 } from "../../bucket/collections.js";
 import {readProfiler} from "../profiler.js";
+import {idOf, withId} from "@spica-server/data";
 
 @Injectable()
 export class MongoBucketDataRepository implements BucketDataRepository {
@@ -32,7 +33,7 @@ export class MongoBucketDataRepository implements BucketDataRepository {
   }
 
   async createStorage(bucket: Bucket) {
-    await this.db.createCollection(bucketDataCollectionName(bucket._id));
+    await this.db.createCollection(bucketDataCollectionName(idOf(bucket)));
   }
 
   async dropStorage(bucketId: Id) {
@@ -40,7 +41,7 @@ export class MongoBucketDataRepository implements BucketDataRepository {
   }
 
   findById(bucket: Bucket, id: Id) {
-    return this.children(bucket).findOne({_id: id});
+    return this.children(bucket).findOne(withId({}, id));
   }
 
   async unsetFields(bucket: Bucket, paths: (string | number)[][]) {
@@ -72,7 +73,7 @@ export class MongoBucketDataRepository implements BucketDataRepository {
   }
 
   async syncIndexes(bucket: Bucket): Promise<void> {
-    const collection = this.db.collection(bucketDataCollectionName(bucket._id));
+    const collection = this.db.collection(bucketDataCollectionName(idOf(bucket)));
 
     const existingIndexes = await collection.listIndexes().toArray();
 

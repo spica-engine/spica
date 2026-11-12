@@ -1,4 +1,4 @@
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, idOf} from "@spica-server/data";
 import {WEBHOOK_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {Test, TestingModule} from "@nestjs/testing";
 import {contractSuite} from "@spica-server/database-testing";
@@ -59,7 +59,7 @@ contractSuite("Webhook Service", engine => {
         .subscribe(targets => {
           expect(targets).toEqual({
             kind: ChangeKind.Added,
-            target: String(hook._id),
+            target: String(idOf(hook)),
             webhook: {
               title: hook.title,
               url: hook.url,
@@ -80,7 +80,7 @@ contractSuite("Webhook Service", engine => {
       .subscribe(targets => {
         expect(targets).toEqual({
           kind: ChangeKind.Added,
-          target: String(hook._id),
+          target: String(idOf(hook)),
           webhook: {
             title: hook.title,
             url: hook.url,
@@ -102,7 +102,7 @@ contractSuite("Webhook Service", engine => {
           expect(targets).toEqual([
             {
               kind: ChangeKind.Added,
-              target: String(hook._id),
+              target: String(idOf(hook)),
               webhook: {
                 title: hook.title,
                 url: hook.url,
@@ -112,13 +112,13 @@ contractSuite("Webhook Service", engine => {
             },
             {
               kind: ChangeKind.Removed,
-              target: String(hook._id)
+              target: String(idOf(hook))
             }
           ]);
           done();
         });
 
-      service.deleteById(hook._id);
+      service.deleteById(idOf(hook));
     });
   });
 
@@ -131,7 +131,7 @@ contractSuite("Webhook Service", engine => {
           expect(targets).toEqual([
             {
               kind: ChangeKind.Added,
-              target: String(hook._id),
+              target: String(idOf(hook)),
               webhook: {
                 title: hook.title,
                 url: hook.url,
@@ -141,12 +141,12 @@ contractSuite("Webhook Service", engine => {
             },
             {
               kind: ChangeKind.Removed,
-              target: String(hook._id)
+              target: String(idOf(hook))
             }
           ]);
           done();
         });
-      service.replaceById(hook._id, {...webhook, trigger: {...webhook.trigger, active: false}});
+      service.replaceById(idOf(hook), {...webhook, trigger: {...webhook.trigger, active: false}});
     });
   });
 

@@ -4,9 +4,12 @@ import {
   fetchToDisk,
   diffObjectFields,
   buildUnifiedDiff,
-  renderPlan
+  renderPlan,
+  SYSTEM_KEY_FIELDS
 } from "@spica-server/sync";
 import {ChangeKind, LocalResource, RemoteResource, ResourceModule} from "@spica-server/sync";
+
+const SHAPES = Object.entries(SYSTEM_KEY_FIELDS);
 
 function makeMockModule(
   name: string,
@@ -46,7 +49,7 @@ function makeMockModule(
   };
 }
 
-describe("diffObjectFields", () => {
+describe.each(SHAPES)("diffObjectFields (%s records)", (_shape, key) => {
   it("returns empty when objects are equal", () => {
     expect(diffObjectFields({a: 1, b: "x"}, {a: 1, b: "x"}, [])).toEqual([]);
   });
@@ -62,8 +65,8 @@ describe("diffObjectFields", () => {
   });
 
   it("excludes ignoredFields", () => {
-    const changed = diffObjectFields({a: 1, _id: "123"}, {a: 1, _id: "456"}, ["_id"]);
-    expect(changed).not.toContain("_id");
+    const changed = diffObjectFields({a: 1, [key]: "123"}, {a: 1, [key]: "456"}, [key]);
+    expect(changed).not.toContain(key);
   });
 
   it("handles nested objects with deep equality", () => {
@@ -80,7 +83,7 @@ describe("buildUnifiedDiff", () => {
   });
 });
 
-describe("buildPlan", () => {
+describe.each(SHAPES)("buildPlan (%s records)", (_shape, key) => {
   const mockHttp = {} as any;
 
   it("classifies creates, updates, deletes correctly", async () => {
@@ -129,13 +132,13 @@ describe("buildPlan", () => {
 
   it("ignores specified fields when comparing", async () => {
     const locals: LocalResource[] = [
-      {slug: "item", data: {name: "item", _id: "local-id", value: "x"}}
+      {slug: "item", data: {name: "item", [key]: "local-id", value: "x"}}
     ];
     const remotes: RemoteResource[] = [
-      {slug: "item", id: "remote-id", data: {name: "item", _id: "remote-id", value: "x"}}
+      {slug: "item", id: "remote-id", data: {name: "item", [key]: "remote-id", value: "x"}}
     ];
 
-    const mod = makeMockModule("test", locals, remotes, ["_id"]);
+    const mod = makeMockModule("test", locals, remotes, [key]);
     const plan = await buildPlan([mod], mockHttp, "/tmp");
 
     expect(plan.modules[0].updates).toHaveLength(0);
@@ -181,7 +184,7 @@ describe("buildPlan", () => {
   });
 });
 
-describe("buildPlan — rename detection", () => {
+describe.each(SHAPES)("buildPlan — rename detection (%s records)", (_shape, key) => {
   const mockHttp = {} as any;
 
   function makeMockModuleWithId(
@@ -194,13 +197,13 @@ describe("buildPlan — rename detection", () => {
     return mod;
   }
 
-  it("promotes a create+delete pair sharing the same _id to an update", async () => {
+  it("promotes a create+delete pair sharing the same key to an update", async () => {
     // Remote has "Members" (_id: "abc"). Local has "Members" but reads _id: "abc" from its yaml
     // (i.e. the user renamed the local folder from "Users" to "Members" and kept _id in schema).
-    const local: LocalResource = {slug: "Members", data: {name: "Members", _id: "abc"}};
+    const local: LocalResource = {slug: "Members", data: {name: "Members", [key]: "abc"}};
     const remote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
 
-    const mod = makeMockModuleWithId([local], [remote], d => d._id);
+    const mod = makeMockModuleWithId([local], [remote], d => d[key]);
     const plan = await buildPlan([mod], mockHttp, "/tmp");
     const mp = plan.modules[0];
 
@@ -212,10 +215,10 @@ describe("buildPlan — rename detection", () => {
   });
 
   it("leaves create+delete unpromoted when _ids do not match", async () => {
-    const local: LocalResource = {slug: "Members", data: {name: "Members", _id: "different-id"}};
+    const local: LocalResource = {slug: "Members", data: {name: "Members", [key]: "different-id"}};
     const remote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
 
-    const mod = makeMockModuleWithId([local], [remote], d => d._id);
+    const mod = makeMockModuleWithId([local], [remote], d => d[key]);
     const plan = await buildPlan([mod], mockHttp, "/tmp");
     const mp = plan.modules[0];
 
@@ -224,11 +227,11 @@ describe("buildPlan — rename detection", () => {
     expect(mp.updates).toHaveLength(0);
   });
 
-  it("leaves create+delete unpromoted when local has no _id", async () => {
+  it("leaves create+delete unpromoted when local has no key", async () => {
     const local: LocalResource = {slug: "Members", data: {name: "Members"}};
     const remote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
 
-    const mod = makeMockModuleWithId([local], [remote], d => d._id);
+    const mod = makeMockModuleWithId([local], [remote], d => d[key]);
     const plan = await buildPlan([mod], mockHttp, "/tmp");
     const mp = plan.modules[0];
 
@@ -238,10 +241,10 @@ describe("buildPlan — rename detection", () => {
   });
 
   it("does not promote renames when detectRenames=false (fetch mode)", async () => {
-    const local: LocalResource = {slug: "Members", data: {name: "Members", _id: "abc"}};
+    const local: LocalResource = {slug: "Members", data: {name: "Members", [key]: "abc"}};
     const remote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
 
-    const mod = makeMockModuleWithId([local], [remote], d => d._id);
+    const mod = makeMockModuleWithId([local], [remote], d => d[key]);
     // detectRenames=false simulates fetch path
     const plan = await buildPlan([mod], mockHttp, "/tmp", {detectRenames: false});
     const mp = plan.modules[0];
@@ -252,7 +255,7 @@ describe("buildPlan — rename detection", () => {
   });
 
   it("does not affect modules without extractLocalId", async () => {
-    const local: LocalResource = {slug: "Members", data: {name: "Members", _id: "abc"}};
+    const local: LocalResource = {slug: "Members", data: {name: "Members", [key]: "abc"}};
     const remote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
 
     // makeMockModule does not set extractLocalId
@@ -266,7 +269,7 @@ describe("buildPlan — rename detection", () => {
   });
 
   it("only promotes the matched pair — independent creates and deletes remain", async () => {
-    const renamedLocal: LocalResource = {slug: "Members", data: {name: "Members", _id: "abc"}};
+    const renamedLocal: LocalResource = {slug: "Members", data: {name: "Members", [key]: "abc"}};
     const newLocal: LocalResource = {slug: "Products", data: {name: "Products"}};
     const renamedRemote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
     const stalRemote: RemoteResource = {slug: "Orders", id: "xyz", data: {name: "Orders"}};
@@ -274,7 +277,7 @@ describe("buildPlan — rename detection", () => {
     const mod = makeMockModuleWithId(
       [renamedLocal, newLocal],
       [renamedRemote, stalRemote],
-      d => d._id
+      d => d[key]
     );
     const plan = await buildPlan([mod], mockHttp, "/tmp");
     const mp = plan.modules[0];

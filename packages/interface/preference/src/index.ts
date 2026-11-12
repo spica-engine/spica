@@ -1,7 +1,6 @@
-import {Id, Repository} from "@spica-server/interface-data";
+import {Repository} from "@spica-server/interface-data";
 
 export interface Preference {
-  _id?: Id;
   scope: string;
   [key: string]: any;
 }

@@ -4,8 +4,8 @@
  */
 import {Provider} from "@nestjs/common";
 import {TestingModule} from "@nestjs/testing";
-import {provideRepository} from "@spica-server/data";
-import {ContractEngine} from "@spica-server/database-testing";
+import {provideRepository, idOf} from "@spica-server/data";
+import {ContractEngine, keyFieldOf} from "@spica-server/database-testing";
 import {
   BUCKET_DATA_REPOSITORY,
   BUCKET_REPOSITORY,
@@ -32,7 +32,7 @@ export interface BucketOptions {
 }
 
 export interface BucketStore {
-  readonly keyField: "_id" | "id";
+  readonly keyField: string;
   createBucket(properties: Fixture, options?: BucketOptions): Promise<any>;
   find(bucket: any, spec?: BucketReadSpec): Promise<any[]>;
   paginate(bucket: any, spec?: BucketReadSpec): Promise<{meta: {total: number}; data: any[]}>;
@@ -63,7 +63,7 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
   });
 
   return {
-    keyField: mongo ? "_id" : "id",
+    keyField: keyFieldOf(engine),
 
     reset() {
       created = {};
@@ -88,7 +88,7 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
         } as any,
         () => {}
       );
-      created[String(bucket._id)] = bucket;
+      created[String(idOf(bucket))] = bucket;
       return bucket;
     },
 
@@ -116,7 +116,7 @@ export function createBucketStore(engine: ContractEngine, module: TestingModule)
           {},
           {resolveSchema: id => created[String(id)], deleteOne: async () => {}}
         );
-      return saved[mongo ? "_id" : "id"];
+      return saved[keyFieldOf(engine)];
     },
 
     async read(bucket, key, {resolve = [], locale} = {}) {

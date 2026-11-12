@@ -90,9 +90,9 @@ describe("relation paths against rows in PostgreSQL", () => {
 
   describe("combined with another condition", () => {
     it("should let through the posts both sides let through", async () => {
-      const rule = "document.author.name == 'bob' && document.owner != auth._id";
+      const rule = "document.author.name == 'bob' && document.owner != auth.id";
 
-      expect(await store.select(rule, {_id: alice})).toEqual(["byBob"]);
+      expect(await store.select(rule, {id: alice})).toEqual(["byBob"]);
     });
 
     it("should leave the relation out of the query when the other side decides", async () => {

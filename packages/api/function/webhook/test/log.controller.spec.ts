@@ -1,4 +1,4 @@
-import {provideRepository} from "@spica-server/data";
+import {provideRepository, withId, idOf} from "@spica-server/data";
 import {WEBHOOK_LOG_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
@@ -54,46 +54,50 @@ contractSuite("Webhook Log Controller", engine => {
 
     logIds = [];
     for (const log of [
-      {
-        _id: idAt(engine, today),
-        content: {
-          request: {
-            body: "req_body",
-            headers: {test_key: "test_value"},
-            url: "url"
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body",
+              headers: {test_key: "test_value"},
+              url: "url"
+            },
+            response: {
+              body: "res_body",
+              headers: {test_key: ["test_value"]},
+              status: 404,
+              statusText: "BAD REQUEST"
+            }
           },
-          response: {
-            body: "res_body",
-            headers: {test_key: ["test_value"]},
-            status: 404,
-            statusText: "BAD REQUEST"
-          }
+          succeed: false,
+          webhook: firstWebhook,
+          created_at: today
         },
-        succeed: false,
-        webhook: firstWebhook,
-        created_at: today
-      },
-      {
-        _id: idAt(engine, yesterday),
-        content: {
-          request: {
-            body: "req_body2",
-            headers: {test_key: "test_value2"},
-            url: "url2"
+        idAt(engine, today)
+      ),
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body2",
+              headers: {test_key: "test_value2"},
+              url: "url2"
+            },
+            response: {
+              body: "res_body2",
+              headers: {test_key: ["test_value2"]},
+              status: 201,
+              statusText: "CREATED"
+            }
           },
-          response: {
-            body: "res_body2",
-            headers: {test_key: ["test_value2"]},
-            status: 201,
-            statusText: "CREATED"
-          }
+          succeed: true,
+          webhook: secondWebhook,
+          created_at: yesterday
         },
-        succeed: true,
-        webhook: secondWebhook,
-        created_at: yesterday
-      }
+        idAt(engine, yesterday)
+      )
     ]) {
-      logIds.push((await service.insert(log))._id);
+      logIds.push(idOf(await service.insert(log)));
     }
   });
 
@@ -106,44 +110,48 @@ contractSuite("Webhook Log Controller", engine => {
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
-      {
-        _id: String(logIds[0]),
-        content: {
-          request: {
-            body: "req_body",
-            headers: {test_key: "test_value"},
-            url: "url"
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body",
+              headers: {test_key: "test_value"},
+              url: "url"
+            },
+            response: {
+              body: "res_body",
+              headers: {test_key: ["test_value"]},
+              status: 404,
+              statusText: "BAD REQUEST"
+            }
           },
-          response: {
-            body: "res_body",
-            headers: {test_key: ["test_value"]},
-            status: 404,
-            statusText: "BAD REQUEST"
-          }
+          succeed: false,
+          webhook: firstWebhook,
+          created_at: today.toISOString()
         },
-        succeed: false,
-        webhook: firstWebhook,
-        created_at: today.toISOString()
-      },
-      {
-        _id: String(logIds[1]),
-        content: {
-          request: {
-            body: "req_body2",
-            headers: {test_key: "test_value2"},
-            url: "url2"
+        String(logIds[0])
+      ),
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body2",
+              headers: {test_key: "test_value2"},
+              url: "url2"
+            },
+            response: {
+              body: "res_body2",
+              headers: {test_key: ["test_value2"]},
+              status: 201,
+              statusText: "CREATED"
+            }
           },
-          response: {
-            body: "res_body2",
-            headers: {test_key: ["test_value2"]},
-            status: 201,
-            statusText: "CREATED"
-          }
+          succeed: true,
+          webhook: secondWebhook,
+          created_at: yesterday.toISOString()
         },
-        succeed: true,
-        webhook: secondWebhook,
-        created_at: yesterday.toISOString()
-      }
+        String(logIds[1])
+      )
     ]);
   });
 
@@ -152,25 +160,27 @@ contractSuite("Webhook Log Controller", engine => {
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
-      {
-        _id: String(logIds[1]),
-        content: {
-          request: {
-            body: "req_body2",
-            headers: {test_key: "test_value2"},
-            url: "url2"
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body2",
+              headers: {test_key: "test_value2"},
+              url: "url2"
+            },
+            response: {
+              body: "res_body2",
+              headers: {test_key: ["test_value2"]},
+              status: 201,
+              statusText: "CREATED"
+            }
           },
-          response: {
-            body: "res_body2",
-            headers: {test_key: ["test_value2"]},
-            status: 201,
-            statusText: "CREATED"
-          }
+          succeed: true,
+          webhook: secondWebhook,
+          created_at: yesterday.toISOString()
         },
-        succeed: true,
-        webhook: secondWebhook,
-        created_at: yesterday.toISOString()
-      }
+        String(logIds[1])
+      )
     ]);
   });
 
@@ -179,25 +189,27 @@ contractSuite("Webhook Log Controller", engine => {
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
-      {
-        _id: String(logIds[0]),
-        content: {
-          request: {
-            body: "req_body",
-            headers: {test_key: "test_value"},
-            url: "url"
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body",
+              headers: {test_key: "test_value"},
+              url: "url"
+            },
+            response: {
+              body: "res_body",
+              headers: {test_key: ["test_value"]},
+              status: 404,
+              statusText: "BAD REQUEST"
+            }
           },
-          response: {
-            body: "res_body",
-            headers: {test_key: ["test_value"]},
-            status: 404,
-            statusText: "BAD REQUEST"
-          }
+          succeed: false,
+          webhook: firstWebhook,
+          created_at: today.toISOString()
         },
-        succeed: false,
-        webhook: firstWebhook,
-        created_at: today.toISOString()
-      }
+        String(logIds[0])
+      )
     ]);
   });
 
@@ -206,25 +218,27 @@ contractSuite("Webhook Log Controller", engine => {
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
-      {
-        _id: String(logIds[1]),
-        content: {
-          request: {
-            body: "req_body2",
-            headers: {test_key: "test_value2"},
-            url: "url2"
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body2",
+              headers: {test_key: "test_value2"},
+              url: "url2"
+            },
+            response: {
+              body: "res_body2",
+              headers: {test_key: ["test_value2"]},
+              status: 201,
+              statusText: "CREATED"
+            }
           },
-          response: {
-            body: "res_body2",
-            headers: {test_key: ["test_value2"]},
-            status: 201,
-            statusText: "CREATED"
-          }
+          succeed: true,
+          webhook: secondWebhook,
+          created_at: yesterday.toISOString()
         },
-        succeed: true,
-        webhook: secondWebhook,
-        created_at: yesterday.toISOString()
-      }
+        String(logIds[1])
+      )
     ]);
   });
 
@@ -241,25 +255,27 @@ contractSuite("Webhook Log Controller", engine => {
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
-      {
-        _id: String(logIds[0]),
-        content: {
-          request: {
-            body: "req_body",
-            headers: {test_key: "test_value"},
-            url: "url"
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body",
+              headers: {test_key: "test_value"},
+              url: "url"
+            },
+            response: {
+              body: "res_body",
+              headers: {test_key: ["test_value"]},
+              status: 404,
+              statusText: "BAD REQUEST"
+            }
           },
-          response: {
-            body: "res_body",
-            headers: {test_key: ["test_value"]},
-            status: 404,
-            statusText: "BAD REQUEST"
-          }
+          succeed: false,
+          webhook: firstWebhook,
+          created_at: today.toISOString()
         },
-        succeed: false,
-        webhook: firstWebhook,
-        created_at: today.toISOString()
-      }
+        String(logIds[0])
+      )
     ]);
   });
 
