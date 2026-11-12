@@ -215,6 +215,16 @@ describe("check-key-names", () => {
       assert.equal(run(root, ["--strict", "--under=packages/api/b/"]), 0);
     });
 
+    it("should fail the source check on a literal outside the tests, not on one in a spec", () => {
+      write("packages/api/b/test/b.spec.ts", `b._id;\n`);
+      writeBaseline(root, {"packages/api/a/src/a.ts": 2, "packages/api/b/test/b.spec.ts": 1});
+
+      assert.equal(run(root, ["--strict-source"]), 1);
+
+      fs.rmSync(path.join(root, "packages/api/a/src/a.ts"));
+      assert.equal(run(root, ["--strict-source"]), 0);
+    });
+
     it("should need a path in strict mode", () => {
       assert.equal(run(root, ["--strict"]), 1);
     });

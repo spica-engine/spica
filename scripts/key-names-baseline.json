@@ -54,7 +54,6 @@
   "packages/api/passport/user/realtime/test/user.spec.ts": 1,
   "packages/api/passport/user/test/user.profiler.spec.ts": 4,
   "packages/data/postgresql/orm/test/documents.spec.ts": 12,
-  "packages/data/postgresql/src/schemas/bucket.schema.json": 1,
   "packages/data/postgresql/test/access/rule-compiler.database.spec.ts": 1,
   "packages/data/postgresql/test/access/rule-fixtures.ts": 2,
   "packages/data/postgresql/test/contract/access-rules.spec.ts": 1,
