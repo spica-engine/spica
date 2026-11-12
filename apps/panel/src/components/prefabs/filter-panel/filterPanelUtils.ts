@@ -1,4 +1,5 @@
 import type { FilterConditionRow, FilterField, FilterFieldType } from './types';
+import type { DataEngine } from '../../../store/api/statusApi';
 
 export const OPERATORS_BY_TYPE: Record<FilterFieldType, { label: string; value: string }[]> = {
   string: [
@@ -373,6 +374,60 @@ export function conditionsToExpression(
 
   const groups = [join(andParts, '&&'), ...(orParts.length ? [join(orParts, '||')] : [])];
   return join(groups, '&&');
+}
+
+export function filterForEngine(
+  engine: DataEngine | undefined,
+  conditions: FilterConditionRow[],
+  fields: FilterField[]
+): Record<string, any> | string | null {
+  return engine === 'postgresql'
+    ? conditionsToExpression(conditions, fields)
+    : conditionsToMongoFilter(conditions, fields);
+}
+
+function matchesStringCondition(item: Record<string, any>, { field, operator, value }: FilterConditionRow): boolean {
+  const actual = String(item[field] ?? '');
+  const actualLower = actual.toLowerCase();
+  const wanted = value.toLowerCase();
+  switch (operator) {
+    case 'contains':
+      return actualLower.includes(wanted);
+    case 'starts with':
+      return actualLower.startsWith(wanted);
+    case 'ends with':
+      return actualLower.endsWith(wanted);
+    case 'equals':
+      return actual === value;
+    case 'not equals':
+      return actual !== value;
+    case 'is empty':
+      return actual === '';
+    case 'is not empty':
+      return actual !== '';
+    default:
+      return true;
+  }
+}
+
+export function matchesConditions(
+  item: Record<string, any>,
+  conditions: FilterConditionRow[],
+  fields: FilterField[]
+): boolean {
+  const known = new Set(fields.map(f => f.key));
+  const active = conditions.filter(c => isConditionActive(c) && known.has(c.field));
+  if (!active.length) return true;
+
+  const results = active.map(c => ({ logicalOp: c.logicalOp, matches: matchesStringCondition(item, c) }));
+  const ops = results.slice(1).map(r => r.logicalOp);
+  if (ops.every(op => op === 'AND')) return results.every(r => r.matches);
+  if (ops.every(op => op === 'OR')) return results.some(r => r.matches);
+
+  const andParts = [results[0].matches];
+  const orParts: boolean[] = [];
+  results.slice(1).forEach(r => (r.logicalOp === 'AND' ? andParts : orParts).push(r.matches));
+  return andParts.every(Boolean) && (orParts.length === 0 || orParts.some(Boolean));
 }
 
 export function combineFilters<T extends Record<string, any> | string>(

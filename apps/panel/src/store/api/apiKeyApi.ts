@@ -40,7 +40,6 @@ export interface ApiKeyOptions {
   limit?: number;
   skip?: number;
   sort?: Record<string, 1 | -1>;
-  filter?: Record<string, any>;
 }
 
 const API_KEY_TAG = 'ApiKey' as const;
@@ -54,12 +53,11 @@ export const apiKeyApi = baseApi.injectEndpoints({
     getApiKeys: builder.query<ApiKeyListResponse, ApiKeyOptions | void>({
       query: (options: ApiKeyOptions = {}) => {
         const params = new URLSearchParams();
-        const { limit, skip, sort, filter } = options;
+        const { limit, skip, sort } = options;
 
         if (limit != null) params.append('limit', String(limit));
         if (skip != null) params.append('skip', String(skip));
         if (sort) params.append('sort', JSON.stringify(sort));
-        if (filter) params.append('filter', JSON.stringify(filter));
 
         const qs = params.toString();
         return qs ? `passport/apikey?${qs}` : `passport/apikey`;

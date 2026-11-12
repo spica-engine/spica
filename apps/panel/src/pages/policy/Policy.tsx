@@ -20,7 +20,9 @@ import { registerAllRenderers } from "./registerRenderers";
 import { useModuleDataRegistry } from "./moduleRenderers";
 import { useModuleStatements } from "./hook/useStatement";
 import Confirmation from "../../components/molecules/confirmation/Confirmation";
-import PolicyActionBar from "../../components/molecules/policy-action-bar/PolicyActionBar";
+import PolicyActionBar, { POLICY_FILTER_FIELDS } from "../../components/molecules/policy-action-bar/PolicyActionBar";
+import { matchesConditions } from "../../components/prefabs/filter-panel/filterPanelUtils";
+import type { FilterConditionRow } from "../../components/prefabs/filter-panel/types";
 import { idOf, omitId, type SystemRecord } from "../../utils/recordKey";
 
 registerAllRenderers();
@@ -45,7 +47,7 @@ const Policy = () => {
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyItem | null>(null);
   const [policyToDelete, setPolicyToDelete] = useState<PolicyItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
+  const [appliedConditions, setAppliedConditions] = useState<FilterConditionRow[]>([]);
   
   const modules = useModuleStatements(statements ?? []);
   const { moduleData, moduleDataElements } = useModuleDataRegistry();
@@ -61,19 +63,9 @@ const Policy = () => {
           idOf(p)?.toLowerCase().includes(q)
       );
     }
-    if (appliedFilter) {
-      const filterEntries = Object.entries(appliedFilter);
-      list = list.filter((p: any) =>
-        filterEntries.every(([key, val]) => {
-          if (val === null || val === undefined) return true;
-          const itemVal = p[key];
-          if (typeof val === "string") return String(itemVal ?? "").toLowerCase().includes(val.toLowerCase());
-          return itemVal === val;
-        })
-      );
-    }
+    list = list.filter((p) => matchesConditions(p, appliedConditions, POLICY_FILTER_FIELDS));
     return list;
-  }, [policies, searchQuery, appliedFilter]);
+  }, [policies, searchQuery, appliedConditions]);
 
 
   const openCreatePolicy = useCallback(() => {
@@ -223,7 +215,7 @@ const Policy = () => {
       <PolicyActionBar
         onSearch={setSearchQuery}
         onAddPolicy={openCreatePolicy}
-        onFilter={setAppliedFilter}
+        onFilter={setAppliedConditions}
       />
 
       {moduleDataElements}
