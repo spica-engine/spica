@@ -14,10 +14,19 @@ export const ReadonlyCell: React.FC<CellRendererProps> = React.memo(
 
     return (
       <span
+        role="button"
+        tabIndex={0}
         className={cx(styles.readDisplay, isSelected && styles.cellSelected)}
         onClick={(e) => {
           e.stopPropagation();
           select();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            select();
+          }
         }}
       >
         {value === null || value === undefined ? "" : String(value)}

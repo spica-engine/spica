@@ -35,7 +35,9 @@ const CategorySelectCreate = ({
   );
 
   const handleSubmit = useCallback((value: string) => {
-    changeCategory(idOf(bucket)!, value).then(() => onCancel?.());
+    changeCategory(idOf(bucket)!, value)
+      .then(() => onCancel?.())
+      .catch(error => console.error("Failed to change the category:", error));
   }, []);
 
   const truncatedCategoryName = truncateText(textValue, 32);

@@ -15,7 +15,7 @@ import SortPanel from "../../prefabs/sort-panel/SortPanel";
 import type {FilterField, FilterConditionRow, SortField} from "../../prefabs/filter-panel/types";
 import {isConditionActive, formatConditionValue} from "../../prefabs/filter-panel/filterPanelUtils";
 import { idOf, keyOf, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
-import { relationValueId } from "../../../domain/relationTarget";
+import { relatedReferences } from "./relatedReferences";
 import { useBucketLookup } from "../../../contexts/BucketLookupContext";
 import { useKeyField } from "../../../hooks/useKeyField";
 
@@ -70,21 +70,12 @@ const DeleteWarningParagraph = ({
   const count = selectedEntries.size;
   const isSingle = count === 1;
 
-  const relationTitles = dependentRelations.map(relation => relation.title);
   const dependentEntries =
     dependentRelations.length > 0 ? bucketData.filter(entry => selectedEntries.has(keyOf(entry, keyField))) : [];
 
-  const relatedIds = dependentEntries.flatMap(entry => {
-    return relationTitles.flatMap(title => {
-      const fieldValue = entry[title];
-      const relationBucketId = dependentRelations.find(r => r.title === title)?.bucketId;
-      if (Array.isArray(fieldValue)) {
-        return fieldValue.map(item => `${relationBucketId}/${relationValueId(item, relatedKeyField(relationBucketId))}`);
-      }
-
-      return `${relationBucketId}/${relationValueId(fieldValue, relatedKeyField(relationBucketId))}` || [];
-    });
-  });
+  const relatedIds = dependentEntries.flatMap(entry =>
+    relatedReferences(entry, dependentRelations, relatedKeyField)
+  );
 
   const uniqueRelatedIds = [...new Set(relatedIds)];
   const dependentCount = uniqueRelatedIds.length;
