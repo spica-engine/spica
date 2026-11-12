@@ -65,6 +65,7 @@ import type {
 import styles from "./field-styles.module.scss";
 import { idOf } from "../../utils/recordKey";
 import { relationValueId } from "../relationTarget";
+import { dateSaveReadyValue, definedDefault } from "./saveValues";
 export function isFieldKind(value: string): value is FieldKind {
   return (Object.values(FieldKind) as string[]).includes(value);
 }
@@ -211,7 +212,7 @@ const NUMBER_DEFINITION: FieldDefinition = {
     const fv = form.fieldValues;
     return {
       ...base,
-      default: form.defaultValue,
+      default: definedDefault(form.defaultValue),
       minimum: fv.minimum,
       maximum: fv.maximum,
       enum:
@@ -292,10 +293,8 @@ const DATE_DEFINITION: FieldDefinition = {
   },
   getSaveReadyValue: (value, properties) => {
     if (properties?.default === ":updated_at") return new Date();
-    const date = new Date(value);
-    // Empty/cleared date must be omitted (undefined), not sent as null — the API
-    // rejects null for a date field. Required-empty is caught by field validation.
-    return isValidDate(date) ? date : undefined;
+    // An empty or cleared date is omitted rather than sent as null; `new Date(null)` is the epoch.
+    return dateSaveReadyValue(value);
   },
   validateCreationForm: form => runYupValidation(DATE_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
@@ -731,7 +730,7 @@ const ARRAY_DEFINITION: FieldDefinition = {
       type: fv.arrayType,
       title: fv.arrayItemTitle,
       description: fv.arrayItemDescription?.length ? fv.arrayItemDescription : undefined,
-      default: form.defaultValue
+      default: definedDefault(form.defaultValue)
     };
 
     if (pv.enumeratedValues?.length) item.enum = pv.enumeratedValues;

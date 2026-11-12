@@ -15,6 +15,8 @@ import {
   updateInnerField
 } from "../../../domain/fields/inner-fields";
 import {useFormState} from "./BucketAddFieldHooks";
+import {configurationForEngine} from "../../../domain/fields/engineConfiguration";
+import {useEngine} from "../../../hooks/useEngine";
 import type {BucketType, Properties} from "src/store/api/bucketApi";
 
 function isObjectEffectivelyEmpty(obj: Object): boolean {
@@ -104,6 +106,12 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   } = useMemo(
     () => fieldDefinition?.buildCreationFormProperties(isInnerField, buckets) || {fieldValues: {}, configurationValues: {}, defaultValue: undefined, presetValues: undefined, multipleSelectionTab: undefined},
     [fieldDefinition, isInnerField, buckets]
+  );
+
+  const engine = useEngine();
+  const configurationOptions = useMemo(
+    () => configurationForEngine(configurationProperties as Record<string, unknown>, engine),
+    [configurationProperties, engine]
   );
 
   const [mainFormProperties, setMainFormProperties] = useState(initialMainFormProperties);
@@ -241,7 +249,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       formErrors={formErrors}
       error={(getErrorMessage(createBucketFieldError) || formErrors?.innerFields) ?? null}
       mainFormInputProperties={mainFormProperties}
-      configurationInputProperties={configurationProperties}
+      configurationInputProperties={configurationOptions as typeof configurationProperties}
       defaultInputProperty={defaultValueProperties}
       presetInputProperties={presetProperties}
       multipleSelectionTabProperties={multipleSelectionTabProperties}
