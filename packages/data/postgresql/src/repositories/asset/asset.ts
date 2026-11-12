@@ -16,7 +16,7 @@ export class PostgresAssetRepository implements AssetRepository {
     return this.orm.findMany(
       assets,
       expressionWhere(assets, typeof filter == "string" ? filter : undefined),
-      {orderBy: {_id: "asc"}}
+      {orderBy: {id: "asc"}}
     );
   }
 
@@ -25,7 +25,7 @@ export class PostgresAssetRepository implements AssetRepository {
   }
 
   findVersions(url: string) {
-    return this.orm.findMany(assets, {url}, {orderBy: {_id: "asc"}});
+    return this.orm.findMany(assets, {url}, {orderBy: {id: "asc"}});
   }
 
   insert(asset: Asset) {

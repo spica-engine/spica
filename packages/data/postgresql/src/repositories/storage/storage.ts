@@ -13,7 +13,7 @@ import {browseWhere} from "./filters.js";
 import {expressionWhere} from "../expression-where.js";
 
 const SORTABLE = new Set([
-  "_id",
+  "id",
   "name",
   "url",
   "created_at",
@@ -43,11 +43,11 @@ export class PostgresStorageRepository implements StorageRepository {
   }
 
   findByIds(ids: Id[]) {
-    return this.orm.findMany(storageObjects, {_id: ids}, {orderBy: {_id: "asc"}});
+    return this.orm.findMany(storageObjects, {id: ids}, {orderBy: {id: "asc"}});
   }
 
   findByNames(names: string[]) {
-    return this.orm.findMany(storageObjects, {name: names}, {orderBy: {_id: "asc"}});
+    return this.orm.findMany(storageObjects, {name: names}, {orderBy: {id: "asc"}});
   }
 
   async browse({resourceFilter, path, filter, sort, skip = 0, limit}: StorageBrowseSpec) {
@@ -64,7 +64,7 @@ export class PostgresStorageRepository implements StorageRepository {
   }
 
   findByNamePrefix(prefix: string) {
-    return this.orm.findMany(storageObjects, {name: startsWith(prefix)}, {orderBy: {_id: "asc"}});
+    return this.orm.findMany(storageObjects, {name: startsWith(prefix)}, {orderBy: {id: "asc"}});
   }
 
   async totalSize() {
@@ -94,7 +94,7 @@ export class PostgresStorageRepository implements StorageRepository {
   }
 
   async deleteByIds(ids: Id[]) {
-    return await this.orm.deleteWhere(storageObjects, {_id: ids});
+    return await this.orm.deleteWhere(storageObjects, {id: ids});
   }
 
   deleteByNamePrefix(prefix: string) {
@@ -105,7 +105,7 @@ export class PostgresStorageRepository implements StorageRepository {
 function orderBy(sort?: object): Record<string, "asc" | "desc"> {
   const entries = Object.entries(sort ?? {});
   if (!entries.length) {
-    return {_id: "asc"};
+    return {id: "asc"};
   }
   return Object.fromEntries(
     entries.map(([field, direction]) => {

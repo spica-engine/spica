@@ -1,6 +1,7 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {Request} from "@spica-server/core-testing";
 import {BucketApp, startBucketApp} from "../../test/support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Expression Read Rule Type Construction", engine => {
   let api: BucketApp;
@@ -35,14 +36,14 @@ contractSuite("Expression Read Rule Type Construction", engine => {
   };
 
   async function createBucketAndSeed(acl: {read: string; write: string}) {
-    bucketId = (
+    bucketId = idOf(
       await api.createBucket(PROPERTIES, {
         title: "Rule Bucket",
         description: "Bucket with hash, encrypted, date fields",
         icon: "settings",
         acl
       })
-    )._id;
+    );
 
     await req.post(`/bucket/${bucketId}/data`, {
       name: "alice",
@@ -143,7 +144,7 @@ contractSuite("Expression Read Rule Type Construction", engine => {
   // ---------------------------------------------------------------------------
   describe("field-level ACL rules", () => {
     async function createBucketWithFieldAcl(fieldAclExpression: string) {
-      bucketId = (
+      bucketId = idOf(
         await api.createBucket(
           {...PROPERTIES, name: {type: "string", title: "Name", acl: fieldAclExpression}},
           {
@@ -153,7 +154,7 @@ contractSuite("Expression Read Rule Type Construction", engine => {
             acl: {write: "true==true", read: "true==true"}
           }
         )
-      )._id;
+      );
 
       await req.post(`/bucket/${bucketId}/data`, {
         name: "alice",

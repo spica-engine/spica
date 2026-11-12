@@ -1,5 +1,6 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {BucketApp, startBucketApp, withoutNulls} from "../support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("BucketDataController: post, put and patch", engine => {
   let api: BucketApp;
@@ -18,7 +19,7 @@ contractSuite("BucketDataController: post, put and patch", engine => {
         options: {}
       }
     });
-    myBucketId = bucket._id;
+    myBucketId = idOf(bucket);
   });
 
   afterEach(() => api.close());

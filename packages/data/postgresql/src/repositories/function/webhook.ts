@@ -18,7 +18,7 @@ export class PostgresWebhookRepository implements WebhookRepository {
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
   findAll() {
-    return this.orm.findMany(webhooks, {}, {orderBy: {_id: "asc"}});
+    return this.orm.findMany(webhooks, {}, {orderBy: {id: "asc"}});
   }
 
   findById(id: Id) {
@@ -59,6 +59,6 @@ export class PostgresWebhookLogRepository implements WebhookLogRepository {
   }
 
   async deleteByIds(ids: Id[]) {
-    return await this.orm.deleteWhere(webhookLogs, {_id: ids});
+    return await this.orm.deleteWhere(webhookLogs, {id: ids});
   }
 }

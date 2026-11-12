@@ -5,6 +5,6 @@ import {mainTableName} from "../../schema/index.js";
 export const countDocuments = (session: Session, tables: string[]) => session.countRows(tables);
 
 export async function allBucketTables(session: Session): Promise<string[]> {
-  const stored = await session.findMany(buckets, {}, {select: ["_id"]});
-  return stored.map(({_id}) => mainTableName(String(_id)));
+  const stored = await session.findMany(buckets, {}, {select: ["id"]});
+  return stored.map(({id}) => mainTableName(String(id)));
 }

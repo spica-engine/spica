@@ -71,6 +71,7 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 | System record ids             | A UUID v7 `id` primary key. The caller may provide it, and PostgreSQL generates it otherwise. MongoDB ObjectIds are not supported. |
 | Minimum PostgreSQL version    | 18. System tables use its built-in `uuidv7()`.                                                                  |
 | Key name in responses         | `_id` on MongoDB, `id` on PostgreSQL. The panel will adapt later, outside this plan.                            |
+| Principal key in rules        | Rule text names it as the engine does: `auth.id` on PostgreSQL, `auth._id` on MongoDB. No alias, no conversion. |
 | Bucket data primary keys      | Each bucket's owner picks the primary key field, its type and whether it is generated.                          |
 | Chart database roles          | Like MongoDB, two roles: `root`, a superuser, and `spica`, an unprivileged role that owns the database. The API uses `spica`. |
 | External database in the chart | Not offered, to match MongoDB. The chart also has no SSL option. The API can still be pointed at any server with `--database-uri`. |

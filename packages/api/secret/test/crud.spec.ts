@@ -10,7 +10,7 @@ import {SecretService, ServicesModule} from "@spica-server/secret-services";
 import {isEncryptedData} from "@spica-server/core-encryption";
 import * as CRUD from "../src/crud";
 import {NotFoundException, INestApplication} from "@nestjs/common";
-import {idOf, withId} from "@spica-server/data";
+import {idOf, withId, systemKeyField} from "@spica-server/data";
 
 const ENCRYPTION_SECRET = "test-encryption-secret-32chars!!";
 
@@ -57,7 +57,7 @@ contractSuite("Secret CRUD", engine => {
       expect(raw.value.authTag).toBeDefined();
     });
 
-    it("should accept a custom _id", async () => {
+    it("should accept a custom id", async () => {
       const customId = newId();
       const result = await CRUD.insert(ss, withId({key: "CUSTOM_ID_KEY", value: "val"}, customId));
 
@@ -85,7 +85,9 @@ contractSuite("Secret CRUD", engine => {
       const raw = await ss.findById(idOf(result));
       expect(raw.updated_at).not.toEqual(clientTimestamp);
       expect((raw as any).injected).toBeUndefined();
-      expect(Object.keys(raw).sort()).toEqual(["_id", "key", "updated_at", "value"]);
+      expect(Object.keys(raw).sort()).toEqual(
+        [systemKeyField(), "key", "updated_at", "value"].sort()
+      );
     });
   });
 
@@ -146,7 +148,7 @@ contractSuite("Secret CRUD", engine => {
       const result = (await CRUD.find(queries, {
         limit: 0,
         skip: 0,
-        sort: {_id: -1},
+        sort: {[systemKeyField()]: -1},
         paginate: true
       })) as any;
 

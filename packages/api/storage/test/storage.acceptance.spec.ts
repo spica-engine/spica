@@ -202,13 +202,16 @@ contractSuite("Storage Acceptance", engine => {
       expect(browse.statusCode).toEqual(404);
     });
 
-    it("should work with _id filter", async () => {
+    it("should work with the key filter", async () => {
       const {body} = await req.get("/storage", {
         filter: nameFilter("third.txt")
       });
 
       const response = await req.get("/storage", {
-        filter: filterOf({_id: idOf(body[0])}, `document._id == '${idOf(body[0])}'`)
+        filter: filterOf(
+          {[systemKeyField()]: idOf(body[0])},
+          `document.${systemKeyField()} == '${idOf(body[0])}'`
+        )
       });
 
       expect(isId(idOf(response.body[0]))).toEqual(true);

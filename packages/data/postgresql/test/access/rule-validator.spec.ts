@@ -109,7 +109,7 @@ describe("PostgresBucketRuleValidator", () => {
         validator.validateReadRule(withAuthor("document.author.name == 'x'"))
       ).resolves.toBeUndefined();
       await expect(
-        validator.validateReadRule(withAuthor("document.author.id == auth._id"))
+        validator.validateReadRule(withAuthor("document.author.id == auth.id"))
       ).resolves.toBeUndefined();
     });
 

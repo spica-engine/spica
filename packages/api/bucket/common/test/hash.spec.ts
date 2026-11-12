@@ -1,5 +1,6 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {BucketApp, startBucketApp} from "../../test/support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Hash Field", engine => {
   const HASH_SECRET = "test-hash-secret-123";
@@ -12,7 +13,7 @@ contractSuite("Hash Field", engine => {
     api = await startBucketApp(engine, {hashSecret: HASH_SECRET});
     key = api.keyField;
 
-    bucketId = (
+    bucketId = idOf(
       await api.createBucket(
         {
           username: {type: "string", title: "Username"},
@@ -21,9 +22,9 @@ contractSuite("Hash Field", engine => {
         },
         {title: "User Bucket", description: "Bucket with hash password field", icon: "person"}
       )
-    )._id;
+    );
 
-    bucketId2 = (
+    bucketId2 = idOf(
       await api.createBucket(
         {
           username: {type: "string", title: "Username"},
@@ -45,7 +46,7 @@ contractSuite("Hash Field", engine => {
           icon: "person"
         }
       )
-    )._id;
+    );
   });
 
   afterEach(() => api.close());

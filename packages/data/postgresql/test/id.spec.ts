@@ -189,7 +189,7 @@ describe("PostgresIdTypes", () => {
     expect(findById).not.toHaveBeenCalled();
   });
 
-  it("keeps keying system records by _id until the key flip", () => {
-    expect(idTypesFor(null).idTypes.systemKeyField()).toBe("_id");
+  it("keys system records by id", () => {
+    expect(idTypesFor(null).idTypes.systemKeyField()).toBe("id");
   });
 });

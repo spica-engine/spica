@@ -1,6 +1,7 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {Request} from "@spica-server/core-testing";
 import {BucketApp, startBucketApp} from "../../test/support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 /**
  * Mixed bucket schema:
@@ -37,7 +38,7 @@ contractSuite("Expression Filter Type Construction", engine => {
     req = api.req;
     key = api.keyField;
 
-    eventBucketId = (
+    eventBucketId = idOf(
       await api.createBucket(
         {
           label: {type: "string", title: "Label"},
@@ -50,9 +51,9 @@ contractSuite("Expression Filter Type Construction", engine => {
           acl: {write: "true==true", read: "true==true"}
         }
       )
-    )._id;
+    );
 
-    mixedBucketId = (
+    mixedBucketId = idOf(
       await api.createBucket(
         {
           name: {type: "string", title: "Name"},
@@ -80,7 +81,7 @@ contractSuite("Expression Filter Type Construction", engine => {
           acl: {write: "true==true", read: "true==true"}
         }
       )
-    )._id;
+    );
   });
 
   afterEach(() => api.close());

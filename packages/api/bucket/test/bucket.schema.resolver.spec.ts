@@ -7,6 +7,7 @@ import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {Observable, Subject} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
+import {idOf, withId} from "@spica-server/data";
 
 contractSuite("Bucket Schema Resolver", engine => {
   class MockBucketService {
@@ -89,10 +90,10 @@ contractSuite("Bucket Schema Resolver", engine => {
         }
       ]
     }).compile();
-    bucket = {
-      ...structuredClone(bucketFixture),
-      _id: String(module.get<IdTypes>(ID_TYPES).forCollection("buckets").generate())
-    };
+    bucket = withId(
+      structuredClone(bucketFixture),
+      String(module.get<IdTypes>(ID_TYPES).forCollection("buckets").generate())
+    );
     bs = module.get(BucketService);
     schemaResolver = new BucketSchemaResolver(bs);
     jest.spyOn(bs, "findById").mockReturnValue(Promise.resolve({...bucket}) as any);
@@ -116,12 +117,12 @@ contractSuite("Bucket Schema Resolver", engine => {
     bs["onBucketUpdated"].next(updatedBucket);
 
     expect(
-      schemaResolver.resolve(bucket._id).pipe(take(3), bufferCount(3)).toPromise()
+      schemaResolver.resolve(idOf(bucket)).pipe(take(3), bufferCount(3)).toPromise()
     ).resolves.toEqual([
       //initial schema
       {
         $schema: "http://spica.internal/bucket/schema",
-        $id: String(bucket._id),
+        $id: String(idOf(bucket)),
         title: "New Bucket",
         description: "Describe your new bucket",
         readOnly: false,
@@ -159,7 +160,7 @@ contractSuite("Bucket Schema Resolver", engine => {
       //preference updates
       {
         $schema: "http://spica.internal/bucket/schema",
-        $id: String(bucket._id),
+        $id: String(idOf(bucket)),
         title: "New Bucket",
         description: "Describe your new bucket",
         readOnly: false,
@@ -192,7 +193,7 @@ contractSuite("Bucket Schema Resolver", engine => {
       //bucket updates
       {
         $schema: "http://spica.internal/bucket/schema",
-        $id: String(bucket._id),
+        $id: String(idOf(bucket)),
         title: "New Bucket",
         description: "Describe your new bucket",
         readOnly: false,

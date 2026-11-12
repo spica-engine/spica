@@ -248,7 +248,7 @@ describe("built-in functions", () => {
     });
 
     it("should type the list by the element: related ids", () => {
-      expect(compile("some(document.editors, [auth._id])", {_id: uuid.toUpperCase()})).toEqual({
+      expect(compile("some(document.editors, [auth.id])", {id: uuid.toUpperCase()})).toEqual({
         sql: `EXISTS (SELECT 1 ${rows("editors")} AND "_a1"."_target" = ANY($1::uuid[]))`,
         values: [[uuid]]
       });

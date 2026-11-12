@@ -16,7 +16,7 @@ export class PostgresFunctionAssetRepository implements FunctionAssetRepository 
   constructor(@Inject(ORM) private readonly orm: Orm) {}
 
   findByFunction(functionId: Id) {
-    return this.orm.findMany(functionAssets, {functionId}, {orderBy: {_id: "asc"}});
+    return this.orm.findMany(functionAssets, {functionId}, {orderBy: {id: "asc"}});
   }
 
   findByFilename(functionId: Id, filename: FunctionAssetFilename) {
@@ -26,12 +26,12 @@ export class PostgresFunctionAssetRepository implements FunctionAssetRepository 
   async upsertAsset(
     functionId: Id,
     filename: FunctionAssetFilename,
-    fields: Omit<FunctionAsset, "functionId" | "filename" | "_id">
+    fields: Omit<FunctionAsset, "functionId" | "filename">
   ) {
     await this.orm.upsert(functionAssets, {...fields, functionId, filename}, CONFLICT);
   }
 
-  async upsertMany(functionId: Id, assets: Array<Omit<FunctionAsset, "functionId" | "_id">>) {
+  async upsertMany(functionId: Id, assets: Array<Omit<FunctionAsset, "functionId">>) {
     await this.orm.transaction(async session => {
       for (const asset of assets) {
         await session.upsert(functionAssets, {...asset, functionId}, CONFLICT);

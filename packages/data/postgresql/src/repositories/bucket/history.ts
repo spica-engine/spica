@@ -43,7 +43,7 @@ export class PostgresHistoryRepository implements HistoryRepository {
       const stored = await session.findMany(
         histories,
         {bucket_id: idOf(currentSchema)},
-        {orderBy: {_id: "asc"}, lock: "update"}
+        {orderBy: {id: "asc"}, lock: "update"}
       );
 
       for (const history of stored) {
@@ -75,10 +75,10 @@ export class PostgresHistoryRepository implements HistoryRepository {
       const stale = await session.findMany(
         histories,
         {bucket_id: bucketId, document_id: String(documentId)},
-        {select: ["_id"], orderBy: {_id: "desc"}, offset: MAX_HISTORIES_PER_DOCUMENT - 1}
+        {select: ["id"], orderBy: {id: "desc"}, offset: MAX_HISTORIES_PER_DOCUMENT - 1}
       );
       if (stale.length) {
-        await session.deleteWhere(histories, {_id: stale.map(history => idOf(history))});
+        await session.deleteWhere(histories, {id: stale.map(history => idOf(history))});
       }
       return session.insert(histories, {
         bucket_id: bucketId,
@@ -105,10 +105,10 @@ export class PostgresHistoryRepository implements HistoryRepository {
     const found = await this.orm.findMany(
       histories,
       {bucket_id: bucketId, document_id: String(documentId)},
-      {select: ["_id", "created_at", "changes"], orderBy: {_id: "desc"}}
+      {select: ["id", "created_at", "changes"], orderBy: {id: "desc"}}
     );
     return found.map(history => ({
-      _id: idOf(history),
+      id: idOf(history),
       date: history.created_at,
       changes: history.changes?.length ?? 0
     })) as HistorySummary[];
@@ -117,8 +117,8 @@ export class PostgresHistoryRepository implements HistoryRepository {
   findSince(bucketId: Id, documentId: Id, historyId: Id) {
     return this.orm.findMany(
       histories,
-      {bucket_id: bucketId, document_id: String(documentId), _id: gte(historyId)},
-      {orderBy: {_id: "desc"}}
+      {bucket_id: bucketId, document_id: String(documentId), id: gte(historyId)},
+      {orderBy: {id: "desc"}}
     ) as Promise<History[]>;
   }
 

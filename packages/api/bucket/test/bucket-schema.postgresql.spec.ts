@@ -1,4 +1,5 @@
 import {postgresBucketSchema} from "@spica-server/data-postgresql";
+import {IdTypes} from "@spica-server/interface-data";
 import {SCHEMA_ID, validatorFor, violations} from "./bucket-schema.helper";
 
 describe("PostgreSQL bucket schema", () => {
@@ -20,7 +21,9 @@ describe("PostgreSQL bucket schema", () => {
   let validator: ReturnType<typeof validatorFor>;
 
   beforeAll(() => {
-    validator = validatorFor(postgresBucketSchema);
+    validator = validatorFor(postgresBucketSchema, {
+      systemKeyField: () => "id"
+    } as unknown as IdTypes);
   });
 
   const check = (definition: object) => violations(validator, SCHEMA_ID, definition);
@@ -66,8 +69,8 @@ describe("PostgreSQL bucket schema", () => {
 
   describe("id", () => {
     it("should be a uuid", async () => {
-      await accepted(bucket({_id: id}));
-      await rejected(bucket({_id: "507f1f77bcf86cd799439011"}));
+      await accepted(bucket({id}));
+      await rejected(bucket({id: "507f1f77bcf86cd799439011"}));
     });
   });
 

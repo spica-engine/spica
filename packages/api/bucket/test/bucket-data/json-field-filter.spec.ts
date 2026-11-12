@@ -1,5 +1,6 @@
 import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {BucketApp, startBucketApp} from "../support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 mongoOnly(
   "filters on the fields inside a json value, which the PostgreSQL rule compiler refuses (Part 7)"
@@ -21,11 +22,11 @@ describe("BucketDataController: filters inside a json value", () => {
     );
 
     rows = [
-      await api.req.post(`/bucket/${bucket._id}/data`, {
+      await api.req.post(`/bucket/${idOf(bucket)}/data`, {
         name: "James",
         characteristics: {height: 184, weight: "75kg"}
       }),
-      await api.req.post(`/bucket/${bucket._id}/data`, {
+      await api.req.post(`/bucket/${idOf(bucket)}/data`, {
         name: "Braim",
         characteristics: {height: 170, weight: "70kg"}
       })
@@ -35,7 +36,7 @@ describe("BucketDataController: filters inside a json value", () => {
   afterEach(() => api.close());
 
   it("should filter documents based on multiple characteristics", async () => {
-    const document = await api.req.get(`/bucket/${bucket._id}/data`, {
+    const document = await api.req.get(`/bucket/${idOf(bucket)}/data`, {
       filter: JSON.stringify({characteristics: {height: 170, weight: "70kg"}})
     });
 
@@ -44,7 +45,7 @@ describe("BucketDataController: filters inside a json value", () => {
   });
 
   it("should filter documents based on a single characteristic", async () => {
-    const document = await api.req.get(`/bucket/${bucket._id}/data`, {
+    const document = await api.req.get(`/bucket/${idOf(bucket)}/data`, {
       filter: JSON.stringify({"characteristics.height": {$eq: 184}})
     });
 

@@ -23,14 +23,14 @@ export class PostgresFunctionRepository implements FunctionRepository {
   ) {}
 
   findAll() {
-    return this.orm.findMany(functions, {}, {orderBy: {_id: "asc"}}) as Promise<StoredFunction[]>;
+    return this.orm.findMany(functions, {}, {orderBy: {id: "asc"}}) as Promise<StoredFunction[]>;
   }
 
   findSummaries() {
     return this.orm.findMany(
       functions,
       {},
-      {select: ["_id", "name", "language"], orderBy: {_id: "asc"}}
+      {select: ["id", "name", "language"], orderBy: {id: "asc"}}
     ) as Promise<StoredFunction[]>;
   }
 
@@ -46,7 +46,7 @@ export class PostgresFunctionRepository implements FunctionRepository {
     return this.orm.findMany(
       functions,
       {[field]: has(resourceId)},
-      {orderBy: {_id: "asc"}}
+      {orderBy: {id: "asc"}}
     ) as Promise<StoredFunction[]>;
   }
 
@@ -68,7 +68,7 @@ export class PostgresFunctionRepository implements FunctionRepository {
     }
 
     return this.orm.transaction(async session => {
-      const current = await session.findOne(functions, {_id: id}, {lock: "update"});
+      const current = await session.findOne(functions, {id}, {lock: "update"});
       if (!current) {
         return null;
       }

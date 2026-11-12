@@ -1,6 +1,7 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {BucketApp, startBucketApp} from "../../test/support/bucket-app";
 import {corruptEncrypted, corruptEncryptedItem} from "../../test/support/corrupt";
+import {idOf} from "@spica-server/data";
 
 contractSuite("Encrypted Field", engine => {
   const ENCRYPTION_SECRET = "01234567890123456789012345678901";
@@ -19,7 +20,7 @@ contractSuite("Encrypted Field", engine => {
     });
     key = api.keyField;
 
-    bucketId = (
+    bucketId = idOf(
       await api.createBucket(
         {
           label: {type: "string", title: "Label"},
@@ -28,9 +29,9 @@ contractSuite("Encrypted Field", engine => {
         },
         {title: "Secure Bucket", description: "Bucket with encrypted field", icon: "lock"}
       )
-    )._id;
+    );
 
-    nestedBucketId = (
+    nestedBucketId = idOf(
       await api.createBucket(
         {
           label: {type: "string", title: "Label"},
@@ -49,9 +50,9 @@ contractSuite("Encrypted Field", engine => {
           icon: "lock"
         }
       )
-    )._id;
+    );
 
-    mixedBucketId = (
+    mixedBucketId = idOf(
       await api.createBucket(
         {
           name: {type: "string", title: "Name"},
@@ -64,7 +65,7 @@ contractSuite("Encrypted Field", engine => {
           icon: "lock"
         }
       )
-    )._id;
+    );
   });
 
   afterEach(() => api.close());
@@ -338,7 +339,7 @@ contractSuite("Encrypted Field", engine => {
     });
 
     it("should handle decryption failure in array of encrypted fields", async () => {
-      const arrayBucketId = (
+      const arrayBucketId = idOf(
         await api.createBucket(
           {
             name: {type: "string", title: "Name"},
@@ -350,7 +351,7 @@ contractSuite("Encrypted Field", engine => {
             icon: "lock"
           }
         )
-      )._id;
+      );
       const insertResponse = await api.req.post(`/bucket/${arrayBucketId}/data`, {
         name: "array-test",
         secrets: ["secret1", "secret2", "secret3"]

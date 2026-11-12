@@ -3,7 +3,6 @@ import {Activity} from "@spica-server/interface-activity";
 
 export const activities = defineEntity<Activity>({
   table: "activities",
-  idProperty: "_id",
   columns: {
     action: {type: "integer", notNull: true},
     identifier: {type: "uuid"},

@@ -1,5 +1,6 @@
 import {contractSuite} from "@spica-server/database-testing";
 import {BucketApp, startBucketApp} from "../support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 contractSuite("BucketDataController: insert with limitations", engine => {
   let api: BucketApp;
@@ -36,7 +37,7 @@ contractSuite("BucketDataController: insert with limitations", engine => {
       bucket = api.definition(properties, {
         documentSettings: {countLimit: 1, limitExceedBehaviour: "prevent"}
       });
-      bucketId = (await api.req.post("/bucket", bucket)).body._id;
+      bucketId = idOf((await api.req.post("/bucket", bucket)).body);
     });
 
     it("should throw error and prevent inserting when limit reached", async () => {
@@ -70,7 +71,7 @@ contractSuite("BucketDataController: insert with limitations", engine => {
       bucket = api.definition(properties, {
         documentSettings: {countLimit: 1, limitExceedBehaviour: "remove"}
       });
-      bucketId = (await api.req.post("/bucket", bucket)).body._id;
+      bucketId = idOf((await api.req.post("/bucket", bucket)).body);
     });
 
     it("should insert document but remove the oldest document of bucket", async () => {

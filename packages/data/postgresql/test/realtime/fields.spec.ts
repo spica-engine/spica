@@ -21,7 +21,7 @@ describe("fieldsOfExpression", () => {
   });
 
   it("should leave out what comes from the user", () => {
-    expect(fields(`document.owner == auth._id`)).toEqual(["owner"]);
+    expect(fields(`document.owner == auth.id`)).toEqual(["owner"]);
     expect(fields(`auth.role == "admin"`)).toEqual([]);
   });
 
