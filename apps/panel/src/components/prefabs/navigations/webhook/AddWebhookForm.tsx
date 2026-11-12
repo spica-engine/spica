@@ -25,6 +25,7 @@ import {
   type WebhookTrigger,
 } from "../../../../store/api/webhookApi";
 import styles from "./AddWebhookForm.module.scss";
+import { idOf } from "../../../../utils/recordKey";
 
 const Editor = lazy(() => import("@monaco-editor/react").then((m) => ({ default: m.default })));
 
@@ -63,7 +64,7 @@ export const AddWebhookForm: React.FC<AddWebhookFormProps> = ({ onClose, initial
   const [updateWebhook, { isLoading: isUpdateLoading }] = useUpdateWebhookMutation();
   const { data: collections = [] } = useGetWebhookCollectionsQuery();
 
-  const isEditMode = Boolean(initialWebhook?._id);
+  const isEditMode = Boolean(idOf(initialWebhook));
   const isLoading = isCreateLoading || isUpdateLoading;
 
   const [title, setTitle] = useState(() => initialWebhook?.title ?? "");
@@ -153,17 +154,17 @@ export const AddWebhookForm: React.FC<AddWebhookFormProps> = ({ onClose, initial
     };
 
     try {
-      if (isEditMode && initialWebhook?._id) {
+      if (isEditMode && idOf(initialWebhook)) {
         const updatePayload: UpdateWebhookRequest = payload;
-        await updateWebhook({ id: initialWebhook._id, body: updatePayload }).unwrap();
+        await updateWebhook({ id: idOf(initialWebhook)!, body: updatePayload }).unwrap();
         resetForm();
         onClose();
       } else {
         const result = await createWebhook(payload).unwrap();
         resetForm();
         onClose();
-        if (result._id) {
-          navigate(`/webhook/${result._id}`);
+        if (idOf(result)) {
+          navigate(`/webhook/${idOf(result)!}`);
         }
       }
     } catch {

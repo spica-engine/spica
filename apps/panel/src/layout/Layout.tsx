@@ -18,6 +18,7 @@ import {
 } from "./components/BucketNavigatorPopupWrapper";
 import { getMenuItems, navigatorItems } from "../pages/home/sidebarItems";
 import {useAuth} from "../contexts/AuthContext";
+import { idOf } from "../utils/recordKey";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -139,7 +140,7 @@ const Layout = () => {
   }, [navigate]);
 
   const handleProfile = useCallback(() => {
-    const identityId = decoded?._id;
+    const identityId = idOf(decoded);
     if (!identityId) return;
     if (location.pathname === "/passport/identity") {
       window.dispatchEvent(new CustomEvent("open-identity-drawer", {detail: {identityId}}));

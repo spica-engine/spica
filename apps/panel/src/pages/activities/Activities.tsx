@@ -18,6 +18,7 @@ import ActivityActionBar from "../../components/molecules/activity-action-bar/Ac
 import styles from "./Activities.module.scss";
 import sharedStyles from "../shared/EntityPage.module.scss";
 import bucketStyles from "../bucket/Bucket.module.scss";
+import {idOf} from "../../utils/recordKey";
 
 const DEFAULT_OPTIONS: ActivityOptions = { limit: 20, skip: 0 };
 
@@ -27,10 +28,10 @@ function createActivityColumns(
   return [
     {
       header: <FlexElement>#</FlexElement>,
-      key: "_id",
+      key: "recordId",
       width: "250px",
       minWidth: "250px",
-      renderCell: ({row}) => <span>{row._id}</span>
+      renderCell: ({row}) => <span>{idOf(row)}</span>
     },
     {
       header: <FlexElement>Identifier</FlexElement>,
@@ -123,7 +124,7 @@ const Activities = () => {
           data={activities}
           loading={isLoading}
           skeletonRowCount={10}
-          fixedColumns={["_id"]}
+          fixedColumns={["recordId"]}
           emptyState={{
             title: "No activities found",
             description: "There are no activities to show.",
