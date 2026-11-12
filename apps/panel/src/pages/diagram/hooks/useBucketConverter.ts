@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useEngine } from "../../../hooks/useEngine";
-import { bucketKeyField } from "../../../utils/recordKey";
+import { bucketKeyField, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
 import type { Property, BucketType } from "../../../store/api/bucketApi";
 import { idOf } from "../../../utils/recordKey";
 
@@ -54,7 +54,7 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
         field.relationType = property.relationType;
       }
 
-      if (key === "_id" || key === "id") {
+      if (key === DEFAULT_KEY_FIELD || key === "id") {
         field.isUnique = true;
       }
       
@@ -84,7 +84,7 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
     return (buckets: BucketType[]): Relation[] => {
       const relations: Relation[] = [];
       const keyFieldById = new Map(
-        buckets.map(bucket => [idOf(bucket)!, bucketKeyField(engine, bucket) ?? "_id"])
+        buckets.map(bucket => [idOf(bucket)!, bucketKeyField(engine, bucket) ?? DEFAULT_KEY_FIELD])
       );
 
       const processProperty = (
@@ -114,7 +114,7 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
             from: bucketId,
             to: property.bucketId,
             fromField: key,
-            toField: keyFieldById.get(property.bucketId) ?? "_id",
+            toField: keyFieldById.get(property.bucketId) ?? DEFAULT_KEY_FIELD,
             type: relationType,
             fromPath: path
           });
@@ -187,7 +187,7 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
       return buckets.map((bucket, bucketIndex) => {
         const fields: Field[] = [];
 
-        const keyField = bucketKeyField(engine, bucket) ?? "_id";
+        const keyField = bucketKeyField(engine, bucket) ?? DEFAULT_KEY_FIELD;
         if (!(keyField in (bucket.properties || {}))) {
           fields.push({
             id: keyField,

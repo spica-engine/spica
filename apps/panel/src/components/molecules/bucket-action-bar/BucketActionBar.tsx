@@ -14,7 +14,7 @@ import FilterPanel from "../../prefabs/filter-panel/FilterPanel";
 import SortPanel from "../../prefabs/sort-panel/SortPanel";
 import type {FilterField, FilterConditionRow, SortField} from "../../prefabs/filter-panel/types";
 import {isConditionActive, formatConditionValue} from "../../prefabs/filter-panel/filterPanelUtils";
-import { idOf, keyOf } from "../../../utils/recordKey";
+import { idOf, keyOf, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
 import { relationValueId } from "../../../domain/relationTarget";
 import { useBucketLookup } from "../../../contexts/BucketLookupContext";
 import { useKeyField } from "../../../hooks/useKeyField";
@@ -130,7 +130,7 @@ const BucketActionBar = ({
   deleteBucketEntries
 }: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
-  const keyField = useKeyField(idOf(bucket)!) ?? "_id";
+  const keyField = useKeyField(idOf(bucket)!) ?? DEFAULT_KEY_FIELD;
   const bucketLookup = useBucketLookup();
   const keyColumnKey = (bucket.properties?.[keyField] as {title?: string} | undefined)?.title ?? keyField;
   const {selectedEntries, deselectEntry} = useEntrySelection(idOf(bucket)!);

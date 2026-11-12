@@ -18,7 +18,7 @@ import Confirmation from "../../molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import type { TableRowClickParams } from "oziko-ui-kit";
 import { CellSelectionProvider } from "./useCellSelection";
-import { idOf, keyOf } from "../../../utils/recordKey";
+import { idOf, keyOf, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
 import { useKeyField } from "../../../hooks/useKeyField";
 import { usePrincipalKey } from "../../../hooks/usePrincipalKey";
 
@@ -275,7 +275,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   isLoadingMore = false
 }) => {
   const principalKey = usePrincipalKey();
-  const keyField = useKeyField(idOf(bucket)!) ?? "_id";
+  const keyField = useKeyField(idOf(bucket)!) ?? DEFAULT_KEY_FIELD;
   const keyIsProperty = keyField in (bucket?.properties ?? {});
   const rowKey = useCallback((row: BucketDataRow) => keyOf(row, keyField), [keyField]);
   const {selectedEntries, selectEntry, deselectEntry, selectEntries, resetSelection} = useEntrySelection(idOf(bucket)!);

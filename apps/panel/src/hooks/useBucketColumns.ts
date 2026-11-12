@@ -3,6 +3,7 @@ import type {BucketType} from "../store/api/bucketApi";
 import type {ColumnType} from "../components/organisms/bucket-table/BucketTable";
 import useLocalStorage from "./useLocalStorage";
 
+import {DEFAULT_KEY_FIELD} from "../utils/recordKey";
 // Types whose values can't be matched with a case-insensitive text regex.
 // Everything else (string, textarea, richtext, color, hash, encrypted, and any
 // custom scalar text field) is treated as searchable.
@@ -33,7 +34,7 @@ interface UseBucketColumnsResult {
 export function useBucketColumns(
   bucket: BucketType | undefined,
   bucketId: string,
-  keyField: string = "_id"
+  keyField: string = DEFAULT_KEY_FIELD
 ): UseBucketColumnsResult {
   const [fieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, []);
 

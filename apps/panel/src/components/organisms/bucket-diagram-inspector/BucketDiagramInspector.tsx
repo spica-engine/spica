@@ -15,7 +15,7 @@ import type {FieldFormState, FieldKind} from "../../../domain/fields/types";
 import {FIELD_REGISTRY, isFieldKind} from "../../../domain/fields/registry";
 import {inferSecurityFromAcl} from "../../../domain/fields/field-acl";
 import type {Field} from "../../../pages/diagram/hooks/useBucketConverter";
-import { idOf } from "../../../utils/recordKey";
+import { idOf, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
 import {usePrincipalKey} from "../../../hooks/usePrincipalKey";
 import {useKeyField} from "../../../hooks/useKeyField";
 
@@ -192,7 +192,7 @@ EditFieldButton.displayName = "EditFieldButton";
 
 const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, fields, onClose}) => {
   const principalKey = usePrincipalKey();
-  const keyField = useKeyField(idOf(bucket)!) ?? "_id";
+  const keyField = useKeyField(idOf(bucket)!) ?? DEFAULT_KEY_FIELD;
   const [createBucketField] = useCreateBucketFieldMutation();
 
   const getFieldTypeDisplay = useCallback((field: Field) => {

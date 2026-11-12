@@ -1,6 +1,7 @@
 import {describe, it, expect} from "@jest/globals";
 import {relationLabelField, relationSearchFilter, relationTarget, relationValueId} from "./relationTarget";
 import {filterFieldTypeOf} from "./filterFieldType";
+import {DEFAULT_KEY_FIELD} from "../utils/recordKey";
 
 const pgBucket = {
   primary: "id",
@@ -30,7 +31,7 @@ describe("relationLabelField", () => {
 
 describe("relationTarget", () => {
   it("should name the key and the label the way the engine does", () => {
-    expect(relationTarget("mongodb", {primary: "title"})).toEqual({keyField: "_id", labelField: "title"});
+    expect(relationTarget("mongodb", {primary: "title"})).toEqual({keyField: DEFAULT_KEY_FIELD, labelField: "title"});
     expect(relationTarget("postgresql", pgBucket)).toEqual({keyField: "id", labelField: "name"});
   });
 
@@ -45,7 +46,7 @@ describe("relationValueId", () => {
     expect(relationValueId(7)).toBe("7");
     expect(relationValueId({value: "a", label: "A"})).toBe("a");
     expect(relationValueId({kind: "id", id: "a"})).toBe("a");
-    expect(relationValueId({_id: "a", title: "t"})).toBe("a");
+    expect(relationValueId({[DEFAULT_KEY_FIELD]: "a", title: "t"})).toBe("a");
   });
 
   it("should prefer the related bucket's key field in a resolved document", () => {
@@ -67,7 +68,7 @@ describe("relationSearchFilter", () => {
       $or: [{title: {$regex: "a.b", $options: "i"}}]
     });
     expect(relationSearchFilter(undefined, undefined, "x")).toEqual({
-      $or: [{_id: {$regex: "x", $options: "i"}}]
+      $or: [{[DEFAULT_KEY_FIELD]: {$regex: "x", $options: "i"}}]
     });
   });
 

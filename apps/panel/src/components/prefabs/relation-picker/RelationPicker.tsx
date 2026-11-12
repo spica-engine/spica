@@ -17,7 +17,7 @@ import styles from "./RelationPicker.module.scss";
 import {useGetBucketDataQuery, useGetBucketQuery, useLazyGetBucketDataQuery} from "../../../store/api/bucketApi";
 import { extractPrimaryColumns, extractPrimaryFieldValue } from "./primaryFieldUtils";
 import { useBucketLookup } from "../../../contexts/BucketLookupContext";
-import { keyOf } from "../../../utils/recordKey";
+import { keyOf, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
 import { relationLabelField } from "../../../domain/relationTarget";
 import { filterFieldTypeOf } from "../../../domain/filterFieldType";
 
@@ -51,7 +51,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
   });
   const bucketLookup = useBucketLookup();
   const labelField = relationLabelField(engine, bucket);
-  const relatedKeyField = keyField ?? "_id";
+  const relatedKeyField = keyField ?? DEFAULT_KEY_FIELD;
   
   const { data: initialData, isLoading: isInitialLoading, isFetching } = useGetBucketDataQuery({
     bucketId: resolvedBucketId as string,
@@ -59,7 +59,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
     relation: true,
     limit: LIMIT,
     skip: 0,
-    sort: { [keyField ?? "_id"]: -1 },
+    sort: { [keyField ?? DEFAULT_KEY_FIELD]: -1 },
     filter: appliedFilter || undefined
   }, {
     skip: !resolvedBucketId || keyField === undefined,
@@ -112,7 +112,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
         relation: true,
         limit: LIMIT,
         skip: skipValue,
-        sort: { [keyField ?? "_id"]: -1 },
+        sort: { [keyField ?? DEFAULT_KEY_FIELD]: -1 },
         filter: appliedFilter || undefined
       }).unwrap();
 

@@ -159,4 +159,28 @@ Order: 1 to 3 first. 14 waits for Part 14. 4 needs 3. 5 needs 2. 6 needs 1 and 2
 
 ## As built
 
-_Fill in after the last PR merges._
+Merged as #2225 to #2245 (PRs 1 to 12) and this PR (13). PR 14 waits for Part 14's server work. The panel runs against an API on PostgreSQL and against MongoDB with no change on MongoDB: rows, selection, filters, search, sort, relations, create, edit, delete, realtime, and the identity, user and storage lists work on both engines.
+
+**What exists**
+- `utils/recordKey.ts`: `idOf`, `omitId`, `pickId`, `SystemRecord`, `principalKeyFor(engine)`, `bucketKeyField(engine, bucket)`, `keyOf(row, keyField)`, `omitKey` and `DEFAULT_KEY_FIELD` (MongoDB's key, and the one assumed until the engine is known). Hooks: `useEngine`, `useKeyField(bucketId)`, `usePrincipalKey`, `useFilterBuilder`.
+- `utils/serializeFilter.ts`: a filter object goes out as JSON and an expression string as is. `utils/storageQuery.ts` builds the storage filter in both languages; `utils/realtimeQuery.ts` the realtime sort and filter.
+- `domain/relationTarget.ts`: a related bucket's key field, label field, id extraction and search filter per engine. `domain/filterFieldType.ts` maps a property to a filter field type, including `bigint`, which keeps its digits as a quoted string. `domain/fields/keyKinds.ts` maps `uuid`, `integer` and `bigint` to input kinds and hides a generated key.
+- The panel's specs run with Jest (`apps/panel/jest.config.cjs`) and are picked up by `nx` in CI. Only pure functions are tested.
+- `yarn check:key-names` covers the panel, including `.tsx`.
+
+**Where it differs from the plan**
+- The label on PostgreSQL is the first `string` or `textarea` property that is not the key. `bucket.primary` stays the key there.
+- Relation state in the entry drawer is keyed by the field, not by the related bucket (#2244): two relation fields to one bucket shared a state and the drawer would have saved the wrong value. Relations nested in objects and arrays still key by bucket id.
+- The drawer waits for relation labels before it re-applies the entry (#2242). A deep link used to show a blank tag, on MongoDB too.
+- Saving a document of a PostgreSQL bucket with a relation property failed on the server (`findById` could not resolve the relation target). Fixed in #2243.
+- The profiler is hidden on PostgreSQL by the engine name (#2236); PR 14 replaces that with the server's `features.profiler`.
+- `ProfilerEntry` extends `SystemRecord` and the drawer reads its id through `idOf`.
+
+**Known gaps**
+- The list cell of a onetomany relation renders nothing, and did not before this part.
+- The PostgreSQL API accepts a relation only to a uuid-keyed bucket, so the panel's support for string- and integer-keyed relation targets is untested end to end.
+- `meta.total` of the realtime list is the number of streamed rows.
+
+**Kept literal on purpose (exempt from the ratchet)**
+- `utils/recordKey.ts` and its spec, the one place the key name lives.
+- `types/storage.ts`: `oziko-ui-kit` declares `_id` on `TypeFile`.

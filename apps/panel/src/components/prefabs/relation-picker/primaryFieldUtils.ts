@@ -3,7 +3,7 @@
  * email: rio.kenan@gmail.com
  */
 
-import { keyOf } from "../../../utils/recordKey";
+import { keyOf, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
 
 export type RelationColumn = {
   key: string;
@@ -97,7 +97,7 @@ export function computeRelationParam(
 export function getPrimaryFieldKey(
   properties: Record<string, any>,
   primaryFieldKey?: string,
-  keyField: string = "_id"
+  keyField: string = DEFAULT_KEY_FIELD
 ): string {
   if (!properties) return keyField;
 
@@ -166,7 +166,7 @@ export function extractPrimaryFieldValue(
   item: Record<string, any>,
   properties: Record<string, any>,
   primaryFieldKey?: string,
-  keyField: string = "_id"
+  keyField: string = DEFAULT_KEY_FIELD
 ): string {
   const primaryKey = getPrimaryFieldKey(properties, primaryFieldKey, keyField);
   const value = item[primaryKey];

@@ -1,3 +1,4 @@
+import {DEFAULT_KEY_FIELD} from "../../utils/recordKey";
 /**
  * Field-level ACL
  * ------------------------------------------------------------
@@ -20,7 +21,7 @@ export interface FieldSecurity {
   principalKey?: string;
 }
 
-const DEFAULT_PRINCIPAL_KEY = "_id";
+const DEFAULT_PRINCIPAL_KEY = DEFAULT_KEY_FIELD;
 
 // PostgreSQL's rule compiler has no `undefined` literal, so a key other than MongoDB's is
 // checked with has().

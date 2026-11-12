@@ -1,5 +1,8 @@
 import type {DataEngine} from '../store/api/statusApi';
 
+// MongoDB's key, and the one assumed until the engine is known.
+export const DEFAULT_KEY_FIELD = '_id';
+
 export interface SystemRecord {
   _id?: string;
   id?: string;

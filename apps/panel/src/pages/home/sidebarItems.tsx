@@ -91,7 +91,7 @@ export const menuItems: TypeMenuItems[] = getMenuItems();
 
 export const navigatorItems: {[key: string]: TypeNavigatorItem[]} = {
   bucket: [
-    {_id: "3", title: "Profile", icon: "bucket", section: "bucket"},
-    {_id: "4", title: "Security", icon: "lock", section: "bucket"}
+    {id: "3", title: "Profile", icon: "bucket", section: "bucket"},
+    {id: "4", title: "Security", icon: "lock", section: "bucket"}
   ]
 };
