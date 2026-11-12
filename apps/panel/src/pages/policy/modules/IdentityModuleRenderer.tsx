@@ -15,6 +15,7 @@ import {
   type OnResourceBatchChange,
   type OnResourceChange
 } from "../moduleRendererHelpers";
+import { idOf } from "../../../utils/recordKey";
 
 export interface IdentityModuleProps extends BaseModuleContext {
   identities?: Identity[];
@@ -57,9 +58,9 @@ export class IdentityModuleRenderer implements ModuleRenderer<IdentityModuleProp
             onResourceBatchChange,
             itemConfig: {
               items: identities,
-              getId: identity => identity._id || "",
-              getKey: identity => identity._id || "",
-              getLabel: identity => identity._id,
+              getId: identity => idOf(identity) || "",
+              getKey: identity => idOf(identity) || "",
+              getLabel: identity => idOf(identity)!,
               getIcon: () => <Icon name="person" size="md" />
             }
           })

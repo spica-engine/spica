@@ -21,12 +21,12 @@ import { useModuleDataRegistry } from "./moduleRenderers";
 import { useModuleStatements } from "./hook/useStatement";
 import Confirmation from "../../components/molecules/confirmation/Confirmation";
 import PolicyActionBar from "../../components/molecules/policy-action-bar/PolicyActionBar";
+import { idOf, omitId, type SystemRecord } from "../../utils/recordKey";
 
 registerAllRenderers();
 
 
-export type PolicyItem = {
-  _id: string;
+export type PolicyItem = SystemRecord & {
   name: string;
   description: string;
   statement: { action: string; module: string; resource?: { include: string[]; exclude: string[] } }[];
@@ -58,7 +58,7 @@ const Policy = () => {
         (p) =>
           p.name?.toLowerCase().includes(q) ||
           p.description?.toLowerCase().includes(q) ||
-          p._id?.toLowerCase().includes(q)
+          idOf(p)?.toLowerCase().includes(q)
       );
     }
     if (appliedFilter) {
@@ -82,7 +82,7 @@ const Policy = () => {
   }, []);
 
   const openCreateFromPredefined = useCallback((policy: PolicyItem) => {
-    setSelectedPolicy({ ...policy, _id: "" });
+    setSelectedPolicy(omitId(policy));
     setIsOpen(true);
   }, []);
 
@@ -98,9 +98,10 @@ const Policy = () => {
 
   const handleSave = useCallback(async (input: PolicyUpsertInput) => {
     try {
-      if (selectedPolicy?._id) {
+      const selectedPolicyId = idOf(selectedPolicy);
+      if (selectedPolicy && selectedPolicyId) {
         await updatePolicy({
-          id: selectedPolicy._id,
+          id: selectedPolicyId,
           body: {
             name: input.name,
             description: input.description,
@@ -128,7 +129,7 @@ const Policy = () => {
   const handleConfirmDelete = useCallback(async () => {
     if (!policyToDelete) return;
     try {
-      await deletePolicy(policyToDelete._id).unwrap();
+      await deletePolicy(idOf(policyToDelete)!).unwrap();
       setPolicyToDelete(null);
     } catch (error) {
       console.error("Failed to delete policy:", error);
@@ -144,8 +145,8 @@ const Policy = () => {
     return [
       {
         header: <FlexElement>#</FlexElement>,
-        key: "_id",
-        renderCell: ({ row }) => <span>{row._id}</span>
+        key: "recordId",
+        renderCell: ({ row }) => <span>{idOf(row)}</span>
       },
       {
         header: <FlexElement>Name</FlexElement>,

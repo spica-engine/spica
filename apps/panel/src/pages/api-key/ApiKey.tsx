@@ -14,6 +14,7 @@ import ApiKeyActionBar from "../../components/molecules/api-key-action-bar/ApiKe
 import styles from "./ApiKey.module.scss";
 import sharedStyles from "../shared/EntityPage.module.scss";
 import bucketStyles from "../bucket/Bucket.module.scss";
+import { idOf } from "../../utils/recordKey";
 
 const PAGE_SIZE = 20;
 
@@ -57,7 +58,7 @@ const ApiKeyPage = () => {
 
   const policyNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    (policies ?? []).forEach((p: Policy) => map.set(p._id, p.name));
+    (policies ?? []).forEach((p: Policy) => map.set(idOf(p)!, p.name));
     return map;
   }, [policies]);
 
@@ -97,7 +98,7 @@ const ApiKeyPage = () => {
     return allItems.filter(
       (item) =>
         item.name?.toLowerCase().includes(q) ||
-        item._id?.toLowerCase().includes(q) ||
+        idOf(item)?.toLowerCase().includes(q) ||
         item.description?.toLowerCase().includes(q)
     );
   }, [allItems, searchQuery]);
@@ -106,10 +107,10 @@ const ApiKeyPage = () => {
     () => [
       {
         header: <FlexElement>#</FlexElement>,
-        key: "_id",
+        key: "recordId",
         width: "220px",
         minWidth: "220px",
-        renderCell: ({ row }) => <span>{row._id}</span>,
+        renderCell: ({ row }) => <span>{idOf(row)}</span>,
       },
       {
         header: <FlexElement>Key</FlexElement>,
@@ -125,13 +126,13 @@ const ApiKeyPage = () => {
               <Button
                 variant="icon"
                 color="default"
-                className={`${styles.keyCopyButton} ${copiedKeyId === row._id ? styles.keyCopied : ""}`}
+                className={`${styles.keyCopyButton} ${copiedKeyId === idOf(row) ? styles.keyCopied : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleCopyKey(row.key!, row._id);
+                  handleCopyKey(row.key!, idOf(row)!);
                 }}
               >
-                <Icon name={copiedKeyId === row._id ? "check" : "contentCopy"} />
+                <Icon name={copiedKeyId === idOf(row) ? "check" : "contentCopy"} />
               </Button>
             )}
           </span>
@@ -213,7 +214,7 @@ const ApiKeyPage = () => {
               <Icon name="pencil" />
             </Button>
             <DeleteEntity
-              entityId={row._id!}
+              entityId={idOf(row)!}
               entityName={row.name}
               entityLabel="API KEY"
               deleteMutation={deleteApiKey}

@@ -15,6 +15,7 @@ import {
   type OnResourceBatchChange,
   type OnResourceChange
 } from "../moduleRendererHelpers";
+import { idOf } from "../../../utils/recordKey";
 
 export interface BucketModuleProps extends BaseModuleContext {
   buckets?: BucketType[];
@@ -56,8 +57,8 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
             onResourceBatchChange,
             itemConfig: {
               items: buckets,
-              getId: bucket => bucket._id,
-              getKey: bucket => bucket._id,
+              getId: bucket => idOf(bucket)!,
+              getKey: bucket => idOf(bucket)!,
               getLabel: bucket => bucket.title,
               getIcon: () => <Icon name="bucket" size="md" />
             }

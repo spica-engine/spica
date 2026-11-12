@@ -1,7 +1,7 @@
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from "../../utils/recordKey";
 
-export interface ApiKey {
-  _id?: string;
+export interface ApiKey extends SystemRecord {
   key?: string;
   name: string;
   description?: string;
@@ -67,7 +67,7 @@ export const apiKeyApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: API_KEY_TAG, id: _id })),
+              ...result.data.map((apiKey) => ({ type: API_KEY_TAG, id: idOf(apiKey) })),
               API_KEY_TAGS.LIST,
             ]
           : [API_KEY_TAGS.LIST],

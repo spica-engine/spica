@@ -15,6 +15,7 @@ import {
   type OnResourceBatchChange,
   type OnResourceChange
 } from "../moduleRendererHelpers";
+import { idOf } from "../../../utils/recordKey";
 
 export interface ApiKeyModuleProps extends BaseModuleContext {
   apiKeys?: ApiKey[];
@@ -56,8 +57,8 @@ export class ApiKeyModuleRenderer implements ModuleRenderer<ApiKeyModuleProps> {
             onResourceBatchChange,
             itemConfig: {
               items: apiKeys,
-              getId: apiKey => apiKey._id ?? "",
-              getKey: apiKey => apiKey._id ?? apiKey.name,
+              getId: apiKey => idOf(apiKey) ?? "",
+              getKey: apiKey => idOf(apiKey) ?? apiKey.name,
               getLabel: apiKey => apiKey.name,
               getIcon: () => <Icon name="key" size="md" />
             }

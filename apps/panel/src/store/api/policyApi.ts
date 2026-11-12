@@ -4,6 +4,7 @@
  */
 
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from "../../utils/recordKey";
 
 // Types
 export interface PolicyStatement {
@@ -15,8 +16,7 @@ export interface PolicyStatement {
   };
 }
 
-export interface Policy {
-  _id: string;
+export interface Policy extends SystemRecord {
   name: string;
   description: string;
   statement: PolicyStatement[];
@@ -79,7 +79,7 @@ export const policyApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ _id }) => ({ type: 'Policy' as const, id: _id })),
+              ...result.map((policy) => ({ type: 'Policy' as const, id: idOf(policy) })),
               { type: 'Policy', id: 'LIST' },
             ]
           : [{ type: 'Policy', id: 'LIST' }],
@@ -132,7 +132,7 @@ export const policyApi = baseApi.injectEndpoints({
       onQueryStarted: async ({ id, body }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           policyApi.util.updateQueryData('getPolicies', undefined, (draft) => {
-            const policy = draft.find((p) => p._id === id);
+            const policy = draft.find((p) => idOf(p) === id);
             if (policy) {
               Object.assign(policy, body);
             }
@@ -161,7 +161,7 @@ export const policyApi = baseApi.injectEndpoints({
       onQueryStarted: async (id, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           policyApi.util.updateQueryData('getPolicies', undefined, (draft) => {
-            return draft.filter((policy) => policy._id !== id);
+            return draft.filter((policy) => idOf(policy) !== id);
           })
         );
 
