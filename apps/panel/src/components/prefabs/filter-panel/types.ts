@@ -1,4 +1,4 @@
-export type FilterFieldType = 'string' | 'number' | 'date' | 'boolean' | 'enum' | 'id' | 'relation';
+export type FilterFieldType = 'string' | 'number' | 'bigint' | 'date' | 'boolean' | 'enum' | 'id' | 'relation';
 
 export interface FilterField {
   key: string;

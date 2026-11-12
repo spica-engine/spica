@@ -19,6 +19,15 @@ export const OPERATORS_BY_TYPE: Record<FilterFieldType, { label: string; value: 
     { label: 'less than', value: 'less than' },
     { label: 'less than or equal', value: 'less than or equal' },
   ],
+  // Values past 2^53 do not survive a JavaScript number, so a bigint is typed, kept and sent as digits.
+  bigint: [
+    { label: 'equals', value: 'equals' },
+    { label: 'not equals', value: 'not equals' },
+    { label: 'greater than', value: 'greater than' },
+    { label: 'greater than or equal', value: 'greater than or equal' },
+    { label: 'less than', value: 'less than' },
+    { label: 'less than or equal', value: 'less than or equal' },
+  ],
   date: [
     { label: 'equals', value: 'equals' },
     { label: 'before', value: 'before' },
@@ -54,6 +63,7 @@ export const OPERATORS_BY_TYPE: Record<FilterFieldType, { label: string; value: 
 export const DEFAULT_OPERATOR: Record<FilterFieldType, string> = {
   string: 'contains',
   number: 'equals',
+  bigint: 'equals',
   date: 'equals',
   boolean: 'is',
   enum: 'equals',
@@ -277,7 +287,9 @@ function expressionFor(condition: FilterConditionRow, field: FilterField): strin
     const n = Number(value);
     return isNaN(n) ? null : n;
   };
+  const digits = (): string | null => (/^-?\d+$/.test(value.trim()) ? quoted(value.trim()) : null);
   const literal = (): string | null => {
+    if (field.type === 'bigint') return digits();
     if (field.type === 'number') {
       const n = number();
       return n === null ? null : String(n);
@@ -291,6 +303,7 @@ function expressionFor(condition: FilterConditionRow, field: FilterField): strin
   const compare = (symbol: string, operand: string | null) =>
     operand === null ? null : `${path} ${symbol} ${operand}`;
   const ordered = (symbol: string) => {
+    if (field.type === 'bigint') return compare(symbol, digits());
     const n = number();
     return n === null ? null : `${path} ${symbol} ${n}`;
   };
