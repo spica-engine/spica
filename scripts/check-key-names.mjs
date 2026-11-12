@@ -17,6 +17,7 @@ const EXEMPT_PREFIXES = [
   "packages/devkit/storage/test/id.spec.ts",
   "packages/devkit/testing/",
   "packages/filter/",
+  "packages/data/postgresql/src/schemas/bucket.schema.json",
   "packages/api/bucket/graphql/",
   "packages/api/bucket/expression/src/convert.ts",
   "packages/api/bucket/expression/src/builtin_funcs.ts",
@@ -61,6 +62,10 @@ export function countKeyLiterals(root) {
   }
   return counts;
 }
+
+const TEST_FILE = /(^|\/)(test|testing)\/|\.spec\.ts$/;
+
+export const isTestFile = file => TEST_FILE.test(file);
 
 export function checkKeyNames(root, baseline, {strictUnder} = {}) {
   const counts = countKeyLiterals(root);
@@ -129,6 +134,19 @@ function toPosix(file) {
 }
 
 export function run(root, argv) {
+  if (argv.includes("--strict-source")) {
+    const named = Object.entries(countKeyLiterals(root)).filter(([file]) => !isTestFile(file));
+    for (const [file, count] of named) {
+      console.error(`${file}: ${count} "_id" literal(s) in source`);
+    }
+    if (named.length) {
+      console.error(`\n${named.length} source file(s) name the key literally.`);
+      return 1;
+    }
+    console.log('No "_id" literals in source.');
+    return 0;
+  }
+
   const strict = argv.includes("--strict");
   const under = argv.find(arg => arg.startsWith("--under="))?.slice("--under=".length);
   if (strict && !under) {
