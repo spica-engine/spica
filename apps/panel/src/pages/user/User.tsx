@@ -13,6 +13,7 @@ import UserDrawer from "./UserDrawer";
 import UserActionBar from "../../components/molecules/user-action-bar/UserActionBar";
 import bucketStyles from "../bucket/Bucket.module.scss";
 import styles from "../shared/EntityPage.module.scss";
+import { idOf } from "../../utils/recordKey";
 
 const PAGE_SIZE = 20;
 
@@ -45,7 +46,7 @@ const User = () => {
 
   const policyNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    (policies ?? []).forEach((p: Policy) => map.set(p._id, p.name));
+    (policies ?? []).forEach((p: Policy) => map.set(idOf(p)!, p.name));
     return map;
   }, [policies]);
 
@@ -70,7 +71,7 @@ const User = () => {
     return allItems.filter(
       (item) =>
         item.username?.toLowerCase().includes(q) ||
-        item._id?.toLowerCase().includes(q)
+        idOf(item)?.toLowerCase().includes(q)
     );
   }, [allItems, searchQuery]);
 
@@ -78,10 +79,10 @@ const User = () => {
     () => [
       {
         header: <FlexElement>#</FlexElement>,
-        key: "_id",
+        key: "recordId",
         width: "220px",
         minWidth: "220px",
-        renderCell: ({ row }) => <span>{row._id}</span>,
+        renderCell: ({ row }) => <span>{idOf(row)}</span>,
       },
       {
         header: <FlexElement>Username</FlexElement>,
@@ -114,7 +115,7 @@ const User = () => {
         renderCell: ({ row }) =>
           row.signUpStrategy ? (
             <Link
-              to={`/passport/strategy?id=${row.signUpStrategy._id}`}
+              to={`/passport/strategy?id=${idOf(row.signUpStrategy)}`}
               className={styles.entityLink}
               target="_blank"
               rel="noopener noreferrer"
