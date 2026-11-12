@@ -7,6 +7,8 @@ import {
   type Storage
 } from "../store/api";
 import type {TypeFile} from "oziko-ui-kit";
+import {kitFileKey} from "../types/storage";
+import {idOf} from "../utils/recordKey";
 
 function useStorageService() {
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -111,12 +113,12 @@ function useStorageService() {
     (storage: Storage): TypeFile => {
       const apiBase = (import.meta.env.VITE_BASE_URL as string) || "/api";
       const base = apiBase.endsWith("/") ? apiBase.slice(0, -1) : apiBase;
-      const viewUrl = storage._id
-        ? `${base}/storage/${storage._id}/view`
+      const viewUrl = idOf(storage)!
+        ? `${base}/storage/${idOf(storage)!}/view`
         : storage.url || "";
 
       return {
-        _id: storage._id || "",
+        ...kitFileKey(idOf(storage)),
         name: storage.name,
         content: {
           type: storage.name.endsWith("/")

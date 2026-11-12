@@ -1,3 +1,4 @@
+import { idOf, pickId } from "../../../utils/recordKey";
 import {type FC, memo, useEffect, useState, useCallback, useRef} from "react";
 import styles from "./StorageFileSelect.module.scss";
 import {Modal, type TypeFile, type TypeFilterValue} from "oziko-ui-kit";
@@ -261,7 +262,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose, 
     } else {
       // Convert TypeFile back to Storage format for the callback
       const storageFile: Storage = {
-        _id: file._id,
+        ...pickId(file),
         name: file.name,
         url: file.url,
         content: file.content
@@ -398,7 +399,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose, 
             file={el}
             onClick={() => handleClickFile(el)}
             className={styles.file}
-            key={el._id}
+            key={idOf(el)}
           />
         ))}
         {(isLoadingMore || (isFetching && data.length === 0)) && (

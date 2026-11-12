@@ -5,6 +5,7 @@ import StorageFileSelect from "../../organisms/storage-file-select/StorageFileSe
 import {useUploadFilesMutation, useGetStorageItemQuery} from "../../../store/api/storageApi";
 import type {Storage} from "../../../store/api/storageApi";
 import useStorage from "../../../hooks/useStorage";
+import { idOf } from "../../../utils/recordKey";
 
 interface StorageFieldInputProps {
   fieldKey: string;
@@ -51,7 +52,7 @@ const StorageFieldInput: React.FC<StorageFieldInputProps> = ({
 
   const handleFileSelect = useCallback(
     (file: Storage) => {
-      onChange?.({key: rest.fieldKey, value: file._id || ""});
+      onChange?.({key: rest.fieldKey, value: idOf(file) || ""});
       handleCloseModal();
     },
     [onChange, rest.fieldKey, handleCloseModal]
@@ -64,7 +65,7 @@ const StorageFieldInput: React.FC<StorageFieldInputProps> = ({
         fileList.items.add(file);
         const result = await uploadFiles({files: fileList.files}).unwrap();
         if (result && result.length > 0) {
-          onChange?.({key: rest.fieldKey, value: result[0]._id || ""});
+          onChange?.({key: rest.fieldKey, value: idOf(result[0]) || ""});
         }
       } catch (error) {
         console.error("Failed to upload file:", error);

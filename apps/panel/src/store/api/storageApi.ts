@@ -4,6 +4,7 @@
  */
 
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from '../../utils/recordKey';
 import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
 import axios, { type AxiosProgressEvent } from 'axios';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
@@ -23,8 +24,7 @@ const createStorageIdTags = (id: string) => [
   STORAGE_TAGS.BROWSE,
 ];
 
-export interface Storage {
-  _id?: string;
+export interface Storage extends SystemRecord {
   name: string;
   url?: string;
   created_at?: string;
@@ -85,7 +85,7 @@ export const storageApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: STORAGE_TAG, id: _id })),
+              ...result.data.map((item) => ({ type: STORAGE_TAG, id: idOf(item) })),
               STORAGE_TAGS.LIST,
             ]
           : [STORAGE_TAGS.LIST],
@@ -203,7 +203,7 @@ export const storageApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ _id }) => ({ type: STORAGE_TAG, id: _id })),
+              ...result.map((item) => ({ type: STORAGE_TAG, id: idOf(item) })),
               STORAGE_TAGS.BROWSE,
             ]
           : [STORAGE_TAGS.BROWSE],
