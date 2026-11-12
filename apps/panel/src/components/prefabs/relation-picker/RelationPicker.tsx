@@ -17,6 +17,9 @@ import styles from "./RelationPicker.module.scss";
 import {useGetBucketDataQuery, useGetBucketQuery, useLazyGetBucketDataQuery} from "../../../store/api/bucketApi";
 import { extractPrimaryColumns, extractPrimaryFieldValue } from "./primaryFieldUtils";
 import { useBucketLookup } from "../../../contexts/BucketLookupContext";
+import { keyOf } from "../../../utils/recordKey";
+import { relationLabelField } from "../../../domain/relationTarget";
+import { filterFieldTypeOf } from "../../../domain/filterFieldType";
 
 type RelationPickerProps = {
   bucketId?: string | null;
@@ -47,6 +50,8 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
     skip: !resolvedBucketId,
   });
   const bucketLookup = useBucketLookup();
+  const labelField = relationLabelField(engine, bucket);
+  const relatedKeyField = keyField ?? "_id";
   
   const { data: initialData, isLoading: isInitialLoading, isFetching } = useGetBucketDataQuery({
     bucketId: resolvedBucketId as string,
@@ -142,13 +147,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
     return Object.entries(props)
       .filter(([, prop]: [string, any]) => !skipTypes.has(prop.type))
       .map(([key, prop]: [string, any]): FilterField => {
-        const strTypes = new Set(["string", "textarea", "color", "richtext", "hash", "encrypted"]);
-        const type: FilterField["type"] =
-          strTypes.has(prop.type) ? "string" :
-          prop.type === "number" ? "number" :
-          prop.type === "date" ? "date" :
-          prop.type === "boolean" ? "boolean" :
-          prop.type === "multiselect" && prop.items?.enum ? "enum" : "string";
+        const type = filterFieldTypeOf(prop);
         const field: FilterField = {key, label: prop.title || key, type};
         if (type === "enum" && prop.items?.enum) {
           field.enumOptions = (prop.items.enum as string[]).map((v: string) => ({label: v, value: v}));
@@ -227,8 +226,9 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
             >
               {items.map((item: any) => {
                 const properties = bucket?.properties || {};
-                const primaryFieldValue = extractPrimaryFieldValue(item, properties, bucket?.primary);
-                const primaryColumns = extractPrimaryColumns(item, properties, bucket?.primary);
+                const itemKey = keyOf(item, relatedKeyField);
+                const primaryFieldValue = extractPrimaryFieldValue(item, properties, labelField, relatedKeyField);
+                const primaryColumns = extractPrimaryColumns(item, properties, labelField);
                 // The primary column shows the resolved primary value(s); when a
                 // related bucket has no primary the column stays blank while the id
                 // column keeps every row aligned.
@@ -238,10 +238,10 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
                   : "";
 
                 const handleItemSelect = () => {
-                      bucketLookup.setRelationLabel(resolvedBucketId, item._id, primaryFieldValue);
+                      bucketLookup.setRelationLabel(resolvedBucketId, itemKey, primaryFieldValue);
 
                   onSelect?.({
-                    id: item._id,
+                    id: itemKey,
                     label: primaryFieldValue,
                     columns: primaryColumns
                   });
@@ -249,7 +249,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
 
                 return (
                   <FluidContainer
-                    key={item._id}
+                    key={itemKey}
                     className={styles.item}
                     mode="fill"
                     dimensionX="fill"
@@ -257,8 +257,8 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
                     root={{
                       children: (
                         <span className={styles.optionRow}>
-                          <span className={styles.optionId} title={item._id}>
-                            {item._id}
+                          <span className={styles.optionId} title={itemKey}>
+                            {itemKey}
                           </span>
                           <span
                             className={styles.optionPrimary}

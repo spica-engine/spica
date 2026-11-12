@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { useEngine } from "../../../hooks/useEngine";
+import { bucketKeyField } from "../../../utils/recordKey";
 import type { Property, BucketType } from "../../../store/api/bucketApi";
 import { idOf } from "../../../utils/recordKey";
 
@@ -30,6 +32,7 @@ export interface Relation {
 }
 
 export const useBucketConverter = (buckets: BucketType[] | null) => {
+  const engine = useEngine();
   const convertPropertyToField = useMemo(() => {
     return (
       key: string, 
@@ -80,6 +83,9 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
   const extractRelations = useMemo(() => {
     return (buckets: BucketType[]): Relation[] => {
       const relations: Relation[] = [];
+      const keyFieldById = new Map(
+        buckets.map(bucket => [idOf(bucket)!, bucketKeyField(engine, bucket) ?? "_id"])
+      );
 
       const processProperty = (
         bucketId: string,
@@ -108,7 +114,7 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
             from: bucketId,
             to: property.bucketId,
             fromField: key,
-            toField: "_id",
+            toField: keyFieldById.get(property.bucketId) ?? "_id",
             type: relationType,
             fromPath: path
           });
@@ -128,7 +134,7 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
 
       return relations;
     };
-  }, []);
+  }, [engine]);
 
   const convertBucketsToNodes = useMemo(() => {
     return (buckets: BucketType[], extractedRelations: Relation[]): Node[] => {
@@ -181,13 +187,16 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
       return buckets.map((bucket, bucketIndex) => {
         const fields: Field[] = [];
 
-        fields.push({
-          id: "_id",
-          name: "_id",
-          type: "unique",
-          isUnique: true,
-          path: "_id"
-        });
+        const keyField = bucketKeyField(engine, bucket) ?? "_id";
+        if (!(keyField in (bucket.properties || {}))) {
+          fields.push({
+            id: keyField,
+            name: keyField,
+            type: "unique",
+            isUnique: true,
+            path: keyField
+          });
+        }
 
         Object.entries(bucket.properties || {}).forEach(([key, property]) => {
           const propertyFields = convertPropertyToField(key, property);
@@ -235,7 +244,7 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
         };
       });
     };
-  }, [convertPropertyToField]);
+  }, [convertPropertyToField, engine]);
 
   const relations = useMemo(() => {
     if (!buckets) return [];
