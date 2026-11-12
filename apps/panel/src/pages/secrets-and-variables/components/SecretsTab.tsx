@@ -10,6 +10,7 @@ import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import EntryForm from "./EntryForm";
 import DeleteConfirmation from "./DeleteConfirmation";
 import styles from "../SecretsAndVariables.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 type SecretsTabProps = {
   isNewOpen?: boolean;
@@ -68,7 +69,7 @@ const SecretsTab = ({ isNewOpen, onNewClose, onCountChange }: SecretsTabProps) =
   const handleConfirmDelete = useCallback(async () => {
     if (!secretToDelete) return;
     try {
-      await deleteSecret(secretToDelete._id).unwrap();
+      await deleteSecret(idOf(secretToDelete)!).unwrap();
       setSecretToDelete(null);
     } catch {
       // Error handled by RTK Query

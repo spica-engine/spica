@@ -23,6 +23,7 @@ import FunctionVariableForm from "./FunctionVariableForm";
 import EntryForm from "../secrets-and-variables/components/EntryForm";
 import DeleteConfirmation from "../secrets-and-variables/components/DeleteConfirmation";
 import styles from "./FunctionVariablesPage.module.scss";
+import { idOf } from "../../utils/recordKey";
 
 const SECRET_MASK = "••••••••••••";
 
@@ -103,11 +104,11 @@ const FunctionVariablesPage = () => {
   const assignedFunctionsMap = useMemo<Record<string, SpicaFunction[]>>(() => {
     const map: Record<string, SpicaFunction[]> = {};
     allEnvVars.forEach(ev => {
-      map[ev._id] = [];
+      map[idOf(ev)!] = [];
     });
     functionList.forEach(fn => {
       (fn.env_vars ?? []).forEach(ev => {
-        if (map[ev._id]) map[ev._id].push(fn);
+        if (map[idOf(ev)!]) map[idOf(ev)!].push(fn);
       });
     });
     return map;
@@ -156,9 +157,9 @@ const FunctionVariablesPage = () => {
     if (!deleteTarget) return;
     try {
       if (deleteTarget.type === "variable") {
-        await deleteEnvVar(deleteTarget.item._id).unwrap();
+        await deleteEnvVar(idOf(deleteTarget.item)!).unwrap();
       } else {
-        await deleteSecret(deleteTarget.item._id).unwrap();
+        await deleteSecret(idOf(deleteTarget.item)!).unwrap();
       }
       setDeleteTarget(null);
     } catch {
@@ -184,7 +185,7 @@ const FunctionVariablesPage = () => {
         header: <FlexElement>Value</FlexElement>,
         key: "value",
         renderCell: ({row}) => {
-          const revealed = revealedIds.has(row._id);
+          const revealed = revealedIds.has(idOf(row)!);
           return (
             <FlexElement direction="horizontal" gap={6} alignment="leftCenter">
               <span className={styles.valueCell} title={revealed ? row.value : undefined}>
@@ -194,7 +195,7 @@ const FunctionVariablesPage = () => {
                 variant="icon"
                 color="default"
                 className={styles.revealButton}
-                onClick={() => toggleReveal(row._id)}
+                onClick={() => toggleReveal(idOf(row)!)}
                 title={revealed ? "Hide value" : "Reveal value"}
               >
                 <Icon name={revealed ? "eyeOff" : "eye"} size="sm" />
@@ -207,12 +208,12 @@ const FunctionVariablesPage = () => {
         header: <FlexElement>Assigned Functions</FlexElement>,
         key: "functions",
         renderCell: ({row}) => {
-          const fns = assignedFunctionsMap[row._id] ?? [];
+          const fns = assignedFunctionsMap[idOf(row)!] ?? [];
           if (fns.length === 0) return <span className={styles.emptyFunctions}>—</span>;
           return (
             <FlexElement direction="horizontal" gap={4} className={styles.chipList}>
               {fns.map(fn => (
-                <Chip key={fn._id} label={fn.name} className={styles.functionChip} />
+                <Chip key={idOf(fn)!} label={fn.name} className={styles.functionChip} />
               ))}
             </FlexElement>
           );
@@ -309,7 +310,7 @@ const FunctionVariablesPage = () => {
   );
 
   const assignedFunctionIds = useMemo(
-    () => (selectedVariable ? (assignedFunctionsMap[selectedVariable._id] ?? []).map(fn => fn._id!) : []),
+    () => (selectedVariable ? (assignedFunctionsMap[idOf(selectedVariable)!] ?? []).map(fn => idOf(fn)!) : []),
     [assignedFunctionsMap, selectedVariable]
   );
 

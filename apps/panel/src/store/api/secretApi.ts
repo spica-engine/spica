@@ -1,8 +1,8 @@
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from '../../utils/recordKey';
 import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
 
-export interface Secret {
-  _id: string;
+export interface Secret extends SystemRecord {
   key: string;
 }
 
@@ -50,7 +50,7 @@ export const secretApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: SECRET_TAG, id: _id })),
+              ...result.data.map((item) => ({ type: SECRET_TAG, id: idOf(item) })),
               SECRET_TAGS.LIST,
             ]
           : [SECRET_TAGS.LIST],

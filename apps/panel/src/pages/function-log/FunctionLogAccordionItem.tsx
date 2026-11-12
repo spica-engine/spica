@@ -1,3 +1,4 @@
+import { idOf, pickId } from "../../utils/recordKey";
 import {Icon, type TypeAccordionItem} from "oziko-ui-kit";
 import type {FunctionLog} from "../../store/api/functionApi";
 import styles from "./FunctionLogPage.module.scss";
@@ -12,7 +13,7 @@ const SEVERITY_CLASS: Record<number, string> = {
 };
 
 function formatTimestamp(log: FunctionLog): string {
-  const ts = Number.parseInt(log._id.substring(0, 8), 16) * 1000;
+  const ts = Number.parseInt(idOf(log)!.substring(0, 8), 16) * 1000;
   return new Date(ts).toLocaleString("en-US", {
     month: "2-digit",
     day: "2-digit",
@@ -49,7 +50,7 @@ export function buildAccordionItem(
     <div className={styles.logDetail}>
       <div className={styles.detailRow}>
         <span className={styles.detailLabel}>Log ID</span>
-        <span className={styles.detailValue}>{log._id}</span>
+        <span className={styles.detailValue}>{idOf(log)!}</span>
       </div>
       <div className={styles.detailRow}>
         <span className={styles.detailLabel}>Event ID</span>
@@ -81,7 +82,7 @@ export function buildAccordionItem(
       <div className={styles.detailJson}>
         {JSON.stringify(
           {
-            _id: log._id,
+            ...pickId(log),
             function: log.function,
             event_id: log.event_id,
             content: log.content,

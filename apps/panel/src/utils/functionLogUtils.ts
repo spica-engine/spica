@@ -1,3 +1,4 @@
+import { idOf } from "./recordKey";
 import type {FunctionLog} from "../store/api/functionApi";
 
 export type DateRange = {begin: Date; end: Date};
@@ -54,7 +55,7 @@ export function getLogDate(log: FunctionLog) {
     }
   }
 
-  return new Date(Number.parseInt(log._id.slice(0, 8), 16) * 1000);
+  return new Date(Number.parseInt(idOf(log)!.slice(0, 8), 16) * 1000);
 }
 
 export function formatRowTimestamp(log: FunctionLog) {

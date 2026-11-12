@@ -1,8 +1,8 @@
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from '../../utils/recordKey';
 import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
 
-export interface EnvVar {
-  _id: string;
+export interface EnvVar extends SystemRecord {
   key: string;
   value: string;
 }
@@ -51,7 +51,7 @@ export const envVarApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: ENV_VAR_TAG, id: _id })),
+              ...result.data.map((item) => ({ type: ENV_VAR_TAG, id: idOf(item) })),
               ENV_VAR_TAGS.LIST,
             ]
           : [ENV_VAR_TAGS.LIST],

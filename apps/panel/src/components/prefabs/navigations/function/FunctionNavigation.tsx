@@ -28,6 +28,7 @@ import type {SpicaFunction} from "../../../../store/api/functionApi";
 import SortableNavigationItem, {shouldPreventHover} from "../SortableNavigationItem";
 import FunctionModal from "./FunctionModal";
 import Confirmation from "../../../molecules/confirmation/Confirmation";
+import { idOf } from "../../../../utils/recordKey";
 
 const FUNCTION_ITEM_TYPE = "FUNCTION_NAVIGATION_ITEM";
 const CATEGORY_ITEM_TYPE = "FUNCTION_NAVIGATION_CATEGORY";
@@ -314,7 +315,7 @@ const FunctionNavigation = () => {
 
   const handleFunctionCreated = useCallback(
     (fn: SpicaFunction) => {
-      if (fn._id) navigate(`/function/${fn._id}`);
+      if (idOf(fn)) navigate(`/function/${idOf(fn)!}`);
     },
     [navigate]
   );
@@ -326,9 +327,9 @@ const FunctionNavigation = () => {
   }, []);
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!deletingFunction?._id) return;
+    if (!idOf(deletingFunction)) return;
     try {
-      await deleteFunction(deletingFunction._id).unwrap();
+      await deleteFunction(idOf(deletingFunction)!).unwrap();
       setDeletingFunction(null);
     } catch (err: any) {
       setDeleteError(err?.data?.message ?? err?.message ?? "Failed to delete function.");
@@ -359,7 +360,7 @@ const FunctionNavigation = () => {
 
       const reordered = (() => {
         const next = orderedFunctions.map(fn => ({...fn}));
-        const currentIndex = next.findIndex(fn => fn._id === functionId);
+        const currentIndex = next.findIndex(fn => idOf(fn) === functionId);
 
         if (currentIndex === -1) {
           return next;
@@ -376,7 +377,7 @@ const FunctionNavigation = () => {
       try {
         await Promise.all(
           reordered.map(fn =>
-            updateFunctionOrder({functionId: fn._id!, order: fn.order ?? 0}).unwrap()
+            updateFunctionOrder({functionId: idOf(fn)!, order: fn.order ?? 0}).unwrap()
           )
         );
       } catch (error) {
@@ -478,15 +479,15 @@ const FunctionNavigation = () => {
   const renderFunctionItem = useCallback(
     (fn: SpicaFunction, index: number, groupKey: string) => (
       <SortableNavigationItem
-        key={fn._id ?? index}
-        id={fn._id!}
+        key={idOf(fn) ?? index}
+        id={idOf(fn)!}
         title={fn.name}
         index={index}
         groupKey={groupKey}
         dndType={FUNCTION_ITEM_TYPE}
         iconName="function"
         variant="sidebar"
-        isActive={activeFunctionId === fn._id}
+        isActive={activeFunctionId === idOf(fn)}
         activeClassName={styles.navItemActive}
         moveItem={moveFunction}
         onNavigate={handleNavigateToFunction}

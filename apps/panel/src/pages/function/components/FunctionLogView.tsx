@@ -63,7 +63,6 @@ const FunctionLogView = ({
       begin: queryRange.begin.toISOString(),
       end: queryRange.end.toISOString(),
       limit: 100,
-      sort: {_id: -1},
       levels: selectedLevels,
     },
     {skip: !functionId || !isOpen}
