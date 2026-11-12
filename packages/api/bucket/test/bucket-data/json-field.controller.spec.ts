@@ -6,7 +6,7 @@ contractSuite("BucketDataController: json field type", engine => {
   let api: BucketApp;
   let bucket;
   let rows;
-  let key: "_id" | "id";
+  let key: string;
 
   beforeEach(async () => {
     api = await startBucketApp(engine);

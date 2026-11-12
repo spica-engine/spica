@@ -6,7 +6,7 @@ contractSuite("BucketDataController: field level authorization", engine => {
   let api: BucketApp;
   let bucket: any;
   let rows = [];
-  let key: "_id" | "id";
+  let key: string;
 
   beforeEach(async () => {
     api = await startBucketApp(engine, {}, {passport: {overriddenStrategyType: "USER"}});

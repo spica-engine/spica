@@ -1,5 +1,8 @@
 import {mongoBucketSchema} from "@spica-server/data-mongodb";
 import {originalValidator, SCHEMA_ID, validatorFor, violations} from "./bucket-schema.helper";
+import {mongoOnly} from "@spica-server/database-testing";
+
+mongoOnly("it validates the MongoDB bucket schema");
 
 describe("MongoDB bucket schema", () => {
   const id = "507f1f77bcf86cd799439011";

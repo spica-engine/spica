@@ -62,12 +62,12 @@ describe("Helpers", () => {
 
   describe("eliminateNonConfigurables", () => {
     it("should filter configurables", () => {
-      const _id = new ObjectId();
+      const resourceId = new ObjectId();
       const actual: Config[] = [
         {
           title: "Set dashboard name",
           module: "dashboard",
-          resource_id: _id.toString(),
+          resource_id: resourceId.toString(),
           submodule: "schema",
           property: "properties.name",
           value: "your_dashboard",
@@ -79,7 +79,7 @@ describe("Helpers", () => {
         {
           title: "Set dashboard name",
           module: "dashboard",
-          resource_id: _id.toString(),
+          resource_id: resourceId.toString(),
           submodule: "schema",
           property: "properties.name",
           value: "my_dahsboard",
@@ -101,7 +101,7 @@ describe("Helpers", () => {
         {
           title: "Set dashboard name",
           module: "dashboard",
-          resource_id: _id.toString(),
+          resource_id: resourceId.toString(),
           submodule: "schema",
           property: "properties.name",
           // it's important to keep value of desired configuration

@@ -107,7 +107,7 @@ describe("FunctionAssetWatcher — happy path", () => {
     watcher.onModuleDestroy();
   });
 
-  it("should call functionService.findOne with the correct {_id: functionId} query", async () => {
+  it("should call functionService.findOne with the key of the function", async () => {
     const watcher = buildWatcher();
     watcher.onModuleInit();
 

@@ -4,7 +4,7 @@ import {idOf} from "@spica-server/data";
 
 contractSuite("BucketDataController: insert with limitations", engine => {
   let api: BucketApp;
-  let key: "_id" | "id";
+  let key: string;
 
   beforeEach(async () => {
     api = await startBucketApp(engine);

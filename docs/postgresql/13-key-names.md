@@ -73,7 +73,7 @@ The system should run without knowing which engine is under it. Key names are on
 | Schema hook            | The eight system schemas declare the key as `$systemKey`. `Validator` swaps it for `ids().systemKeyField()` when a schema is registered, validated or given as an option, and refuses a schema that names it when no id types are available. |
 | Persisted field names  | Asset and differ `uniqueField`, sync `IGNORED_FIELDS`, the filter validator and the expression functions read the name from the resolver. |
 | Devkit record types    | Published types are fixed per release, not per instance, so they cannot name the key. In `auth`, `identity` and `storage`, `_id` becomes optional and `@deprecated`, pointing to `idOf`; it is `undefined` on PostgreSQL. It is removed in a later major version. Each package exports `idOf(record)`, which returns `_id` when the record has one and `id` otherwise; that is safe for system records because a record has exactly one of the two. Bucket documents keep using the bucket's `primary`. |
-| Ratchet                | AST-based script, a per-file baseline, an allowlist of the MongoDB adapter and MongoDB-only packages, and `--strict --under=<path>/` like `check:engine-specs`. |
+| Ratchet                | A script that fails on any `_id` literal outside an allowlist of the MongoDB adapter, MongoDB-only packages and `mongoOnly` specs. It started with a per-file baseline that only went down; the baseline reached zero and was deleted. |
 
 ### The two-phase flip
 
@@ -122,13 +122,13 @@ Each PR runs on both engines in CI. Specs of a domain are moved to the test help
 - **Cross-domain readers.** The action guard, activity interceptor and realtime code read other domains' records. Covered by the two-phase flip.
 - **Stored JSON that mentions a key.** `histories.changes`, `dashboards.components`, `functions.triggers` and `assets` are JSONB. Audit them for key names that were written by the system rather than by a user, in PR 7.
 - **Event payloads.** Change events delivered to user functions and webhooks must keep their documented shape (Part 10). Check that none of them copies a system record's key under a fixed name.
-- **Mongo-only specs.** Specs that write to MongoDB collections directly keep `_id`; they are `mongoOnly` and allowlisted.
+- **Mongo-only specs.** Specs that write to MongoDB collections directly keep `_id`; they declare `mongoOnly(...)`, and the script skips any file that does.
 - **Clients that still assume `_id` on PostgreSQL.** The admin panel (system lists sort and filter by `_id`, the rule editor offers `auth._id` and `document._id`), `@spica-devkit/bucket` documents and the CLI's generated ORM are MongoDB-shaped. A PostgreSQL instance now answers `id` for system records, so the panel needs `useKeyField()` without a bucket id to map the engine to the key and the rule editor to offer `auth.id`. The plan lists the panel under "Requests to other parts".
 - **Docs drift.** The README says PostgreSQL responses use `id`, but the code does not yet. PR 8 makes the docs true.
 
 ## As built
 
-Merged as #2208 to #2221 (PRs 1 to 7, 6b) and this PR. A system record is keyed `_id` on MongoDB and `id` on PostgreSQL from storage to response, and no code outside the MongoDB adapter, the MongoDB wrapper and the exempt MongoDB-shaped code names the key. `yarn check:key-names` fails when a file's count grows and, with `--strict-source`, when any non-test file names the key literally.
+Merged as #2208 to #2221 (PRs 1 to 7, 6b) and this PR. A system record is keyed `_id` on MongoDB and `id` on PostgreSQL from storage to response, and no code outside the MongoDB adapter, the MongoDB wrapper and the exempt MongoDB-shaped code names the key. `yarn check:key-names` fails when any file outside the exemptions below names the key literally, source and specs alike. There is no baseline.
 
 **What exists**
 - `ids().systemKeyField()` (`_id` or `id`), and in `@spica-server/data`: `idOf`, `withId`, `assignId`, `stripId`, `omitId`, `systemKeyField`. `Keyed<T>` is `T` plus an optional brand.
@@ -150,6 +150,7 @@ Merged as #2208 to #2221 (PRs 1 to 7, 6b) and this PR. A system record is keyed 
 - GraphQL (`packages/api/bucket/graphql`: no PostgreSQL property types, `mongoOnly` spec), the rule converters `convert.ts` and `builtin_funcs.ts` (they render MongoDB filters), `@spica-devkit/bucket` documents and realtime operators, the CLI's generated ORM and `project start`, the realtime document types of `interface/function/packages`.
 - Files that name both keys by definition: `sync/record-key.ts`, `internal_common/key.ts`, the devkit `idOf` specs, the deprecated `_id?` declarations of the `auth`, `identity` and `storage` devkit types, and the PostgreSQL reserved property name pattern.
 - About 495 `_id` literals remain in specs, mostly MongoDB-shaped fixtures (CLI and sync specs, bucket document fixtures, `mongoOnly` specs) and `keyField` helpers that already choose by engine.
+- `packages/sync/src/record-key.ts`, the devkit `id` helpers and their specs, which exist to name both keys. Specs elsewhere run over both shapes (`SYSTEM_KEY_FIELDS`, `KEY_FIELDS`) or take the name from `keyFieldOf`/`ENGINE_KEY_FIELDS` in `@spica-server/database-testing`.
 
 **Still open**
 - The admin panel: on PostgreSQL its system lists sort and filter by `_id` and its rule editor offers `auth._id`. It needs `useKeyField()` without a bucket id to map the engine to the key (Part 12).

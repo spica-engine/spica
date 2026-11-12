@@ -7,7 +7,7 @@ import {idOf} from "@spica-server/data";
 contractSuite("BucketDataController", engine => {
   let api: BucketApp;
   let req: Request;
-  let key: "_id" | "id";
+  let key: string;
 
   beforeEach(async () => {
     api = await startBucketApp(engine, {}, {omitNulls: true});

@@ -1,8 +1,9 @@
+import {systemKeyField} from "@spica-server/data";
 import {ExpressionBucketDataOptionsBuilder} from "@spica-server/bucket-realtime";
 
 const request = (
   query: Record<string, string> = {},
-  user: any = {_id: {toString: () => "u1"}, role: "member"}
+  user: any = {[systemKeyField()]: {toString: () => "u1"}, role: "member"}
 ) => ({user, query: new URLSearchParams(query)}) as any;
 
 describe("ExpressionBucketDataOptionsBuilder", () => {
@@ -31,7 +32,7 @@ describe("ExpressionBucketDataOptionsBuilder", () => {
   it("should ask for the read rule with the user, whose id is text", async () => {
     const options = await ExpressionBucketDataOptionsBuilder.fromBucketQuery(request(), true);
 
-    expect(options).toEqual({applyAcl: true, user: {_id: "u1", role: "member"}});
+    expect(options).toEqual({applyAcl: true, user: {[systemKeyField()]: "u1", role: "member"}});
   });
 
   it("should hand over the secret the hashed fields need", async () => {

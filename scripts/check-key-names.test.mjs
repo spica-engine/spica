@@ -3,14 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import {afterEach, beforeEach, describe, it, mock} from "node:test";
-import {
-  BASELINE_FILE,
-  checkKeyNames,
-  countKeyLiterals,
-  readBaseline,
-  run,
-  writeBaseline
-} from "./check-key-names.mjs";
+import {countKeyLiterals, run} from "./check-key-names.mjs";
 
 describe("check-key-names", () => {
   let root;
@@ -99,134 +92,45 @@ describe("check-key-names", () => {
     });
   });
 
-  describe("checkKeyNames", () => {
-    beforeEach(() => write("packages/api/a/src/a.ts", `a._id;\nb._id;\n`));
-
-    it("should pass when the counts match the baseline", () => {
-      const result = checkKeyNames(root, {"packages/api/a/src/a.ts": 2});
-
-      assert.deepEqual(result.grown, []);
-      assert.deepEqual(result.shrunk, []);
-    });
-
-    it("should report a file whose count grew", () => {
-      const result = checkKeyNames(root, {"packages/api/a/src/a.ts": 1});
-
-      assert.deepEqual(result.grown, [{file: "packages/api/a/src/a.ts", count: 2, allowed: 1}]);
-    });
-
-    it("should report a file the baseline does not know", () => {
-      const result = checkKeyNames(root, {});
-
-      assert.deepEqual(result.grown, [{file: "packages/api/a/src/a.ts", count: 2, allowed: 0}]);
-    });
-
-    it("should report a file whose count dropped, so the baseline stays tight", () => {
-      const result = checkKeyNames(root, {"packages/api/a/src/a.ts": 3});
-
-      assert.deepEqual(result.shrunk, [{file: "packages/api/a/src/a.ts", count: 2, allowed: 3}]);
-    });
-
-    it("should report a baseline entry whose file is gone", () => {
-      const result = checkKeyNames(root, {"packages/api/a/src/a.ts": 2, "packages/api/b.ts": 1});
-
-      assert.deepEqual(result.shrunk, [{file: "packages/api/b.ts", count: 0, allowed: 1}]);
-    });
-
-    it("should ignore the baseline in strict mode and only look under the path", () => {
-      write("packages/api/b/src/b.ts", `b._id;\n`);
-
-      const result = checkKeyNames(
-        root,
-        {"packages/api/a/src/a.ts": 2},
-        {strictUnder: "packages/api/a/"}
-      );
-
-      assert.deepEqual(result.grown, [{file: "packages/api/a/src/a.ts", count: 2, allowed: 0}]);
-    });
-
-    it("should not match a sibling directory whose name starts the same way", () => {
-      write("packages/api/ab/src/b.ts", `b._id;\n`);
-
-      const result = checkKeyNames(root, {}, {strictUnder: "packages/api/a/"});
-
-      assert.deepEqual(
-        result.grown.map(({file}) => file),
-        ["packages/api/a/src/a.ts"]
-      );
-    });
-  });
-
-  describe("baseline file", () => {
-    it("should read an empty baseline when the file does not exist", () => {
-      assert.deepEqual(readBaseline(root), {});
-    });
-
-    it("should write the entries sorted by path", () => {
-      writeBaseline(root, {"packages/b.ts": 1, "apps/a.ts": 2});
-
-      const written = fs.readFileSync(path.join(root, BASELINE_FILE), "utf8");
-      assert.equal(written, `{\n  "apps/a.ts": 2,\n  "packages/b.ts": 1\n}\n`);
-      assert.deepEqual(readBaseline(root), {"apps/a.ts": 2, "packages/b.ts": 1});
-    });
-  });
-
   describe("run", () => {
     beforeEach(() => {
       mock.method(console, "log", () => {});
       mock.method(console, "error", () => {});
-      write("packages/api/a/src/a.ts", `a._id;\nb._id;\n`);
     });
 
     afterEach(() => mock.restoreAll());
 
-    it("should create the baseline when there is none", () => {
-      assert.equal(run(root, ["--update"]), 0);
-      assert.deepEqual(readBaseline(root), {"packages/api/a/src/a.ts": 2});
+    it("should pass when nothing names the key", () => {
+      write("packages/api/a/src/a.ts", `const a = 1;\n`);
+
+      assert.equal(run(root), 0);
     });
 
-    it("should pass against a matching baseline", () => {
-      writeBaseline(root, {"packages/api/a/src/a.ts": 2});
+    it("should fail on a literal in source", () => {
+      write("packages/api/a/src/a.ts", `a._id;\n`);
 
-      assert.equal(run(root, []), 0);
+      assert.equal(run(root), 1);
     });
 
-    it("should fail when a file grew, and not raise the baseline on update", () => {
-      writeBaseline(root, {"packages/api/a/src/a.ts": 1});
+    it("should fail on a literal in a spec", () => {
+      write("packages/api/a/test/a.spec.ts", `expect(a._id).toBe(1);\n`);
 
-      assert.equal(run(root, []), 1);
-      assert.equal(run(root, ["--update"]), 1);
-      assert.deepEqual(readBaseline(root), {"packages/api/a/src/a.ts": 1});
+      assert.equal(run(root), 1);
     });
 
-    it("should fail on a stale baseline until it is lowered by update", () => {
-      writeBaseline(root, {"packages/api/a/src/a.ts": 3, "packages/api/gone.ts": 1});
+    it("should pass for a spec that declares itself mongoOnly", () => {
+      write(
+        "packages/api/a/test/a.spec.ts",
+        `contractSuite("a", () => mongoOnly("uses operators"));\nexpect(a._id).toBe(1);\n`
+      );
 
-      assert.equal(run(root, []), 1);
-      assert.equal(run(root, ["--update"]), 0);
-      assert.deepEqual(readBaseline(root), {"packages/api/a/src/a.ts": 2});
-      assert.equal(run(root, []), 0);
+      assert.equal(run(root), 0);
     });
 
-    it("should fail in strict mode while the path still has literals", () => {
-      writeBaseline(root, {"packages/api/a/src/a.ts": 2});
+    it("should still count a spec that only mentions mongoOnly in a name", () => {
+      write("packages/api/a/test/a.spec.ts", `const notMongoOnly = 1;\nexpect(a._id).toBe(1);\n`);
 
-      assert.equal(run(root, ["--strict", "--under=packages/api/a/"]), 1);
-      assert.equal(run(root, ["--strict", "--under=packages/api/b/"]), 0);
-    });
-
-    it("should fail the source check on a literal outside the tests, not on one in a spec", () => {
-      write("packages/api/b/test/b.spec.ts", `b._id;\n`);
-      writeBaseline(root, {"packages/api/a/src/a.ts": 2, "packages/api/b/test/b.spec.ts": 1});
-
-      assert.equal(run(root, ["--strict-source"]), 1);
-
-      fs.rmSync(path.join(root, "packages/api/a/src/a.ts"));
-      assert.equal(run(root, ["--strict-source"]), 0);
-    });
-
-    it("should need a path in strict mode", () => {
-      assert.equal(run(root, ["--strict"]), 1);
+      assert.equal(run(root), 1);
     });
   });
 });

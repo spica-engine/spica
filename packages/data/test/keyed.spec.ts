@@ -17,7 +17,7 @@ interface Identity {
 describe("system record keys", () => {
   afterEach(() => bindIdTypes(undefined as IdTypes));
 
-  describe.each(["_id", "id"])("when the system key is %s", key => {
+  describe.each(["ref", "id"])("when the system key is %s", key => {
     beforeEach(() => bindIdTypes({systemKeyField: () => key} as unknown as IdTypes));
 
     it("should report the system key field", () => {
@@ -77,9 +77,9 @@ describe("system record keys", () => {
 
   it("should leave the other engine's key alone", () => {
     bindIdTypes({systemKeyField: () => "id"} as unknown as IdTypes);
-    const record = {_id: "kept", id: "abc", identifier: "admin"} as unknown as Keyed<Identity>;
+    const record = {ref: "kept", id: "abc", identifier: "admin"} as unknown as Keyed<Identity>;
     expect(idOf(record)).toBe("abc");
-    expect(omitId(record)).toEqual({_id: "kept", identifier: "admin"});
+    expect(omitId(record)).toEqual({ref: "kept", identifier: "admin"});
   });
 
   it("should throw when no adapter has bound id types", () => {

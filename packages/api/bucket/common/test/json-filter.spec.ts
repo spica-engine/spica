@@ -1,5 +1,7 @@
-import {ObjectId} from "@spica-server/database-testing";
+import {ObjectId, mongoOnly} from "@spica-server/database-testing";
 import {filterReviver} from "@spica-server/bucket-common";
+
+mongoOnly("the reviver reads MongoDB JSON filters");
 
 describe("filterReviver", () => {
   const hex = "5f1e8b9c2a4d3e0012345678";

@@ -34,7 +34,7 @@ export const ruleBucket: any = {
 export const thirdId = "0198a7e0-7b1c-7d2e-9f3a-4b5c6d7e8f92";
 
 export const thirdBucket: any = {
-  _id: thirdId,
+  id: thirdId,
   title: "Third",
   primary: "id",
   acl: {read: "true==true", write: "true==true"},
@@ -46,7 +46,7 @@ export const thirdBucket: any = {
 };
 
 export const otherBucket: any = {
-  _id: otherId,
+  id: otherId,
   title: "Other",
   primary: "id",
   acl: {read: "true==true", write: "true==true"},

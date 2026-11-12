@@ -13,6 +13,14 @@ export interface ContractEngine {
   sharing(first: TestingModule): DynamicModule;
 }
 
+export const ENGINE_KEY_FIELDS: Record<ContractEngineName, string> = {
+  mongodb: "_id",
+  postgresql: "id"
+};
+
+export const keyFieldOf = (engine: {name: ContractEngineName}): string =>
+  ENGINE_KEY_FIELDS[engine.name];
+
 const engines: ContractEngine[] = [
   {
     name: "mongodb",

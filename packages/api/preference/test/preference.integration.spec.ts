@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {contractSuite} from "@spica-server/database-testing";
+import {contractSuite, keyFieldOf} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceModule} from "@spica-server/preference";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
@@ -7,7 +7,7 @@ import {INestApplication} from "@nestjs/common";
 import {BucketModule, BucketCoreModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
-import {keyed, keyFieldOf} from "../../bucket/test/support/bucket-app";
+import {keyed} from "../../bucket/test/support/bucket-app";
 import {idOf} from "@spica-server/data";
 
 contractSuite("Preference Integration", engine => {

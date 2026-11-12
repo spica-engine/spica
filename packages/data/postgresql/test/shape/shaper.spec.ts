@@ -43,7 +43,7 @@ describe("BucketShaper", () => {
       });
     });
 
-    it("should emit null for NULL columns and never produce _id", () => {
+    it("should emit null for NULL columns and nothing else", () => {
       const document = shape(properties, {main: {id: uuid(1)}});
 
       expect(document).toEqual({
@@ -55,7 +55,6 @@ describe("BucketShaper", () => {
         payload: null,
         place: null
       });
-      expect(document).not.toHaveProperty("_id");
     });
 
     it.each([

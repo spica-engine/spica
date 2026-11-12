@@ -340,7 +340,7 @@ contractSuite("bucket write: insert", engine => {
   });
 
   describe("the write rule", () => {
-    const user = {_id: "u"};
+    const user = {id: "u"};
 
     it("should refuse a document the rule denies and keep nothing", async () => {
       const bucket = await writer.bucket(
@@ -529,7 +529,7 @@ contractSuite("bucket write: insert with a total document limit", engine => {
 
 contractSuite("bucket write: replace and patch", engine => {
   const writer = writerOver(engine);
-  const user = {_id: "u"};
+  const user = {id: "u"};
   let authors: any;
   let ann: string;
   let bob: string;
@@ -741,7 +741,7 @@ contractSuite("bucket write: replace and patch", engine => {
 
 contractSuite("bucket write: delete", engine => {
   const writer = writerOver(engine);
-  const user = {_id: "u"};
+  const user = {id: "u"};
   const secrets = {hashSecret: "hash-secret", encryptionSecret: "encryption-secret"};
   let bucket: any;
 

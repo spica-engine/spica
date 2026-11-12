@@ -6,7 +6,7 @@ import {idOf} from "@spica-server/data";
 contractSuite("Expression Write Rule Type Construction", engine => {
   let api: BucketApp;
   let req: Request;
-  let key: "_id" | "id";
+  let key: string;
 
   const HASH_SECRET = "test-hash-secret-123";
   const ENCRYPTION_SECRET = "01234567890123456789012345678901";

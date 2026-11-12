@@ -1,11 +1,14 @@
 import http from "http";
 import {AddressInfo} from "net";
+import {SYSTEM_KEY_FIELDS} from "@spica-server/sync";
 import {apply, plan, SpicaRequestError} from "../src";
 
-type Bucket = {_id: string; title: string; [key: string]: unknown};
+const SHAPES = Object.entries(SYSTEM_KEY_FIELDS);
+
+type Bucket = {title: string; [key: string]: unknown};
 
 // A minimal stand-in for the Spica bucket API; every other list endpoint is empty.
-function startFakeSpica() {
+function startFakeSpica(key: string) {
   const state = {
     buckets: [] as Bucket[],
     requests: [] as string[],
@@ -32,16 +35,18 @@ function startFakeSpica() {
       if (req.method === "GET") return send(200, state.buckets);
       if (req.method === "POST") {
         if (state.failPosts) return send(400, {message: "invalid bucket"});
-        const bucket = {...JSON.parse(body), _id: `id${state.nextId++}`};
+        const bucket = {...JSON.parse(body), [key]: `id${state.nextId++}`};
         state.buckets.push(bucket);
         return send(201, bucket);
       }
       if (req.method === "PUT") {
-        state.buckets = state.buckets.map(b => (b._id === id ? {...JSON.parse(body), _id: id} : b));
+        state.buckets = state.buckets.map(b =>
+          b[key] === id ? {...JSON.parse(body), [key]: id} : b
+        );
         return send(200, {});
       }
       if (req.method === "DELETE") {
-        state.buckets = state.buckets.filter(b => b._id !== id);
+        state.buckets = state.buckets.filter(b => b[key] !== id);
         return send(204);
       }
       send(404, {message: "not found"});
@@ -60,17 +65,17 @@ function startFakeSpica() {
   });
 }
 
-describe("plan and apply", () => {
+describe.each(SHAPES)("plan and apply (%s records)", (_shape, key) => {
   let spica: Awaited<ReturnType<typeof startFakeSpica>>;
   let connection: {url: string; authorization: string};
 
   beforeEach(async () => {
-    spica = await startFakeSpica();
+    spica = await startFakeSpica(key);
     connection = {url: spica.url, authorization: "APIKEY secret"};
     spica.state.buckets = [
-      {_id: "keep", title: "Keep", properties: {a: {type: "string"}}},
-      {_id: "change", title: "Change", properties: {a: {type: "string"}}},
-      {_id: "gone", title: "Gone", properties: {}}
+      {[key]: "keep", title: "Keep", properties: {a: {type: "string"}}},
+      {[key]: "change", title: "Change", properties: {a: {type: "string"}}},
+      {[key]: "gone", title: "Gone", properties: {}}
     ];
   });
 
@@ -134,7 +139,7 @@ describe("plan and apply", () => {
 
   it("refuses to apply when the remote changed after review", async () => {
     const reviewed = await plan({connection, files, modules: ["bucket"]});
-    spica.state.buckets.push({_id: "late", title: "Late", properties: {}});
+    spica.state.buckets.push({[key]: "late", title: "Late", properties: {}});
     spica.state.requests = [];
 
     const result = await apply({
@@ -199,6 +204,6 @@ describe("plan and apply", () => {
     const error = await plan({connection, files, modules: ["bucket"]}).catch(e => e);
     expect(error).toBeInstanceOf(SpicaRequestError);
     expect(JSON.stringify(error)).not.toContain("APIKEY secret");
-    spica = await startFakeSpica();
+    spica = await startFakeSpica(key);
   });
 });

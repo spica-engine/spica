@@ -4,8 +4,11 @@ import {
   buildPlan,
   functionModule,
   memorySource,
-  policyModule
+  policyModule,
+  SYSTEM_KEY_FIELDS
 } from "@spica-server/sync";
+
+const SHAPES = Object.entries(SYSTEM_KEY_FIELDS);
 
 describe("memorySource", () => {
   const source = memorySource({
@@ -86,10 +89,10 @@ describe("readLocal from a memory source", () => {
   });
 });
 
-describe("buildPlan with a memory source", () => {
+describe.each(SHAPES)("buildPlan with a memory source (%s records)", (_shape, key) => {
   it("plans against in-memory files instead of the disk", async () => {
     const http = {
-      get: jest.fn(async (url: string) => (url === "bucket" ? [{_id: "b1", title: "Old"}] : [])),
+      get: jest.fn(async (url: string) => (url === "bucket" ? [{[key]: "b1", title: "Old"}] : [])),
       post: jest.fn(),
       put: jest.fn(),
       delete: jest.fn(),

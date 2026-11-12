@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {contractSuite} from "@spica-server/database-testing";
+import {contractSuite, keyFieldOf} from "@spica-server/database-testing";
 import {AccessStore, createAccessStore} from "./access-store";
 
 const alice = "0192f3a0-0000-7000-8000-0000000000c1";
@@ -10,7 +10,7 @@ const bruce = "0192f3a0-0000-7000-8000-0000000000c2";
  * admin panel, plus one or more per built-in function.
  */
 contractSuite("access rules", engine => {
-  const principal = engine.name == "mongodb" ? "_id" : "id";
+  const principal = keyFieldOf(engine);
   let module: TestingModule;
   let store: AccessStore;
 

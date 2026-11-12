@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {provideRepository, idOf, omitId} from "@spica-server/data";
-import {changeFeedReady, contractSuite} from "@spica-server/database-testing";
+import {changeFeedReady, contractSuite, keyFieldOf} from "@spica-server/database-testing";
 import {WebhookChangeDispatcher, WebhookService} from "@spica-server/function-webhook";
 import {WebhookInvoker} from "@spica-server/function-webhook/src/invoker";
 import {
@@ -40,7 +40,7 @@ let buckets = 0;
 
 contractSuite("Webhook Invoker", engine => {
   const mongo = engine.name == "mongodb";
-  const keyField = mongo ? "_id" : "id";
+  const keyField = keyFieldOf(engine);
   let invoker: WebhookInvoker;
   let module: TestingModule;
   let service: WebhookService;
