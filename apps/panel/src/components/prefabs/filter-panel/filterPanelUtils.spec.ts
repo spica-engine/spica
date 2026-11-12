@@ -1,5 +1,5 @@
 import {describe, it, expect} from "@jest/globals";
-import {combineFilters, conditionsToExpression} from "./filterPanelUtils";
+import {combineFilters, conditionsToExpression, filterForEngine, matchesConditions} from "./filterPanelUtils";
 import type {FilterConditionRow, FilterField} from "./types";
 
 const fields: FilterField[] = [
@@ -124,5 +124,65 @@ describe("combineFilters", () => {
   it("should join objects with $and and expressions with &&", () => {
     expect(combineFilters([{a: 1}, {b: 2}])).toEqual({$and: [{a: 1}, {b: 2}]});
     expect(combineFilters(["a == 1", "b == 2"])).toBe("(a == 1) && (b == 2)");
+  });
+});
+
+describe("filterForEngine", () => {
+  const conditions = [row("title", "equals", "a")];
+
+  it("should write the expression language on PostgreSQL", () => {
+    expect(filterForEngine("postgresql", conditions, fields)).toBe('(document.title == "a")');
+  });
+
+  it("should write a MongoDB filter on MongoDB and before the engine is known", () => {
+    expect(filterForEngine("mongodb", conditions, fields)).toEqual({title: {$eq: "a"}});
+    expect(filterForEngine(undefined, conditions, fields)).toEqual({title: {$eq: "a"}});
+  });
+
+  it("should be null when no condition is active", () => {
+    expect(filterForEngine("postgresql", [row("title", "equals", "")], fields)).toBeNull();
+    expect(filterForEngine("mongodb", [], fields)).toBeNull();
+  });
+});
+
+describe("matchesConditions", () => {
+  const policy = {name: "Bucket Full Access", description: "Full access to bucket"};
+
+  it("should match everything when no condition is active", () => {
+    expect(matchesConditions(policy, [], fields)).toBe(true);
+    expect(matchesConditions(policy, [row("title", "contains", "")], fields)).toBe(true);
+  });
+
+  it("should match string operators against a plain string", () => {
+    const f: FilterField[] = [{key: "name", label: "Name", type: "string"}];
+    expect(matchesConditions(policy, [row("name", "contains", "full")], f)).toBe(true);
+    expect(matchesConditions(policy, [row("name", "starts with", "bucket")], f)).toBe(true);
+    expect(matchesConditions(policy, [row("name", "ends with", "access")], f)).toBe(true);
+    expect(matchesConditions(policy, [row("name", "equals", "Bucket Full Access")], f)).toBe(true);
+    expect(matchesConditions(policy, [row("name", "equals", "bucket full access")], f)).toBe(false);
+    expect(matchesConditions(policy, [row("name", "not equals", "x")], f)).toBe(true);
+    expect(matchesConditions(policy, [row("name", "is not empty")], f)).toBe(true);
+    expect(matchesConditions({}, [row("name", "is empty")], f)).toBe(true);
+  });
+
+  it("should combine conditions the way the expression builder does", () => {
+    const f: FilterField[] = [
+      {key: "name", label: "Name", type: "string"},
+      {key: "description", label: "Description", type: "string"}
+    ];
+    expect(
+      matchesConditions(policy, [row("name", "contains", "bucket"), row("description", "contains", "nope")], f)
+    ).toBe(false);
+    expect(
+      matchesConditions(
+        policy,
+        [row("name", "contains", "bucket"), row("description", "contains", "nope", "OR")],
+        f
+      )
+    ).toBe(true);
+  });
+
+  it("should ignore a condition on a field the list does not offer", () => {
+    expect(matchesConditions(policy, [row("other", "equals", "x")], [{key: "name", label: "Name", type: "string"}])).toBe(true);
   });
 });

@@ -21,7 +21,6 @@ const PAGE_SIZE = 20;
 const ApiKeyPage = () => {
   const [skip, setSkip] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
 
   const {
     currentData: apiKeyResponse,
@@ -30,7 +29,6 @@ const ApiKeyPage = () => {
   } = useGetApiKeysQuery({
     limit: PAGE_SIZE,
     skip,
-    ...(appliedFilter ? {filter: appliedFilter} : {}),
   });
 
   const { allItems, hasMore, handleLoadMore, resetList } =
@@ -38,7 +36,7 @@ const ApiKeyPage = () => {
       response: apiKeyResponse,
       isFetching,
       pageSize: PAGE_SIZE,
-      queryKey: JSON.stringify(appliedFilter ?? null),
+      queryKey: "all",
       scrollContainerId: "apikey-scroll-container",
       skip,
       setSkip,
@@ -250,10 +248,6 @@ const ApiKeyPage = () => {
       <ApiKeyActionBar
         onSearch={setSearchQuery}
         onNewApiKey={handleOpenCreateDrawer}
-        onFilter={(filter) => {
-          setAppliedFilter(filter);
-          setSkip(0);
-        }}
       />
 
       <div id="apikey-scroll-container" className={sharedStyles.scrollContainer}>

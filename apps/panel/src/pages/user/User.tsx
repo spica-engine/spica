@@ -14,13 +14,14 @@ import UserActionBar from "../../components/molecules/user-action-bar/UserAction
 import bucketStyles from "../bucket/Bucket.module.scss";
 import styles from "../shared/EntityPage.module.scss";
 import { idOf } from "../../utils/recordKey";
+import type { FilterInput } from "../../utils/serializeFilter";
 
 const PAGE_SIZE = 20;
 
 const User = () => {
   const [skip, setSkip] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
+  const [appliedFilter, setAppliedFilter] = useState<FilterInput | null>(null);
 
   const { currentData: userResponse, isLoading, isFetching } = useGetUsersQuery({
     paginate: true,

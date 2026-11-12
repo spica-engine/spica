@@ -3,7 +3,7 @@
  * email: rio.kenan@gmail.com
  */
 
-import React, {useState, useCallback} from "react";
+import React from "react";
 import {Link} from "react-router-dom";
 import {FlexElement, Table, type TableColumn} from "oziko-ui-kit";
 import {useGetActivitiesQuery, type Activity, type ActivityOptions} from "../../store/api";
@@ -14,7 +14,6 @@ import {
   buildActivityLink,
   titleCase
 } from "./activityUtils";
-import ActivityActionBar from "../../components/molecules/activity-action-bar/ActivityActionBar";
 import styles from "./Activities.module.scss";
 import sharedStyles from "../shared/EntityPage.module.scss";
 import bucketStyles from "../bucket/Bucket.module.scss";
@@ -104,20 +103,10 @@ function createActivityColumns(
 const ACTIVITY_COLUMNS = createActivityColumns(styles.resourceLink);
 
 const Activities = () => {
-  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
-  const [filterOptions, setFilterOptions] = useState<ActivityOptions>(DEFAULT_OPTIONS);
-
-  const {data: activities = [], isLoading} = useGetActivitiesQuery(
-    appliedFilter ? {...filterOptions, filter: appliedFilter} : filterOptions
-  );
-
-  const handleFilter = useCallback((filter: Record<string, any> | null) => {
-    setAppliedFilter(filter);
-  }, []);
+  const {data: activities = [], isLoading} = useGetActivitiesQuery(DEFAULT_OPTIONS);
 
   return (
     <div className={bucketStyles.container}>
-      <ActivityActionBar onFilter={handleFilter} />
       <div className={sharedStyles.scrollContainer}>
         <Table
           columns={ACTIVITY_COLUMNS}

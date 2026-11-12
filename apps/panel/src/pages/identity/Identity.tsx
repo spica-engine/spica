@@ -15,13 +15,14 @@ import bucketStyles from "../bucket/Bucket.module.scss";
 import { useLocation, useNavigate } from "react-router-dom";
 import IdentityActionBar from "../../components/molecules/identity-action-bar/IdentityActionBar";
 import { idOf } from "../../utils/recordKey";
+import type { FilterInput } from "../../utils/serializeFilter";
 
 const PAGE_SIZE = 20;
 
 const Identity = () => {
   const [skip, setSkip] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
+  const [appliedFilter, setAppliedFilter] = useState<FilterInput | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
