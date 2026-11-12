@@ -17,6 +17,7 @@ import {inferSecurityFromAcl} from "../../../domain/fields/field-acl";
 import type {Field} from "../../../pages/diagram/hooks/useBucketConverter";
 import { idOf } from "../../../utils/recordKey";
 import {usePrincipalKey} from "../../../hooks/usePrincipalKey";
+import {useKeyField} from "../../../hooks/useKeyField";
 
 export type BucketDiagramInspectorProps = {
   bucket: BucketType;
@@ -191,6 +192,7 @@ EditFieldButton.displayName = "EditFieldButton";
 
 const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, fields, onClose}) => {
   const principalKey = usePrincipalKey();
+  const keyField = useKeyField(idOf(bucket)!) ?? "_id";
   const [createBucketField] = useCreateBucketFieldMutation();
 
   const getFieldTypeDisplay = useCallback((field: Field) => {
@@ -587,7 +589,7 @@ const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, 
               <span className={styles.fieldName}>{getFieldDisplayName(field)}</span>
               <span className={styles.fieldType}>{getFieldTypeDisplay(field)}</span>
 
-              {field.name !== "_id" && (
+              {field.name !== keyField && (
                 <span className={styles.fieldControls}>
                   <EditFieldButton
                     field={field}

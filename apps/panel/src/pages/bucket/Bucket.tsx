@@ -27,6 +27,8 @@ import {
 } from "../../components/prefabs/filter-panel/filterPanelUtils";
 import { bucketKeyField, idOf, keyOf } from "../../utils/recordKey";
 import { useKeyField } from "../../hooks/useKeyField";
+import { relationLabelField } from "../../domain/relationTarget";
+import { filterFieldTypeOf } from "../../domain/filterFieldType";
 
 
 function keyFilterField(bucket: BucketType, engine?: DataEngine): FilterField {
@@ -98,16 +100,7 @@ export default function Bucket() {
     const derived = Object.entries(bucket.properties)
       .filter(([key, prop]: [string, any]) => !skipTypes.has(prop.type) && key !== idField.key)
       .map(([key, prop]: [string, any]): FilterField => {
-        const strTypes = new Set(["string", "textarea", "color", "richtext", "hash", "encrypted"]);
-        const fieldType: FilterField["type"] =
-          prop.type === "relation" ? "relation" :
-          strTypes.has(prop.type) ? "string" :
-          prop.type === "number" || prop.type === "integer" ? "number" :
-          prop.type === "bigint" ? "bigint" :
-          prop.type === "uuid" ? "id" :
-          prop.type === "date" ? "date" :
-          prop.type === "boolean" ? "boolean" :
-          prop.type === "multiselect" && prop.items?.enum ? "enum" : "string";
+        const fieldType = filterFieldTypeOf(prop);
         const base: FilterField = {key, label: prop.title || key, type: fieldType};
         if (fieldType === "enum" && prop.items?.enum) {
           base.enumOptions = (prop.items.enum as string[]).map(v => ({label: v, value: v}));
@@ -177,6 +170,7 @@ export default function Bucket() {
     const idToTitleMap = new Map<string, string>();
     const idToPropertiesMap = new Map<string, Record<string, any>>();
     const idToPrimaryKeyMap = new Map<string, string>();
+    const idToKeyFieldMap = new Map<string, string>();
     const relationLabelCache = new Map<string, string>(); // Key: "bucketId:documentId"
 
     for (const bucket of buckets) {
@@ -186,8 +180,13 @@ export default function Bucket() {
       if (idOf(bucket) && bucket.properties) {
         idToPropertiesMap.set(idOf(bucket)!, bucket.properties);
       }
-      if (idOf(bucket) && bucket.primary) {
-        idToPrimaryKeyMap.set(idOf(bucket)!, bucket.primary);
+      const labelField = relationLabelField(engine, bucket);
+      if (idOf(bucket) && labelField) {
+        idToPrimaryKeyMap.set(idOf(bucket)!, labelField);
+      }
+      const relatedKeyField = bucketKeyField(engine, bucket);
+      if (idOf(bucket) && relatedKeyField) {
+        idToKeyFieldMap.set(idOf(bucket)!, relatedKeyField);
       }
     }
     
@@ -208,9 +207,12 @@ export default function Bucket() {
       },
       getBucketPrimaryKey(bucketId: string): string | undefined {
         return idToPrimaryKeyMap.get(bucketId);
+      },
+      getBucketKeyField(bucketId: string): string | undefined {
+        return idToKeyFieldMap.get(bucketId);
       }
     };
-  }, [buckets]);
+  }, [buckets, engine]);
   
   const deleteBucketEntries = useCallback(
     async (entryIds: string[], bucketId: string): Promise<{failed: string[]; succeeded: string[]}> => {

@@ -15,6 +15,8 @@ import SortPanel from "../../prefabs/sort-panel/SortPanel";
 import type {FilterField, FilterConditionRow, SortField} from "../../prefabs/filter-panel/types";
 import {isConditionActive, formatConditionValue} from "../../prefabs/filter-panel/filterPanelUtils";
 import { idOf, keyOf } from "../../../utils/recordKey";
+import { relationValueId } from "../../../domain/relationTarget";
+import { useBucketLookup } from "../../../contexts/BucketLookupContext";
 import { useKeyField } from "../../../hooks/useKeyField";
 
 type BucketActionBarProps = {
@@ -56,12 +58,14 @@ const DeleteWarningParagraph = ({
   selectedEntries,
   dependentRelations,
   bucketData,
-  keyField
+  keyField,
+  relatedKeyField
 }: {
   selectedEntries: Set<string>;
   dependentRelations: Property[];
   bucketData: Record<string, any>[];
   keyField: string;
+  relatedKeyField: (bucketId: string | undefined) => string | undefined;
 }) => {
   const count = selectedEntries.size;
   const isSingle = count === 1;
@@ -75,10 +79,10 @@ const DeleteWarningParagraph = ({
       const fieldValue = entry[title];
       const relationBucketId = dependentRelations.find(r => r.title === title)?.bucketId;
       if (Array.isArray(fieldValue)) {
-        return fieldValue.map(item => `${relationBucketId}/${item._id}`);
+        return fieldValue.map(item => `${relationBucketId}/${relationValueId(item, relatedKeyField(relationBucketId))}`);
       }
 
-      return `${relationBucketId}/${fieldValue?._id}` || [];
+      return `${relationBucketId}/${relationValueId(fieldValue, relatedKeyField(relationBucketId))}` || [];
     });
   });
 
@@ -127,6 +131,7 @@ const BucketActionBar = ({
 }: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
   const keyField = useKeyField(idOf(bucket)!) ?? "_id";
+  const bucketLookup = useBucketLookup();
   const keyColumnKey = (bucket.properties?.[keyField] as {title?: string} | undefined)?.title ?? keyField;
   const {selectedEntries, deselectEntry} = useEntrySelection(idOf(bucket)!);
 
@@ -515,6 +520,7 @@ const BucketActionBar = ({
                 dependentRelations={dependentRelations}
                 bucketData={bucketData}
                 keyField={keyField}
+                relatedKeyField={bucketId => (bucketId ? bucketLookup.getBucketKeyField(bucketId) : undefined)}
               />
               <span>
                 Please type <strong>agree</strong> to confirm deletion.

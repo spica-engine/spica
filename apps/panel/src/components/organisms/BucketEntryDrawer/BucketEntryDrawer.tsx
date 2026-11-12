@@ -153,7 +153,14 @@ const BucketEntryDrawer = ({
     );
     if (relationEntries.length === 0) return;
 
-    const allReady = relationEntries.every(([, p]) => (p as any)?.relationState?.stateInitialized === true);
+    const hasValue = (key: string) => {
+      const value = entry[key];
+      return value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0);
+    };
+    const allReady = relationEntries.every(([key, p]) => {
+      const state = (p as any)?.relationState;
+      return state?.stateInitialized === true && (!hasValue(key) || state.initialFormattedValues !== undefined);
+    });
     if (!allReady) return;
 
     labelReadyReappliedRef.current = true;

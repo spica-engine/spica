@@ -3,6 +3,8 @@
  * email: rio.kenan@gmail.com
  */
 
+import { keyOf } from "../../../utils/recordKey";
+
 export type RelationColumn = {
   key: string;
   value: string;
@@ -94,9 +96,10 @@ export function computeRelationParam(
 
 export function getPrimaryFieldKey(
   properties: Record<string, any>,
-  primaryFieldKey?: string
+  primaryFieldKey?: string,
+  keyField: string = "_id"
 ): string {
-  if (!properties) return "_id";
+  if (!properties) return keyField;
 
   if (primaryFieldKey && properties[primaryFieldKey] !== undefined) {
     return primaryFieldKey;
@@ -112,7 +115,7 @@ export function getPrimaryFieldKey(
     return "title";
   }
 
-  return "_id";
+  return keyField;
 }
 
 /**
@@ -162,13 +165,14 @@ export function extractPrimaryColumns(
 export function extractPrimaryFieldValue(
   item: Record<string, any>,
   properties: Record<string, any>,
-  primaryFieldKey?: string
+  primaryFieldKey?: string,
+  keyField: string = "_id"
 ): string {
-  const primaryKey = getPrimaryFieldKey(properties, primaryFieldKey);
+  const primaryKey = getPrimaryFieldKey(properties, primaryFieldKey, keyField);
   const value = item[primaryKey];
 
   if (value === undefined || value === null || value === "") {
-    return item._id || "";
+    return keyOf(item, keyField);
   }
 
   return String(value);

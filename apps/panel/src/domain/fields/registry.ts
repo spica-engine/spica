@@ -64,6 +64,7 @@ import type {
 } from "src/hooks/useRelationInputHandlers";
 import styles from "./field-styles.module.scss";
 import { idOf } from "../../utils/recordKey";
+import { relationValueId } from "../relationTarget";
 export function isFieldKind(value: string): value is FieldKind {
   return (Object.values(FieldKind) as string[]).includes(value);
 }
@@ -470,13 +471,16 @@ const RELATION_DEFINITION: FieldDefinition = {
       : rawFormatted
         ? [rawFormatted]
         : [];
-    const getValue = (v: any) => v?._id ?? v?.value ?? v;
+    const relatedKeyField = property?.relationState?.keyField;
+    const getValue = (v: any) => relationValueId(v, relatedKeyField) ?? v;
     const getLabel = (v: any) =>
       v?.[primaryKey] ??
       v?.label ??
       formattedList.find(
-        (i: {value: string; _id?: string}) =>
-          i.value === v?.value || i.value === v?._id || (typeof v === "string" && i.value === v)
+        (i: {value: string}) =>
+          i.value === v?.value ||
+          i.value === relationValueId(v, relatedKeyField) ||
+          (typeof v === "string" && i.value === v)
       )?.label ??
       (!Array.isArray(rawFormatted) ? (rawFormatted as any)?.label : undefined);
 

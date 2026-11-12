@@ -488,10 +488,10 @@ export function decodeFilterConditions(param: string | null): FilterConditionRow
 }
 
 // The param value that pins a bucket's list to a single document by id — the
-// target of a relation click, expressed as an ordinary `_id equals` condition so
+// target of a relation click, expressed as an ordinary `<key field> equals` condition so
 // it renders as a removable filter chip like any other.
-export function encodeIdFilterConditions(documentId: string): string {
+export function encodeIdFilterConditions(documentId: string, keyField: string = '_id'): string {
   return JSON.stringify([
-    {field: '_id', operator: 'equals', value: documentId, logicalOp: 'AND'} as SerializedCondition
+    {field: keyField, operator: 'equals', value: documentId, logicalOp: 'AND'} as SerializedCondition
   ]);
 }
