@@ -1,4 +1,4 @@
-import { idOf } from "../../utils/recordKey";
+import { getLogDate } from "../../utils/functionLogUtils";
 import {memo, useMemo} from "react";
 import {Chart, FlexElement} from "oziko-ui-kit";
 import type {Plugin} from "chart.js";
@@ -37,8 +37,7 @@ function buildChartData(logs: FunctionLog[], begin: Date, end: Date) {
   }
 
   for (const log of logs) {
-    const ts = Number.parseInt(idOf(log)!.substring(0, 8), 16) * 1000;
-    const d = new Date(ts);
+    const d = getLogDate(log);
     const key = useHourly
       ? `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:00`
       : `${d.getMonth() + 1}/${d.getDate()}`;
