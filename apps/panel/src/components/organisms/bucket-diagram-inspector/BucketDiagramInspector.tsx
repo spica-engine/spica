@@ -16,6 +16,7 @@ import {FIELD_REGISTRY, isFieldKind} from "../../../domain/fields/registry";
 import {inferSecurityFromAcl} from "../../../domain/fields/field-acl";
 import type {Field} from "../../../pages/diagram/hooks/useBucketConverter";
 import { idOf } from "../../../utils/recordKey";
+import {usePrincipalKey} from "../../../hooks/usePrincipalKey";
 
 export type BucketDiagramInspectorProps = {
   bucket: BucketType;
@@ -189,6 +190,7 @@ const EditFieldButton: React.FC<EditFieldButtonProps> = memo(
 EditFieldButton.displayName = "EditFieldButton";
 
 const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, fields, onClose}) => {
+  const principalKey = usePrincipalKey();
   const [createBucketField] = useCreateBucketFieldMutation();
 
   const getFieldTypeDisplay = useCallback((field: Field) => {
@@ -327,7 +329,7 @@ const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, 
         presetValues: buildPresetValues(property),
         defaultValue: property.default,
         // Rehydrate the field-level ACL so the Security tab reflects the saved rule.
-        securityValues: inferSecurityFromAcl(property.acl)
+        securityValues: inferSecurityFromAcl(property.acl, principalKey)
       };
 
       if (property.type === "multiselect") {
@@ -338,7 +340,7 @@ const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, 
 
       return fieldFormState;
     },
-    [bucket, buildFieldValues, buildPresetValues, addMultiselectFields, addInnerFields]
+    [bucket, buildFieldValues, buildPresetValues, addMultiselectFields, addInnerFields, principalKey]
   );
 
   const updateRequiredArray = useCallback(
