@@ -1,5 +1,6 @@
 import { baseApi } from './baseApi';
 import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
+import { idOf, type SystemRecord } from "../../utils/recordKey";
 
 // Types (migrated from bucketService.ts)
 export type BucketDataType = {
@@ -15,8 +16,7 @@ export type BucketCapabilities = {
   propertyTypes: string[];
 };
 
-export type BucketType = {
-  _id: string;
+export type BucketType = SystemRecord & {
   title: string;
   properties: Properties;
   required?: string[];
@@ -305,7 +305,7 @@ export const bucketApi = baseApi.injectEndpoints({
       onQueryStarted: async ({ id, body }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const bucket = draft.find((b) => b._id === id);
+            const bucket = draft.find((b) => idOf(b) === id);
             if (bucket) {
               Object.assign(bucket, body);
             }
@@ -335,7 +335,7 @@ export const bucketApi = baseApi.injectEndpoints({
       onQueryStarted: async (id, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            return draft.filter((bucket) => bucket._id !== id);
+            return draft.filter((bucket) => idOf(bucket) !== id);
           })
         );
 
@@ -365,7 +365,7 @@ export const bucketApi = baseApi.injectEndpoints({
       onQueryStarted: async ({ bucketId, category }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const bucket = draft.find((b) => b._id === bucketId);
+            const bucket = draft.find((b) => idOf(b) === bucketId);
             if (bucket) {
               bucket.category = category;
             }
@@ -398,7 +398,7 @@ export const bucketApi = baseApi.injectEndpoints({
       onQueryStarted: async ({ bucketId, order }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const bucket = draft.find((b) => b._id === bucketId);
+            const bucket = draft.find((b) => idOf(b) === bucketId);
             if (bucket) {
               bucket.order = order;
             }
@@ -416,19 +416,19 @@ export const bucketApi = baseApi.injectEndpoints({
     // Create bucket field (update bucket properties)
     createBucketField: builder.mutation<BucketType, BucketType>({
       query: (modifiedBucket) => ({
-        url: `bucket/${modifiedBucket._id}`,
+        url: `bucket/${idOf(modifiedBucket)!}`,
         method: 'PUT',
         body: modifiedBucket,
       }),
       invalidatesTags: (result, error, bucket) => [
-        { type: 'BucketData', id: bucket._id },
+        { type: 'BucketData', id: idOf(bucket)! },
       ],
       // Optimistic update for immediate UI response
       onQueryStarted: async (modifiedBucket, { dispatch, queryFulfilled }) => {
         // Optimistically update the cache
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const bucketIndex = draft.findIndex((b) => b._id === modifiedBucket._id);
+            const bucketIndex = draft.findIndex((b) => idOf(b) === idOf(modifiedBucket));
             if (bucketIndex !== -1) {
               draft[bucketIndex] = { ...draft[bucketIndex], ...modifiedBucket };
             }
@@ -440,7 +440,7 @@ export const bucketApi = baseApi.injectEndpoints({
           // Replace optimistic update with server response
           dispatch(
             bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-              const bucketIndex = draft.findIndex((b) => b._id === updatedBucket._id);
+              const bucketIndex = draft.findIndex((b) => idOf(b) === idOf(updatedBucket));
               if (bucketIndex !== -1) {
                 draft[bucketIndex] = updatedBucket;
               }
@@ -459,19 +459,19 @@ export const bucketApi = baseApi.injectEndpoints({
       newRules: { write: string; read: string } 
     }>({
       query: ({ bucket, newRules }) => ({
-        url: `bucket/${bucket._id}`,
+        url: `bucket/${idOf(bucket)!}`,
         method: 'PUT',
         body: { ...bucket, acl: newRules },
       }),
       invalidatesTags: (result, error, { bucket }) => [
-        { type: 'Bucket', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
         'Bucket',
       ],
       // Optimistic update
       onQueryStarted: async ({ bucket, newRules }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const foundBucket = draft.find((b) => b._id === bucket._id);
+            const foundBucket = draft.find((b) => idOf(b) === idOf(bucket));
             if (foundBucket) {
               foundBucket.acl = newRules;
             }
@@ -489,12 +489,12 @@ export const bucketApi = baseApi.injectEndpoints({
     // Delete bucket history
     deleteBucketHistory: builder.mutation<{ message: string }, BucketType>({
       query: (bucket) => ({
-        url: `bucket/${bucket._id}/history`,
+        url: `bucket/${idOf(bucket)!}/history`,
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, bucket) => [
-        { type: 'Bucket', id: bucket._id },
-        { type: 'BucketData', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
+        { type: 'BucketData', id: idOf(bucket)! },
         'Bucket',
       ],
     }),
@@ -502,7 +502,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket history setting
     updateBucketHistory: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `bucket/${bucket._id}`,
+        url: `bucket/${idOf(bucket)!}`,
         method: 'PUT',
         body: {
           ...bucket,
@@ -510,14 +510,14 @@ export const bucketApi = baseApi.injectEndpoints({
         },
       }),
       invalidatesTags: (result, error, bucket) => [
-        { type: 'Bucket', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
         'Bucket',
       ],
       // Optimistic update
       onQueryStarted: async (bucket, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const foundBucket = draft.find((b) => b._id === bucket._id);
+            const foundBucket = draft.find((b) => idOf(b) === idOf(bucket));
             if (foundBucket) {
               foundBucket.history = !foundBucket.history;
             }
@@ -535,7 +535,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket readonly setting
     updateBucketReadonly: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `bucket/${bucket._id}`,
+        url: `bucket/${idOf(bucket)!}`,
         method: 'PUT',
         body: {
           ...bucket,
@@ -543,14 +543,14 @@ export const bucketApi = baseApi.injectEndpoints({
         },
       }),
       invalidatesTags: (result, error, bucket) => [
-        { type: 'Bucket', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
         'Bucket',
       ],
       // Optimistic update
       onQueryStarted: async (bucket, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const foundBucket = draft.find((b) => b._id === bucket._id);
+            const foundBucket = draft.find((b) => idOf(b) === idOf(bucket));
             if (foundBucket) {
               foundBucket.readOnly = !foundBucket.readOnly;
             }
@@ -574,20 +574,20 @@ export const bucketApi = baseApi.injectEndpoints({
         delete (body as any).index;
         
         return {
-          url: `bucket/${bucket._id}`,
+          url: `bucket/${idOf(bucket)!}`,
           method: 'PUT',
           body,
         };
       },
       invalidatesTags: (result, error, { bucket }) => [
-        { type: 'Bucket', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
         'Bucket',
       ],
       // Optimistic update
       onQueryStarted: async ({ newTitle, bucket }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const foundBucket = draft.find((b) => b._id === bucket._id);
+            const foundBucket = draft.find((b) => idOf(b) === idOf(bucket));
             if (foundBucket) {
               foundBucket.title = newTitle;
             }
@@ -618,12 +618,12 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket limitation fields
     updateBucketLimitationFields: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `bucket/${bucket._id}`,
+        url: `bucket/${idOf(bucket)!}`,
         method: 'PUT',
         body: bucket,
       }),
       invalidatesTags: (result, error, bucket) => [
-        { type: 'Bucket', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
         'Bucket',
       ],
     }),
@@ -811,7 +811,7 @@ export const bucketApi = baseApi.injectEndpoints({
 
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const foundBucket = draft.find((b) => b._id === bucketId);
+            const foundBucket = draft.find((b) => idOf(b) === bucketId);
             if (foundBucket) {
               foundBucket.properties = updatedProperties;
               foundBucket.required = updatedRequired;

@@ -63,6 +63,7 @@ import type {
   TypeSearchOptionsMap
 } from "src/hooks/useRelationInputHandlers";
 import styles from "./field-styles.module.scss";
+import { idOf } from "../../utils/recordKey";
 export function isFieldKind(value: string): value is FieldKind {
   return (Object.values(FieldKind) as string[]).includes(value);
 }
@@ -517,7 +518,7 @@ const RELATION_DEFINITION: FieldDefinition = {
         ...BaseFields,
         bucket: {
           ...SpecializedInputs.bucket,
-          enum: buckets?.map(b => ({label: b.title, value: b._id})) || []
+          enum: buckets?.map(b => ({label: b.title, value: idOf(b)!})) || []
         },
         relationType: SpecializedInputs.relationType
       },

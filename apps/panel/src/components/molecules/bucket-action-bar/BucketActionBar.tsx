@@ -14,6 +14,7 @@ import FilterPanel from "../../prefabs/filter-panel/FilterPanel";
 import SortPanel from "../../prefabs/sort-panel/SortPanel";
 import type {FilterField, FilterConditionRow, SortField} from "../../prefabs/filter-panel/types";
 import {isConditionActive, formatConditionValue} from "../../prefabs/filter-panel/filterPanelUtils";
+import { idOf } from "../../../utils/recordKey";
 
 type BucketActionBarProps = {
   onRefresh: () => Promise<BucketDataType | void>;
@@ -122,7 +123,7 @@ const BucketActionBar = ({
   deleteBucketEntries
 }: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
-  const {selectedEntries, deselectEntry} = useEntrySelection(bucket._id);
+  const {selectedEntries, deselectEntry} = useEntrySelection(idOf(bucket)!);
 
   const [isColumnsOpen, setIsColumnsOpen] = useState(false);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
@@ -190,7 +191,7 @@ const BucketActionBar = ({
   // filter lives in the URL now, so it clears naturally when the route changes.
   useEffect(() => {
     setSearchValue("");
-  }, [bucket?._id]);
+  }, [idOf(bucket)]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -235,7 +236,7 @@ const BucketActionBar = ({
     setDeleteEntryError(null);
     try {
       const entryIds = Array.from(selectedEntries);
-      const {failed: failedEntryIds, succeeded: deletedEntryIds} = await deleteBucketEntries(entryIds, bucket._id);
+      const {failed: failedEntryIds, succeeded: deletedEntryIds} = await deleteBucketEntries(entryIds, idOf(bucket)!);
 
       deletedEntryIds.forEach(id => deselectEntry(id));
       await onRefresh();

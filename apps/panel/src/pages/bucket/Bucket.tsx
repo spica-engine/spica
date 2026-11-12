@@ -25,6 +25,7 @@ import {
   encodeFilterConditions,
   isConditionActive
 } from "../../components/prefabs/filter-panel/filterPanelUtils";
+import { idOf } from "../../utils/recordKey";
 
 
 function keyFilterField(bucket: BucketType, engine?: DataEngine): FilterField {
@@ -68,7 +69,7 @@ export default function Bucket() {
   );
 
   const bucket = useMemo(
-    () => buckets?.find((i: BucketType) => i._id === bucketId),
+    () => buckets?.find((i: BucketType) => idOf(i) === bucketId),
     [buckets, bucketId]
   );
 
@@ -174,14 +175,14 @@ export default function Bucket() {
     const relationLabelCache = new Map<string, string>(); // Key: "bucketId:documentId"
 
     for (const bucket of buckets) {
-      if (bucket._id && bucket.title) {
-        idToTitleMap.set(bucket._id, bucket.title);
+      if (idOf(bucket) && bucket.title) {
+        idToTitleMap.set(idOf(bucket)!, bucket.title);
       }
-      if (bucket._id && bucket.properties) {
-        idToPropertiesMap.set(bucket._id, bucket.properties);
+      if (idOf(bucket) && bucket.properties) {
+        idToPropertiesMap.set(idOf(bucket)!, bucket.properties);
       }
-      if (bucket._id && bucket.primary) {
-        idToPrimaryKeyMap.set(bucket._id, bucket.primary);
+      if (idOf(bucket) && bucket.primary) {
+        idToPrimaryKeyMap.set(idOf(bucket)!, bucket.primary);
       }
     }
     

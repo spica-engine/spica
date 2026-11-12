@@ -20,6 +20,7 @@ import RelationFieldInput from "../../atoms/relation-field-input/RelationFieldIn
 import ArrayFieldInput from "../../atoms/array-field-input/ArrayFieldInput";
 import ObjectFieldInput from "../../atoms/object-field-input/ObjectFieldInput";
 import ErrorBoundary from "../../atoms/error-boundary/ErrorBoundary";
+import { idOf } from "../../../utils/recordKey";
 
 // oziko <Drawer size> is a raw px number with no design token; 1.25× the previous 380px baseline.
 const DRAWER_WIDTH_PX = 475;
@@ -232,7 +233,7 @@ const BucketEntryDrawer = ({
     if (isEditMode && entry?._id) {
       const prepared = service.prepareData(formState.value, formattedProperties, bucket.required || []);
       await updateBucketEntry({
-        bucketId: bucket._id,
+        bucketId: idOf(bucket)!,
         entryId: entry._id,
         data: prepared
       }).unwrap().then(() => {
@@ -241,7 +242,7 @@ const BucketEntryDrawer = ({
       }).catch(() => {});
     } else {
       await submitActions.submit(
-        bucket._id,
+        idOf(bucket)!,
         formState.value,
         formattedProperties,
         bucket.required || []
@@ -250,7 +251,7 @@ const BucketEntryDrawer = ({
   }, [
     formActions,
     submitActions,
-    bucket._id,
+    idOf(bucket)!,
     bucket.required,
     formState.value,
     formattedProperties,

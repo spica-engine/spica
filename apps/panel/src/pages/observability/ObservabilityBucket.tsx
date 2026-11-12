@@ -8,6 +8,7 @@ import ObservabilityActionBar from "../../components/molecules/observability-act
 import BucketOverviewList from "./BucketOverviewList";
 import bucketStyles from "../bucket/Bucket.module.scss";
 import styles from "../shared/EntityPage.module.scss";
+import { idOf } from "../../utils/recordKey";
 
 const PAGE_SIZE = 20;
 
@@ -52,7 +53,7 @@ const ObservabilityBucket = () => {
   const handleBack = useCallback(() => setBucketId(undefined), []);
 
   const selectedBucketTitle = useMemo(
-    () => buckets.find(b => b._id === bucketId)?.title ?? bucketId,
+    () => buckets.find(b => idOf(b) === bucketId)?.title ?? bucketId,
     [buckets, bucketId]
   );
 

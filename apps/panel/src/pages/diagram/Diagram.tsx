@@ -27,6 +27,7 @@ import EditBucket from "../../components/prefabs/edit-bucket/EditBucket";
 import {useBucketConverter} from "./hooks";
 import {useDiagramColorMode} from "./hooks/useDiagramColorMode";
 import {computeConstellationLayout} from "./layout/constellation";
+import { idOf } from "../../utils/recordKey";
 
 const nodeTypes = {bucketNode: BucketDiagramNode, ringLabel: DiagramRingLabel};
 
@@ -46,7 +47,7 @@ export default function Diagram() {
 
   const bucketById = useMemo(() => {
     const map = new Map<string, (typeof buckets)[number]>();
-    buckets.forEach(bucket => map.set(bucket._id, bucket));
+    buckets.forEach(bucket => map.set(idOf(bucket)!, bucket));
     return map;
   }, [buckets]);
 
