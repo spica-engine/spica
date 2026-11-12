@@ -288,6 +288,7 @@ const BucketEntryDrawer = ({
             <div className={styles.drawerTitle}>{isEditMode ? "Edit Entry" : "New Entry"}</div>
             <div className={styles.drawerSubtitle}>
               {bucket.title}&nbsp;·&nbsp;{isEditMode ? "edit document" : "new document"}
+              {isEditMode && entryKey && keyField in (bucket.properties ?? {}) ? <>&nbsp;·&nbsp;{entryKey}</> : null}
             </div>
           </div>
           <button className={styles.drawerClose} onClick={onClose}>

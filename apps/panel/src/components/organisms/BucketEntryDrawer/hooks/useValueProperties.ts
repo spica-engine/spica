@@ -6,6 +6,9 @@ import {
   useRelationInputHandlers,
   type RelationState
 } from "../../../../hooks/useRelationInputHandlers";
+import {inputKindOf, isHiddenKeyProperty} from "../../../../domain/fields/keyKinds";
+import {useKeyField} from "../../../../hooks/useKeyField";
+import {idOf} from "../../../../utils/recordKey";
 
 
 function collectBucketIds(
@@ -42,6 +45,7 @@ function collectBucketIds(
 }
 
 export const useValueProperties = (bucket: BucketType, initialEntry?: Record<string, any> | null) => {
+  const keyField = useKeyField(idOf(bucket)!);
   const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers, initRelationValue} =
     useRelationInputHandlers();
 
@@ -77,7 +81,9 @@ export const useValueProperties = (bucket: BucketType, initialEntry?: Record<str
     const output: Record<string, any> = {};
 
     for (const [key, prop] of Object.entries(properties || {})) {
-      const kind = prop.type;
+      if (isHiddenKeyProperty(key, prop as any, keyField, Boolean(initialEntry))) continue;
+
+      const kind = (prop.type ? inputKindOf(String(prop.type)) : undefined) as FieldKind;
       const fieldDefinition = kind ? FIELD_REGISTRY[kind] : undefined;
       
       if (!fieldDefinition) {
@@ -115,7 +121,7 @@ export const useValueProperties = (bucket: BucketType, initialEntry?: Record<str
         };
         base = fieldDefinition.buildValueProperty(prop, relationProps);
       } else {
-        base = fieldDefinition.buildValueProperty(prop);
+        base = fieldDefinition.buildValueProperty({...prop, type: kind} as Property);
       }
 
       if (kind === FieldKind.Multiselect) {
@@ -153,7 +159,9 @@ export const useValueProperties = (bucket: BucketType, initialEntry?: Record<str
     loadMoreOptionsMap,
     searchOptionsMap,
     relationStates,
-    bucketIds.length
+    bucketIds.length,
+    keyField,
+    initialEntry
   ]);
 
   return valueProperties;

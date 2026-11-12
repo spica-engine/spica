@@ -581,7 +581,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     key: string,
     property: BucketProperty
   ) => {
-    const cellConfig = cellRegistry.get(property.type);
+    const cellConfig = key === keyField ? cellRegistry.readonly() : cellRegistry.get(property.type);
     const CellComponent = cellConfig.component;
 
     return (params: { row: BucketDataRow; isFocused: boolean }) => {
@@ -597,7 +597,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
         />
       );
     };
-  }, [handleValueChange, rowKey]);
+  }, [handleValueChange, rowKey, keyField]);
 
   const createPropertyColumn = useCallback((
     key: string,

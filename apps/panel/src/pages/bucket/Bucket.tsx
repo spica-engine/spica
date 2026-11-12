@@ -102,7 +102,8 @@ export default function Bucket() {
         const fieldType: FilterField["type"] =
           prop.type === "relation" ? "relation" :
           strTypes.has(prop.type) ? "string" :
-          prop.type === "number" ? "number" :
+          prop.type === "number" || prop.type === "integer" || prop.type === "bigint" ? "number" :
+          prop.type === "uuid" ? "id" :
           prop.type === "date" ? "date" :
           prop.type === "boolean" ? "boolean" :
           prop.type === "multiselect" && prop.items?.enum ? "enum" : "string";
