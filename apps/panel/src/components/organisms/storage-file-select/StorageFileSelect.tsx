@@ -9,6 +9,8 @@ import {useGetStorageItemsQuery, type Storage, type StorageOptions} from "../../
 import { convertQuickDateToRange, convertToBytes } from "../../../utils/storage";
 import useStorage from "../../../hooks/useStorage";
 import AuthorizedStorageFileCard from "../../molecules/authoized-storage-file-card/AuthorizedStorageFileCard";
+import { useEngine } from "../../../hooks/useEngine";
+import { allOf, compileStorageClause, matchesName, nameEndsWithSlash, type StorageClause } from "../../../utils/storageQuery";
 
 type TypeStorageFileSelect = {
   className?: string;
@@ -38,7 +40,8 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose, 
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [storageOptions, setStorageOptions] = useState<StorageOptions>({});
   const [folderStorageOptions, setFolderStorageOptions] = useState<StorageOptions>({});
-  const { convertStorageToTypeFile, buildDirectoryFilter } = useStorage();
+  const { convertStorageToTypeFile, buildDirectoryClause } = useStorage();
+  const engine = useEngine();
 
   const {
     data: storageResponse,
@@ -64,59 +67,42 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose, 
 
   const ITEMS_PER_PAGE = 20;
 
-  const buildSearchFilter = useCallback(() => {
-    return searchTerm
-      ? {
-          name: {$regex: searchTerm, $options: "i"}
-        }
-      : null;
+  const buildSearchClause = useCallback((): StorageClause | null => {
+    return searchTerm ? matchesName(searchTerm, true) : null;
   }, [searchTerm]);
 
-  const buildActiveFilters = useCallback(() => {
+  const buildActiveClauses = useCallback((): StorageClause[] => {
     if (!activeFilter) return [];
 
-    const filterConditions: any[] = [];
+    const clauses: StorageClause[] = [];
 
     if (activeFilter.type && activeFilter.type.length > 0) {
       const typeRegex = activeFilter.type.map(type => `\\.${type}$`).join("|");
-      filterConditions.push({
-        $and: [
-          {name: {$not: {$regex: "/$"}}},
-          {name: {$regex: `(${typeRegex})`, $options: "i"}}
-        ]
-      });
+      clauses.push(allOf([nameEndsWithSlash(), matchesName(`(${typeRegex})`, true)])!);
     }
 
     if (activeFilter.fileSize.min.value !== null || activeFilter.fileSize.max.value !== null) {
-      const sizeConditions: any = {};
+      const minBytes =
+        activeFilter.fileSize.min.value !== null
+          ? convertToBytes(activeFilter.fileSize.min.value, activeFilter.fileSize.min.unit)
+          : null;
+      const maxBytes =
+        activeFilter.fileSize.max.value !== null
+          ? convertToBytes(activeFilter.fileSize.max.value, activeFilter.fileSize.max.unit)
+          : null;
 
-      if (activeFilter.fileSize.min.value !== null) {
-        const minBytes = convertToBytes(
-          activeFilter.fileSize.min.value,
-          activeFilter.fileSize.min.unit
+      if (minBytes !== null || maxBytes !== null) {
+        clauses.push(
+          allOf([
+            nameEndsWithSlash(),
+            {
+              kind: "range",
+              field: "content.size",
+              ...(minBytes !== null ? {gte: minBytes} : {}),
+              ...(maxBytes !== null ? {lte: maxBytes} : {})
+            }
+          ])!
         );
-        if (minBytes !== null) {
-          sizeConditions.$gte = minBytes;
-        }
-      }
-
-      if (activeFilter.fileSize.max.value !== null) {
-        const maxBytes = convertToBytes(
-          activeFilter.fileSize.max.value,
-          activeFilter.fileSize.max.unit
-        );
-        if (maxBytes !== null) {
-          sizeConditions.$lte = maxBytes;
-        }
-      }
-
-      if (Object.keys(sizeConditions).length > 0) {
-        filterConditions.push({
-          $and: [
-            {name: {$not: {$regex: "/$"}}},
-            {"content.size": sizeConditions}
-          ]
-        });
       }
     }
 
@@ -131,52 +117,33 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose, 
     }
 
     if (dateRange && (dateRange.from || dateRange.to)) {
-      const dateConditions: any = {};
-      if (dateRange.from) {
-        dateConditions.$gte = dateRange.from.toISOString();
-      }
-      if (dateRange.to) {
-        dateConditions.$lte = dateRange.to.toISOString();
-      }
-
-      if (Object.keys(dateConditions).length > 0) {
-        filterConditions.push({
-          $or: [
-            {createdAt: dateConditions},
-            {_id: dateConditions}
-          ]
-        });
-      }
+      clauses.push({
+        kind: "range",
+        field: "created_at",
+        ...(dateRange.from ? {gte: dateRange.from.toISOString()} : {}),
+        ...(dateRange.to ? {lte: dateRange.to.toISOString()} : {})
+      });
     }
 
-    return filterConditions;
+    return clauses;
   }, [activeFilter]);
 
   const buildCompleteFilter = useCallback(() => {
-    const allConditions: any[] = [];
-
-    const directoryFilter = buildDirectoryFilter(directory);
-    allConditions.push(directoryFilter);
-
-    const searchFilter = buildSearchFilter();
-    if (searchFilter) {
-      allConditions.push(searchFilter);
-    }
-
-    const activeFilters = buildActiveFilters();
-    if (activeFilters.length > 0) {
-      allConditions.push(...activeFilters);
-    }
-
-    return allConditions.length > 1 ? {$and: allConditions} : allConditions[0] || {};
-  }, [buildDirectoryFilter, buildSearchFilter, buildActiveFilters]);
+    const search = buildSearchClause();
+    const clause = allOf([
+      buildDirectoryClause(directory),
+      ...(search ? [search] : []),
+      ...buildActiveClauses()
+    ]);
+    return compileStorageClause(engine, clause) ?? {};
+  }, [buildDirectoryClause, buildSearchClause, buildActiveClauses, directory, engine]);
 
   const buildSortOptions = useCallback(() => {
     const sortMap = {
       [SORTS.NAME_ASC]: {name: 1},
       [SORTS.NAME_DESC]: {name: -1},
-      [SORTS.DATE_ASC]: {_id: 1},
-      [SORTS.DATE_DESC]: {_id: -1}
+      [SORTS.DATE_ASC]: {created_at: 1},
+      [SORTS.DATE_DESC]: {created_at: -1}
     };
 
     return sortMap[sortBy];
@@ -195,7 +162,11 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose, 
     };
 
     const folderOptions: StorageOptions = {
-      filter: {"content.type": "application/octet-stream"},
+      filter: compileStorageClause(engine, {
+        kind: "equals",
+        field: "content.type",
+        value: "application/octet-stream"
+      })!,
       sort,
       limit: 1,
       paginate: true
@@ -204,7 +175,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose, 
     setStorageOptions(options);
     setFolderStorageOptions(folderOptions);
     setHasInitialLoad(true);
-  }, [buildCompleteFilter, buildSortOptions]);
+  }, [buildCompleteFilter, buildSortOptions, engine]);
 
   useEffect(() => {
     if (storageResponse && isOpen) {

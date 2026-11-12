@@ -5,7 +5,6 @@ import "oziko-ui-kit/dist/index.css";
 import "./styles.scss";
 import {AuthProvider} from "./contexts/AuthContext";
 import {DrawerProvider} from "./contexts/DrawerContext";
-import {StorageProvider} from "./contexts/StorageContext";
 import {Provider} from "react-redux";
 import {store} from "./store";
 import {DndProvider} from "react-dnd";
@@ -19,10 +18,7 @@ root.render(
       <DndProvider backend={HTML5Backend}>
         <DrawerProvider>
           <AuthProvider>
-            {/* TODO: Remove Storage provider after all actions are migrated to RTK Query */}
-              <StorageProvider>
-                <AppRouter />
-              </StorageProvider>
+            <AppRouter />
           </AuthProvider>
         </DrawerProvider>
       </DndProvider>
