@@ -1,5 +1,5 @@
 import {DynamicModule, Global, Inject, Module, Optional, Type} from "@nestjs/common";
-import {DATA_ENGINE} from "@spica-server/data";
+import {DATA_CAPABILITIES} from "@spica-server/data";
 import {HistoryModule} from "@spica-server/bucket-history";
 import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
 import {HookModule} from "@spica-server/bucket-hooks";
@@ -130,7 +130,7 @@ export class BucketModule {
         {
           provide: BucketSchemaResolver,
           useFactory: provideBucketSchemaResolver,
-          inject: [Validator, BucketService, {token: DATA_ENGINE, optional: true}]
+          inject: [Validator, BucketService, {token: DATA_CAPABILITIES, optional: true}]
         },
         {
           provide: BUCKET_DEFINITION_SCHEMA,

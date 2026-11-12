@@ -4,8 +4,7 @@ import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/cor
 import {combineLatest, Observable, Subject} from "rxjs";
 import {map, shareReplay, takeUntil} from "rxjs/operators";
 import {Bucket, BucketPreferences} from "@spica-server/interface-bucket";
-
-const POSTGRESQL_ENGINE = "postgresql";
+import {DataCapabilities} from "@spica-server/data";
 
 @Injectable()
 export class BucketSchemaResolver implements OnModuleDestroy {
@@ -51,9 +50,9 @@ export class BucketSchemaResolver implements OnModuleDestroy {
 export function provideBucketSchemaResolver(
   validator: Validator,
   bs: BucketService,
-  engine?: string
+  capabilities?: DataCapabilities
 ) {
-  const resolver = new BucketSchemaResolver(bs, engine == POSTGRESQL_ENGINE);
+  const resolver = new BucketSchemaResolver(bs, Boolean(capabilities?.nullableProperties));
   validator.registerUriResolver(uri => resolver.resolve(uri));
   return resolver;
 }

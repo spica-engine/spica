@@ -1,6 +1,6 @@
 import {Inject, Injectable, Module} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {DATA_ENGINE, DataAdapter, DataModule, ids} from "@spica-server/data";
+import {DATA_CAPABILITIES, DATA_ENGINE, DataAdapter, DataModule, ids} from "@spica-server/data";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 
 const fakeIdTypes = {} as IdTypes;
@@ -31,6 +31,22 @@ describe("DataModule", () => {
     }).compile();
 
     expect(module.get(DATA_ENGINE)).toBe("fake");
+  });
+
+  it("should expose the adapter's capabilities", async () => {
+    const module = await Test.createTestingModule({
+      imports: [DataModule.forRoot({...fakeAdapter(), capabilities: {nullableProperties: true}})]
+    }).compile();
+
+    expect(module.get(DATA_CAPABILITIES)).toEqual({nullableProperties: true});
+  });
+
+  it("should expose no capabilities when the adapter declares none", async () => {
+    const module = await Test.createTestingModule({
+      imports: [DataModule.forRoot(fakeAdapter())]
+    }).compile();
+
+    expect(module.get(DATA_CAPABILITIES)).toEqual({});
   });
 
   it("should expose the adapter's id types to modules that don't import it", async () => {

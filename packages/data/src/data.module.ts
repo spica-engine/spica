@@ -1,6 +1,6 @@
 import {DynamicModule, Global, Inject, Module} from "@nestjs/common";
 import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
-import {DATA_ENGINE, DataAdapter} from "./adapter.js";
+import {DATA_CAPABILITIES, DATA_ENGINE, DataAdapter} from "./adapter.js";
 import {bindIdTypes} from "./ids.js";
 
 @Global()
@@ -14,8 +14,11 @@ export class DataModule {
     return {
       module: DataModule,
       imports: [adapter.module],
-      providers: [{provide: DATA_ENGINE, useValue: adapter.engine}],
-      exports: [adapter.module, DATA_ENGINE]
+      providers: [
+        {provide: DATA_ENGINE, useValue: adapter.engine},
+        {provide: DATA_CAPABILITIES, useValue: adapter.capabilities ?? {}}
+      ],
+      exports: [adapter.module, DATA_ENGINE, DATA_CAPABILITIES]
     };
   }
 }
