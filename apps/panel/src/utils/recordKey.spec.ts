@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { idOf, omitId, pickId, type SystemRecord } from './recordKey';
+import { idOf, omitId, pickId, principalKeyFor, type SystemRecord } from './recordKey';
 
 describe.each([
   ['MongoDB', '_id'],
@@ -33,5 +33,16 @@ describe('idOf', () => {
 
   it('should prefer the MongoDB name when a record somehow carries both', () => {
     expect(idOf({ _id: 'a', id: 'b' })).toBe('a');
+  });
+});
+
+describe('principalKeyFor', () => {
+  it('should name the key the way the engine does', () => {
+    expect(principalKeyFor('postgresql')).toBe('id');
+    expect(principalKeyFor('mongodb')).toBe('_id');
+  });
+
+  it('should default to the MongoDB name until the engine is known', () => {
+    expect(principalKeyFor(undefined)).toBe('_id');
   });
 });

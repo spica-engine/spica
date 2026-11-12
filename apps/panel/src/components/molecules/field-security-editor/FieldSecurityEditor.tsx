@@ -5,6 +5,7 @@ import styles from "./FieldSecurityEditor.module.scss";
 import {buildAclExpression, type FieldAclMode, type FieldSecurity} from "../../../domain/fields/field-acl";
 import type {Properties} from "../../../store/api/bucketApi";
 import {useRuleEditor} from "../../../hooks/useRuleEditor";
+import {usePrincipalKey} from "../../../hooks/usePrincipalKey";
 
 export type {FieldSecurity} from "../../../domain/fields/field-acl";
 
@@ -42,11 +43,11 @@ const DEFAULT_VALUE: FieldSecurity = {mode: "everyone", expression: ""};
 
 // Ghost guidance shown over the empty custom editor. Each line is a real, valid
 // expression: `auth.*` reasons about the requester, `document.*` about the row.
-const CUSTOM_EXAMPLES = [
+const customExamples = (principalKey: string) => [
   "document.age > 24",
   "auth.identifier == 'admin'",
   `"HR" in auth.policies`,
-  "document.owner == auth._id"
+  `document.owner == auth.${principalKey}`
 ];
 
 const EDITOR_OPTIONS = {
@@ -79,6 +80,7 @@ const FieldSecurityEditor: FC<FieldSecurityEditorProps> = ({
   onChange,
   className
 }) => {
+  const principalKey = usePrincipalKey();
   const propertyKeys = useMemo(() => Object.keys(bucketProperties ?? {}), [bucketProperties]);
 
   const {language, theme, beforeMount} = useRuleEditor({properties: bucketProperties});
@@ -92,25 +94,28 @@ const FieldSecurityEditor: FC<FieldSecurityEditorProps> = ({
         onChange({
           mode,
           ownerField,
-          expression: buildAclExpression({mode, ownerField, expression: ""}) ?? value.expression
+          principalKey,
+          expression:
+            buildAclExpression({mode, ownerField, expression: "", principalKey}) ?? value.expression
         });
         return;
       }
 
       // Custom keeps whatever preset expression was last shown so it stays editable.
       if (mode === "custom") {
-        onChange({mode, expression: value.expression, ownerField: value.ownerField});
+        onChange({mode, expression: value.expression, ownerField: value.ownerField, principalKey});
         return;
       }
 
       // Everyone / authenticated: mirror the canonical expression for display.
       onChange({
         mode,
-        expression: buildAclExpression({mode, expression: value.expression}) ?? "",
-        ownerField: value.ownerField
+        expression: buildAclExpression({mode, expression: value.expression, principalKey}) ?? "",
+        ownerField: value.ownerField,
+        principalKey
       });
     },
-    [value, propertyKeys, onChange]
+    [value, propertyKeys, principalKey, onChange]
   );
 
   const handleOwnerFieldChange = useCallback(
@@ -119,17 +124,18 @@ const FieldSecurityEditor: FC<FieldSecurityEditorProps> = ({
       onChange({
         mode: "owner",
         ownerField,
-        expression: buildAclExpression({mode: "owner", ownerField, expression: ""}) ?? ""
+        principalKey,
+        expression: buildAclExpression({mode: "owner", ownerField, expression: "", principalKey}) ?? ""
       });
     },
-    [onChange]
+    [principalKey, onChange]
   );
 
   const handleExpressionChange = useCallback(
     (expression?: string) => {
-      onChange({mode: "custom", expression: expression ?? "", ownerField: value.ownerField});
+      onChange({mode: "custom", expression: expression ?? "", ownerField: value.ownerField, principalKey});
     },
-    [onChange, value.ownerField]
+    [onChange, value.ownerField, principalKey]
   );
 
   return (
@@ -190,7 +196,7 @@ const FieldSecurityEditor: FC<FieldSecurityEditorProps> = ({
           />
           {!value.expression.trim() && (
             <div className={styles.editorPlaceholder} aria-hidden="true">
-              {CUSTOM_EXAMPLES.map(example => (
+              {customExamples(principalKey).map(example => (
                 <div key={example} className={styles.editorPlaceholderLine}>
                   {example}
                 </div>

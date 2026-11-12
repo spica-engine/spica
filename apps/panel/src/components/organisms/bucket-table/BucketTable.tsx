@@ -19,6 +19,7 @@ import useLocalStorage from "../../../hooks/useLocalStorage";
 import type { TableRowClickParams } from "oziko-ui-kit";
 import { CellSelectionProvider } from "./useCellSelection";
 import { idOf } from "../../../utils/recordKey";
+import { usePrincipalKey } from "../../../hooks/usePrincipalKey";
 
 interface BucketTableNewProps {
   bucket: BucketSchema;
@@ -272,6 +273,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   hasMore = false,
   isLoadingMore = false
 }) => {
+  const principalKey = usePrincipalKey();
   const {selectedEntries, selectEntry, deselectEntry, selectEntries, resetSelection} = useEntrySelection(idOf(bucket)!);
 
   const [createBucketField] = useCreateBucketFieldMutation();
@@ -408,10 +410,10 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 
   const handleOpenEditField = useCallback(
     (key: string, property: BucketProperty) => {
-      const formState = propertyToFieldFormState(key, property, bucket as unknown as BucketSchema);
+      const formState = propertyToFieldFormState(key, property, bucket as unknown as BucketSchema, principalKey);
       setEditingField({key, kind: formState.type, formState});
     },
-    [bucket]
+    [bucket, principalKey]
   );
 
   const handleEditSaveAndClose = useCallback(

@@ -110,3 +110,45 @@ describe("field-acl", () => {
     });
   });
 });
+
+describe.each(["_id", "id"])("field-acl presets for principal key %s", key => {
+  const authenticated = key === "_id" ? "auth._id != undefined" : "has(auth.id)";
+
+  it("builds the authenticated and owner expressions with the key", () => {
+    expect(buildAclExpression({mode: "authenticated", expression: "", principalKey: key})).toBe(
+      authenticated
+    );
+    expect(
+      buildAclExpression({mode: "owner", expression: "", ownerField: "author", principalKey: key})
+    ).toBe(`document.author == auth.${key}`);
+  });
+
+  it("recognizes its own presets and keeps the key on the result", () => {
+    expect(inferSecurityFromAcl(authenticated, key)).toEqual({
+      mode: "authenticated",
+      expression: authenticated,
+      principalKey: key
+    });
+    expect(inferSecurityFromAcl(`document.author == auth.${key}`, key)).toEqual({
+      mode: "owner",
+      expression: `document.author == auth.${key}`,
+      ownerField: "author",
+      principalKey: key
+    });
+  });
+
+  it.each([
+    {mode: "authenticated", expression: ""},
+    {mode: "owner", expression: "", ownerField: "author"}
+  ] as FieldSecurity[])("round-trips %o", preset => {
+    const acl = buildAclExpression({...preset, principalKey: key});
+    expect(inferSecurityFromAcl(acl, key).mode).toBe(preset.mode);
+  });
+
+  it("does not treat the other engine's name as a preset", () => {
+    const other = key === "id" ? "_id" : "id";
+    const otherAuthenticated = other === "_id" ? "auth._id != undefined" : "has(auth.id)";
+    expect(inferSecurityFromAcl(otherAuthenticated, key).mode).toBe("custom");
+    expect(inferSecurityFromAcl(`document.author == auth.${other}`, key).mode).toBe("custom");
+  });
+});
