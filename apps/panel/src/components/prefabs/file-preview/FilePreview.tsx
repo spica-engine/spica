@@ -7,7 +7,7 @@ import {FileMetadata} from "./file-metadata/FileMetadata";
 import {FileActions} from "./file-actions/FileActions";
 import {FileViewerFrame} from "./file-viewer-frame/FileViewerFrame";
 import {useLayoutEffect, useMemo, useState} from "react";
-import {getTimestampFromObjectId, buildFileUrl} from "./utils";
+import {getTimestampFromId, buildFileUrl} from "./utils";
 import { idOf } from "../../../utils/recordKey";
 
 interface FilePreviewProps {
@@ -27,7 +27,7 @@ export const FilePreview = ({
   const [fileUrl, setFileUrl] = useState<string | null>(previewFile?.url || null);
 
   const timestamp = useMemo(
-    () => getTimestampFromObjectId(idOf(previewFile)),
+    () => getTimestampFromId(idOf(previewFile)),
     [idOf(previewFile)]
   );
 

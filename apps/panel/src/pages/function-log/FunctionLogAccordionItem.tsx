@@ -1,4 +1,5 @@
 import { idOf, pickId } from "../../utils/recordKey";
+import { getLogDate } from "../../utils/functionLogUtils";
 import {Icon, type TypeAccordionItem} from "oziko-ui-kit";
 import type {FunctionLog} from "../../store/api/functionApi";
 import styles from "./FunctionLogPage.module.scss";
@@ -13,8 +14,7 @@ const SEVERITY_CLASS: Record<number, string> = {
 };
 
 function formatTimestamp(log: FunctionLog): string {
-  const ts = Number.parseInt(idOf(log)!.substring(0, 8), 16) * 1000;
-  return new Date(ts).toLocaleString("en-US", {
+  return getLogDate(log).toLocaleString("en-US", {
     month: "2-digit",
     day: "2-digit",
     year: "numeric",
