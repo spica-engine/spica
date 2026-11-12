@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
 import {ObjectId, contractSuite} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {AssetModule} from "@spica-server/asset";
+import {AssetModule, exporters, listers, operators, validators} from "@spica-server/asset";
 import {FunctionModule} from "@spica-server/function";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
@@ -76,6 +76,9 @@ contractSuite("function", engine => {
   };
 
   beforeEach(async () => {
+    // The asset registries are process-wide and only ever grow, so the validators and operators of
+    // the other engine's modules would otherwise run against this engine's resources.
+    [validators, operators, exporters, listers].forEach(registry => registry.clear());
     process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     const module = await Test.createTestingModule(moduleMeta).compile();
     module.enableShutdownHooks();
