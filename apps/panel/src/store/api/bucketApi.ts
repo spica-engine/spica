@@ -1,4 +1,5 @@
 import { baseApi } from './baseApi';
+import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
 
 // Types (migrated from bucketService.ts)
 export type BucketDataType = {
@@ -100,7 +101,7 @@ export type BucketDataQueryType = {
   limit?: number;
   sort?: Record<string, number>;
   skip?: number;
-  filter?: Record<string, any> | string;
+  filter?: FilterInput;
 };
 
 export type BucketDataQueryWithIdType = BucketDataQueryType & { bucketId: string };
@@ -192,7 +193,7 @@ export const bucketApi = baseApi.injectEndpoints({
       limit?: number;
       sort?: Record<string, number>;
       skip?: number;
-      filter?: Record<string, any> | string;
+      filter?: FilterInput;
     }>({
       query: ({ bucketId, ...params }) => {
         const queryParams = new URLSearchParams();
@@ -210,10 +211,7 @@ export const bucketApi = baseApi.injectEndpoints({
         if (params.skip != null) queryParams.append('skip', String(params.skip));
         if (params.sort) queryParams.append('sort', JSON.stringify(params.sort));
         if (params.filter) {
-          queryParams.append(
-            'filter',
-            typeof params.filter === 'string' ? params.filter : JSON.stringify(params.filter)
-          );
+          queryParams.append('filter', serializeFilter(params.filter));
         }
 
         const qs = queryParams.toString();
