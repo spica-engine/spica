@@ -4,11 +4,11 @@ import {Button, Icon, Popover} from "oziko-ui-kit";
 import SearchBar from "../../atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import FilterPanel from "../../prefabs/filter-panel/FilterPanel";
-import type {FilterField} from "../../prefabs/filter-panel/types";
+import type {FilterConditionRow, FilterField} from "../../prefabs/filter-panel/types";
 
 const SEARCH_DEBOUNCE_TIME = 500;
 
-const POLICY_FILTER_FIELDS: FilterField[] = [
+export const POLICY_FILTER_FIELDS: FilterField[] = [
   {key: "name", label: "Name", type: "string"},
   {key: "description", label: "Description", type: "string"},
 ];
@@ -16,7 +16,7 @@ const POLICY_FILTER_FIELDS: FilterField[] = [
 type PolicyActionBarProps = {
   onSearch: (value: string) => void;
   onAddPolicy: () => void;
-  onFilter: (filter: Record<string, any> | null) => void;
+  onFilter: (conditions: FilterConditionRow[]) => void;
 };
 
 const PolicyActionBar = ({onSearch, onAddPolicy, onFilter}: PolicyActionBarProps) => {
@@ -51,16 +51,16 @@ const PolicyActionBar = ({onSearch, onAddPolicy, onFilter}: PolicyActionBarProps
   );
 
   const handleFilterApply = useCallback(
-    (filter: Record<string, any> | null) => {
+    (filter: Record<string, any> | null, conditions: FilterConditionRow[]) => {
       setActiveFilterCount(filter ? 1 : 0);
-      onFilter(filter);
+      onFilter(conditions);
     },
     [onFilter]
   );
 
   const handleFilterClear = useCallback(() => {
     setActiveFilterCount(0);
-    onFilter(null);
+    onFilter([]);
   }, [onFilter]);
 
   return (

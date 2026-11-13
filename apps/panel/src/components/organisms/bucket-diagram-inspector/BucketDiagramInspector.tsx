@@ -15,6 +15,9 @@ import type {FieldFormState, FieldKind} from "../../../domain/fields/types";
 import {FIELD_REGISTRY, isFieldKind} from "../../../domain/fields/registry";
 import {inferSecurityFromAcl} from "../../../domain/fields/field-acl";
 import type {Field} from "../../../pages/diagram/hooks/useBucketConverter";
+import { idOf, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
+import {usePrincipalKey} from "../../../hooks/usePrincipalKey";
+import {useKeyField} from "../../../hooks/useKeyField";
 
 export type BucketDiagramInspectorProps = {
   bucket: BucketType;
@@ -188,6 +191,8 @@ const EditFieldButton: React.FC<EditFieldButtonProps> = memo(
 EditFieldButton.displayName = "EditFieldButton";
 
 const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, fields, onClose}) => {
+  const principalKey = usePrincipalKey();
+  const keyField = useKeyField(idOf(bucket)!) ?? DEFAULT_KEY_FIELD;
   const [createBucketField] = useCreateBucketFieldMutation();
 
   const getFieldTypeDisplay = useCallback((field: Field) => {
@@ -326,7 +331,7 @@ const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, 
         presetValues: buildPresetValues(property),
         defaultValue: property.default,
         // Rehydrate the field-level ACL so the Security tab reflects the saved rule.
-        securityValues: inferSecurityFromAcl(property.acl)
+        securityValues: inferSecurityFromAcl(property.acl, principalKey)
       };
 
       if (property.type === "multiselect") {
@@ -337,7 +342,7 @@ const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, 
 
       return fieldFormState;
     },
-    [bucket, buildFieldValues, buildPresetValues, addMultiselectFields, addInnerFields]
+    [bucket, buildFieldValues, buildPresetValues, addMultiselectFields, addInnerFields, principalKey]
   );
 
   const updateRequiredArray = useCallback(
@@ -568,7 +573,7 @@ const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, 
         </div>
       </div>
 
-      <span className={styles.bucketId}>{bucket._id}</span>
+      <span className={styles.bucketId}>{idOf(bucket)!}</span>
 
       <div className={styles.body}>
         <div className={styles.fields}>
@@ -584,7 +589,7 @@ const BucketDiagramInspector: React.FC<BucketDiagramInspectorProps> = ({bucket, 
               <span className={styles.fieldName}>{getFieldDisplayName(field)}</span>
               <span className={styles.fieldType}>{getFieldTypeDisplay(field)}</span>
 
-              {field.name !== "_id" && (
+              {field.name !== keyField && (
                 <span className={styles.fieldControls}>
                   <EditFieldButton
                     field={field}

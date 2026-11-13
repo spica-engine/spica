@@ -19,6 +19,7 @@ import {
 } from "../../../store/api/functionApi";
 import type {SpicaFunction} from "../../../store/api/functionApi";
 import styles from "./ImportedFunctionPanel.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 // Imported functions are installed as `@spica-fn/<FunctionName>` dependencies
 // (npm-like, file: linked to the sibling function on disk) and used in code as
@@ -68,7 +69,7 @@ const ImportedFunctionPanel = ({code, onCodeChange, currentFunctionId}: Imported
   const functionsById = useMemo<Record<string, SpicaFunction>>(() => {
     const map: Record<string, SpicaFunction> = {};
     (functionList ?? []).forEach(fn => {
-      if (fn._id) map[fn._id] = fn;
+      if (idOf(fn)) map[idOf(fn)!] = fn;
     });
     return map;
   }, [functionList]);
@@ -106,8 +107,8 @@ const ImportedFunctionPanel = ({code, onCodeChange, currentFunctionId}: Imported
   const selectOptions = useMemo<TypeLabeledValue[]>(() => {
     if (!functionList) return [];
     return functionList
-      .filter(fn => fn._id && fn._id !== currentFunctionId && !importedNameSet.has(fn.name))
-      .map(fn => ({value: fn._id as string, label: fn.name}));
+      .filter(fn => idOf(fn) && idOf(fn) !== currentFunctionId && !importedNameSet.has(fn.name))
+      .map(fn => ({value: idOf(fn) as string, label: fn.name}));
   }, [functionList, currentFunctionId, importedNameSet]);
 
   const handleAdd = useCallback(

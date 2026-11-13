@@ -18,6 +18,7 @@ import {
 } from "./components/BucketNavigatorPopupWrapper";
 import { getMenuItems, navigatorItems } from "../pages/home/sidebarItems";
 import {useAuth} from "../contexts/AuthContext";
+import { idOf } from "../utils/recordKey";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ const Layout = () => {
 
   const [updateBucketOrder] = useUpdateBucketOrderMutation();
 
-  const memoizedBuckets = useMemo(() => buckets, [JSON.stringify(buckets.map(b => b._id))]);
+  const memoizedBuckets = useMemo(() => buckets, [JSON.stringify(buckets.map(b => idOf(b)!))]);
 
   const [localBuckets, setLocalBuckets] = useState(memoizedBuckets);
 
@@ -64,7 +65,7 @@ const Layout = () => {
     try {
       await Promise.all(
         bucketsWithUpdatedOrder.map(bucket =>
-          updateBucketOrder({bucketId: bucket._id, order: bucket.order ?? 0}).unwrap()
+          updateBucketOrder({bucketId: idOf(bucket)!, order: bucket.order ?? 0}).unwrap()
         )
       );
     } catch (error) {
@@ -88,7 +89,7 @@ const Layout = () => {
       items: (localBuckets?.map(i => ({
         ...i,
         section: "bucket",
-        link: `/bucket/${i._id}`,
+        link: `/bucket/${idOf(i)!}`,
         suffixElements: [
           (props: BucketNavigatorPopupWrapperProps) => (
             <BucketNavigatorPopupWrapper {...props} bucket={i} />
@@ -139,7 +140,7 @@ const Layout = () => {
   }, [navigate]);
 
   const handleProfile = useCallback(() => {
-    const identityId = decoded?._id;
+    const identityId = idOf(decoded);
     if (!identityId) return;
     if (location.pathname === "/passport/identity") {
       window.dispatchEvent(new CustomEvent("open-identity-drawer", {detail: {identityId}}));

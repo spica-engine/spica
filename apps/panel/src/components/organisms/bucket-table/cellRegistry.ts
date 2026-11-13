@@ -14,6 +14,7 @@ import {
   LocationCell,
   JsonCell,
   RelationCell,
+  ReadonlyCell,
 } from "./cells";
 
 
@@ -96,6 +97,25 @@ class CellRegistry {
       component: RelationCell,
       defaultValue: null,
     });
+
+    this.register("uuid", {
+      component: ReadonlyCell,
+      defaultValue: null,
+    });
+
+    this.register("integer", {
+      component: NumberCell,
+      defaultValue: 0,
+    });
+
+    this.register("bigint", {
+      component: StringCell,
+      defaultValue: "",
+    });
+  }
+
+  public readonly(): CellTypeConfig {
+    return { component: ReadonlyCell };
   }
 
   public register(type: BucketPropertyType | string, config: CellTypeConfig) {

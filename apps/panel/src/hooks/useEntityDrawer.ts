@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePolicyFormBindings } from "./usePolicyFormBindings";
 import type { TypeProperties, TypeRepresenterValue } from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import { idOf, type SystemRecord } from "../utils/recordKey";
 
-export interface EntityWithPolicies {
-  _id?: string;
+export interface EntityWithPolicies extends SystemRecord {
   policies?: string[];
   [key: string]: any;
 }
@@ -33,7 +33,7 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
   isUpdating,
   onClose,
 }: UseEntityDrawerConfig<TEntity>) {
-  const isEditMode = !!selectedEntity?._id;
+  const isEditMode = !!idOf(selectedEntity);
 
   const [formValues, setFormValues] = useState<TypeRepresenterValue>({
     [nameField]: "",
@@ -107,10 +107,10 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
     try {
       const selectedPolicies = (formValues.policies as string[]) ?? [];
 
-      if (isEditMode && selectedEntity?._id) {
+      if (isEditMode && selectedEntity && idOf(selectedEntity)) {
         const body: Record<string, any> = { [nameField]: nameValue };
         if (password) body.password = password;
-        await updateMutation({ id: selectedEntity._id, body }).unwrap();
+        await updateMutation({ id: idOf(selectedEntity)!, body }).unwrap();
 
         const existingPolicies = selectedEntity.policies ?? [];
         const toAdd = selectedPolicies.filter((p) => !existingPolicies.includes(p));
@@ -119,8 +119,8 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
         setIsSavingPolicies(true);
         try {
           await Promise.all([
-            ...toAdd.map((policyId) => addPolicyMutation({ id: selectedEntity._id!, policyId }).unwrap()),
-            ...toRemove.map((policyId) => removePolicyMutation({ id: selectedEntity._id!, policyId }).unwrap()),
+            ...toAdd.map((policyId) => addPolicyMutation({ id: idOf(selectedEntity)!, policyId }).unwrap()),
+            ...toRemove.map((policyId) => removePolicyMutation({ id: idOf(selectedEntity)!, policyId }).unwrap()),
           ]);
         } finally {
           setIsSavingPolicies(false);
@@ -129,11 +129,11 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
         const createBody: Record<string, any> = { [nameField]: nameValue, password };
         const created = await createMutation(createBody).unwrap();
 
-        if (selectedPolicies.length > 0 && created._id) {
+        if (selectedPolicies.length > 0 && idOf(created)) {
           setIsSavingPolicies(true);
           try {
             await Promise.all(
-              selectedPolicies.map((policyId) => addPolicyMutation({ id: created._id!, policyId }).unwrap())
+              selectedPolicies.map((policyId) => addPolicyMutation({ id: idOf(created)!, policyId }).unwrap())
             );
           } finally {
             setIsSavingPolicies(false);

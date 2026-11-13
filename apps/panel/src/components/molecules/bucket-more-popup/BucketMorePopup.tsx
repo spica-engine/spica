@@ -16,6 +16,7 @@ import BucketLimitationsForm, {
   LIMIT_EXCEED_BEHAVIOUR_OPTIONS,
   type TypeLimitExceedBehaviour
 } from "../bucket-limitations-form/BucketLimitationsForm";
+import { idOf } from "../../../utils/recordKey";
 
 type TypeBucketMorePopup = {
   className?: string;
@@ -61,7 +62,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket, onManageIn
     // Toggle documentSettings - if it exists, remove it; if not, add empty object
     try {
       await updateBucket({
-        id: bucket._id,
+        id: idOf(bucket)!,
         body: {
           title: bucket.title,
           description: bucket.description,
@@ -83,7 +84,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket, onManageIn
   const handleChangeHistory = async () => {
     try {
       await updateBucket({
-        id: bucket._id,
+        id: idOf(bucket)!,
         body: {
           history: !bucket.history
         }

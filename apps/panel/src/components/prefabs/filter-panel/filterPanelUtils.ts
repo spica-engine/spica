@@ -1,5 +1,7 @@
 import type { FilterConditionRow, FilterField, FilterFieldType } from './types';
+import type { DataEngine } from '../../../store/api/statusApi';
 
+import {DEFAULT_KEY_FIELD} from "../../../utils/recordKey";
 export const OPERATORS_BY_TYPE: Record<FilterFieldType, { label: string; value: string }[]> = {
   string: [
     { label: 'contains', value: 'contains' },
@@ -11,6 +13,15 @@ export const OPERATORS_BY_TYPE: Record<FilterFieldType, { label: string; value: 
     { label: 'is not empty', value: 'is not empty' },
   ],
   number: [
+    { label: 'equals', value: 'equals' },
+    { label: 'not equals', value: 'not equals' },
+    { label: 'greater than', value: 'greater than' },
+    { label: 'greater than or equal', value: 'greater than or equal' },
+    { label: 'less than', value: 'less than' },
+    { label: 'less than or equal', value: 'less than or equal' },
+  ],
+  // Values past 2^53 do not survive a JavaScript number, so a bigint is typed, kept and sent as digits.
+  bigint: [
     { label: 'equals', value: 'equals' },
     { label: 'not equals', value: 'not equals' },
     { label: 'greater than', value: 'greater than' },
@@ -53,6 +64,7 @@ export const OPERATORS_BY_TYPE: Record<FilterFieldType, { label: string; value: 
 export const DEFAULT_OPERATOR: Record<FilterFieldType, string> = {
   string: 'contains',
   number: 'equals',
+  bigint: 'equals',
   date: 'equals',
   boolean: 'is',
   enum: 'equals',
@@ -276,7 +288,9 @@ function expressionFor(condition: FilterConditionRow, field: FilterField): strin
     const n = Number(value);
     return isNaN(n) ? null : n;
   };
+  const digits = (): string | null => (/^-?\d+$/.test(value.trim()) ? quoted(value.trim()) : null);
   const literal = (): string | null => {
+    if (field.type === 'bigint') return digits();
     if (field.type === 'number') {
       const n = number();
       return n === null ? null : String(n);
@@ -290,6 +304,7 @@ function expressionFor(condition: FilterConditionRow, field: FilterField): strin
   const compare = (symbol: string, operand: string | null) =>
     operand === null ? null : `${path} ${symbol} ${operand}`;
   const ordered = (symbol: string) => {
+    if (field.type === 'bigint') return compare(symbol, digits());
     const n = number();
     return n === null ? null : `${path} ${symbol} ${n}`;
   };
@@ -375,6 +390,60 @@ export function conditionsToExpression(
   return join(groups, '&&');
 }
 
+export function filterForEngine(
+  engine: DataEngine | undefined,
+  conditions: FilterConditionRow[],
+  fields: FilterField[]
+): Record<string, any> | string | null {
+  return engine === 'postgresql'
+    ? conditionsToExpression(conditions, fields)
+    : conditionsToMongoFilter(conditions, fields);
+}
+
+function matchesStringCondition(item: Record<string, any>, { field, operator, value }: FilterConditionRow): boolean {
+  const actual = String(item[field] ?? '');
+  const actualLower = actual.toLowerCase();
+  const wanted = value.toLowerCase();
+  switch (operator) {
+    case 'contains':
+      return actualLower.includes(wanted);
+    case 'starts with':
+      return actualLower.startsWith(wanted);
+    case 'ends with':
+      return actualLower.endsWith(wanted);
+    case 'equals':
+      return actual === value;
+    case 'not equals':
+      return actual !== value;
+    case 'is empty':
+      return actual === '';
+    case 'is not empty':
+      return actual !== '';
+    default:
+      return true;
+  }
+}
+
+export function matchesConditions(
+  item: Record<string, any>,
+  conditions: FilterConditionRow[],
+  fields: FilterField[]
+): boolean {
+  const known = new Set(fields.map(f => f.key));
+  const active = conditions.filter(c => isConditionActive(c) && known.has(c.field));
+  if (!active.length) return true;
+
+  const results = active.map(c => ({ logicalOp: c.logicalOp, matches: matchesStringCondition(item, c) }));
+  const ops = results.slice(1).map(r => r.logicalOp);
+  if (ops.every(op => op === 'AND')) return results.every(r => r.matches);
+  if (ops.every(op => op === 'OR')) return results.some(r => r.matches);
+
+  const andParts = [results[0].matches];
+  const orParts: boolean[] = [];
+  results.slice(1).forEach(r => (r.logicalOp === 'AND' ? andParts : orParts).push(r.matches));
+  return andParts.every(Boolean) && (orParts.length === 0 || orParts.some(Boolean));
+}
+
 export function combineFilters<T extends Record<string, any> | string>(
   filters: (T | null | undefined)[]
 ): T | undefined {
@@ -420,10 +489,10 @@ export function decodeFilterConditions(param: string | null): FilterConditionRow
 }
 
 // The param value that pins a bucket's list to a single document by id — the
-// target of a relation click, expressed as an ordinary `_id equals` condition so
+// target of a relation click, expressed as an ordinary `<key field> equals` condition so
 // it renders as a removable filter chip like any other.
-export function encodeIdFilterConditions(documentId: string): string {
+export function encodeIdFilterConditions(documentId: string, keyField: string = DEFAULT_KEY_FIELD): string {
   return JSON.stringify([
-    {field: '_id', operator: 'equals', value: documentId, logicalOp: 'AND'} as SerializedCondition
+    {field: keyField, operator: 'equals', value: documentId, logicalOp: 'AND'} as SerializedCondition
   ]);
 }

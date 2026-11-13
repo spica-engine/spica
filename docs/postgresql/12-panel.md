@@ -17,14 +17,14 @@ Makes the admin panel (`apps/panel`) usable against an API that runs on PostgreS
 - The panel follows the API's contract (README, "The backend defines the contract; clients follow it"). When a request the panel sends is not what the contract defines, the panel changes. What the panel needs from the server is not built to fit the panel; it goes under "Requests to other parts".
 - The panel asks the API for the engine (`GET /status/engine`) and writes each filter in that language: MongoDB JSON, or an expression string on PostgreSQL. It never converts one into the other.
 - A request that carries a filter waits until the engine is known.
-- A document's key is read through one place (`useKeyField`), never as a literal `_id`, wherever the document is a **bucket document**. System records (identity, user, policy, api key, function, env var, secret, storage object, activity, webhook, dashboard, strategy) carry their UUID v7 as `_id` on MongoDB and as `id` on PostgreSQL since Part 13. The panel reads it through the engine from `useEngine()`, and the rule editor offers `auth.id` on PostgreSQL and `auth._id` on MongoDB.
+- A document's key is read through one place (`useKeyField`), never as a literal `_id`, wherever the document is a **bucket document**. System records (identity, user, policy, api key, function, env var, secret, storage object, activity, webhook, dashboard, strategy) carry their UUID v7 as `_id` on MongoDB and as `id` on PostgreSQL since Part 13. The panel reads it through one helper, `idOf(record)`, which takes whichever of the two names the record carries, and the rule editor offers `auth.id` on PostgreSQL and `auth._id` on MongoDB.
 - Anything MongoDB-only (the profiler) is hidden on PostgreSQL, not left to fail.
 
 ## Depends on
 
 - **Part 8 (merged):** the engine endpoint, the expression filter, `useEngine`, `useKeyField`, `conditionsToExpression`.
 - **Part 8a (merged):** the system-domain writes the pages rely on.
-- **Part 10:** the realtime socket. The panel's realtime strategy is not in this part.
+- **Part 10 (merged):** the realtime socket speaks the expression language and keys documents by the bucket's key field. The panel's realtime hook is in this part.
 
 ## Provides
 
@@ -36,7 +36,6 @@ Makes the admin panel (`apps/panel`) usable against an API that runs on PostgreS
 
 ## Not this part
 
-- Realtime on PostgreSQL (Part 10): the websocket filter, default sort and chunk reducer.
 - Server changes, except where "Decisions needed" says otherwise.
 
 ## Today
@@ -46,8 +45,8 @@ Makes the admin panel (`apps/panel`) usable against an API that runs on PostgreS
 - Facade lists that take a filter (JSON on MongoDB, an expression on PostgreSQL): identity, user, refresh token, secret, env var, storage (`/storage` and `/storage/browse`), bucket data.
 - Not facade filters: policy, asset, function (`JSONP`), and every `/profile` endpoint. They stay JSON.
 - **`/activity` and `/apikey` ignore `filter`.** Neither controller has the parameter. The panel's filter panels on the Activities and API key pages are no-ops on both engines. `/activity` sorts by `_id` itself.
-- **`/activity` took MongoDB operators in `resource`.** The panel sent `resource={"$all":[module,bucketId],"$in":[documentIds]}`. Part 8a redefines the parameter instead of translating it: `resource` repeated (values the activity's resource list must all hold) and `documentId` repeated (ids of which it must hold any), and changes the panel's `buildActivityFilterOptions` and `getActivities` in the same PR, so the filter never breaks on MongoDB. Nothing is left to do for it here.
-- **Policy filtering is client-side** (`pages/policy/Policy.tsx`) and matches a string against a MongoDB object like `{$regex}`, so any condition returns nothing. Engine-independent.
+- **`/activity` took MongoDB operators in `resource`.** The panel sent `resource={"$all":[module,bucketId],"$in":[documentIds]}`. Part 8a redefines the parameter instead of translating it: `resource` repeated (values the activity's resource list must all hold) and `documentId` repeated (ids of which it must hold any), and changes the panel's `buildActivityFilterOptions` and `getActivities` in the same PR, so the filter never breaks on MongoDB. Nothing is left to do for it here. The panel's `ActivityFilterPopover.tsx` and `buildActivityFilterOptions` are imported nowhere, so they are dead code, and the Activities page only mounts `ActivityActionBar`.
+- **Policy filtering is client-side** (`pages/policy/Policy.tsx`) and matches a string against a MongoDB object like `{$regex}`, so any condition returns nothing. Engine-independent. The server supports a JSON `filter` on `/passport/policy`, but the panel never sends one.
 - Function logs ignore `sort`.
 
 ### Filters the panel builds (outside the bucket page)
@@ -59,9 +58,13 @@ Makes the admin panel (`apps/panel`) usable against an API that runs on PostgreS
 | Storage search, directory listing, file picker, rename | `StorageActionBar`, `hooks/useStorage.ts`, `StorageFileSelect.tsx`, `pages/storage/utils.ts` | both (about 20 `$` operators) |
 | Relation input in the drawer | `hooks/useRelationInputHandlers.tsx` (`$or`/`$regex`)                              | an expression on PostgreSQL                          |
 | Profiler                | `utils/profilerFilter.ts` (11 operators), Observability page                           | MongoDB only (`system.profile`)                      |
-| `StorageContext.tsx`    | filters, never mounted                                                                 | dead code                                           |
+| `StorageContext.tsx`    | filters; the provider is mounted (`main.tsx`) but its hook has no consumers            | dead code                                           |
 
 Every list wrapper in `store/api/*.ts` (13 sites) sends `JSON.stringify(filter)`, which would quote an expression string. Types are `Record<string, any>`.
+
+### System records read as `_id` (about 540 sites)
+
+`useKeyField` is bucket-only and no system-record code asks for the engine, so every page reads the key of an identity, user, policy, api key, function, env var, secret, storage object, activity, webhook, dashboard, strategy, refresh token and bucket schema as `_id`. The sites are TypeScript declarations (about 25 in `store/api/*.ts`, the JWT payload in `types/auth.ts`), RTK tag providers, table columns and selection, drawers (edit-or-create checks), request URLs and bodies, cache patches, the policy module renderers and the policy export, and env var and secret diffing. Two need care: `oziko-ui-kit`'s `TypeFile` pins `_id` for storage items, and the "new policy" drawer uses `_id: ""` as a sentinel. Function logs also sort by `_id` (`FunctionLogView`, `FunctionLogPage`).
 
 ### Bucket documents read as `_id` (about 75 sites in about 17 files)
 
@@ -74,7 +77,7 @@ Every list wrapper in `store/api/*.ts` (13 sites) sends `JSON.stringify(filter)`
 
 ### `_id` sorts left
 
-`useRelationInputHandlers.tsx:58`, `bucketApi.ts:664`, and the realtime hook (Part 10).
+`useRelationInputHandlers.tsx:58`, `bucketApi.ts:663`, `StorageFileSelect.tsx:177`, the function log views, and the realtime hook, which also keys documents by `_id` (4 sites) and sends its filter as quoted JSON.
 
 ### UUID v7 timestamp decoding
 
@@ -88,20 +91,16 @@ On MongoDB it is the display field of a bucket. On PostgreSQL it is the key fiel
 
 Three specs exist (`field-acl.spec.ts`, `filterPanelUtils.spec.ts`, `useBucketSearch.spec.ts`) and import from `@jest/globals`. There is no `apps/panel/jest.config` and no `test` target, so CI does not run them. Hooks, slices, cache patches, the storage and profiler builders, relations, the drawer and every page are untested.
 
-## Decisions needed
+## Decisions
 
-1. **API key, activity and policy filters.**
-   - Remove the filter UI. Smallest, honest, and the UI does nothing today.
-   - Add server support (`filter` on `/apikey` and `/activity`, server-side policy filtering). Useful, and a server change in a panel part.
-   - Keep it as is. Misleading.
-2. **What `bucket.primary` is on PostgreSQL.**
-   - It stays the key, and the panel gets a separate display-field setting for PostgreSQL buckets (a schema change on the bucket, so a server change).
-   - The panel picks the label by its own rule on PostgreSQL (first string property) and ignores `primary` for labels. No schema change, but a rule that differs by engine.
-   - Reuse `primary` for both. Only workable when the key is also readable, which a uuid is not.
-3. **The profiler on PostgreSQL.** Hide the Observability page, or build an equivalent on `pg_stat_statements`. Hiding is this part. The equivalent is its own piece of work and needs the extension on the server.
-4. **A test runner for the panel.** Add a jest config and a `test` target, or move the specs to vitest, which the Vite setup already hints at (`/// <reference types='vitest' />`). Either way CI runs them.
-5. **The storage expression builder.** One builder for `name`, `content.*` and dates, shared by the four storage call sites, or each call site keeps its own.
-6. **Dead code.** Delete `StorageContext.tsx`'s filter helpers, or convert them.
+1. **API key, activity and policy filters.** Remove the filter UI on Activities and API key, which does nothing today. The server is not changed. Policy filtering stays client-side and is fixed to match plain strings.
+2. **What `bucket.primary` is on PostgreSQL.** It stays the key. The panel picks a label by its own rule on PostgreSQL (the first string property) and ignores `primary` for labels. No schema change.
+3. **The profiler on PostgreSQL.** Hidden by the engine until Part 14 builds a `pg_stat_statements` equivalent. Then it follows the server's `features.profiler` (PR 14 below).
+4. **A test runner for the panel.** Jest, with a standalone config, because the specs already import `@jest/globals` and nothing new needs installing. Only pure functions are tested for now.
+5. **The storage expression builder.** One builder shared by the storage call sites.
+6. **Dead code.** `StorageContext.tsx` and `ActivityFilterPopover.tsx` are deleted.
+7. **System-record keys.** All system pages read the key through `idOf`, not just the pages the first draft of this document listed.
+8. **Realtime.** Part 10 has merged, so the panel's realtime hook is in this part.
 
 ## Target architecture
 
@@ -112,37 +111,45 @@ Three specs exist (`field-acl.spec.ts`, `filterPanelUtils.spec.ts`, `useBucketSe
 | `serializeFilter`         | Turns a filter (object or string) into the query parameter. One place.          |
 | Filter builder per engine | `conditionsToMongoFilter` / `conditionsToExpression`, plus a storage builder.   |
 | `useEngine`, `useKeyField`| Already built. The only way to learn the engine and a bucket's key field.      |
+| `idOf(record)`            | Reads a system record's key, whichever of `_id` and `id` it carries.            |
 | Key accessor              | `keyOf(row, keyField)` used by the table, selection, drawer and relations.      |
 | `uuid` field kind         | Renders and edits a uuid key.                                                   |
 
 ## What changes
 
-- **API wrappers:** one serialization helper for the 13 sites, widened types.
-- **System pages:** identity, user and storage write the engine's filter language.
+- **API wrappers:** one serialization helper, widened types.
+- **System pages:** every page reads keys through `idOf`; identity and user write the engine's filter language; the dead filter panels go.
+- **Storage:** one expression builder.
 - **Observability:** hidden on PostgreSQL.
 - **Bucket pages:** rows, selection, drawer and relations use the key field.
-- **Relations:** the related bucket's key field and a label rule for PostgreSQL.
-- **Tests:** the panel's specs run in CI.
+- **Relations:** the related bucket's key field, a label rule for PostgreSQL and a `uuid` field kind.
+- **Realtime:** the hook uses the key field, the default sort and the expression filter.
+- **Tests:** the panel's specs run in CI, and the ratchet covers the panel.
 
 ## PR breakdown
 
-1. A panel test runner, so every later PR brings tests that run.
-2. The filter serialization helper and widened types (13 files, mechanical, behaviour-neutral).
-3. Identity and user filters in the engine's language, with the decision on API key, activity and policy.
-4. Storage filters (about 8 files, a new expression builder), and removal of the dead `StorageContext` code.
-5. Hide the profiler on PostgreSQL.
-6. UUID v7 timestamps: one helper, four call sites.
-7. Bucket row identity (about 11 files): table, columns, selection, page, cache patches, drawer, transformer, activity popover, rule editor. Drops the duplicate `_id` column.
-8. Relations and `bucket.primary` (8 to 10 files), per the decision, with a `uuid` field kind and `encodeIdFilterConditions` using the related key field.
+1. Panel test runner and these corrections.
+2. The filter serialization helper and widened types (15 sites, mechanical, behaviour-neutral).
+3. `idOf` and the `SystemRecord` type.
+4. System-record keys, one PR per domain, behaviour-neutral on MongoDB: (a) identity, user, refresh token; (b) api key, policy; (c) function, env var, secret, function logs; (d) storage and file preview; (e) activity, webhook, dashboard, strategy, login, JWT; (f) bucket schemas.
+5. Identity and user filters in the engine's language; remove the Activities and API key filter UI and `ActivityFilterPopover`; fix the policy filter.
+6. Storage filters (a shared expression builder) and removal of `StorageContext`.
+7. Hide the profiler on PostgreSQL.
+8. UUID v7 timestamps: one helper, four call sites.
+9. Rule editor principal key: `auth.id` or `auth._id` by engine.
+10. Bucket row identity: table, columns, selection, page, cache patches, drawer, transformer. Drops the duplicate `_id` column.
+11. Relations and labels, with a `uuid` field kind and `encodeIdFilterConditions` using the related key field.
+12. Realtime on PostgreSQL.
+13. The key name ratchet covers the panel, and "As built".
+14. After Part 14's endpoints have merged: the profiler gate reads `features.profiler` from `GET /status/engine` instead of the engine name, and the Observability page shows a statements table on PostgreSQL (query, calls, total, mean, max, rows, cache hit ratio), filtered and sorted in the expression language. The hidden routes and the rail item come back when the server reports the profiler on.
 
-Order: 1, 2 first. 3 to 6 are independent. 7 before 8.
+Order: 1 to 3 first. 14 waits for Part 14. 4 needs 3. 5 needs 2. 6 needs 1 and 2. 7 to 9 are independent. 10 needs 3. 11 and 12 need 10. 13 is last.
 
 ## Open questions
 
-- **Drawer create form.** A generated uuid key: show it read-only, or hide it? A caller-supplied key (integer, text) needs an input.
-- **`useBucketSearch` on a bucket with a uuid key column.** Quick search runs a regex over searchable columns, which must exclude uuid columns.
+- **Drawer create form.** A generated uuid key: shown read-only. A caller-supplied key (integer, text) needs an input.
+- **`useBucketSearch` on a bucket with a uuid key column.** Quick search runs a regex over searchable columns, which must exclude uuid, integer and bigint columns.
 - **Export or clipboard of bucket ids.** The survey found none, but a user can copy a key from the table.
-- **Part 10 interplay.** Until realtime works on PostgreSQL, the per-bucket strategy has to fall back to HTTP when the engine is PostgreSQL.
 
 ## Done when
 
@@ -152,4 +159,28 @@ Order: 1, 2 first. 3 to 6 are independent. 7 before 8.
 
 ## As built
 
-_Fill in after the last PR merges._
+Merged as #2225 to #2245 (PRs 1 to 12) and this PR (13). PR 14 waits for Part 14's server work. The panel runs against an API on PostgreSQL and against MongoDB with no change on MongoDB: rows, selection, filters, search, sort, relations, create, edit, delete, realtime, and the identity, user and storage lists work on both engines.
+
+**What exists**
+- `utils/recordKey.ts`: `idOf`, `omitId`, `pickId`, `SystemRecord`, `principalKeyFor(engine)`, `bucketKeyField(engine, bucket)`, `keyOf(row, keyField)`, `omitKey` and `DEFAULT_KEY_FIELD` (MongoDB's key, and the one assumed until the engine is known). Hooks: `useEngine`, `useKeyField(bucketId)`, `usePrincipalKey`, `useFilterBuilder`.
+- `utils/serializeFilter.ts`: a filter object goes out as JSON and an expression string as is. `utils/storageQuery.ts` builds the storage filter in both languages; `utils/realtimeQuery.ts` the realtime sort and filter.
+- `domain/relationTarget.ts`: a related bucket's key field, label field, id extraction and search filter per engine. `domain/filterFieldType.ts` maps a property to a filter field type, including `bigint`, which keeps its digits as a quoted string. `domain/fields/keyKinds.ts` maps `uuid`, `integer` and `bigint` to input kinds and hides a generated key.
+- The panel's specs run with Jest (`apps/panel/jest.config.cjs`) and are picked up by `nx` in CI. Only pure functions are tested.
+- `yarn check:key-names` covers the panel, including `.tsx`.
+
+**Where it differs from the plan**
+- The label on PostgreSQL is the first `string` or `textarea` property that is not the key. `bucket.primary` stays the key there.
+- Relation state in the entry drawer is keyed by the field, not by the related bucket (#2244): two relation fields to one bucket shared a state and the drawer would have saved the wrong value. Relations nested in objects and arrays still key by bucket id.
+- The drawer waits for relation labels before it re-applies the entry (#2242). A deep link used to show a blank tag, on MongoDB too.
+- Saving a document of a PostgreSQL bucket with a relation property failed on the server (`findById` could not resolve the relation target). Fixed in #2243.
+- The profiler is hidden on PostgreSQL by the engine name (#2236); PR 14 replaces that with the server's `features.profiler`.
+- `ProfilerEntry` extends `SystemRecord` and the drawer reads its id through `idOf`.
+
+**Known gaps**
+- The list cell of a onetomany relation renders nothing, and did not before this part.
+- The PostgreSQL API accepts a relation only to a uuid-keyed bucket, so the panel's support for string- and integer-keyed relation targets is untested end to end.
+- `meta.total` of the realtime list is the number of streamed rows.
+
+**Kept literal on purpose (exempt from the ratchet)**
+- `utils/recordKey.ts` and its spec, the one place the key name lives.
+- `types/storage.ts`: `oziko-ui-kit` declares `_id` on `TypeFile`.

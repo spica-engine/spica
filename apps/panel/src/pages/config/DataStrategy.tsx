@@ -17,6 +17,7 @@ import {
   type RelationLabelModeMap
 } from "../../components/prefabs/relation-picker/primaryFieldUtils";
 import styles from "./DataStrategy.module.scss";
+import { idOf } from "../../utils/recordKey";
 
 type RelationFieldToggleProps = {
   fieldKey: string;
@@ -65,7 +66,7 @@ type StrategyRowProps = {
 
 const StrategyRow: React.FC<StrategyRowProps> = React.memo(({bucket}) => {
   const [strategy, setStrategy] = useLocalStorage<BucketDataStrategy>(
-    bucketDataStrategyKey(bucket._id),
+    bucketDataStrategyKey(idOf(bucket)!),
     "http"
   );
 
@@ -77,12 +78,12 @@ const StrategyRow: React.FC<StrategyRowProps> = React.memo(({bucket}) => {
   // Buckets that had the deprecated single-value setting pre-fill every relation
   // field with that choice; otherwise each field defaults to "primary".
   const initialLabelMap = useMemo(
-    () => seedRelationLabelMap(bucket._id, relationFieldKeys),
-    [bucket._id, relationFieldKeys]
+    () => seedRelationLabelMap(idOf(bucket)!, relationFieldKeys),
+    [idOf(bucket)!, relationFieldKeys]
   );
 
   const [labelMap, setLabelMap] = useLocalStorage<RelationLabelModeMap>(
-    relationLabelModeMapKey(bucket._id),
+    relationLabelModeMapKey(idOf(bucket)!),
     initialLabelMap
   );
 
@@ -164,7 +165,7 @@ const DataStrategy = () => {
             </thead>
             <tbody>
               {buckets.map(bucket => (
-                <StrategyRow key={bucket._id} bucket={bucket} />
+                <StrategyRow key={idOf(bucket)!} bucket={bucket} />
               ))}
             </tbody>
           </table>

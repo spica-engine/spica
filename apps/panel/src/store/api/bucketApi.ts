@@ -1,4 +1,7 @@
 import { baseApi } from './baseApi';
+import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
+import { bucketKeyField, idOf, keyOf, type SystemRecord } from "../../utils/recordKey";
+import { statusApi } from "./statusApi";
 
 // Types (migrated from bucketService.ts)
 export type BucketDataType = {
@@ -14,8 +17,7 @@ export type BucketCapabilities = {
   propertyTypes: string[];
 };
 
-export type BucketType = {
-  _id: string;
+export type BucketType = SystemRecord & {
   title: string;
   properties: Properties;
   required?: string[];
@@ -100,7 +102,7 @@ export type BucketDataQueryType = {
   limit?: number;
   sort?: Record<string, number>;
   skip?: number;
-  filter?: Record<string, any> | string;
+  filter?: FilterInput;
 };
 
 export type BucketDataQueryWithIdType = BucketDataQueryType & { bucketId: string };
@@ -192,7 +194,7 @@ export const bucketApi = baseApi.injectEndpoints({
       limit?: number;
       sort?: Record<string, number>;
       skip?: number;
-      filter?: Record<string, any> | string;
+      filter?: FilterInput;
     }>({
       query: ({ bucketId, ...params }) => {
         const queryParams = new URLSearchParams();
@@ -210,10 +212,7 @@ export const bucketApi = baseApi.injectEndpoints({
         if (params.skip != null) queryParams.append('skip', String(params.skip));
         if (params.sort) queryParams.append('sort', JSON.stringify(params.sort));
         if (params.filter) {
-          queryParams.append(
-            'filter',
-            typeof params.filter === 'string' ? params.filter : JSON.stringify(params.filter)
-          );
+          queryParams.append('filter', serializeFilter(params.filter));
         }
 
         const qs = queryParams.toString();
@@ -307,7 +306,7 @@ export const bucketApi = baseApi.injectEndpoints({
       onQueryStarted: async ({ id, body }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const bucket = draft.find((b) => b._id === id);
+            const bucket = draft.find((b) => idOf(b) === id);
             if (bucket) {
               Object.assign(bucket, body);
             }
@@ -337,7 +336,7 @@ export const bucketApi = baseApi.injectEndpoints({
       onQueryStarted: async (id, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            return draft.filter((bucket) => bucket._id !== id);
+            return draft.filter((bucket) => idOf(bucket) !== id);
           })
         );
 
@@ -367,7 +366,7 @@ export const bucketApi = baseApi.injectEndpoints({
       onQueryStarted: async ({ bucketId, category }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const bucket = draft.find((b) => b._id === bucketId);
+            const bucket = draft.find((b) => idOf(b) === bucketId);
             if (bucket) {
               bucket.category = category;
             }
@@ -400,7 +399,7 @@ export const bucketApi = baseApi.injectEndpoints({
       onQueryStarted: async ({ bucketId, order }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const bucket = draft.find((b) => b._id === bucketId);
+            const bucket = draft.find((b) => idOf(b) === bucketId);
             if (bucket) {
               bucket.order = order;
             }
@@ -418,19 +417,19 @@ export const bucketApi = baseApi.injectEndpoints({
     // Create bucket field (update bucket properties)
     createBucketField: builder.mutation<BucketType, BucketType>({
       query: (modifiedBucket) => ({
-        url: `bucket/${modifiedBucket._id}`,
+        url: `bucket/${idOf(modifiedBucket)!}`,
         method: 'PUT',
         body: modifiedBucket,
       }),
       invalidatesTags: (result, error, bucket) => [
-        { type: 'BucketData', id: bucket._id },
+        { type: 'BucketData', id: idOf(bucket)! },
       ],
       // Optimistic update for immediate UI response
       onQueryStarted: async (modifiedBucket, { dispatch, queryFulfilled }) => {
         // Optimistically update the cache
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const bucketIndex = draft.findIndex((b) => b._id === modifiedBucket._id);
+            const bucketIndex = draft.findIndex((b) => idOf(b) === idOf(modifiedBucket));
             if (bucketIndex !== -1) {
               draft[bucketIndex] = { ...draft[bucketIndex], ...modifiedBucket };
             }
@@ -442,7 +441,7 @@ export const bucketApi = baseApi.injectEndpoints({
           // Replace optimistic update with server response
           dispatch(
             bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-              const bucketIndex = draft.findIndex((b) => b._id === updatedBucket._id);
+              const bucketIndex = draft.findIndex((b) => idOf(b) === idOf(updatedBucket));
               if (bucketIndex !== -1) {
                 draft[bucketIndex] = updatedBucket;
               }
@@ -461,19 +460,19 @@ export const bucketApi = baseApi.injectEndpoints({
       newRules: { write: string; read: string } 
     }>({
       query: ({ bucket, newRules }) => ({
-        url: `bucket/${bucket._id}`,
+        url: `bucket/${idOf(bucket)!}`,
         method: 'PUT',
         body: { ...bucket, acl: newRules },
       }),
       invalidatesTags: (result, error, { bucket }) => [
-        { type: 'Bucket', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
         'Bucket',
       ],
       // Optimistic update
       onQueryStarted: async ({ bucket, newRules }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const foundBucket = draft.find((b) => b._id === bucket._id);
+            const foundBucket = draft.find((b) => idOf(b) === idOf(bucket));
             if (foundBucket) {
               foundBucket.acl = newRules;
             }
@@ -491,12 +490,12 @@ export const bucketApi = baseApi.injectEndpoints({
     // Delete bucket history
     deleteBucketHistory: builder.mutation<{ message: string }, BucketType>({
       query: (bucket) => ({
-        url: `bucket/${bucket._id}/history`,
+        url: `bucket/${idOf(bucket)!}/history`,
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, bucket) => [
-        { type: 'Bucket', id: bucket._id },
-        { type: 'BucketData', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
+        { type: 'BucketData', id: idOf(bucket)! },
         'Bucket',
       ],
     }),
@@ -504,7 +503,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket history setting
     updateBucketHistory: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `bucket/${bucket._id}`,
+        url: `bucket/${idOf(bucket)!}`,
         method: 'PUT',
         body: {
           ...bucket,
@@ -512,14 +511,14 @@ export const bucketApi = baseApi.injectEndpoints({
         },
       }),
       invalidatesTags: (result, error, bucket) => [
-        { type: 'Bucket', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
         'Bucket',
       ],
       // Optimistic update
       onQueryStarted: async (bucket, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const foundBucket = draft.find((b) => b._id === bucket._id);
+            const foundBucket = draft.find((b) => idOf(b) === idOf(bucket));
             if (foundBucket) {
               foundBucket.history = !foundBucket.history;
             }
@@ -537,7 +536,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket readonly setting
     updateBucketReadonly: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `bucket/${bucket._id}`,
+        url: `bucket/${idOf(bucket)!}`,
         method: 'PUT',
         body: {
           ...bucket,
@@ -545,14 +544,14 @@ export const bucketApi = baseApi.injectEndpoints({
         },
       }),
       invalidatesTags: (result, error, bucket) => [
-        { type: 'Bucket', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
         'Bucket',
       ],
       // Optimistic update
       onQueryStarted: async (bucket, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const foundBucket = draft.find((b) => b._id === bucket._id);
+            const foundBucket = draft.find((b) => idOf(b) === idOf(bucket));
             if (foundBucket) {
               foundBucket.readOnly = !foundBucket.readOnly;
             }
@@ -576,20 +575,20 @@ export const bucketApi = baseApi.injectEndpoints({
         delete (body as any).index;
         
         return {
-          url: `bucket/${bucket._id}`,
+          url: `bucket/${idOf(bucket)!}`,
           method: 'PUT',
           body,
         };
       },
       invalidatesTags: (result, error, { bucket }) => [
-        { type: 'Bucket', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
         'Bucket',
       ],
       // Optimistic update
       onQueryStarted: async ({ newTitle, bucket }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const foundBucket = draft.find((b) => b._id === bucket._id);
+            const foundBucket = draft.find((b) => idOf(b) === idOf(bucket));
             if (foundBucket) {
               foundBucket.title = newTitle;
             }
@@ -620,12 +619,12 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket limitation fields
     updateBucketLimitationFields: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `bucket/${bucket._id}`,
+        url: `bucket/${idOf(bucket)!}`,
         method: 'PUT',
         body: bucket,
       }),
       invalidatesTags: (result, error, bucket) => [
-        { type: 'Bucket', id: bucket._id },
+        { type: 'Bucket', id: idOf(bucket)! },
         'Bucket',
       ],
     }),
@@ -644,11 +643,13 @@ export const bucketApi = baseApi.injectEndpoints({
       // Insert the created entry into every cached getBucketData variation for this
       // bucket (each keyed by its full query args) so it appears immediately instead
       // of only after the invalidation refetch. Patched after queryFulfilled because
-      // the server assigns the _id; the refetch reconciles ordering/filter edge cases.
+      // the server assigns the key; the refetch reconciles ordering/filter edge cases.
       onQueryStarted: async ({ bucketId }, { dispatch, queryFulfilled, getState }) => {
         try {
           const { data: newEntry } = await queryFulfilled;
           const queries = (getState() as any)[bucketApi.reducerPath]?.queries ?? {};
+          const keyField = keyFieldInState(getState(), bucketId);
+          if (!keyField) return;
 
           for (const cacheKey in queries) {
             const cached = queries[cacheKey];
@@ -657,10 +658,10 @@ export const bucketApi = baseApi.injectEndpoints({
 
             dispatch(
               bucketApi.util.updateQueryData('getBucketData', cached.originalArgs, (draft) => {
-                if (draft.data.some((entry) => entry._id === newEntry._id)) return;
+                if (draft.data.some((entry) => keyOf(entry, keyField) === keyOf(newEntry, keyField))) return;
                 // Newest-first is the default sort, so prepend; only an explicit
-                // ascending _id sort appends. Any other sort the refetch corrects.
-                const ascById = (cached.originalArgs as any)?.sort?._id === 1;
+                // ascending sort on the key appends. Any other sort the refetch corrects.
+                const ascById = (cached.originalArgs as any)?.sort?.[keyField] === 1;
                 if (ascById) draft.data.push(newEntry);
                 else draft.data.unshift(newEntry);
                 if (draft.meta && typeof draft.meta.total === 'number') {
@@ -695,6 +696,7 @@ export const bucketApi = baseApi.injectEndpoints({
       onQueryStarted: async ({ bucketId, entryId, data }, { dispatch, queryFulfilled, getState }) => {
         const patchResults: { undo: () => void }[] = [];
         const queries = (getState() as any)[bucketApi.reducerPath]?.queries ?? {};
+        const keyField = keyFieldInState(getState(), bucketId);
 
         for (const cacheKey in queries) {
           const cached = queries[cacheKey];
@@ -704,7 +706,7 @@ export const bucketApi = baseApi.injectEndpoints({
           patchResults.push(
             dispatch(
               bucketApi.util.updateQueryData('getBucketData', cached.originalArgs, (draft) => {
-                const entryIndex = draft.data.findIndex((entry) => entry._id === entryId);
+                const entryIndex = draft.data.findIndex((entry) => keyOf(entry, keyField) === String(entryId));
                 if (entryIndex !== -1) {
                   draft.data[entryIndex] = { ...draft.data[entryIndex], ...data };
                 }
@@ -740,6 +742,7 @@ export const bucketApi = baseApi.injectEndpoints({
       // resurrecting the row.
       onQueryStarted: async ({ entryId, bucketId }, { dispatch, getState }) => {
         const queries = (getState() as any)[bucketApi.reducerPath]?.queries ?? {};
+        const keyField = keyFieldInState(getState(), bucketId);
 
         for (const cacheKey in queries) {
           const cached = queries[cacheKey];
@@ -748,7 +751,7 @@ export const bucketApi = baseApi.injectEndpoints({
 
           dispatch(
             bucketApi.util.updateQueryData('getBucketData', cached.originalArgs, (draft) => {
-              const entryIndex = draft.data.findIndex((entry) => entry._id === entryId);
+              const entryIndex = draft.data.findIndex((entry) => keyOf(entry, keyField) === String(entryId));
               if (entryIndex !== -1) {
                 draft.data.splice(entryIndex, 1);
                 if (draft.meta && typeof draft.meta.total === 'number') {
@@ -813,7 +816,7 @@ export const bucketApi = baseApi.injectEndpoints({
 
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
-            const foundBucket = draft.find((b) => b._id === bucketId);
+            const foundBucket = draft.find((b) => idOf(b) === bucketId);
             if (foundBucket) {
               foundBucket.properties = updatedProperties;
               foundBucket.required = updatedRequired;
@@ -862,6 +865,12 @@ export const {
   useGetBucketDataProfileQuery,
   useLazyGetBucketDataProfileQuery,
 } = bucketApi;
+
+function keyFieldInState(state: any, bucketId: string): string | undefined {
+  const engine = statusApi.endpoints.getEngine.select()(state)?.data?.engine;
+  const bucket = bucketApi.endpoints.getBucket.select(bucketId)(state)?.data;
+  return bucketKeyField(engine, bucket);
+}
 
 export const bucketApiReducerPath = bucketApi.reducerPath;
 export const bucketApiMiddleware = bucketApi.middleware;

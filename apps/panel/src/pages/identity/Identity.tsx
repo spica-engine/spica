@@ -14,13 +14,15 @@ import styles from "../shared/EntityPage.module.scss";
 import bucketStyles from "../bucket/Bucket.module.scss";
 import { useLocation, useNavigate } from "react-router-dom";
 import IdentityActionBar from "../../components/molecules/identity-action-bar/IdentityActionBar";
+import { idOf } from "../../utils/recordKey";
+import type { FilterInput } from "../../utils/serializeFilter";
 
 const PAGE_SIZE = 20;
 
 const Identity = () => {
   const [skip, setSkip] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
+  const [appliedFilter, setAppliedFilter] = useState<FilterInput | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -83,7 +85,7 @@ const Identity = () => {
 
   const policyNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    (policies ?? []).forEach((p: Policy) => map.set(p._id, p.name));
+    (policies ?? []).forEach((p: Policy) => map.set(idOf(p)!, p.name));
     return map;
   }, [policies]);
 
@@ -106,10 +108,10 @@ const Identity = () => {
     () => [
       {
         header: <FlexElement>#</FlexElement>,
-        key: "_id",
+        key: "recordId",
         width: "220px",
         minWidth: "220px",
-        renderCell: ({ row }) => <span>{row._id}</span>,
+        renderCell: ({ row }) => <span>{idOf(row)}</span>,
       },
       {
         header: <FlexElement>Identifier</FlexElement>,
@@ -189,7 +191,7 @@ const Identity = () => {
     return allItems.filter(
       (item) =>
         item.identifier?.toLowerCase().includes(q) ||
-        item._id?.toLowerCase().includes(q)
+        idOf(item)?.toLowerCase().includes(q)
     );
   }, [allItems, searchQuery]);
 

@@ -10,6 +10,7 @@ import {
 import FieldSecurityEditor, {
   type FieldSecurity
 } from "../field-security-editor/FieldSecurityEditor";
+import {usePrincipalKey} from "../../../hooks/usePrincipalKey";
 
 type FieldSecurityOverviewProps = {
   bucket: BucketType;
@@ -87,6 +88,7 @@ const FieldSecurityOverview: FC<FieldSecurityOverviewProps> = ({
   onClose,
   visible = true
 }) => {
+  const principalKey = usePrincipalKey();
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [pending, setPending] = useState<FieldSecurity | null>(null);
   const [saving, setSaving] = useState(false);
@@ -109,10 +111,10 @@ const FieldSecurityOverview: FC<FieldSecurityOverviewProps> = ({
   const handleEdit = useCallback(
     (fieldKey: string) => {
       const acl = (bucket.properties?.[fieldKey] as {acl?: string})?.acl;
-      setPending(inferSecurityFromAcl(acl));
+      setPending(inferSecurityFromAcl(acl, principalKey));
       setEditingKey(fieldKey);
     },
-    [bucket.properties]
+    [bucket.properties, principalKey]
   );
 
   const handleCancelEdit = useCallback(() => {

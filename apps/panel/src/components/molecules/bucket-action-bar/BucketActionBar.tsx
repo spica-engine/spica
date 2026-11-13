@@ -14,6 +14,10 @@ import FilterPanel from "../../prefabs/filter-panel/FilterPanel";
 import SortPanel from "../../prefabs/sort-panel/SortPanel";
 import type {FilterField, FilterConditionRow, SortField} from "../../prefabs/filter-panel/types";
 import {isConditionActive, formatConditionValue} from "../../prefabs/filter-panel/filterPanelUtils";
+import { idOf, keyOf, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
+import { relatedReferences } from "./relatedReferences";
+import { useBucketLookup } from "../../../contexts/BucketLookupContext";
+import { useKeyField } from "../../../hooks/useKeyField";
 
 type BucketActionBarProps = {
   onRefresh: () => Promise<BucketDataType | void>;
@@ -53,30 +57,25 @@ const generateErrorMessage = (failedIds: string[]): string | null => {
 const DeleteWarningParagraph = ({
   selectedEntries,
   dependentRelations,
-  bucketData
+  bucketData,
+  keyField,
+  relatedKeyField
 }: {
   selectedEntries: Set<string>;
   dependentRelations: Property[];
   bucketData: Record<string, any>[];
+  keyField: string;
+  relatedKeyField: (bucketId: string | undefined) => string | undefined;
 }) => {
   const count = selectedEntries.size;
   const isSingle = count === 1;
 
-  const relationTitles = dependentRelations.map(relation => relation.title);
   const dependentEntries =
-    dependentRelations.length > 0 ? bucketData.filter(entry => selectedEntries.has(entry._id)) : [];
+    dependentRelations.length > 0 ? bucketData.filter(entry => selectedEntries.has(keyOf(entry, keyField))) : [];
 
-  const relatedIds = dependentEntries.flatMap(entry => {
-    return relationTitles.flatMap(title => {
-      const fieldValue = entry[title];
-      const relationBucketId = dependentRelations.find(r => r.title === title)?.bucketId;
-      if (Array.isArray(fieldValue)) {
-        return fieldValue.map(item => `${relationBucketId}/${item._id}`);
-      }
-
-      return `${relationBucketId}/${fieldValue?._id}` || [];
-    });
-  });
+  const relatedIds = dependentEntries.flatMap(entry =>
+    relatedReferences(entry, dependentRelations, relatedKeyField)
+  );
 
   const uniqueRelatedIds = [...new Set(relatedIds)];
   const dependentCount = uniqueRelatedIds.length;
@@ -122,7 +121,10 @@ const BucketActionBar = ({
   deleteBucketEntries
 }: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
-  const {selectedEntries, deselectEntry} = useEntrySelection(bucket._id);
+  const keyField = useKeyField(idOf(bucket)!) ?? DEFAULT_KEY_FIELD;
+  const bucketLookup = useBucketLookup();
+  const keyColumnKey = (bucket.properties?.[keyField] as {title?: string} | undefined)?.title ?? keyField;
+  const {selectedEntries, deselectEntry} = useEntrySelection(idOf(bucket)!);
 
   const [isColumnsOpen, setIsColumnsOpen] = useState(false);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
@@ -190,7 +192,7 @@ const BucketActionBar = ({
   // filter lives in the URL now, so it clears naturally when the route changes.
   useEffect(() => {
     setSearchValue("");
-  }, [bucket?._id]);
+  }, [idOf(bucket)]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -235,7 +237,7 @@ const BucketActionBar = ({
     setDeleteEntryError(null);
     try {
       const entryIds = Array.from(selectedEntries);
-      const {failed: failedEntryIds, succeeded: deletedEntryIds} = await deleteBucketEntries(entryIds, bucket._id);
+      const {failed: failedEntryIds, succeeded: deletedEntryIds} = await deleteBucketEntries(entryIds, idOf(bucket)!);
 
       deletedEntryIds.forEach(id => deselectEntry(id));
       await onRefresh();
@@ -265,14 +267,14 @@ const BucketActionBar = ({
   };
 
   const {allColumnsVisible, someColumnsVisible, hiddenColumnsCount} = useMemo(() => {
-    const {_id, ...otherColumnsVisibility} = visibleColumns;
+    const {[keyColumnKey]: _keyVisibility, ...otherColumnsVisibility} = visibleColumns;
     const otherColumnsValues = Object.values(otherColumnsVisibility);
     const allColumnsVisible = otherColumnsValues.every(isVisible => isVisible);
     const someColumnsVisible =
       !allColumnsVisible && otherColumnsValues.some(isVisible => isVisible);
     const hiddenColumnsCount = otherColumnsValues.filter(isVisible => !isVisible).length;
     return {allColumnsVisible, someColumnsVisible, hiddenColumnsCount};
-  }, [visibleColumns]);
+  }, [visibleColumns, keyColumnKey]);
 
   return (
     <>
@@ -413,7 +415,7 @@ const BucketActionBar = ({
                 <div className={styles.columnList}>
                   {columns.map(col => {
                     const isVisible = visibleColumns[col.key];
-                    const isLocked = col.key === "_id";
+                    const isLocked = col.key === keyColumnKey;
                     return (
                       <div
                         key={col.key}
@@ -508,6 +510,8 @@ const BucketActionBar = ({
                 selectedEntries={selectedEntries}
                 dependentRelations={dependentRelations}
                 bucketData={bucketData}
+                keyField={keyField}
+                relatedKeyField={bucketId => (bucketId ? bucketLookup.getBucketKeyField(bucketId) : undefined)}
               />
               <span>
                 Please type <strong>agree</strong> to confirm deletion.

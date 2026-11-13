@@ -1,8 +1,9 @@
 import { baseApi } from './baseApi';
+import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
 import type { AuthFactorMeta, StartFactorVerificationResponse } from './identityApi';
+import { type SystemRecord } from "../../utils/recordKey";
 
-export interface ProfilerEntry {
-  _id?: string;
+export interface ProfilerEntry extends SystemRecord {
   op: "command" | "count" | "distinct" | "geoNear" | "getMore" | "group" | "insert" | "mapReduce" | "query" | "remove" | "update";
   ns: string;
   command: Record<string, any>;
@@ -26,14 +27,12 @@ export interface ProfilerQueryParams {
   sort?: Record<string, 1 | -1>;
 }
 
-export interface SignUpStrategy {
-  _id: string;
+export interface SignUpStrategy extends SystemRecord {
   title: string;
   type: string;
 }
 
-export interface User {
-  _id?: string;
+export interface User extends SystemRecord {
   username: string;
   password?: string;
   policies?: string[];
@@ -74,7 +73,7 @@ export const userApi = baseApi.injectEndpoints({
       limit?: number;
       skip?: number;
       sort?: Record<string, 1 | -1>;
-      filter?: Record<string, any>;
+      filter?: FilterInput;
       paginate?: boolean;
     } | void>({
       query: (options = {}) => {
@@ -85,7 +84,7 @@ export const userApi = baseApi.injectEndpoints({
         if (limit != null) params.append('limit', String(limit));
         if (skip != null) params.append('skip', String(skip));
         if (sort) params.append('sort', JSON.stringify(sort));
-        if (filter) params.append('filter', JSON.stringify(filter));
+        if (filter) params.append('filter', serializeFilter(filter));
 
         const qs = params.toString();
         return qs ? `passport/user?${qs}` : 'passport/user';

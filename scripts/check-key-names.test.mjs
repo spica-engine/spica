@@ -75,7 +75,7 @@ describe("check-key-names", () => {
       write("packages/database/src/a.ts", content);
       write("packages/interface/database/src/a.ts", content);
       write("packages/devkit/database/src/a.ts", content);
-      write("apps/panel/src/a.ts", content);
+      write("apps/panel/src/utils/recordKey.ts", content);
       write("packages/filter/src/a.ts", content);
       write("packages/api/bucket/graphql/src/a.ts", content);
       write("packages/devkit/bucket/src/a.ts", content);
@@ -88,6 +88,17 @@ describe("check-key-names", () => {
       assert.deepEqual(countKeyLiterals(root), {
         "packages/data/postgresql/src/a.ts": 1,
         "packages/sync/src/other.ts": 1
+      });
+    });
+
+    it("should scan the panel's components and pages, not only its helpers", () => {
+      write("apps/panel/src/utils/recordKey.ts", `a._id;\n`);
+      write("apps/panel/src/pages/Bucket.tsx", `a._id;\n`);
+      write("apps/panel/src/hooks/useThing.ts", `a._id;\n`);
+
+      assert.deepEqual(countKeyLiterals(root), {
+        "apps/panel/src/pages/Bucket.tsx": 1,
+        "apps/panel/src/hooks/useThing.ts": 1
       });
     });
   });

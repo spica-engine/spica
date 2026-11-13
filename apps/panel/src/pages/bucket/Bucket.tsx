@@ -25,15 +25,20 @@ import {
   encodeFilterConditions,
   isConditionActive
 } from "../../components/prefabs/filter-panel/filterPanelUtils";
+import { bucketKeyField, idOf, keyOf, DEFAULT_KEY_FIELD } from "../../utils/recordKey";
+import { useKeyField } from "../../hooks/useKeyField";
+import { relationLabelField } from "../../domain/relationTarget";
+import { filterFieldTypeOf } from "../../domain/filterFieldType";
 
 
 function keyFilterField(bucket: BucketType, engine?: DataEngine): FilterField {
-  if (engine !== "postgresql" || !bucket.primary) return {key: "_id", label: "ID", type: "id"};
-  const type = (bucket.properties as any)?.[bucket.primary]?.type;
+  const keyField = bucketKeyField(engine, bucket);
+  if (engine !== "postgresql" || !keyField) return {key: DEFAULT_KEY_FIELD, label: "ID", type: "id"};
+  const type = (bucket.properties as any)?.[keyField]?.type;
   return {
-    key: bucket.primary,
+    key: keyField,
     label: "ID",
-    type: type === "integer" || type === "bigint" ? "number" : type === "string" ? "string" : "id"
+    type: type === "integer" ? "number" : type === "bigint" ? "bigint" : type === "string" ? "string" : "id"
   };
 }
 
@@ -68,7 +73,7 @@ export default function Bucket() {
   );
 
   const bucket = useMemo(
-    () => buckets?.find((i: BucketType) => i._id === bucketId),
+    () => buckets?.find((i: BucketType) => idOf(i) === bucketId),
     [buckets, bucketId]
   );
 
@@ -78,8 +83,9 @@ export default function Bucket() {
     }
   }, [bucketId, dispatch]);
 
+  const keyField = useKeyField(bucketId) ?? DEFAULT_KEY_FIELD;
   const {formattedColumns, visibleColumns, searchableColumns, toggleColumn} =
-    useBucketColumns(bucket, bucketId);
+    useBucketColumns(bucket, bucketId, keyField);
 
   const engine = useEngine();
   const {searchQuery, handleSearch} = useBucketSearch(bucketId, searchableColumns, engine);
@@ -94,14 +100,7 @@ export default function Bucket() {
     const derived = Object.entries(bucket.properties)
       .filter(([key, prop]: [string, any]) => !skipTypes.has(prop.type) && key !== idField.key)
       .map(([key, prop]: [string, any]): FilterField => {
-        const strTypes = new Set(["string", "textarea", "color", "richtext", "hash", "encrypted"]);
-        const fieldType: FilterField["type"] =
-          prop.type === "relation" ? "relation" :
-          strTypes.has(prop.type) ? "string" :
-          prop.type === "number" ? "number" :
-          prop.type === "date" ? "date" :
-          prop.type === "boolean" ? "boolean" :
-          prop.type === "multiselect" && prop.items?.enum ? "enum" : "string";
+        const fieldType = filterFieldTypeOf(prop);
         const base: FilterField = {key, label: prop.title || key, type: fieldType};
         if (fieldType === "enum" && prop.items?.enum) {
           base.enumOptions = (prop.items.enum as string[]).map(v => ({label: v, value: v}));
@@ -144,8 +143,8 @@ export default function Bucket() {
   // is shareable. Prefer the already-loaded row (its relations are resolved); fall
   // back to fetching by id for deep links and for docs outside the current page.
   const loadedEntry = useMemo(
-    () => (entryId ? (bucketData?.data ?? []).find((row: any) => row._id === entryId) ?? null : null),
-    [entryId, bucketData]
+    () => (entryId ? (bucketData?.data ?? []).find((row: any) => keyOf(row, keyField) === entryId) ?? null : null),
+    [entryId, bucketData, keyField]
   );
   const {data: fetchedEntry} = useGetBucketEntryQuery(
     {bucketId, entryId},
@@ -171,17 +170,23 @@ export default function Bucket() {
     const idToTitleMap = new Map<string, string>();
     const idToPropertiesMap = new Map<string, Record<string, any>>();
     const idToPrimaryKeyMap = new Map<string, string>();
+    const idToKeyFieldMap = new Map<string, string>();
     const relationLabelCache = new Map<string, string>(); // Key: "bucketId:documentId"
 
     for (const bucket of buckets) {
-      if (bucket._id && bucket.title) {
-        idToTitleMap.set(bucket._id, bucket.title);
+      if (idOf(bucket) && bucket.title) {
+        idToTitleMap.set(idOf(bucket)!, bucket.title);
       }
-      if (bucket._id && bucket.properties) {
-        idToPropertiesMap.set(bucket._id, bucket.properties);
+      if (idOf(bucket) && bucket.properties) {
+        idToPropertiesMap.set(idOf(bucket)!, bucket.properties);
       }
-      if (bucket._id && bucket.primary) {
-        idToPrimaryKeyMap.set(bucket._id, bucket.primary);
+      const labelField = relationLabelField(engine, bucket);
+      if (idOf(bucket) && labelField) {
+        idToPrimaryKeyMap.set(idOf(bucket)!, labelField);
+      }
+      const relatedKeyField = bucketKeyField(engine, bucket);
+      if (idOf(bucket) && relatedKeyField) {
+        idToKeyFieldMap.set(idOf(bucket)!, relatedKeyField);
       }
     }
     
@@ -202,9 +207,12 @@ export default function Bucket() {
       },
       getBucketPrimaryKey(bucketId: string): string | undefined {
         return idToPrimaryKeyMap.get(bucketId);
+      },
+      getBucketKeyField(bucketId: string): string | undefined {
+        return idToKeyFieldMap.get(bucketId);
       }
     };
-  }, [buckets]);
+  }, [buckets, engine]);
   
   const deleteBucketEntries = useCallback(
     async (entryIds: string[], bucketId: string): Promise<{failed: string[]; succeeded: string[]}> => {
@@ -242,7 +250,7 @@ export default function Bucket() {
             );
             return subscription
               .unwrap()
-              .then((entry: any) => Boolean(entry && entry._id))
+              .then((entry: any) => Boolean(entry && keyOf(entry, keyField)))
               .finally(() => subscription.unsubscribe());
           })
         );
@@ -261,16 +269,17 @@ export default function Bucket() {
 
       return {succeeded, failed};
     },
-    [deleteBucketEntry, dispatch]
+    [deleteBucketEntry, dispatch, keyField]
   );
 
   // Preserve the active `?filter=` (and any other search params) when opening the
   // drawer — the filter is the URL-owned source of truth, so dropping it here would
   // wipe it from the list, and handleEditDrawerClose would then re-append nothing.
   const handleExpandRow = useCallback((row: Record<string, any>) => {
-    if (!bucketId || !row?._id) return;
-    navigate(`/bucket/${bucketId}/${row._id}${location.search}`);
-  }, [bucketId, navigate, location.search]);
+    const rowKey = keyOf(row, keyField);
+    if (!bucketId || !rowKey) return;
+    navigate(`/bucket/${bucketId}/${rowKey}${location.search}`);
+  }, [bucketId, navigate, location.search, keyField]);
 
   const handleDataChange = useCallback(
     (rowId: string, propertyKey: string, newValue: any) => {

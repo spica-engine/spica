@@ -25,6 +25,7 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 | [11 Devkit](./11-devkit.md)                                                | 1, 5         |
 | [12 Admin panel](./12-panel.md)                                            | 8, 8a, 10    |
 | [13 Key names](./13-key-names.md)                                          | 3, 5, 8a, 9, 10 |
+| [14 Query profiling](./14-query-profiling.md)                              | 1, 5, 12     |
 
 ## Rules for every PR
 
@@ -33,7 +34,7 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 - **MongoDB stays green.** Existing MongoDB test suites pass unchanged in every PR.
 - **New code brings its own tests.** PostgreSQL code adds tests that run on PostgreSQL in CI. Shared behaviour gets contract cases that run on both engines.
 - **Specs of a part's domain are classified.** When a part makes a domain work on PostgreSQL, every spec in that domain either runs through `contractSuite` on both engines or declares `mongoOnly("reason")`. `yarn check:engine-specs --strict --under=<path>/` must list nothing for the domain before the part's last PR merges. Keep the trailing slash, or the prefix also matches sibling directories.
-- **PostgreSQL was experimental** until Parts 0 to 10 had merged. Part 10 removed the warning and the markings in the options and the chart. The devkit (Part 11) and the admin panel (Part 12) follow the backend and are still to come.
+- **PostgreSQL was experimental** until Parts 0 to 10 had merged. Part 10 removed the warning and the markings in the options and the chart. The admin panel (Part 12) has followed; the devkit (Part 11) is still to come.
 - **Keep the docs true.** The last PR of a part fills in that part's "As built" section. If a decision changes during review, update it in the part document and in the decisions table below.
 
 ## Prompt for a part session
@@ -70,7 +71,7 @@ Every part is delivered as a series of small PRs. A part starts only after the p
 | What a caller filter may contain | The Spica expression language, compiled to SQL with bound values and never pasted into a query. It cannot name another table or read `auth`. Written in Part 8. |
 | System record ids             | A UUID v7 `id` primary key. The caller may provide it, and PostgreSQL generates it otherwise. MongoDB ObjectIds are not supported. |
 | Minimum PostgreSQL version    | 18. System tables use its built-in `uuidv7()`.                                                                  |
-| Key name in responses         | `_id` on MongoDB, `id` on PostgreSQL. The panel will adapt later, outside this plan.                            |
+| Key name in responses         | `_id` on MongoDB, `id` on PostgreSQL. The panel reads it through `idOf` and the bucket's key field (Part 12).   |
 | Principal key in rules        | Rule text names it as the engine does: `auth.id` on PostgreSQL, `auth._id` on MongoDB. No alias, no conversion. |
 | Bucket data primary keys      | Each bucket's owner picks the primary key field, its type and whether it is generated.                          |
 | Chart database roles          | Like MongoDB, two roles: `root`, a superuser, and `spica`, an unprivileged role that owns the database. The API uses `spica`. |

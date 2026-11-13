@@ -1,30 +1,18 @@
 import React, {memo, useState, useCallback, useEffect, useMemo} from "react";
 import styles from "../bucket-action-bar/BucketActionBar.module.scss";
-import {Button, Icon, Popover} from "oziko-ui-kit";
+import {Button, Icon} from "oziko-ui-kit";
 import SearchBar from "../../atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
-import FilterPanel from "../../prefabs/filter-panel/FilterPanel";
-import type {FilterField} from "../../prefabs/filter-panel/types";
 
 const SEARCH_DEBOUNCE_TIME = 500;
-
-const APIKEY_FILTER_FIELDS: FilterField[] = [
-  {key: "name", label: "Name", type: "string"},
-  {key: "description", label: "Description", type: "string"},
-  {key: "active", label: "Active", type: "boolean"},
-  {key: "expiresAt", label: "Expires At", type: "date"},
-];
 
 type ApiKeyActionBarProps = {
   onSearch: (value: string) => void;
   onNewApiKey: () => void;
-  onFilter: (filter: Record<string, any> | null) => void;
 };
 
-const ApiKeyActionBar = ({onSearch, onNewApiKey, onFilter}: ApiKeyActionBarProps) => {
+const ApiKeyActionBar = ({onSearch, onNewApiKey}: ApiKeyActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [activeFilterCount, setActiveFilterCount] = useState(0);
 
   const debouncedSearch = useMemo(
     () => debounce((value: string) => onSearch(value), SEARCH_DEBOUNCE_TIME),
@@ -52,19 +40,6 @@ const ApiKeyActionBar = ({onSearch, onNewApiKey, onFilter}: ApiKeyActionBarProps
     [debouncedSearch]
   );
 
-  const handleFilterApply = useCallback(
-    (filter: Record<string, any> | null) => {
-      setActiveFilterCount(filter ? 1 : 0);
-      onFilter(filter);
-    },
-    [onFilter]
-  );
-
-  const handleFilterClear = useCallback(() => {
-    setActiveFilterCount(0);
-    onFilter(null);
-  }, [onFilter]);
-
   return (
     <div className={styles.container}>
       {/* LEFT: search */}
@@ -77,34 +52,6 @@ const ApiKeyActionBar = ({onSearch, onNewApiKey, onFilter}: ApiKeyActionBarProps
             onKeyDown: handleKeyDown,
           }}
         />
-        <Popover
-          open={isFilterOpen}
-          onClose={() => setIsFilterOpen(false)}
-          placement="bottomStart"
-          contentProps={{style: {padding: 0, background: 'transparent', boxShadow: 'none', border: 'none'}}}
-          content={
-            <FilterPanel
-              fields={APIKEY_FILTER_FIELDS}
-              onApply={handleFilterApply}
-              onClear={handleFilterClear}
-              onRequestClose={() => setIsFilterOpen(false)}
-            />
-          }
-        >
-          <Button
-            shape="chip"
-            variant="outlined"
-            color="default"
-            className={`${(isFilterOpen || activeFilterCount > 0) ? styles.chipActive : ""}`}
-            onClick={() => setIsFilterOpen(prev => !prev)}
-          >
-            <Icon name="filter" />
-            Filter
-            {activeFilterCount > 0 && (
-              <span className={styles.chipBadge}>{activeFilterCount}</span>
-            )}
-          </Button>
-        </Popover>
       </div>
 
       {/* RIGHT: actions */}

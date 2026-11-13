@@ -13,6 +13,7 @@ import {
 } from "../../../../store/api/functionApi";
 import type {SpicaFunction, TriggerMap} from "../../../../store/api/functionApi";
 import styles from "./FunctionModal.module.scss";
+import { idOf } from "../../../../utils/recordKey";
 
 type FunctionModalProps = {
   isOpen: boolean;
@@ -74,7 +75,7 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
       resetForm();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, functionToEdit?._id]);
+  }, [isOpen, idOf(functionToEdit)]);
 
   const handleClose = useCallback(() => {
     resetForm();
@@ -101,9 +102,9 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
     const trimmedCategory = category.trim();
 
     try {
-      if (isEditMode && functionToEdit?._id) {
+      if (isEditMode && idOf(functionToEdit)) {
         const result = await updateFunction({
-          id: functionToEdit._id,
+          id: idOf(functionToEdit)!,
           body: {
             name: trimmed,
             language: language as "javascript" | "typescript",
@@ -133,8 +134,8 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
         }).unwrap();
 
         const exampleCode = TRIGGER_EXAMPLES.http;
-        if (result._id) {
-          await updateIndex({id: result._id, index: exampleCode}).unwrap();
+        if (idOf(result)) {
+          await updateIndex({id: idOf(result)!, index: exampleCode}).unwrap();
         }
 
         resetForm();

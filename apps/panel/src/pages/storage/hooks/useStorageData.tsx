@@ -33,7 +33,10 @@ export function useStorageData(directory: TypeDirectories, filterQuery: StorageF
     return dirToFetch.fullPath.split("/").filter(Boolean).join("/");
   }, [dirToFetch?.fullPath]);
 
-  const hasFilter = Boolean(filterQuery && Object.keys(filterQuery).length > 0);
+  const hasFilter = Boolean(
+    filterQuery &&
+      (typeof filterQuery === "string" ? filterQuery.length > 0 : Object.keys(filterQuery).length > 0)
+  );
 
   useEffect(() => {
     if (hasFilter && filterQuery) {
