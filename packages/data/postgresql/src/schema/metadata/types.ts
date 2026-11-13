@@ -20,6 +20,8 @@ export interface ColumnMetadata {
   notNull: boolean;
   enum?: unknown[];
   checkName?: string;
+  /** Holds the primary key of a relation target, so its type is the target's key type. */
+  reference?: true;
 }
 
 export interface IndexMetadata {

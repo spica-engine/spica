@@ -32,6 +32,41 @@ describe("compile", () => {
       expect(Object.keys(schema.properties)).toEqual(["id"]);
     });
 
+    describe("relations", () => {
+      const relations = (options?: Parameters<typeof compile>[2]) =>
+        compile(
+          bucketOf("id", {
+            id: {type: "uuid" as any},
+            owner: {type: "relation", bucketId: "b", relationType: "onetoone"} as any,
+            editors: {type: "relation", bucketId: "b", relationType: "onetomany"} as any
+          }),
+          preferences,
+          options
+        ).properties as Record<string, any>;
+
+      it("should validate relation values as object ids by default", () => {
+        const properties = relations();
+
+        expect(properties.owner).toMatchObject({type: "string", format: "objectid-string"});
+        expect(properties.editors.items).toEqual({type: "string", format: "objectid-string"});
+      });
+
+      it("should accept a string or an integer key when relations hold the primary key", () => {
+        const properties = relations({relationsByPrimaryKey: true});
+
+        expect(properties.owner.type).toEqual(["string", "integer"]);
+        expect(properties.owner.format).toBeUndefined();
+        expect(properties.editors.items).toEqual({type: ["string", "integer"]});
+      });
+
+      it("should let a one-to-one relation hold null as well when nullable", () => {
+        const properties = relations({relationsByPrimaryKey: true, nullable: true});
+
+        expect(properties.owner.type).toEqual(["string", "integer", "null"]);
+        expect(properties.editors.type).toBe("array");
+      });
+    });
+
     it("should compile a uuid property to a uuid string", () => {
       const schema = compile(bucketOf("id", {id: {type: "uuid" as any}}), preferences);
       expect(schema.properties.id).toEqual({type: "string", format: "uuid"});

@@ -78,13 +78,19 @@ const relationCollector: PropertyCollector = {
     if (relation.relationType == "onetomany") {
       const link = new TableBuilder(fieldTableName(context.bucketId, path), path);
       context.addTable(link);
-      link.add({name: SYSTEM_COLUMNS.target, path, type: target.primaryKey.type, notNull: true});
+      link.add({
+        name: SYSTEM_COLUMNS.target,
+        path,
+        type: target.primaryKey.type,
+        notNull: true,
+        reference: true
+      });
       link.reference(SYSTEM_COLUMNS.target, target, "CASCADE");
       return;
     }
 
     const name = columnName(relativePath(visit));
-    table.add({name, path, type: target.primaryKey.type, notNull: required});
+    table.add({name, path, type: target.primaryKey.type, notNull: required, reference: true});
     table.reference(name, target, required ? "RESTRICT" : "SET NULL");
   }
 };
