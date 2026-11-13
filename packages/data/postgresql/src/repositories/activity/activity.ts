@@ -12,6 +12,8 @@ import {PostgresExpiry} from "../../expiry/index.js";
 import {ORM} from "../../orm.js";
 import {idOf} from "@spica-server/data";
 
+const flattenResource = (resource: unknown[]) => resource.flat(Infinity) as string[];
+
 @Injectable()
 export class PostgresActivityRepository implements ActivityRepository {
   constructor(
@@ -25,7 +27,10 @@ export class PostgresActivityRepository implements ActivityRepository {
   }
 
   async insertMany(items: Activity[]) {
-    const inserted = await this.orm.insertMany(activities, items);
+    const inserted = await this.orm.insertMany(
+      activities,
+      items.map(item => ({...item, resource: flattenResource(item.resource)}))
+    );
     return inserted.map(activity => idOf(activity));
   }
 
