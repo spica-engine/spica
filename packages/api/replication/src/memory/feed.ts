@@ -1,8 +1,10 @@
+import {Logger} from "@nestjs/common";
 import {PartialObserver, Observable, share} from "rxjs";
 import {MemoryOptions, IPubSub} from "@spica-server/interface-replication";
 import {ChangeEvent, ChangeFeed} from "@spica-server/interface-data";
 
 export class FeedMemory<T> implements IPubSub<T> {
+  private readonly logger = new Logger(FeedMemory.name);
   private changeStream$: Observable<ChangeEvent<T>>;
 
   constructor(
@@ -17,7 +19,9 @@ export class FeedMemory<T> implements IPubSub<T> {
   }
 
   publish(document: T) {
-    this.store.insert({...document, created_at: new Date()});
+    this.store
+      .insert({...document, created_at: new Date()})
+      .catch(error => this.logger.error(`Could not publish the replication message: ${error}`));
   }
 
   subscribe(observer: PartialObserver<T>) {

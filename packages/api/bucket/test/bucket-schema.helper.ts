@@ -6,8 +6,8 @@ import {IdTypes} from "@spica-server/interface-data";
 import BaseSchema from "../src/schemas/bucket.schema.json" with {type: "json"};
 import OriginalSchema from "./fixtures/bucket.schema.original.json" with {type: "json"};
 
-// NOSONAR: schema $id identifiers are never fetched
-export const SCHEMA_ID = "http://spica.internal/bucket/schema";
+// $id identifiers are never fetched
+export const SCHEMA_ID = "http://spica.internal/bucket/schema"; // NOSONAR
 
 const CUSTOM_FIELDS = [
   "primary",
@@ -39,8 +39,7 @@ export function validatorFor(extension: BucketSchemaExtension, idTypes?: IdTypes
 
 export function originalValidator() {
   const validator = createValidator();
-  // NOSONAR: schema $id identifiers are never fetched
-  validator.registerSchema({...OriginalSchema, $id: "http://spica.internal/bucket/original"});
+  validator.registerSchema({...OriginalSchema, $id: "http://spica.internal/bucket/original"}); // NOSONAR
   return validator;
 }
 

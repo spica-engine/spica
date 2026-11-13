@@ -22,8 +22,8 @@ export function specNeeds(text) {
 
 function projectRoots(root) {
   const roots = new Map();
-  // NOSONAR: runs in CI on a trusted runner PATH
-  const files = execFileSync("git", ["ls-files", "*project.json"], {cwd: root, encoding: "utf8"})
+  // runs in CI on a trusted runner PATH
+  const files = execFileSync("git", ["ls-files", "*project.json"], {cwd: root, encoding: "utf8"}) // NOSONAR
     .split("\n")
     .filter(Boolean);
   for (const file of files) {
