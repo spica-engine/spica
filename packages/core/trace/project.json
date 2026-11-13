@@ -1,0 +1,5 @@
+{
+  "name": "core/trace",
+  "sourceRoot": "packages/core/trace/src",
+  "projectType": "library"
+}

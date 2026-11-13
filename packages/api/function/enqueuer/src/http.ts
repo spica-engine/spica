@@ -31,9 +31,13 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     private corsOptions: CorsOptions,
     private guardService: IGuardService,
     private attachStatusTracker?: AttachStatusTracker,
-    private payloadSizeLimit?: number
+    private payloadSizeLimit?: number,
+    middleware?: express.RequestHandler
   ) {
     super();
+    if (middleware) {
+      this.router.use(middleware);
+    }
     this.router.use(
       bodyParser.raw({
         limit: this.payloadSizeLimit != null ? this.payloadSizeLimit * 1024 * 1024 : "10mb",

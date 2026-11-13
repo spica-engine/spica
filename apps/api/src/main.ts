@@ -7,6 +7,7 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {WsAdapter} from "@spica-server/core-websocket";
+import {HttpTrackerModule} from "@spica-server/core-http-tracker";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
@@ -28,7 +29,6 @@ import https from "https";
 import os from "os";
 import path from "path";
 import yargs from "yargs/yargs";
-import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import {ConfigModule} from "@spica-server/config";
 import {deriveKey} from "@spica-server/core-encryption";
@@ -650,7 +650,8 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .demandOption("public-url")
   .option("access-logs", {
     boolean: true,
-    description: "Enable/disable http access logs",
+    description:
+      "Enable/disable http access logs. Every line ends with request_id, hop_id, parent_hop_id, started_at and duration_ms; function requests share one request_id across the spica instances they call",
     default: false
   })
   .option("access-logs-url-filter", {
@@ -1031,6 +1032,11 @@ const modules = [
     payloadSizeLimit: args["payload-size-limit"]
   }),
   ConfigModule.forRoot(),
+  HttpTrackerModule.forRoot({
+    accessLogs: args["access-logs"],
+    accessLogsUrlFilter: args["access-logs-url-filter"],
+    accessLogsStatusCodeFilter: args["access-logs-statuscode-filter"]
+  }),
   StatusModule.forRoot({
     expireAfterSeconds: args["common-log-lifespan"],
     httpStatusTracking: args["http-status-tracking"]
@@ -1095,22 +1101,6 @@ NestFactory.create(RootModule, {
     Middlewares.MergePatchJsonParser(args["payload-size-limit"])
   );
   app.enableShutdownHooks();
-
-  if (args["access-logs"]) {
-    morgan.token("prefix", () => "access-log:");
-    app.use(
-      morgan(
-        ':prefix :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length]',
-        {
-          skip: (req, res) => {
-            const urlRegex = new RegExp(args["access-logs-url-filter"]);
-            const statusCodeRegex = new RegExp(args["access-logs-statuscode-filter"]);
-            return !urlRegex.test(req.url) || !statusCodeRegex.test(res.statusCode.toString());
-          }
-        }
-      )
-    );
-  }
 
   app.use(cookieParser());
 

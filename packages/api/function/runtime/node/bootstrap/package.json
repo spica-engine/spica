@@ -12,6 +12,7 @@
     "@spica-devkit/database": "workspace:*",
     "@spica-server/bucket-hooks-proto": "workspace:*",
     "@spica-server/bucket-hooks-proto-node": "workspace:*",
+    "@spica-server/core-trace": "workspace:*",
     "@spica-server/function-queue-node": "workspace:*",
     "@spica-server/function-queue-proto": "workspace:*",
     "@spica-server/function-runtime-logger": "workspace:*"

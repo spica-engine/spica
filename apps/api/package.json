@@ -13,6 +13,7 @@
     "@spica-server/config": "workspace:*",
     "@spica-server/core": "workspace:*",
     "@spica-server/core-encryption": "workspace:*",
+    "@spica-server/core-http-tracker": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/core-websocket": "workspace:*",
     "@spica-server/dashboard": "workspace:*",
@@ -32,7 +33,6 @@
     "@spica-server/status": "workspace:*",
     "@spica-server/storage": "workspace:*",
     "cookie-parser": "^1.4.7",
-    "morgan": "^1.10.1",
     "reflect-metadata": "^0.2.2",
     "yargs": "^17.7.3"
   },
