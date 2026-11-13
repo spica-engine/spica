@@ -13,6 +13,8 @@ import {RollupBuilder} from "@spica-server/function-builder-rollup";
 import {Node} from "@spica-server/function-scheduler";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import fs from "fs";
+import http from "http";
+import {AddressInfo} from "net";
 import os from "os";
 import path from "path";
 import {PassThrough, Writable} from "stream";
@@ -645,6 +647,55 @@ describe("Entrypoint", () => {
 
       const exitCode = await spawn().catch(e => e);
       expect(exitCode).toBe(4);
+    });
+
+    it("should add the correlation headers of the request to the calls fn makes", async () => {
+      const received: http.IncomingHttpHeaders[] = [];
+      const server = http.createServer((req, res) => {
+        received.push(req.headers);
+        res.end("ok");
+      });
+      await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
+      const {port} = server.address() as AddressInfo;
+
+      await initializeFn(`
+      export default async function() {
+        await fetch("http://127.0.0.1:${port}/");
+        process.exit(4);
+      }`);
+
+      const ev = new event.Event({
+        type: event.Type.HTTP,
+        target: new event.Target({
+          cwd: meta.cwd,
+          handler: "default",
+          context: new event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
+
+      queue.enqueue(ev);
+
+      const request = new Http.Request({
+        headers: [
+          new Http.Header({
+            key: "x-spica-request-id",
+            value: "11111111-2222-3333-4444-555555555555"
+          }),
+          new Http.Header({key: "x-spica-hop-id", value: "abcdef0123456789"})
+        ]
+      });
+      httpQueue.enqueue(ev.id, request, undefined);
+
+      const exitCode = await spawn().catch(e => e);
+      server.close();
+
+      expect(exitCode).toBe(4);
+      expect(received).toHaveLength(1);
+      expect(received[0]["x-spica-request-id"]).toBe("11111111-2222-3333-4444-555555555555");
+      expect(received[0]["x-spica-parent-hop-id"]).toBe("abcdef0123456789");
     });
 
     it("should pass the ip resolved by the api to fn", async () => {

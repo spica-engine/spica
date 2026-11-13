@@ -33,6 +33,7 @@ import {
 import {createRequire} from "module";
 import * as path from "path";
 
+import {installTracePropagation, traceRequest} from "@spica-server/core-trace";
 import {getLoggerConsole, logContext} from "@spica-server/function-runtime-logger";
 
 if (process.env.LOGGER) {
@@ -57,6 +58,8 @@ const firehoseQueue = new FirehoseQueue();
 const bucketChangeQueue = new BucketChangeQueue();
 const rabbitmqQueue = new RabbitMQQueue();
 const grpcQueue = new GrpcQueueNode();
+
+installTracePropagation();
 
 (async () => {
   const queue = new EventQueue();
@@ -154,6 +157,8 @@ async function _process(ev: event.Event, queue: EventQueue) {
 
   const callArguments: any[] = [];
 
+  let invoke = <T>(call: () => T): T => call();
+
   let callback: (arg: any) => Promise<void> = async (result: any) => {
     await result;
   };
@@ -178,6 +183,8 @@ async function _process(ev: event.Event, queue: EventQueue) {
         queue.complete(new event.Complete({id: ev.id, succedded: false}));
         return;
       }
+
+      invoke = call => traceRequest(request.headers, call);
 
       const response = new Response(
         (e: any) => {
@@ -347,7 +354,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
         `This function does export a symbol named '${ev.target.handler}' but it is not a function.`
       );
     }
-    await callback(module[ev.target.handler](...callArguments));
+    await callback(invoke(() => module[ev.target.handler](...callArguments)));
     queue.complete(new event.Complete({id: ev.id, succedded: true}));
   } catch (e) {
     console.error(e);

@@ -278,6 +278,12 @@
       "path": "./packages/core/websocket"
     },
     {
+      "path": "./packages/core/http-tracker"
+    },
+    {
+      "path": "./packages/core/trace"
+    },
+    {
       "path": "./packages/interface/core"
     },
     {

@@ -9216,6 +9216,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/core-http-tracker@workspace:*, @spica-server/core-http-tracker@workspace:packages/core/http-tracker":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/core-http-tracker@workspace:packages/core/http-tracker"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.22"
+    "@spica-server/core-trace": "workspace:*"
+    "@types/express": "npm:^4.17.25"
+    morgan: "npm:^1.10.1"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/core-patch@workspace:*, @spica-server/core-patch@workspace:packages/core/patch":
   version: 0.0.0-use.local
   resolution: "@spica-server/core-patch@workspace:packages/core/patch"
@@ -9254,6 +9265,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/core-trace@workspace:*, @spica-server/core-trace@workspace:packages/core/trace":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/core-trace@workspace:packages/core/trace"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/core-websocket@workspace:*, @spica-server/core-websocket@workspace:packages/core/websocket":
   version: 0.0.0-use.local
   resolution: "@spica-server/core-websocket@workspace:packages/core/websocket"
@@ -9270,10 +9287,16 @@ __metadata:
   resolution: "@spica-server/core@workspace:packages/core"
   dependencies:
     "@nestjs/common": "npm:^10.4.22"
+    "@nestjs/core": "npm:^10.4.22"
+    "@nestjs/platform-express": "npm:^10.4.22"
+    "@nestjs/testing": "npm:^10.4.22"
+    "@spica-server/core-http-tracker": "workspace:*"
+    "@spica-server/core-trace": "workspace:*"
     "@spica-server/interface-core": "workspace:*"
     "@types/body-parser": "npm:^1.19.6"
     "@types/matcher": "npm:^2.0.0"
     body-parser: "npm:^1.20.5"
+    express: "npm:^4.21.2"
     matcher: "npm:^5.0.0"
     type-is: "npm:^1.6.18"
   languageName: unknown
@@ -9497,6 +9520,7 @@ __metadata:
     "@grpc/proto-loader": "npm:^0.8.1"
     "@nestjs/common": "npm:^10.4.22"
     "@spica-server/core": "workspace:*"
+    "@spica-server/core-http-tracker": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
@@ -9642,6 +9666,7 @@ __metadata:
     "@spica-devkit/database": "workspace:*"
     "@spica-server/bucket-hooks-proto": "workspace:*"
     "@spica-server/bucket-hooks-proto-node": "workspace:*"
+    "@spica-server/core-trace": "workspace:*"
     "@spica-server/function-queue-node": "workspace:*"
     "@spica-server/function-queue-proto": "workspace:*"
     "@spica-server/function-runtime-logger": "workspace:*"
@@ -9673,6 +9698,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.22"
     "@nestjs/core": "npm:^10.4.22"
+    "@spica-server/core-http-tracker": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/function-builder": "workspace:*"
@@ -10857,6 +10883,7 @@ __metadata:
     "@spica-server/config": "workspace:*"
     "@spica-server/core": "workspace:*"
     "@spica-server/core-encryption": "workspace:*"
+    "@spica-server/core-http-tracker": "workspace:*"
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/dashboard": "workspace:*"
@@ -10878,7 +10905,6 @@ __metadata:
     "@types/cookie-parser": "npm:^1.4.10"
     "@types/yargs": "npm:^17.0.35"
     cookie-parser: "npm:^1.4.7"
-    morgan: "npm:^1.10.1"
     nodemon: "npm:^3.1.14"
     reflect-metadata: "npm:^0.2.2"
     yargs: "npm:^17.7.3"
