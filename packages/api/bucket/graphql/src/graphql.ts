@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   OnModuleInit,
   Optional,
   PipeTransform
@@ -12,7 +13,7 @@ import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-buc
 import {ChangeEmitter} from "@spica-server/bucket-hooks";
 import {BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core-schema";
-import {ids, idOf} from "@spica-server/data";
+import {DATA_ENGINE, ids, idOf} from "@spica-server/data";
 import {Id} from "@spica-server/interface-data";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {resourceFilterFunction, extractStrategyType} from "@spica-server/passport-guard";
@@ -66,8 +67,14 @@ import {applyPatch, deepCopy} from "@spica-server/core-patch";
 import {Action} from "@spica-server/interface-activity";
 import {SchemaWarning} from "@spica-server/interface-bucket-graphql";
 
+const POSTGRESQL_ENGINE = "postgresql";
+
 @Injectable()
 export class GraphqlController implements OnModuleInit {
+  private readonly logger = new Logger(GraphqlController.name);
+
+  private readonly supported: boolean;
+
   buckets: Bucket[] = [];
 
   staticTypes = `
@@ -159,27 +166,47 @@ export class GraphqlController implements OnModuleInit {
     @Optional() @Inject(HISTORY_REPOSITORY) private history: HistoryRepository,
     @Optional() private hookChangeEmitter: ChangeEmitter,
     @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
-    @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
+    @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string,
+    @Optional() @Inject(DATA_ENGINE) engine?: string
   ) {
+    this.supported = engine != POSTGRESQL_ENGINE;
+    if (!this.supported) {
+      return;
+    }
+
     this.bs.schemaChangeEmitter.subscribe(() => {
-      this.bs.findAll().then(buckets => {
-        this.schemaWarnings = [];
-
-        if (!buckets.length) {
-          this.schema = this.defaultSchema;
-          return;
-        }
-
-        const result = validateBuckets(buckets);
-        this.buckets = result.buckets;
-        this.schemaWarnings = result.warnings;
-
-        this.schema = this.getSchema(this.buckets);
-      });
+      this.bs
+        .findAll()
+        .then(buckets => this.rebuildSchema(buckets))
+        .catch(error =>
+          this.logger.error(
+            `Failed to build the GraphQL schema, the previous one is kept. Reason: ${error instanceof Error ? error.message : error}`
+          )
+        );
     });
   }
 
+  private rebuildSchema(buckets: Bucket[]) {
+    this.schemaWarnings = [];
+
+    if (!buckets.length) {
+      this.schema = this.defaultSchema;
+      return;
+    }
+
+    const result = validateBuckets(buckets);
+    this.buckets = result.buckets;
+    this.schemaWarnings = result.warnings;
+
+    this.schema = this.getSchema(this.buckets);
+  }
+
   onModuleInit() {
+    if (!this.supported) {
+      this.logger.warn("GraphQL is not supported on PostgreSQL yet, so it is not enabled.");
+      return;
+    }
+
     const app = this.adapterHost.httpAdapter.getInstance();
 
     app.use(
