@@ -127,6 +127,9 @@ tests:
           pattern: CREATE EXTENSION IF NOT EXISTS pg_cron;
       - matchRegex:
           path: data["init-users.sh"]
+          pattern: GRANT pg_read_all_settings TO :"app_user";
+      - matchRegex:
+          path: data["init-users.sh"]
           pattern: GRANT USAGE ON SCHEMA cron TO :"app_user";
       - matchRegex:
           path: data["init-users.sh"]
