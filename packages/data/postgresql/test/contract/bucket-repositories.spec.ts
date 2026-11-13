@@ -3,13 +3,20 @@ import {provideRepository, idOf, withId} from "@spica-server/data";
 import {contractSuite, clearStorage} from "@spica-server/database-testing";
 import {BUCKET_REPOSITORY, BucketRepository} from "@spica-server/interface-bucket";
 import {HISTORY_REPOSITORY, HistoryRepository} from "@spica-server/interface-bucket-history";
-import {ID_TYPES, IdType, IdTypes} from "@spica-server/interface-data";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  ID_TYPES,
+  IdType,
+  IdTypes
+} from "@spica-server/interface-data";
 
 contractSuite("bucket repositories", engine => {
   let module: TestingModule;
   let idType: IdType;
   let buckets: BucketRepository;
   let histories: HistoryRepository;
+  let queries: CollectionQueryFacade;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -21,6 +28,7 @@ contractSuite("bucket repositories", engine => {
     idType = module.get<IdTypes>(ID_TYPES).unscoped();
     buckets = module.get(BUCKET_REPOSITORY);
     histories = module.get(HISTORY_REPOSITORY);
+    queries = module.get(COLLECTION_QUERY);
   }, 120_000);
 
   beforeEach(() =>
@@ -57,6 +65,16 @@ contractSuite("bucket repositories", engine => {
         ["z", "y"]
       ]);
       expect(found?.indexes).toEqual(indexes);
+    });
+
+    it("returns the indexes in the same shape from the collection query as from the repository", async () => {
+      const indexes = [{definition: {b: 1, a: -1}, options: {unique: true}}];
+      const inserted = await buckets.insert(bucket("Listed", {indexes}));
+
+      const [listed] = await queries.find<any>("buckets", {});
+
+      expect(listed.indexes).toEqual(indexes);
+      expect(listed.indexes).toEqual((await buckets.findById(idOf(inserted)))?.indexes);
     });
 
     it("inserts a bucket and finds it by id", async () => {

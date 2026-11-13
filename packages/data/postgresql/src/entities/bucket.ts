@@ -3,6 +3,21 @@ import {Bucket} from "@spica-server/interface-bucket";
 import {Id} from "@spica-server/interface-data";
 import {History} from "@spica-server/interface-bucket-history";
 
+type Index = NonNullable<Bucket["indexes"]>[number];
+
+// jsonb sorts object keys, which would reorder the columns of a compound index
+const indexesCodec = {
+  encode: (indexes: Index[]) =>
+    indexes.map(index => ({...index, definition: Object.entries(index.definition)})),
+  decode: (indexes: Index[]) =>
+    indexes.map(index => ({
+      ...index,
+      definition: Array.isArray(index.definition)
+        ? Object.fromEntries(index.definition)
+        : index.definition
+    }))
+};
+
 export const buckets = defineEntity<Bucket & {id?: Id}>({
   table: "buckets",
   columns: {
@@ -21,7 +36,7 @@ export const buckets = defineEntity<Bucket & {id?: Id}>({
     documentSettings: {
       embedded: {countLimit: {type: "double precision"}, limitExceedBehaviour: {type: "text"}}
     },
-    indexes: {type: "jsonb"}
+    indexes: {type: "jsonb", codec: indexesCodec}
   }
 });
 
