@@ -52,7 +52,7 @@ export const addColumnSql = (
 ) => alterTable(table.name, `ADD COLUMN ${columnSql(metadata, table, column)}`);
 
 export function checkSql(table: string, column: ColumnMetadata) {
-  const values = column.enum.filter(value => value !== null).map(literalOf);
+  const values = column.enum.filter(value => value !== null).map(value => literalOf(value));
   return alterTable(
     table,
     `ADD CONSTRAINT ${quote(column.checkName)} CHECK (${quote(column.name)} IN (${values.join(", ")}))`
@@ -95,7 +95,7 @@ export function createTableSql(
 ) {
   const definitions = [
     ...table.columns.map(column => columnSql(metadata, table, column)),
-    `CONSTRAINT ${quote(constraintName(table.name, table.keyColumns, "pk"))} PRIMARY KEY (${table.keyColumns.map(quote).join(", ")})`,
+    `CONSTRAINT ${quote(constraintName(table.name, table.keyColumns, "pk"))} PRIMARY KEY (${table.keyColumns.map(column => quote(column)).join(", ")})`,
     ...(withForeignKeys ? table.foreignKeys.map(foreignKeySql) : [])
   ];
   return `CREATE TABLE ${quote(table.name)} (\n${definitions.map(definition => `  ${definition}`).join(",\n")}\n)`;

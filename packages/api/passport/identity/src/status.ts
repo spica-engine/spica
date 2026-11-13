@@ -1,7 +1,7 @@
 import {register} from "@spica-server/status";
 import {IdentityRepository} from "@spica-server/interface-passport-identity";
 
-export async function registerStatusProvider(identities: IdentityRepository) {
+export function registerStatusProvider(identities: IdentityRepository) {
   const provide = async () => {
     return {
       module: "identity",

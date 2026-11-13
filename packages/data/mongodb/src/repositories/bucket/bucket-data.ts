@@ -103,7 +103,7 @@ export class MongoBucketDataRepository implements BucketDataRepository {
 
     const sortedOptions: Record<string, any> = {};
     Object.keys(options)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
       .forEach(k => {
         sortedOptions[k] = options[k];
       });

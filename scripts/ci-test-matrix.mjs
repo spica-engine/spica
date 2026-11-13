@@ -10,7 +10,8 @@ const SERVICES = ["mongodb", "postgresql", "rabbitmq", "mailer"];
 
 const RULES = {
   mongodb: /database-testing|MONGODB_URL/,
-  postgresql: /contractSuite\s*\(|DatabaseTestingModule\s*\.\s*postgres\s*\(|createPostgresDatabase\s*\(|POSTGRES_URL/,
+  postgresql:
+    /contractSuite\s*\(|DatabaseTestingModule\s*\.\s*postgres\s*\(|createPostgresDatabase\s*\(|POSTGRES_URL/,
   rabbitmq: /RABBITMQ_(URL|STREAM_HOST|STREAM_PORT)/,
   mailer: /MAILER_URL/
 };
@@ -21,6 +22,7 @@ export function specNeeds(text) {
 
 function projectRoots(root) {
   const roots = new Map();
+  // NOSONAR: runs in CI on a trusted runner PATH
   const files = execFileSync("git", ["ls-files", "*project.json"], {cwd: root, encoding: "utf8"})
     .split("\n")
     .filter(Boolean);
@@ -42,7 +44,11 @@ function specsOf(root, directory, nestedRoots) {
       const relative = `${current}/${entry.name}`;
       if (!entry.isDirectory()) {
         if (entry.name.endsWith(".spec.ts")) specs.push(relative);
-      } else if (entry.name != "node_modules" && entry.name != "dist" && !nestedRoots.has(relative)) {
+      } else if (
+        entry.name != "node_modules" &&
+        entry.name != "dist" &&
+        !nestedRoots.has(relative)
+      ) {
         walk(relative);
       }
     }

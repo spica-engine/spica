@@ -1,4 +1,5 @@
 ARG POSTGRES_MAJOR=18
+# NOSONAR: the entrypoint needs root to prepare PGDATA, then drops to the postgres user
 FROM postgres:${POSTGRES_MAJOR}
 ARG POSTGRES_MAJOR
 

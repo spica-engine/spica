@@ -4,7 +4,7 @@ import {Status} from "@spica-server/interface-status";
 import {BucketDataRepository, BucketRepository} from "@spica-server/interface-bucket";
 import {idOf} from "@spica-server/data";
 
-export async function registerStatusProvider(
+export function registerStatusProvider(
   bs: BucketService,
   buckets: BucketRepository,
   bucketData: BucketDataRepository

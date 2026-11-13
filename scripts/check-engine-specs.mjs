@@ -23,7 +23,7 @@ export function findUnclassifiedSpecs(root) {
       }
     });
   }
-  return unclassified.sort();
+  return unclassified.sort((a, b) => a.localeCompare(b));
 }
 
 function walk(directory, visit) {

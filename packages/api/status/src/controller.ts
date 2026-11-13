@@ -12,10 +12,8 @@ import {
 } from "@nestjs/common";
 import {DATE} from "@spica-server/core";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
-import {StatusProvider} from "@spica-server/interface-status";
+import {providers} from "./providers.js";
 import {DATA_ENGINE, DATA_HEALTH, DataHealth} from "@spica-server/interface-data";
-
-export const providers = new Map<string, StatusProvider>();
 
 @Controller("status")
 export class StatusController {
