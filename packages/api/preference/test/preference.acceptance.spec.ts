@@ -1,24 +1,24 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
+import {PREFERENCE_REPOSITORY, PreferenceRepository} from "@spica-server/interface-preference";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceModule} from "@spica-server/preference";
 
-describe("PreferenceController", () => {
+contractSuite("PreferenceController", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
-  let db: DatabaseService;
 
   function addpref(pref: any) {
-    return app.get(DatabaseService).collection("preferences").insertOne(pref);
+    return module.get<PreferenceRepository>(PREFERENCE_REPOSITORY).insert(pref);
   }
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.standalone(),
+        engine.module(),
         PassportTestingModule.initialize(),
         PreferenceModule.forRoot(),
         CoreTestingModule
@@ -27,11 +27,12 @@ describe("PreferenceController", () => {
     }).compile();
     app = module.createNestApplication();
     req = module.get(Request);
-    db = module.get(DatabaseService);
     await app.listen(req.socket);
   }, 120000);
 
-  afterEach(async () => await db.collection("preferences").drop());
+  afterEach(() =>
+    clearStorage(engine, module, {mongodb: ["preferences"], postgresql: ["preferences"]})
+  );
 
   afterAll(async () => await app.close());
 

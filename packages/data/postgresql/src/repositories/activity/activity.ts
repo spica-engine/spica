@@ -1,0 +1,44 @@
+import {Inject, Injectable} from "@nestjs/common";
+import {Orm} from "@spica-server/data-postgresql-orm";
+import {Id} from "@spica-server/interface-data";
+import {
+  Activity,
+  ACTIVITY_OPTIONS,
+  ActivityOptions,
+  ActivityRepository
+} from "@spica-server/interface-activity";
+import {activities} from "../../entities/index.js";
+import {PostgresExpiry} from "../../expiry/index.js";
+import {ORM} from "../../orm.js";
+import {idOf} from "@spica-server/data";
+
+const flattenResource = (resource: unknown[]) => resource.flat(Infinity) as string[];
+
+@Injectable()
+export class PostgresActivityRepository implements ActivityRepository {
+  constructor(
+    @Inject(ORM) private readonly orm: Orm,
+    @Inject(PostgresExpiry) private readonly expiry: PostgresExpiry,
+    @Inject(ACTIVITY_OPTIONS) private readonly retention: ActivityOptions
+  ) {}
+
+  async applyExpiry() {
+    await this.expiry.expire(activities, "created_at", this.retention.expireAfterSeconds);
+  }
+
+  async insertMany(items: Activity[]) {
+    const inserted = await this.orm.insertMany(
+      activities,
+      items.map(item => ({...item, resource: flattenResource(item.resource)}))
+    );
+    return inserted.map(activity => idOf(activity));
+  }
+
+  async deleteById(id: Id) {
+    return (await this.orm.deleteById(activities, id)) ? 1 : 0;
+  }
+
+  async deleteByIds(ids: Id[]) {
+    return await this.orm.deleteWhere(activities, {id: ids});
+  }
+}

@@ -1,8 +1,7 @@
-import {ObjectId} from "@spica-server/database";
+import {ExpiringRepository} from "@spica-server/interface-data";
 import {LogLevels, LogChannels} from "@spica-server/interface-function-runtime";
 
 export interface Log {
-  _id: ObjectId;
   function: string;
   event_id: string;
   content: string;
@@ -17,3 +16,21 @@ export interface LogOptions {
 }
 
 export const FUNCTION_LOG_OPTIONS = Symbol.for("FUNCTION_LOG_OPTIONS");
+
+export interface LogRepository extends ExpiringRepository {
+  /**
+   * Deletes the function's logs, optionally only those created in the range or at the levels.
+   */
+  deleteByFunction(
+    functionId: string,
+    options?: {createdBetween?: {from: Date; to: Date}; levels?: number[]}
+  ): Promise<number>;
+}
+
+export const FUNCTION_LOG_REPOSITORY = Symbol.for("FUNCTION_LOG_REPOSITORY");
+
+export interface LogSink {
+  insert(log: Log): Promise<unknown>;
+}
+
+export const FUNCTION_LOG_SINK = Symbol.for("FUNCTION_LOG_SINK");

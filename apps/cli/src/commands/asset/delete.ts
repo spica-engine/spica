@@ -3,6 +3,7 @@ import {httpService} from "../../http";
 import fs from "fs";
 import YAML from "yaml";
 import path from "path";
+import {recordKey} from "@spica-server/sync";
 
 async function _delete({options}: ActionParameters) {
   const type = options.type as string;
@@ -27,7 +28,7 @@ async function _delete({options}: ActionParameters) {
     return;
   }
 
-  await client.delete(`/asset/${asset._id}`, {params: {type}});
+  await client.delete(`/asset/${recordKey(asset)}`, {params: {type}});
 
   return console.info("Asset ${assetMeta.name} has been deleted successfully");
 }

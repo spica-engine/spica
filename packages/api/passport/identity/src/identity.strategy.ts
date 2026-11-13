@@ -1,13 +1,17 @@
 import {BadRequestException, Inject, Injectable, UnauthorizedException} from "@nestjs/common";
 import {PassportStrategy} from "@nestjs/passport";
 import {ExtractJwt, Strategy} from "passport-jwt";
-import {IdentityService} from "./identity.service.js";
-import {IdentityOptions, IDENTITY_OPTIONS} from "@spica-server/interface-passport-identity";
+import {
+  IdentityOptions,
+  IDENTITY_OPTIONS,
+  IDENTITY_REPOSITORY,
+  IdentityRepository
+} from "@spica-server/interface-passport-identity";
 
 @Injectable()
 export class IdentityStrategy extends PassportStrategy(Strategy, "identity") {
   constructor(
-    private identity: IdentityService,
+    @Inject(IDENTITY_REPOSITORY) private identities: IdentityRepository,
     @Inject(IDENTITY_OPTIONS) options: IdentityOptions
   ) {
     super({
@@ -23,7 +27,7 @@ export class IdentityStrategy extends PassportStrategy(Strategy, "identity") {
     const {identifier} = request.header;
     const {iat} = request.payload;
 
-    const user = await this.identity.findOne({identifier});
+    const user = await this.identities.findByIdentifier(identifier);
     if (!user) return undefined;
 
     const deactivateJwtsBefore = user["deactivateJwtsBefore"];

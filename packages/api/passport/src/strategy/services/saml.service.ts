@@ -7,16 +7,16 @@ import {
   PassportOptions,
   PASSPORT_OPTIONS
 } from "@spica-server/interface-passport";
-import {StrategyService} from "./strategy.service.js";
+import {StrategyRepository} from "@spica-server/interface-passport";
 import forge from "node-forge";
-import {ObjectId} from "@spica-server/database";
+import {ids, idOf} from "@spica-server/data";
 
 @Injectable()
 export class SamlService implements StrategyTypeService {
   readonly type = "saml";
 
   constructor(
-    private strategy: StrategyService,
+    private strategies: StrategyRepository,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {}
 
@@ -30,7 +30,9 @@ export class SamlService implements StrategyTypeService {
   }
 
   getStrategy(id: string): Promise<SamlStrategy> {
-    return this.strategy.findOne({_id: new ObjectId(id)}) as Promise<SamlStrategy>;
+    return this.strategies.findById(
+      ids().forCollection("strategy").parse(id)
+    ) as Promise<SamlStrategy>;
   }
 
   getLoginUrl(strategy: SamlStrategy): Promise<{url: string; state: string}> {
@@ -66,10 +68,10 @@ export class SamlService implements StrategyTypeService {
     });
 
     const sp = new saml2.ServiceProvider({
-      entity_id: `${this.options.publicUrl}/passport/strategy/${strategy._id}`,
+      entity_id: `${this.options.publicUrl}/passport/strategy/${idOf(strategy)}`,
       assert_endpoint: state
-        ? `${this.options.publicUrl}/passport/identity/strategy/${strategy._id}/complete?state=${state}`
-        : `${this.options.publicUrl}/passport/identity/strategy/${strategy._id}/complete`,
+        ? `${this.options.publicUrl}/passport/identity/strategy/${idOf(strategy)}/complete?state=${state}`
+        : `${this.options.publicUrl}/passport/identity/strategy/${idOf(strategy)}/complete`,
       certificate: strategy.options.sp.certificate,
       private_key: strategy.options.sp.private_key,
       force_authn: true,

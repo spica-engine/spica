@@ -19,6 +19,8 @@ import {
 import StorageFilter from "../../../../components/molecules/storage-filter/StorageFilter";
 import {useLazyGetStorageItemsQuery} from "../../../../store/api/storageApi";
 import useStorageService from "../../../../hooks/useStorage";
+import {useEngine} from "../../../../hooks/useEngine";
+import {compileStorageClause, escapeRegex, matchesName} from "../../../../utils/storageQuery";
 import type {DirectoryItem} from "../../../../types/storage";
 import type {Storage} from "../../../../store/api/storageApi";
 import {
@@ -36,6 +38,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 export default function StorageActionBar({onResetPreview}: StorageActionBarProps) {
   const dispatch = useAppDispatch();
+  const engine = useEngine();
   const directory = useAppSelector(selectDirectory);
   const currentDirectory = useAppSelector(selectCurrentDirectory);
   const searchQuery = useAppSelector(selectSearchQuery);
@@ -70,7 +73,7 @@ export default function StorageActionBar({onResetPreview}: StorageActionBarProps
     setAppliedFilter(clonedFilter);
     setIsFilterOpen(false);
 
-    const filterQuery = buildStorageFilterQuery(clonedFilter);
+    const filterQuery = buildStorageFilterQuery(clonedFilter, engine);
     dispatch(setFilterQuery(filterQuery));
   };
 
@@ -114,7 +117,6 @@ export default function StorageActionBar({onResetPreview}: StorageActionBarProps
     [convertStorageToTypeFile]
   );
 
-  const escapeForRegex = useCallback((value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), []);
 
   useEffect(() => {
     const trimmedQuery = searchQuery.trim();
@@ -134,12 +136,7 @@ export default function StorageActionBar({onResetPreview}: StorageActionBarProps
     const timeoutId = setTimeout(async () => {
       try {
         const response = await triggerSearch({
-          filter: {
-            name: {
-              $regex: escapeForRegex(trimmedQuery),
-              $options: "i"
-            }
-          },
+          filter: compileStorageClause(engine, matchesName(escapeRegex(trimmedQuery), true))!,
           limit: 50,
           paginate: true
         }).unwrap();
@@ -164,7 +161,7 @@ export default function StorageActionBar({onResetPreview}: StorageActionBarProps
       isCancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [searchQuery, triggerSearch, dispatch, convertSearchResults, escapeForRegex]);
+  }, [searchQuery, triggerSearch, dispatch, convertSearchResults, engine]);
   
   const visibleDirectories = directory
     .filter(dir => dir.currentDepth)

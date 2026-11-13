@@ -18,6 +18,9 @@
       "path": "../../../interface/function/enqueuer"
     },
     {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../../interface/core"
     },
     {
@@ -27,13 +30,19 @@
       "path": "../queue"
     },
     {
-      "path": "../../../database"
-    },
-    {
       "path": "../../../core"
     },
     {
+      "path": "../../../interface/bucket/common"
+    },
+    {
+      "path": "../../../interface/bucket"
+    },
+    {
       "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../data"
     },
     {
       "path": "../../../core/testing"

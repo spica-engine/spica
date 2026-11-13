@@ -5,14 +5,15 @@ import fs from "fs";
 import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+import {idOf} from "@spica-server/data";
 
-describe("Function RabbitMQ Trigger Schema", () => {
+contractSuite("Function RabbitMQ Trigger Schema", engine => {
   let app: INestApplication;
   let request: Request;
 
@@ -40,7 +41,7 @@ describe("Function RabbitMQ Trigger Schema", () => {
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
@@ -212,7 +213,7 @@ describe("Function RabbitMQ Trigger Schema", () => {
     it("should update the trigger options", async () => {
       const {body: created} = await request.post("/function", rabbitmqFunction("updated", {}));
 
-      const res = await request.put(`/function/${created._id}`, {
+      const res = await request.put(`/function/${idOf(created)}`, {
         ...created,
         triggers: {
           default: {

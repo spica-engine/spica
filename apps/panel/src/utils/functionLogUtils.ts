@@ -1,3 +1,5 @@
+import { idOf } from "./recordKey";
+import { creationDate } from "./idTimestamp";
 import type {FunctionLog} from "../store/api/functionApi";
 
 export type DateRange = {begin: Date; end: Date};
@@ -46,15 +48,7 @@ export function formatTimelineLabel(date: Date, withDate: boolean) {
 }
 
 export function getLogDate(log: FunctionLog) {
-  if (log.created_at) {
-    const parsed = new Date(log.created_at);
-
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed;
-    }
-  }
-
-  return new Date(Number.parseInt(log._id.slice(0, 8), 16) * 1000);
+  return creationDate(log, idOf(log));
 }
 
 export function formatRowTimestamp(log: FunctionLog) {

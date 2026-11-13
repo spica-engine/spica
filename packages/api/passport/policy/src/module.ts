@@ -11,6 +11,8 @@ import {PolicyController} from "./policy.controller.js";
 import {PolicyService} from "./policy.service.js";
 import PolicySchema from "./schemas/policy.json" with {type: "json"};
 import {PolicyRealtimeModule} from "@spica-server/passport-policy-realtime";
+import {provideRepository, idOf} from "@spica-server/data";
+import {POLICY_REPOSITORY} from "@spica-server/interface-passport-policy";
 @Global()
 @Module({})
 export class PolicyModule {
@@ -25,13 +27,14 @@ export class PolicyModule {
       exports: [PolicyService, POLICY_RESOLVER],
       controllers: [PolicyController],
       providers: [
+        provideRepository(POLICY_REPOSITORY),
         PolicyService,
         {
           provide: POLICY_RESOLVER,
           useFactory: (policyService: PolicyService): PolicyResolver<Policy> => {
             return async (ids: string[]) => {
               const policies = await policyService._findAll();
-              return policies.filter(policy => ids.indexOf(policy._id.toString()) != -1);
+              return policies.filter(policy => ids.indexOf(idOf(policy).toString()) != -1);
             };
           },
           inject: [PolicyService]
@@ -51,6 +54,5 @@ export class PolicyModule {
     @Optional() @Inject(APIKEY_POLICY_FINALIZER) apikeyFinalizer: changeFactory,
     @Optional() @Inject(IDENTITY_POLICY_FINALIZER) identityFinalizer: changeFactory,
     validator: Validator
-  ) {
-  }
+  ) {}
 }

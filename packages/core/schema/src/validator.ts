@@ -8,7 +8,9 @@ import {shareReplay, skip, take, tap} from "rxjs/operators";
 import defaultVocabulary from "./default.js";
 import formatVocabulary from "./format.js";
 import {Default, Format, Keyword, ModuleOptions, UriResolver} from "@spica-server/interface-core";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {GLOBAL_SCHEMA_MODULE_OPTIONS, SCHEMA_MODULE_OPTIONS} from "./consts.js";
+import {hasSystemKey, withSystemKey} from "./system-key.js";
 
 export {CodeKeywordDefinition, ErrorObject, KeywordCxt, _} from "ajv";
 export {ValidationError};
@@ -26,7 +28,8 @@ export class Validator {
 
   constructor(
     @Inject(SCHEMA_MODULE_OPTIONS) local: ModuleOptions = {},
-    @Optional() @Inject(GLOBAL_SCHEMA_MODULE_OPTIONS) global: ModuleOptions = {}
+    @Optional() @Inject(GLOBAL_SCHEMA_MODULE_OPTIONS) global: ModuleOptions = {},
+    @Optional() @Inject(ID_TYPES) private idTypes?: IdTypes
   ) {
     this._defaults = new Map<string, Default>(
       [...(local.defaults || []), ...(global.defaults || [])].map(def => [def.match, def])
@@ -42,7 +45,10 @@ export class Validator {
           formats[format.name] = format;
           return formats;
         }, {}),
-      schemas: new Array().concat(local.schemas || []).concat(global.schemas || []),
+      schemas: new Array()
+        .concat(local.schemas || [])
+        .concat(global.schemas || [])
+        .map(schema => this.withKey(schema)),
       strict: true,
       allowUnionTypes: true,
       ["defaults" as any]: this._defaults
@@ -107,6 +113,21 @@ export class Validator {
     this._ajv.addKeyword(def);
   }
 
+  registerSchema(schema: {$id: string}) {
+    this._ajv.removeSchema(schema.$id);
+    this._ajv.addSchema(this.withKey(schema));
+  }
+
+  private withKey<T>(schema: T): T {
+    if (!hasSystemKey(schema)) {
+      return schema;
+    }
+    if (!this.idTypes) {
+      throw new Error("A schema names the system record key, but no id types are available.");
+    }
+    return withSystemKey(schema, this.idTypes.systemKeyField());
+  }
+
   removeSchema(schemaUri?: string) {
     if (schemaUri) {
       this._schemaSubscriptions.get(schemaUri)?.unsubscribe();
@@ -131,7 +152,7 @@ export class Validator {
     let uri: string;
 
     if (this.isSchema(schemaOrId)) {
-      schema = schemaOrId;
+      schema = this.withKey(schemaOrId);
       uri = schemaOrId["$id"];
     } else if (this.isId(schemaOrId)) {
       schema = {$ref: schemaOrId};

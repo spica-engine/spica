@@ -1,5 +1,4 @@
 export default {
-  _id: "WebhookReadOnlyAccess",
   name: "Webhook Read Only Access",
   description: "Read only access to webhook service.",
   statement: [

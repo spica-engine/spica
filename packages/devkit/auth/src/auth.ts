@@ -13,7 +13,7 @@ import {
   PasswordlessLoginCompleteResponse
 } from "./interface";
 import {UserSession} from "./user-session";
-import {initialize as _initialize, checkInitialized} from "@spica-devkit/internal_common";
+import {initialize as _initialize, checkInitialized, idOf} from "@spica-devkit/internal_common";
 import {
   ApikeyInitialization,
   HttpService,
@@ -99,7 +99,7 @@ export async function signIn(
 
   return new UserSession({
     token: response.token,
-    userId: verified._id,
+    userId: idOf(verified),
     username: verified.username,
     service
   });
@@ -536,7 +536,7 @@ export async function completePasswordlessLogin(
 
   return new UserSession({
     token: response.token,
-    userId: verified._id,
+    userId: idOf(verified),
     username: verified.username,
     service
   });

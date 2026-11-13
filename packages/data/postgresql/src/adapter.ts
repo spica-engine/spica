@@ -1,0 +1,142 @@
+import {Logger, Module, OnApplicationShutdown, Inject} from "@nestjs/common";
+import {DataAdapter} from "@spica-server/data";
+import {createTables, Orm} from "@spica-server/data-postgresql-orm";
+import {
+  CHANGE_FEED,
+  COLLECTION_NAMES,
+  COLLECTION_QUERY,
+  DATA_HEALTH,
+  ID_TYPES,
+  PG_POOL,
+  REPOSITORY_CLASSES,
+  RESULT_SHAPER
+} from "@spica-server/interface-data";
+import pg from "pg";
+import {installChangeSupport, PostgresChangeFeed} from "./change/index.js";
+import {PostgresCollectionNames} from "./collection-names.js";
+import {PostgresRealtime} from "./realtime/index.js";
+import {REALTIME} from "@spica-server/interface-realtime";
+import {systemEntities} from "./entities/index.js";
+import {PostgresExpiry} from "./expiry/index.js";
+import {PostgresDataHealth} from "./health.js";
+import {PostgresIdTypes} from "./id.js";
+import {ORM} from "./orm.js";
+import {PostgresBucketQueryFacade, PostgresCollectionQueryFacade} from "./query/index.js";
+import {repositoryClasses} from "./repositories/index.js";
+import {BucketDescriptions, PostgresResultShaper} from "./shape/index.js";
+import {postgresBucketSchema} from "./schemas/index.js";
+import {BUCKET_RULE_VALIDATOR, BUCKET_SCHEMA_EXTENSION} from "@spica-server/interface-bucket";
+import {BUCKET_QUERY, BUCKET_WRITE} from "@spica-server/interface-bucket-common";
+import {PostgresBucketRuleValidator} from "./access/rule-validator.js";
+import {assertSupportedServerVersion} from "./version.js";
+import {TRANSACTION_RUNNER} from "@spica-server/transaction";
+import {PostgresBucketWriteFacade} from "./write/index.js";
+
+export const POSTGRESQL_ENGINE = "postgresql";
+
+export type PostgresUri = string | (() => Promise<string>);
+
+export interface PostgresConnectionOptions {
+  poolSize?: number;
+}
+
+const logger = new Logger("PostgresDataAdapter");
+
+export async function connect(uri: string, options: PostgresConnectionOptions = {}) {
+  const pool = new pg.Pool({
+    connectionString: uri,
+    max: options.poolSize
+  });
+  pool.on("error", error => logger.error(`Idle PostgreSQL client failed: ${error.message}`));
+  try {
+    const {rows} = await pool.query("SHOW server_version_num");
+    assertSupportedServerVersion(rows[0].server_version_num);
+    const cron = await pool.query("SELECT 1 FROM pg_available_extensions WHERE name = 'pg_cron'");
+    if (!cron.rowCount) {
+      logger.warn("The pg_cron extension is not available on this PostgreSQL server.");
+    }
+  } catch (error) {
+    await pool.end();
+    throw error;
+  }
+  return pool;
+}
+
+async function connectWithSystemTables(uri: string, options: PostgresConnectionOptions) {
+  const pool = await connect(uri, options);
+  try {
+    await createTables(pool, systemEntities);
+    await installChangeSupport(pool);
+  } catch (error) {
+    await pool.end();
+    throw error;
+  }
+  return pool;
+}
+
+@Module({})
+export class PostgresDataAdapterModule implements OnApplicationShutdown {
+  constructor(@Inject(PG_POOL) private readonly pool: pg.Pool) {}
+
+  async onApplicationShutdown() {
+    await this.pool.end();
+  }
+}
+
+export class PostgresDataAdapter {
+  static forRoot(uri: PostgresUri, options: PostgresConnectionOptions = {}): DataAdapter {
+    return {
+      engine: POSTGRESQL_ENGINE,
+      capabilities: {nullableProperties: true, relationsByPrimaryKey: true},
+      module: {
+        module: PostgresDataAdapterModule,
+        providers: [
+          {
+            provide: PG_POOL,
+            useFactory: async () =>
+              connectWithSystemTables(typeof uri == "function" ? await uri() : uri, options)
+          },
+          {provide: ORM, useFactory: (pool: pg.Pool) => new Orm(pool), inject: [PG_POOL]},
+          {
+            provide: TRANSACTION_RUNNER,
+            useFactory: (orm: Orm) => (work: () => Promise<unknown>) => orm.runInTransaction(work),
+            inject: [ORM]
+          },
+          PostgresExpiry,
+          {provide: ID_TYPES, useClass: PostgresIdTypes},
+          BucketDescriptions,
+          {provide: RESULT_SHAPER, useClass: PostgresResultShaper},
+          {provide: COLLECTION_QUERY, useClass: PostgresCollectionQueryFacade},
+          {provide: BUCKET_QUERY, useClass: PostgresBucketQueryFacade},
+          {provide: BUCKET_WRITE, useClass: PostgresBucketWriteFacade},
+          {provide: BUCKET_RULE_VALIDATOR, useClass: PostgresBucketRuleValidator},
+          {provide: BUCKET_SCHEMA_EXTENSION, useValue: postgresBucketSchema},
+          {provide: REPOSITORY_CLASSES, useValue: repositoryClasses},
+          {provide: CHANGE_FEED, useClass: PostgresChangeFeed},
+          {provide: REALTIME, useClass: PostgresRealtime},
+          {provide: COLLECTION_NAMES, useClass: PostgresCollectionNames},
+          {provide: DATA_HEALTH, useClass: PostgresDataHealth}
+        ],
+        exports: [
+          PG_POOL,
+          ORM,
+          TRANSACTION_RUNNER,
+          PostgresExpiry,
+          ID_TYPES,
+          BucketDescriptions,
+          RESULT_SHAPER,
+          COLLECTION_QUERY,
+          BUCKET_QUERY,
+          BUCKET_WRITE,
+          BUCKET_RULE_VALIDATOR,
+          BUCKET_SCHEMA_EXTENSION,
+          REPOSITORY_CLASSES,
+          CHANGE_FEED,
+          REALTIME,
+          COLLECTION_NAMES,
+          DATA_HEALTH
+        ]
+      }
+    };
+  }
+}

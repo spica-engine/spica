@@ -1,15 +1,18 @@
 import {Test} from "@nestjs/testing";
 import {BucketCacheModule, BucketCacheService} from "@spica-server/bucket-cache";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {BUCKET_REPOSITORY, BucketRepository} from "@spica-server/interface-bucket";
 import {Cache} from "cache-manager";
+import {idOf} from "@spica-server/data";
 
-describe("Bucket Cache Service", () => {
+contractSuite("Bucket Cache Service", engine => {
   let service: BucketCacheService;
   let cacheManager: Cache;
+  let buckets: BucketRepository;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [BucketCacheModule.register({ttl: null}), DatabaseTestingModule.standalone()],
+      imports: [BucketCacheModule.register({ttl: null}), engine.module()],
       controllers: [],
       providers: []
     }).compile();
@@ -18,6 +21,7 @@ describe("Bucket Cache Service", () => {
 
     service = module.get(BucketCacheService);
     cacheManager = service["cacheManager"];
+    buckets = module.get(BUCKET_REPOSITORY);
   });
 
   it("should clear bucket1 caches", async () => {
@@ -34,36 +38,45 @@ describe("Bucket Cache Service", () => {
   });
 
   it("should clear the bucket2 caches when bucket1 caches deleted because of the relation", async () => {
-    const {insertedId: bucket1} = await service["db"].collection("buckets").insertOne({
-      properties: {
-        title: {
-          type: "string"
+    const bucket1 = idOf(
+      await buckets.insert({
+        title: "bucket1",
+        properties: {
+          title: {
+            type: "string"
+          }
         }
-      }
-    });
+      } as any)
+    );
 
-    const {insertedId: bucket2} = await service["db"].collection("buckets").insertOne({
-      properties: {
-        rel: {
-          type: "relation",
-          bucketId: bucket1.toHexString()
+    const bucket2 = idOf(
+      await buckets.insert({
+        title: "bucket2",
+        properties: {
+          rel: {
+            type: "relation",
+            bucketId: String(bucket1)
+          }
         }
-      }
-    });
+      } as any)
+    );
 
-    const {insertedId: bucket3} = await service["db"].collection("buckets").insertOne({
-      properties: {
-        title: {
-          ttype: "string"
+    const bucket3 = idOf(
+      await buckets.insert({
+        title: "bucket3",
+        properties: {
+          title: {
+            type: "string"
+          }
         }
-      }
-    });
+      } as any)
+    );
 
     await cacheManager.set(`/bucket/${bucket1}/data`, [{title: "test1"}]);
     await cacheManager.set(`/bucket/${bucket2}/data`, [{title: "test2"}]);
     await cacheManager.set(`/bucket/${bucket3}/data`, [{title: "test3"}]);
 
-    await service.invalidate(bucket1.toHexString());
+    await service.invalidate(String(bucket1));
 
     const cacheKeys = await cacheManager.store.keys();
     expect(cacheKeys).toEqual([`/bucket/${bucket3}/data`]);

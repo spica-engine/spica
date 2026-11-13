@@ -5,6 +5,8 @@ import Editor from "@monaco-editor/react";
 import type {BucketType} from "../../../store/api/bucketApi";
 import {useUpdateBucketRulesMutation} from "../../../store/api/bucketApi";
 import {useRuleEditor} from "../../../hooks/useRuleEditor";
+import { idOf } from "../../../utils/recordKey";
+import {useKeyField} from "../../../hooks/useKeyField";
 
 type EditorFormProps = {
   bucket: BucketType;
@@ -147,9 +149,11 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
 
   const [updateBucketRule, { isLoading: loading, error: apiError }] = useUpdateBucketRulesMutation();
 
+  const documentKeyField = useKeyField(idOf(bucket)!);
   const {language, theme, beforeMount} = useRuleEditor({
     properties: bucket.properties,
-    documentId: bucket._id
+    documentId: idOf(bucket)!,
+    documentKeyField
   });
 
   useEffect(() => {

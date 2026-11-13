@@ -3,15 +3,15 @@ import {StorageModule} from "@spica-server/storage";
 import {Strategy} from "@spica-server/storage";
 import {Default} from "@spica-server/storage";
 import {GCloud} from "@spica-server/storage";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 
-describe("Strategy", () => {
+contractSuite("Strategy", engine => {
   it("should create the default strategy", async () => {
     const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.standalone(),
+        engine.module(),
         StorageModule.forRoot({
           defaultPath: process.env.TEST_TMPDIR,
           defaultPublicUrl: "http://insteadof",
@@ -29,7 +29,7 @@ describe("Strategy", () => {
     const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.standalone(),
+        engine.module(),
         StorageModule.forRoot({
           strategy: "gcloud",
           gcloudBucketName: "test",

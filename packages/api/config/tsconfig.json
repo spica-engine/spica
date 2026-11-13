@@ -16,10 +16,13 @@
       "path": "../../interface/replication"
     },
     {
+      "path": "../../interface/data"
+    },
+    {
       "path": "../../interface/config"
     },
     {
-      "path": "../../database"
+      "path": "../../data"
     },
     {
       "path": "../../core/schema"

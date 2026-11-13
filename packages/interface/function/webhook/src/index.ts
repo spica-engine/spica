@@ -1,7 +1,14 @@
-import {ObjectId} from "@spica-server/database";
+import {
+  DeletableById,
+  ExpiringRepository,
+  FindableAll,
+  Id,
+  Insertable,
+  ReplaceableById,
+  Repository
+} from "@spica-server/interface-data";
 
 export interface Webhook {
-  _id?: ObjectId;
   title: string;
   url: string;
   body: string;
@@ -22,7 +29,6 @@ export interface Trigger {
 }
 
 export interface Log {
-  _id?: ObjectId;
   webhook: string;
   succeed: boolean;
   content: {
@@ -59,7 +65,22 @@ export enum ChangeKind {
 export interface TargetChange {
   kind: ChangeKind;
   target: string;
-  webhook?: Omit<Webhook, "_id">;
+  webhook?: Webhook;
 }
 
 export const WEBHOOK_OPTIONS = Symbol.for("WEBHOOK_OPTIONS");
+
+export interface WebhookRepository
+  extends
+    FindableAll<Webhook>,
+    Repository<Webhook>,
+    ReplaceableById<Webhook>,
+    DeletableById<Webhook | null> {}
+
+export const WEBHOOK_REPOSITORY = Symbol.for("WEBHOOK_REPOSITORY");
+
+export interface WebhookLogRepository extends Insertable<Log>, DeletableById, ExpiringRepository {
+  deleteByIds(ids: Id[]): Promise<number>;
+}
+
+export const WEBHOOK_LOG_REPOSITORY = Symbol.for("WEBHOOK_LOG_REPOSITORY");

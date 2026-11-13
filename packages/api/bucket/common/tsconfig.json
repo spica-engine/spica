@@ -7,6 +7,9 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../../interface/core"
     },
     {
@@ -25,10 +28,7 @@
       "path": "../../../filter"
     },
     {
-      "path": "../../../database/pipeline"
-    },
-    {
-      "path": "../../../database"
+      "path": "../../../data"
     },
     {
       "path": "../../../core/schema"

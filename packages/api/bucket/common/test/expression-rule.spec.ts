@@ -1,78 +1,49 @@
-import {INestApplication} from "@nestjs/common";
-import {Test, TestingModule} from "@nestjs/testing";
-import {BucketModule} from "@spica-server/bucket";
-import {SchemaModule} from "@spica-server/core-schema";
-import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
-import {OBJECTID_STRING, OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
-import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
-import {PassportTestingModule} from "@spica-server/passport-testing";
-import {PreferenceTestingModule} from "@spica-server/preference-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {Request} from "@spica-server/core-testing";
+import {BucketApp, startBucketApp} from "../../test/support/bucket-app";
+import {idOf} from "@spica-server/data";
 
-describe("Expression Read Rule Type Construction", () => {
-  let app: INestApplication;
+contractSuite("Expression Read Rule Type Construction", engine => {
+  let api: BucketApp;
   let req: Request;
-  let module: TestingModule;
+  let key: string;
 
   const HASH_SECRET = "test-hash-secret-123";
   const ENCRYPTION_SECRET = "01234567890123456789012345678901";
+
+  beforeEach(async () => {
+    api = await startBucketApp(
+      engine,
+      {hashSecret: HASH_SECRET, encryptionSecret: ENCRYPTION_SECRET},
+      {passport: {overriddenStrategyType: "USER"}}
+    );
+    req = api.req;
+    key = api.keyField;
+  });
+
+  afterEach(() => api.close());
 
   let bucketId: string;
 
   const ALICE_DATE = "2024-02-15T00:00:00.000Z";
   const BOB_DATE = "2024-09-10T00:00:00.000Z";
 
-  beforeEach(async () => {
-    module = await Test.createTestingModule({
-      imports: [
-        SchemaModule.forRoot({
-          formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME],
-          defaults: [CREATED_AT, UPDATED_AT]
-        }),
-        CoreTestingModule,
-        PassportTestingModule.initialize({
-          overriddenStrategyType: "USER"
-        }),
-        DatabaseTestingModule.replicaSet(),
-        PreferenceTestingModule,
-        BucketModule.forRoot({
-          hooks: false,
-          history: false,
-          realtime: false,
-          cache: false,
-          graphql: false,
-          hashSecret: HASH_SECRET,
-          encryptionSecret: ENCRYPTION_SECRET
-        })
-      ]
-    }).compile();
-
-    module.enableShutdownHooks();
-    app = module.createNestApplication();
-    req = module.get(Request);
-    await app.listen(req.socket);
-  });
-
-  afterEach(() => app.close());
+  const PROPERTIES = {
+    name: {type: "string", title: "Name"},
+    password: {type: "hash", title: "Password"},
+    secret: {type: "encrypted", title: "Secret"},
+    created: {type: "date", title: "Created"}
+  };
 
   async function createBucketAndSeed(acl: {read: string; write: string}) {
-    bucketId = new ObjectId().toHexString();
-
-    await req.post("/bucket", {
-      _id: bucketId,
-      title: "Rule Bucket",
-      description: "Bucket with hash, encrypted, date fields",
-      icon: "settings",
-      primary: "name",
-      readOnly: false,
-      acl,
-      properties: {
-        name: {type: "string", title: "Name"},
-        password: {type: "hash", title: "Password"},
-        secret: {type: "encrypted", title: "Secret"},
-        created: {type: "date", title: "Created"}
-      }
-    });
+    bucketId = idOf(
+      await api.createBucket(PROPERTIES, {
+        title: "Rule Bucket",
+        description: "Bucket with hash, encrypted, date fields",
+        icon: "settings",
+        acl
+      })
+    );
 
     await req.post(`/bucket/${bucketId}/data`, {
       name: "alice",
@@ -173,27 +144,17 @@ describe("Expression Read Rule Type Construction", () => {
   // ---------------------------------------------------------------------------
   describe("field-level ACL rules", () => {
     async function createBucketWithFieldAcl(fieldAclExpression: string) {
-      bucketId = new ObjectId().toHexString();
-
-      await req.post("/bucket", {
-        _id: bucketId,
-        title: "Field ACL Bucket",
-        description: "Bucket with field-level ACL using typed fields",
-        icon: "settings",
-        primary: "name",
-        readOnly: false,
-        acl: {write: "true==true", read: "true==true"},
-        properties: {
-          name: {
-            type: "string",
-            title: "Name",
-            acl: fieldAclExpression
-          },
-          password: {type: "hash", title: "Password"},
-          secret: {type: "encrypted", title: "Secret"},
-          created: {type: "date", title: "Created"}
-        }
-      });
+      bucketId = idOf(
+        await api.createBucket(
+          {...PROPERTIES, name: {type: "string", title: "Name", acl: fieldAclExpression}},
+          {
+            title: "Field ACL Bucket",
+            description: "Bucket with field-level ACL using typed fields",
+            icon: "settings",
+            acl: {write: "true==true", read: "true==true"}
+          }
+        )
+      );
 
       await req.post(`/bucket/${bucketId}/data`, {
         name: "alice",

@@ -8,6 +8,7 @@ import {
   RepresentativeFileEvent
 } from "@spica-server/interface-representative";
 import {Observable} from "rxjs";
+import {withId} from "@spica-server/data";
 
 @Injectable()
 export class RepresentativeManager implements IRepresentativeManager {
@@ -131,7 +132,7 @@ export class RepresentativeManager implements IRepresentativeManager {
     }
 
     return Promise.all(promises).then(() => {
-      return {_id: id, contents};
+      return withId({contents}, id);
     });
   }
 

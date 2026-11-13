@@ -6,6 +6,8 @@ import {
   type BucketType,
   type Properties
 } from "../../../store/api/bucketApi";
+import { idOf, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
+import { useKeyField } from "../../../hooks/useKeyField";
 
 // oziko <Drawer size> is a raw px number with no design token; mirrors BucketEntryDrawer's width.
 const DRAWER_WIDTH_PX = 475;
@@ -170,9 +172,11 @@ const BucketIndexManager = ({bucket, isOpen, onClose}: BucketIndexManagerProps) 
     }
   }, [isOpen, bucket.indexes, resetForm, reset]);
 
+  const keyField = useKeyField(idOf(bucket)) ?? DEFAULT_KEY_FIELD;
+
   const suggestions = useMemo(
-    () => ["_id", WILDCARD_TOKEN, ...collectSuggestions(bucket.properties)],
-    [bucket.properties]
+    () => [keyField, WILDCARD_TOKEN, ...collectSuggestions(bucket.properties)],
+    [keyField, bucket.properties]
   );
 
   const handlePathChange = useCallback((id: string, path: string) => {
@@ -320,7 +324,7 @@ const BucketIndexManager = ({bucket, isOpen, onClose}: BucketIndexManagerProps) 
     const {section, index, ...rest} = bucket as Record<string, any>;
     try {
       await updateBucket({
-        id: bucket._id,
+        id: idOf(bucket)!,
         body: {...rest, indexes: workingIndexes}
       }).unwrap();
       onClose();

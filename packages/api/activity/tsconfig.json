@@ -7,16 +7,25 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../interface/passport/user"
+    },
+    {
+      "path": "../../interface/passport/identity"
+    },
+    {
       "path": "../passport/guard"
+    },
+    {
+      "path": "../../interface/data"
     },
     {
       "path": "../../interface/activity"
     },
     {
-      "path": "../../database/pipeline"
+      "path": "../../database"
     },
     {
-      "path": "../../database"
+      "path": "../../data"
     },
     {
       "path": "../../core"

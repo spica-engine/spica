@@ -1,14 +1,16 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
+import {withId} from "@spica-server/data";
 import {Npm} from "@spica-server/function-pkgmanager-node";
+import {Keyed} from "@spica-server/interface-data";
 import {LocalPackageManager} from "@spica-server/function-pkgmanager-local";
 import {FunctionDependents} from "@spica-server/function/src/function-dependents";
 
 describe("FunctionDependents", () => {
   let root: string;
-  let fns: {_id: string; name: string; language: string}[];
-  let functionService: {find: jest.Mock};
+  let fns: Keyed<{name: string; language: string}>[];
+  let functionService: {findSummaries: jest.Mock};
   let builders: Map<string, {bundlesDependencies: boolean}>;
   let preparationService: {build: jest.Mock};
   let dependents: FunctionDependents;
@@ -20,7 +22,7 @@ describe("FunctionDependents", () => {
     imports: string[] = [],
     extra: Record<string, string> = {}
   ) => {
-    fns.push({_id: `${name}_id`, name, language: "typescript"});
+    fns.push(withId({name, language: "typescript"}, `${name}-key`));
     const dependencies = {...extra};
     for (const imported of imports) {
       dependencies[`@spica-fn/${imported}`] = imported.startsWith("file:")
@@ -40,7 +42,7 @@ describe("FunctionDependents", () => {
   beforeEach(async () => {
     root = await fs.promises.mkdtemp(path.join(os.tmpdir(), "fn-dependents-"));
     fns = [];
-    functionService = {find: jest.fn().mockImplementation(async () => fns)};
+    functionService = {findSummaries: jest.fn().mockImplementation(async () => fns)};
     builders = new Map([["typescript", {bundlesDependencies: false}]]);
     preparationService = {build: jest.fn().mockResolvedValue(undefined)};
     const scheduler = {
@@ -60,10 +62,7 @@ describe("FunctionDependents", () => {
   it("should only read names and languages from the database", async () => {
     await addFunction("x");
     await find("x");
-    expect(functionService.find).toHaveBeenCalledWith(
-      {},
-      {projection: {_id: 1, name: 1, language: 1}}
-    );
+    expect(functionService.findSummaries).toHaveBeenCalledTimes(1);
   });
 
   it("should find direct and indirect importers", async () => {
@@ -106,7 +105,7 @@ describe("FunctionDependents", () => {
   it("should ignore registry packages, unknown folders and missing package.json files", async () => {
     await addFunction("x");
     await addFunction("a", ["file:../not-a-function"], {lodash: "^4.17.21"});
-    fns.push({_id: "no_pkg_id", name: "no-pkg", language: "typescript"});
+    fns.push(withId({name: "no-pkg", language: "typescript"}, "no_pkg_id"));
 
     expect(await names("x")).toEqual([]);
   });
@@ -139,8 +138,8 @@ describe("FunctionDependents", () => {
 
       expect(plan).toEqual({
         routing: [],
-        outdate: ["x_id", "a_id", "b_id"],
-        reconcile: ["x_id", "a_id", "b_id"]
+        outdate: ["x-key", "a-key", "b-key"],
+        reconcile: ["x-key", "a-key", "b-key"]
       });
     });
 
@@ -172,7 +171,7 @@ describe("FunctionDependents", () => {
 
       const plan = await dependents.refreshPlan(fns[0] as any);
 
-      expect(plan.outdate).toEqual(["x_id", "a_id"]);
+      expect(plan.outdate).toEqual(["x-key", "a-key"]);
     });
   });
 });

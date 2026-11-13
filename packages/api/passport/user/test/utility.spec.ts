@@ -2,6 +2,7 @@ import {
   registerPolicyAttacher,
   providePolicyFinalizer
 } from "@spica-server/passport-user/src/utility";
+import {withId} from "@spica-server/data";
 
 describe("Utilities", () => {
   let request;
@@ -11,10 +12,7 @@ describe("Utilities", () => {
       params: {
         id: "test_user"
       },
-      user: {
-        _id: "test_user",
-        policies: []
-      },
+      user: withId({policies: []}, "test_user"),
       body: {},
       method: "PUT"
     };
@@ -39,29 +37,18 @@ describe("Utilities", () => {
   });
 
   it("should pull policy from user policies", async () => {
-    const userService: any = {
-      updateMany: (filter: object, update: object) => {
-        return Promise.resolve();
+    const users: any = {
+      removePolicyFromAll: (policyId: string) => {
+        return Promise.resolve(0);
       }
     };
 
-    const updateManySpy = jest.spyOn(userService, "updateMany");
+    const removePolicyFromAllSpy = jest.spyOn(users, "removePolicyFromAll");
 
-    const factoryFunction = providePolicyFinalizer(userService);
+    const factoryFunction = providePolicyFinalizer(users);
     await factoryFunction("my_policy");
 
-    expect(updateManySpy).toHaveBeenCalledTimes(1);
-    expect(updateManySpy).toHaveBeenCalledWith(
-      {
-        policies: {
-          $in: ["my_policy"]
-        }
-      },
-      {
-        $pull: {
-          policies: "my_policy"
-        }
-      }
-    );
+    expect(removePolicyFromAllSpy).toHaveBeenCalledTimes(1);
+    expect(removePolicyFromAllSpy).toHaveBeenCalledWith("my_policy");
   });
 });

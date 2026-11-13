@@ -63,6 +63,8 @@ func.register("equal", builtin.equal);
 
 // string
 func.register("regex", builtin.regex);
+func.register("startsWith", builtin.startsWith);
+func.register("contains", builtin.contains);
 
 // iterables
 func.register("length", builtin.length);

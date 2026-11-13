@@ -6,6 +6,7 @@ import type { Storage } from "../../../../store/api/storageApi";
 import { StorageMinimizedInput } from "oziko-ui-kit";
 import useStorage from "../../../../hooks/useStorage";
 import styles from "./Cells.module.scss";
+import { idOf } from "../../../../utils/recordKey";
 
 export const StorageCell: React.FC<CellRendererProps> = ({
   value,
@@ -18,7 +19,7 @@ export const StorageCell: React.FC<CellRendererProps> = ({
   const storageId = useMemo(() => {
     if (!value) return null;
     if (typeof value === "string") return value;
-    if (typeof value === "object" && value._id) return value._id;
+    if (typeof value === "object" && idOf(value)) return idOf(value)!;
     return null;
   }, [value]);
 
@@ -28,7 +29,7 @@ export const StorageCell: React.FC<CellRendererProps> = ({
 
   const storageValue = useMemo(() => {
     if (!value) return null;
-    if (typeof value === "object" && value._id) return value as Storage;
+    if (typeof value === "object" && idOf(value)) return value as Storage;
     if (typeof value === "string" && fetchedStorage) return fetchedStorage;
     return null;
   }, [value, fetchedStorage]);
@@ -45,7 +46,7 @@ export const StorageCell: React.FC<CellRendererProps> = ({
 
   const handleFileSelect = useCallback(
     (file: Storage) => {
-      onChange(file._id || null);
+      onChange(idOf(file) || null);
       handleCloseModal();
     },
     [onChange, handleCloseModal]
@@ -58,7 +59,7 @@ export const StorageCell: React.FC<CellRendererProps> = ({
         fileList.items.add(file);
         const result = await uploadFiles({ files: fileList.files }).unwrap();
         if (result && result.length > 0) {
-          onChange(result[0]._id || null);
+          onChange(idOf(result[0]) || null);
         }
       } catch (error) {
         console.error("Failed to upload file:", error);

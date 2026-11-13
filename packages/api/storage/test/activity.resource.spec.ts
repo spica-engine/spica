@@ -1,9 +1,10 @@
 import {Action} from "@spica-server/interface-activity";
 import {createStorageActivity} from "@spica-server/storage";
+import {withId} from "@spica-server/data";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {
-    const res = [{_id: "storage_object1"}, {_id: "storage_object2"}];
+    const res = [withId({}, "storage_object1"), withId({}, "storage_object2")];
 
     const activities = createStorageActivity(
       {action: Action.POST, identifier: "test_identifier"},

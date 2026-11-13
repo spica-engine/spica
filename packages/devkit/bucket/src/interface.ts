@@ -2,6 +2,7 @@ import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 import {Observable} from "rxjs";
 
 export interface Bucket {
+  /** @deprecated Read the key with idOf; it is named id on PostgreSQL. */
   _id?: string;
   title: string;
   icon?: string;

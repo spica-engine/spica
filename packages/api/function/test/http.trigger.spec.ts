@@ -5,12 +5,13 @@ import fs from "fs";
 import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+import {idOf} from "@spica-server/data";
 
 /**
  * Tests for HTTP trigger schema validation on create (POST), read (GET), and update (PUT) operations.
@@ -22,7 +23,7 @@ import {SecretModule} from "@spica-server/secret";
  *  - allOf conditional: authorize:true requires authenticate.minItems=1
  *  - additionalProperties: false
  */
-describe("Function HTTP Trigger Schema", () => {
+contractSuite("Function HTTP Trigger Schema", engine => {
   let app: INestApplication;
   let request: Request;
 
@@ -52,7 +53,7 @@ describe("Function HTTP Trigger Schema", () => {
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
@@ -364,7 +365,7 @@ describe("Function HTTP Trigger Schema", () => {
         })
         .then(r => r.body);
 
-      const found = await request.get(`/function/${created._id}`).then(r => r.body);
+      const found = await request.get(`/function/${idOf(created)}`).then(r => r.body);
 
       expect(found.triggers.default.type).toEqual("http");
       expect(found.triggers.default.options.method).toEqual("Post");
@@ -389,7 +390,7 @@ describe("Function HTTP Trigger Schema", () => {
         })
         .then(r => r.body);
 
-      const found = await request.get(`/function/${created._id}`).then(r => r.body);
+      const found = await request.get(`/function/${idOf(created)}`).then(r => r.body);
       const opts = found.triggers.default.options;
 
       // Schema defaults: preflight=true, authorize=false, authenticate=[]
@@ -398,7 +399,11 @@ describe("Function HTTP Trigger Schema", () => {
     });
 
     it("should return 404 for a non-existent function id", async () => {
-      const res = await request.get("/function/000000000000000000000000");
+      const unknownId =
+        engine.name == "mongodb"
+          ? "000000000000000000000000"
+          : "00000000-0000-7000-8000-000000000000";
+      const res = await request.get(`/function/${unknownId}`);
 
       expect(res.statusCode).toEqual(404);
     });
@@ -416,7 +421,7 @@ describe("Function HTTP Trigger Schema", () => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -439,7 +444,7 @@ describe("Function HTTP Trigger Schema", () => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -469,7 +474,7 @@ describe("Function HTTP Trigger Schema", () => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -505,7 +510,7 @@ describe("Function HTTP Trigger Schema", () => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -528,7 +533,7 @@ describe("Function HTTP Trigger Schema", () => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           language: "typescript"
         });
@@ -536,7 +541,7 @@ describe("Function HTTP Trigger Schema", () => {
         expect(updated.statusCode).toEqual(200);
 
         // PUT response strips language (CRUD.replace deletes it), so verify via GET
-        const found = await request.get(`/function/${created._id}`).then(r => r.body);
+        const found = await request.get(`/function/${idOf(created)}`).then(r => r.body);
         expect(found.language).toEqual(created.language);
       });
     });
@@ -550,7 +555,7 @@ describe("Function HTTP Trigger Schema", () => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -573,7 +578,7 @@ describe("Function HTTP Trigger Schema", () => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -597,7 +602,7 @@ describe("Function HTTP Trigger Schema", () => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -625,7 +630,7 @@ describe("Function HTTP Trigger Schema", () => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -652,7 +657,7 @@ describe("Function HTTP Trigger Schema", () => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {
@@ -675,7 +680,7 @@ describe("Function HTTP Trigger Schema", () => {
           })
           .then(r => r.body);
 
-        const updated = await request.put(`/function/${created._id}`, {
+        const updated = await request.put(`/function/${idOf(created)}`, {
           ...created,
           triggers: {
             default: {

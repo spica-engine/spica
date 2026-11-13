@@ -74,7 +74,12 @@ export class RepresentativeManager {
     return fs.promises.writeFile(fullPath, content);
   }
 
-  readResource(module: string, id: string, fileNames = []): Promise<any> {
+  readResource(
+    module: string,
+    id: string,
+    keyField: string,
+    fileNames: string[] = []
+  ): Promise<any> {
     const moduleDir = this.getModuleDir(module);
 
     const resourcesPath = path.join(moduleDir, id);
@@ -109,11 +114,16 @@ export class RepresentativeManager {
     }
 
     return Promise.all(promises).then(() => {
-      return {_id: id, contents};
+      return {[keyField]: id, contents};
     });
   }
 
-  read(module: string, resNameValidator: (name: string) => boolean, fileNameFilter = []) {
+  read(
+    module: string,
+    resNameValidator: (name: string) => boolean,
+    keyField: string,
+    fileNameFilter: string[] = []
+  ) {
     const moduleDir = this.getModuleDir(module);
 
     let ids;
@@ -132,7 +142,7 @@ export class RepresentativeManager {
         continue;
       }
 
-      const promise = this.readResource(module, id, fileNameFilter).then(resource => {
+      const promise = this.readResource(module, id, keyField, fileNameFilter).then(resource => {
         if (resource.contents && Object.keys(resource.contents).length) {
           results.push(resource);
         }

@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportModule} from "@spica-server/passport";
 import {INestApplication} from "@nestjs/common";
@@ -8,8 +8,9 @@ import {OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {Config} from "twilio/lib/twiml/VoiceResponse";
 import {ConfigModule} from "@spica-server/config";
+import {idOf} from "@spica-server/data";
 
-describe("User Ban Logic", () => {
+contractSuite("User Ban Logic", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
@@ -33,7 +34,7 @@ describe("User Ban Logic", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID, DATE_TIME]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         CoreTestingModule,
         ConfigModule.forRoot(),
@@ -111,7 +112,7 @@ describe("User Ban Logic", () => {
         Authorization: `IDENTITY ${identityToken}`
       }
     );
-    testUserId = userListRes.body._id;
+    testUserId = idOf(userListRes.body).toString();
   });
 
   afterEach(() => app.close());

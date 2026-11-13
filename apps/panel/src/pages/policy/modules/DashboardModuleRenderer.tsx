@@ -15,6 +15,7 @@ import {
   type OnResourceBatchChange,
   type OnResourceChange
 } from "../moduleRendererHelpers";
+import { idOf } from "../../../utils/recordKey";
 
 export interface DashboardModuleProps extends BaseModuleContext {
   dashboards?: Dashboard[];
@@ -56,8 +57,8 @@ export class DashboardModuleRenderer implements ModuleRenderer<DashboardModulePr
             onResourceBatchChange,
             itemConfig: {
               items: dashboards,
-              getId: dashboard => dashboard._id || "",
-              getKey: dashboard => dashboard._id || dashboard.name,
+              getId: dashboard => idOf(dashboard) || "",
+              getKey: dashboard => idOf(dashboard) || dashboard.name,
               getLabel: dashboard => dashboard.name,
               getIcon: () => <Icon name="dashboard" size="md" />
             }

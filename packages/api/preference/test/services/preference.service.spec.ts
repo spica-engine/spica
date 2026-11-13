@@ -1,28 +1,38 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
 import {PreferenceService, PreferenceChangeDispatcher} from "@spica-server/preference-services";
-import {Preference} from "@spica-server/interface-preference";
+import {
+  Preference,
+  PREFERENCE_REPOSITORY,
+  PreferenceRepository
+} from "@spica-server/interface-preference";
+import {provideRepository, idOf} from "@spica-server/data";
 import {Observable} from "rxjs";
 import {take} from "rxjs/operators";
 
-describe("Preference Service", () => {
+contractSuite("Preference Service", engine => {
   async function addPref(prefs: Preference[]) {
-    await module.get(DatabaseService).collection("preferences").insertMany(prefs);
+    for (const pref of prefs) {
+      await module.get<PreferenceRepository>(PREFERENCE_REPOSITORY).insert(pref);
+    }
   }
 
   let module: TestingModule;
   let preferenceService: PreferenceService;
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet()],
-      providers: [PreferenceService, PreferenceChangeDispatcher]
+      imports: [engine.module()],
+      providers: [
+        provideRepository(PREFERENCE_REPOSITORY),
+        PreferenceService,
+        PreferenceChangeDispatcher
+      ]
     }).compile();
     preferenceService = module.get(PreferenceService);
   }, 120000);
 
   beforeEach(async () => {
-    // clear prefs
-    await module.get(DatabaseService).collection("preferences").deleteMany({});
+    await clearStorage(engine, module, {mongodb: ["preferences"], postgresql: ["preferences"]});
 
     // add prefs
     const prefs: Preference[] = [
@@ -54,14 +64,11 @@ describe("Preference Service", () => {
   });
 
   it("should update preference", async () => {
-    const insertedPref = await preferenceService.insertOne({scope: "test"});
-    await preferenceService.replace(
-      {_id: insertedPref._id},
-      {
-        scope: "test",
-        property: "new property for test"
-      }
-    );
+    const insertedPref = await preferenceService.insert({scope: "test"});
+    await preferenceService.replace(insertedPref.scope, {
+      scope: "test",
+      property: "new property for test"
+    });
 
     const pref = await preferenceService.get("test");
 
@@ -70,14 +77,14 @@ describe("Preference Service", () => {
   });
 
   it("should add new preference", async () => {
-    await preferenceService.insertOne({
+    await preferenceService.insert({
       scope: "function",
       property: "function property"
     });
 
     const functionPref = await preferenceService.get("function");
 
-    expect(functionPref._id).toBeDefined();
+    expect(idOf(functionPref)).toBeDefined();
     expect(functionPref.scope).toBe("function");
     expect(functionPref.property).toBe("function property");
   });
@@ -110,22 +117,22 @@ describe("Preference Service", () => {
         });
 
       preferenceService
-        .replace({scope: "bucket"}, {scope: "bucket", property: "updated bucket property"})
+        .replace("bucket", {scope: "bucket", property: "updated bucket property"})
         .catch();
     });
 
     it("should keep propagating after a reload fails", done => {
-      const coll = (preferenceService as any)._coll;
-      const findOne = coll.findOne.bind(coll);
+      const repository = module.get(PREFERENCE_REPOSITORY);
+      const findById = repository.findById.bind(repository);
       let alreadyFailed = false;
 
       jest.spyOn((preferenceService as any).logger, "error").mockImplementation(() => {});
-      jest.spyOn(coll, "findOne").mockImplementation((...args) => {
+      jest.spyOn(repository, "findById").mockImplementation((...args) => {
         if (!alreadyFailed) {
           alreadyFailed = true;
           return Promise.reject(new Error("transient failure"));
         }
-        return findOne(...args);
+        return findById(...args);
       });
 
       preferenceService
@@ -137,9 +144,9 @@ describe("Preference Service", () => {
         });
 
       preferenceService
-        .replace({scope: "bucket"}, {scope: "bucket", property: "first update"})
+        .replace("bucket", {scope: "bucket", property: "first update"})
         .then(() =>
-          preferenceService.replace({scope: "bucket"}, {scope: "bucket", property: "second update"})
+          preferenceService.replace("bucket", {scope: "bucket", property: "second update"})
         )
         .catch();
     });

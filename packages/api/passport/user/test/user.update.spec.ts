@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, DatabaseService} from "@spica-server/database-testing";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportModule} from "@spica-server/passport";
 import {INestApplication} from "@nestjs/common";
@@ -7,12 +7,12 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {ConfigModule} from "@spica-server/config";
+import {idOf} from "@spica-server/data";
 
-describe("User Update Endpoints", () => {
+contractSuite("User Update Endpoints", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
-  let database: DatabaseService;
   let user1: any;
   let user2: any;
   let user1Token: string;
@@ -24,7 +24,7 @@ describe("User Update Endpoints", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID, DATE_TIME]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         CoreTestingModule,
         ConfigModule.forRoot(),
@@ -74,7 +74,6 @@ describe("User Update Endpoints", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
-    database = module.get(DatabaseService);
 
     await app.listen(req.socket);
 
@@ -132,13 +131,13 @@ describe("User Update Endpoints", () => {
   afterAll(() => app.close());
 
   afterEach(async () => {
-    await database.collection("user").deleteMany({});
+    await clearStorage(engine, module, {mongodb: ["user"], postgresql: ["users"]});
   });
 
   describe("user self update", () => {
     it("should successfully update own password", async () => {
       const res = await req.put(
-        `/passport/user/${user1._id}/self`,
+        `/passport/user/${idOf(user1)}/self`,
         {
           password: "newPassword123"
         },
@@ -148,7 +147,7 @@ describe("User Update Endpoints", () => {
       );
 
       expect(res.statusCode).toEqual(200);
-      expect(res.body._id).toEqual(user1._id);
+      expect(idOf(res.body)).toEqual(idOf(user1));
       expect(res.body.username).toEqual("user1");
       expect(res.body.password).toBeUndefined();
 
@@ -170,7 +169,7 @@ describe("User Update Endpoints", () => {
 
     it("should fail when trying to update not allowed fields", async () => {
       const res = await req.put(
-        `/passport/user/${user1._id}/self`,
+        `/passport/user/${idOf(user1)}/self`,
         {
           password: "anotherPassword",
           bannedUntil: new Date(Date.now() + 10000).toISOString()
@@ -186,7 +185,7 @@ describe("User Update Endpoints", () => {
 
     it("should fail when trying to update another user's password", async () => {
       const res = await req.put(
-        `/passport/user/${user2._id}/self`,
+        `/passport/user/${idOf(user2)}/self`,
         {
           password: "hackedPassword"
         },
@@ -217,7 +216,7 @@ describe("User Update Endpoints", () => {
       const banUntil = new Date(Date.now() + 86400000).toISOString();
 
       const res = await req.put(
-        `/passport/user/${user2._id}`,
+        `/passport/user/${idOf(user2)}`,
         {
           bannedUntil: banUntil
         },
@@ -226,13 +225,13 @@ describe("User Update Endpoints", () => {
         }
       );
       expect(res.statusCode).toEqual(200);
-      expect(res.body._id).toEqual(user2._id);
+      expect(idOf(res.body)).toEqual(idOf(user2));
       expect(res.body.bannedUntil).toBeDefined();
     });
 
     it("should allow identity to update username and password", async () => {
       const res = await req.put(
-        `/passport/user/${user2._id}`,
+        `/passport/user/${idOf(user2)}`,
         {
           username: "user2updated",
           password: "newPassword456"

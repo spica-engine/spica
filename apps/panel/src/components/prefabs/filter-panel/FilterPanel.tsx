@@ -27,6 +27,7 @@ const createEmptyCondition = (): FilterConditionRow => ({
 const FieldTypeIcon = ({ type }: { type: string }) => {
   switch (type) {
     case 'number':
+    case 'bigint':
       return (
         <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <line x1="4" y1="9" x2="20" y2="9" /><line x1="4" y1="15" x2="20" y2="15" />

@@ -3,8 +3,17 @@ import path from "path";
 import fs from "fs";
 import yaml from "yaml";
 import {createDevDispatcher, DevState} from "@spica/cli/src/commands/sync/dev";
-import {ResourceModule, LocalResource, RemoteResource} from "@spica-server/sync";
+import {
+  ResourceModule,
+  LocalResource,
+  RemoteResource,
+  KEY_FIELDS,
+  SYSTEM_KEY_FIELDS,
+  recordKey
+} from "@spica-server/sync";
 import {functionModule} from "@spica-server/sync";
+
+const SHAPES = Object.entries(SYSTEM_KEY_FIELDS);
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -37,7 +46,7 @@ function makeMockModule(
     name,
     displayName: name,
     identityField: "name",
-    ignoredFields: ["_id"],
+    ignoredFields: KEY_FIELDS,
     readLocal: jest.fn().mockResolvedValue([]),
     readRemote: jest.fn().mockResolvedValue([]),
     create: jest.fn().mockResolvedValue(undefined),
@@ -48,7 +57,7 @@ function makeMockModule(
     diffFields: () => [],
     renderDetail: () => ({}),
     summaryLine: (r: any) => String(r.slug),
-    extractLocalId: (data: any) => data._id,
+    extractLocalId: (data: any) => recordKey(data),
     ...overrides
   } as any;
 }
@@ -118,7 +127,7 @@ describe("DevDispatcher — bucket: add (create)", () => {
   });
 });
 
-describe("DevDispatcher — bucket: change (update)", () => {
+describe.each(SHAPES)("DevDispatcher — bucket: change (update) (%s records)", (_shape, key) => {
   it("calls mod.update with stored remoteId when schema.yaml changes", async () => {
     const dir = makeTmpDir();
     try {
@@ -126,7 +135,7 @@ describe("DevDispatcher — bucket: change (update)", () => {
       fs.mkdirSync(bucketDir, {recursive: true});
       fs.writeFileSync(
         path.join(bucketDir, "schema.yaml"),
-        yaml.stringify({_id: "id-1", title: "Updated Bucket", properties: {}})
+        yaml.stringify({[key]: "id-1", title: "Updated Bucket", properties: {}})
       );
 
       const mod = makeMockModule("bucket");
@@ -220,62 +229,65 @@ describe("DevDispatcher — bucket: unlink (delete)", () => {
 
 // ─── Dispatcher: rename detection ─────────────────────────────────────────────
 
-describe("DevDispatcher — rename detection (single update, no delete+create)", () => {
-  it("promotes rename to a single update when _id matches pending delete", async () => {
-    jest.useFakeTimers();
-    const dir = makeTmpDir();
-    try {
-      // Create the new-name folder on disk
-      const newDir = path.join(dir, "bucket", "new-name");
-      fs.mkdirSync(newDir, {recursive: true});
-      fs.writeFileSync(
-        path.join(newDir, "schema.yaml"),
-        yaml.stringify({_id: "id-1", title: "New Name", properties: {}})
-      );
+describe.each(SHAPES)(
+  "DevDispatcher — rename detection (single update, no delete+create) (%s records)",
+  (_shape, key) => {
+    it("promotes rename to a single update when key matches pending delete", async () => {
+      jest.useFakeTimers();
+      const dir = makeTmpDir();
+      try {
+        // Create the new-name folder on disk
+        const newDir = path.join(dir, "bucket", "new-name");
+        fs.mkdirSync(newDir, {recursive: true});
+        fs.writeFileSync(
+          path.join(newDir, "schema.yaml"),
+          yaml.stringify({[key]: "id-1", title: "New Name", properties: {}})
+        );
 
-      const mod = makeMockModule("bucket");
-      const state = makeState({bucket: {"old-name": "id-1"}});
-      const logs: string[] = [];
-      const dispatcher = createDevDispatcher({
-        modules: [mod],
-        http: mockHttp,
-        rootDir: dir,
-        state,
-        logger: m => logs.push(m),
-        renameWindowMs: 500
-      });
+        const mod = makeMockModule("bucket");
+        const state = makeState({bucket: {"old-name": "id-1"}});
+        const logs: string[] = [];
+        const dispatcher = createDevDispatcher({
+          modules: [mod],
+          http: mockHttp,
+          rootDir: dir,
+          state,
+          logger: m => logs.push(m),
+          renameWindowMs: 500
+        });
 
-      // Simulate: unlink old-name, then add new-name within the window
-      const unlinkPromise = dispatcher.handleEvent(
-        "unlink",
-        path.join(dir, "bucket", "old-name", "schema.yaml")
-      );
-      await unlinkPromise;
+        // Simulate: unlink old-name, then add new-name within the window
+        const unlinkPromise = dispatcher.handleEvent(
+          "unlink",
+          path.join(dir, "bucket", "old-name", "schema.yaml")
+        );
+        await unlinkPromise;
 
-      // The add comes before the rename window expires
-      const addPromise = dispatcher.handleEvent(
-        "add",
-        path.join(dir, "bucket", "new-name", "schema.yaml")
-      );
-      await addPromise;
+        // The add comes before the rename window expires
+        const addPromise = dispatcher.handleEvent(
+          "add",
+          path.join(dir, "bucket", "new-name", "schema.yaml")
+        );
+        await addPromise;
 
-      // No timers needed — update should already have been called during add handling
-      expect(mod.delete).not.toHaveBeenCalled();
-      expect(mod.create).not.toHaveBeenCalled();
-      expect(mod.update).toHaveBeenCalledTimes(1);
-      const [, local, remoteId] = mod.update.mock.calls[0];
-      expect(local.slug).toBe("new-name");
-      expect(remoteId).toBe("id-1");
+        // No timers needed — update should already have been called during add handling
+        expect(mod.delete).not.toHaveBeenCalled();
+        expect(mod.create).not.toHaveBeenCalled();
+        expect(mod.update).toHaveBeenCalledTimes(1);
+        const [, local, remoteId] = mod.update.mock.calls[0];
+        expect(local.slug).toBe("new-name");
+        expect(remoteId).toBe("id-1");
 
-      // Advance timers to confirm no delayed delete fires
-      await jest.runAllTimersAsync();
-      expect(mod.delete).not.toHaveBeenCalled();
-    } finally {
-      jest.useRealTimers();
-      cleanup(dir);
-    }
-  });
-});
+        // Advance timers to confirm no delayed delete fires
+        await jest.runAllTimersAsync();
+        expect(mod.delete).not.toHaveBeenCalled();
+      } finally {
+        jest.useRealTimers();
+        cleanup(dir);
+      }
+    });
+  }
+);
 
 // ─── Dispatcher: function create via schema.yaml add ────────────────────────
 
@@ -606,55 +618,61 @@ describe("DevDispatcher — function: index/package change triggers granular upd
 
 // ─── Dispatcher: function rename detection ────────────────────────────────────
 
-describe("DevDispatcher — function rename: promoted to single update", () => {
-  it("does not delete+create when _id matches pending delete", async () => {
-    jest.useFakeTimers();
-    const dir = makeTmpDir();
-    try {
-      const newFnDir = path.join(dir, "function", "new-fn-name");
-      fs.mkdirSync(newFnDir, {recursive: true});
-      fs.writeFileSync(
-        path.join(newFnDir, "schema.yaml"),
-        yaml.stringify({_id: "fn-id-1", name: "new-fn-name", language: "javascript"})
-      );
-      fs.writeFileSync(path.join(newFnDir, "index.mjs"), "export default () => {};");
-      fs.writeFileSync(path.join(newFnDir, "package.json"), JSON.stringify({dependencies: {}}));
+describe.each(SHAPES)(
+  "DevDispatcher — function rename: promoted to single update (%s records)",
+  (_shape, key) => {
+    it("does not delete+create when key matches pending delete", async () => {
+      jest.useFakeTimers();
+      const dir = makeTmpDir();
+      try {
+        const newFnDir = path.join(dir, "function", "new-fn-name");
+        fs.mkdirSync(newFnDir, {recursive: true});
+        fs.writeFileSync(
+          path.join(newFnDir, "schema.yaml"),
+          yaml.stringify({[key]: "fn-id-1", name: "new-fn-name", language: "javascript"})
+        );
+        fs.writeFileSync(path.join(newFnDir, "index.mjs"), "export default () => {};");
+        fs.writeFileSync(path.join(newFnDir, "package.json"), JSON.stringify({dependencies: {}}));
 
-      const mod = makeFunctionMod();
-      const state = makeState({function: {"old-fn-name": "fn-id-1"}});
+        const mod = makeFunctionMod();
+        const state = makeState({function: {"old-fn-name": "fn-id-1"}});
 
-      const dispatcher = createDevDispatcher({
-        modules: [mod],
-        http: mockHttp,
-        rootDir: dir,
-        state,
-        renameWindowMs: 500
-      });
+        const dispatcher = createDevDispatcher({
+          modules: [mod],
+          http: mockHttp,
+          rootDir: dir,
+          state,
+          renameWindowMs: 500
+        });
 
-      await dispatcher.handleEvent(
-        "unlink",
-        path.join(dir, "function", "old-fn-name", "schema.yaml")
-      );
-      await dispatcher.handleEvent("add", path.join(dir, "function", "new-fn-name", "schema.yaml"));
+        await dispatcher.handleEvent(
+          "unlink",
+          path.join(dir, "function", "old-fn-name", "schema.yaml")
+        );
+        await dispatcher.handleEvent(
+          "add",
+          path.join(dir, "function", "new-fn-name", "schema.yaml")
+        );
 
-      expect(mod.delete).not.toHaveBeenCalled();
-      expect(mod.create).not.toHaveBeenCalled();
-      // Rename: schema handler calls updateSchema only
-      // index and package.json add events will upload those separately
-      expect(mod.updateSchema).toHaveBeenCalledTimes(1);
-      expect(mod.uploadIndex).not.toHaveBeenCalled();
-      expect(mod.uploadDependencies).not.toHaveBeenCalled();
-      const [, remoteId] = mod.updateSchema.mock.calls[0];
-      expect(remoteId).toBe("fn-id-1");
+        expect(mod.delete).not.toHaveBeenCalled();
+        expect(mod.create).not.toHaveBeenCalled();
+        // Rename: schema handler calls updateSchema only
+        // index and package.json add events will upload those separately
+        expect(mod.updateSchema).toHaveBeenCalledTimes(1);
+        expect(mod.uploadIndex).not.toHaveBeenCalled();
+        expect(mod.uploadDependencies).not.toHaveBeenCalled();
+        const [, remoteId] = mod.updateSchema.mock.calls[0];
+        expect(remoteId).toBe("fn-id-1");
 
-      await jest.runAllTimersAsync();
-      expect(mod.delete).not.toHaveBeenCalled();
-    } finally {
-      jest.useRealTimers();
-      cleanup(dir);
-    }
-  });
-});
+        await jest.runAllTimersAsync();
+        expect(mod.delete).not.toHaveBeenCalled();
+      } finally {
+        jest.useRealTimers();
+        cleanup(dir);
+      }
+    });
+  }
+);
 
 // ─── Dispatcher: dispose cancels pending timers ───────────────────────────────
 

@@ -20,13 +20,15 @@ import { registerAllRenderers } from "./registerRenderers";
 import { useModuleDataRegistry } from "./moduleRenderers";
 import { useModuleStatements } from "./hook/useStatement";
 import Confirmation from "../../components/molecules/confirmation/Confirmation";
-import PolicyActionBar from "../../components/molecules/policy-action-bar/PolicyActionBar";
+import PolicyActionBar, { POLICY_FILTER_FIELDS } from "../../components/molecules/policy-action-bar/PolicyActionBar";
+import { matchesConditions } from "../../components/prefabs/filter-panel/filterPanelUtils";
+import type { FilterConditionRow } from "../../components/prefabs/filter-panel/types";
+import { idOf, omitId, type SystemRecord } from "../../utils/recordKey";
 
 registerAllRenderers();
 
 
-export type PolicyItem = {
-  _id: string;
+export type PolicyItem = SystemRecord & {
   name: string;
   description: string;
   statement: { action: string; module: string; resource?: { include: string[]; exclude: string[] } }[];
@@ -45,7 +47,7 @@ const Policy = () => {
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyItem | null>(null);
   const [policyToDelete, setPolicyToDelete] = useState<PolicyItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
+  const [appliedConditions, setAppliedConditions] = useState<FilterConditionRow[]>([]);
   
   const modules = useModuleStatements(statements ?? []);
   const { moduleData, moduleDataElements } = useModuleDataRegistry();
@@ -58,22 +60,12 @@ const Policy = () => {
         (p) =>
           p.name?.toLowerCase().includes(q) ||
           p.description?.toLowerCase().includes(q) ||
-          p._id?.toLowerCase().includes(q)
+          idOf(p)?.toLowerCase().includes(q)
       );
     }
-    if (appliedFilter) {
-      const filterEntries = Object.entries(appliedFilter);
-      list = list.filter((p: any) =>
-        filterEntries.every(([key, val]) => {
-          if (val === null || val === undefined) return true;
-          const itemVal = p[key];
-          if (typeof val === "string") return String(itemVal ?? "").toLowerCase().includes(val.toLowerCase());
-          return itemVal === val;
-        })
-      );
-    }
+    list = list.filter((p) => matchesConditions(p, appliedConditions, POLICY_FILTER_FIELDS));
     return list;
-  }, [policies, searchQuery, appliedFilter]);
+  }, [policies, searchQuery, appliedConditions]);
 
 
   const openCreatePolicy = useCallback(() => {
@@ -82,7 +74,7 @@ const Policy = () => {
   }, []);
 
   const openCreateFromPredefined = useCallback((policy: PolicyItem) => {
-    setSelectedPolicy({ ...policy, _id: "" });
+    setSelectedPolicy(omitId(policy));
     setIsOpen(true);
   }, []);
 
@@ -98,9 +90,10 @@ const Policy = () => {
 
   const handleSave = useCallback(async (input: PolicyUpsertInput) => {
     try {
-      if (selectedPolicy?._id) {
+      const selectedPolicyId = idOf(selectedPolicy);
+      if (selectedPolicy && selectedPolicyId) {
         await updatePolicy({
-          id: selectedPolicy._id,
+          id: selectedPolicyId,
           body: {
             name: input.name,
             description: input.description,
@@ -128,7 +121,7 @@ const Policy = () => {
   const handleConfirmDelete = useCallback(async () => {
     if (!policyToDelete) return;
     try {
-      await deletePolicy(policyToDelete._id).unwrap();
+      await deletePolicy(idOf(policyToDelete)!).unwrap();
       setPolicyToDelete(null);
     } catch (error) {
       console.error("Failed to delete policy:", error);
@@ -144,8 +137,8 @@ const Policy = () => {
     return [
       {
         header: <FlexElement>#</FlexElement>,
-        key: "_id",
-        renderCell: ({ row }) => <span>{row._id}</span>
+        key: "recordId",
+        renderCell: ({ row }) => <span>{idOf(row)}</span>
       },
       {
         header: <FlexElement>Name</FlexElement>,
@@ -222,7 +215,7 @@ const Policy = () => {
       <PolicyActionBar
         onSearch={setSearchQuery}
         onAddPolicy={openCreatePolicy}
-        onFilter={setAppliedFilter}
+        onFilter={setAppliedConditions}
       />
 
       {moduleDataElements}

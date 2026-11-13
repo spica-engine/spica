@@ -36,7 +36,7 @@ export interface DevEventContext {
   /**
    * Find, cancel, and return any pending-delete entry whose remoteId matches.
    * Used for rename detection: call this on `add schema.yaml` with the new
-   * file's `_id` — if it matches a pending delete, it's a rename, not a create.
+   * file's key — if it matches a pending delete, it's a rename, not a create.
    * Returns undefined when no match is found.
    */
   consumePendingDeleteByRemoteId(remoteId: string): {slug: string; remoteId: string} | undefined;
@@ -120,9 +120,9 @@ export interface ResourceModule<T = any> {
   unorderedPaths?: string[];
 
   /**
-   * Extract a stable server-assigned ID from local data (e.g. `_id` written by a
+   * Extract a stable server-assigned ID from local data (e.g. the key written by a
    * previous fetch). When provided, buildPlan uses it to detect renames: a local
-   * resource whose identity field changed but whose `_id` matches a remote-only
+   * resource whose identity field changed but whose key matches a remote-only
    * entry is promoted to an update instead of a delete + create pair.
    */
   extractLocalId?(data: T): string | undefined;
@@ -134,7 +134,7 @@ export interface ResourceModule<T = any> {
 
   /** Apply a create to the remote API */
   create(http: SyncHttpClient, local: LocalResource<T>): Promise<void>;
-  /** Apply an update to the remote API; remoteId is the _id on the server */
+  /** Apply an update to the remote API; remoteId is the key on the server */
   update(http: SyncHttpClient, local: LocalResource<T>, remoteId: string): Promise<void>;
   /** Delete a remote resource */
   delete(http: SyncHttpClient, remoteId: string): Promise<void>;
@@ -190,7 +190,7 @@ export interface LocalResource<T = any> {
 export interface RemoteResource<T = any> {
   /** Derived from identityField on the remote object */
   slug: string;
-  /** Remote _id; used for update / delete API calls */
+  /** Remote key; used for update / delete API calls */
   id: string;
   data: T;
 }

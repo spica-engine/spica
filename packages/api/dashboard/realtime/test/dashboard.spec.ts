@@ -2,11 +2,21 @@ import {ForbiddenException, INestApplication, UnauthorizedException} from "@nest
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Websocket} from "@spica-server/core-testing";
 import {WsAdapter} from "@spica-server/core-websocket";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {
+  DatabaseService,
+  DatabaseTestingModule,
+  ObjectId,
+  mongoOnly
+} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {ChunkKind} from "@spica-server/interface-realtime";
 import {DashboardRealtimeModule} from "../src";
 import {GuardService} from "@spica-server/passport-guard-services";
+import {withId} from "@spica-server/data";
+
+mongoOnly(
+  "its documents, ids and filter syntax are MongoDB's; PostgreSQL realtime of this collection is covered by the realtime specs in data-postgresql"
+);
 
 function url(path: string, query?: {[k: string]: string | string[]}) {
   const url = new URL(path, "ws://insteadof");
@@ -131,32 +141,36 @@ describe("Dashboard Realtime", () => {
       });
 
       const insertData = [
-        {
-          _id: dashboardId1,
-          name: "Tests",
-          icon: "leaderboard",
-          components: [
-            {
-              name: "TestComp",
-              url: "ozikotest.com",
-              type: "pie",
-              ratio: "2/2"
-            }
-          ]
-        },
-        {
-          _id: dashboardId2,
-          name: "Test2",
-          icon: "leaderboard",
-          components: [
-            {
-              name: "Bazingaaa",
-              url: "zamazingo.com",
-              type: "pie",
-              ratio: "2/2"
-            }
-          ]
-        }
+        withId(
+          {
+            name: "Tests",
+            icon: "leaderboard",
+            components: [
+              {
+                name: "TestComp",
+                url: "ozikotest.com",
+                type: "pie",
+                ratio: "2/2"
+              }
+            ]
+          },
+          dashboardId1
+        ),
+        withId(
+          {
+            name: "Test2",
+            icon: "leaderboard",
+            components: [
+              {
+                name: "Bazingaaa",
+                url: "zamazingo.com",
+                type: "pie",
+                ratio: "2/2"
+              }
+            ]
+          },
+          dashboardId2
+        )
       ];
       rows = await db
         .collection("dashboard")

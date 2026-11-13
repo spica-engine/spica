@@ -4,6 +4,8 @@
  */
 
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from '../../utils/recordKey';
+import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
 import axios, { type AxiosProgressEvent } from 'axios';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import type { RootState } from '../index';
@@ -22,8 +24,7 @@ const createStorageIdTags = (id: string) => [
   STORAGE_TAGS.BROWSE,
 ];
 
-export interface Storage {
-  _id?: string;
+export interface Storage extends SystemRecord {
   name: string;
   url?: string;
   created_at?: string;
@@ -42,7 +43,7 @@ export interface StorageListResponse {
 }
 
 export interface StorageOptions {
-  filter?: object;
+  filter?: FilterInput;
   limit?: number;
   skip?: number;
   sort?: object;
@@ -75,7 +76,7 @@ export const storageApi = baseApi.injectEndpoints({
         if (limit != null) params.append('limit', String(limit));
         if (skip != null) params.append('skip', String(skip));
         if (sort) params.append('sort', JSON.stringify(sort));
-        if (filter) params.append('filter', JSON.stringify(filter));
+        if (filter) params.append('filter', serializeFilter(filter));
         params.append('paginate', JSON.stringify(paginate ?? false));
 
         const qs = params.toString();
@@ -84,7 +85,7 @@ export const storageApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: STORAGE_TAG, id: _id })),
+              ...result.data.map((item) => ({ type: STORAGE_TAG, id: idOf(item) })),
               STORAGE_TAGS.LIST,
             ]
           : [STORAGE_TAGS.LIST],
@@ -193,7 +194,7 @@ export const storageApi = baseApi.injectEndpoints({
         if (limit != null) params.append('limit', String(limit));
         if (skip != null) params.append('skip', String(skip));
         if (sort) params.append('sort', JSON.stringify(sort));
-        if (filter) params.append('filter', JSON.stringify(filter));
+        if (filter) params.append('filter', serializeFilter(filter));
         params.append('paginate', JSON.stringify(paginate ?? false));
 
         const qs = params.toString();
@@ -202,7 +203,7 @@ export const storageApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ _id }) => ({ type: STORAGE_TAG, id: _id })),
+              ...result.map((item) => ({ type: STORAGE_TAG, id: idOf(item) })),
               STORAGE_TAGS.BROWSE,
             ]
           : [STORAGE_TAGS.BROWSE],

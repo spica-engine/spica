@@ -6,14 +6,20 @@
 import React, {useCallback, useState, useEffect, useMemo} from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import {useFillScrollContainer} from "../../../hooks/useFillScrollContainer";
+import {useEngine} from "../../../hooks/useEngine";
+import {useKeyField} from "../../../hooks/useKeyField";
 import FilterPanel from "../filter-panel/FilterPanel";
-import type {FilterField} from "../filter-panel/types";
+import type {FilterConditionRow, FilterField} from "../filter-panel/types";
+import {conditionsToExpression} from "../filter-panel/filterPanelUtils";
 import type {Property} from "src/store/api/bucketApi";
 import {Button, FlexElement, FluidContainer, Text} from "oziko-ui-kit";
 import styles from "./RelationPicker.module.scss";
 import {useGetBucketDataQuery, useGetBucketQuery, useLazyGetBucketDataQuery} from "../../../store/api/bucketApi";
 import { extractPrimaryColumns, extractPrimaryFieldValue } from "./primaryFieldUtils";
 import { useBucketLookup } from "../../../contexts/BucketLookupContext";
+import { keyOf, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
+import { relationLabelField } from "../../../domain/relationTarget";
+import { filterFieldTypeOf } from "../../../domain/filterFieldType";
 
 type RelationPickerProps = {
   bucketId?: string | null;
@@ -30,18 +36,22 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
   currentValue,
   bucketProperties: providedBucketProperties
 }) => {
-  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
+  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | string | null>(null);
   const [additionalPages, setAdditionalPages] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const LIMIT = 7;
   const hasBucketId = typeof bucketId === "string" && bucketId.trim().length > 0;
   const resolvedBucketId = hasBucketId ? bucketId : undefined;
+  const keyField = useKeyField(resolvedBucketId);
+  const engine = useEngine();
   
   const {data: bucket} = useGetBucketQuery(resolvedBucketId as string, {
     skip: !resolvedBucketId,
   });
   const bucketLookup = useBucketLookup();
+  const labelField = relationLabelField(engine, bucket);
+  const relatedKeyField = keyField ?? DEFAULT_KEY_FIELD;
   
   const { data: initialData, isLoading: isInitialLoading, isFetching } = useGetBucketDataQuery({
     bucketId: resolvedBucketId as string,
@@ -49,10 +59,10 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
     relation: true,
     limit: LIMIT,
     skip: 0,
-    sort: { _id: -1 },
+    sort: { [keyField ?? DEFAULT_KEY_FIELD]: -1 },
     filter: appliedFilter || undefined
   }, {
-    skip: !resolvedBucketId,
+    skip: !resolvedBucketId || keyField === undefined,
   });
 
   const [getBucketData] = useLazyGetBucketDataQuery();
@@ -102,7 +112,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
         relation: true,
         limit: LIMIT,
         skip: skipValue,
-        sort: { _id: -1 },
+        sort: { [keyField ?? DEFAULT_KEY_FIELD]: -1 },
         filter: appliedFilter || undefined
       }).unwrap();
 
@@ -121,7 +131,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
     } finally {
       setIsFetchingMore(false);
     }
-  }, [resolvedBucketId, appliedFilter, currentPage, LIMIT, getBucketData, isFetching]);
+  }, [resolvedBucketId, appliedFilter, currentPage, LIMIT, getBucketData, isFetching, keyField]);
 
   useFillScrollContainer({
     containerId: "scrollableDiv",
@@ -137,13 +147,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
     return Object.entries(props)
       .filter(([, prop]: [string, any]) => !skipTypes.has(prop.type))
       .map(([key, prop]: [string, any]): FilterField => {
-        const strTypes = new Set(["string", "textarea", "color", "richtext", "hash", "encrypted"]);
-        const type: FilterField["type"] =
-          strTypes.has(prop.type) ? "string" :
-          prop.type === "number" ? "number" :
-          prop.type === "date" ? "date" :
-          prop.type === "boolean" ? "boolean" :
-          prop.type === "multiselect" && prop.items?.enum ? "enum" : "string";
+        const type = filterFieldTypeOf(prop);
         const field: FilterField = {key, label: prop.title || key, type};
         if (type === "enum" && prop.items?.enum) {
           field.enumOptions = (prop.items.enum as string[]).map((v: string) => ({label: v, value: v}));
@@ -152,11 +156,14 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
       });
   }, [bucket]);
 
-  const handleFilterApply = useCallback((filter: Record<string, any> | null) => {
-    setAppliedFilter(filter);
-    setAdditionalPages([]);
-    setCurrentPage(0);
-  }, []);
+  const handleFilterApply = useCallback(
+    (filter: Record<string, any> | null, conditions: FilterConditionRow[]) => {
+      setAppliedFilter(engine === "postgresql" ? conditionsToExpression(conditions, filterFields) : filter);
+      setAdditionalPages([]);
+      setCurrentPage(0);
+    },
+    [engine, filterFields]
+  );
 
   const handleFilterClear = useCallback(() => {
     setAppliedFilter(null);
@@ -219,8 +226,9 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
             >
               {items.map((item: any) => {
                 const properties = bucket?.properties || {};
-                const primaryFieldValue = extractPrimaryFieldValue(item, properties, bucket?.primary);
-                const primaryColumns = extractPrimaryColumns(item, properties, bucket?.primary);
+                const itemKey = keyOf(item, relatedKeyField);
+                const primaryFieldValue = extractPrimaryFieldValue(item, properties, labelField, relatedKeyField);
+                const primaryColumns = extractPrimaryColumns(item, properties, labelField);
                 // The primary column shows the resolved primary value(s); when a
                 // related bucket has no primary the column stays blank while the id
                 // column keeps every row aligned.
@@ -230,10 +238,10 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
                   : "";
 
                 const handleItemSelect = () => {
-                      bucketLookup.setRelationLabel(resolvedBucketId, item._id, primaryFieldValue);
+                      bucketLookup.setRelationLabel(resolvedBucketId, itemKey, primaryFieldValue);
 
                   onSelect?.({
-                    id: item._id,
+                    id: itemKey,
                     label: primaryFieldValue,
                     columns: primaryColumns
                   });
@@ -241,7 +249,7 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
 
                 return (
                   <FluidContainer
-                    key={item._id}
+                    key={itemKey}
                     className={styles.item}
                     mode="fill"
                     dimensionX="fill"
@@ -249,8 +257,8 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
                     root={{
                       children: (
                         <span className={styles.optionRow}>
-                          <span className={styles.optionId} title={item._id}>
-                            {item._id}
+                          <span className={styles.optionId} title={itemKey}>
+                            {itemKey}
                           </span>
                           <span
                             className={styles.optionPrimary}

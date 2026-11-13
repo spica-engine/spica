@@ -1,9 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {
-  DatabaseService,
-  DatabaseTestingModule,
-  ProfilingLevel
-} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {IdentityModule} from "@spica-server/passport-identity";
@@ -13,12 +10,15 @@ import {OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";
+import {idOf, withId} from "@spica-server/data";
 
-describe("Identity Controller", () => {
+contractSuite("Identity Controller", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
-  let db: DatabaseService;
+
+  const missingId = () =>
+    String(module.get<IdTypes>(ID_TYPES).forCollection("identity").generate());
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -26,7 +26,7 @@ describe("Identity Controller", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PassportTestingModule.initialize(),
         PreferenceTestingModule,
         CoreTestingModule,
@@ -49,9 +49,6 @@ describe("Identity Controller", () => {
     }).compile();
     app = module.createNestApplication();
 
-    db = module.get(DatabaseService);
-    await db.setProfilingLevel(ProfilingLevel.all);
-
     req = module.get(Request);
     await app.listen(req.socket);
   });
@@ -65,11 +62,9 @@ describe("Identity Controller", () => {
         password: "password1"
       });
       expect(res.statusCode).toEqual(201);
-      expect(res.body).toEqual({
-        _id: expect.any(String),
-        identifier: "user1",
-        policies: []
-      });
+      expect(res.body).toMatchObject(
+        withId({identifier: "user1", policies: []}, expect.any(String))
+      );
     });
 
     it("should fail if identifier is missing", async () => {
@@ -113,21 +108,21 @@ describe("Identity Controller", () => {
         identifier: "user1",
         password: "password1"
       });
-      identity1Id = res1.body._id;
+      identity1Id = idOf(res1.body).toString();
 
       const res2 = await req.post("/passport/identity", {
         identifier: "user2",
         password: "password2"
       });
-      identity2Id = res2.body._id;
+      identity2Id = idOf(res2.body).toString();
     });
 
     it("should list all identities without password fields", async () => {
       const res = await req.get("/passport/identity", {sort: JSON.stringify({identifier: 1})});
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual([
-        {_id: identity1Id, identifier: "user1", policies: []},
-        {_id: identity2Id, identifier: "user2", policies: []}
+      expect(res.body).toMatchObject([
+        withId({identifier: "user1", policies: []}, identity1Id),
+        withId({identifier: "user2", policies: []}, identity2Id)
       ]);
     });
 
@@ -137,7 +132,26 @@ describe("Identity Controller", () => {
         limit: 1
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual([{_id: identity1Id, identifier: "user1", policies: []}]);
+      expect(res.body).toMatchObject([withId({identifier: "user1", policies: []}, identity1Id)]);
+    });
+
+    it("should filter by identifier", async () => {
+      const filter =
+        engine.name == "mongodb"
+          ? JSON.stringify({identifier: "user2"})
+          : "document.identifier == 'user2'";
+      const res = await req.get("/passport/identity", {filter});
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toMatchObject([withId({identifier: "user2", policies: []}, identity2Id)]);
+    });
+
+    it("should answer 404 for a filter in the language of the other engine", async () => {
+      const filter =
+        engine.name == "mongodb"
+          ? "document.identifier == 'user1'"
+          : JSON.stringify({identifier: "user1"});
+      const res = await req.get("/passport/identity", {filter});
+      expect(res.statusCode).toEqual(404);
     });
 
     it("should skip results", async () => {
@@ -146,7 +160,7 @@ describe("Identity Controller", () => {
         skip: 1
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual([{_id: identity2Id, identifier: "user2", policies: []}]);
+      expect(res.body).toMatchObject([withId({identifier: "user2", policies: []}, identity2Id)]);
     });
 
     it("should sort results", async () => {
@@ -154,9 +168,9 @@ describe("Identity Controller", () => {
         sort: JSON.stringify({identifier: -1})
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual([
-        {_id: identity2Id, identifier: "user2", policies: []},
-        {_id: identity1Id, identifier: "user1", policies: []}
+      expect(res.body).toMatchObject([
+        withId({identifier: "user2", policies: []}, identity2Id),
+        withId({identifier: "user1", policies: []}, identity1Id)
       ]);
     });
 
@@ -166,11 +180,11 @@ describe("Identity Controller", () => {
         sort: JSON.stringify({identifier: 1})
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual({
+      expect(res.body).toMatchObject({
         meta: {total: 2},
         data: [
-          {_id: identity1Id, identifier: "user1", policies: []},
-          {_id: identity2Id, identifier: "user2", policies: []}
+          withId({identifier: "user1", policies: []}, identity1Id),
+          withId({identifier: "user2", policies: []}, identity2Id)
         ]
       });
     });
@@ -183,9 +197,9 @@ describe("Identity Controller", () => {
         skip: 1
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual({
+      expect(res.body).toMatchObject({
         meta: {total: 2},
-        data: [{_id: identity2Id, identifier: "user2", policies: []}]
+        data: [withId({identifier: "user2", policies: []}, identity2Id)]
       });
     });
   });
@@ -198,21 +212,17 @@ describe("Identity Controller", () => {
         identifier: "user1",
         password: "password1"
       });
-      identityId = res.body._id;
+      identityId = idOf(res.body).toString();
     });
 
     it("should return an identity by id without password fields", async () => {
       const res = await req.get(`/passport/identity/${identityId}`);
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual({
-        _id: identityId,
-        identifier: "user1",
-        policies: []
-      });
+      expect(res.body).toMatchObject(withId({identifier: "user1", policies: []}, identityId));
     });
 
     it("should return 404 for non-existing identity", async () => {
-      const nonExistingId = "000000000000000000000000";
+      const nonExistingId = missingId();
       const res = await req.get(`/passport/identity/${nonExistingId}`);
       expect(res.statusCode).toEqual(404);
       expect(res.body).toEqual({
@@ -231,7 +241,7 @@ describe("Identity Controller", () => {
         identifier: "user1",
         password: "password1"
       });
-      identityId = res.body._id;
+      identityId = idOf(res.body).toString();
     });
 
     it("should update an identity's identifier", async () => {
@@ -239,11 +249,9 @@ describe("Identity Controller", () => {
         identifier: "updated_user1"
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual({
-        _id: identityId,
-        identifier: "updated_user1",
-        policies: []
-      });
+      expect(res.body).toMatchObject(
+        withId({identifier: "updated_user1", policies: []}, identityId)
+      );
     });
 
     it("should update an identity's password without exposing password fields", async () => {
@@ -252,12 +260,12 @@ describe("Identity Controller", () => {
         password: "new_password"
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual({
-        _id: identityId,
-        identifier: "user1",
-        policies: [],
-        deactivateJwtsBefore: expect.any(Number)
-      });
+      expect(res.body).toMatchObject(
+        withId(
+          {identifier: "user1", policies: [], deactivateJwtsBefore: expect.any(Number)},
+          identityId
+        )
+      );
     });
 
     it("should fail when updating to a duplicate identifier", async () => {
@@ -279,7 +287,7 @@ describe("Identity Controller", () => {
     });
 
     it("should return 400 with not found message for non-existing identity", async () => {
-      const nonExistingId = "000000000000000000000000";
+      const nonExistingId = missingId();
       const res = await req.put(`/passport/identity/${nonExistingId}`, {
         identifier: "ghost"
       });
@@ -301,13 +309,13 @@ describe("Identity Controller", () => {
         identifier: "user1",
         password: "password1"
       });
-      identity1Id = res1.body._id;
+      identity1Id = idOf(res1.body).toString();
 
       const res2 = await req.post("/passport/identity", {
         identifier: "user2",
         password: "password2"
       });
-      identity2Id = res2.body._id;
+      identity2Id = idOf(res2.body).toString();
     });
 
     it("should delete an identity", async () => {
@@ -331,11 +339,7 @@ describe("Identity Controller", () => {
 
       const getRes = await req.get(`/passport/identity/${identity2Id}`);
       expect(getRes.statusCode).toEqual(200);
-      expect(getRes.body).toEqual({
-        _id: identity2Id,
-        identifier: "user2",
-        policies: []
-      });
+      expect(getRes.body).toMatchObject(withId({identifier: "user2", policies: []}, identity2Id));
     });
   });
 
@@ -348,7 +352,7 @@ describe("Identity Controller", () => {
         identifier: "user1",
         password: "password1"
       });
-      identityId = identityRes.body._id;
+      identityId = idOf(identityRes.body).toString();
 
       const policyRes = await req.post("/passport/policy", {
         name: "test_policy",
@@ -361,7 +365,7 @@ describe("Identity Controller", () => {
           }
         ]
       });
-      policyId = policyRes.body._id;
+      policyId = idOf(policyRes.body).toString();
     });
 
     it("should add a policy to an identity", async () => {
@@ -370,11 +374,9 @@ describe("Identity Controller", () => {
 
       const getRes = await req.get(`/passport/identity/${identityId}`);
       expect(getRes.statusCode).toEqual(200);
-      expect(getRes.body).toEqual({
-        _id: identityId,
-        identifier: "user1",
-        policies: [policyId]
-      });
+      expect(getRes.body).toMatchObject(
+        withId({identifier: "user1", policies: [policyId]}, identityId)
+      );
     });
 
     it("should not duplicate when adding same policy twice", async () => {
@@ -383,11 +385,9 @@ describe("Identity Controller", () => {
 
       const getRes = await req.get(`/passport/identity/${identityId}`);
       expect(getRes.statusCode).toEqual(200);
-      expect(getRes.body).toEqual({
-        _id: identityId,
-        identifier: "user1",
-        policies: [policyId]
-      });
+      expect(getRes.body).toMatchObject(
+        withId({identifier: "user1", policies: [policyId]}, identityId)
+      );
     });
 
     it("should remove a policy from an identity", async () => {
@@ -398,15 +398,11 @@ describe("Identity Controller", () => {
 
       const getRes = await req.get(`/passport/identity/${identityId}`);
       expect(getRes.statusCode).toEqual(200);
-      expect(getRes.body).toEqual({
-        _id: identityId,
-        identifier: "user1",
-        policies: []
-      });
+      expect(getRes.body).toMatchObject(withId({identifier: "user1", policies: []}, identityId));
     });
 
     it("should return 404 when adding policy to non-existing identity", async () => {
-      const res = await req.put(`/passport/identity/000000000000000000000000/policy/${policyId}`);
+      const res = await req.put(`/passport/identity/${missingId()}/policy/${policyId}`);
       expect(res.statusCode).toEqual(404);
       expect(res.body).toEqual({
         statusCode: 404,
@@ -416,110 +412,13 @@ describe("Identity Controller", () => {
     });
 
     it("should return 404 when removing policy from non-existing identity", async () => {
-      const res = await req.delete(
-        `/passport/identity/000000000000000000000000/policy/${policyId}`
-      );
+      const res = await req.delete(`/passport/identity/${missingId()}/policy/${policyId}`);
       expect(res.statusCode).toEqual(404);
       expect(res.body).toEqual({
         statusCode: 404,
         message: expect.stringContaining("not found"),
         error: "Not Found"
       });
-    });
-  });
-
-  describe("profiler", () => {
-    beforeEach(async () => {
-      // to make db insert profile entry
-      await Promise.all([
-        // unrelated operation to ensure ns filter working correctly
-        db.collection("buckets").insertOne({}),
-        req.post("/passport/identity", {identifier: "user1", password: "password1"}),
-        req.get("/passport/identity")
-      ]);
-    });
-
-    it("should list identity profile entries", async () => {
-      const res = await req.get("/passport/identity/profile");
-      expect(res.statusCode).toEqual(200);
-      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
-    });
-
-    it("should filter identity profile entries by operation type", async () => {
-      const res = await req.get("/passport/identity/profile", {
-        filter: JSON.stringify({op: "insert"})
-      });
-      expect(res.statusCode).toEqual(200);
-      expect(res.body.every(profileEntry => profileEntry.op == "insert")).toEqual(true);
-      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
-    });
-
-    it("should limit identity profile entries", async () => {
-      const res = await req.get("/passport/identity/profile", {
-        limit: 1
-      });
-      expect(res.statusCode).toEqual(200);
-      expect(res.body.length).toEqual(1);
-      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
-    });
-
-    it("should skip bucket1 profile entries", async () => {
-      const [{body: allProfileEntries}, skippedRes] = await Promise.all([
-        req.get("/passport/identity/profile"),
-        req.get("/passport/identity/profile", {skip: 1})
-      ]);
-      expect(skippedRes.statusCode).toEqual(200);
-      expect(skippedRes.body.length).toEqual(allProfileEntries.length - 1);
-
-      allProfileEntries.shift();
-      expect(skippedRes.body).toEqual(allProfileEntries);
-      expect(skippedRes.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(
-        true
-      );
-    });
-
-    it("should sort bucket1 profile entries", async () => {
-      const response = await req.get("/passport/identity/profile", {
-        sort: JSON.stringify({ts: -1})
-      });
-      expect(response.statusCode).toEqual(200);
-
-      for (let i = 1; i < response.body.length; i++) {
-        expect(response.body[i - 1].ts >= response.body[i].ts).toEqual(true);
-      }
-
-      expect(response.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(
-        true
-      );
-    });
-
-    // to prevent accessing other collections profile entries
-    it("should ignore ns on filter", async () => {
-      let res = await req.get("/passport/identity/profile", {
-        filter: JSON.stringify({ns: "test.buckets"})
-      });
-
-      expect(res.statusCode).toEqual(200);
-      // user provided ns filter will be overridden
-      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
-    });
-
-    it("should ignore ns on the nested filter", async () => {
-      let res = await req.get("/passport/identity/profile", {
-        filter: JSON.stringify({
-          $or: [{ns: "test.functions"}, {ns: "test.buckets"}]
-        })
-      });
-
-      expect(res.statusCode).toEqual(200);
-      // there is no such profile entries for filter below
-      /*
-      {
-        $or: [{ns: "test.functions"}, {ns: "test.buckets"}]
-        "ns": "test.identity"
-      },
-    */
-      expect(res.body.length).toEqual(0);
     });
   });
 });

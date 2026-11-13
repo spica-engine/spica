@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {RateLimitService} from "@spica-server/passport-user/src/rate-limit.service";
 import {RateLimitGuard} from "@spica-server/passport-user/src/rate-limit.guard";
 import {UserConfigService} from "@spica-server/passport-user/src/config.service";
@@ -15,7 +15,7 @@ import {MailerModule, MailerService} from "@spica-server/mailer";
 import {SmsModule, SmsService} from "@spica-server/sms";
 import {ExecutionContext, HttpException, HttpStatus} from "@nestjs/common";
 
-describe("RateLimitService", () => {
+contractSuite("RateLimitService", engine => {
   let module: TestingModule;
   let rateLimitService: RateLimitService;
   let userConfigService: UserConfigService;
@@ -24,7 +24,7 @@ describe("RateLimitService", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({formats: [OBJECT_ID]}),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         CoreTestingModule,
         PassportTestingModule.initialize(),
         PreferenceTestingModule,

@@ -1,6 +1,14 @@
+import {USER_REPOSITORY, VERIFICATION_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
 import {INestApplication} from "@nestjs/common";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {idOf, systemKeyField, withId} from "@spica-server/data";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  ID_TYPES,
+  IdTypes
+} from "@spica-server/interface-data";
 import {VerificationService} from "@spica-server/passport-user/src/verification.service";
 import {UserService} from "@spica-server/passport-user/src/user.service";
 import {MailerService} from "@spica-server/mailer";
@@ -17,20 +25,32 @@ import {GenericContainer} from "testcontainers";
 import {UserConfigService} from "../src/config.service";
 import {ConfigModule} from "@spica-server/config";
 
-describe("Provider Verification E2E with MailHog", () => {
+contractSuite("Provider Verification E2E with MailHog", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
   let verificationService: VerificationService;
+  let verifications: any;
   let userConfigService: UserConfigService;
   let userService: UserService;
+  let users: any;
   let mailerService: MailerService;
-  let db: DatabaseService;
+  let queries: CollectionQueryFacade;
   let container: any;
   let smtpPort: number;
   let apiPort: number;
   let apiHost: string;
-  let testUserId: ObjectId;
+  let testUserId: any;
+
+  const newUserId = () => module.get<IdTypes>(ID_TYPES).forCollection("user").generate();
+
+  const findVerification = async (criteria: Record<string, unknown>): Promise<any> => {
+    const where = Object.fromEntries(
+      Object.entries(criteria).map(([field, value]) => [field, {eq: value}])
+    ) as any;
+    const [verification] = await queries.find("verification", {where, limit: 1});
+    return verification ?? null;
+  };
 
   const wrongCode = "999999";
   const STRATEGY = "Otp";
@@ -71,7 +91,7 @@ describe("Provider Verification E2E with MailHog", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         CoreTestingModule,
         PassportTestingModule.initialize(),
         PreferenceTestingModule,
@@ -107,9 +127,12 @@ describe("Provider Verification E2E with MailHog", () => {
     }).compile();
 
     verificationService = module.get(VerificationService);
+
+    verifications = module.get(VERIFICATION_REPOSITORY);
     userService = module.get(UserService);
+    users = module.get(USER_REPOSITORY);
     mailerService = module.get(MailerService);
-    db = module.get(DatabaseService);
+    queries = module.get(COLLECTION_QUERY);
     userConfigService = module.get(UserConfigService);
 
     await userConfigService.set({
@@ -123,24 +146,20 @@ describe("Provider Verification E2E with MailHog", () => {
   }, 60000);
 
   afterEach(async () => {
+    await clearStorage(engine, module, {
+      mongodb: ["verification", "user"],
+      postgresql: ["verifications", "users"]
+    });
     if (app) await app.close();
-    if (module) await module.close();
     if (container) await container.stop();
   });
 
   beforeEach(async () => {
-    testUserId = new ObjectId();
-    await userService.insertOne({
-      _id: testUserId,
-      username: "testuser",
-      password: "testpassword"
-    } as any);
+    testUserId = newUserId();
+    await users.insert(withId({username: "testuser", password: "testpassword"}, testUserId) as any);
   });
 
   afterEach(async () => {
-    await db.collection("verification").deleteMany({});
-    await db.collection("user").deleteMany({});
-
     try {
       await fetch(`http://${apiHost}:${apiPort}/api/v1/messages`, {method: "DELETE"});
     } catch (e) {
@@ -196,7 +215,7 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(codeMatch).toBeTruthy();
       const code = codeMatch[1];
 
-      const verification = await verificationService.findOne({
+      const verification = await findVerification({
         userId: testUserId,
         provider: EMAIL_PROVIDER
       });
@@ -222,7 +241,7 @@ describe("Provider Verification E2E with MailHog", () => {
         provider: EMAIL_PROVIDER
       });
 
-      const updatedVerification = await verificationService.findOne({_id: verification._id});
+      const updatedVerification = await findVerification({[systemKeyField()]: idOf(verification)});
 
       expect(updatedVerification.is_used).toBe(true);
 
@@ -256,7 +275,7 @@ describe("Provider Verification E2E with MailHog", () => {
 
       expect(body.total).toBeGreaterThan(0);
 
-      const verification = await verificationService.findOne({
+      const verification = await findVerification({
         userId: testUserId,
         provider: EMAIL_PROVIDER
       });
@@ -278,7 +297,7 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(verifyResponse.statusCode).toBe(400);
       expect(verifyResponse.body.message).toBe("Invalid verification code");
 
-      const updatedVerification = await verificationService.findOne({_id: verification._id});
+      const updatedVerification = await findVerification({[systemKeyField()]: idOf(verification)});
 
       expect(updatedVerification.is_used).toBe(true);
 
@@ -328,7 +347,7 @@ describe("Provider Verification E2E with MailHog", () => {
         value: email
       });
 
-      const verification = await verificationService.findOne({
+      const verification = await findVerification({
         userId: testUserId,
         provider: EMAIL_PROVIDER
       });
@@ -350,7 +369,7 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(firstVerifyResponse.statusCode).toBe(400);
       expect(firstVerifyResponse.body.message).toBe("Invalid verification code");
 
-      const updatedVerification = await verificationService.findOne({_id: verification._id});
+      const updatedVerification = await findVerification({[systemKeyField()]: idOf(verification)});
 
       expect(updatedVerification.is_used).toBe(true);
 
@@ -429,7 +448,7 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(tokenMatch).toBeTruthy();
       const token = tokenMatch[1];
 
-      const verification = await verificationService.findOne({
+      const verification = await findVerification({
         userId: testUserId,
         provider: EMAIL_PROVIDER,
         strategy: MAGIC_LINK_STRATEGY
@@ -452,7 +471,7 @@ describe("Provider Verification E2E with MailHog", () => {
         provider: EMAIL_PROVIDER
       });
 
-      const updatedVerification = await verificationService.findOne({_id: verification._id});
+      const updatedVerification = await findVerification({[systemKeyField()]: idOf(verification)});
       expect(updatedVerification.is_used).toBe(true);
 
       const userResponse = await req.get(`/passport/user/${testUserId}`);

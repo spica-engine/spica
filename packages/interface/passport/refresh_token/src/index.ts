@@ -1,7 +1,5 @@
-import {ObjectId} from "@spica-server/database";
 
 export interface RefreshToken {
-  _id?: ObjectId;
   identity?: string;
   user?: string;
   token: string;

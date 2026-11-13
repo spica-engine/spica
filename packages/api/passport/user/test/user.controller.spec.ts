@@ -1,5 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {INestApplication} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core-schema";
@@ -7,12 +8,12 @@ import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {PassportModule} from "@spica-server/passport";
 import {ConfigModule} from "@spica-server/config";
+import {idOf} from "@spica-server/data";
 
-describe("User Controller CRUD Operations", () => {
+contractSuite("User Controller CRUD Operations", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
-  let database: DatabaseService;
   let adminToken: string;
 
   beforeAll(async () => {
@@ -21,7 +22,7 @@ describe("User Controller CRUD Operations", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID, DATE_TIME]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         CoreTestingModule,
         ConfigModule.forRoot(),
@@ -71,7 +72,6 @@ describe("User Controller CRUD Operations", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
-    database = module.get(DatabaseService);
 
     await app.listen(req.socket);
 
@@ -88,7 +88,7 @@ describe("User Controller CRUD Operations", () => {
   afterAll(() => app.close());
 
   afterEach(async () => {
-    await database.collection("user").deleteMany({});
+    await clearStorage(engine, module, {mongodb: ["user"], postgresql: ["users"]});
   });
 
   describe("POST /passport/user (create)", () => {
@@ -100,7 +100,7 @@ describe("User Controller CRUD Operations", () => {
       );
 
       expect(res.statusCode).toBe(201);
-      expect(res.body._id).toBeDefined();
+      expect(idOf(res.body)).toBeDefined();
       expect(res.body.username).toBe("newuser");
       expect(res.body.password).toBeUndefined();
       expect(res.body.lastPasswords).toBeUndefined();
@@ -262,7 +262,12 @@ describe("User Controller CRUD Operations", () => {
     it("should filter users by username", async () => {
       const res = await req.get(
         "/passport/user",
-        {filter: JSON.stringify({username: "listuser1"})},
+        {
+          filter:
+            engine.name == "mongodb"
+              ? JSON.stringify({username: "listuser1"})
+              : "document.username == 'listuser1'"
+        },
         {Authorization: `IDENTITY ${adminToken}`}
       );
 
@@ -282,7 +287,7 @@ describe("User Controller CRUD Operations", () => {
         {username: "finduser", password: "password123"},
         {Authorization: `IDENTITY ${adminToken}`}
       );
-      userId = createRes.body._id;
+      userId = idOf(createRes.body).toString();
 
       userToken = await req
         .post("/passport/login", {username: "finduser", password: "password123"})
@@ -295,7 +300,7 @@ describe("User Controller CRUD Operations", () => {
       });
 
       expect(res.statusCode).toBe(200);
-      expect(res.body._id).toBe(userId);
+      expect(idOf(res.body)).toBe(userId);
       expect(res.body.username).toBe("finduser");
       expect(res.body.password).toBeUndefined();
       expect(res.body.lastPasswords).toBeUndefined();
@@ -307,7 +312,7 @@ describe("User Controller CRUD Operations", () => {
       });
 
       expect(res.statusCode).toBe(200);
-      expect(res.body._id).toBe(userId);
+      expect(idOf(res.body)).toBe(userId);
       expect(res.body.username).toBe("finduser");
     });
 
@@ -318,7 +323,7 @@ describe("User Controller CRUD Operations", () => {
           {username: "another", password: "test123"},
           {Authorization: `IDENTITY ${adminToken}`}
         )
-        .then(r => r.body._id);
+        .then(r => idOf(r.body));
 
       const res = await req.get(`/passport/user/${user2Id}`, undefined, {
         Authorization: `USER ${userToken}`
@@ -334,7 +339,7 @@ describe("User Controller CRUD Operations", () => {
     });
 
     it("should return 404 for non-existent user ID", async () => {
-      const fakeId = "000000000000000000000000";
+      const fakeId = module.get<IdTypes>(ID_TYPES).forCollection("user").generate();
       const res = await req.get(`/passport/user/${fakeId}`, undefined, {
         Authorization: `IDENTITY ${adminToken}`
       });
@@ -353,7 +358,7 @@ describe("User Controller CRUD Operations", () => {
         {username: "updateuser", password: "password123"},
         {Authorization: `IDENTITY ${adminToken}`}
       );
-      userId = createRes.body._id;
+      userId = idOf(createRes.body).toString();
 
       userToken = await req
         .post("/passport/login", {username: "updateuser", password: "password123"})
@@ -459,8 +464,8 @@ describe("User Controller CRUD Operations", () => {
         )
       ]);
 
-      user1Id = res1.body._id;
-      user2Id = res2.body._id;
+      user1Id = idOf(res1.body).toString();
+      user2Id = idOf(res2.body).toString();
 
       user1Token = await req
         .post("/passport/login", {username: "selfuser1", password: "password1"})
@@ -475,7 +480,7 @@ describe("User Controller CRUD Operations", () => {
       );
 
       expect(res.statusCode).toBe(200);
-      expect(res.body._id).toBe(user1Id);
+      expect(idOf(res.body)).toBe(user1Id);
       expect(res.body.password).toBeUndefined();
 
       const loginRes = await req.post("/passport/login", {
@@ -564,7 +569,7 @@ describe("User Controller CRUD Operations", () => {
         {username: "deleteuser", password: "password123"},
         {Authorization: `IDENTITY ${adminToken}`}
       );
-      userId = createRes.body._id;
+      userId = idOf(createRes.body).toString();
 
       userToken = await req
         .post("/passport/login", {username: "deleteuser", password: "password123"})
@@ -596,7 +601,7 @@ describe("User Controller CRUD Operations", () => {
         Authorization: `IDENTITY ${adminToken}`
       });
       expect(findRes.statusCode).toBe(200);
-      expect(findRes.body._id).toBe(userId);
+      expect(idOf(findRes.body)).toBe(userId);
     });
 
     it("should reject deleting user without authorization", async () => {
@@ -616,7 +621,7 @@ describe("User Controller CRUD Operations", () => {
         {username: "policyuser", password: "password123"},
         {Authorization: `IDENTITY ${adminToken}`}
       );
-      userId = createRes.body._id;
+      userId = idOf(createRes.body).toString();
 
       userToken = await req
         .post("/passport/login", {username: "policyuser", password: "password123"})
@@ -666,7 +671,7 @@ describe("User Controller CRUD Operations", () => {
         {username: "rmpolicyuser", password: "password123"},
         {Authorization: `IDENTITY ${adminToken}`}
       );
-      userId = createRes.body._id;
+      userId = idOf(createRes.body).toString();
 
       await req.put(`/passport/user/${userId}/policy/RemovablePolicy`, undefined, {
         Authorization: `IDENTITY ${adminToken}`

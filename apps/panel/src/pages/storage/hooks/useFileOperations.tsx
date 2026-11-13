@@ -2,6 +2,7 @@ import type {TypeFile} from "oziko-ui-kit";
 import type {TypeDirectories, DirectoryItem} from "src/types/storage";
 import {ROOT_PATH} from "../constants";
 import {useStorageConverter} from "./useStorageConverter";
+import { idOf } from "../../../utils/recordKey";
 
 export function useFileOperations(
   directory: TypeDirectories,
@@ -34,7 +35,7 @@ export function useFileOperations(
     const newDirectories = directory.map(dir => {
       if (dir.items) {
         const updatedItems = dir.items.map(item =>
-          item._id === updatedFile._id ? updatedFile : item
+          idOf(item) === idOf(updatedFile) ? updatedFile : item
         );
         return {
           ...dir,
@@ -50,7 +51,7 @@ export function useFileOperations(
   const onFileDeleted = (fileId: string) => {
     const newDirectories = directory.map(dir => {
       if (dir.items) {
-        const filteredItems = dir.items.filter(item => item._id !== fileId);
+        const filteredItems = dir.items.filter(item => idOf(item) !== fileId);
         return {
           ...dir,
           items: filteredItems

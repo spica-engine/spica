@@ -3,6 +3,9 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../interface/function"
+    },
+    {
       "path": "../../../realtime"
     },
     {
@@ -18,10 +21,13 @@
       "path": "../../../interface/function/log"
     },
     {
-      "path": "../../../database/realtime"
+      "path": "../../../interface/data"
     },
     {
       "path": "../../../database"
+    },
+    {
+      "path": "../../../data"
     },
     {
       "path": "../../../core"

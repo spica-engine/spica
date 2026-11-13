@@ -1,6 +1,7 @@
+import {USER_REPOSITORY} from "@spica-server/interface-passport-user";
 import {Test, TestingModule} from "@nestjs/testing";
 import {INestApplication} from "@nestjs/common";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {PasswordlessLoginService} from "@spica-server/passport-user/src/services/passwordless-login.service";
 import {UserService} from "@spica-server/passport-user/src/user.service";
 import {UserConfigService} from "@spica-server/passport-user/src/config.service";
@@ -16,14 +17,14 @@ import fetch from "node-fetch";
 import {GenericContainer} from "testcontainers";
 import {ConfigModule} from "@spica-server/config";
 
-describe("Passwordless Login E2E with MailHog", () => {
+contractSuite("Passwordless Login E2E with MailHog", engine => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
   let passwordlessService: PasswordlessLoginService;
   let userConfigService: UserConfigService;
   let userService: UserService;
-  let db: DatabaseService;
+  let users: any;
   let container: any;
   let smtpPort: number;
   let apiPort: number;
@@ -66,7 +67,7 @@ describe("Passwordless Login E2E with MailHog", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         CoreTestingModule,
         PassportTestingModule.initialize(),
         PreferenceTestingModule,
@@ -104,7 +105,7 @@ describe("Passwordless Login E2E with MailHog", () => {
 
     passwordlessService = module.get(PasswordlessLoginService);
     userService = module.get(UserService);
-    db = module.get(DatabaseService);
+    users = module.get(USER_REPOSITORY);
     userConfigService = module.get(UserConfigService);
 
     await userConfigService.set({
@@ -132,14 +133,13 @@ describe("Passwordless Login E2E with MailHog", () => {
 
   afterEach(async () => {
     if (app) await app.close();
-    if (module) await module.close();
     if (container) await container.stop();
   });
 
   beforeEach(async () => {
     const encryptedEmail = userService.encryptField(testEmail);
 
-    await userService.insertOne({
+    await users.insert({
       username: testUsername,
       password: "hashedpassword",
       policies: [],

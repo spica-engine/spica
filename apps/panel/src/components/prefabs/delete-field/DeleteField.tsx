@@ -2,6 +2,7 @@ import { Icon } from 'oziko-ui-kit';
 import React, { useState, type ReactNode, type FC } from 'react'
 import Confirmation from '../../molecules/confirmation/Confirmation';
 import { useDeleteBucketFieldMutation, type BucketType } from '../../../store/api/bucketApi';
+import { idOf } from "../../../utils/recordKey";
 
 type DeleteFieldProps = {
     field: any; // TODO: add type
@@ -29,7 +30,7 @@ const DeleteField: FC<DeleteFieldProps> = ({ field, bucket, children }) => {
 
     const confirmDelete = async () => {
         const fieldKey = field.path || field.name;
-        await deleteBucketField({ bucketId: bucket._id, fieldKey, bucket });
+        await deleteBucketField({ bucketId: idOf(bucket)!, fieldKey, bucket });
         setIsConfirmationOpen(false);
     };
 

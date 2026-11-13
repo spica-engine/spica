@@ -15,6 +15,7 @@ import {
   type OnResourceBatchChange,
   type OnResourceChange
 } from "../moduleRendererHelpers";
+import { idOf } from "../../../utils/recordKey";
 
 export interface WebhookModuleProps extends BaseModuleContext {
   webhooks?: Webhook[];
@@ -56,8 +57,8 @@ export class WebhookModuleRenderer implements ModuleRenderer<WebhookModuleProps>
             onResourceBatchChange,
             itemConfig: {
               items: webhooks,
-              getId: webhook => webhook._id ?? "",
-              getKey: webhook => webhook._id ?? webhook.url,
+              getId: webhook => idOf(webhook) ?? "",
+              getKey: webhook => idOf(webhook) ?? webhook.url,
               getLabel: webhook => webhook.url,
               getIcon: () => <Icon name="link" size="md" />
             }

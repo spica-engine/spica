@@ -1,5 +1,8 @@
 import { useMemo } from "react";
+import { useEngine } from "../../../hooks/useEngine";
+import { bucketKeyField, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
 import type { Property, BucketType } from "../../../store/api/bucketApi";
+import { idOf } from "../../../utils/recordKey";
 
 export interface Field {
   id: string;
@@ -29,6 +32,7 @@ export interface Relation {
 }
 
 export const useBucketConverter = (buckets: BucketType[] | null) => {
+  const engine = useEngine();
   const convertPropertyToField = useMemo(() => {
     return (
       key: string, 
@@ -50,7 +54,7 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
         field.relationType = property.relationType;
       }
 
-      if (key === "_id" || key === "id") {
+      if (key === DEFAULT_KEY_FIELD || key === "id") {
         field.isUnique = true;
       }
       
@@ -79,6 +83,9 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
   const extractRelations = useMemo(() => {
     return (buckets: BucketType[]): Relation[] => {
       const relations: Relation[] = [];
+      const keyFieldById = new Map(
+        buckets.map(bucket => [idOf(bucket)!, bucketKeyField(engine, bucket) ?? DEFAULT_KEY_FIELD])
+      );
 
       const processProperty = (
         bucketId: string,
@@ -107,7 +114,7 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
             from: bucketId,
             to: property.bucketId,
             fromField: key,
-            toField: "_id",
+            toField: keyFieldById.get(property.bucketId) ?? DEFAULT_KEY_FIELD,
             type: relationType,
             fromPath: path
           });
@@ -121,13 +128,13 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
 
       buckets.forEach(bucket => {
         Object.entries(bucket.properties || {}).forEach(([key, property]) => {
-          processProperty(bucket._id, key, property);
+          processProperty(idOf(bucket)!, key, property);
         });
       });
 
       return relations;
     };
-  }, []);
+  }, [engine]);
 
   const convertBucketsToNodes = useMemo(() => {
     return (buckets: BucketType[], extractedRelations: Relation[]): Node[] => {
@@ -137,7 +144,7 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
       const bucketRelations = new Map<string, { incoming: Set<string>, outgoing: Set<string> }>();
       
       buckets.forEach(bucket => {
-        bucketRelations.set(bucket._id, { incoming: new Set(), outgoing: new Set() });
+        bucketRelations.set(idOf(bucket)!, { incoming: new Set(), outgoing: new Set() });
       });
 
       extractedRelations.forEach(relation => {
@@ -157,7 +164,7 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
       const isolatedBuckets: BucketType[] = [];
 
       buckets.forEach(bucket => {
-        const relations = bucketRelations.get(bucket._id);
+        const relations = bucketRelations.get(idOf(bucket)!);
         if (relations && relations.incoming.size === 0 && relations.outgoing.size === 0) {
           isolatedBuckets.push(bucket);
         } else if (relations && (relations.incoming.size + relations.outgoing.size) > 8) {
@@ -180,13 +187,16 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
       return buckets.map((bucket, bucketIndex) => {
         const fields: Field[] = [];
 
-        fields.push({
-          id: "_id",
-          name: "_id",
-          type: "unique",
-          isUnique: true,
-          path: "_id"
-        });
+        const keyField = bucketKeyField(engine, bucket) ?? DEFAULT_KEY_FIELD;
+        if (!(keyField in (bucket.properties || {}))) {
+          fields.push({
+            id: keyField,
+            name: keyField,
+            type: "unique",
+            isUnique: true,
+            path: keyField
+          });
+        }
 
         Object.entries(bucket.properties || {}).forEach(([key, property]) => {
           const propertyFields = convertPropertyToField(key, property);
@@ -195,13 +205,13 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
 
         let x: number, y: number;
 
-        const relations = bucketRelations.get(bucket._id);
+        const relations = bucketRelations.get(idOf(bucket)!);
         const totalConnections = relations ? relations.incoming.size + relations.outgoing.size : 0;
         const isIsolated = relations && relations.incoming.size === 0 && relations.outgoing.size === 0;
         const isHighConnection = totalConnections > 8;
 
         if (isIsolated) {
-          const isolatedIndex = isolatedBuckets.findIndex((b: BucketType) => b._id === bucket._id);
+          const isolatedIndex = isolatedBuckets.findIndex((b: BucketType) => idOf(b) === idOf(bucket));
           const row = Math.floor(isolatedIndex / squareColumns);
           const col = isolatedIndex % squareColumns;
           
@@ -212,14 +222,14 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
             x = centerX;
             y = centerY;
           } else {
-            const highConnectionIndex = highConnectionBuckets.findIndex((b: BucketType) => b._id === bucket._id);
+            const highConnectionIndex = highConnectionBuckets.findIndex((b: BucketType) => idOf(b) === idOf(bucket));
             const angle = (highConnectionIndex / highConnectionBuckets.length) * 2 * Math.PI;
             
             x = centerX + innerRadius * Math.cos(angle);
             y = centerY + innerRadius * Math.sin(angle);
           }
         } else {
-          const regularIndex = regularConnectedBuckets.findIndex((b: BucketType) => b._id === bucket._id);
+          const regularIndex = regularConnectedBuckets.findIndex((b: BucketType) => idOf(b) === idOf(bucket));
           const angle = (regularIndex / regularConnectedBuckets.length) * 2 * Math.PI;
           
           x = centerX + outerRadius * Math.cos(angle);
@@ -227,14 +237,14 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
         }
 
         return {
-          id: bucket._id,
+          id: idOf(bucket)!,
           name: bucket.title,
           position: { x, y },
           fields
         };
       });
     };
-  }, [convertPropertyToField]);
+  }, [convertPropertyToField, engine]);
 
   const relations = useMemo(() => {
     if (!buckets) return [];

@@ -3,38 +3,41 @@ import {
   getDuplicatedActionMaps,
   createDuplicatedActionsErrorMessage
 } from "@spica-server/passport-policy/src/utility";
+import {withId} from "@spica-server/data";
 
-const policy: Policy = {
-  _id: "test",
-  name: "my_policy",
-  statement: [
-    {
-      action: "activity:index",
-      module: "activity"
-    },
-    {
-      action: "bucket:create",
-      module: "bucket"
-    },
-    {
-      action: "activity:index",
-      module: "activity"
-    },
-    {
-      action: "bucket:index",
-      module: "bucket",
-      resource: "*"
-    },
-    {
-      action: "bucket:create",
-      module: "bucket"
-    },
-    {
-      action: "activity:index",
-      module: "activity"
-    }
-  ]
-};
+const policy: Policy = withId(
+  {
+    name: "my_policy",
+    statement: [
+      {
+        action: "activity:index",
+        module: "activity"
+      },
+      {
+        action: "bucket:create",
+        module: "bucket"
+      },
+      {
+        action: "activity:index",
+        module: "activity"
+      },
+      {
+        action: "bucket:index",
+        module: "bucket",
+        resource: "*"
+      },
+      {
+        action: "bucket:create",
+        module: "bucket"
+      },
+      {
+        action: "activity:index",
+        module: "activity"
+      }
+    ]
+  },
+  "test"
+);
 
 describe("Utility", () => {
   describe("getDuplicatedActionMaps", () => {

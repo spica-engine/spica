@@ -2,13 +2,18 @@ import {ForbiddenException, INestApplication, UnauthorizedException} from "@nest
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request, Websocket} from "@spica-server/core-testing";
 import {WsAdapter} from "@spica-server/core-websocket";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {ChunkKind} from "@spica-server/interface-realtime";
 import {SecretModule} from "@spica-server/secret";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID, OBJECTID_STRING} from "@spica-server/core-schema";
+import {idOf, withId} from "@spica-server/data";
+
+mongoOnly(
+  "its documents, ids and filter syntax are MongoDB's; PostgreSQL realtime of this collection is covered by the realtime specs in data-postgresql"
+);
 
 function url(path: string, query: Record<string, string> = {}) {
   const u = new URL(path, "ws://insteadof");
@@ -183,11 +188,11 @@ describe("Secret Realtime", () => {
               expect(calls).toEqual([
                 {
                   kind: ChunkKind.Initial,
-                  document: expect.objectContaining({_id: secrets[0]._id, key: secrets[0].key})
+                  document: expect.objectContaining(withId({key: secrets[0].key}, idOf(secrets[0])))
                 },
                 {
                   kind: ChunkKind.Initial,
-                  document: expect.objectContaining({_id: secrets[1]._id, key: secrets[1].key})
+                  document: expect.objectContaining(withId({key: secrets[1].key}, idOf(secrets[1])))
                 },
                 {kind: ChunkKind.EndOfInitial}
               ]);
@@ -230,11 +235,15 @@ describe("Secret Realtime", () => {
                 expect(calls).toEqual([
                   {
                     kind: ChunkKind.Initial,
-                    document: expect.objectContaining({_id: secrets[0]._id, key: secrets[0].key})
+                    document: expect.objectContaining(
+                      withId({key: secrets[0].key}, idOf(secrets[0]))
+                    )
                   },
                   {
                     kind: ChunkKind.Initial,
-                    document: expect.objectContaining({_id: secrets[1]._id, key: secrets[1].key})
+                    document: expect.objectContaining(
+                      withId({key: secrets[1].key}, idOf(secrets[1]))
+                    )
                   },
                   {kind: ChunkKind.EndOfInitial},
                   {kind: ChunkKind.Insert, document: expect.objectContaining({key: "SECRET_KEY_3"})}

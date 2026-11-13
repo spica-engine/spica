@@ -7,10 +7,16 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../interface/core"
+    },
+    {
       "path": "../../interface/config"
     },
     {
-      "path": "../../interface/core"
+      "path": "../../data"
+    },
+    {
+      "path": "../../interface/data"
     },
     {
       "path": "../encryption"

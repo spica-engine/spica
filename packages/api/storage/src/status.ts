@@ -1,7 +1,7 @@
 import {register} from "@spica-server/status";
 import {StorageService} from "./storage.service.js";
 
-export async function registerStatusProvider(service: StorageService) {
+export function registerStatusProvider(service: StorageService) {
   const provide = async () => {
     return {
       module: "storage",

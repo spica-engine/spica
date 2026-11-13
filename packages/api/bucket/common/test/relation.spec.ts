@@ -1,16 +1,39 @@
+import {idOf, systemKeyField} from "@spica-server/data";
 import {
   findRelations,
-  getUpdateParams,
   isArray,
   isObject,
   isDesiredRelation,
   createRelationMap,
+  getRelationPaths,
   getRelationResolvedBucketSchema
 } from "@spica-server/bucket-common";
 import {deepCopy} from "@spica-server/core-patch";
 import {RelationType} from "@spica-server/interface-bucket-common";
 
 describe("Relation", () => {
+  describe("getRelationPaths", () => {
+    it("should list the relations of a bucket as plain paths", () => {
+      const bucket: any = {
+        properties: {
+          title: {type: "string"},
+          author: {type: "relation", bucketId: "a", relationType: "onetoone"},
+          editors: {type: "relation", bucketId: "a", relationType: "onetomany"}
+        }
+      };
+
+      expect(getRelationPaths(bucket)).toEqual([["author"], ["editors"]]);
+    });
+
+    it("should split the dotted relations a client names", () => {
+      expect(getRelationPaths(["author", "meta.reviewer"])).toEqual([
+        ["author"],
+        ["meta", "reviewer"]
+      ]);
+      expect(getRelationPaths([])).toEqual([]);
+    });
+  });
+
   it("should check whether schema is object or not", () => {
     const schema = {
       type: "object",
@@ -75,22 +98,6 @@ describe("Relation", () => {
     );
   });
 
-  it("should get update operation params for one to one relation", () => {
-    const updateParams = getUpdateParams("test_key", RelationType.One, "document_id");
-    expect(updateParams).toEqual({
-      filter: {test_key: "document_id"},
-      update: {$unset: {test_key: ""}}
-    });
-  });
-
-  it("should get update operation params for one to many relation", () => {
-    const updateParams = getUpdateParams("test_key", RelationType.Many, "document_id");
-    expect(updateParams).toEqual({
-      filter: {test_key: {$in: ["document_id"]}},
-      update: {$pull: {test_key: "document_id"}}
-    });
-  });
-
   describe("relationMap and resolving relation of bucket schema", () => {
     let mainSchema;
 
@@ -127,7 +134,7 @@ describe("Relation", () => {
       };
 
       userSchema = {
-        _id: "user_bucket_id",
+        [systemKeyField()]: "user_bucket_id",
         properties: {
           name: {
             type: "string"
@@ -141,7 +148,7 @@ describe("Relation", () => {
       };
 
       walletSchema = {
-        _id: "wallet_bucket_id",
+        [systemKeyField()]: "wallet_bucket_id",
         properties: {
           brand: {
             type: "string"
@@ -152,7 +159,7 @@ describe("Relation", () => {
       schemas = [userSchema, walletSchema];
 
       resolve = id => {
-        return Promise.resolve(schemas.find(s => s._id == id) as any);
+        return Promise.resolve(schemas.find(s => idOf(s) == id) as any);
       };
     });
 
@@ -195,9 +202,9 @@ describe("Relation", () => {
         expect(relationMap).toEqual([]);
       });
 
-      it("should create relation map if _id of user is requested", async () => {
+      it("should create relation map if the key of user is requested", async () => {
         const relationMap = await createRelationMap({
-          paths: [["user", "_id"]],
+          paths: [["user", systemKeyField()]],
           properties: mainSchema.properties,
           resolve: resolve
         });

@@ -1,33 +1,51 @@
-import {Injectable} from "@nestjs/common";
-import {Collection, DatabaseService, ObjectId, BaseCollection} from "@spica-server/database";
-import {Policy} from "@spica-server/interface-passport-policy";
+import {Inject, Injectable} from "@nestjs/common";
+import {withId} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
+import {Policy, POLICY_REPOSITORY, PolicyRepository} from "@spica-server/interface-passport-policy";
 import managedPolicies from "./policies/index.js";
 
 @Injectable()
-export class PolicyService extends BaseCollection<Policy>("policies") {
-  managedPolicies: Array<PolicyWithType>;
+export class PolicyService {
+  private managed: Array<PolicyWithType>;
   customerManagedPolicies: Array<PolicyWithType>;
+
+  get managedPolicies(): Array<PolicyWithType> {
+    this.managed ??= Object.entries(managedPolicies).map(
+      ([id, policy]) => ({...withId(policy, id), system: true}) as PolicyWithType
+    );
+    return this.managed;
+  }
 
   get policies(): Array<PolicyWithType> {
     return [...this.managedPolicies, ...this.customerManagedPolicies];
   }
 
-  constructor(db: DatabaseService) {
-    super(db);
-    this.managedPolicies = managedPolicies.map(p => ({...p, system: true}) as PolicyWithType);
-  }
+  constructor(@Inject(POLICY_REPOSITORY) private readonly repository: PolicyRepository) {}
 
   _findAll(): Promise<Policy[]> {
-    return this._coll
-      .find()
-      .toArray()
-      .then(policies => {
-        this.customerManagedPolicies = policies.map(p => {
-          const policy = {...p, system: false};
-          return policy as PolicyWithType;
-        });
-        return this.policies;
+    return this.repository.findAll().then(policies => {
+      this.customerManagedPolicies = policies.map(p => {
+        const policy = {...p, system: false};
+        return policy as PolicyWithType;
       });
+      return this.policies;
+    });
+  }
+
+  findById(id: Id) {
+    return this.repository.findById(id);
+  }
+
+  insert(policy: Policy) {
+    return this.repository.insert(policy);
+  }
+
+  replaceById(id: Id, policy: Policy) {
+    return this.repository.replaceById(id, policy);
+  }
+
+  deleteById(id: Id) {
+    return this.repository.deleteById(id);
   }
 
   paginate(filter: object, limit: number, skip: number = 0) {

@@ -6,6 +6,7 @@ import {
 } from "../store/api/bucketApi";
 import type {BucketDataQueryType} from "../store/api/bucketApi";
 import useLocalStorage from "./useLocalStorage";
+import {useKeyField} from "./useKeyField";
 import {
   computeRelationParam,
   getRelationFieldKeys,
@@ -13,6 +14,7 @@ import {
   seedRelationLabelMap,
   type RelationLabelModeMap
 } from "../components/prefabs/relation-picker/primaryFieldUtils";
+import { keyOf, DEFAULT_KEY_FIELD } from "../utils/recordKey";
 
 const DEFAULT_PAGE_SIZE = 25;
 
@@ -81,12 +83,12 @@ function smoothScrollToTop(el: HTMLElement): Promise<void> {
   });
 }
 
-function dedupeById(rows: any[]): any[] {
+function dedupeById(rows: any[], keyField: string | undefined): any[] {
   const seen = new Set<string>();
   const result: any[] = [];
   for (const row of rows) {
-    const id = row?._id;
-    const key = typeof id === "string" ? id : JSON.stringify(row);
+    const id = keyOf(row, keyField);
+    const key = id !== "" ? id : JSON.stringify(row);
     if (seen.has(key)) continue;
     seen.add(key);
     result.push(row);
@@ -127,6 +129,8 @@ export function useBucketData(
       ? bucketId
       : undefined;
 
+  const keyField = useKeyField(resolvedBucketId);
+
   const queryArgs = useMemo(() => {
     if (!resolvedBucketId) {
       return undefined;
@@ -138,10 +142,10 @@ export function useBucketData(
       bucketId: resolvedBucketId,
       paginate: true,
       limit: DEFAULT_PAGE_SIZE,
-      sort: {_id: -1},
+      sort: {[keyField ?? DEFAULT_KEY_FIELD]: -1},
       ...searchQuery,
     };
-  }, [resolvedBucketId, searchQuery]);
+  }, [resolvedBucketId, searchQuery, keyField]);
 
   const pageSize = (queryArgs?.limit as number) ?? DEFAULT_PAGE_SIZE;
 
@@ -153,7 +157,7 @@ export function useBucketData(
   } = useGetBucketDataQuery(
     queryArgs as NonNullable<typeof queryArgs>,
     {
-      skip: !queryArgs || !enabled,
+      skip: !queryArgs || !enabled || keyField === undefined,
       refetchOnFocus: true
     }
   );
@@ -175,8 +179,8 @@ export function useBucketData(
   const total = bucketDataResponse?.meta?.total ?? 0;
 
   const combinedData = useMemo(
-    () => dedupeById([...firstPage, ...extraData]),
-    [firstPage, extraData]
+    () => dedupeById([...firstPage, ...extraData], keyField),
+    [firstPage, extraData, keyField]
   );
 
   const hasMore = !!queryArgs && combinedData.length < total;
@@ -203,14 +207,14 @@ export function useBucketData(
       .then(page => {
         const rows = page?.data ?? [];
         if (rows.length) {
-          setExtraData(prev => dedupeById([...prev, ...rows]));
+          setExtraData(prev => dedupeById([...prev, ...rows], keyField));
         }
       })
       .catch(() => {
         // Swallow — the next scroll will retry; the first page is still shown.
       })
       .finally(() => setIsFetchingMore(false));
-  }, [queryArgs, isFetchingMore, combinedData.length, total, fetchMore, pageSize]);
+  }, [queryArgs, isFetchingMore, combinedData.length, total, fetchMore, pageSize, keyField]);
 
   const handleRefresh = useCallback(async () => {
     if (tableRef.current) await smoothScrollToTop(tableRef.current);

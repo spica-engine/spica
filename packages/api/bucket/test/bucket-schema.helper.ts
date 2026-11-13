@@ -1,0 +1,53 @@
+import {composeBucketSchema} from "@spica-server/bucket-common";
+import {OBJECT_ID, OBJECTID_STRING, UUID, DATE_TIME, Validator} from "@spica-server/core-schema";
+import {MongoIdTypes} from "@spica-server/data-mongodb";
+import {BucketSchemaExtension} from "@spica-server/interface-bucket";
+import {IdTypes} from "@spica-server/interface-data";
+import BaseSchema from "../src/schemas/bucket.schema.json" with {type: "json"};
+import OriginalSchema from "./fixtures/bucket.schema.original.json" with {type: "json"};
+
+// $id identifiers are never fetched
+export const SCHEMA_ID = "http://spica.internal/bucket/schema"; // NOSONAR
+
+const CUSTOM_FIELDS = [
+  "primary",
+  "options",
+  "bucketId",
+  "relationType",
+  "dependent",
+  "locationType",
+  "acl"
+];
+
+function createValidator(extension?: BucketSchemaExtension, idTypes: IdTypes = new MongoIdTypes()) {
+  return new Validator(
+    {
+      formats: [OBJECT_ID, OBJECTID_STRING, UUID, DATE_TIME],
+      customFields: CUSTOM_FIELDS,
+      keywords: extension?.keywords ?? []
+    },
+    {},
+    idTypes
+  );
+}
+
+export function validatorFor(extension: BucketSchemaExtension, idTypes?: IdTypes) {
+  const validator = createValidator(extension, idTypes);
+  validator.registerSchema(composeBucketSchema(BaseSchema, extension.schema) as {$id: string});
+  return validator;
+}
+
+export function originalValidator() {
+  const validator = createValidator();
+  validator.registerSchema({...OriginalSchema, $id: "http://spica.internal/bucket/original"}); // NOSONAR
+  return validator;
+}
+
+export async function violations(validator: Validator, id: string, definition: unknown) {
+  try {
+    await validator.validate(id, JSON.parse(JSON.stringify(definition)));
+    return [];
+  } catch (error) {
+    return (error.errors ?? [error]).map((e: any) => `${e.instancePath ?? ""} ${e.message}`.trim());
+  }
+}

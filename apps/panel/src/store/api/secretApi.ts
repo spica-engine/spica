@@ -1,7 +1,8 @@
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from '../../utils/recordKey';
+import { serializeFilter, type FilterInput } from '../../utils/serializeFilter';
 
-export interface Secret {
-  _id: string;
+export interface Secret extends SystemRecord {
   key: string;
 }
 
@@ -21,7 +22,7 @@ export interface SecretOptions {
   limit?: number;
   skip?: number;
   sort?: Record<string, 1 | -1>;
-  filter?: Record<string, any>;
+  filter?: FilterInput;
 }
 
 const SECRET_TAG = 'Secret' as const;
@@ -40,7 +41,7 @@ export const secretApi = baseApi.injectEndpoints({
         if (limit != null) params.append('limit', String(limit));
         if (skip != null) params.append('skip', String(skip));
         if (sort) params.append('sort', JSON.stringify(sort));
-        if (filter) params.append('filter', JSON.stringify(filter));
+        if (filter) params.append('filter', serializeFilter(filter));
         params.append('paginate', 'true');
 
         const qs = params.toString();
@@ -49,7 +50,7 @@ export const secretApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: SECRET_TAG, id: _id })),
+              ...result.data.map((item) => ({ type: SECRET_TAG, id: idOf(item) })),
               SECRET_TAGS.LIST,
             ]
           : [SECRET_TAGS.LIST],

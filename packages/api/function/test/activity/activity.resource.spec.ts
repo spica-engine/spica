@@ -5,12 +5,11 @@ import {
   createFunctionEnvVarActivity,
   createFunctionIndexActivity
 } from "@spica-server/function/src/activity.resource";
+import {withId} from "@spica-server/data";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {
-    const res = {
-      _id: "function_id"
-    };
+    const res = withId({}, "function_id");
 
     const activities = createFunctionActivity(
       {action: Action.POST, identifier: "test_user"},

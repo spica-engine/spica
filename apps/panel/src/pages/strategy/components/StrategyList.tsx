@@ -8,6 +8,7 @@ import { FlexElement, Text } from "oziko-ui-kit";
 import type { AuthenticationStrategy } from "../../../store/api/authenticationStrategyApi";
 import StrategyItem from "./StrategyItem";
 import styles from "./StrategyList.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 type StrategyListProps = {
   strategies: AuthenticationStrategy[] | undefined;
@@ -53,7 +54,7 @@ const StrategyList = memo(function StrategyList({
     <>
       {strategies.map(strategy => (
         <StrategyItem
-          key={strategy._id}
+          key={idOf(strategy)!}
           strategy={strategy}
           onSelect={onSelectStrategy}
           onDelete={onDeleteClick}

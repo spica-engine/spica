@@ -1,6 +1,7 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core-schema";
-import {StorageOptions, STORAGE_OPTIONS} from "@spica-server/interface-storage";
+import {StorageOptions, STORAGE_OPTIONS, STORAGE_REPOSITORY} from "@spica-server/interface-storage";
+import {provideRepository} from "@spica-server/data";
 import {StorageController} from "./storage.controller.js";
 import {StorageService} from "./storage.service.js";
 import {Default} from "./strategy/default.js";
@@ -38,6 +39,7 @@ export class StorageModule {
           provide: STORAGE_OPTIONS,
           useValue: options
         },
+        provideRepository(STORAGE_REPOSITORY),
         StorageService,
         {
           provide: Strategy,

@@ -1,4 +1,3 @@
-import {ChangeStream, DatabaseService} from "@spica-server/database";
 import {DatabaseQueue, EventQueue} from "@spica-server/function-queue";
 import {Database, event} from "@spica-server/function-queue-proto";
 import {JobReducer} from "@spica-server/replication";
@@ -8,6 +7,9 @@ import {ClassCommander} from "@spica-server/replication";
 import uniqid from "uniqid";
 import {DatabaseOptions, Description} from "@spica-server/interface-function-enqueuer";
 import {Logger} from "@nestjs/common";
+import {ChangeEvent, ChangeFeed, ChangeOperation} from "@spica-server/interface-data";
+import {Subscription} from "rxjs";
+import {withId} from "@spica-server/data";
 
 export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   type = event.Type.DATABASE;
@@ -20,12 +22,12 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     description: "Catch up the events happen in the database."
   };
 
-  private streams = new Set<ChangeStream>();
+  private streams = new Set<Subscription>();
 
   constructor(
     private queue: EventQueue,
     private databaseQueue: DatabaseQueue,
-    private db: DatabaseService,
+    private feed: ChangeFeed,
     private jobReducer?: JobReducer,
     private commander?: ClassCommander
   ) {
@@ -37,12 +39,12 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   }
 
   subscribe(target: event.Target, options: DatabaseOptions): void {
-    const stream = this.db.collection(options.collection).watch(
-      [{$match: {operationType: options.type.toLowerCase()}}],
-      {fullDocument: "updateLookup", maxAwaitTimeMS: this.db.changeStreamAwaitTimeMS}
-    );
-
-    stream.on("change", change => this.onChangeHandler(change, target));
+    const stream = this.feed
+      .watch(options.collection, {
+        operations: [options.type.toLowerCase() as ChangeOperation],
+        document: "current"
+      })
+      .subscribe(change => this.onChangeHandler(change, target));
 
     Object.defineProperty(stream, "target", {writable: false, value: target});
 
@@ -57,13 +59,13 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
           stream["target"].cwd == target.cwd &&
           stream["target"].handler == target.handler)
       ) {
-        stream.close();
+        stream.unsubscribe();
         this.streams.delete(stream);
       }
     }
   }
 
-  onChangeHandler(rawChange, target: event.Target, eventId?: string) {
+  onChangeHandler(rawChange: ChangeEvent, target: event.Target, eventId?: string) {
     const ev = new event.Event({
       id: eventId || uniqid(),
       target,
@@ -71,16 +73,16 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     });
 
     const change = new Database.Change({
-      kind: getChangeKind(rawChange.operationType),
-      document: rawChange.fullDocument ? JSON.stringify(rawChange.fullDocument) : undefined,
-      documentKey: rawChange.documentKey._id.toString(),
-      collection: rawChange.ns.coll
+      kind: getChangeKind(rawChange.operation),
+      document: rawChange.document ? JSON.stringify(rawChange.document) : undefined,
+      documentKey: rawChange.key,
+      collection: rawChange.collection
     });
 
     if (change.kind == Database.Change.Kind.UPDATE) {
       change.updateDescription = new Database.Change.UpdateDescription({
-        removedFields: JSON.stringify(rawChange.updateDescription.removedFields),
-        updatedFields: JSON.stringify(rawChange.updateDescription.updatedFields)
+        removedFields: JSON.stringify(rawChange.changes?.removed ?? []),
+        updatedFields: JSON.stringify(rawChange.changes?.updated ?? {})
       });
     }
 
@@ -90,7 +92,10 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     };
 
     if (this.jobReducer) {
-      this.jobReducer.do({...rawChange, event_id: ev.id, _id: rawChange._id._data}, enqueue);
+      this.jobReducer.do(
+        withId({...rawChange, event_id: ev.id}, `${rawChange.id}-${target.cwd}-${target.handler}`),
+        enqueue
+      );
     } else {
       enqueue();
     }
@@ -105,13 +110,12 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     const shiftPromises: Promise<any>[] = [];
 
     for (const event of events) {
-      const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
+      const shift = this.jobReducer.takeByEventId(event.id).then(job => {
         if (!job) {
           this.logger.error(`Job ${event.id} does not exist!`);
           return;
         }
-        const newChange = {...job, _id: {_data: job._id}};
-        return this.shift(newChange, event.target.toObject(), event.id);
+        return this.shift(job as unknown as ChangeEvent, event.target.toObject(), event.id);
       });
 
       shiftPromises.push(shift);
@@ -121,7 +125,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   }
 
   private shift(
-    rawChange,
+    rawChange: ChangeEvent,
     target: {
       id: string;
       cwd: string;
@@ -157,7 +161,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   }
 }
 
-function getChangeKind(type: "insert" | "update" | "replace" | "delete"): Database.Change.Kind {
+function getChangeKind(type: ChangeOperation): Database.Change.Kind {
   switch (type) {
     case "insert":
       return Database.Change.Kind.INSERT;

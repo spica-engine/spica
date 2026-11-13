@@ -1,7 +1,9 @@
 import {Injectable, OnModuleDestroy} from "@nestjs/common";
 import {ChangeStream, DatabaseService, Document} from "@spica-server/database";
-import {StreamChunk} from "@spica-server/interface-realtime";
-import {Observable} from "rxjs";
+import {Realtime, StreamChunk} from "@spica-server/interface-realtime";
+import {Observable, throwError} from "rxjs";
+import {ids} from "@spica-server/data";
+import {renderResourceFilter} from "@spica-server/database-pipeline";
 import {FindOptions} from "@spica-server/interface-database";
 import {Emitter} from "./stream.js";
 import isEqual from "lodash/isEqual.js";
@@ -10,7 +12,9 @@ import {PassThrough, Readable} from "stream";
 const CURSOR_READY_TIMEOUT_MS = 5000;
 
 @Injectable()
-export class RealtimeDatabaseService implements OnModuleDestroy {
+export class RealtimeDatabaseService implements Realtime, OnModuleDestroy {
+  readonly filterLanguage = "json";
+
   constructor(private database: DatabaseService) {}
 
   private changeStreams = new Map<
@@ -61,6 +65,22 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
   }
 
   private emitters = new Map<string, {value: Emitter<any>; listenerCount: number}>();
+
+  private withRenderedResourceFilter<T>(name: string, options: FindOptions<T>): FindOptions<T> {
+    const {resourceFilter, ...rest} = options;
+    if (!resourceFilter) {
+      return options;
+    }
+    const idType = ids().forCollection(name);
+    const {$match} = renderResourceFilter(resourceFilter, id => idType.parse(id));
+    const conditions = rest.filter
+      ? "$and" in rest.filter
+        ? rest.filter.$and
+        : [rest.filter]
+      : [];
+    return {...rest, filter: {$and: [$match, ...conditions]} as any};
+  }
+
   private getEmitter(name: string, options: FindOptions<any>) {
     let emitterName = this.findEmitterName(name, options);
 
@@ -97,7 +117,11 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
   }
 
   doesEmitterExist(name: string, options: FindOptions<any>) {
-    return !!this.findEmitterName(name, options);
+    try {
+      return !!this.findEmitterName(name, this.withRenderedResourceFilter(name, options));
+    } catch {
+      return false;
+    }
   }
 
   async onModuleDestroy() {
@@ -121,6 +145,7 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
   }
 
   removeEmitter(name: string, options: FindOptions<any>) {
+    options = this.withRenderedResourceFilter(name, options);
     const emitterName = this.findEmitterName(name, options);
 
     const emitter = this.emitters.get(emitterName);
@@ -153,7 +178,13 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
     name: string,
     options: FindOptions<T> = {}
   ): Observable<StreamChunk<T>> {
-    return this.getEmitter(name, options).getObservable();
+    let rendered: FindOptions<T>;
+    try {
+      rendered = this.withRenderedResourceFilter(name, options);
+    } catch (error) {
+      return throwError(() => error);
+    }
+    return this.getEmitter(name, rendered).getObservable();
   }
 
   private closeStreamSafely(entry: {

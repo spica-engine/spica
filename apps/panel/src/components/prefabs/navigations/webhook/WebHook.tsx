@@ -11,6 +11,7 @@ import { Drawer, FlexElement, Icon, Popover } from "oziko-ui-kit";
 import { useGetWebhooksQuery, useUpdateWebhookMutation, type Webhook } from "../../../../store/api/webhookApi";
 import AddWebhookForm from "./AddWebhookForm";
 import { InfoRow } from "./InfoRow";
+import { idOf } from "../../../../utils/recordKey";
 
 interface WebhookItemProps {
   webhook: Webhook;
@@ -25,9 +26,9 @@ const WebhookItem = memo(({ webhook, isActive }: WebhookItemProps) => {
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (!webhook._id || isUpdating) return;
+      if (!idOf(webhook) || isUpdating) return;
       await updateWebhook({
-        id: webhook._id,
+        id: idOf(webhook)!,
         body: {
           title: webhook.title,
           url: webhook.url,
@@ -36,12 +37,12 @@ const WebhookItem = memo(({ webhook, isActive }: WebhookItemProps) => {
         },
       });
     },
-    [webhook._id, webhook.trigger, isRunning, isUpdating, updateWebhook]
+    [idOf(webhook)!, webhook.trigger, isRunning, isUpdating, updateWebhook]
   );
 
   return (
     <Link
-      to={webhook._id ? `/webhook/${webhook._id}` : "#"}
+      to={idOf(webhook) ? `/webhook/${idOf(webhook)!}` : "#"}
       className={`${webhookStyles.webhookItem} ${isActive ? webhookStyles.webhookItemActive : ""}`}
     >
       <Icon name="webhook" size="sm" className={webhookStyles.webhookIcon} />
@@ -59,7 +60,7 @@ const WebhookItem = memo(({ webhook, isActive }: WebhookItemProps) => {
             <FlexElement direction="vertical" gap={8} alignment="leftTop">
               <InfoRow
                 label="ID"
-                value={webhook._id}
+                value={idOf(webhook)!}
                 labelWidth={80}
                 valueClassName={webhookStyles.popoverValue}
                 labelClassName={webhookStyles.popoverLabel}
@@ -123,9 +124,9 @@ const WebHook = () => {
         {!isLoading &&
           webhooks.map((webhook) => (
             <WebhookItem
-              key={webhook._id ?? webhook.url}
+              key={idOf(webhook) ?? webhook.url}
               webhook={webhook}
-              isActive={activeWebhookId === webhook._id}
+              isActive={activeWebhookId === idOf(webhook)}
             />
           ))}
       </div>

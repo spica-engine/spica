@@ -1,9 +1,10 @@
+import "@spica-server/database-testing";
 import {format as _format} from "prettier";
 import {
   createSchema,
-  extractAggregationFromQuery,
-  requestedFieldsFromExpression,
+  parseQuery,
   requestedFieldsFromInfo,
+  requestedFieldsFromQuery,
   validateBuckets
 } from "@spica-server/bucket-graphql";
 
@@ -433,138 +434,106 @@ describe("Schema", () => {
     });
   });
 
-  describe("AggregationFromQuery", () => {
-    let query;
+  describe("parseQuery", () => {
     let bucket;
     beforeEach(() => {
-      query = {};
       bucket = {
         _id: "id",
         properties: {
-          title: {
-            type: "string"
-          },
-          age: {
-            type: "number"
-          }
+          title: {type: "string"},
+          age: {type: "number"}
         }
       };
     });
 
-    it("should extract aggregation from query that includes basic equality", () => {
-      query = {title: "test"};
-      const aggregation = extractAggregationFromQuery(bucket, query, []);
-      expect(aggregation).toEqual({title: "test"});
+    const condition = (path: string[], operator: string, value: unknown, extra = {}) => ({
+      path,
+      operator,
+      value,
+      ...extra
     });
 
-    it("should extract aggregation from query that includes comparision operators", () => {
-      query = {title_ne: "test", age_gte: 15};
-      const aggregation = extractAggregationFromQuery(bucket, query, []);
-      expect(aggregation).toEqual({title: {$ne: "test"}, age: {$gte: 15}});
+    it("should read a field as an equality", () => {
+      expect(parseQuery(bucket, {title: "test"}, [])).toEqual(condition(["title"], "eq", "test"));
     });
 
-    it("should extract aggregation from query that includes logical operators", () => {
-      query = {
-        OR: [
+    it("should read field_operator as a comparison, and keep every condition", () => {
+      expect(parseQuery(bucket, {title_ne: "test", age_gte: 15}, [])).toEqual({
+        and: [condition(["title"], "ne", "test"), condition(["age"], "gte", 15)]
+      });
+    });
+
+    it("should read OR and AND as groups", () => {
+      const query = {OR: [{AND: [{title_ne: "test"}, {age_gte: 15}]}]};
+
+      expect(parseQuery(bucket, query, [])).toEqual({
+        or: [
           {
-            AND: [
-              {
-                title_ne: "test"
-              },
-              {
-                age_gte: 15
-              }
-            ]
-          }
-        ]
-      };
-      const aggregation = extractAggregationFromQuery(bucket, query, []);
-      expect(aggregation).toEqual({
-        $or: [
-          {
-            $and: [
-              {
-                title: {
-                  $ne: "test"
-                }
-              },
-              {
-                age: {
-                  $gte: 15
-                }
-              }
-            ]
+            and: [condition(["title"], "ne", "test"), condition(["age"], "gte", 15)]
           }
         ]
       });
     });
 
-    it("should extract aggregation from nested object query", () => {
+    it("should read a nested object as a longer path", () => {
       bucket.properties = {
-        name: {
-          type: "string"
-        },
+        name: {type: "string"},
         address: {
           type: "object",
-          properties: {
-            city: {
-              type: "string"
-            },
-            no: {
-              type: "string"
-            }
-          }
+          properties: {city: {type: "string"}, no: {type: "string"}}
         }
       };
-      query = {
-        name: "Jim",
-        address: {
-          city: "Antalya",
-          no_gt: "50",
-          no_lte: "100"
-        }
-      };
-      const aggregation = extractAggregationFromQuery(bucket, query, []);
-      expect(aggregation).toEqual({
-        name: "Jim",
-        "address.city": "Antalya",
-        "address.no": {$gt: "50", $lte: "100"}
+      const query = {name: "Jim", address: {city: "Antalya", no_gt: "50", no_lte: "100"}};
+
+      expect(parseQuery(bucket, query, [])).toEqual({
+        and: [
+          condition(["name"], "eq", "Jim"),
+          condition(["address", "city"], "eq", "Antalya"),
+          condition(["address", "no"], "gt", "50"),
+          condition(["address", "no"], "lte", "100")
+        ]
       });
     });
 
-    it("should ignore part of query that does not match with any bucket property", () => {
-      query = {title_ne: "test", country: "some_country"};
-      const aggregation = extractAggregationFromQuery(bucket, query, []);
-      expect(aggregation).toEqual({title: {$ne: "test"}});
+    it("should follow a relation into the properties of the related bucket", () => {
+      bucket.properties = {
+        author: {type: "relation", bucketId: "authors", relationType: "onetoone"}
+      };
+      const authors = {_id: "authors", properties: {name: {type: "string"}}};
+
+      expect(parseQuery(bucket, {author: {name: "Ann"}}, [authors as any])).toEqual(
+        condition(["author", "name"], "eq", "Ann")
+      );
     });
 
-    it("should cast expression values to own original formats", () => {
+    it("should ignore part of the query that does not match any property", () => {
+      expect(parseQuery(bucket, {title_ne: "test", country: "x", nope: {a: 1}}, [])).toEqual(
+        condition(["title"], "ne", "test")
+      );
+      expect(parseQuery(bucket, {country: "x"}, [])).toBeUndefined();
+    });
+
+    it("should keep an operator the schema does not list", () => {
+      expect(parseQuery(bucket, {age_exists: true}, [])).toEqual(
+        condition(["age"], "exists", true)
+      );
+    });
+
+    it("should cast dates, and mark keys", () => {
       const date = new Date().toString();
-
       bucket.properties = {
-        created_at: {
-          type: "date"
-        },
-        dates: {
-          type: "array",
-          items: {
-            type: "date"
-          }
-        }
+        created_at: {type: "date"},
+        dates: {type: "array", items: {type: "date"}},
+        owners: {type: "array", items: {type: "objectid"}}
       };
+      const query = {created_at_lt: date, dates_in: [date], owners_in: ["a"]};
 
-      query = {
-        created_at_lt: date,
-        dates_in: [date]
-      };
-      const aggregation = extractAggregationFromQuery(bucket, query, []);
-      expect(aggregation).toEqual({
-        created_at: {
-          $lt: new Date(date)
-        },
-        dates: {
-          $in: [new Date(date)]
-        }
+      expect(parseQuery(bucket, query, [])).toEqual({
+        and: [
+          condition(["created_at"], "lt", new Date(date)),
+          condition(["dates"], "in", [new Date(date)]),
+          condition(["owners"], "in", ["a"], {id: true})
+        ]
       });
     });
   });
@@ -624,37 +593,33 @@ describe("Schema", () => {
       ]);
     });
 
-    it("should extract requested fields from expression", () => {
-      const expression = {
-        status: true,
-        $or: [
+    it("should extract requested fields from a query", () => {
+      const where = {
+        and: [
+          {path: ["status"], operator: "eq", value: true},
           {
-            $or: [
+            or: [
               {
-                name: {$regex: "test"}
+                or: [
+                  {path: ["name"], operator: "regex", value: "test"},
+                  {path: ["age"], operator: "gte", value: 12}
+                ]
               },
-              {
-                age: {$gte: 12, lt: 21}
-              }
+              {path: ["address", "city"], operator: "eq", value: "paris"},
+              {path: ["age"], operator: "eq", value: 20}
             ]
-          },
-          {
-            "address.city": "paris"
-          },
-          {
-            age: 20
           }
         ]
       };
 
-      const requestedFields = requestedFieldsFromExpression(expression, []);
-      expect(requestedFields).toEqual([
+      expect(requestedFieldsFromQuery(where)).toEqual([
         ["status"],
         ["name"],
         ["age"],
         ["address", "city"],
         ["age"]
       ]);
+      expect(requestedFieldsFromQuery(undefined)).toEqual([]);
     });
 
     it("should find requested fields from specified root key,and merge them", () => {

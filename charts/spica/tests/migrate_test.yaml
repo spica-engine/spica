@@ -111,3 +111,88 @@ tests:
       - equal:
           path: spec.template.spec.nodeSelector.region
           value: eu-west
+
+  - it: should render a Job on upgrade for postgresql
+    release:
+      upgrade: true
+    set:
+      database.type: postgresql
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Job
+
+  - it: should render nothing on a fresh install for postgresql
+    set:
+      database.type: postgresql
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should select the postgresql track and omit --database-name
+    release:
+      upgrade: true
+    set:
+      database.type: postgresql
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--database-type"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: postgresql
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--database-uri"
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--database-name"
+
+  - it: should pass the root postgres credentials to the postgresql migrate job
+    release:
+      upgrade: true
+    set:
+      database.type: postgresql
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: POSTGRES_USERNAME
+      - equal:
+          path: spec.template.spec.containers[0].env[1].valueFrom.secretKeyRef.name
+          value: release-name-database-root-credentials
+      - equal:
+          path: spec.template.spec.containers[0].env[1].valueFrom.secretKeyRef.key
+          value: rootUsername
+      - equal:
+          path: spec.template.spec.containers[0].env[2].name
+          value: POSTGRES_PASSWORD
+      - equal:
+          path: spec.template.spec.containers[0].env[2].valueFrom.secretKeyRef.key
+          value: rootPassword
+
+  - it: should not pass MongoDB credentials to the postgresql migrate job
+    release:
+      upgrade: true
+    set:
+      database.type: postgresql
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MONGODB_USERNAME
+          any: true
+
+  - it: should keep the mongodb arguments and credentials by default
+    release:
+      upgrade: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--database-name"
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--database-type"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: MONGODB_USERNAME

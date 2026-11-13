@@ -1,32 +1,31 @@
+import {provideRepository, withId, idOf} from "@spica-server/data";
+import {WEBHOOK_LOG_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {INestApplication} from "@nestjs/common";
-import {Test} from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {clearStorage, contractSuite, idAt} from "@spica-server/database-testing";
 import {WebhookLogController} from "@spica-server/function-webhook/src/log.controller";
-import {WebhookLogService} from "@spica-server/function-webhook/src/log.service";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 
-describe("Activity Controller", () => {
+contractSuite("Webhook Log Controller", engine => {
   let request: Request;
   let app: INestApplication;
-  let service: WebhookLogService;
+  let service: any;
   let today: Date;
   let yesterday: Date;
-  let logIds: ObjectId[];
-
-  let created_at = new Date();
+  let module: TestingModule;
+  let logIds: any[];
+  let firstWebhook: string;
+  let secondWebhook: string;
 
   beforeAll(async () => {
-    const module = await Test.createTestingModule({
-      imports: [
-        DatabaseTestingModule.standalone(),
-        CoreTestingModule,
-        PassportTestingModule.initialize()
-      ],
+    module = await Test.createTestingModule({
+      imports: [engine.module(), CoreTestingModule, PassportTestingModule.initialize()],
       controllers: [WebhookLogController],
       providers: [
-        WebhookLogService,
+        provideRepository(WEBHOOK_LOG_REPOSITORY),
         {
           provide: WEBHOOK_OPTIONS,
           useValue: {
@@ -42,59 +41,68 @@ describe("Activity Controller", () => {
 
     await app.listen(request.socket);
 
-    service = module.get(WebhookLogService);
-
-    await new Promise(resolve => setTimeout(() => resolve(""), 2000));
+    service = module.get(WEBHOOK_LOG_REPOSITORY);
   });
 
   beforeEach(async () => {
     today = new Date();
     yesterday = new Date(today.getTime() - 86400000);
 
-    logIds = await service.insertMany([
-      {
-        _id: ObjectId.createFromTime(today.getTime() / 1000),
-        content: {
-          request: {
-            body: "req_body",
-            headers: {test_key: "test_value"},
-            url: "url"
+    const webhookIds = module.get<IdTypes>(ID_TYPES).forCollection("webhook");
+    firstWebhook = String(webhookIds.generate());
+    secondWebhook = String(webhookIds.generate());
+
+    logIds = [];
+    for (const log of [
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body",
+              headers: {test_key: "test_value"},
+              url: "url"
+            },
+            response: {
+              body: "res_body",
+              headers: {test_key: ["test_value"]},
+              status: 404,
+              statusText: "BAD REQUEST"
+            }
           },
-          response: {
-            body: "res_body",
-            headers: {test_key: ["test_value"]},
-            status: 404,
-            statusText: "BAD REQUEST"
-          }
+          succeed: false,
+          webhook: firstWebhook,
+          created_at: today
         },
-        succeed: false,
-        webhook: "test_webhook_id",
-        created_at
-      },
-      {
-        _id: ObjectId.createFromTime(yesterday.getTime() / 1000),
-        content: {
-          request: {
-            body: "req_body2",
-            headers: {test_key: "test_value2"},
-            url: "url2"
+        idAt(engine, today)
+      ),
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body2",
+              headers: {test_key: "test_value2"},
+              url: "url2"
+            },
+            response: {
+              body: "res_body2",
+              headers: {test_key: ["test_value2"]},
+              status: 201,
+              statusText: "CREATED"
+            }
           },
-          response: {
-            body: "res_body2",
-            headers: {test_key: ["test_value2"]},
-            status: 201,
-            statusText: "CREATED"
-          }
+          succeed: true,
+          webhook: secondWebhook,
+          created_at: yesterday
         },
-        succeed: true,
-        webhook: "test_webhook_id2",
-        created_at
-      }
-    ]);
+        idAt(engine, yesterday)
+      )
+    ]) {
+      logIds.push(idOf(await service.insert(log)));
+    }
   });
 
   afterEach(async () => {
-    await service.deleteMany({});
+    await clearStorage(engine, module, {mongodb: ["webhook_logs"], postgresql: ["webhook_logs"]});
   });
 
   it("should get all logs", async () => {
@@ -102,44 +110,48 @@ describe("Activity Controller", () => {
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
-      {
-        _id: logIds[0].toHexString(),
-        content: {
-          request: {
-            body: "req_body",
-            headers: {test_key: "test_value"},
-            url: "url"
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body",
+              headers: {test_key: "test_value"},
+              url: "url"
+            },
+            response: {
+              body: "res_body",
+              headers: {test_key: ["test_value"]},
+              status: 404,
+              statusText: "BAD REQUEST"
+            }
           },
-          response: {
-            body: "res_body",
-            headers: {test_key: ["test_value"]},
-            status: 404,
-            statusText: "BAD REQUEST"
-          }
+          succeed: false,
+          webhook: firstWebhook,
+          created_at: today.toISOString()
         },
-        succeed: false,
-        webhook: "test_webhook_id",
-        created_at: created_at.toISOString()
-      },
-      {
-        _id: logIds[1].toHexString(),
-        content: {
-          request: {
-            body: "req_body2",
-            headers: {test_key: "test_value2"},
-            url: "url2"
+        String(logIds[0])
+      ),
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body2",
+              headers: {test_key: "test_value2"},
+              url: "url2"
+            },
+            response: {
+              body: "res_body2",
+              headers: {test_key: ["test_value2"]},
+              status: 201,
+              statusText: "CREATED"
+            }
           },
-          response: {
-            body: "res_body2",
-            headers: {test_key: ["test_value2"]},
-            status: 201,
-            statusText: "CREATED"
-          }
+          succeed: true,
+          webhook: secondWebhook,
+          created_at: yesterday.toISOString()
         },
-        succeed: true,
-        webhook: "test_webhook_id2",
-        created_at: created_at.toISOString()
-      }
+        String(logIds[1])
+      )
     ]);
   });
 
@@ -148,52 +160,56 @@ describe("Activity Controller", () => {
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
-      {
-        _id: logIds[1].toHexString(),
-        content: {
-          request: {
-            body: "req_body2",
-            headers: {test_key: "test_value2"},
-            url: "url2"
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body2",
+              headers: {test_key: "test_value2"},
+              url: "url2"
+            },
+            response: {
+              body: "res_body2",
+              headers: {test_key: ["test_value2"]},
+              status: 201,
+              statusText: "CREATED"
+            }
           },
-          response: {
-            body: "res_body2",
-            headers: {test_key: ["test_value2"]},
-            status: 201,
-            statusText: "CREATED"
-          }
+          succeed: true,
+          webhook: secondWebhook,
+          created_at: yesterday.toISOString()
         },
-        succeed: true,
-        webhook: "test_webhook_id2",
-        created_at: created_at.toISOString()
-      }
+        String(logIds[1])
+      )
     ]);
   });
 
   it("should filter by webhook", async () => {
-    const response = await request.get("/webhook/logs", {webhook: "test_webhook_id"});
+    const response = await request.get("/webhook/logs", {webhook: firstWebhook});
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
-      {
-        _id: logIds[0].toHexString(),
-        content: {
-          request: {
-            body: "req_body",
-            headers: {test_key: "test_value"},
-            url: "url"
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body",
+              headers: {test_key: "test_value"},
+              url: "url"
+            },
+            response: {
+              body: "res_body",
+              headers: {test_key: ["test_value"]},
+              status: 404,
+              statusText: "BAD REQUEST"
+            }
           },
-          response: {
-            body: "res_body",
-            headers: {test_key: ["test_value"]},
-            status: 404,
-            statusText: "BAD REQUEST"
-          }
+          succeed: false,
+          webhook: firstWebhook,
+          created_at: today.toISOString()
         },
-        succeed: false,
-        webhook: "test_webhook_id",
-        created_at: created_at.toISOString()
-      }
+        String(logIds[0])
+      )
     ]);
   });
 
@@ -202,31 +218,35 @@ describe("Activity Controller", () => {
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
-      {
-        _id: logIds[1].toHexString(),
-        content: {
-          request: {
-            body: "req_body2",
-            headers: {test_key: "test_value2"},
-            url: "url2"
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body2",
+              headers: {test_key: "test_value2"},
+              url: "url2"
+            },
+            response: {
+              body: "res_body2",
+              headers: {test_key: ["test_value2"]},
+              status: 201,
+              statusText: "CREATED"
+            }
           },
-          response: {
-            body: "res_body2",
-            headers: {test_key: ["test_value2"]},
-            status: 201,
-            statusText: "CREATED"
-          }
+          succeed: true,
+          webhook: secondWebhook,
+          created_at: yesterday.toISOString()
         },
-        succeed: true,
-        webhook: "test_webhook_id2",
-        created_at: created_at.toISOString()
-      }
+        String(logIds[1])
+      )
     ]);
   });
 
   it("should filter by date", async () => {
-    let begin = new Date(today.setHours(0));
-    let end = new Date(today.setHours(23, 59, 59, 999));
+    const begin = new Date(today);
+    begin.setHours(0);
+    const end = new Date(today);
+    end.setHours(23, 59, 59, 999);
 
     const response = await request.get("/webhook/logs", {
       begin: begin.toISOString(),
@@ -235,30 +255,32 @@ describe("Activity Controller", () => {
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
-      {
-        _id: logIds[0].toHexString(),
-        content: {
-          request: {
-            body: "req_body",
-            headers: {test_key: "test_value"},
-            url: "url"
+      withId(
+        {
+          content: {
+            request: {
+              body: "req_body",
+              headers: {test_key: "test_value"},
+              url: "url"
+            },
+            response: {
+              body: "res_body",
+              headers: {test_key: ["test_value"]},
+              status: 404,
+              statusText: "BAD REQUEST"
+            }
           },
-          response: {
-            body: "res_body",
-            headers: {test_key: ["test_value"]},
-            status: 404,
-            statusText: "BAD REQUEST"
-          }
+          succeed: false,
+          webhook: firstWebhook,
+          created_at: today.toISOString()
         },
-        succeed: false,
-        webhook: "test_webhook_id",
-        created_at: created_at.toISOString()
-      }
+        String(logIds[0])
+      )
     ]);
   });
 
   it("should delete specific log", async () => {
-    const response = await request.delete(`/webhook/logs/${logIds[0].toHexString()}`);
+    const response = await request.delete(`/webhook/logs/${String(logIds[0])}`);
     expect([response.statusCode, response.statusText]).toEqual([204, "No Content"]);
   });
 

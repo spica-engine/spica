@@ -1,6 +1,6 @@
 import {fromEvent, of} from "rxjs";
 import {catchError, concatMap, takeUntil} from "rxjs/operators";
-import {RealtimeDatabaseService} from "@spica-server/database-realtime";
+import {Realtime} from "@spica-server/interface-realtime";
 import {ResourceFilterFunction, IGuardService} from "@spica-server/interface-passport-guard";
 
 export function getConnectionHandlers(
@@ -8,8 +8,10 @@ export function getConnectionHandlers(
   getCollectionName: (client: any, req: any) => Promise<string>,
   getFindOptions: (client: any, req: any) => Promise<any>,
   buildErrorMessage: (error: any) => any,
-  realtime: RealtimeDatabaseService,
-  resourceFilterFunction?: ResourceFilterFunction,
+  realtime: Realtime,
+  resourceFilter?: (
+    ctx: Parameters<ResourceFilterFunction>[1]
+  ) => ReturnType<ResourceFilterFunction>,
   authAction?: string,
   documentTransformFactories?: ((
     client: any,
@@ -30,11 +32,11 @@ export function getConnectionHandlers(
           request: req,
           response: client,
           actions: authAction,
-          options: {resourceFilter: !!resourceFilterFunction}
+          options: {resourceFilter: !!resourceFilter}
         });
 
-        if (resourceFilterFunction) {
-          req.resourceFilter = resourceFilterFunction({}, {
+        if (resourceFilter) {
+          req.resourceFilter = resourceFilter({
             switchToHttp: () => ({
               getRequest: () => req
             })
