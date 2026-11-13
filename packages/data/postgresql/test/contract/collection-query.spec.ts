@@ -289,6 +289,23 @@ contractSuite("collection query", engine => {
     });
   });
 
+  (postgres ? it : it.skip)(
+    "should flatten a resource list recorded as one element, as text[] holds no nested arrays",
+    async () => {
+      await activities.insertMany([
+        {
+          action: 1,
+          resource: ["function", "1", "dependency", ["axios", "lodash"]],
+          created_at: new Date()
+        }
+      ] as any);
+
+      const [recorded] = await queries.find<any>("activity", {});
+
+      expect(recorded.resource).toEqual(["function", "1", "dependency", "axios", "lodash"]);
+    }
+  );
+
   (postgres ? describe : describe.skip)("hashed fields on PostgreSQL", () => {
     const secret = "hashed-fields-secret";
     const hashed = {secret, fields: {email: "email.hash", phone: "phone.hash"}};

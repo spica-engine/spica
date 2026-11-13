@@ -22,12 +22,18 @@ export type ColumnDefault =
   | Record<string, unknown>
   | SqlDefault;
 
+export interface ColumnCodec {
+  encode(value: any): unknown;
+  decode(value: any): unknown;
+}
+
 export interface ScalarColumn {
   type: ColumnType;
   column?: string;
   notNull?: boolean;
   default?: ColumnDefault;
   keepNull?: boolean;
+  codec?: ColumnCodec;
 }
 
 export interface EmbeddedColumns {

@@ -96,7 +96,8 @@ export function toDbValue(column: ResolvedColumn, value: unknown) {
   if (value instanceof Condition || value instanceof Assignment || value instanceof WhereGroup) {
     throw new Error(`"${column.property}" cannot store an expression.`);
   }
-  return column.type == "jsonb" ? JSON.stringify(value) : value;
+  const stored = column.codec ? column.codec.encode(value) : value;
+  return column.type == "jsonb" ? JSON.stringify(stored) : stored;
 }
 
 export function fromRow<R>(entity: Entity<R>, row: Record_): R {
@@ -109,7 +110,9 @@ export function fromRow<R>(entity: Entity<R>, row: Record_): R {
       const parent = column.path
         .slice(0, -1)
         .reduce((node, key) => (node[key] ??= {}) as Record_, record);
-      parent[column.path[column.path.length - 1]] = value;
+      parent[column.path[column.path.length - 1]] = column.codec
+        ? column.codec.decode(value)
+        : value;
     }
   }
   return record as R;

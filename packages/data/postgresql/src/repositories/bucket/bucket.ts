@@ -5,7 +5,6 @@ import {Bucket, BucketRepository, StoredBucket} from "@spica-server/interface-bu
 import {buckets} from "../../entities/index.js";
 import {ORM} from "../../orm.js";
 import {entryStatus} from "../helpers.js";
-import {decodeBucket, encodeBucket} from "./rows.js";
 
 @Injectable()
 export class PostgresBucketRepository implements BucketRepository {
@@ -13,24 +12,23 @@ export class PostgresBucketRepository implements BucketRepository {
 
   async findAll() {
     const found = await this.orm.findMany(buckets, {}, {orderBy: {id: "asc"}});
-    return found.map(decodeBucket) as StoredBucket[];
+    return found as StoredBucket[];
   }
 
   async findById(id: Id) {
-    return decodeBucket(await this.orm.findById(buckets, id)) as StoredBucket | null;
+    return (await this.orm.findById(buckets, id)) as StoredBucket | null;
   }
 
   async insert(bucket: Bucket) {
-    return decodeBucket(await this.orm.insert(buckets, encodeBucket(bucket))) as StoredBucket;
+    return (await this.orm.insert(buckets, bucket)) as StoredBucket;
   }
 
   async replaceById(id: Id, bucket: Bucket) {
-    const replaced = await this.orm.replaceById(buckets, id, encodeBucket(bucket));
-    return decodeBucket(replaced) as StoredBucket | null;
+    return (await this.orm.replaceById(buckets, id, bucket)) as StoredBucket | null;
   }
 
   async deleteById(id: Id) {
-    return decodeBucket(await this.orm.deleteById(buckets, id)) as StoredBucket | null;
+    return (await this.orm.deleteById(buckets, id)) as StoredBucket | null;
   }
 
   async unsetProperties(id: Id, paths: string[]) {
