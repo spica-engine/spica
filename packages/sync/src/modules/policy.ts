@@ -20,12 +20,18 @@ interface Policy {
 }
 
 const IGNORED_FIELDS = [...KEY_FIELDS, "system"];
+const UNORDERED_PATHS = [
+  "statement",
+  "statement.*.resource.include",
+  "statement.*.resource.exclude"
+];
 
 export const policyModule: ResourceModule<Policy> = {
   name: "policy",
   displayName: "Policy",
   identityField: "name",
   ignoredFields: IGNORED_FIELDS,
+  unorderedPaths: UNORDERED_PATHS,
 
   readLocal(rootDir, source) {
     return readLocalSchemas<Policy>(rootDir, "policy", source);
@@ -67,11 +73,11 @@ export const policyModule: ResourceModule<Policy> = {
   },
 
   diffFields(local, remote) {
-    return diffSchemaFields(local, remote, IGNORED_FIELDS);
+    return diffSchemaFields(local, remote, IGNORED_FIELDS, UNORDERED_PATHS);
   },
 
   renderDetail(local, remote) {
-    return renderSchemaDetail(local.data, remote.data, IGNORED_FIELDS);
+    return renderSchemaDetail(local.data, remote.data, IGNORED_FIELDS, UNORDERED_PATHS);
   },
 
   summaryLine(resource) {

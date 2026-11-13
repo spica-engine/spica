@@ -95,14 +95,6 @@ export interface Plan {
  */
 export const DEFAULT_CONCURRENCY = 10;
 
-export interface ReadRemoteOptions {
-  /**
-   * Maximum resources fetched in parallel; defaults to `DEFAULT_CONCURRENCY`.
-   * Modules whose remote read is a single request ignore it.
-   */
-  concurrency?: number;
-}
-
 /**
  * Strategy interface — one implementation per resource type.
  * Adding a new module = one new file implementing this interface.
@@ -120,6 +112,12 @@ export interface ResourceModule<T = any> {
    * representing a real user-visible change.
    */
   ignoredFields: string[];
+  /**
+   * Dot paths of arrays whose item order carries no meaning, so a reorder is not an update.
+   * `*` matches any one key, `**` any number of keys. Only list arrays the server treats as sets:
+   * the order of e.g. `enum` or `default` is user-visible and must stay a change.
+   */
+  unorderedPaths?: string[];
 
   /**
    * Extract a stable server-assigned ID from local data (e.g. the key written by a
@@ -132,7 +130,7 @@ export interface ResourceModule<T = any> {
   /** Read all local resources from the project directory (on disk unless a source is given) */
   readLocal(rootDir: string, source?: ResourceSource): Promise<LocalResource<T>[]>;
   /** Fetch all remote resources from the Spica API */
-  readRemote(http: SyncHttpClient, options?: ReadRemoteOptions): Promise<RemoteResource<T>[]>;
+  readRemote(http: SyncHttpClient): Promise<RemoteResource<T>[]>;
 
   /** Apply a create to the remote API */
   create(http: SyncHttpClient, local: LocalResource<T>): Promise<void>;

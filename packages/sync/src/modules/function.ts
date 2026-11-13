@@ -5,7 +5,7 @@ import isEqual from "lodash/isEqual.js";
 import semver from "semver";
 import {bold, cyan, green, red, yellow} from "colorette";
 import {SyncHttpClient} from "../http";
-import {buildUnifiedDiff, diffObjectFields} from "../planner";
+import {buildUnifiedDiff, diffObjectFields, stringifyForDiff} from "../planner";
 import {
   ensureDir,
   omit,
@@ -17,13 +17,8 @@ import {
   writeYaml
 } from "../fs-utils";
 import {diskSource, ResourceSource} from "../source";
-import {
-  DEFAULT_CONCURRENCY,
-  DevEventContext,
-  LocalResource,
-  RemoteResource,
-  ResourceModule
-} from "../types";
+import {sortUnorderedArrays} from "../unordered";
+import {DevEventContext, LocalResource, RemoteResource, ResourceModule} from "../types";
 import {KEY_FIELDS, recordKey} from "../record-key";
 
 interface FunctionSchema {
@@ -48,7 +43,8 @@ export interface FunctionData {
   dependencies: Record<string, string>;
 }
 
-const SCHEMA_IGNORED = [...KEY_FIELDS, "env_vars", "secrets"];
+const SCHEMA_IGNORED = [...KEY_FIELDS, "env_vars", "secrets", "order"];
+const SCHEMA_UNORDERED = ["triggers.*.options.authenticate"];
 
 function indexFilename(language?: string): string {
   return language === "typescript" ? "index.ts" : "index.mjs";
@@ -78,20 +74,6 @@ function normalizeSchema(schema: FunctionSchema): FunctionSchema {
     normalized.secrets = (schema.secrets as unknown[]).map(extractId).sort(byCodeUnit);
   }
   return normalized;
-}
-
-async function mapInBatches<T, R>(
-  items: T[],
-  size: number,
-  fn: (item: T) => Promise<R>
-): Promise<R[]> {
-  // A non-positive size would never advance `i` — an unresponsive infinite loop.
-  const limit = Math.max(1, size);
-  const results: R[] = [];
-  for (let i = 0; i < items.length; i += limit) {
-    results.push(...(await Promise.all(items.slice(i, i + limit).map(fn))));
-  }
-  return results;
 }
 
 function isNotFoundError(error: unknown): boolean {
@@ -166,6 +148,7 @@ export const functionModule: FunctionModule = {
   displayName: "Function",
   identityField: "name",
   ignoredFields: SCHEMA_IGNORED,
+  unorderedPaths: SCHEMA_UNORDERED,
 
   readSchema(rootDir, slug, source = diskSource) {
     return readSourceYaml<FunctionSchema>(
@@ -203,37 +186,39 @@ export const functionModule: FunctionModule = {
     return results;
   },
 
-  async readRemote(http, options = {}) {
+  async readRemote(http) {
     const res = await http.get<FunctionSchema[] | {data: FunctionSchema[]}>("function");
     const fns = unwrapList(res);
 
-    return mapInBatches(fns, options.concurrency ?? DEFAULT_CONCURRENCY, async fn => {
-      const id = recordKey(fn)!;
+    return Promise.all(
+      fns.map(async fn => {
+        const id = recordKey(fn)!;
 
-      const [indexRes, depsRes] = await Promise.all([
-        http.get<{index: string}>(`function/${id}/index`).catch(emptyIfMissing({index: ""})),
-        http
-          .get<RemoteDependency[]>(`function/${id}/dependencies`)
-          .catch(emptyIfMissing<RemoteDependency[]>([]))
-      ]).catch(error => {
-        throw new Error(`Could not read function "${fn.name}": ${error?.message ?? error}`);
-      });
+        const [indexRes, depsRes] = await Promise.all([
+          http.get<{index: string}>(`function/${id}/index`).catch(emptyIfMissing({index: ""})),
+          http
+            .get<RemoteDependency[]>(`function/${id}/dependencies`)
+            .catch(emptyIfMissing<RemoteDependency[]>([]))
+        ]).catch(error => {
+          throw new Error(`Could not read function "${fn.name}": ${error?.message ?? error}`);
+        });
 
-      const dependencies: Record<string, string> = {};
-      for (const dep of depsRes) {
-        dependencies[dep.name] = dep.version;
-      }
-
-      return {
-        slug: sanitizeSlug(fn.name),
-        id,
-        data: {
-          schema: normalizeSchema(fn),
-          index: indexRes.index ?? "",
-          dependencies
+        const dependencies: Record<string, string> = {};
+        for (const dep of depsRes) {
+          dependencies[dep.name] = dep.version;
         }
-      };
-    });
+
+        return {
+          slug: sanitizeSlug(fn.name),
+          id,
+          data: {
+            schema: normalizeSchema(fn),
+            index: indexRes.index ?? "",
+            dependencies
+          }
+        };
+      })
+    );
   },
 
   async create(http, local) {
@@ -354,7 +339,8 @@ export const functionModule: FunctionModule = {
     const schemaChanged = diffObjectFields(
       local.schema as Record<string, unknown>,
       remote.schema as Record<string, unknown>,
-      SCHEMA_IGNORED
+      SCHEMA_IGNORED,
+      SCHEMA_UNORDERED
     );
     if (schemaChanged.length) changed.push("schema");
 
@@ -376,8 +362,12 @@ export const functionModule: FunctionModule = {
   renderDetail(local, remote) {
     const result: Record<string, string> = {};
 
-    const localSchemaYaml = yaml.stringify(omit(local.data.schema, SCHEMA_IGNORED));
-    const remoteSchemaYaml = yaml.stringify(omit(remote.data.schema, SCHEMA_IGNORED));
+    const localSchemaYaml = stringifyForDiff(
+      sortUnorderedArrays(omit(local.data.schema, SCHEMA_IGNORED), SCHEMA_UNORDERED)
+    );
+    const remoteSchemaYaml = stringifyForDiff(
+      sortUnorderedArrays(omit(remote.data.schema, SCHEMA_IGNORED), SCHEMA_UNORDERED)
+    );
     if (localSchemaYaml !== remoteSchemaYaml) {
       result["schema"] = buildUnifiedDiff(remoteSchemaYaml, localSchemaYaml, "schema.yaml");
     }

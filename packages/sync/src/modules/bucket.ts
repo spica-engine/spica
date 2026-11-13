@@ -17,13 +17,15 @@ interface Bucket {
   [key: string]: unknown;
 }
 
-const IGNORED_FIELDS = [...KEY_FIELDS];
+const IGNORED_FIELDS = [...KEY_FIELDS, "order"];
+const UNORDERED_PATHS = ["required", "properties.**.required", "indexes"];
 
 export const bucketModule: ResourceModule<Bucket> = {
   name: "bucket",
   displayName: "Bucket",
   identityField: "title",
   ignoredFields: IGNORED_FIELDS,
+  unorderedPaths: UNORDERED_PATHS,
 
   readLocal(rootDir, source) {
     return readLocalSchemas<Bucket>(rootDir, "bucket", source);
@@ -60,11 +62,11 @@ export const bucketModule: ResourceModule<Bucket> = {
   },
 
   diffFields(local, remote) {
-    return diffSchemaFields(local, remote, IGNORED_FIELDS);
+    return diffSchemaFields(local, remote, IGNORED_FIELDS, UNORDERED_PATHS);
   },
 
   renderDetail(local, remote) {
-    return renderSchemaDetail(local.data, remote.data, IGNORED_FIELDS);
+    return renderSchemaDetail(local.data, remote.data, IGNORED_FIELDS, UNORDERED_PATHS);
   },
 
   summaryLine(resource) {
