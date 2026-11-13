@@ -24,6 +24,7 @@ data:
     CREATE ROLE :"app_user" LOGIN PASSWORD :'app_password';
     CREATE DATABASE :"app_database" OWNER :"app_user";
     REVOKE ALL ON DATABASE :"app_database" FROM PUBLIC;
+    GRANT pg_read_all_settings TO :"app_user";
     GRANT USAGE ON SCHEMA cron TO :"app_user";
     GRANT EXECUTE ON FUNCTION cron.schedule_in_database(text, text, text, text, text, boolean) TO :"app_user";
     SQL
