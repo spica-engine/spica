@@ -63,6 +63,97 @@ describe("PostgreSQL bucket write: errors", () => {
     });
   });
 
+  describe("a reference whose type is not the key type of its target", () => {
+    const relationTo = (target: any, relationType = "onetoone") => ({
+      title: {type: "string"},
+      author: {type: "relation", bucketId: String(idOf(target)), relationType}
+    });
+
+    describe("with an integer key", () => {
+      let authors: any;
+      let posts: any;
+      let editors: any;
+
+      beforeAll(async () => {
+        authors = await createBucket(
+          {},
+          {properties: {id: {type: "integer", options: {generated: true}}, name: {type: "string"}}}
+        );
+        await insert(authors, {name: "ann"});
+        posts = await createBucket(relationTo(authors));
+        editors = await createBucket(relationTo(authors, "onetomany"));
+      });
+
+      it("should accept the key as a number or as a string", async () => {
+        await insert(posts, {title: "a", author: 1});
+        await insert(posts, {title: "b", author: "1"});
+
+        expect((await rows(posts)).map(row => row.author)).toEqual([1, 1]);
+      });
+
+      it("should name a one to one relation that is not an integer", async () => {
+        await expect(insert(posts, {title: "p", author: "abc"})).rejects.toMatchObject(
+          badRequest("The property .author must be a valid integer key.")
+        );
+      });
+
+      it("should name a one to many relation that holds a value that is not an integer", async () => {
+        await expect(insert(editors, {title: "p", author: [1, "abc"]})).rejects.toMatchObject(
+          badRequest("The property .author must be a valid integer key.")
+        );
+      });
+
+      it("should report a missing document, not a wrong type, for an integer that is free", async () => {
+        await expect(insert(posts, {title: "p", author: 404})).rejects.toMatchObject(
+          badRequest("The property .author refers to a document that does not exist.")
+        );
+      });
+    });
+
+    describe("with a text key", () => {
+      let authors: any;
+      let posts: any;
+
+      beforeAll(async () => {
+        authors = await createBucket(
+          {},
+          {primary: "code", properties: {code: {type: "string"}, name: {type: "string"}}}
+        );
+        await insert(authors, {code: "ann", name: "Ann"});
+        posts = await createBucket(relationTo(authors));
+      });
+
+      it("should accept an existing key", async () => {
+        await insert(posts, {title: "a", author: "ann"});
+
+        expect((await rows(posts)).map(row => row.author)).toEqual(["ann"]);
+      });
+
+      it("should name a relation that is not a string", async () => {
+        await expect(insert(posts, {title: "p", author: 5})).rejects.toMatchObject(
+          badRequest("The property .author must be a valid text key.")
+        );
+      });
+
+      it("should name a missing document", async () => {
+        await expect(insert(posts, {title: "p", author: "bob"})).rejects.toMatchObject(
+          badRequest("The property .author refers to a document that does not exist.")
+        );
+      });
+    });
+
+    describe("with a uuid key", () => {
+      it("should name a relation that is not a uuid", async () => {
+        const authors = await createBucket({name: {type: "string"}});
+        const posts = await createBucket(relationTo(authors));
+
+        await expect(insert(posts, {title: "p", author: "not-a-uuid"})).rejects.toMatchObject(
+          badRequest("The property .author must be a valid uuid key.")
+        );
+      });
+    });
+  });
+
   describe("a document that a required property refers to", () => {
     it("should not be deleted", async () => {
       const authors = await createBucket({name: {type: "string"}});

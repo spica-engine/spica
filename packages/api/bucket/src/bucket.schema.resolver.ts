@@ -14,7 +14,8 @@ export class BucketSchemaResolver implements OnModuleDestroy {
 
   constructor(
     private bucketService: BucketService,
-    private nullable = false
+    private nullable = false,
+    private relationsByPrimaryKey = false
   ) {
     this.preferenceWatcher = this.bucketService.watchPreferences(true).pipe(shareReplay(1));
   }
@@ -38,7 +39,10 @@ export class BucketSchemaResolver implements OnModuleDestroy {
             return {};
           }
 
-          let jsonSchema = compile(schema, prefs, {nullable: this.nullable});
+          let jsonSchema = compile(schema, prefs, {
+            nullable: this.nullable,
+            relationsByPrimaryKey: this.relationsByPrimaryKey
+          });
           jsonSchema.$id = uri;
           return jsonSchema;
         })
@@ -52,7 +56,11 @@ export function provideBucketSchemaResolver(
   bs: BucketService,
   capabilities?: DataCapabilities
 ) {
-  const resolver = new BucketSchemaResolver(bs, Boolean(capabilities?.nullableProperties));
+  const resolver = new BucketSchemaResolver(
+    bs,
+    Boolean(capabilities?.nullableProperties),
+    Boolean(capabilities?.relationsByPrimaryKey)
+  );
   validator.registerUriResolver(uri => resolver.resolve(uri));
   return resolver;
 }

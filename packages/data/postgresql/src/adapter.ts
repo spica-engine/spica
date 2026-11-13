@@ -87,7 +87,7 @@ export class PostgresDataAdapter {
   static forRoot(uri: PostgresUri, options: PostgresConnectionOptions = {}): DataAdapter {
     return {
       engine: POSTGRESQL_ENGINE,
-      capabilities: {nullableProperties: true},
+      capabilities: {nullableProperties: true, relationsByPrimaryKey: true},
       module: {
         module: PostgresDataAdapterModule,
         providers: [

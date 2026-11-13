@@ -46,6 +46,8 @@ export const DATA_ENGINE = Symbol.for("SPICA_DATA_ENGINE");
 export interface DataCapabilities {
   /** An unset optional property is a NULL column: it reads back as null and a write may send null. */
   nullableProperties?: boolean;
+  /** A relation holds the primary key of its target, whose type the storage enforces. */
+  relationsByPrimaryKey?: boolean;
 }
 
 export const DATA_CAPABILITIES = Symbol.for("SPICA_DATA_CAPABILITIES");

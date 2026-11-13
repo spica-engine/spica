@@ -15,6 +15,8 @@ function addIdField(bucket) {
 export interface CompileOptions {
   /** Optional properties kept in a column may hold null. Everything else stays strict. */
   nullable?: boolean;
+  /** Relation values are the target's primary key, so any key type is accepted and the storage decides. */
+  relationsByPrimaryKey?: boolean;
 }
 
 function holdsNull(schema: JSONSchema7) {
@@ -106,19 +108,19 @@ export function compile(
         schema.uniqueItems = true;
         break;
 
-      case "relation":
+      case "relation": {
+        const key: JSONSchema7 = options.relationsByPrimaryKey
+          ? {type: ["string", "integer"]}
+          : {type: "string", format: "objectid-string"};
         if (schema["relationType"] == "onetomany") {
           schema.type = "array";
-          schema.items = {
-            format: "objectid-string",
-            type: "string"
-          };
+          schema.items = key;
         } else {
-          schema.type = "string";
-          schema.format = "objectid-string";
+          Object.assign(schema, key);
         }
 
         break;
+      }
       case "date":
         schema.type = "string";
         schema.format = "date-time";
@@ -175,8 +177,9 @@ export function compile(
       default:
     }
 
-    if (nullableKind && typeof schema.type == "string") {
-      schema.type = [schema.type, "null"];
+    if (nullableKind && schema.type) {
+      const kinds = [schema.type].flat();
+      schema.type = (kinds.includes("null") ? kinds : [...kinds, "null"]) as JSONSchema7["type"];
       if (Array.isArray(schema.enum) && !schema.enum.includes(null)) {
         schema.enum = [...schema.enum, null];
       }

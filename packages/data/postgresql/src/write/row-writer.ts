@@ -1,8 +1,11 @@
 import {BadRequestException} from "@spica-server/bucket-common";
+import {InvalidIdError} from "@spica-server/data";
 import {isEncryptedData} from "@spica-server/core-encryption";
 import {Session} from "@spica-server/data-postgresql-orm";
 import {Bucket} from "@spica-server/interface-bucket";
+import {keyIdType} from "../id.js";
 import {BucketMetadata, ColumnMetadata, SYSTEM_COLUMNS, TableMetadata} from "../schema/index.js";
+import type {KeyType} from "../schema/primary-key.js";
 import {fieldKey, Row, RowSet} from "../shape/index.js";
 import {toColumnValue, valueAt} from "./values.js";
 
@@ -42,6 +45,19 @@ function keyOf(metadata: BucketMetadata, document: object) {
   return key;
 }
 
+function referenceKey(column: ColumnMetadata, value: unknown) {
+  try {
+    return keyIdType(column.type as KeyType).parse(value);
+  } catch (error) {
+    if (error instanceof InvalidIdError) {
+      throw new BadRequestException(
+        `The property .${column.path.join(".")} must be a valid ${column.type} key.`
+      );
+    }
+    throw error;
+  }
+}
+
 export class Converter {
   private readonly encrypted: Set<string>;
 
@@ -52,7 +68,11 @@ export class Converter {
   value(column: ColumnMetadata, value: unknown) {
     const isEncrypted =
       this.encrypted.has(column.path.join("\0")) && value !== undefined && value !== null;
-    return isEncrypted ? encodeEncrypted(column.path, value) : toColumnValue(column, value);
+    if (isEncrypted) {
+      return encodeEncrypted(column.path, value);
+    }
+    const hasReference = column.reference && value !== undefined && value !== null;
+    return toColumnValue(column, hasReference ? referenceKey(column, value) : value);
   }
 }
 
