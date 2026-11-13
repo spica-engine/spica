@@ -2,13 +2,20 @@ import {HOP_ID_HEADER, REQUEST_ID_HEADER, runWithTrace} from "@spica-server/core
 import type {IncomingMessage} from "http";
 import type {RequestHandler} from "express";
 import morgan from "morgan";
-import {HopTrace, getHopTrace, resolveHopTrace, setHopTrace} from "./hop-trace.js";
+import {
+  HopTrace,
+  getHopTrace,
+  readProxyRequestId,
+  resolveHopTrace,
+  setHopTrace
+} from "./hop-trace.js";
 
 export interface HttpTrackerOptions {
   accessLogs: boolean;
   accessLogsUrlFilter?: string;
   accessLogsStatusCodeFilter?: string;
   accessLogsStream?: {write(line: string): unknown};
+  accessLogsProxyRequestIdHeader?: string;
 }
 
 export interface HttpTracker {
@@ -18,7 +25,7 @@ export interface HttpTracker {
 
 const ACCESS_LOG_FORMAT =
   ':prefix :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ' +
-  "request_id=:request-id hop_id=:hop-id parent_hop_id=:parent-hop-id started_at=:started-at duration_ms=:total-time[0]";
+  "spica_request_id=:spica-request-id spica_hop_id=:spica-hop-id spica_parent_hop_id=:spica-parent-hop-id proxy_request_id=:proxy-request-id started_at=:started-at duration_ms=:total-time[0]";
 
 function registerAccessLogTokens() {
   const token = (read: (trace: HopTrace) => string | undefined) => (req: IncomingMessage) => {
@@ -28,16 +35,20 @@ function registerAccessLogTokens() {
 
   morgan.token("prefix", () => "access-log:");
   morgan.token(
-    "request-id",
+    "spica-request-id",
     token(trace => trace.requestId)
   );
   morgan.token(
-    "hop-id",
+    "spica-hop-id",
     token(trace => trace.hopId)
   );
   morgan.token(
-    "parent-hop-id",
+    "spica-parent-hop-id",
     token(trace => trace.parentHopId)
+  );
+  morgan.token(
+    "proxy-request-id",
+    token(trace => trace.proxyRequestId)
   );
   morgan.token(
     "started-at",
@@ -57,6 +68,7 @@ function createAccessLog(options: HttpTrackerOptions): RequestHandler {
 
 export function createHttpTracker(options: HttpTrackerOptions): HttpTracker {
   const accessLog = options.accessLogs ? createAccessLog(options) : undefined;
+  const proxyRequestIdHeader = options.accessLogsProxyRequestIdHeader ?? "x-request-id";
 
   const handler: RequestHandler = (req, res, next) => {
     const tracked = getHopTrace(req);
@@ -65,6 +77,7 @@ export function createHttpTracker(options: HttpTrackerOptions): HttpTracker {
     }
 
     const trace = resolveHopTrace(req.headers);
+    trace.proxyRequestId = readProxyRequestId(req.headers, proxyRequestIdHeader);
     setHopTrace(req, trace);
     req.headers[REQUEST_ID_HEADER] = trace.requestId;
     req.headers[HOP_ID_HEADER] = trace.hopId;

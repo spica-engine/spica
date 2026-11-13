@@ -651,13 +651,19 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .option("access-logs", {
     boolean: true,
     description:
-      "Enable/disable http access logs. Every line ends with request_id, hop_id, parent_hop_id, started_at and duration_ms; function requests share one request_id across the spica instances they call",
+      "Enable/disable http access logs. Every line ends with spica_request_id, spica_hop_id, spica_parent_hop_id, proxy_request_id, started_at and duration_ms; requests share one spica_request_id across the spica instances a function calls",
     default: false
   })
   .option("access-logs-url-filter", {
     string: true,
     description: "Regex to filter access logs by url",
     default: ".*"
+  })
+  .option("access-logs-proxy-request-id-header", {
+    string: true,
+    description:
+      "Request header set by the load balancer or proxy (nginx, istio, ...) whose value is logged as proxy_request_id. Empty disables it",
+    default: "x-request-id"
   })
   .option("access-logs-statuscode-filter", {
     string: true,
@@ -1035,7 +1041,8 @@ const modules = [
   HttpTrackerModule.forRoot({
     accessLogs: args["access-logs"],
     accessLogsUrlFilter: args["access-logs-url-filter"],
-    accessLogsStatusCodeFilter: args["access-logs-statuscode-filter"]
+    accessLogsStatusCodeFilter: args["access-logs-statuscode-filter"],
+    accessLogsProxyRequestIdHeader: args["access-logs-proxy-request-id-header"]
   }),
   StatusModule.forRoot({
     expireAfterSeconds: args["common-log-lifespan"],

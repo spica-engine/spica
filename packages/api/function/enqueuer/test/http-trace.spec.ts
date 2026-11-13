@@ -110,9 +110,9 @@ describe("http enqueuer request correlation", () => {
 
       const hopId = enqueuedHeaders()["x-spica-hop-id"];
       expect(accessLog).toHaveLength(1);
-      expect(accessLog[0]).toContain(`request_id=${VALID_REQUEST_ID}`);
-      expect(accessLog[0]).toContain(`hop_id=${hopId}`);
-      expect(accessLog[0]).toContain(`parent_hop_id=${VALID_PARENT_HOP_ID}`);
+      expect(accessLog[0]).toContain(`spica_request_id=${VALID_REQUEST_ID}`);
+      expect(accessLog[0]).toContain(`spica_hop_id=${hopId}`);
+      expect(accessLog[0]).toContain(`spica_parent_hop_id=${VALID_PARENT_HOP_ID}`);
     });
   });
 

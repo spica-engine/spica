@@ -9,7 +9,17 @@ import {
 
 export interface HopTrace extends RequestTrace {
   parentHopId?: string;
+  proxyRequestId?: string;
   startedAt: Date;
+}
+
+// The value ends up in a log line that is parsed by whitespace, so anything that could
+// start another field (spaces, quotes, line breaks) is refused.
+const SAFE_PROXY_REQUEST_ID = /^[A-Za-z0-9._:=;,-]{1,128}$/;
+
+export function readProxyRequestId(headers: IncomingHttpHeaders, header?: string) {
+  const value = header ? headers[header.toLowerCase()] : undefined;
+  return typeof value == "string" && SAFE_PROXY_REQUEST_ID.test(value) ? value : undefined;
 }
 
 const hopTraces = new WeakMap<IncomingMessage, HopTrace>();

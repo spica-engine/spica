@@ -108,11 +108,75 @@ describe("HttpTracker", () => {
     expect(accessLog).toHaveLength(1);
     expect(accessLog[0]).toContain("access-log:");
     expect(accessLog[0]).toContain('"GET /things HTTP/1.1" 200');
-    expect(accessLog[0]).toContain(`request_id=${VALID_REQUEST_ID}`);
-    expect(accessLog[0]).toContain(`hop_id=${seenInHandler[0].stored.hopId}`);
-    expect(accessLog[0]).toContain(`parent_hop_id=${VALID_PARENT_HOP_ID}`);
+    expect(accessLog[0]).toContain(`spica_request_id=${VALID_REQUEST_ID}`);
+    expect(accessLog[0]).toContain(`spica_hop_id=${seenInHandler[0].stored.hopId}`);
+    expect(accessLog[0]).toContain(`spica_parent_hop_id=${VALID_PARENT_HOP_ID}`);
     expect(accessLog[0]).toMatch(/started_at=\d{4}-\d{2}-\d{2}T[\d:.]+Z/);
     expect(accessLog[0]).toMatch(/duration_ms=\d+$/);
+  });
+
+  describe("proxy request id", () => {
+    const proxyId = "dd73241871cb96e0c3b5cb4d3d4bb0f7";
+
+    const logLine = async (
+      options: Parameters<typeof createTracker>[0],
+      headers: Record<string, string>
+    ) => {
+      const tracker = createTracker(options);
+      const url = await start(tracker, app => {
+        app.use(tracker.handler);
+        app.get("/things", record);
+      });
+      await fetch(`${url}/things`, {headers});
+      return accessLog[0];
+    };
+
+    it("logs the id the proxy put in x-request-id next to the spica ids", async () => {
+      const line = await logLine(
+        {},
+        {"x-request-id": proxyId, "x-spica-request-id": VALID_REQUEST_ID}
+      );
+
+      expect(line).toContain(`spica_request_id=${VALID_REQUEST_ID}`);
+      expect(line).toContain(`proxy_request_id=${proxyId}`);
+    });
+
+    it("never uses the proxy id as the spica request id", async () => {
+      await logLine({}, {"x-request-id": proxyId});
+
+      expect(seenInHandler[0].stored.requestId).not.toBe(proxyId);
+      expect(accessLog[0]).toContain(`spica_request_id=${seenInHandler[0].stored.requestId}`);
+    });
+
+    it("reads the header that was configured", async () => {
+      const line = await logLine(
+        {accessLogsProxyRequestIdHeader: "X-Amzn-Trace-Id"},
+        {"x-request-id": proxyId, "x-amzn-trace-id": "Root=1-5759e988-bd862e3fe1be46a994272793"}
+      );
+
+      expect(line).toContain("proxy_request_id=Root=1-5759e988-bd862e3fe1be46a994272793 ");
+    });
+
+    it("prints a dash when the header is missing", async () => {
+      expect(await logLine({}, {})).toContain("proxy_request_id=- ");
+    });
+
+    it("prints a dash when logging of it is disabled", async () => {
+      const line = await logLine({accessLogsProxyRequestIdHeader: ""}, {"x-request-id": proxyId});
+
+      expect(line).toContain("proxy_request_id=- ");
+    });
+
+    it.each([
+      ["spaces that could start another field", "abc spica_request_id=forged"],
+      ["quotes", 'abc"def12345'],
+      ["a value that is too long", "a".repeat(129)]
+    ])("refuses a value with %s", async (_, value) => {
+      const line = await logLine({}, {"x-request-id": value});
+
+      expect(line).toContain("proxy_request_id=- ");
+      expect(line).not.toContain("forged");
+    });
   });
 
   it("returns the request id to the caller", async () => {

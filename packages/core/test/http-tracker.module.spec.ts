@@ -123,7 +123,7 @@ describe("HttpTrackerModule", () => {
     expect(response.headers.get("x-spica-request-id")).toBe("11111111-2222-3333-4444-555555555555");
     expect(accessLog).toHaveLength(1);
     expect(accessLog[0]).toContain('"GET /ctl HTTP/1.1" 200');
-    expect(accessLog[0]).toContain("request_id=11111111-2222-3333-4444-555555555555");
+    expect(accessLog[0]).toContain("spica_request_id=11111111-2222-3333-4444-555555555555");
   });
 
   it("makes the trace current inside the controller and rewrites the incoming headers", async () => {
