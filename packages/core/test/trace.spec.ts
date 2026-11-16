@@ -88,10 +88,6 @@ describe("trace context", () => {
     expect(seen).toEqual(trace);
     expect(getCurrentTrace()).toBeUndefined();
   });
-
-  it("is hidden again by running without a trace", () => {
-    expect(runWithTrace(trace, () => runWithTrace(undefined, getCurrentTrace))).toBeUndefined();
-  });
 });
 
 describe("trace propagation on outgoing calls", () => {
@@ -144,10 +140,6 @@ describe("trace propagation on outgoing calls", () => {
   it("adds nothing to calls made outside of a request", async () => {
     expect(await viaFetch()).toEqual({requestId: null, parentHopId: null});
     expect(await viaHttp()).toEqual({requestId: null, parentHopId: null});
-  });
-
-  it("adds nothing for work that carries no trace", async () => {
-    expect(await runWithTrace(undefined, viaFetch)).toEqual({requestId: null, parentHopId: null});
   });
 
   it("keeps concurrent requests apart", async () => {

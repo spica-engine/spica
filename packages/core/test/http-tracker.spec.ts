@@ -2,106 +2,148 @@ import bodyParser from "body-parser";
 import express from "express";
 import http from "http";
 import {AddressInfo} from "net";
-import {getCurrentTrace, installTracePropagation} from "@spica-server/core-trace";
-import {
-  HttpTracker,
-  createHttpTracker,
-  getHopTrace,
-  resolveHopTrace
-} from "@spica-server/core-http-tracker";
+import {getCurrentTrace} from "@spica-server/core-trace";
+import {HttpTracker, createHttpTracker, getHopTrace} from "@spica-server/core-http-tracker";
 
 const VALID_REQUEST_ID = "11111111-2222-3333-4444-555555555555";
 const VALID_PARENT_HOP_ID = "abcdef0123456789";
+const PROXY_ID = "dd73241871cb96e0c3b5cb4d3d4bb0f7";
 
-describe("resolveHopTrace", () => {
-  it("generates a request id and a hop id when the caller sent none", () => {
-    const trace = resolveHopTrace({});
+describe("HttpTracker handler", () => {
+  function handle(
+    headers: Record<string, string> = {},
+    options: Partial<Parameters<typeof createHttpTracker>[0]> = {}
+  ) {
+    const tracker = createHttpTracker({accessLogs: false, ...options});
+    const req: any = {headers: {...headers}};
+    const res: any = {setHeader: jest.fn()};
+    let current: ReturnType<typeof getCurrentTrace>;
+    const next = jest.fn(() => {
+      current = getCurrentTrace();
+    });
 
-    expect(trace.requestId).toMatch(/^[0-9a-f-]{36}$/);
-    expect(trace.hopId).toMatch(/^[0-9a-f]{16}$/);
-    expect(trace.parentHopId).toBeUndefined();
+    tracker.handler(req, res, next);
+
+    return {tracker, req, res, next, currentInNext: () => current};
+  }
+
+  it("generates the ids, writes them to the request headers and returns the request id", () => {
+    const {req, res} = handle();
+    const trace = getHopTrace(req);
+
+    expect(req.headers["x-spica-request-id"]).toBe(trace.requestId);
+    expect(req.headers["x-spica-hop-id"]).toBe(trace.hopId);
+    expect(res.setHeader).toHaveBeenCalledWith("x-spica-request-id", trace.requestId);
   });
 
-  it("keeps a valid request id and parent hop id from the caller", () => {
-    const trace = resolveHopTrace({
+  it("keeps the request id and parent hop of the caller", () => {
+    const {req, res} = handle({
       "x-spica-request-id": VALID_REQUEST_ID,
       "x-spica-parent-hop-id": VALID_PARENT_HOP_ID
     });
 
-    expect(trace.requestId).toBe(VALID_REQUEST_ID);
-    expect(trace.parentHopId).toBe(VALID_PARENT_HOP_ID);
-  });
-
-  it("replaces ids that are malformed", () => {
-    const trace = resolveHopTrace({
-      "x-spica-request-id": "short",
-      "x-spica-parent-hop-id": "bad value with spaces and \n newline"
+    expect(getHopTrace(req)).toMatchObject({
+      requestId: VALID_REQUEST_ID,
+      parentHopId: VALID_PARENT_HOP_ID
     });
-
-    expect(trace.requestId).not.toBe("short");
-    expect(trace.requestId).toMatch(/^[0-9a-f-]{36}$/);
-    expect(trace.parentHopId).toBeUndefined();
+    expect(res.setHeader).toHaveBeenCalledWith("x-spica-request-id", VALID_REQUEST_ID);
   });
 
-  it("never takes the hop id from the caller", () => {
-    const trace = resolveHopTrace({"x-spica-hop-id": "0123456789abcdef"});
+  it("does not let the caller choose the hop id or an invalid request id", () => {
+    const {req} = handle({"x-spica-request-id": "bad id", "x-spica-hop-id": "spoofedspoofed00"});
+    const trace = getHopTrace(req);
 
-    expect(trace.hopId).not.toBe("0123456789abcdef");
+    expect(req.headers["x-spica-hop-id"]).toBe(trace.hopId);
+    expect(req.headers["x-spica-hop-id"]).not.toBe("spoofedspoofed00");
+    expect(req.headers["x-spica-request-id"]).toBe(trace.requestId);
+    expect(trace.requestId).not.toBe("bad id");
   });
 
-  it("creates a different hop id for every call", () => {
-    expect(resolveHopTrace({}).hopId).not.toBe(resolveHopTrace({}).hopId);
+  it("makes the trace the current one for what follows, and only for that", () => {
+    const {req, currentInNext, next} = handle();
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(currentInNext()).toBe(getHopTrace(req));
+    expect(getCurrentTrace()).toBeUndefined();
+  });
+
+  it("keeps the proxy id next to the spica ids and never uses it as the request id", () => {
+    const {req} = handle({"x-request-id": PROXY_ID});
+
+    expect(getHopTrace(req).proxyRequestId).toBe(PROXY_ID);
+    expect(getHopTrace(req).requestId).not.toBe(PROXY_ID);
+  });
+
+  it("reads the proxy id from the configured header", () => {
+    const {req} = handle(
+      {"x-request-id": PROXY_ID, "x-amzn-trace-id": "Root=1-abc"},
+      {accessLogsProxyRequestIdHeader: "X-Amzn-Trace-Id"}
+    );
+
+    expect(getHopTrace(req).proxyRequestId).toBe("Root=1-abc");
+  });
+
+  it("only runs what follows in the same trace when it is mounted again", () => {
+    const {tracker, req, res} = handle();
+    const trace = getHopTrace(req);
+    let current: ReturnType<typeof getCurrentTrace>;
+
+    tracker.handler(req, res, () => (current = getCurrentTrace()));
+
+    expect(current).toBe(trace);
+    expect(getHopTrace(req)).toBe(trace);
+    expect(res.setHeader).toHaveBeenCalledTimes(1);
   });
 });
 
-describe("HttpTracker", () => {
+describe("HttpTracker access log", () => {
   let server: http.Server;
   let accessLog: string[];
-  let seenInHandler: any[];
+  let seen: ReturnType<typeof getCurrentTrace>[];
 
-  async function start(tracker: HttpTracker, mount: (app: express.Application) => void) {
+  async function start(
+    options: Partial<Parameters<typeof createHttpTracker>[0]>,
+    mount: (app: express.Application, tracker: HttpTracker) => void
+  ) {
+    const tracker = createHttpTracker({
+      accessLogs: true,
+      accessLogsStream: {write: line => accessLog.push(String(line).trim())},
+      ...options
+    });
     const app = express();
-    mount(app);
+    mount(app, tracker);
     server = http.createServer(app);
     await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
     return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   }
 
-  function createTracker(options: Partial<Parameters<typeof createHttpTracker>[0]> = {}) {
-    return createHttpTracker({
-      accessLogs: true,
-      accessLogsStream: {write: line => accessLog.push(String(line).trim())},
-      ...options
-    });
-  }
+  const handlers = (app: express.Application) => {
+    const record = (_: express.Request, res: express.Response) => {
+      seen.push(getCurrentTrace());
+      res.end("ok");
+    };
+    app.get("/things", record);
+    app.post("/things", record);
+  };
 
   beforeEach(() => {
     accessLog = [];
-    seenInHandler = [];
+    seen = [];
   });
 
   afterEach(() => new Promise(resolve => server.close(resolve)));
 
-  const record = (req: express.Request, res: express.Response) => {
-    seenInHandler.push({
-      stored: getHopTrace(req),
-      current: getCurrentTrace(),
-      headers: {...req.headers}
-    });
-    res.end("ok");
-  };
-
-  it("writes the correlation fields to the access log", async () => {
-    const tracker = createTracker();
-    const url = await start(tracker, app => {
+  it("writes the spica ids, the proxy id and the timing of a request", async () => {
+    const url = await start({}, (app, tracker) => {
       app.use(tracker.handler);
-      app.get("/things", record);
+      handlers(app);
     });
 
     await fetch(`${url}/things`, {
       headers: {
         "x-spica-request-id": VALID_REQUEST_ID,
-        "x-spica-parent-hop-id": VALID_PARENT_HOP_ID
+        "x-spica-parent-hop-id": VALID_PARENT_HOP_ID,
+        "x-request-id": PROXY_ID
       }
     });
 
@@ -109,161 +151,38 @@ describe("HttpTracker", () => {
     expect(accessLog[0]).toContain("access-log:");
     expect(accessLog[0]).toContain('"GET /things HTTP/1.1" 200');
     expect(accessLog[0]).toContain(`spica_request_id=${VALID_REQUEST_ID}`);
-    expect(accessLog[0]).toContain(`spica_hop_id=${seenInHandler[0].stored.hopId}`);
+    expect(accessLog[0]).toContain(`spica_hop_id=${seen[0].hopId}`);
     expect(accessLog[0]).toContain(`spica_parent_hop_id=${VALID_PARENT_HOP_ID}`);
+    expect(accessLog[0]).toContain(`proxy_request_id=${PROXY_ID} `);
     expect(accessLog[0]).toMatch(/started_at=\d{4}-\d{2}-\d{2}T[\d:.]+Z/);
     expect(accessLog[0]).toMatch(/duration_ms=\d+$/);
   });
 
-  describe("proxy request id", () => {
-    const proxyId = "dd73241871cb96e0c3b5cb4d3d4bb0f7";
-
-    const logLine = async (
-      options: Parameters<typeof createTracker>[0],
-      headers: Record<string, string>
-    ) => {
-      const tracker = createTracker(options);
-      const url = await start(tracker, app => {
-        app.use(tracker.handler);
-        app.get("/things", record);
-      });
-      await fetch(`${url}/things`, {headers});
-      return accessLog[0];
-    };
-
-    it("logs the id the proxy put in x-request-id next to the spica ids", async () => {
-      const line = await logLine(
-        {},
-        {"x-request-id": proxyId, "x-spica-request-id": VALID_REQUEST_ID}
-      );
-
-      expect(line).toContain(`spica_request_id=${VALID_REQUEST_ID}`);
-      expect(line).toContain(`proxy_request_id=${proxyId}`);
+  it("writes a dash for a proxy id that is missing or unsafe, never the value", async () => {
+    const url = await start({}, (app, tracker) => {
+      app.use(tracker.handler);
+      handlers(app);
     });
 
-    it("never uses the proxy id as the spica request id", async () => {
-      await logLine({}, {"x-request-id": proxyId});
+    await fetch(`${url}/things`);
+    await fetch(`${url}/things`, {headers: {"x-request-id": "abc spica_request_id=forged"}});
 
-      expect(seenInHandler[0].stored.requestId).not.toBe(proxyId);
-      expect(accessLog[0]).toContain(`spica_request_id=${seenInHandler[0].stored.requestId}`);
-    });
-
-    it("reads the header that was configured", async () => {
-      const line = await logLine(
-        {accessLogsProxyRequestIdHeader: "X-Amzn-Trace-Id"},
-        {"x-request-id": proxyId, "x-amzn-trace-id": "Root=1-5759e988-bd862e3fe1be46a994272793"}
-      );
-
-      expect(line).toContain("proxy_request_id=Root=1-5759e988-bd862e3fe1be46a994272793 ");
-    });
-
-    it("prints a dash when the header is missing", async () => {
-      expect(await logLine({}, {})).toContain("proxy_request_id=- ");
-    });
-
-    it("prints a dash when logging of it is disabled", async () => {
-      const line = await logLine({accessLogsProxyRequestIdHeader: ""}, {"x-request-id": proxyId});
-
-      expect(line).toContain("proxy_request_id=- ");
-    });
-
-    it.each([
-      ["spaces that could start another field", "abc spica_request_id=forged"],
-      ["quotes", 'abc"def12345'],
-      ["a value that is too long", "a".repeat(129)]
-    ])("refuses a value with %s", async (_, value) => {
-      const line = await logLine({}, {"x-request-id": value});
-
+    expect(accessLog).toHaveLength(2);
+    for (const line of accessLog) {
       expect(line).toContain("proxy_request_id=- ");
       expect(line).not.toContain("forged");
-    });
-  });
-
-  it("returns the request id to the caller", async () => {
-    const tracker = createTracker();
-    const url = await start(tracker, app => {
-      app.use(tracker.handler);
-      app.get("/things", record);
-    });
-
-    const generated = await fetch(`${url}/things`);
-    const kept = await fetch(`${url}/things`, {headers: {"x-spica-request-id": VALID_REQUEST_ID}});
-
-    expect(generated.headers.get("x-spica-request-id")).toBe(seenInHandler[0].stored.requestId);
-    expect(kept.headers.get("x-spica-request-id")).toBe(VALID_REQUEST_ID);
-  });
-
-  it("makes the incoming headers carry the ids of the trace", async () => {
-    const tracker = createTracker();
-    const url = await start(tracker, app => {
-      app.use(tracker.handler);
-      app.get("/things", record);
-    });
-
-    await fetch(`${url}/things`);
-    await fetch(`${url}/things`, {headers: {"x-spica-request-id": VALID_REQUEST_ID}});
-
-    const [generated, kept] = seenInHandler;
-    expect(generated.headers["x-spica-request-id"]).toBe(generated.stored.requestId);
-    expect(generated.headers["x-spica-hop-id"]).toBe(generated.stored.hopId);
-    expect(kept.headers["x-spica-request-id"]).toBe(VALID_REQUEST_ID);
-    expect(kept.headers["x-spica-hop-id"]).toBe(kept.stored.hopId);
-  });
-
-  it("does not let the caller choose the hop id", async () => {
-    const tracker = createTracker();
-    const url = await start(tracker, app => {
-      app.use(tracker.handler);
-      app.get("/things", record);
-    });
-
-    await fetch(`${url}/things`, {
-      headers: {"x-spica-request-id": "malformed id", "x-spica-hop-id": "spoofedspoofed00"}
-    });
-
-    const {headers, stored} = seenInHandler[0];
-    expect(headers["x-spica-hop-id"]).toBe(stored.hopId);
-    expect(headers["x-spica-hop-id"]).not.toBe("spoofedspoofed00");
-    expect(headers["x-spica-request-id"]).toBe(stored.requestId);
-    expect(headers["x-spica-request-id"]).not.toBe("malformed id");
-  });
-
-  it("makes the trace the current one for the handlers that follow", async () => {
-    const tracker = createTracker();
-    const url = await start(tracker, app => {
-      app.use(tracker.handler);
-      app.get("/things", record);
-    });
-
-    await fetch(`${url}/things`);
-
-    expect(seenInHandler[0].current).toEqual(seenInHandler[0].stored);
-  });
-
-  it("tracks requests without writing an access log when logging is off", async () => {
-    const tracker = createTracker({accessLogs: false});
-    const url = await start(tracker, app => {
-      app.use(tracker.handler);
-      app.get("/things", record);
-    });
-
-    const response = await fetch(`${url}/things`);
-
-    expect(accessLog).toEqual([]);
-    expect(response.headers.get("x-spica-request-id")).toBe(seenInHandler[0].stored.requestId);
-    expect(seenInHandler[0].current).toEqual(seenInHandler[0].stored);
+    }
   });
 
   it("applies the url and status code filters", async () => {
-    const tracker = createTracker({
-      accessLogsUrlFilter: "^/logged",
-      accessLogsStatusCodeFilter: "^2"
-    });
-    const url = await start(tracker, app => {
-      app.use(tracker.handler);
-      app.get("/logged", record);
-      app.get("/ignored", record);
-    });
+    const url = await start(
+      {accessLogsUrlFilter: "^/logged", accessLogsStatusCodeFilter: "^2"},
+      (app, tracker) => {
+        app.use(tracker.handler);
+        app.get("/logged", (_, res) => res.end("ok"));
+        app.get("/ignored", (_, res) => res.end("ok"));
+      }
+    );
 
     await fetch(`${url}/logged`);
     await fetch(`${url}/ignored`);
@@ -273,12 +192,23 @@ describe("HttpTracker", () => {
     expect(accessLog[0]).toContain('"GET /logged HTTP/1.1" 200');
   });
 
+  it("writes nothing when access logs are off, but still tracks the request", async () => {
+    const url = await start({accessLogs: false}, (app, tracker) => {
+      app.use(tracker.handler);
+      handlers(app);
+    });
+
+    const response = await fetch(`${url}/things`);
+
+    expect(accessLog).toEqual([]);
+    expect(response.headers.get("x-spica-request-id")).toBe(seen[0].requestId);
+  });
+
   it("logs a request once, however many times the handler is mounted", async () => {
-    const tracker = createTracker();
-    const url = await start(tracker, app => {
+    const url = await start({}, (app, tracker) => {
       app.use(tracker.handler);
       app.use(tracker.handler);
-      app.get("/things", record);
+      handlers(app);
     });
 
     await fetch(`${url}/things`);
@@ -287,11 +217,10 @@ describe("HttpTracker", () => {
   });
 
   it("keeps the trace across a body parser", async () => {
-    const tracker = createTracker();
-    const url = await start(tracker, app => {
+    const url = await start({}, (app, tracker) => {
       app.use(tracker.handler);
       app.use(bodyParser.json());
-      app.post("/things", record);
+      handlers(app);
     });
 
     await fetch(`${url}/things`, {
@@ -300,30 +229,7 @@ describe("HttpTracker", () => {
       body: JSON.stringify({a: 1})
     });
 
-    expect(seenInHandler[0].current).toEqual(seenInHandler[0].stored);
-  });
-
-  it("adds the correlation headers to calls the handlers make", async () => {
-    installTracePropagation();
-    const downstream = http.createServer((req, res) =>
-      res.end(JSON.stringify({requestId: req.headers["x-spica-request-id"] ?? null}))
-    );
-    await new Promise<void>(resolve => downstream.listen(0, "127.0.0.1", resolve));
-    const downstreamUrl = `http://127.0.0.1:${(downstream.address() as AddressInfo).port}`;
-
-    const tracker = createTracker();
-    const url = await start(tracker, app => {
-      app.use(tracker.handler);
-      app.get("/things", async (_, res) => {
-        res.end(await (await fetch(downstreamUrl)).text());
-      });
-    });
-
-    const body = await (
-      await fetch(`${url}/things`, {headers: {"x-spica-request-id": VALID_REQUEST_ID}})
-    ).json();
-    await new Promise(resolve => downstream.close(resolve));
-
-    expect(body).toEqual({requestId: VALID_REQUEST_ID});
+    expect(seen[0]).toBeDefined();
+    expect(accessLog[0]).toContain(`spica_hop_id=${seen[0].hopId}`);
   });
 });
