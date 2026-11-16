@@ -68,7 +68,7 @@ export class PolicyController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy
   ) {
-    return CRUD.replace(this.policy, {_id: id, ...body});
+    return CRUD.replace(this.policy, {...body, _id: id});
   }
 
   @UseInterceptors(activity(createPolicyActivity))
