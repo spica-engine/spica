@@ -112,6 +112,12 @@ export interface ResourceModule<T = any> {
    * representing a real user-visible change.
    */
   ignoredFields: string[];
+  /**
+   * Dot paths of arrays whose item order carries no meaning, so a reorder is not an update.
+   * `*` matches any one key, `**` any number of keys. Only list arrays the server treats as sets:
+   * the order of e.g. `enum` or `default` is user-visible and must stay a change.
+   */
+  unorderedPaths?: string[];
 
   /**
    * Extract a stable server-assigned ID from local data (e.g. `_id` written by a

@@ -246,3 +246,33 @@ describe("resolveModules", () => {
     expect(() => resolveModules(["nonexistent"])).toThrow("Unknown module");
   });
 });
+
+describe("policyModule.diffFields array order", () => {
+  const policy = (statement: unknown[]) => ({name: "p", description: "d", statement}) as any;
+
+  it("ignores a reorder of statements", () => {
+    const a = {action: "bucket:index", module: "bucket"};
+    const b = {action: "function:index", module: "function"};
+    expect(policyModule.diffFields(policy([a, b]), policy([b, a]))).toEqual([]);
+  });
+
+  it("ignores a reorder of resource include and exclude", () => {
+    const statement = (include: string[], exclude: string[]) => ({
+      action: "bucket:data:show",
+      module: "bucket:data",
+      resource: {include, exclude}
+    });
+    expect(
+      policyModule.diffFields(
+        policy([statement(["1", "2"], ["3", "4"])]),
+        policy([statement(["2", "1"], ["4", "3"])])
+      )
+    ).toEqual([]);
+  });
+
+  it("still reports a really different statement", () => {
+    const a = {action: "bucket:index", module: "bucket"};
+    const b = {action: "function:index", module: "function"};
+    expect(policyModule.diffFields(policy([a]), policy([a, b]))).toEqual(["statement"]);
+  });
+});
