@@ -102,5 +102,5 @@ ingress:
   ingressClassName: nginx
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: 15M
-    nginx.ingress.kubernetes.io/client-body-buffer-size: 15Mb
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 15m
     nginx.ingress.kubernetes.io/rewrite-target: /$1
