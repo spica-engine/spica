@@ -1,0 +1,20 @@
+{
+  "name": "@spica-server/core-http-tracker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.22",
+    "@spica-server/core-trace": "workspace:*",
+    "morgan": "^1.10.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.25"
+  }
+}

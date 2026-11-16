@@ -33,6 +33,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@spica-server/core-http-tracker": "workspace:*",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/database-testing": "workspace:*",
     "@types/amqplib": "^0.10.8",
