@@ -1,0 +1,5 @@
+{
+  "name": "core/http-tracker",
+  "sourceRoot": "packages/core/http-tracker/src",
+  "projectType": "library"
+}

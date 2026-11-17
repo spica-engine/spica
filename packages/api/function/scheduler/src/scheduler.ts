@@ -3,6 +3,7 @@ import {Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional} fro
 import {HttpAdapterHost} from "@nestjs/core";
 import {CHANGE_FEED, ChangeFeed} from "@spica-server/interface-data";
 import {FUNCTION_LOG_SINK, LogSink} from "@spica-server/interface-function-log";
+import {HTTP_TRACKER, HttpTracker} from "@spica-server/core-http-tracker";
 import {Builder} from "@spica-server/function-builder";
 import {LegacyBuilder} from "@spica-server/function-builder-legacy";
 import {RollupBuilder} from "@spica-server/function-builder-rollup";
@@ -81,7 +82,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
     @Optional() private jobReducer: JobReducer,
     @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker,
-    private guardService: GuardService
+    private guardService: GuardService,
+    @Optional() @Inject(HTTP_TRACKER) private httpTracker?: HttpTracker
   ) {
     this.outputs = this.createOutputs(logSink);
 
@@ -125,7 +127,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.options.corsOptions,
         this.guardService,
         this.attachStatusTracker,
-        this.options.payloadSizeLimit
+        this.options.payloadSizeLimit,
+        this.httpTracker?.handler
       )
     );
 

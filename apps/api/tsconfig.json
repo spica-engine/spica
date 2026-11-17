@@ -67,6 +67,9 @@
       "path": "../../packages/core/schema"
     },
     {
+      "path": "../../packages/core/http-tracker"
+    },
+    {
       "path": "../../packages/core/encryption"
     },
     {

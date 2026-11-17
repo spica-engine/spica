@@ -6,6 +6,9 @@
       "path": "../../../core/testing"
     },
     {
+      "path": "../../../core/http-tracker"
+    },
+    {
       "path": "../../replication"
     },
     {
