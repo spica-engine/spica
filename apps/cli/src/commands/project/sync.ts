@@ -6,6 +6,7 @@ import {httpService} from "../../http";
 import {availableSyncModules, validateSyncIds, validateSyncModules} from "../../validator";
 import {bold, green, red} from "colorette";
 import lodash from "lodash";
+import {recordKey, recordKeyField} from "@spica-server/sync";
 const {isEqual} = lodash;
 
 let IGNORE_ERRORS;
@@ -197,22 +198,24 @@ export class ResourceGroupComparisor {
   constructor(
     private sources: any[],
     private targets: any[],
-    private uniqueField = "_id",
+    private uniqueField?: string,
     private ignoredFields = []
   ) {
     this.existings = targets.filter(target =>
-      sources.some(source => source[this.uniqueField] == target[this.uniqueField])
+      sources.some(source => this.unique(source) == this.unique(target))
     );
 
-    this.existingIds = this.existings.map(existing => existing[this.uniqueField]);
+    this.existingIds = this.existings.map(existing => this.unique(existing));
+  }
+
+  private unique(record: any) {
+    return this.uniqueField ? record[this.uniqueField] : recordKey(record);
   }
 
   updations() {
     const updations = [];
     for (const existing of this.existings) {
-      const source = this.sources.find(
-        source => source[this.uniqueField] == existing[this.uniqueField]
-      );
+      const source = this.sources.find(source => this.unique(source) == this.unique(existing));
 
       if (this.ignoredFields.length) {
         this.ignoredFields.forEach(field => {
@@ -230,11 +233,11 @@ export class ResourceGroupComparisor {
   }
 
   insertions() {
-    return this.sources.filter(source => this.existingIds.indexOf(source[this.uniqueField]) == -1);
+    return this.sources.filter(source => this.existingIds.indexOf(this.unique(source)) == -1);
   }
 
   deletions() {
-    return this.targets.filter(target => this.existingIds.indexOf(target[this.uniqueField]) == -1);
+    return this.targets.filter(target => this.existingIds.indexOf(this.unique(target)) == -1);
   }
 }
 interface ModuleSynchronizer {
@@ -331,7 +334,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
 
     const updatePromiseFactories = this.updations.map(
       fn => () =>
-        this.targetService.put(`function/${fn._id}`, fn).catch(e =>
+        this.targetService.put(`function/${recordKey(fn)}`, fn).catch(e =>
           handleRejection({
             action: "update",
             e,
@@ -343,7 +346,7 @@ export class FunctionSynchronizer implements ModuleSynchronizer {
 
     const deletePromiseFactories = this.deletions.map(
       fn => () =>
-        this.targetService.delete(`function/${fn._id}`).catch(e =>
+        this.targetService.delete(`function/${recordKey(fn)}`).catch(e =>
           handleRejection({
             action: "delete",
             objectName: this.moduleName + " " + fn.name,
@@ -379,11 +382,12 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
   }
 
   async analyze() {
-    const sourceDeps = await this.sourceService
-      .get<any[]>(`function/${this.fn._id}/dependencies`);
+    const sourceDeps = await this.sourceService.get<any[]>(
+      `function/${recordKey(this.fn)}/dependencies`
+    );
 
     const targetDeps = await this.targetService
-      .get<any[]>(`function/${this.fn._id}/dependencies`)
+      .get<any[]>(`function/${recordKey(this.fn)}/dependencies`)
       .catch(e => {
         if (isNotFoundException(e)) {
           return [];
@@ -419,25 +423,29 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
 
     if (insertBody.name.length) {
       promiseFactories.push(() =>
-        this.targetService.post(`function/${this.fn._id}/dependencies`, insertBody).catch(e => {
-          handleRejection({
-            action: "insert",
-            e,
-            objectName: this.getDisplayableModuleName()
-          });
-        })
+        this.targetService
+          .post(`function/${recordKey(this.fn)}/dependencies`, insertBody)
+          .catch(e => {
+            handleRejection({
+              action: "insert",
+              e,
+              objectName: this.getDisplayableModuleName()
+            });
+          })
       );
     }
 
     const deletePromiseFactories = this.deletions.map(
       dep => () =>
-        this.targetService.delete(`function/${this.fn._id}/dependencies/${dep.name}`).catch(e =>
-          handleRejection({
-            action: "update",
-            e,
-            objectName: this.getDisplayableModuleName()
-          })
-        )
+        this.targetService
+          .delete(`function/${recordKey(this.fn)}/dependencies/${dep.name}`)
+          .catch(e =>
+            handleRejection({
+              action: "update",
+              e,
+              objectName: this.getDisplayableModuleName()
+            })
+          )
     );
 
     if (deletePromiseFactories.length) {
@@ -478,9 +486,9 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
 
     const sourceFnIndexes = await Promise.all(
       sourceFns.map(fn =>
-        this.sourceService.get<any>(`function/${fn._id}/index`).then(res => {
+        this.sourceService.get<any>(`function/${recordKey(fn)}/index`).then(res => {
           return {
-            _id: fn._id,
+            [recordKeyField(fn)]: recordKey(fn),
             name: fn.name,
             index: res.index
           };
@@ -491,10 +499,10 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
     const targetFnIndexes = await Promise.all(
       sourceFns.map(fn =>
         this.targetService
-          .get<any>(`function/${fn._id}/index`)
+          .get<any>(`function/${recordKey(fn)}/index`)
           .then(res => {
             return {
-              _id: fn._id,
+              [recordKeyField(fn)]: recordKey(fn),
               name: fn.name,
               index: res.index
             };
@@ -525,7 +533,7 @@ export class FunctionIndexSynchronizer implements ModuleSynchronizer {
     // except others, we don't need to remove any function index because they are supposed to be deleted with function module synchronization
     const promiseFactories = [...this.insertions, ...this.updations].map(
       fn => () =>
-        this.targetService.post(`function/${fn._id}/index`, {index: fn.index}).catch(e =>
+        this.targetService.post(`function/${recordKey(fn)}/index`, {index: fn.index}).catch(e =>
           handleRejection({
             action: "insert",
             objectName: this.getDisplayableModuleName() + " " + fn.name,
@@ -568,12 +576,15 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
     const params = {
       localize: false
     };
-    const sourceData = await this.sourceService.get<any[]>(`bucket/${this.bucket._id}/data`, {
-      params
-    });
+    const sourceData = await this.sourceService.get<any[]>(
+      `bucket/${recordKey(this.bucket)}/data`,
+      {
+        params
+      }
+    );
 
     const targetData = await this.targetService
-      .get<any[]>(`bucket/${this.bucket._id}/data`, {
+      .get<any[]>(`bucket/${recordKey(this.bucket)}/data`, {
         params
       })
       .catch(e => {
@@ -600,7 +611,7 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
     console.log();
     const insertPromiseFactories = this.insertions.map(
       data => () =>
-        this.targetService.post(`bucket/${this.bucket._id}/data`, data).catch(e =>
+        this.targetService.post(`bucket/${recordKey(this.bucket)}/data`, data).catch(e =>
           handleRejection({
             action: "insert",
             objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
@@ -615,13 +626,15 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
 
     const updatePromiseFactories = this.updations.map(
       data => () =>
-        this.targetService.put(`bucket/${this.bucket._id}/data/${data._id}`, data).catch(e =>
-          handleRejection({
-            action: "update",
-            e,
-            objectName: this.getDisplayableModuleName() + " " + data[this.primaryField]
-          })
-        )
+        this.targetService
+          .put(`bucket/${recordKey(this.bucket)}/data/${recordKey(data)}`, data)
+          .catch(e =>
+            handleRejection({
+              action: "update",
+              e,
+              objectName: this.getDisplayableModuleName() + " " + data[this.primaryField]
+            })
+          )
     );
     await spinUntilPromiseEnd(
       updatePromiseFactories,
@@ -630,13 +643,15 @@ export class BucketDataSynchronizer implements ModuleSynchronizer {
 
     const deletePromiseFactories = this.deletions.map(
       data => () =>
-        this.targetService.delete(`bucket/${this.bucket._id}/data/${data._id}`).catch(e =>
-          handleRejection({
-            action: "delete",
-            objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
-            e
-          })
-        )
+        this.targetService
+          .delete(`bucket/${recordKey(this.bucket)}/data/${recordKey(data)}`)
+          .catch(e =>
+            handleRejection({
+              action: "delete",
+              objectName: this.getDisplayableModuleName() + " " + data[this.primaryField],
+              e
+            })
+          )
     );
     await spinUntilPromiseEnd(
       deletePromiseFactories,
@@ -720,7 +735,7 @@ export class BucketSynchronizer implements ModuleSynchronizer {
 
     const updatePromiseFactories = this.updations.map(
       bucket => () =>
-        this.targetService.put(`bucket/${bucket._id}`, bucket).catch(e =>
+        this.targetService.put(`bucket/${recordKey(bucket)}`, bucket).catch(e =>
           handleRejection({
             action: "update",
             objectName: this.getDisplayableModuleName() + " " + bucket.title,
@@ -732,7 +747,7 @@ export class BucketSynchronizer implements ModuleSynchronizer {
 
     const deletePromiseFactories = this.deletions.map(
       bucket => () =>
-        this.targetService.delete(`bucket/${bucket._id}`).catch(e =>
+        this.targetService.delete(`bucket/${recordKey(bucket)}`).catch(e =>
           handleRejection({
             action: "delete",
             objectName: bucket.title,
@@ -814,7 +829,7 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
       return apikeyInsertPromise.then(() => {
         const policyAttachPromises = policies.map(policy =>
           this.targetService
-            .put(`passport/apikey/${apikey._id}/policy/${policy}`)
+            .put(`passport/apikey/${recordKey(apikey)}/policy/${policy}`)
             .catch(e => insertRejectionHandler(e))
         );
         return Promise.all(policyAttachPromises);
@@ -837,7 +852,7 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
 
       // detaching all policies then attaching policies will cause sending a lot of requests, instead we will remove apikey
       const apikeyDeletePromise = this.targetService
-        .delete(`passport/apikey/${apikey._id}`)
+        .delete(`passport/apikey/${recordKey(apikey)}`)
         .catch(e => rejectionHandler(e));
       const apikeyInsertPromise = apikeyDeletePromise.then(() =>
         this.targetService.post(`passport/apikey`, apikeyData).catch(e => rejectionHandler(e))
@@ -846,7 +861,7 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
       return apikeyInsertPromise.then(() => {
         const policyAttachPromises = policies.map(policy =>
           this.targetService
-            .put(`passport/apikey/${apikey._id}/policy/${policy}`)
+            .put(`passport/apikey/${recordKey(apikey)}/policy/${policy}`)
             .catch(e => rejectionHandler(e))
         );
         return Promise.all(policyAttachPromises);
@@ -856,7 +871,7 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
 
     const deletePromiseFactories = this.deletions.map(
       apikey => () =>
-        this.targetService.delete(`passport/apikey/${apikey._id}`).catch(e =>
+        this.targetService.delete(`passport/apikey/${recordKey(apikey)}`).catch(e =>
           handleRejection({
             action: "delete",
             objectName: apikey.name,
@@ -935,7 +950,7 @@ export class PolicySynchronizer implements ModuleSynchronizer {
     const updatePromiseFactories = this.updations.map(policy => () => {
       delete policy.system;
 
-      return this.targetService.put(`passport/policy/${policy._id}`, policy).catch(e =>
+      return this.targetService.put(`passport/policy/${recordKey(policy)}`, policy).catch(e =>
         handleRejection({
           action: "update",
           objectName: this.getDisplayableModuleName() + " " + policy.name,
@@ -947,7 +962,7 @@ export class PolicySynchronizer implements ModuleSynchronizer {
 
     const deletePromiseFactories = this.deletions.map(
       policy => () =>
-        this.targetService.delete(`passport/policy/${policy._id}`).catch(e =>
+        this.targetService.delete(`passport/policy/${recordKey(policy)}`).catch(e =>
           handleRejection({
             action: "delete",
             objectName: policy.name,
@@ -1022,7 +1037,7 @@ export class EnvironmentVariableSynchronizer implements ModuleSynchronizer {
 
     const updatePromiseFactories = this.updations.map(
       envVar => () =>
-        this.targetService.put(`env-var/${envVar._id}`, envVar).catch(e =>
+        this.targetService.put(`env-var/${recordKey(envVar)}`, envVar).catch(e =>
           handleRejection({
             action: "update",
             objectName: this.getDisplayableModuleName() + " " + envVar.key,
@@ -1034,7 +1049,7 @@ export class EnvironmentVariableSynchronizer implements ModuleSynchronizer {
 
     const deletePromiseFactories = this.deletions.map(
       envVar => () =>
-        this.targetService.delete(`env-var/${envVar._id}`).catch(e =>
+        this.targetService.delete(`env-var/${recordKey(envVar)}`).catch(e =>
           handleRejection({
             action: "delete",
             objectName: envVar.key,
@@ -1151,7 +1166,7 @@ async function getFilteredResources(
 ) {
   const res = await service.get<any>(path);
   const resources: any[] = paginate ? res.data : res;
-  return ids ? resources.filter(resource => ids.includes(resource._id)) : resources;
+  return ids ? resources.filter(resource => ids.includes(recordKey(resource))) : resources;
 }
 
 function transformIDs(ids: any) {

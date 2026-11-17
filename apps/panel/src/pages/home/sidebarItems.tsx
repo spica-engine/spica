@@ -1,5 +1,6 @@
 import type { IconName } from "oziko-ui-kit";
 import type {TypeMenuItems, TypeNavigatorItem} from "../../types/sidebar";
+import type {EngineFeature} from "../../utils/engineFeatures";
 
 export type SideBarItem = {
   id: string;
@@ -8,6 +9,7 @@ export type SideBarItem = {
   position?: "bottom";
   route?: string;
   separator?: true;
+  feature?: EngineFeature;
 };
 
 export const sideBarItems: SideBarItem[] = [
@@ -18,7 +20,7 @@ export const sideBarItems: SideBarItem[] = [
   { id: "accessManagement", name: "Access Management", icon: "identities" },
   { id: "config",           name: "Configuration",     icon: "cog"        },
   { id: "webhook",          name: "Webhook",           icon: "webhook"    },
-  { id: "observability",    name: "Observability",     icon: "security"   },
+  { id: "observability",    name: "Observability",     icon: "security",  feature: "profiler" },
   { id: "storage",          name: "Storage",           icon: "storage"    },
   {
     id: "home", name: "Home", icon: "home",
@@ -89,7 +91,7 @@ export const menuItems: TypeMenuItems[] = getMenuItems();
 
 export const navigatorItems: {[key: string]: TypeNavigatorItem[]} = {
   bucket: [
-    {_id: "3", title: "Profile", icon: "bucket", section: "bucket"},
-    {_id: "4", title: "Security", icon: "lock", section: "bucket"}
+    {id: "3", title: "Profile", icon: "bucket", section: "bucket"},
+    {id: "4", title: "Security", icon: "lock", section: "bucket"}
   ]
 };

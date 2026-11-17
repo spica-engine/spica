@@ -9,7 +9,7 @@ export type TypeMenuItems = {
 };
 
 export type TypeNavigatorItem = {
-  _id: string;
+  id: string;
   section: string; //!Todo can be improvable like statically defined values etc.
   title?: string;
   icon?: IconName;

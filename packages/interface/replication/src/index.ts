@@ -1,3 +1,4 @@
+import {ExpiringRepository, Keyed} from "@spica-server/interface-data";
 import {PartialObserver} from "rxjs";
 
 interface IPublisher<T> {
@@ -14,11 +15,10 @@ export interface IJobReducer {
   do(meta: JobMeta, job: Function): Promise<boolean>;
 }
 
-export interface JobMeta {
-  _id: string;
+export type JobMeta = Keyed<{
   created_at?: Date;
   [key: string]: any;
-}
+}>;
 
 export interface ICommander {
   register(ctx: Object, fns: Function[], cmdType: CommandType): {unsubscribe: () => void};
@@ -32,7 +32,6 @@ export interface CommandMessengerOptions {
 }
 
 export interface CommandMessage {
-  _id?: string;
   created_at?: Date;
   source: CommandSource;
   target: CommandTarget;
@@ -84,3 +83,23 @@ export const REPLICATION_SERVICE_OPTIONS = Symbol.for("REPLICATION_SERVICE_OPTIO
 export const COMMAND_MEMORY_OPTIONS = Symbol.for("COMMAND_MEMORY_OPTIONS");
 
 export const REPLICA_ID = Symbol.for("REPLICA_ID");
+
+export interface JobRepository extends ExpiringRepository {
+  /**
+   * Stores the job unless a replica already did, resolving to whether this call stored it.
+   */
+  claim(meta: JobMeta): Promise<boolean>;
+  /**
+   * Deletes the job of the event and resolves to it, or to null when there is none.
+   */
+  takeByEventId(eventId: string): Promise<JobMeta | null>;
+}
+
+export const JOB_REPOSITORY = Symbol.for("JOB_REPOSITORY");
+
+export interface CommandRepository extends ExpiringRepository {
+  insert(command: CommandMessage): Promise<unknown>;
+}
+
+export const COMMAND_REPOSITORY = Symbol.for("COMMAND_REPOSITORY");
+export const COMMAND_COLLECTION = "commands";

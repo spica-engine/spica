@@ -7,6 +7,9 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../data"
+    },
+    {
       "path": "../../../core/websocket"
     },
     {
@@ -20,9 +23,6 @@
     },
     {
       "path": "../../../interface/realtime"
-    },
-    {
-      "path": "../../../database/realtime"
     },
     {
       "path": "../../passport/testing"

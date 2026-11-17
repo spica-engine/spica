@@ -1,9 +1,15 @@
-import {useState, useCallback, useEffect} from "react";
+import {useState, useCallback, useEffect, useMemo} from "react";
+import {isFieldPath} from "../components/prefabs/filter-panel/filterPanelUtils";
 import type {BucketDataQueryType} from "../store/api/bucketApi";
+import type {DataEngine} from "../store/api/statusApi";
 
 const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const buildBucketQuery = (searchText: string, searchableColumns: string[]): BucketDataQueryType => {
+export const buildBucketQuery = (
+  searchText: string,
+  searchableColumns: string[],
+  engine?: DataEngine
+): BucketDataQueryType => {
   const base: BucketDataQueryType = {
     paginate: true,
     relation: true,
@@ -13,6 +19,16 @@ const buildBucketQuery = (searchText: string, searchableColumns: string[]): Buck
   // MongoDB rejects an empty `$or: []` and returns nothing, so a bucket with no
   // text-searchable columns must omit the filter entirely rather than emit one.
   if (!searchableColumns.length) return base;
+
+  if (engine === "postgresql") {
+    const columns = searchableColumns.filter(isFieldPath);
+    if (!columns.length) return base;
+    const pattern = JSON.stringify(escapeForRegex(searchText));
+    return {
+      ...base,
+      filter: columns.map(col => `regex(document.${col}, ${pattern}, "i")`).join(" || ")
+    };
+  }
 
   return {
     ...base,
@@ -31,21 +47,23 @@ interface UseBucketSearchResult {
 
 export function useBucketSearch(
   bucketId: string,
-  searchableColumns: string[]
+  searchableColumns: string[],
+  engine?: DataEngine
 ): UseBucketSearchResult {
-  const [searchQuery, setSearchQuery] = useState<BucketDataQueryType | undefined>();
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
-    setSearchQuery(undefined);
+    setSearchText("");
   }, [bucketId]);
 
-  const handleSearch = useCallback(
-    async (search: string) => {
-      const trimmed = search.trim();
-      const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
-      setSearchQuery(query && bucketId ? query : undefined);
-    },
-    [bucketId, searchableColumns]
+  const handleSearch = useCallback(async (search: string) => {
+    setSearchText(search.trim());
+  }, []);
+
+  const searchQuery = useMemo(
+    () =>
+      searchText && bucketId ? buildBucketQuery(searchText, searchableColumns, engine) : undefined,
+    [searchText, bucketId, searchableColumns, engine]
   );
 
   return {
@@ -53,5 +71,3 @@ export function useBucketSearch(
     handleSearch
   };
 }
-
-

@@ -8,8 +8,9 @@ import {FunctionEngine} from "./engine.js";
 import {PlanExecutor} from "./plan-executor.js";
 import {TriggerSecretResolver} from "./trigger-secret-resolver.js";
 import {FunctionController} from "./function.controller.js";
-import {LogModule, LogService} from "@spica-server/function-log";
-import {FunctionService, ServicesModule} from "@spica-server/function-services";
+import {LogModule} from "@spica-server/function-log";
+import {FUNCTION_LOG_REPOSITORY, LogRepository} from "@spica-server/interface-function-log";
+import {ServicesModule} from "@spica-server/function-services";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver.js";
 import {Http} from "./services/interface.js";
 import {Axios} from "./services/axios.js";
@@ -18,7 +19,12 @@ import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {registerAssetHandlers} from "./asset.js";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface-asset";
-import {FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface-function";
+import {
+  FunctionOptions,
+  FUNCTION_OPTIONS,
+  FUNCTION_REPOSITORY,
+  FunctionRepository
+} from "@spica-server/interface-function";
 import {FunctionRealtimeModule} from "@spica-server/function-realtime";
 import {FunctionAssetStorageModule} from "@spica-server/function-asset-storage";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
@@ -30,15 +36,15 @@ import {FunctionPreparationService} from "./function-preparation.service.js";
 @Module({})
 export class FunctionModule {
   constructor(
-    fs: FunctionService,
+    @Inject(FUNCTION_REPOSITORY) functions: FunctionRepository,
     fe: FunctionEngine,
     scheduler: Scheduler,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
-    logs: LogService,
+    @Inject(FUNCTION_LOG_REPOSITORY) logs: LogRepository,
     validator: Validator
   ) {
-    registerStatusProvider(fs, scheduler);
-    registerAssetHandlers(fs, fe, logs, validator, this.assetRepManager);
+    registerStatusProvider(functions, scheduler);
+    registerAssetHandlers(functions, fe, logs, validator, this.assetRepManager);
   }
   static forRoot(
     options: SchedulingOptions & FunctionOptions & {realtime: boolean}

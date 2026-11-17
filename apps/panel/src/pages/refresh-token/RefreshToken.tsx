@@ -10,6 +10,7 @@ import Confirmation from "../../components/molecules/confirmation/Confirmation";
 import styles from "./RefreshToken.module.scss";
 import sharedStyles from "../shared/EntityPage.module.scss";
 import bucketStyles from "../bucket/Bucket.module.scss";
+import { idOf } from "../../utils/recordKey";
 
 function formatDate(value?: string): string {
   if (!value) return "—";
@@ -27,7 +28,7 @@ const RefreshTokenPage = () => {
     async (token: RefreshToken) => {
       try {
         await updateRefreshToken({
-          id: token._id,
+          id: idOf(token)!,
           disabled: !token.disabled,
         }).unwrap();
       } catch {
@@ -45,7 +46,7 @@ const RefreshTokenPage = () => {
   const handleConfirmDelete = useCallback(async () => {
     if (!tokenToDelete) return;
     try {
-      await deleteRefreshToken(tokenToDelete._id).unwrap();
+      await deleteRefreshToken(idOf(tokenToDelete)!).unwrap();
       setTokenToDelete(null);
     } catch {
       // Error handled by RTK Query
@@ -60,12 +61,12 @@ const RefreshTokenPage = () => {
     () => [
       {
         header: <FlexElement>#</FlexElement>,
-        key: "_id",
+        key: "recordId",
         width: "120px",
         minWidth: "100px",
         renderCell: ({ row }) => (
-          <span className={styles.idCell} title={row._id}>
-            {row._id.slice(-8)}
+          <span className={styles.idCell} title={idOf(row)}>
+            {idOf(row)!.slice(-8)}
           </span>
         ),
       },

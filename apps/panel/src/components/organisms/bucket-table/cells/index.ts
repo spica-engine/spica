@@ -13,3 +13,4 @@ export { ObjectCell } from "./ObjectCell";
 export { LocationCell } from "./LocationCell";
 export { RelationCell } from "./RelationCell";
 export { JsonCell } from "./JsonCell";
+export { ReadonlyCell } from "./ReadonlyCell";

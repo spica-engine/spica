@@ -17,6 +17,7 @@ import type { RelationLabelModeMap } from '../../../prefabs/relation-picker/prim
 import useLocalStorage from '../../../../hooks/useLocalStorage';
 import { useCellState } from '../useCellSelection';
 import styles from './Cells.module.scss';
+import { relationValueId } from '../../../../domain/relationTarget';
 
 const cx = (...classes: (string | false | undefined)[]) => classes.filter(Boolean).join(' ');
 
@@ -31,6 +32,7 @@ export const RelationCell: React.FC<CellRendererProps> = ({
   const bucketLookup = useBucketLookup();
   const navigate = useNavigate();
   const relatedBucketId = property.bucketId;
+  const relatedKeyField = relatedBucketId ? bucketLookup.getBucketKeyField(relatedBucketId) : undefined;
 
   // The list view honors the per-field setting of the bucket currently being
   // viewed (/bucket/:bucketId), keyed by this cell's property, not the related
@@ -54,37 +56,38 @@ export const RelationCell: React.FC<CellRendererProps> = ({
       return value as RelationSelected;
     }
 
-    if (typeof value === 'object' && value._id) {
+    const valueId = typeof value === 'object' ? relationValueId(value, relatedKeyField) : undefined;
+    if (typeof value === 'object' && valueId) {
       const relatedBucketProperties = bucketLookup.getBucketProperties(relatedBucketId);
       if (relatedBucketProperties) {
         const relatedPrimaryKey = bucketLookup.getBucketPrimaryKey(relatedBucketId);
-        const label = extractPrimaryFieldValue(value, relatedBucketProperties, relatedPrimaryKey);
+        const label = extractPrimaryFieldValue(value, relatedBucketProperties, relatedPrimaryKey, relatedKeyField);
         const columns = extractPrimaryColumns(value, relatedBucketProperties, relatedPrimaryKey);
 
-        bucketLookup.setRelationLabel(relatedBucketId, value._id, label);
+        bucketLookup.setRelationLabel(relatedBucketId, valueId, label);
 
         return {
           kind: 'id',
-          id: value._id,
+          id: valueId,
           label: label,
           columns: columns
         };
       }
       return {
         kind: 'id',
-        id: value._id
+        id: valueId
       };
     }
 
-    if (typeof value === 'string') {
+    if (typeof value === 'string' || typeof value === 'number') {
       return {
         kind: 'id',
-        id: value
+        id: String(value)
       };
     }
 
     return null;
-  }, [value, relatedBucketId, bucketLookup]);
+  }, [value, relatedBucketId, bucketLookup, relatedKeyField]);
 
   const handleSelect = useCallback((selection: any) => {
     const id = typeof selection === 'string' ? selection : selection?.id ?? null;
@@ -103,9 +106,9 @@ export const RelationCell: React.FC<CellRendererProps> = ({
   const navigateToRelated = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (!relatedBucketId || !normalizedValue?.id) return;
-    const filter = encodeURIComponent(encodeIdFilterConditions(normalizedValue.id));
+    const filter = encodeURIComponent(encodeIdFilterConditions(normalizedValue.id, relatedKeyField));
     navigate(`/bucket/${relatedBucketId}?filter=${filter}`);
-  }, [navigate, relatedBucketId, normalizedValue?.id]);
+  }, [navigate, relatedBucketId, normalizedValue?.id, relatedKeyField]);
 
   if (!relatedBucketId) {
     return <span>No bucket ID</span>;

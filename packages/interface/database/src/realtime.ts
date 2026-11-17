@@ -1,7 +1,8 @@
-import {Filter, ObjectId} from "mongodb";
+import {Filter} from "mongodb";
+import {Id, ResourceFilterSpec} from "@spica-server/interface-data";
 
 interface Document {
-  _id: ObjectId;
+  _id: Id;
 }
 
 export enum OperationType {
@@ -37,6 +38,7 @@ export interface DatabaseChange<T extends Document> {
 
 export interface FindOptions<T> {
   filter?: Filter<T>;
+  resourceFilter?: ResourceFilterSpec;
   sort?: {
     [index: string]: -1 | 1;
   };

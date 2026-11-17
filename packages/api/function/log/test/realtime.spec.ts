@@ -3,9 +3,19 @@ import {Test} from "@nestjs/testing";
 import {LogModule} from "@spica-server/function-log";
 import {CoreTestingModule, Websocket} from "@spica-server/core-testing";
 import {WsAdapter} from "@spica-server/core-websocket";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {
+  DatabaseService,
+  DatabaseTestingModule,
+  ObjectId,
+  mongoOnly
+} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {ChunkKind} from "@spica-server/interface-realtime";
+import {systemKeyField} from "@spica-server/data";
+
+mongoOnly(
+  "it writes MongoDB log documents directly; the gateway on PostgreSQL is covered by realtime.postgresql.spec.ts"
+);
 
 function url(path: string, query?: {[k: string]: string | string[]}) {
   const url = new URL(path, "ws://insteadof");
@@ -205,9 +215,7 @@ describe("Realtime", () => {
     const ws = wsc.get(
       url("/function-logs", {
         begin: created_at.toString(),
-        sort: JSON.stringify({
-          _id: -1
-        })
+        sort: JSON.stringify({[systemKeyField()]: -1})
       })
     );
     const message = jest.fn();

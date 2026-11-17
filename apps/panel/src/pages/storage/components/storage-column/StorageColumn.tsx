@@ -6,6 +6,7 @@ import {
   type DirectoryItem,
   type TypeDirectories
 } from "../../../../types/storage";
+import { idOf } from "../../../../utils/recordKey";
 
 interface StorageItemColumnProps {
   items: DirectoryItem[];
@@ -92,11 +93,11 @@ export const StorageItemColumn = memo(
             const fullPath = item.fullPath || item.name;
             const isActive = isFolder
               ? directory.find(i => i.fullPath === fullPath)?.isActive || false
-              : previewFileId === item._id;
+              : previewFileId === idOf(item);
 
             return (
               <StorageItem
-                key={item._id}
+                key={idOf(item)!}
                 item={item}
                 onFolderClick={folderName =>
                   handleFolderClick(folderName, fullPath, depth, isActive)

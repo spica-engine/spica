@@ -1,7 +1,6 @@
 import RefreshTokenReadOnlyAccess from "./refresh.token.readonly.js";
 
 export default {
-  _id: "RefreshTokenFullAccess",
   name: "Refresh Token Full Access",
   description: "Full access to refresh token service.",
   statement: [

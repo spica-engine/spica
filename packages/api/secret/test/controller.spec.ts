@@ -1,30 +1,40 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite, waitForMongoIndexes} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID} from "@spica-server/core-schema";
 import {SecretModule} from "../src";
 import {PassportTestingModule} from "@spica-server/passport-testing";
+import {idOf, systemKeyField} from "@spica-server/data";
 
 const ENCRYPTION_SECRET = "test-encryption-secret-32chars!!";
 
-describe("Secret", () => {
+contractSuite("Secret", engine => {
   let req: Request;
   let app: INestApplication;
+  let missingId: () => string;
+
+  const filterOn = (field: string, value: string) =>
+    engine.name == "postgresql"
+      ? `document.${field} == '${value}'`
+      : JSON.stringify({[field]: value});
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.standalone(),
+        engine.module(),
         CoreTestingModule,
         SecretModule.forRoot({realtime: false, encryptionSecret: ENCRYPTION_SECRET}),
         SchemaModule.forRoot({formats: [OBJECT_ID]}),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"})
       ]
     }).compile();
+    await waitForMongoIndexes(engine, module, {secret: ["key_1"]});
 
     req = module.get(Request);
+    missingId = () => String(module.get<IdTypes>(ID_TYPES).forCollection("secret").generate());
 
     app = module.createNestApplication();
 
@@ -41,7 +51,7 @@ describe("Secret", () => {
       expect(res.body.length).toBe(1);
       expect(res.body[0].key).toBe("SECRET_KEY");
       expect(res.body[0].value).toBeUndefined();
-      expect(res.body[0]._id).toBeDefined();
+      expect(idOf(res.body[0])).toBeDefined();
     });
 
     it("should support limit, skip and sort", async () => {
@@ -64,7 +74,10 @@ describe("Secret", () => {
       await req.post("/secret", {key: "KEY_2", value: "val_2"});
       await req.post("/secret", {key: "KEY_3", value: "val_3"});
 
-      const res = await req.get(`/secret`, {paginate: true, sort: JSON.stringify({_id: -1})});
+      const res = await req.get(`/secret`, {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
       expect(res.body.meta.total).toBe(3);
       expect(res.body.data.length).toBe(3);
       res.body.data.forEach(s => {
@@ -76,7 +89,7 @@ describe("Secret", () => {
       await req.post("/secret", {key: "KEY_1", value: "val_1"});
       await req.post("/secret", {key: "KEY_2", value: "val_2"});
 
-      const res = await req.get(`/secret`, {filter: JSON.stringify({key: "KEY_2"})});
+      const res = await req.get(`/secret`, {filter: filterOn("key", "KEY_2")});
       expect(res.body.length).toBe(1);
       expect(res.body[0].key).toBe("KEY_2");
     });
@@ -86,14 +99,14 @@ describe("Secret", () => {
     it("should return secret by id with value hidden", async () => {
       const {body: inserted} = await req.post("/secret", {key: "MY_SECRET", value: "secret123"});
 
-      const res = await req.get(`/secret/${inserted._id}`);
-      expect(res.body._id).toBe(inserted._id);
+      const res = await req.get(`/secret/${idOf(inserted)}`);
+      expect(idOf(res.body)).toBe(idOf(inserted));
       expect(res.body.key).toBe("MY_SECRET");
       expect(res.body.value).toBeUndefined();
     });
 
     it("should return 404 for non-existent id", async () => {
-      const res = await req.get(`/secret/${new ObjectId()}`).catch(r => r);
+      const res = await req.get(`/secret/${missingId()}`).catch(r => r);
       expect(res.statusCode).toBe(404);
     });
   });
@@ -102,7 +115,7 @@ describe("Secret", () => {
     it("should create a new secret and return it without value", async () => {
       const {body} = await req.post("/secret", {key: "API_KEY", value: "super-secret"});
 
-      expect(body._id).toBeDefined();
+      expect(idOf(body)).toBeDefined();
       expect(body.key).toBe("API_KEY");
       expect(body.value).toBeUndefined();
     });
@@ -110,7 +123,7 @@ describe("Secret", () => {
     it("should encrypt the value in the database", async () => {
       const {body} = await req.post("/secret", {key: "DB_PASS", value: "plaintext-password"});
 
-      const found = await req.get(`/secret/${body._id}`);
+      const found = await req.get(`/secret/${idOf(body)}`);
       expect(found.body.value).toBeUndefined();
       expect(found.body.key).toBe("DB_PASS");
     });
@@ -140,20 +153,18 @@ describe("Secret", () => {
     it("should update secret and return without value", async () => {
       const {body: inserted} = await req.post("/secret", {key: "OLD_KEY", value: "old_val"});
 
-      const {body: updated} = await req.put(`/secret/${inserted._id}`, {
+      const {body: updated} = await req.put(`/secret/${idOf(inserted)}`, {
         key: "NEW_KEY",
         value: "new_val"
       });
 
-      expect(updated._id).toBe(inserted._id);
+      expect(idOf(updated)).toBe(idOf(inserted));
       expect(updated.key).toBe("NEW_KEY");
       expect(updated.value).toBeUndefined();
     });
 
     it("should return 404 for non-existent secret", async () => {
-      const res = await req
-        .put(`/secret/${new ObjectId()}`, {key: "KEY", value: "val"})
-        .catch(r => r);
+      const res = await req.put(`/secret/${missingId()}`, {key: "KEY", value: "val"}).catch(r => r);
 
       expect(res.statusCode).toBe(404);
     });
@@ -166,7 +177,7 @@ describe("Secret", () => {
       expect(body.updated_at).not.toBeFalsy();
       expect(body.value).toBeUndefined();
 
-      const res = await req.get(`/secret/${body._id}`);
+      const res = await req.get(`/secret/${idOf(body)}`);
       expect(res.body.updated_at).not.toBeFalsy();
       expect(res.body.value).toBeUndefined();
     });
@@ -174,7 +185,7 @@ describe("Secret", () => {
     it("should advance updated_at on update", async () => {
       const {body: inserted} = await req.post("/secret", {key: "TS_KEY", value: "val"});
 
-      const {body: updated} = await req.put(`/secret/${inserted._id}`, {
+      const {body: updated} = await req.put(`/secret/${idOf(inserted)}`, {
         key: "TS_KEY",
         value: "val2"
       });
@@ -197,9 +208,9 @@ describe("Secret", () => {
       expect(body.updated_at).not.toBe(clientTimestamp);
       expect(body.injected).toBeUndefined();
 
-      const res = await req.get(`/secret/${body._id}`);
+      const res = await req.get(`/secret/${idOf(body)}`);
       expect(res.body.injected).toBeUndefined();
-      expect(Object.keys(res.body).sort()).toEqual(["_id", "key", "updated_at"]);
+      expect(Object.keys(res.body).sort()).toEqual([systemKeyField(), "key", "updated_at"].sort());
     });
   });
 
@@ -207,7 +218,7 @@ describe("Secret", () => {
     it("should delete secret", async () => {
       const {body} = await req.post("/secret", {key: "TO_DELETE", value: "val"});
 
-      const res = await req.delete(`/secret/${body._id}`);
+      const res = await req.delete(`/secret/${idOf(body)}`);
       expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
 
       const {body: secrets} = await req.get("/secret");
@@ -215,7 +226,7 @@ describe("Secret", () => {
     });
 
     it("should return 404 for non-existent secret", async () => {
-      const res = await req.delete(`/secret/${new ObjectId()}`).catch(r => r);
+      const res = await req.delete(`/secret/${missingId()}`).catch(r => r);
 
       expect(res.statusCode).toBe(404);
     });

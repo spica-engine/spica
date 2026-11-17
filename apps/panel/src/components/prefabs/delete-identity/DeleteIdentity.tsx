@@ -2,6 +2,7 @@ import React, { type FC, type ReactNode } from "react";
 import type { Identity } from "../../../store/api/identityApi";
 import { useDeleteIdentityMutation } from "../../../store/api/identityApi";
 import DeleteEntity from "../delete-entity/DeleteEntity";
+import { idOf } from "../../../utils/recordKey";
 
 type DeleteIdentityProps = {
   identity: Identity;
@@ -18,7 +19,7 @@ const DeleteIdentity: FC<DeleteIdentityProps> = ({ identity, onDeleted, children
 
   return (
     <DeleteEntity
-      entityId={identity._id!}
+      entityId={idOf(identity)!}
       entityName={identity.identifier}
       entityLabel="IDENTITY"
       deleteMutation={deleteIdentity}

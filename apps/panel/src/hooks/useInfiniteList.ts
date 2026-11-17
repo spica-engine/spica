@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFillScrollContainer } from "./useFillScrollContainer";
+import { idOf, type SystemRecord } from "../utils/recordKey";
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -24,7 +25,7 @@ interface UseInfiniteListReturn<T> {
   resetList: () => void;
 }
 
-export function useInfiniteList<T extends { _id?: string }>({
+export function useInfiniteList<T extends SystemRecord>({
   response,
   isFetching,
   pageSize,
@@ -51,8 +52,8 @@ export function useInfiniteList<T extends { _id?: string }>({
       setAllItems(response.data);
     } else {
       setAllItems((prev) => {
-        const existingIds = new Set(prev.map((item) => item._id));
-        const newItems = response.data.filter((item) => !existingIds.has(item._id));
+        const existingIds = new Set(prev.map((item) => idOf(item)));
+        const newItems = response.data.filter((item) => !existingIds.has(idOf(item)));
         return [...prev, ...newItems];
       });
     }

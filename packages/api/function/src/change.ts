@@ -9,6 +9,7 @@ import {
   SecretRelation
 } from "@spica-server/interface-function";
 import {hasSecretPlaceholder} from "./secret-placeholder.js";
+import {idOf} from "@spica-server/data";
 
 type FunctionDocument = Function<EnvRelation.NotResolved, SecretRelation.NotResolved>;
 
@@ -17,7 +18,7 @@ export function createPlan(
   current: FunctionDocument | null
 ): FunctionChangePlan {
   if (previous && current) {
-    const id = current._id.toString();
+    const id = idOf(current).toString();
     if (previous.name != current.name) {
       return {
         routing: [
@@ -40,12 +41,12 @@ export function createPlan(
     return {
       routing: createTargetChanges(current, ChangeKind.Added),
       outdate: [],
-      reconcile: [current._id.toString()]
+      reconcile: [idOf(current).toString()]
     };
   }
 
   if (previous) {
-    const id = previous._id.toString();
+    const id = idOf(previous).toString();
     return {
       routing: createTargetChanges(previous, ChangeKind.Removed),
       outdate: [id],
@@ -70,7 +71,7 @@ export function secretRefreshPlan(fn: FunctionDocument, secretKeys: string[]): F
   }
 
   return {
-    ...refreshPlan(fn._id.toString()),
+    ...refreshPlan(idOf(fn).toString()),
     routing: createTargetChanges({...fn, triggers: referencingTriggers}, ChangeKind.Updated)
   };
 }
@@ -137,7 +138,7 @@ function createTargetChanges(fn: FunctionDocument, changeKind: ChangeKind): Targ
       options: trigger.options,
       type: trigger.type,
       target: {
-        id: fn._id.toString(),
+        id: idOf(fn).toString(),
         handler,
         name: fn.name
       }

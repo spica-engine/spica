@@ -45,7 +45,6 @@ import StorageReadOnlyAccess from "./storage.readonly.js";
 import StrategyFullAccess from "./strategy.fullaccess.js";
 import StrategyReadOnlyAccess from "./strategy.readonly.js";
 
-
 import WebhookFullAccess from "./webhook.fullaccess.js";
 import WebhookReadOnlyAccess from "./webhook.readonly.js";
 
@@ -55,60 +54,42 @@ import UserReadOnlyAccess from "./user.readonly.js";
 import ConfigFullAccess from "./config.fullaccess.js";
 import ConfigReadOnlyAccess from "./config.readonly.js";
 
-export default [
+export default {
   ActivityFullAccess,
   ActivityReadOnlyAccess,
-
   ApiKeyFullAccess,
   ApiKeyReadOnlyAccess,
-
   AssetFullAccess,
   AssetReadOnlyAccess,
-
   BucketFullAccess,
   BucketReadOnlyAccess,
-
   DashboardFullAccess,
   DashboardReadOnlyAccess,
-
   EnvVarFullAccess,
   EnvVarReadOnlyAccess,
-
   SecretFullAccess,
   SecretReadOnlyAccess,
-
   FunctionFullAccess,
   FunctionReadOnlyAccess,
-
   IdentityFullAccess,
   IdentityReadOnlyAccess,
-
   PassportFullAccess,
   PassportReadOnlyAccess,
-
   PolicyFullAccess,
   PolicyReadOnlyAccess,
-
   PreferenceFullAccess,
   PreferenceReadOnlyAccess,
-
   RefreshTokenFullAccess,
   RefreshTokenReadOnlyAccess,
-
   StatusFullAccess,
-
   StorageFullAccess,
   StorageReadOnlyAccess,
-
   StrategyFullAccess,
   StrategyReadOnlyAccess,
-
   WebhookFullAccess,
   WebhookReadOnlyAccess,
-
   UserFullAccess,
   UserReadOnlyAccess,
-
   ConfigFullAccess,
   ConfigReadOnlyAccess
-];
+};

@@ -15,10 +15,10 @@ import {
   Res,
   UseGuards
 } from "@nestjs/common";
-import {AssetService} from "./service.js";
-import {OBJECT_ID, ObjectId} from "@spica-server/database";
 import {
   Asset,
+  ASSET_REPOSITORY,
+  AssetRepository,
   Config,
   ExportMeta,
   Resource,
@@ -29,31 +29,34 @@ import {
 } from "@spica-server/interface-asset";
 import {exporters, operators, validators} from "./registration.js";
 import {putConfiguration} from "./helpers.js";
-import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
+import {BOOLEAN, FILTER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {AssetRepManager} from "./representative.js";
 import {createReadStream} from "fs";
-import {OptionalId} from "@spica-server/database";
+import {ID, idOf} from "@spica-server/data";
+import {Id} from "@spica-server/interface-data";
+
+const ASSET_COLLECTION = "asset";
 
 @Controller("asset")
 export class AssetController {
   constructor(
-    private service: AssetService,
+    @Inject(ASSET_REPOSITORY) private assets: AssetRepository,
     @Inject(ASSET_REP_MANAGER) private repManager: AssetRepManager,
     @Inject(INSTALLATION_STRATEGIES) private installationStrategies: IInstallationStrategy[]
   ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:index"))
-  find(@Query("filter", DEFAULT({}), JSONP) filter: object) {
-    return this.service.find(filter);
+  find(@Query("filter", FILTER) filter?: object | string) {
+    return this.assets.find(filter);
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:show", "asset"))
-  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.service.findOne({_id: id}).then(r => {
+  async findOne(@Param("id", ID(ASSET_COLLECTION)) id: Id) {
+    return this.assets.findById(id).then(r => {
       if (!r) {
         throw new NotFoundException();
       }
@@ -65,7 +68,7 @@ export class AssetController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:download"))
   async insert(@Body(Schema.validate("http://spica.internal/asset")) asset: Asset) {
     asset.status = "downloaded";
-    return this.service.insertOne(asset);
+    return this.assets.insert(asset);
   }
 
   @Post("export")
@@ -112,7 +115,7 @@ export class AssetController {
   @Post(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:install", "asset"))
   async install(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(ASSET_COLLECTION)) id: Id,
     @Body(
       Schema.validate({
         type: "object",
@@ -128,7 +131,7 @@ export class AssetController {
     {configs}: {configs: Config[]},
     @Query("preview", BOOLEAN) preview: boolean
   ) {
-    let asset: OptionalId<Asset> = await this.service.findOne({_id: id});
+    let asset: Asset = await this.assets.findById(id);
     if (!asset) {
       throw new NotFoundException();
     }
@@ -137,9 +140,7 @@ export class AssetController {
 
     await this.validateResources(asset.resources);
 
-    const allVersions = await this.service.find({
-      url: asset.url
-    });
+    const allVersions = await this.assets.findVersions(asset.url);
 
     const strategy = this.installationStrategies.find(s => s.isMyTask(asset, allVersions));
 
@@ -165,19 +166,19 @@ export class AssetController {
 
     const assetsAfterInstall = strategy.afterInstall(resourcesAfterInstall);
 
-    await Promise.all(assetsAfterInstall.map(a => this.service.findOneAndReplace({_id: a._id}, a)));
+    await Promise.all(assetsAfterInstall.map(a => this.assets.replaceById(idOf(a), a)));
 
-    return assetsAfterInstall.find(a => a._id == asset._id);
+    return assetsAfterInstall.find(a => idOf(a) == idOf(asset));
   }
 
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:delete", "asset"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(ASSET_COLLECTION)) id: Id,
     @Query("type") type: "soft" | "hard" = "soft"
   ) {
-    const asset = await this.service.findOne({_id: id});
+    const asset = await this.assets.findById(id);
 
     if (!asset) {
       throw new NotFoundException(`Asset with ID ${id} not found`);
@@ -196,14 +197,11 @@ export class AssetController {
         delete r.failure_message;
         return r;
       });
-      return this.service.findOneAndUpdate(
-        {_id: id},
-        {$set: {status: "downloaded", resources: resources}}
-      );
+      return this.assets.updateById(id, {status: "downloaded", resources: resources});
     }
 
     if (type == "hard") {
-      return this.service.findOneAndDelete({_id: id});
+      return this.assets.deleteById(id);
     }
 
     throw new BadRequestException(`Unknown delete type '${type}'`);
@@ -254,7 +252,7 @@ export class AssetController {
           relatedValidators.map(validator =>
             validator(copy).catch(e => {
               throw new BadRequestException(
-                `Module '${copy.module}' resource '${copy._id}' validation has been failed: ${e}`
+                `Module '${copy.module}' resource '${idOf(copy)}' validation has been failed: ${e}`
               );
             })
           )

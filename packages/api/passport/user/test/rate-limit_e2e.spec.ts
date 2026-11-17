@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportModule} from "@spica-server/passport";
 import {INestApplication} from "@nestjs/common";
@@ -11,7 +11,7 @@ import {RateLimitService} from "../src/rate-limit.service";
 import {ConfigModule} from "@spica-server/config";
 import {NestExpressApplication} from "@nestjs/platform-express";
 
-describe("Rate Limit E2E", () => {
+contractSuite("Rate Limit E2E", engine => {
   let module: TestingModule;
   let app: NestExpressApplication;
   let req: Request;
@@ -27,7 +27,7 @@ describe("Rate Limit E2E", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID, DATE_TIME]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         CoreTestingModule,
         ConfigModule.forRoot(),

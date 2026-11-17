@@ -13,6 +13,9 @@
           "outputPath": "apps/api/dist",
           "outputFileName": "src/main.js"
         }
+      },
+      "configurations": {
+        "postgresql": {}
       }
     },
     "prune": {

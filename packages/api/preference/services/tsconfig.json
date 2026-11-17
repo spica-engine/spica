@@ -7,13 +7,13 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../data"
+    },
+    {
       "path": "../../replication"
     },
     {
       "path": "../../../interface/preference"
-    },
-    {
-      "path": "../../../database"
     },
     {
       "path": "../../../core/patch"

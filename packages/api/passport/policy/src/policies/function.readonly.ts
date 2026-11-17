@@ -1,7 +1,6 @@
 import EnvVarReadOnlyAccess from "./env.var.readonly.js";
 
 export default {
-  _id: "FunctionReadOnlyAccess",
   name: "Function Read Only Access",
   description: "Read only access to function service.",
   statement: [

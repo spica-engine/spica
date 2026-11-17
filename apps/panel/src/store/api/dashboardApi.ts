@@ -1,4 +1,5 @@
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from '../../utils/recordKey';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,8 +34,7 @@ export interface DashboardComponent {
   ratio: DashboardRatio;
 }
 
-export interface Dashboard {
-  _id?: string;
+export interface Dashboard extends SystemRecord {
   name: string;
   icon: string;
   components: DashboardComponent[];
@@ -144,7 +144,7 @@ export const dashboardApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: DASHBOARD_TAG, id: _id })),
+              ...result.data.map((item) => ({ type: DASHBOARD_TAG, id: idOf(item) })),
               DASHBOARD_TAGS.LIST,
             ]
           : [DASHBOARD_TAGS.LIST],

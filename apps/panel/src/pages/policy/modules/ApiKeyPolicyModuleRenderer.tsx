@@ -9,6 +9,7 @@ import type { ApiKey } from "../../../store/api/apiKeyApi";
 import type { Policy } from "../../../store/api/policyApi";
 import type { OnResourceChange, OnResourceBatchChange } from "../moduleRendererHelpers";
 import { EntityPairModuleRenderer, type EntityPairConfig } from "./shared/EntityPairModuleRenderer";
+import { idOf } from "../../../utils/recordKey";
 
 export interface ApiKeyPolicyModuleProps extends BaseModuleContext {
   apiKeys?: ApiKey[];
@@ -24,8 +25,8 @@ export class ApiKeyPolicyModuleRenderer implements ModuleRenderer<ApiKeyPolicyMo
     const config: EntityPairConfig<ApiKey, Policy> = {
       leftEntities: apiKeys,
       rightEntities: policies,
-      getLeftId: (apiKey) => apiKey._id ?? "",
-      getRightId: (policy) => policy._id,
+      getLeftId: (apiKey) => idOf(apiKey) ?? "",
+      getRightId: (policy) => idOf(policy)!,
       getLeftLabel: (apiKey) => apiKey.name,
       getRightLabel: (policy) => policy.name,
       leftPlaceholder: "Select API Key",

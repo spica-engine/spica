@@ -3,6 +3,7 @@ import {useDrag} from "react-dnd";
 import {type DirectoryItem, type DragItem} from "../../../../types/storage";
 import styles from "./DroppableItem.module.scss";
 import {DnDItemTypes} from "../../../../hooks/useTypedDragLayer";
+import { idOf } from "../../../../utils/recordKey";
 
 interface DraggableStorageItemProps {
   item: DirectoryItem;
@@ -24,7 +25,7 @@ export function DraggableStorageItem({item, children}: DraggableStorageItemProps
   const [{isDragging}, drag] = useDrag<DragItem, unknown, {isDragging: boolean}>({
     type: DnDItemTypes.STORAGE_ITEM,
     item: {
-      id: item._id || "",
+      id: idOf(item) || "",
       name: item.label as string,
       fullPath: item.fullPath,
       parentPath,

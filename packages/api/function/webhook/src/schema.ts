@@ -1,9 +1,9 @@
-import {Injectable} from "@nestjs/common";
+import {Inject, Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core-schema";
-import {DatabaseService} from "@spica-server/database";
+import {COLLECTION_NAMES, CollectionNames} from "@spica-server/interface-data";
 import {JSONSchema7} from "json-schema";
 
-export function getSchema(collections: string[]): JSONSchema7 {
+export function getSchema(collections: string[], operations: string[]): JSONSchema7 {
   return {
     $id: "http://spica.internal/webhook",
     type: "object",
@@ -54,7 +54,7 @@ export function getSchema(collections: string[]): JSONSchema7 {
               type: {
                 type: "string",
                 title: "Event type",
-                enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"],
+                enum: operations,
                 description: "Event type that must be performed in the specified collection"
               }
             }
@@ -69,7 +69,7 @@ export function getSchema(collections: string[]): JSONSchema7 {
 @Injectable()
 export class SchemaResolver {
   constructor(
-    private db: DatabaseService,
+    @Inject(COLLECTION_NAMES) private collectionNames: CollectionNames,
     private validator: Validator
   ) {
     validator.registerUriResolver(this.resolve.bind(this));
@@ -77,17 +77,14 @@ export class SchemaResolver {
 
   resolve(uri: string): Promise<JSONSchema7> {
     if (uri == "http://spica.internal/webhook") {
-      const collectionNames = new Set<string>();
-
-      return this.db
-        .collections()
-        .then(collections => {
-          for (const collection of collections) {
-            collectionNames.add(collection.collectionName);
-          }
-
-          return getSchema(Array.from(collectionNames));
-        })
+      return this.collectionNames
+        .list()
+        .then(names =>
+          getSchema(
+            Array.from(new Set(names)),
+            this.collectionNames.changeOperations().map(operation => operation.toUpperCase())
+          )
+        )
         .then(schema => {
           // remove schema right after it's used.
           setImmediate(() => this.validator.removeSchema(schema.$id));

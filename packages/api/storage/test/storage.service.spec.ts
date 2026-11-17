@@ -1,36 +1,44 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {NotFoundException} from "@nestjs/common";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {clearStorage, contractSuite, waitForMongoIndexes} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {StorageService} from "@spica-server/storage";
 import {Default} from "@spica-server/storage";
 import {Strategy} from "@spica-server/storage";
-import {StorageObject, STORAGE_OPTIONS} from "@spica-server/interface-storage";
+import {StorageObject, STORAGE_OPTIONS, STORAGE_REPOSITORY} from "@spica-server/interface-storage";
+import {provideRepository, withId, idOf, systemKeyField} from "@spica-server/data";
 import {Readable} from "stream";
 
-describe("Storage Service", () => {
+contractSuite("Storage Service", engine => {
   let module: TestingModule;
 
   let storageService: StorageService;
+  let repository: any;
   let storageObject: StorageObject<Buffer>;
   let strategyInstance: Strategy;
-  let storageObjectId: ObjectId = new ObjectId("56cb91bdc3464f14678934ca");
+  let storageObjectId: any;
 
-  const resourceFilter = {$match: {}};
+  const newId = () => module.get<IdTypes>(ID_TYPES).forCollection("storage").generate();
+  const filterOf = (mongodb: object, postgresql: string) =>
+    engine.name == "mongodb" ? mongodb : postgresql;
+
+  const resourceFilter = {include: [], exclude: []};
+
+  const seed = (objects: any[]) =>
+    repository.insertAll(
+      objects.map(({content: {data, ...content}, ...object}) => ({
+        created_at: new Date(),
+        updated_at: new Date(),
+        ...object,
+        content
+      }))
+    );
 
   beforeEach(async () => {
-    storageObject = {
-      _id: storageObjectId,
-      name: "name",
-      url: "url",
-      content: {
-        data: Buffer.from("abc"),
-        type: "type",
-        size: 10
-      }
-    };
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.standalone()],
+      imports: [engine.module()],
       providers: [
+        provideRepository(STORAGE_REPOSITORY),
         StorageService,
         {
           provide: Strategy,
@@ -43,12 +51,27 @@ describe("Storage Service", () => {
       ]
     }).compile();
     storageService = module.get(StorageService);
+    repository = module.get(STORAGE_REPOSITORY);
     strategyInstance = module.get(Strategy);
-  });
+    await waitForMongoIndexes(engine, module, {storage: ["name_1"]});
+    storageObjectId = newId();
+    storageObject = withId(
+      {
+        name: "name",
+        url: "url",
+        content: {
+          data: Buffer.from("abc"),
+          type: "type",
+          size: 10
+        }
+      },
+      storageObjectId
+    );
+  }, 120_000);
 
-  afterEach(() => {
-    storageService.deleteMany({});
-    module.close();
+  afterEach(async () => {
+    await clearStorage(engine, module, {mongodb: ["storage"], postgresql: ["storage_objects"]});
+    await module.close();
   });
 
   it("should add storage objects", async () => {
@@ -65,18 +88,20 @@ describe("Storage Service", () => {
     ).resolves.not.toThrow();
 
     return await expect(
-      storageService.getAll(resourceFilter, undefined, true, 30, 0, {_id: -1}).then(result => {
-        Array.from(result.data).forEach((val, index) => {
-          expect(val.name).toBe("name" + (result.data.length - 1 - index));
-          expect(val.content["data"]).toBe(undefined);
-          expect(val.content.type).toBe((result.data.length - 1 - index).toString());
-          expect(val.created_at).toBeInstanceOf(Date);
-          expect(val.updated_at).toBeInstanceOf(Date);
-          expect(val.created_at).toEqual(result.data[index].created_at);
-          expect(val.updated_at).toEqual(result.data[index].updated_at);
-        });
-        return result;
-      })
+      storageService
+        .getAll(resourceFilter, undefined, true, 30, 0, {[systemKeyField()]: -1})
+        .then(result => {
+          Array.from(result.data).forEach((val, index) => {
+            expect(val.name).toBe("name" + (result.data.length - 1 - index));
+            expect(val.content["data"]).toBe(undefined);
+            expect(val.content.type).toBe((result.data.length - 1 - index).toString());
+            expect(val.created_at).toBeInstanceOf(Date);
+            expect(val.updated_at).toBeInstanceOf(Date);
+            expect(val.created_at).toEqual(result.data[index].created_at);
+            expect(val.updated_at).toEqual(result.data[index].updated_at);
+          });
+          return result;
+        })
     );
   });
 
@@ -107,33 +132,39 @@ describe("Storage Service", () => {
   describe("transaction rollback consistency", () => {
     it("should revert storage insert if one of objects failed", async () => {
       const storageObjects = [
-        {
-          _id: "successId",
-          name: "name1",
-          content: {
-            data: Buffer.from("abc1"),
-            type: "type1",
-            size: 10
-          }
-        },
-        {
-          _id: "failId",
-          name: "name2",
-          content: {
-            data: Buffer.from("abc2"),
-            type: "type2",
-            size: 20
-          }
-        },
-        {
-          _id: "thirdId",
-          name: "name3",
-          content: {
-            data: Buffer.from("abc3"),
-            type: "type3",
-            size: 30
-          }
-        }
+        withId(
+          {
+            name: "name1",
+            content: {
+              data: Buffer.from("abc1"),
+              type: "type1",
+              size: 10
+            }
+          },
+          newId()
+        ),
+        withId(
+          {
+            name: "name2",
+            content: {
+              data: Buffer.from("abc2"),
+              type: "type2",
+              size: 20
+            }
+          },
+          newId()
+        ),
+        withId(
+          {
+            name: "name3",
+            content: {
+              data: Buffer.from("abc3"),
+              type: "type3",
+              size: 30
+            }
+          },
+          newId()
+        )
       ];
 
       const originalWrite = strategyInstance.write.bind(strategyInstance);
@@ -148,27 +179,25 @@ describe("Storage Service", () => {
         "Error: Failed to write object name2 to storage. Reason: Upload failed for Item"
       );
 
-      const insertedObjects = await storageService.find();
+      const insertedObjects = await repository.findByNamePrefix("");
       expect(insertedObjects).toEqual([]);
 
       const objectPromises = storageObjects.map(storageObject =>
-        strategyInstance.read(storageObject._id).catch(e => e.code)
+        strategyInstance.read(idOf(storageObject)).catch(e => e.code)
       );
       const result = await Promise.all(objectPromises);
       expect(result).toEqual(["ENOENT", "ENOENT", "ENOENT"]);
     });
 
-    it("should revert updateMeta when MongoDB updateMany fails", async () => {
+    it("should revert updateMeta when the rename of the names fails", async () => {
       await storageService.insert([storageObject]);
       const originalName = storageObject.name;
       const newName = "renamed_object";
 
-      jest
-        .spyOn((storageService as any)._coll, "updateMany")
-        .mockRejectedValueOnce(new Error("MongoDB updateMany failed"));
+      jest.spyOn(repository, "renamePrefix").mockRejectedValueOnce(new Error("rename failed"));
 
       await expect(storageService.updateMeta(storageObjectId, newName)).rejects.toThrow(
-        "MongoDB updateMany failed"
+        "rename failed"
       );
 
       const storedContent = await strategyInstance.read(originalName);
@@ -184,16 +213,18 @@ describe("Storage Service", () => {
     await expect(storageService.insert([storageObject])).resolves.not.toThrow();
 
     await new Promise(resolve => setTimeout(resolve, 50)); // ensure updated_at is later than created_at
-    const updatedData = {
-      _id: storageObjectId,
-      name: "new name",
-      url: "new_url",
-      content: {
-        data: Buffer.from("cba"),
-        type: "newtype",
-        size: 10
-      }
-    };
+    const updatedData = withId(
+      {
+        name: "new name",
+        url: "new_url",
+        content: {
+          data: Buffer.from("cba"),
+          type: "newtype",
+          size: 10
+        }
+      },
+      storageObjectId
+    );
     await expect(storageService.update(storageObjectId, updatedData)).resolves.not.toThrow();
 
     const insertedObject = await storageService.get(storageObjectId);
@@ -202,18 +233,22 @@ describe("Storage Service", () => {
 
     return await expect(
       storageService.get(storageObjectId).then(result => {
-        expect(result).toEqual({
-          _id: storageObjectId,
-          name: "new name",
-          url: "new_url",
-          created_at: createdAt,
-          updated_at: updatedAt,
-          content: {
-            data: Buffer.from("cba"),
-            type: "newtype",
-            size: 10
-          }
-        });
+        expect(result).toEqual(
+          withId(
+            {
+              name: "new name",
+              url: "new_url",
+              created_at: createdAt,
+              updated_at: updatedAt,
+              content: {
+                data: Buffer.from("cba"),
+                type: "newtype",
+                size: 10
+              }
+            },
+            storageObjectId
+          )
+        );
         expect(result.updated_at.getTime()).toBeGreaterThan(createdAt.getTime());
         return result;
       })
@@ -233,48 +268,56 @@ describe("Storage Service", () => {
   });
 
   it("should delete multiple storage objects", async () => {
-    const object1Id = new ObjectId();
-    const object2Id = new ObjectId();
-    const object3Id = new ObjectId();
-    const object4Id = new ObjectId();
+    const object1Id = newId();
+    const object2Id = newId();
+    const object3Id = newId();
+    const object4Id = newId();
 
     const testObjects = [
-      {
-        _id: object1Id,
-        name: "file1.txt",
-        content: {
-          data: Buffer.from("content1"),
-          type: "text/plain",
-          size: 8
-        }
-      },
-      {
-        _id: object2Id,
-        name: "file2.txt",
-        content: {
-          data: Buffer.from("content2"),
-          type: "text/plain",
-          size: 8
-        }
-      },
-      {
-        _id: object3Id,
-        name: "file3.txt",
-        content: {
-          data: Buffer.from("content3"),
-          type: "text/plain",
-          size: 8
-        }
-      },
-      {
-        _id: object4Id,
-        name: "file4.txt",
-        content: {
-          data: Buffer.from("content4"),
-          type: "text/plain",
-          size: 8
-        }
-      }
+      withId(
+        {
+          name: "file1.txt",
+          content: {
+            data: Buffer.from("content1"),
+            type: "text/plain",
+            size: 8
+          }
+        },
+        object1Id
+      ),
+      withId(
+        {
+          name: "file2.txt",
+          content: {
+            data: Buffer.from("content2"),
+            type: "text/plain",
+            size: 8
+          }
+        },
+        object2Id
+      ),
+      withId(
+        {
+          name: "file3.txt",
+          content: {
+            data: Buffer.from("content3"),
+            type: "text/plain",
+            size: 8
+          }
+        },
+        object3Id
+      ),
+      withId(
+        {
+          name: "file4.txt",
+          content: {
+            data: Buffer.from("content4"),
+            type: "text/plain",
+            size: 8
+          }
+        },
+        object4Id
+      )
     ];
 
     await storageService.insert(testObjects);
@@ -291,68 +334,80 @@ describe("Storage Service", () => {
   });
 
   it("should delete folder with nested sub-resources at multiple levels", async () => {
-    const folderId = new ObjectId();
-    const subFolder1Id = new ObjectId();
-    const subFolder2Id = new ObjectId();
-    const nestedFileId = new ObjectId();
-    const deepNestedFileId = new ObjectId();
-    const rootFileId = new ObjectId();
+    const folderId = newId();
+    const subFolder1Id = newId();
+    const subFolder2Id = newId();
+    const nestedFileId = newId();
+    const deepNestedFileId = newId();
+    const rootFileId = newId();
 
-    const remainingData = {
-      _id: rootFileId,
-      name: "readme.txt",
-      content: {
-        data: Buffer.from("readme content"),
-        type: "text/plain",
-        size: 14
-      }
-    };
+    const remainingData = withId(
+      {
+        name: "readme.txt",
+        content: {
+          data: Buffer.from("readme content"),
+          type: "text/plain",
+          size: 14
+        }
+      },
+      rootFileId
+    );
     const testData = [
-      {
-        _id: folderId,
-        name: "documents/",
-        content: {
-          data: Buffer.from(""),
-          type: "application/octet-stream",
-          size: 0
-        }
-      },
-      {
-        _id: subFolder1Id,
-        name: "documents/work/",
-        content: {
-          data: Buffer.from(""),
-          type: "application/octet-stream",
-          size: 0
-        }
-      },
-      {
-        _id: subFolder2Id,
-        name: "documents/work/projects/",
-        content: {
-          data: Buffer.from(""),
-          type: "application/octet-stream",
-          size: 0
-        }
-      },
-      {
-        _id: nestedFileId,
-        name: "documents/work/report.pdf",
-        content: {
-          data: Buffer.from("report data"),
-          type: "application/pdf",
-          size: 11
-        }
-      },
-      {
-        _id: deepNestedFileId,
-        name: "documents/work/projects/project1.docx",
-        content: {
-          data: Buffer.from("project data"),
-          type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          size: 12
-        }
-      },
+      withId(
+        {
+          name: "documents/",
+          content: {
+            data: Buffer.from(""),
+            type: "application/octet-stream",
+            size: 0
+          }
+        },
+        folderId
+      ),
+      withId(
+        {
+          name: "documents/work/",
+          content: {
+            data: Buffer.from(""),
+            type: "application/octet-stream",
+            size: 0
+          }
+        },
+        subFolder1Id
+      ),
+      withId(
+        {
+          name: "documents/work/projects/",
+          content: {
+            data: Buffer.from(""),
+            type: "application/octet-stream",
+            size: 0
+          }
+        },
+        subFolder2Id
+      ),
+      withId(
+        {
+          name: "documents/work/report.pdf",
+          content: {
+            data: Buffer.from("report data"),
+            type: "application/pdf",
+            size: 11
+          }
+        },
+        nestedFileId
+      ),
+      withId(
+        {
+          name: "documents/work/projects/project1.docx",
+          content: {
+            data: Buffer.from("project data"),
+            type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            size: 12
+          }
+        },
+        deepNestedFileId
+      ),
       remainingData
     ];
 
@@ -396,18 +451,25 @@ describe("Storage Service", () => {
           content: {data: Buffer.from(""), type: "type2"}
         }
       ];
-      await storageService.insertMany(storageObjects);
+      await seed(storageObjects);
     });
 
     it("should filter by name", async () => {
-      const res = await storageService.getAll(resourceFilter, {name: "object1"}, false, 0, 0, {});
+      const res = await storageService.getAll(
+        resourceFilter,
+        filterOf({name: "object1"}, "document.name == 'object1'"),
+        false,
+        0,
+        0,
+        {}
+      );
       expect(res.map(r => r.name)).toEqual(["object1"]);
     });
 
     it("should filter by content type", async () => {
       const res = await storageService.getAll(
         resourceFilter,
-        {"content.type": "type1"},
+        filterOf({"content.type": "type1"}, "document.content.type == 'type1'"),
         false,
         0,
         0,
@@ -422,7 +484,10 @@ describe("Storage Service", () => {
 
       const resGte = await storageService.getAll(
         resourceFilter,
-        {created_at: {$gte: targetDate}},
+        filterOf(
+          {created_at: {$gte: targetDate}},
+          `document.created_at >= '${targetDate.toISOString()}'`
+        ),
         false,
         0,
         0,
@@ -433,7 +498,10 @@ describe("Storage Service", () => {
 
       const resLt = await storageService.getAll(
         resourceFilter,
-        {created_at: {$lt: targetDate}},
+        filterOf(
+          {created_at: {$lt: targetDate}},
+          `document.created_at < '${targetDate.toISOString()}'`
+        ),
         false,
         0,
         0,
@@ -448,7 +516,10 @@ describe("Storage Service", () => {
 
       const res1 = await storageService.getAll(
         resourceFilter,
-        {updated_at: {$gte: targetDate}},
+        filterOf(
+          {updated_at: {$gte: targetDate}},
+          `document.updated_at >= '${targetDate.toISOString()}'`
+        ),
         false,
         0,
         0,
@@ -458,7 +529,10 @@ describe("Storage Service", () => {
 
       const res2 = await storageService.getAll(
         resourceFilter,
-        {updated_at: {$lt: targetDate}},
+        filterOf(
+          {updated_at: {$lt: targetDate}},
+          `document.updated_at < '${targetDate.toISOString()}'`
+        ),
         false,
         0,
         0,
@@ -487,10 +561,10 @@ describe("Storage Service", () => {
         content: {data: Buffer.from(""), type: "type4"}
       }
     ];
-    await storageService.insertMany(storageObjects);
+    await seed(storageObjects);
     const res = await storageService.getAll(
       resourceFilter,
-      {name: {$regex: "^object"}},
+      filterOf({name: {$regex: "^object"}}, "regex(document.name, '^object')"),
       false,
       2,
       1,
@@ -511,7 +585,7 @@ describe("Storage Service", () => {
           type: ""
         }
       }));
-      await storageService.insertMany(storageObjects);
+      await seed(storageObjects);
     });
 
     it("should sort storage objects descend by name", async () => {
@@ -538,23 +612,27 @@ describe("Storage Service", () => {
 
     it("should sort storage objects descend by date", async () => {
       return await expect(
-        storageService.getAll(resourceFilter, undefined, true, 3, 0, {_id: -1}).then(result => {
-          expect(result.data[0].name).toBe("name0");
-          expect(result.data[1].name).toBe("name1");
-          expect(result.data[2].name).toBe("name2");
-          return result;
-        })
+        storageService
+          .getAll(resourceFilter, undefined, true, 3, 0, {[systemKeyField()]: -1})
+          .then(result => {
+            expect(result.data[0].name).toBe("name0");
+            expect(result.data[1].name).toBe("name1");
+            expect(result.data[2].name).toBe("name2");
+            return result;
+          })
       ).resolves.not.toThrow();
     });
 
     it("should sort storage objects ascend by date", async () => {
       return await expect(
-        storageService.getAll(resourceFilter, undefined, true, 3, 0, {_id: 1}).then(result => {
-          expect(result.data[0].name).toBe("name2");
-          expect(result.data[1].name).toBe("name1");
-          expect(result.data[2].name).toBe("name0");
-          return result;
-        })
+        storageService
+          .getAll(resourceFilter, undefined, true, 3, 0, {[systemKeyField()]: 1})
+          .then(result => {
+            expect(result.data[0].name).toBe("name2");
+            expect(result.data[1].name).toBe("name1");
+            expect(result.data[2].name).toBe("name0");
+            return result;
+          })
       ).resolves.not.toThrow();
     });
   });
@@ -652,8 +730,9 @@ describe("Storage Service", () => {
 
     it("should skip validation if total size limit was not provided", async () => {
       module = await Test.createTestingModule({
-        imports: [DatabaseTestingModule.standalone()],
+        imports: [engine.module()],
         providers: [
+          provideRepository(STORAGE_REPOSITORY),
           StorageService,
           {
             provide: Strategy,
@@ -666,18 +745,21 @@ describe("Storage Service", () => {
         ]
       }).compile();
       storageService = module.get(StorageService);
+      repository = module.get(STORAGE_REPOSITORY);
 
       const [insertedObj] = await storageService.insert([
-        {
-          _id: new ObjectId(),
-          name: "name",
-          url: "url",
-          content: {
-            data: Buffer.from(""),
-            type: "text/plain",
-            size: 100 * MB
-          }
-        }
+        withId(
+          {
+            name: "name",
+            url: "url",
+            content: {
+              data: Buffer.from(""),
+              type: "text/plain",
+              size: 100 * MB
+            }
+          },
+          newId()
+        )
       ]);
 
       expect(insertedObj.content.size).toEqual(100 * MB);
@@ -685,60 +767,68 @@ describe("Storage Service", () => {
 
     beforeEach(async () => {
       storageObjects = [
-        {
-          _id: new ObjectId(),
-          name: "name",
-          url: "url",
-          content: {
-            data: Buffer.from(""),
-            type: "text/plain",
-            size: 4.5 * MB
-          }
-        },
-        {
-          _id: new ObjectId(),
-          name: "name2",
-          url: "url2",
-          content: {
-            data: Buffer.from(""),
-            type: "text/plain",
-            size: 4.5 * MB
-          }
-        }
+        withId(
+          {
+            name: "name",
+            url: "url",
+            content: {
+              data: Buffer.from(""),
+              type: "text/plain",
+              size: 4.5 * MB
+            }
+          },
+          newId()
+        ),
+        withId(
+          {
+            name: "name2",
+            url: "url2",
+            content: {
+              data: Buffer.from(""),
+              type: "text/plain",
+              size: 4.5 * MB
+            }
+          },
+          newId()
+        )
       ];
-      await storageService.insertMany(storageObjects);
+      await seed(storageObjects);
     });
 
     describe("insert", () => {
       it("should insert if it won't exceed the limit", async () => {
-        const storageObject = {
-          _id: new ObjectId(),
-          name: "name3",
-          url: "url",
-          content: {
-            data: Buffer.from(""),
-            type: "text/plain",
-            size: 1 * MB
-          }
-        };
+        const storageObject = withId(
+          {
+            name: "name3",
+            url: "url",
+            content: {
+              data: Buffer.from(""),
+              type: "text/plain",
+              size: 1 * MB
+            }
+          },
+          newId()
+        );
 
         const [insertedObj] = await storageService.insert([storageObject]);
-        expect(insertedObj._id).toEqual(storageObject._id);
+        expect(idOf(insertedObj)).toEqual(idOf(storageObject));
       });
 
       it("should not insert if it exceed the limit", async () => {
-        const storageObject = {
-          _id: new ObjectId(),
-          name: "name3",
-          url: "url",
-          content: {
-            data: Buffer.from(""),
-            type: "text/plain",
-            size: 1.1 * MB
-          }
-        };
+        const storageObject = withId(
+          {
+            name: "name3",
+            url: "url",
+            content: {
+              data: Buffer.from(""),
+              type: "text/plain",
+              size: 1.1 * MB
+            }
+          },
+          newId()
+        );
 
-        await storageService.insertMany([storageObject]).catch(e => {
+        await seed([storageObject]).catch(e => {
           expect(e).toEqual(new Error("Total storage object size limit exceeded"));
         });
       });
@@ -748,14 +838,14 @@ describe("Storage Service", () => {
       it("should update if it won't exceed the limit", async () => {
         storageObjects[0].content.size = 5.5 * MB;
 
-        const updatedObj = await storageService.update(storageObjects[0]._id, storageObjects[0]);
+        const updatedObj = await storageService.update(idOf(storageObjects[0]), storageObjects[0]);
         expect(updatedObj.content.size).toEqual(5.5 * MB);
       });
 
       it("should not update if it exceed the limit", async () => {
         storageObjects[0].content.size = 5.6 * MB;
 
-        await storageService.update(storageObjects[0]._id, storageObjects[0]).catch(e => {
+        await storageService.update(idOf(storageObjects[0]), storageObjects[0]).catch(e => {
           expect(e).toEqual(new Error("Total storage object size limit exceeded"));
         });
       });
@@ -763,7 +853,7 @@ describe("Storage Service", () => {
 
     describe("browse", () => {
       beforeEach(async () => {
-        await storageService.deleteMany({});
+        await clearStorage(engine, module, {mongodb: ["storage"], postgresql: ["storage_objects"]});
 
         jest.spyOn(strategyInstance, "write").mockResolvedValue(undefined);
         jest.spyOn(strategyInstance, "writeStream").mockResolvedValue(undefined);
@@ -847,7 +937,7 @@ describe("Storage Service", () => {
           }
         ];
 
-        await storageService.insertMany(testFiles);
+        await seed(testFiles);
       });
 
       describe("browse filter", () => {
@@ -983,7 +1073,7 @@ describe("Storage Service", () => {
           const contentResult = await storageService.browse(
             photosResourceFilter,
             "photos",
-            {"content.type": "image/jpeg"},
+            filterOf({"content.type": "image/jpeg"}, "document.content.type == 'image/jpeg'"),
             10,
             0
           );
@@ -1000,7 +1090,7 @@ describe("Storage Service", () => {
           const nameResult = await storageService.browse(
             photosResourceFilter,
             "photos",
-            {name: {$regex: "vacation"}},
+            filterOf({name: {$regex: "vacation"}}, "regex(document.name, 'vacation')"),
             10,
             0
           );
@@ -1026,7 +1116,7 @@ describe("Storage Service", () => {
 
   describe("proxyRead", () => {
     it("should throw NotFoundException when object is not found by id", async () => {
-      await expect(storageService.proxyRead(new ObjectId(), {})).rejects.toThrow(NotFoundException);
+      await expect(storageService.proxyRead(newId(), {})).rejects.toThrow(NotFoundException);
     });
 
     it("should throw NotFoundException when object is not found by name", async () => {

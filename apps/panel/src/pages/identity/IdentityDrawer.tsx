@@ -11,6 +11,7 @@ import {
 } from "../../store/api/identityApi";
 import EntityDrawer from "../../components/organisms/entity-drawer/EntityDrawer";
 import TwoFactorSection from "../../components/organisms/two-factor-section/TwoFactorSection";
+import { idOf } from "../../utils/recordKey";
 
 type IdentityDrawerProps = {
   isOpen: boolean;
@@ -41,9 +42,9 @@ const IdentityDrawer: React.FC<IdentityDrawerProps> = ({ isOpen, selectedIdentit
       isCreating={isCreating}
       isUpdating={isUpdating}
       extraContent={
-        selectedIdentity?._id ? (
+        selectedIdentity && idOf(selectedIdentity) ? (
           <TwoFactorSection
-            entityId={selectedIdentity._id}
+            entityId={idOf(selectedIdentity)!}
             enabled={!!selectedIdentity.authFactor}
             entityNoun="identity"
             startVerification={startVerification}

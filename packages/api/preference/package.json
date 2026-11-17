@@ -18,7 +18,7 @@
     "@spica-server/activity-services": "workspace:*",
     "@spica-server/core-patch": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
-    "@spica-server/database": "workspace:*",
+    "@spica-server/data": "workspace:*",
     "@spica-server/interface-activity": "workspace:*",
     "@spica-server/interface-preference": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",

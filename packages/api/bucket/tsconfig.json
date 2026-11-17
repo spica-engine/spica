@@ -4,11 +4,7 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts",
-    "src/**/*.json"
-  ],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
       "path": "../status"
@@ -32,7 +28,16 @@
       "path": "../../interface/passport/guard"
     },
     {
+      "path": "../../interface/data"
+    },
+    {
       "path": "../../interface/core"
+    },
+    {
+      "path": "../../interface/bucket/history"
+    },
+    {
+      "path": "../../interface/bucket/common"
     },
     {
       "path": "../../interface/bucket"
@@ -44,7 +49,7 @@
       "path": "../../interface/activity"
     },
     {
-      "path": "../../database"
+      "path": "../../data"
     },
     {
       "path": "../../core/schema"

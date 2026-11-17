@@ -1,5 +1,4 @@
 export default {
-  _id: "SecretReadOnlyAccess",
   name: "Secrets Read Only Access",
   description: "Read only access to secrets service.",
   statement: [

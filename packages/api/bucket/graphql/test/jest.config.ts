@@ -4,7 +4,7 @@ export default {
   projects: [
     {
       preset: "../../../../../jest.preset.js",
-      testMatch: ["<rootDir>/schema.spec.ts"]
+      testMatch: ["<rootDir>/schema.spec.ts", "<rootDir>/guard.spec.ts"]
     },
     {
       preset: "../../../../../jest.preset.js",

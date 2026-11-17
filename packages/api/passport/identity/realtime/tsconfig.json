@@ -22,9 +22,6 @@
       "path": "../../../../interface/passport/identity"
     },
     {
-      "path": "../../../../database/realtime"
-    },
-    {
       "path": "../../../../core/schema"
     },
     {

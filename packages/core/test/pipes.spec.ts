@@ -4,6 +4,7 @@ import {
   BOOLEAN,
   DATE,
   DEFAULT,
+  FILTER,
   JSONP,
   JSONPR,
   NUMBER,
@@ -17,6 +18,31 @@ describe("core pipes", () => {
       const result = NUMBER.transform("1", undefined);
       expect(typeof result).toBe("number");
       expect(result).toBe(1);
+    });
+  });
+
+  describe("FILTER pipe", () => {
+    it("should parse a filter that starts with a brace as json", () => {
+      expect(FILTER.transform('{"age": {"$gt": 5}}', undefined)).toEqual({age: {$gt: 5}});
+      expect(FILTER.transform('  {"age": 5}', undefined)).toEqual({age: 5});
+    });
+
+    it("should keep any other string for the engine to read as an expression", () => {
+      expect(FILTER.transform("document.age > 5", undefined)).toBe("document.age > 5");
+      expect(FILTER.transform("has(document.title) && document.age == 1", undefined)).toBe(
+        "has(document.title) && document.age == 1"
+      );
+    });
+
+    it("should answer 400 for broken json and for an empty value", () => {
+      expect(() => FILTER.transform('{"age": ', undefined)).toThrow(HttpException);
+      expect(() => FILTER.transform("", undefined)).toThrow(HttpException);
+      expect(() => FILTER.transform("   ", undefined)).toThrow(HttpException);
+    });
+
+    it("should pass values that are not strings through", () => {
+      expect(FILTER.transform({a: 1} as any, undefined)).toEqual({a: 1});
+      expect(FILTER.transform(undefined, undefined)).toBeUndefined();
     });
   });
 

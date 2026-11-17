@@ -1,20 +1,19 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core-schema";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {COLLECTION_NAMES, CollectionNames} from "@spica-server/interface-data";
 import {SchemaResolver} from "@spica-server/function-webhook/src/schema";
 
-describe("Schema Resolver", () => {
+contractSuite("Schema Resolver", engine => {
   let resolver: SchemaResolver;
   let module: TestingModule;
-  let db: DatabaseService;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.standalone(), SchemaModule.forChild()],
+      imports: [engine.module(), SchemaModule.forChild()],
       providers: [SchemaResolver]
     }).compile();
     resolver = module.get(SchemaResolver);
-    db = module.get(DatabaseService);
   });
 
   afterEach(async () => await module.close());
@@ -24,7 +23,9 @@ describe("Schema Resolver", () => {
   });
 
   it("should resolve the inital schema", async () => {
-    await db.collection("test").insertOne({});
+    const names = module.get<CollectionNames>(COLLECTION_NAMES);
+    const collections = await names.list();
+    const operations = names.changeOperations().map(operation => operation.toUpperCase());
     const schema = await resolver.resolve("http://spica.internal/webhook");
 
     expect(schema).toEqual({
@@ -65,13 +66,13 @@ describe("Schema Resolver", () => {
                 collection: {
                   type: "string",
                   title: "Collection",
-                  enum: ["test"],
+                  enum: collections,
                   description: "Target collection that event must be perfomed on"
                 },
                 type: {
                   type: "string",
                   title: "Event type",
-                  enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"],
+                  enum: operations,
                   description: "Event type that must be performed in the specified collection"
                 }
               }
@@ -80,5 +81,17 @@ describe("Schema Resolver", () => {
         }
       }
     });
+  });
+
+  it("should offer REPLACE only on engines that report replacements", async () => {
+    const schema: any = await resolver.resolve("http://spica.internal/webhook");
+
+    const offered = schema.properties.trigger.properties.options.properties.type.enum;
+
+    expect(offered).toEqual(
+      engine.name == "mongodb"
+        ? ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+        : ["INSERT", "UPDATE", "DELETE"]
+    );
   });
 });

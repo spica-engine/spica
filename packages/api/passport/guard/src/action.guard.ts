@@ -9,7 +9,6 @@ import {
   Optional,
   Type
 } from "@nestjs/common";
-import {ObjectId} from "@spica-server/database";
 import {isMatch} from "matcher";
 import {Text, Parameter, parse} from "path-to-regexp";
 import {
@@ -17,7 +16,8 @@ import {
   PrepareUser,
   PolicyResolver,
   POLICY_RESOLVER,
-  ResourceFilterFunction
+  ResourceFilterFunction,
+  ResourceFilterOptions
 } from "@spica-server/interface-passport-guard";
 
 export function wrapArray(val: string | string[]) {
@@ -29,52 +29,24 @@ export function wrapArrayFlexible<T>(val: T | T[] | undefined): T[] {
 }
 
 export const resourceFilterFunction: ResourceFilterFunction = (
-  data: {pure?: boolean} = {pure: false},
+  data: ResourceFilterOptions,
   ctx: ExecutionContext
 ) => {
   const request = ctx.switchToHttp().getRequest();
   const {include, exclude: excluded} = request.resourceFilter;
 
-  if (data && data.pure) {
+  if (!data || !("collection" in data)) {
     return {
       includeds: include,
       excludeds: [].concat(...excluded)
     };
   }
 
-  let aggregation = [];
-
-  for (const exclude of excluded) {
-    aggregation.push({
-      _id: {
-        $nin: Array.from<string>(new Set(exclude)).map(id => new ObjectId(id))
-      }
-    });
-  }
-
-  if (include.length) {
-    aggregation.push({
-      _id: {
-        $in: Array.from<string>(new Set(include)).map(id => new ObjectId(id))
-      }
-    });
-  }
-
-  if (!aggregation.length) {
-    return {
-      $match: {}
-    };
-  }
-
-  return {
-    $match: {
-      $or: aggregation
-    }
-  };
+  return {include, exclude: excluded};
 };
 
-export const ResourceFilter = (data = {pure: false}) => {
-  return createParamDecorator<{pure: boolean}>(resourceFilterFunction, [
+export const ResourceFilter = (data: ResourceFilterOptions) => {
+  return createParamDecorator<ResourceFilterOptions>(resourceFilterFunction, [
     (target, key, index) => {
       Reflect.defineMetadata("resourceFilter", {key, index}, target.constructor, key);
     }

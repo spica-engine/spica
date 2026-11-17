@@ -1,7 +1,7 @@
 import * as Auth from "../";
-import {Axios} from "@spica-devkit/internal_common";
+import {Axios, KEY_FIELDS} from "@spica-devkit/internal_common";
 
-describe("@spica-devkit/auth", () => {
+describe.each(KEY_FIELDS)("@spica-devkit/auth (%s records)", key => {
   let getSpy: jest.Mocked<any>;
   let postSpy: jest.Mocked<any>;
   let putSpy: jest.Mocked<any>;
@@ -10,7 +10,7 @@ describe("@spica-devkit/auth", () => {
   beforeEach(() => {
     getSpy = jest.spyOn(Axios.prototype, "get").mockImplementation((url: string) => {
       if (url && url.includes("/verify")) {
-        return Promise.resolve({_id: "user_id", username: "test"});
+        return Promise.resolve({[key]: "user_id", username: "test"});
       }
       return Promise.resolve();
     });
@@ -22,7 +22,7 @@ describe("@spica-devkit/auth", () => {
           issuer: "passport/user"
         });
       }
-      return Promise.resolve({_id: "user_id", username: "test"});
+      return Promise.resolve({[key]: "user_id", username: "test"});
     });
     putSpy = jest.spyOn(Axios.prototype, "put").mockReturnValue(Promise.resolve());
     deleteSpy = jest.spyOn(Axios.prototype, "delete").mockReturnValue(Promise.resolve());

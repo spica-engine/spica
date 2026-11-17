@@ -6,13 +6,14 @@ import path from "path";
 import {FunctionModule} from "@spica-server/function";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {SchemaModule, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+import {idOf} from "@spica-server/data";
 
-describe("Function trigger secret placeholders", () => {
+contractSuite("Function trigger secret placeholders", engine => {
   let app: INestApplication;
   let request: Request;
   let scheduler: Scheduler;
@@ -43,13 +44,13 @@ describe("Function trigger secret placeholders", () => {
   async function insertSecret(key: string, value: string) {
     const res = await request.post("/secret", {key, value});
     expect(res.statusCode).toEqual(201);
-    return res.body._id as string;
+    return idOf(res.body).toString();
   }
 
   async function insertFunction(url = PLACEHOLDER_URL) {
     const res = await request.post("/function", rabbitmqFunction(url));
     expect(res.statusCode).toEqual(201);
-    return res.body._id as string;
+    return idOf(res.body).toString();
   }
 
   async function inject(fnId: string, secretId: string) {
@@ -105,7 +106,7 @@ describe("Function trigger secret placeholders", () => {
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),

@@ -2,7 +2,8 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {
   DatabaseService,
   DatabaseTestingModule,
-  ProfilingLevel
+  ProfilingLevel,
+  mongoOnly
 } from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
@@ -13,6 +14,8 @@ import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";
+
+mongoOnly("the profiler reads MongoDB's system.profile, which PostgreSQL has no equivalent of");
 
 describe("user Controller", () => {
   let module: TestingModule;

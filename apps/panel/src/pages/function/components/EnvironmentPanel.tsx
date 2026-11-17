@@ -15,6 +15,7 @@ import type {ResolvedEnvVar, ResolvedSecret} from "../../../store/api/functionAp
 import {useGetEnvVarsQuery} from "../../../store/api/envVarApi";
 import {useGetSecretsQuery} from "../../../store/api/secretApi";
 import styles from "./EnvironmentPanel.module.scss";
+import { idOf, pickId } from "../../../utils/recordKey";
 
 type TabKey = "variables" | "secrets";
 
@@ -37,44 +38,44 @@ const EnvironmentPanel = ({envVars, secrets, onEnvVarsChange, onSecretsChange}: 
   const allSecrets = secretsResponse?.data ?? [];
 
   const assignedEnvVarIdSet = useMemo(
-    () => new Set(envVars.map(v => v._id)),
+    () => new Set(envVars.map(v => idOf(v)!)),
     [envVars]
   );
 
   const assignedSecretIdSet = useMemo(
-    () => new Set(secrets.map(s => s._id)),
+    () => new Set(secrets.map(s => idOf(s)!)),
     [secrets]
   );
 
   const envVarOptions = useMemo<TypeLabeledValue[]>(
     () =>
       allEnvVars
-        .filter(v => !assignedEnvVarIdSet.has(v._id))
-        .map(v => ({value: v._id, label: v.key})),
+        .filter(v => !assignedEnvVarIdSet.has(idOf(v)!))
+        .map(v => ({value: idOf(v)!, label: v.key})),
     [allEnvVars, assignedEnvVarIdSet]
   );
 
   const secretOptions = useMemo<TypeLabeledValue[]>(
     () =>
       allSecrets
-        .filter(s => !assignedSecretIdSet.has(s._id))
-        .map(s => ({value: s._id, label: s.key})),
+        .filter(s => !assignedSecretIdSet.has(idOf(s)!))
+        .map(s => ({value: idOf(s)!, label: s.key})),
     [allSecrets, assignedSecretIdSet]
   );
 
   const handleAddEnvVars = useCallback((ids: string[]) => {
     if (!ids.length) return;
     const newVars = ids
-      .map(id => allEnvVars.find(v => v._id === id))
+      .map(id => allEnvVars.find(v => idOf(v) === id))
       .filter((v): v is typeof allEnvVars[number] => !!v)
-      .map(v => ({_id: v._id, key: v.key, value: v.value}));
+      .map(v => ({...pickId(v), key: v.key, value: v.value}));
     onEnvVarsChange([...envVars, ...newVars]);
     setSelectedVarIds([]);
   }, [allEnvVars, envVars, onEnvVarsChange]);
 
   const handleRemoveEnvVar = useCallback(
     (envVarId: string) => {
-      onEnvVarsChange(envVars.filter(v => v._id !== envVarId));
+      onEnvVarsChange(envVars.filter(v => idOf(v) !== envVarId));
     },
     [envVars, onEnvVarsChange]
   );
@@ -82,16 +83,16 @@ const EnvironmentPanel = ({envVars, secrets, onEnvVarsChange, onSecretsChange}: 
   const handleAddSecrets = useCallback((ids: string[]) => {
     if (!ids.length) return;
     const newSecrets = ids
-      .map(id => allSecrets.find(s => s._id === id))
+      .map(id => allSecrets.find(s => idOf(s) === id))
       .filter((s): s is typeof allSecrets[number] => !!s)
-      .map(s => ({_id: s._id, key: s.key}));
+      .map(s => ({...pickId(s), key: s.key}));
     onSecretsChange([...secrets, ...newSecrets]);
     setSelectedSecretIds([]);
   }, [allSecrets, secrets, onSecretsChange]);
 
   const handleRemoveSecret = useCallback(
     (secretId: string) => {
-      onSecretsChange(secrets.filter(s => s._id !== secretId));
+      onSecretsChange(secrets.filter(s => idOf(s) !== secretId));
     },
     [secrets, onSecretsChange]
   );
@@ -120,13 +121,13 @@ const EnvironmentPanel = ({envVars, secrets, onEnvVarsChange, onSecretsChange}: 
       ) : (
         <div className={styles.itemList}>
           {envVars.map(v => (
-            <div key={v._id} className={styles.varItem}>
+            <div key={idOf(v)!} className={styles.varItem}>
               <span className={styles.varKey}>{v.key}</span>
               <div className={styles.varActions}>
                 <Button
                   variant="icon"
                   color="danger"
-                  onClick={() => handleRemoveEnvVar(v._id)}
+                  onClick={() => handleRemoveEnvVar(idOf(v)!)}
                   className={styles.button}
                 >
                   <Icon name="delete" size="sm" />
@@ -163,13 +164,13 @@ const EnvironmentPanel = ({envVars, secrets, onEnvVarsChange, onSecretsChange}: 
       ) : (
         <div className={styles.itemList}>
           {secrets.map(s => (
-            <div key={s._id} className={styles.varItem}>
+            <div key={idOf(s)!} className={styles.varItem}>
               <span className={styles.varKey}>{s.key}</span>
               <div className={styles.varActions}>
                 <Button
                   variant="icon"
                   color="danger"
-                  onClick={() => handleRemoveSecret(s._id)}
+                  onClick={() => handleRemoveSecret(idOf(s)!)}
                   className={styles.button}
                 >
                   <Icon name="delete" size="sm" />

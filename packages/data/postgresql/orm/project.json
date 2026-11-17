@@ -1,0 +1,5 @@
+{
+  "name": "data/postgresql/orm",
+  "sourceRoot": "packages/data/postgresql/orm/src",
+  "projectType": "library"
+}

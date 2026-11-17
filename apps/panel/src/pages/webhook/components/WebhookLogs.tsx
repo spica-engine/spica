@@ -8,6 +8,7 @@ import Loader from "../../../components/atoms/loader/Loader";
 import type { WebhookLog } from "../../../store/api/webhookApi";
 import styles from "../Webhook.module.scss";
 import { FlexElement } from "oziko-ui-kit";
+import { idOf } from "../../../utils/recordKey";
 
 type LogFilter = "all" | "success" | "error";
 
@@ -84,7 +85,7 @@ export const WebhookLogs: React.FC<WebhookLogsProps> = ({ logs, isLoading }) => 
               ? new Date(log.created_at).toLocaleString()
               : "-";
             return (
-              <div key={log._id ?? i} className={styles.logRow}>
+              <div key={idOf(log) ?? i} className={styles.logRow}>
                 <div className={`${styles.logDot} ${getLogDotClass(log)}`} />
                 <span className={styles.logMsg}>{statusText}</span>
                 <span className={styles.logTs}>{dateStr}</span>

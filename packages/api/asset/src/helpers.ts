@@ -1,4 +1,5 @@
 import {Asset, Config} from "@spica-server/interface-asset";
+import {idOf} from "@spica-server/data";
 
 export function putConfiguration(asset: Asset, configs: Config[]) {
   configs = eliminateNonConfigurables(asset.configs, configs);
@@ -9,7 +10,7 @@ export function putConfiguration(asset: Asset, configs: Config[]) {
         return resource;
       }
 
-      if (resource._id.toString() != config.resource_id) {
+      if (idOf(resource).toString() != config.resource_id) {
         return resource;
       }
 

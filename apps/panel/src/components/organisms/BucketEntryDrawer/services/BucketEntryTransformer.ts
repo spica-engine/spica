@@ -1,5 +1,6 @@
 import type {Property, Properties} from "src/store/api/bucketApi";
 import type {FieldRegistry} from "src/domain/fields/types";
+import {relationValueId} from "../../../../domain/relationTarget";
 
 export class BucketEntryTransformer {
   constructor(private fieldRegistry: FieldRegistry) {}
@@ -70,10 +71,8 @@ export class BucketEntryTransformer {
       // - plain string "id"
       // - display format   {value: "id", label: "..."}
       // - resolved object  {_id: "id", title: "..."}  (API response with relation:true)
-      const extractId = (v: any): string | undefined => {
-        if (typeof v === "string") return v;
-        return v?.value ?? v?._id ?? undefined;
-      };
+      const relatedKeyField = (property as any)?.relationState?.keyField;
+      const extractId = (v: any): string | undefined => relationValueId(v, relatedKeyField);
       if (isOneToMany) {
         return Array.isArray(val)
           ? val.map(extractId).filter(Boolean)

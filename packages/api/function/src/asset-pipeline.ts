@@ -1,14 +1,17 @@
 import {Logger} from "@nestjs/common";
-import {ObjectId} from "@spica-server/database";
+import {Id, Keyed} from "@spica-server/interface-data";
 import {Function} from "@spica-server/interface-function";
-import {FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
-import {FunctionAssetService} from "@spica-server/function-services";
+import {
+  FunctionAssetFilename,
+  FunctionAssetRepository
+} from "@spica-server/interface-function-asset-storage";
 import {hashBuffer, assetKey, FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
+import {idOf} from "@spica-server/data";
 
 const logger = new Logger("FunctionAssetPipeline");
 
-type FunctionWithId = Function & {_id: ObjectId};
+type FunctionWithId = Keyed<Function>;
 
 /** Format any caught value as a string for use in log messages. */
 function errMsg(e: unknown): string {
@@ -34,11 +37,11 @@ export async function applyAssetChange(
   filename: FunctionAssetFilename,
   op: () => Promise<Buffer>,
   reconciler: FunctionAssetReconciler,
-  assetService: FunctionAssetService,
+  assetService: FunctionAssetRepository,
   tracker: SelfWriteTracker | null
 ): Promise<void> {
   // Step 1: fetch previous metadata for this file only.
-  const prevAsset = await assetService.findByFilename(fn._id, filename);
+  const prevAsset = await assetService.findByFilename(idOf(fn), filename);
 
   // Step 2: execute the operation.
   let data: Buffer;
@@ -71,11 +74,11 @@ export async function applyAssetChange(
   // Step 6: persist metadata.
   try {
     tracker?.stamp({
-      functionId: fn._id.toHexString(),
+      functionId: idOf(fn).toString(),
       filename: record.filename,
       hash: record.hash
     });
-    await assetService.upsertAsset(fn._id, filename, {
+    await assetService.upsertAsset(idOf(fn), filename, {
       key: record.key,
       hash: record.hash,
       size: record.size,

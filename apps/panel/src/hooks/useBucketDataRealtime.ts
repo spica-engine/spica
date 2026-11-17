@@ -1,6 +1,9 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import type {BucketDataQueryType} from "../store/api/bucketApi";
 import type {UseBucketDataResult} from "./useBucketData";
+import {useKeyField} from "./useKeyField";
+import {keyOf} from "../utils/recordKey";
+import {realtimeFilter, realtimeSort} from "../utils/realtimeQuery";
 
 const DEFAULT_PAGE_SIZE = 25;
 
@@ -34,13 +37,13 @@ interface Sequence {
 
 interface StreamChunk {
   kind: ChunkKind;
-  document?: {_id: string; [key: string]: any};
+  document?: Record<string, any>;
   sequence?: Sequence[];
   status?: number;
   message?: string;
 }
 
-// Ordered, _id-keyed set — ports IterableSet from @spica-devkit/bucket so the
+// Ordered, key-keyed set — ports IterableSet from @spica-devkit/bucket so the
 // panel applies realtime chunks (insert/update/delete/reorder) identically to
 // the canonical client, without pulling in rxjs or the devkit.
 class OrderedDocumentSet {
@@ -145,14 +148,13 @@ export function useBucketDataRealtime(
 
   const pageSize = (searchQuery?.limit as number) ?? DEFAULT_PAGE_SIZE;
 
+  const keyField = useKeyField(resolvedBucketId);
+
   const sortKey = useMemo(
-    () => JSON.stringify(searchQuery?.sort ?? {_id: -1}),
-    [searchQuery?.sort]
+    () => realtimeSort(searchQuery?.sort, keyField),
+    [searchQuery?.sort, keyField]
   );
-  const filterKey = useMemo(
-    () => (searchQuery?.filter ? JSON.stringify(searchQuery.filter) : ""),
-    [searchQuery?.filter]
-  );
+  const filterKey = useMemo(() => realtimeFilter(searchQuery?.filter), [searchQuery?.filter]);
 
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -173,7 +175,7 @@ export function useBucketDataRealtime(
   }, [pageSize, sortKey, filterKey, resolvedBucketId]);
 
   useEffect(() => {
-    if (!enabled || !resolvedBucketId) {
+    if (!enabled || !resolvedBucketId || keyField === undefined) {
       setData([]);
       setLoading(false);
       setHasMore(false);
@@ -237,12 +239,16 @@ export function useBucketDataRealtime(
           case ChunkKind.Insert:
           case ChunkKind.Update:
           case ChunkKind.Replace:
-            if (chunk.document?._id) documents.set(chunk.document._id, chunk.document);
+            if (keyOf(chunk.document, keyField)) {
+              documents.set(keyOf(chunk.document, keyField), chunk.document);
+            }
             scheduleFlush();
             break;
           case ChunkKind.Delete:
           case ChunkKind.Expunge:
-            if (chunk.document?._id) documents.delete(chunk.document._id);
+            if (keyOf(chunk.document, keyField)) {
+              documents.delete(keyOf(chunk.document, keyField));
+            }
             scheduleFlush();
             break;
           case ChunkKind.Order:
@@ -277,7 +283,7 @@ export function useBucketDataRealtime(
       }
       socket?.close();
     };
-  }, [enabled, resolvedBucketId, sortKey, filterKey, limit, reconnectNonce]);
+  }, [enabled, resolvedBucketId, keyField, sortKey, filterKey, limit, reconnectNonce]);
 
   const bucketData = useMemo(() => {
     if (!enabled || !resolvedBucketId) return null;

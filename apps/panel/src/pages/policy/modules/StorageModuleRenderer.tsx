@@ -15,6 +15,7 @@ import {
   type OnResourceBatchChange,
   type OnResourceChange
 } from "../moduleRendererHelpers";
+import { idOf } from "../../../utils/recordKey";
 
 export interface StorageModuleProps extends BaseModuleContext {
   storages?: Storage[];
@@ -56,8 +57,8 @@ export class StorageModuleRenderer implements ModuleRenderer<StorageModuleProps>
             onResourceBatchChange,
             itemConfig: {
               items: storages,
-              getId: storage => storage._id || "",
-              getKey: storage => storage._id || storage.name,
+              getId: storage => idOf(storage) || "",
+              getKey: storage => idOf(storage) || storage.name,
               getLabel: storage => storage.name,
               getIcon: () => <Icon name="storage" size="md" />
             }

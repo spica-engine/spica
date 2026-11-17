@@ -14,6 +14,14 @@ export function isSelectChain(node) {
   return isSelectChain(node.left);
 }
 
+export function assertListAfterIn(node) {
+  if (!Array.isArray(node.right)) {
+    throw new TypeError(
+      "The right side of 'in' must be a list, for example document.status in ['open', 'done']."
+    );
+  }
+}
+
 export function isIdentifier(node) {
   return node.kind == "identifier";
 }

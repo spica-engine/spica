@@ -3,17 +3,18 @@ import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {LegacyBuilder} from "@spica-server/function-builder-legacy";
 import {RollupBuilder} from "@spica-server/function-builder-rollup";
 import {BuilderType, SUPPORTED_LANGUAGES} from "@spica-server/interface-function-builder";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite, QuietChangeFeedModule} from "@spica-server/database-testing";
 import {getFreeAddress} from "@spica-server/core-testing";
 
-describe("Builder selection", () => {
+contractSuite("Builder selection", engine => {
   let module: TestingModule;
 
   async function createScheduler(builder?: BuilderType) {
     process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.standalone(),
+        engine.module(),
+        QuietChangeFeedModule,
         SchedulerModule.forRoot({
           invocationLogs: false,
           databaseName: undefined,

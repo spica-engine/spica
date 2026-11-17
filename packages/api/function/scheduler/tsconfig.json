@@ -30,7 +30,13 @@
       "path": "../../../interface/function/pkgmanager"
     },
     {
+      "path": "../../../interface/function/log"
+    },
+    {
       "path": "../../../interface/function/builder"
+    },
+    {
+      "path": "../../../interface/data"
     },
     {
       "path": "../runtime/node"
@@ -69,7 +75,7 @@
       "path": "../builder"
     },
     {
-      "path": "../../../database"
+      "path": "../../../data"
     },
     {
       "path": "../../../database/testing"

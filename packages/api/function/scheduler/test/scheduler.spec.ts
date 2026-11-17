@@ -1,6 +1,6 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite, QuietChangeFeedModule} from "@spica-server/database-testing";
 import {event} from "@spica-server/function-queue-proto";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
@@ -10,7 +10,7 @@ import {getFreeAddress} from "@spica-server/core-testing";
 
 process.env.DISABLE_LOGGER = "true";
 
-describe("Scheduler", () => {
+contractSuite("Scheduler", engine => {
   let scheduler: Scheduler;
   let app: INestApplication;
   let spawnSpy: jest.SpyInstance;
@@ -117,9 +117,9 @@ describe("Scheduler", () => {
 
   // A real worker signals readiness by opening its event stream (subscribe); simulate that
   // for a spawned Initial/Fresh worker.
-  function triggerGotWorker(_id?: string) {
+  function triggerGotWorker(wanted?: string) {
     const [workerId] = Array.from(scheduler.workers.entries()).find(([id, worker]) => {
-      if (_id) return _id == id;
+      if (wanted) return wanted == id;
       return worker.state == WorkerState.Initial || worker.state == WorkerState.Fresh;
     });
     scheduler.workerSubscribed(workerId, () => {});
@@ -133,7 +133,7 @@ describe("Scheduler", () => {
   beforeEach(async () => {
     process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.standalone(), SchedulerModule.forRoot(schedulerOptions)]
+      imports: [engine.module(), QuietChangeFeedModule, SchedulerModule.forRoot(schedulerOptions)]
     }).compile();
     module.enableShutdownHooks();
 
@@ -684,8 +684,22 @@ describe("Scheduler", () => {
       connectWarmingWorkers();
 
       const status = scheduler.getStatus();
-      expect(status.functions["1"]).toEqual({warming: 0, warm: 2, idle: 0, busy: 0, superseded: 0, retiring: 0});
-      expect(status.functions["2"]).toEqual({warming: 0, warm: 1, idle: 0, busy: 0, superseded: 0, retiring: 0});
+      expect(status.functions["1"]).toEqual({
+        warming: 0,
+        warm: 2,
+        idle: 0,
+        busy: 0,
+        superseded: 0,
+        retiring: 0
+      });
+      expect(status.functions["2"]).toEqual({
+        warming: 0,
+        warm: 1,
+        idle: 0,
+        busy: 0,
+        superseded: 0,
+        retiring: 0
+      });
       expect(status.unit).toEqual("count");
     });
 

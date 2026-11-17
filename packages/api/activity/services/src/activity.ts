@@ -1,5 +1,6 @@
 import {Logger} from "@nestjs/common";
 import {Predict, Action} from "@spica-server/interface-activity";
+import {idOf} from "@spica-server/data";
 
 const logger = new Logger("Activity");
 
@@ -8,7 +9,7 @@ export function getAction(action: string): Action {
 }
 
 export function getUser(user: any) {
-  return user ? user._id : undefined;
+  return user ? idOf(user) : undefined;
 }
 
 export function createActivity(req: any, res: any, predict: Predict) {

@@ -15,6 +15,7 @@ import {
   type OnResourceBatchChange,
   type OnResourceChange
 } from "../moduleRendererHelpers";
+import { idOf } from "../../../utils/recordKey";
 
 export interface AuthenticationStrategyModuleProps extends BaseModuleContext {
   strategies?: AuthenticationStrategy[];
@@ -58,8 +59,8 @@ export class AuthenticationStrategyModuleRenderer implements ModuleRenderer<Auth
             onResourceBatchChange,
             itemConfig: {
               items: strategies,
-              getId: strategy => strategy._id,
-              getKey: strategy => strategy._id,
+              getId: strategy => idOf(strategy)!,
+              getKey: strategy => idOf(strategy)!,
               getLabel: strategy => strategy.title,
             }
           })

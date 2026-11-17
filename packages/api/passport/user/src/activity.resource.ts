@@ -1,4 +1,5 @@
 import {Action, PreActivity, ModuleActivity} from "@spica-server/interface-activity";
+import {idOf} from "@spica-server/data";
 
 export function createUserActivity(preActivity: PreActivity, req: any, res: any): ModuleActivity[] {
   let activities: ModuleActivity[] = [];
@@ -7,7 +8,7 @@ export function createUserActivity(preActivity: PreActivity, req: any, res: any)
     case Action.POST:
       activities.push({
         ...preActivity,
-        resource: ["passport", "user", res._id.toString()]
+        resource: ["passport", "user", idOf(res).toString()]
       });
       break;
     case Action.PUT:

@@ -1,7 +1,7 @@
 import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {AssetModule} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core-schema";
@@ -11,6 +11,9 @@ import {IdentityModule} from "@spica-server/passport-identity";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {PreferenceModule} from "@spica-server/preference";
 import {ConfigModule} from "@spica-server/config";
+import {idOf, stripId, withId} from "@spica-server/data";
+
+mongoOnly("the spec is disabled (xdescribe) since 2024 and runs on no engine");
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
@@ -98,13 +101,15 @@ xdescribe("identity-settings", () => {
       }
     };
 
-    identitySettingsV1Resource = {
-      _id: "identity",
-      module: "preference",
-      contents: {
-        schema: identitySettingsV1
-      }
-    };
+    identitySettingsV1Resource = withId(
+      {
+        module: "preference",
+        contents: {
+          schema: identitySettingsV1
+        }
+      },
+      "identity"
+    );
 
     identitySettingsV2 = {
       attributes: {
@@ -138,7 +143,7 @@ xdescribe("identity-settings", () => {
 
   it("insert update and delete", async () => {
     // INSERT PREVIEW
-    let preview = await previewAssetInstallation(assetv1._id);
+    let preview = await previewAssetInstallation(idOf(assetv1));
 
     expect(preview).toEqual({
       insertions: [identitySettingsV1Resource],
@@ -146,7 +151,7 @@ xdescribe("identity-settings", () => {
       deletions: []
     });
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
     let identitySettings = await getIdentitySettings();
@@ -156,101 +161,107 @@ xdescribe("identity-settings", () => {
     });
 
     // INSERT
-    await installAsset(assetv1._id);
+    await installAsset(idOf(assetv1));
 
     identitySettings = await getIdentitySettings();
-    expect(identitySettings).toEqual({
-      _id: identitySettings._id,
-      scope: "passport",
-      identity: identitySettingsV1
-    });
+    expect(identitySettings).toEqual(
+      withId({scope: "passport", identity: identitySettingsV1}, idOf(identitySettings))
+    );
 
     // UPDATE PREVIEW
     assetv2 = await downloadAsset(assetv2);
 
-    preview = await previewAssetInstallation(assetv2._id);
+    preview = await previewAssetInstallation(idOf(assetv2));
     expect(preview).toEqual({
       insertions: [],
       updations: [identitySettingsV2Resource],
       deletions: []
     });
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("installed");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("downloaded");
 
     identitySettings = await getIdentitySettings();
-    expect(identitySettings).toEqual({
-      _id: identitySettings._id,
-      scope: "passport",
-      identity: identitySettingsV1
-    });
+    expect(identitySettings).toEqual(
+      withId({scope: "passport", identity: identitySettingsV1}, idOf(identitySettings))
+    );
 
     // UPDATE
-    await installAsset(assetv2._id);
+    await installAsset(idOf(assetv2));
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("installed");
 
     identitySettings = await getIdentitySettings();
-    expect(identitySettings).toEqual({
-      _id: identitySettings._id,
-      scope: "passport",
-      identity: {attributes: {...identitySettingsV1.attributes, ...identitySettingsV2.attributes}}
-    });
+    expect(identitySettings).toEqual(
+      withId(
+        {
+          scope: "passport",
+          identity: {
+            attributes: {...identitySettingsV1.attributes, ...identitySettingsV2.attributes}
+          }
+        },
+        idOf(identitySettings)
+      )
+    );
 
     // DELETE PREVIEW
     let assetv3 = {...assetv2, resources: []};
-    delete assetv3._id;
+    stripId(assetv3);
     delete assetv3.status;
 
     assetv3 = await downloadAsset(assetv3);
 
-    preview = await previewAssetInstallation(assetv3._id);
+    preview = await previewAssetInstallation(idOf(assetv3));
     expect(preview).toEqual({
       insertions: [],
       updations: [],
       deletions: [{...identitySettingsV2Resource, installation_status: "installed"}]
     });
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("installed");
 
-    assetv3 = await getAsset(assetv3._id);
+    assetv3 = await getAsset(idOf(assetv3));
     expect(assetv3.status).toEqual("downloaded");
 
     identitySettings = await getIdentitySettings();
-    expect(identitySettings).toEqual({
-      _id: identitySettings._id,
-      scope: "passport",
-      identity: {attributes: {...identitySettingsV1.attributes, ...identitySettingsV2.attributes}}
-    });
+    expect(identitySettings).toEqual(
+      withId(
+        {
+          scope: "passport",
+          identity: {
+            attributes: {...identitySettingsV1.attributes, ...identitySettingsV2.attributes}
+          }
+        },
+        idOf(identitySettings)
+      )
+    );
 
     // DELETE
-    await installAsset(assetv3._id);
+    await installAsset(idOf(assetv3));
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("downloaded");
 
-    assetv3 = await getAsset(assetv3._id);
+    assetv3 = await getAsset(idOf(assetv3));
     expect(assetv3.status).toEqual("installed");
 
     identitySettings = await getIdentitySettings();
-    expect(identitySettings).toEqual({
-      _id: identitySettings._id,
-      scope: "passport",
-      identity: identitySettingsV1
-    });
+    expect(identitySettings).toEqual(
+      withId({scope: "passport", identity: identitySettingsV1}, idOf(identitySettings))
+    );
   });
 });

@@ -1,5 +1,4 @@
 export default {
-  _id: "StatusFullAccess",
   name: "Status Full Access",
   description: "Full access to status service.",
   statement: [

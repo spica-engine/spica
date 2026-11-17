@@ -1,4 +1,4 @@
-import {ObjectId} from "mongodb";
+import {Id} from "@spica-server/interface-data";
 
 export interface PaginationPlan {
   dataPipeline: object[];
@@ -20,7 +20,7 @@ export interface AggregatableCollection {
 
 export interface IPipelineBuilder {
   attachToPipeline(condition: any, ...attachedObject: object[]): this;
-  findOneIfRequested(entryId: ObjectId): this;
+  findOneIfRequested(entryId: Id): this;
   filterResources(resourceFilter: object): this;
   filterByUserRequest(filterByUserRequest: object): Promise<this>;
   sort(sort: Object): this;

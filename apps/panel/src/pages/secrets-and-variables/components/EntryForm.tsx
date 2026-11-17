@@ -12,6 +12,7 @@ import {
 } from "../../../store/api/envVarApi";
 import type { EnvVar } from "../../../store/api/envVarApi";
 import styles from "../SecretsAndVariables.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 type EntryType = "secret" | "variable";
 
@@ -64,9 +65,9 @@ const EntryForm = ({
       setSubmitError(null);
       try {
         if (isEditSecret && selectedSecret) {
-          await updateSecret({ id: selectedSecret._id, key: values.key, value: values.value }).unwrap();
+          await updateSecret({ id: idOf(selectedSecret)!, key: values.key, value: values.value }).unwrap();
         } else if (isEditVariable && selectedVariable) {
-          await updateEnvVar({ id: selectedVariable._id, key: values.key, value: values.value }).unwrap();
+          await updateEnvVar({ id: idOf(selectedVariable)!, key: values.key, value: values.value }).unwrap();
         } else if (entryType === "secret") {
           await createSecret({ key: values.key, value: values.value }).unwrap();
         } else {

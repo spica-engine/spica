@@ -1,5 +1,4 @@
 export default {
-  _id: "RefreshTokenReadOnlyAccess",
   name: "Refresh Token Read Only Access",
   description: "Read only access to refresh token service.",
   statement: [

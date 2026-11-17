@@ -8,6 +8,7 @@ import styles from "./FileActions.module.scss";
 import {getParentPath} from "../../../../pages/storage/utils";
 import {ROOT_PATH} from "../../../../pages/storage/constants";
 import ImageEditor from "../../image-editor/ImageEditor";
+import { idOf } from "../../../../utils/recordKey";
 
 
 interface FileActionsProps {
@@ -57,7 +58,7 @@ export const FileActions = ({
 
   const handleEditedImageSave = useCallback(
     async ({blob}: {blob: Blob}) => {
-      if (!file?._id || !file.fullPath) {
+      if (!idOf(file) || !file.fullPath) {
         setIsImageEditorOpen(false);
         return;
       }
@@ -73,7 +74,7 @@ export const FileActions = ({
       const uploadFile = new File([editedFile], encodedFileName, {type: editedFile.type});
 
       try {
-        const updatedFile = await updateStorageItem({id: file._id, file: uploadFile}).unwrap();
+        const updatedFile = await updateStorageItem({id: idOf(file)!, file: uploadFile}).unwrap();
 
         if (updatedFile) {
           onFileReplaced?.({
@@ -146,7 +147,7 @@ export const FileActions = ({
         ref={fileInputRef}
       />
 
-      <DeleteFileButton fileId={file._id} onFileDeleted={onDelete} onClose={onClose} />
+      <DeleteFileButton fileId={idOf(file)!} onFileDeleted={onDelete} onClose={onClose} />
     </FlexElement>
   );
 };

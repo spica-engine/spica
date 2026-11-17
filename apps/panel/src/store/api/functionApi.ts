@@ -1,18 +1,16 @@
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from "../../utils/recordKey";
 
-export interface ResolvedEnvVar {
-  _id: string;
+export interface ResolvedEnvVar extends SystemRecord {
   key: string;
   value: string;
 }
 
-export interface ResolvedSecret {
-  _id: string;
+export interface ResolvedSecret extends SystemRecord {
   key: string;
 }
 
-export interface SpicaFunction {
-  _id?: string;
+export interface SpicaFunction extends SystemRecord {
   name: string;
   description?: string;
   language: 'javascript' | 'typescript';
@@ -40,8 +38,7 @@ export interface FunctionTrigger {
 
 export type TriggerMap = Record<string, { type: string; active?: boolean; options: Record<string, any> }>;
 
-export interface FunctionExecution {
-  _id?: string;
+export interface FunctionExecution extends SystemRecord {
   function: string;
   status: 'running' | 'success' | 'failed';
   startedAt?: Date;
@@ -51,8 +48,7 @@ export interface FunctionExecution {
   result?: any;
 }
 
-export interface FunctionLog {
-  _id: string;
+export interface FunctionLog extends SystemRecord {
   function: string;
   event_id: string;
   content: string;
@@ -278,7 +274,7 @@ export const functionApi = baseApi.injectEndpoints({
       onQueryStarted: async ({ functionId, order }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           functionApi.util.updateQueryData('getFunctions', undefined, (draft) => {
-            const fn = draft.data.find((f) => f._id === functionId);
+            const fn = draft.data.find((f) => idOf(f) === functionId);
             if (fn) {
               fn.order = order;
             }
@@ -309,7 +305,7 @@ export const functionApi = baseApi.injectEndpoints({
       onQueryStarted: async ({ functionId, category }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           functionApi.util.updateQueryData('getFunctions', undefined, (draft) => {
-            const fn = draft.data.find((f) => f._id === functionId);
+            const fn = draft.data.find((f) => idOf(f) === functionId);
             if (fn) {
               fn.category = category;
             }
@@ -401,19 +397,19 @@ export const functionApi = baseApi.injectEndpoints({
       query: ({ newName, fn }) => {
         const body = { ...fn, name: newName };
         return {
-          url: `/function/${fn._id}`,
+          url: `/function/${idOf(fn)!}`,
           method: 'PUT',
           body,
         };
       },
       invalidatesTags: (result, error, { fn }) => [
-        { type: 'Function', id: fn._id },
+        { type: 'Function', id: idOf(fn)! },
         'Function',
       ],
       onQueryStarted: async ({ newName, fn }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           functionApi.util.updateQueryData('getFunctions', undefined, (draft) => {
-            const found = draft.data.find((f) => f._id === fn._id);
+            const found = draft.data.find((f) => idOf(f) === idOf(fn));
             if (found) {
               found.name = newName;
             }

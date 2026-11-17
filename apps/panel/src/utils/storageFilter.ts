@@ -1,5 +1,8 @@
 import type {TypeFilterValue} from "oziko-ui-kit";
 import {convertQuickDateToRange, convertToBytes} from "./storage";
+import type {DataEngine} from "../store/api/statusApi";
+import type {FilterInput} from "./serializeFilter";
+import {allOf, compileStorageClause, type StorageClause} from "./storageQuery";
 
 export const STORAGE_TYPE_OPTIONS = [
   {value: "image/jpeg", label: "JPEG/JPG"},
@@ -64,7 +67,7 @@ export const STORAGE_CREATED_AT_PRESETS = [
   {value: "last_week", label: "Last Week"}
 ] as const;
 
-export type StorageFilterQuery = Record<string, unknown>;
+export type StorageFilterQuery = FilterInput;
 
 const STORAGE_FILTER_TEMPLATE: TypeFilterValue = {
   type: [],
@@ -150,25 +153,20 @@ const ensureDate = (value: Date | string | null | undefined): Date | null => {
   return value instanceof Date ? value : new Date(value);
 };
 
-const withFileGuard = (condition: Record<string, unknown>) => ({
-  $and: [
-    {
-      "content.type": {$ne: "inode/directory"}
-    },
-    condition
-  ]
-});
+const DIRECTORY_TYPE = "inode/directory";
 
-export const buildStorageFilterQuery = (filter: TypeFilterValue): StorageFilterQuery | null => {
-  const filterConditions: Record<string, unknown>[] = [];
+const fileOnly = (condition: StorageClause): StorageClause =>
+  allOf([{kind: "notEqual", field: "content.type", value: DIRECTORY_TYPE}, condition])!;
+
+export const buildStorageFilterQuery = (
+  filter: TypeFilterValue,
+  engine?: DataEngine
+): StorageFilterQuery | null => {
+  const clauses: StorageClause[] = [];
   const defaultFilter = STORAGE_FILTER_TEMPLATE;
 
   if (filter.type.length > 0 && !areTypeSelectionsEqual(filter.type, defaultFilter.type)) {
-    filterConditions.push(
-      withFileGuard({
-        "content.type": {$in: filter.type}
-      })
-    );
+    clauses.push(fileOnly({kind: "in", field: "content.type", values: filter.type}));
   }
 
   const minBytes =
@@ -187,21 +185,14 @@ export const buildStorageFilterQuery = (filter: TypeFilterValue): StorageFilterQ
       filter.fileSize.max.unit !== defaultFilter.fileSize.max.unit);
 
   if (hasCustomSize && (minBytes !== null || maxBytes !== null)) {
-    const sizeConditions: Record<string, number> = {};
-    if (minBytes !== null) {
-      sizeConditions.$gte = minBytes;
-    }
-    if (maxBytes !== null) {
-      sizeConditions.$lte = maxBytes;
-    }
-
-    if (Object.keys(sizeConditions).length > 0) {
-      filterConditions.push(
-        withFileGuard({
-          "content.size": sizeConditions
-        })
-      );
-    }
+    clauses.push(
+      fileOnly({
+        kind: "range",
+        field: "content.size",
+        ...(minBytes !== null ? {gte: minBytes} : {}),
+        ...(maxBytes !== null ? {lte: maxBytes} : {})
+      })
+    );
   }
 
   let dateRange: {from: Date | null; to: Date | null} | null = null;
@@ -216,29 +207,13 @@ export const buildStorageFilterQuery = (filter: TypeFilterValue): StorageFilterQ
   }
 
   if (dateRange && (dateRange.from || dateRange.to)) {
-    const dateConditions: Record<string, string> = {};
-    if (dateRange.from) {
-      dateConditions.$gte = dateRange.from.toISOString();
-    }
-    if (dateRange.to) {
-      dateConditions.$lte = dateRange.to.toISOString();
-    }
-
-    if (Object.keys(dateConditions).length > 0) {
-      filterConditions.push({
-        $or: [{created_at: dateConditions}, {createdAt: dateConditions}]
-      });
-    }
+    clauses.push({
+      kind: "range",
+      field: "created_at",
+      ...(dateRange.from ? {gte: dateRange.from.toISOString()} : {}),
+      ...(dateRange.to ? {lte: dateRange.to.toISOString()} : {})
+    });
   }
 
-  if (!filterConditions.length) {
-    return null;
-  }
-
-  if (filterConditions.length === 1) {
-    return filterConditions[0];
-  }
-
-  return {$and: filterConditions};
+  return compileStorageClause(engine, allOf(clauses));
 };
-

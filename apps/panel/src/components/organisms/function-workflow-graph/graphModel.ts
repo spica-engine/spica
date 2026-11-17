@@ -2,6 +2,7 @@ import type {Edge, Node} from "@xyflow/react";
 import type {SpicaFunction} from "../../../store/api/functionApi";
 import type {BucketType} from "../../../store/api/bucketApi";
 import {normalizeTriggers, type NormalizedTrigger} from "../../../utils/functionTriggers";
+import { idOf } from "../../../utils/recordKey";
 
 export type NodeFocus = "focused" | "related" | "dimmed";
 
@@ -96,7 +97,7 @@ export const buildWorkflowModel = (
   functions: SpicaFunction[],
   buckets: BucketType[]
 ): WorkflowModel => {
-  const bucketNameById = new Map(buckets.map(bucket => [bucket._id, bucket.title]));
+  const bucketNameById = new Map(buckets.map(bucket => [idOf(bucket)!, bucket.title]));
 
   const nodes: Node[] = [];
   const edges: Edge[] = [];
@@ -117,7 +118,7 @@ export const buildWorkflowModel = (
   // trigger) has no edge to draw and is intentionally omitted from the graph.
   const connectedFunctions = functions
     .map((fn, index) => {
-      const fnId = fn._id ?? `fn-${index}`;
+      const fnId = idOf(fn) ?? `fn-${index}`;
       const triggers = normalizeTriggers(fn);
       const dataTriggers = triggers.filter(isDataTrigger);
       return {fn, fnId, triggers, dataTriggers};

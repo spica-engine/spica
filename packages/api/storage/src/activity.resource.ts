@@ -1,4 +1,5 @@
 import {Action, ModuleActivity, PreActivity} from "@spica-server/interface-activity";
+import {idOf} from "@spica-server/data";
 
 export function createStorageActivity(
   preActivity: PreActivity,
@@ -10,7 +11,7 @@ export function createStorageActivity(
   switch (preActivity.action) {
     case Action.POST:
       res.forEach(item => {
-        activities.push({...preActivity, resource: ["storage", item._id.toString()]});
+        activities.push({...preActivity, resource: ["storage", idOf(item).toString()]});
       });
       break;
     case Action.PUT:

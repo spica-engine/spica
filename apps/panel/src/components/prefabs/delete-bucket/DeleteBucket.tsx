@@ -4,6 +4,7 @@ import type {BucketType} from "../../../store/api/bucketApi";
 import { Icon } from 'oziko-ui-kit';
 import styles from "./DeleteBucket.module.scss"
 import { useDeleteBucketMutation } from '../../../store/api/bucketApi';
+import { idOf } from "../../../utils/recordKey";
 
 type DeleteBucketProps = {
     bucket: BucketType;
@@ -19,7 +20,7 @@ const DeleteBucket: FC<DeleteBucketProps> = ({ bucket, children }) => {
     const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
     
     const handleDeleteBucket = async () => {
-        await deleteBucket(bucket._id);
+        await deleteBucket(idOf(bucket)!);
         setIsConfirmationOpen(false);
     };
 

@@ -1,14 +1,7 @@
-import {INestApplication} from "@nestjs/common";
-import {Test, TestingModule} from "@nestjs/testing";
-import {BucketModule} from "@spica-server/bucket";
-import {Middlewares} from "@spica-server/core";
-import {SchemaModule} from "@spica-server/core-schema";
-import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
-import {OBJECTID_STRING, OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
-import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
-import {PassportTestingModule} from "@spica-server/passport-testing";
-import {PreferenceTestingModule} from "@spica-server/preference-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {Request} from "@spica-server/core-testing";
+import {BucketApp, startBucketApp} from "../../test/support/bucket-app";
+import {idOf} from "@spica-server/data";
 
 /**
  * Mixed bucket schema:
@@ -23,10 +16,10 @@ import {PreferenceTestingModule} from "@spica-server/preference-testing";
  *   label      : string
  *   event_date : date
  */
-describe("Expression Filter Type Construction", () => {
-  let app: INestApplication;
+contractSuite("Expression Filter Type Construction", engine => {
+  let api: BucketApp;
   let req: Request;
-  let module: TestingModule;
+  let key: string;
 
   const HASH_SECRET = "test-hash-secret-123";
   const ENCRYPTION_SECRET = "01234567890123456789012345678901";
@@ -34,65 +27,35 @@ describe("Expression Filter Type Construction", () => {
   let eventBucketId: string;
   let mixedBucketId: string;
 
-  // document IDs set per-suite in beforeEach
   let aliceId: string;
   let bobId: string;
 
   beforeEach(async () => {
-    module = await Test.createTestingModule({
-      imports: [
-        SchemaModule.forRoot({
-          formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME],
-          defaults: [CREATED_AT, UPDATED_AT]
-        }),
-        CoreTestingModule,
-        PassportTestingModule.initialize(),
-        DatabaseTestingModule.replicaSet(),
-        PreferenceTestingModule,
-        BucketModule.forRoot({
-          hooks: false,
-          history: false,
-          realtime: false,
-          cache: false,
-          graphql: false,
-          hashSecret: HASH_SECRET,
-          encryptionSecret: ENCRYPTION_SECRET
-        })
-      ]
-    }).compile();
+    api = await startBucketApp(engine, {
+      hashSecret: HASH_SECRET,
+      encryptionSecret: ENCRYPTION_SECRET
+    });
+    req = api.req;
+    key = api.keyField;
 
-    module.enableShutdownHooks();
-    app = module.createNestApplication();
-    req = module.get(Request);
-    app.use(Middlewares.MergePatchJsonParser(10));
-    await app.listen(req.socket);
-
-    eventBucketId = new ObjectId().toHexString();
-    mixedBucketId = new ObjectId().toHexString();
-
-    await Promise.all([
-      req.post("/bucket", {
-        _id: eventBucketId,
-        title: "Event Bucket",
-        description: "Bucket holding event records with a date field",
-        icon: "event",
-        primary: "label",
-        readOnly: false,
-        acl: {write: "true==true", read: "true==true"},
-        properties: {
+    eventBucketId = idOf(
+      await api.createBucket(
+        {
           label: {type: "string", title: "Label"},
           event_date: {type: "date", title: "Event Date"}
+        },
+        {
+          title: "Event Bucket",
+          description: "Bucket holding event records with a date field",
+          icon: "event",
+          acl: {write: "true==true", read: "true==true"}
         }
-      }),
-      req.post("/bucket", {
-        _id: mixedBucketId,
-        title: "Mixed Bucket",
-        description: "Bucket with hash, encrypted, date, nested object, and relation fields",
-        icon: "settings",
-        primary: "name",
-        readOnly: false,
-        acl: {write: "true==true", read: "true==true"},
-        properties: {
+      )
+    );
+
+    mixedBucketId = idOf(
+      await api.createBucket(
+        {
           name: {type: "string", title: "Name"},
           password: {type: "hash", title: "Password"},
           secret: {type: "encrypted", title: "Secret"},
@@ -110,12 +73,18 @@ describe("Expression Filter Type Construction", () => {
             bucketId: eventBucketId,
             relationType: "onetoone"
           }
+        },
+        {
+          title: "Mixed Bucket",
+          description: "Bucket with hash, encrypted, date, nested object, and relation fields",
+          icon: "settings",
+          acl: {write: "true==true", read: "true==true"}
         }
-      })
-    ]);
+      )
+    );
   });
 
-  afterEach(() => app.close());
+  afterEach(() => api.close());
 
   // ---------------------------------------------------------------------------
   // Shared data fixture — two event docs and two mixed docs (alice, bob)
@@ -141,7 +110,7 @@ describe("Expression Filter Type Construction", () => {
         secret: "sec_alice",
         created: ALICE_DATE,
         credentials: {pin: "1111"},
-        event: eventAliceRes.body._id
+        event: eventAliceRes.body[key]
       }),
       req.post(`/bucket/${mixedBucketId}/data`, {
         name: "bob",
@@ -149,12 +118,12 @@ describe("Expression Filter Type Construction", () => {
         secret: "sec_bob",
         created: BOB_DATE,
         credentials: {pin: "2222"},
-        event: eventBobRes.body._id
+        event: eventBobRes.body[key]
       })
     ]);
 
-    aliceId = aliceRes.body._id;
-    bobId = bobRes.body._id;
+    aliceId = aliceRes.body[key];
+    bobId = bobRes.body[key];
   }
 
   // ---------------------------------------------------------------------------

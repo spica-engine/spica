@@ -149,11 +149,13 @@ function registerRuleEditor(
 type UseRuleEditorParams = {
   /** Bucket properties powering `document.*` completions. */
   properties: Record<string, any> | undefined;
-  /** Row id exposed as `document._id` in completions, when known. */
+  /** Row id exposed under the document key in completions, when known. */
   documentId?: string;
+  /** The key field of the bucket's documents, when it is not one of the properties. */
+  documentKeyField?: string;
 };
 
-export function useRuleEditor({properties, documentId}: UseRuleEditorParams) {
+export function useRuleEditor({properties, documentId, documentKeyField}: UseRuleEditorParams) {
   const disposableRef = useRef<monaco.IDisposable | null>(null);
   const initializedRef = useRef(false);
 
@@ -173,9 +175,12 @@ export function useRuleEditor({properties, documentId}: UseRuleEditorParams) {
   const suggestions = useMemo<RuleEditorSuggestions>(
     () => ({
       auth,
-      document: documentId !== undefined ? {...properties, _id: documentId} : {...properties}
+      document:
+        documentId !== undefined && documentKeyField && !(documentKeyField in (properties ?? {}))
+          ? {...properties, [documentKeyField]: documentId}
+          : {...properties}
     }),
-    [properties, auth, documentId]
+    [properties, auth, documentId, documentKeyField]
   );
 
   useEffect(() => {

@@ -14,6 +14,7 @@ import { Navigate } from "react-router-dom";
 import logo from "../../assets/images/logo.svg";
 import type { AuthFactorChallengeResponse } from "../../store/api";
 import OtpInput from "../../components/molecules/otp-input/OtpInput";
+import { idOf } from "../../utils/recordKey";
 
 const OTP_LENGTH = 6;
 
@@ -350,14 +351,14 @@ const Login = () => {
 
             {strategies?.map(strategy => (
               <Button
-                key={strategy._id}
+                key={idOf(strategy)!}
                 fullWidth
                 type="button"
                 color="default"
                 variant="outlined"
                 disabled={loginLoading}
                 style={{ height: 36 }}
-                onClick={() => submitStrategy(strategy._id)}
+                onClick={() => submitStrategy(idOf(strategy)!)}
               >
                 <Icon size="sm" name={(strategy.icon || "help") as IconName} />
                 {strategy.title}

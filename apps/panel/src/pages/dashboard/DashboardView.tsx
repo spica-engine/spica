@@ -10,6 +10,7 @@ import {
 } from "../../store/api/dashboardApi";
 import type {DashboardComponent} from "../../store/api/dashboardApi";
 import {getEmptyComponent} from "../../store/api/dashboardApi";
+import { idOf } from "../../utils/recordKey";
 
 const DashboardView = () => {
   const {dashboardId} = useParams<{dashboardId: string}>();
@@ -74,7 +75,7 @@ const DashboardView = () => {
 
   const handleSaveComponent = useCallback(
     async (component: DashboardComponent) => {
-      if (!dashboard?._id) return;
+      if (!dashboard || !idOf(dashboard)) return;
 
       try {
         const updatedComponents = [...(dashboard.components ?? [])];
@@ -86,7 +87,7 @@ const DashboardView = () => {
         }
 
         await updateDashboard({
-          id: dashboard._id,
+          id: idOf(dashboard)!,
           body: {
             name: dashboard.name,
             icon: dashboard.icon,
@@ -104,14 +105,14 @@ const DashboardView = () => {
   );
 
   const handleDeleteComponent = useCallback(async () => {
-    if (!dashboard?._id || editingIndex === null) return;
+    if (!dashboard || !idOf(dashboard) || editingIndex === null) return;
 
     try {
       const updatedComponents = [...(dashboard.components ?? [])];
       updatedComponents.splice(editingIndex, 1);
 
       await updateDashboard({
-        id: dashboard._id,
+        id: idOf(dashboard)!,
         body: {
           name: dashboard.name,
           icon: dashboard.icon,

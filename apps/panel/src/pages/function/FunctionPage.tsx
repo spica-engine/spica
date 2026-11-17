@@ -30,6 +30,7 @@ import FunctionHeader from "./components/FunctionHeader";
 import FunctionLogFooter from "./components/FunctionLogFooter";
 import FunctionSidebar from "./components/FunctionSidebar";
 import styles from "./FunctionPage.module.scss";
+import { idOf } from "../../utils/recordKey";
 
 const IMPORT_REGEX = /^import\s+\*\s+as\s+(\w+)\s+from\s+["']\.\.\/\.\.\/([^/]+)\/\.build["'];?\s*$/gm;
 
@@ -162,7 +163,7 @@ const FunctionPage = () => {
   }, [functionId, code, isIndexSaving, updateIndex]);
 
   const handleSaveSidebar = useCallback(async () => {
-    if (!fn?._id || isSidebarSaving) return;
+    if (!fn || !idOf(fn) || isSidebarSaving) return;
     setIsSidebarSaving(true);
     try {
       const triggersChanged = JSON.stringify(localTriggers) !== JSON.stringify(serverTriggers);
@@ -175,41 +176,41 @@ const FunctionPage = () => {
         }, {});
 
         await updateFunction({
-          id: fn._id,
+          id: idOf(fn)!,
           body: {name: fn.name, language: fn.language, timeout: fn.timeout, category: fn.category, warmWorkers: fn.warmWorkers, concurrencyPerWorker: fn.concurrencyPerWorker, triggers: triggersMap},
         }).unwrap();
       }
 
-      const serverEnvVarIds = new Set((fn.env_vars ?? []).map(v => v._id));
-      const localEnvVarIds = new Set(localEnvVars.map(v => v._id));
+      const serverEnvVarIds = new Set((fn.env_vars ?? []).map(v => idOf(v)!));
+      const localEnvVarIds = new Set(localEnvVars.map(v => idOf(v)!));
 
       for (const v of localEnvVars) {
-        if (!serverEnvVarIds.has(v._id)) {
-          await injectEnvVar({functionId: fn._id, envVarId: v._id}).unwrap();
+        if (!serverEnvVarIds.has(idOf(v)!)) {
+          await injectEnvVar({functionId: idOf(fn)!, envVarId: idOf(v)!}).unwrap();
         }
       }
       for (const v of fn.env_vars ?? []) {
-        if (!localEnvVarIds.has(v._id)) {
-          await ejectEnvVar({functionId: fn._id, envVarId: v._id}).unwrap();
+        if (!localEnvVarIds.has(idOf(v)!)) {
+          await ejectEnvVar({functionId: idOf(fn)!, envVarId: idOf(v)!}).unwrap();
         }
       }
 
-      const serverSecretIds = new Set((fn.secrets ?? []).map(s => s._id));
-      const localSecretIds = new Set(localSecrets.map(s => s._id));
+      const serverSecretIds = new Set((fn.secrets ?? []).map(s => idOf(s)!));
+      const localSecretIds = new Set(localSecrets.map(s => idOf(s)!));
 
       for (const s of localSecrets) {
-        if (!serverSecretIds.has(s._id)) {
-          await injectSecret({functionId: fn._id, secretId: s._id}).unwrap();
+        if (!serverSecretIds.has(idOf(s)!)) {
+          await injectSecret({functionId: idOf(fn)!, secretId: idOf(s)!}).unwrap();
         }
       }
       for (const s of fn.secrets ?? []) {
-        if (!localSecretIds.has(s._id)) {
-          await ejectSecret({functionId: fn._id, secretId: s._id}).unwrap();
+        if (!localSecretIds.has(idOf(s)!)) {
+          await ejectSecret({functionId: idOf(fn)!, secretId: idOf(s)!}).unwrap();
         }
       }
 
       if (hasUnsavedChanges) {
-        await updateIndex({id: fn._id, index: code}).unwrap();
+        await updateIndex({id: idOf(fn)!, index: code}).unwrap();
         setLastSavedCode(code);
         setLastSaveTime(new Date());
       }
@@ -235,7 +236,7 @@ const FunctionPage = () => {
   }, [fn]);
 
   const handleNameEditSave = useCallback(async () => {
-    if (!fn?._id || !editingName.trim()) {
+    if (!fn || !idOf(fn) || !editingName.trim()) {
       setIsNameEditing(false);
       return;
     }
@@ -243,7 +244,7 @@ const FunctionPage = () => {
     if (newName !== fn.name) {
       try {
         await updateFunction({
-          id: fn._id,
+          id: idOf(fn)!,
           body: {name: newName, language: fn.language, timeout: fn.timeout, category: fn.category, warmWorkers: fn.warmWorkers, concurrencyPerWorker: fn.concurrencyPerWorker, triggers: fn.triggers as any},
         }).unwrap();
       } catch {

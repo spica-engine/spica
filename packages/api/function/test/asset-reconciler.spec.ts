@@ -8,19 +8,16 @@ import {
   FUNCTION_ASSET_STRATEGY,
   FUNCTION_ASSET_STORAGE_OPTIONS
 } from "@spica-server/interface-function-asset-storage";
+import {withId, idOf} from "@spica-server/data";
 
 // ---------------------------------------------------------------------------
 // Shared fixtures
 // ---------------------------------------------------------------------------
 
-const mockFn = {
-  _id: new ObjectId(),
-  name: "my-function",
-  language: "typescript",
-  timeout: 30,
-  triggers: {},
-  env: {}
-} as any;
+const mockFn = withId(
+  {name: "my-function", language: "typescript", timeout: 30, triggers: {}, env: {}},
+  new ObjectId()
+) as any;
 
 const buildReconciler = (overrides: Partial<typeof mockDeps> = {}) => {
   const merged = {...mockDeps, ...overrides};
@@ -346,7 +343,7 @@ describe("FunctionAssetReconciler.reconcileFunction", () => {
         hash,
         size: data.byteLength,
         strategy: "default",
-        functionId: mockFn._id
+        functionId: idOf(mockFn)
       }
     ]);
     mockDeps.preparationService.readFileBuffer.mockResolvedValue(data);
@@ -370,7 +367,7 @@ describe("FunctionAssetReconciler.reconcileFunction", () => {
         hash: remoteHash,
         size: remoteData.byteLength,
         strategy: "default",
-        functionId: mockFn._id
+        functionId: idOf(mockFn)
       }
     ]);
     mockDeps.preparationService.readFileBuffer.mockResolvedValue(localData);
@@ -401,7 +398,7 @@ describe("FunctionAssetReconciler.reconcileFunction", () => {
         hash: remoteHash,
         size: remoteData.byteLength,
         strategy: "default",
-        functionId: mockFn._id
+        functionId: idOf(mockFn)
       }
     ]);
     mockDeps.preparationService.readFileBuffer.mockResolvedValue(null);
@@ -427,7 +424,7 @@ describe("FunctionAssetReconciler.reconcileFunction", () => {
         hash: remoteHash,
         size: remoteData.byteLength,
         strategy: "default",
-        functionId: mockFn._id
+        functionId: idOf(mockFn)
       },
       {
         filename: "package.json",
@@ -435,7 +432,7 @@ describe("FunctionAssetReconciler.reconcileFunction", () => {
         hash: remoteHash,
         size: remoteData.byteLength,
         strategy: "default",
-        functionId: mockFn._id
+        functionId: idOf(mockFn)
       }
     ]);
     mockDeps.preparationService.readFileBuffer.mockResolvedValue(localData);
@@ -461,7 +458,7 @@ describe("FunctionAssetReconciler.reconcileAll", () => {
 
   it("should reconcile all functions even when one throws", async () => {
     const reconciler = buildReconciler();
-    const fn2 = {...mockFn, _id: new ObjectId(), name: "fn-2"} as any;
+    const fn2 = withId({...mockFn, name: "fn-2"}, new ObjectId()) as any;
 
     mockDeps.assetService.findByFunction
       .mockRejectedValueOnce(new Error("db error for fn1"))
@@ -474,7 +471,7 @@ describe("FunctionAssetReconciler.reconcileAll", () => {
 
   it("should process all functions", async () => {
     const reconciler = buildReconciler();
-    const fn2 = {...mockFn, _id: new ObjectId(), name: "fn-2"} as any;
+    const fn2 = withId({...mockFn, name: "fn-2"}, new ObjectId()) as any;
     mockDeps.assetService.findByFunction.mockResolvedValue([]);
 
     await reconciler.reconcileAll([mockFn, fn2]);
@@ -497,7 +494,7 @@ describe("FunctionAssetReconciler.deleteAll", () => {
         hash: "aaa",
         size: 100,
         strategy: "default",
-        functionId: mockFn._id
+        functionId: idOf(mockFn)
       },
       {
         filename: "package.json",
@@ -505,7 +502,7 @@ describe("FunctionAssetReconciler.deleteAll", () => {
         hash: "bbb",
         size: 50,
         strategy: "default",
-        functionId: mockFn._id
+        functionId: idOf(mockFn)
       }
     ]);
 
@@ -513,7 +510,7 @@ describe("FunctionAssetReconciler.deleteAll", () => {
 
     expect(mockDeps.strategy.delete).toHaveBeenCalledWith("functions/my-function/index.ts");
     expect(mockDeps.strategy.delete).toHaveBeenCalledWith("functions/my-function/package.json");
-    expect(mockDeps.assetService.deleteByFunction).toHaveBeenCalledWith(mockFn._id);
+    expect(mockDeps.assetService.deleteByFunction).toHaveBeenCalledWith(idOf(mockFn));
   });
 
   it("should still call deleteByFunction when storage delete fails for some assets", async () => {
@@ -525,13 +522,13 @@ describe("FunctionAssetReconciler.deleteAll", () => {
         hash: "aaa",
         size: 100,
         strategy: "default",
-        functionId: mockFn._id
+        functionId: idOf(mockFn)
       }
     ]);
     mockDeps.strategy.delete.mockRejectedValue(new Error("storage unavailable"));
 
     await expect(reconciler.deleteAll(mockFn)).resolves.toBeUndefined();
-    expect(mockDeps.assetService.deleteByFunction).toHaveBeenCalledWith(mockFn._id);
+    expect(mockDeps.assetService.deleteByFunction).toHaveBeenCalledWith(idOf(mockFn));
   });
 });
 
@@ -577,7 +574,7 @@ describe("FunctionAssetReconciler.backfill", () => {
       files["package.json"]
     );
     expect(mockDeps.assetService.upsertAsset).toHaveBeenCalledWith(
-      mockFn._id,
+      idOf(mockFn),
       "index.ts",
       expect.objectContaining({
         key: "functions/my-function/index.ts",
@@ -594,7 +591,7 @@ describe("FunctionAssetReconciler.backfill", () => {
     await reconciler.backfill([mockFn]);
 
     expect(mockDeps.tracker.stamp).toHaveBeenCalledWith({
-      functionId: mockFn._id.toHexString(),
+      functionId: idOf(mockFn).toString(),
       filename: "index.ts",
       hash: hashBuffer(files["index.ts"])
     });
@@ -624,7 +621,7 @@ describe("FunctionAssetReconciler.backfill", () => {
       lockfile
     );
     expect(mockDeps.assetService.upsertAsset).toHaveBeenCalledWith(
-      mockFn._id,
+      idOf(mockFn),
       "package-lock.json",
       expect.objectContaining({hash: hashBuffer(lockfile)})
     );
@@ -648,12 +645,12 @@ describe("FunctionAssetReconciler.backfill", () => {
       files["package.json"]
     );
     expect(mockDeps.assetService.upsertAsset).toHaveBeenCalledWith(
-      mockFn._id,
+      idOf(mockFn),
       "index.ts",
       expect.objectContaining({hash: hashBuffer(files["index.ts"]), strategy: "awss3"})
     );
     expect(mockDeps.assetService.upsertAsset).toHaveBeenCalledWith(
-      mockFn._id,
+      idOf(mockFn),
       "package.json",
       expect.objectContaining({strategy: "awss3"})
     );
@@ -752,7 +749,7 @@ describe("FunctionAssetReconciler.backfill", () => {
 
     expect(mockDeps.strategy.write).toHaveBeenCalledTimes(1);
     expect(mockDeps.assetService.upsertAsset).toHaveBeenCalledWith(
-      mockFn._id,
+      idOf(mockFn),
       "package.json",
       expect.anything()
     );
@@ -780,11 +777,11 @@ describe("FunctionAssetReconciler.backfill", () => {
   });
 
   it("should warn about each file with neither a stored copy nor a local file", async () => {
-    const partial = {...mockFn, _id: new ObjectId(), name: "partial"};
-    const failing = {...mockFn, _id: new ObjectId(), name: "failing"};
+    const partial = withId({...mockFn, name: "partial"}, new ObjectId());
+    const failing = withId({...mockFn, name: "failing"}, new ObjectId());
     mockDeps.assetService.findByFunction.mockImplementation(async id => {
-      if (id == partial._id) return [recorded("index.ts")];
-      if (id == failing._id) throw new Error("db");
+      if (id == idOf(partial)) return [recorded("index.ts")];
+      if (id == idOf(failing)) throw new Error("db");
       return [];
     });
     mockDeps.preparationService.readFileBuffer.mockResolvedValue(null);
@@ -817,9 +814,9 @@ describe("FunctionAssetReconciler.backfill", () => {
   });
 
   it("should not warn when every function is already stored or uploaded", async () => {
-    const stored = {...mockFn, _id: new ObjectId(), name: "stored"};
+    const stored = withId({...mockFn, name: "stored"}, new ObjectId());
     mockDeps.assetService.findByFunction.mockImplementation(async id =>
-      id == stored._id ? [recorded("index.ts")] : []
+      id == idOf(stored) ? [recorded("index.ts")] : []
     );
     const reconciler = buildReconciler();
     const warn = jest.spyOn((reconciler as any).logger, "warn").mockImplementation(() => {});
@@ -830,7 +827,7 @@ describe("FunctionAssetReconciler.backfill", () => {
   });
 
   it("should continue with other functions when one fails", async () => {
-    const other = {...mockFn, _id: new ObjectId(), name: "other"};
+    const other = withId({...mockFn, name: "other"}, new ObjectId());
     mockDeps.assetService.findByFunction
       .mockRejectedValueOnce(new Error("db"))
       .mockResolvedValueOnce([]);
@@ -869,7 +866,7 @@ describe("FunctionAssetReconciler.backfill", () => {
 
 describe("FunctionAssetReconciler.moveAssets", () => {
   const record = (filename: string, name = "my-function") => ({
-    functionId: mockFn._id,
+    functionId: idOf(mockFn),
     filename,
     key: assetKey(name, filename),
     hash: `hash-${filename}`
@@ -895,13 +892,13 @@ describe("FunctionAssetReconciler.moveAssets", () => {
       Buffer.from("data:functions/my-function/package.json")
     );
     expect(mockDeps.assetService.replaceKey).toHaveBeenCalledWith(
-      mockFn._id,
+      idOf(mockFn),
       "index.ts",
       "functions/my-function/index.ts",
       "functions/renamed/index.ts"
     );
     expect(mockDeps.assetService.replaceKey).toHaveBeenCalledWith(
-      mockFn._id,
+      idOf(mockFn),
       "package.json",
       "functions/my-function/package.json",
       "functions/renamed/package.json"
@@ -916,12 +913,12 @@ describe("FunctionAssetReconciler.moveAssets", () => {
     await buildReconciler().moveAssets(mockFn, "renamed");
 
     expect(mockDeps.tracker.stamp).toHaveBeenCalledWith({
-      functionId: mockFn._id.toHexString(),
+      functionId: idOf(mockFn).toString(),
       filename: "index.ts",
       hash: "hash-index.ts"
     });
     expect(mockDeps.tracker.stamp).toHaveBeenCalledWith({
-      functionId: mockFn._id.toHexString(),
+      functionId: idOf(mockFn).toString(),
       filename: "package.json",
       hash: "hash-package.json"
     });
@@ -953,7 +950,7 @@ describe("FunctionAssetReconciler.moveAssets", () => {
     await expect(buildReconciler().moveAssets(mockFn, "renamed")).rejects.toThrow("read failed");
 
     expect(mockDeps.assetService.replaceKey).toHaveBeenLastCalledWith(
-      mockFn._id,
+      idOf(mockFn),
       "index.ts",
       "functions/renamed/index.ts",
       "functions/my-function/index.ts"

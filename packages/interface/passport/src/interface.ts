@@ -1,7 +1,5 @@
-import {ObjectId} from "@spica-server/database";
 
 export interface Strategy {
-  _id?: ObjectId;
   type: string;
   name: string;
   title: string;

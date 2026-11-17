@@ -1,7 +1,7 @@
 import * as Identity from "../";
-import {Axios} from "@spica-devkit/internal_common";
+import {Axios, KEY_FIELDS} from "@spica-devkit/internal_common";
 
-describe("@spica-devkit/identity", () => {
+describe.each(KEY_FIELDS)("@spica-devkit/identity (%s records)", key => {
   let getSpy: jest.Mocked<any>;
   let postSpy: jest.Mocked<any>;
   let putSpy: jest.Mocked<any>;
@@ -11,7 +11,7 @@ describe("@spica-devkit/identity", () => {
     getSpy = jest.spyOn(Axios.prototype, "get").mockReturnValue(Promise.resolve());
     postSpy = jest
       .spyOn(Axios.prototype, "post")
-      .mockReturnValue(Promise.resolve({_id: "identity_id", identifier: "test"}));
+      .mockReturnValue(Promise.resolve({[key]: "identity_id", identifier: "test"}));
     putSpy = jest.spyOn(Axios.prototype, "put").mockReturnValue(Promise.resolve());
     deleteSpy = jest.spyOn(Axios.prototype, "delete").mockReturnValue(Promise.resolve());
 

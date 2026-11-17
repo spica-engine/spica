@@ -13,6 +13,7 @@ import {
 } from "../../../store/api/functionApi";
 import type {SpicaFunction, FunctionTrigger, Enqueuer} from "../../../store/api/functionApi";
 import styles from "./ConfigurationDialog.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 type ConfigurationDialogProps = {
   isOpen: boolean;
@@ -48,7 +49,7 @@ const ConfigurationDialog = ({
   initialFunction,
   onSaved,
 }: ConfigurationDialogProps) => {
-  const isEdit = !!initialFunction?._id;
+  const isEdit = !!idOf(initialFunction);
 
   const [name, setName] = useState(initialFunction?.name ?? "");
   const [language, setLanguage] = useState<"javascript" | "typescript">(
@@ -74,9 +75,9 @@ const ConfigurationDialog = ({
     }
 
     try {
-      if (isEdit && initialFunction?._id) {
+      if (isEdit && idOf(initialFunction)) {
         const result = await updateFunction({
-          id: initialFunction._id,
+          id: idOf(initialFunction)!,
           body: {name, language, timeout},
         }).unwrap();
         onSaved?.(result);
@@ -92,8 +93,8 @@ const ConfigurationDialog = ({
         }).unwrap();
 
         const exampleCode = TRIGGER_EXAMPLES[triggerType] ?? TRIGGER_EXAMPLES.http;
-        if (result._id) {
-          await updateIndex({id: result._id, index: exampleCode}).unwrap();
+        if (idOf(result)) {
+          await updateIndex({id: idOf(result)!, index: exampleCode}).unwrap();
         }
         onSaved?.(result);
       }

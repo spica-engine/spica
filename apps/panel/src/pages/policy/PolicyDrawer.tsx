@@ -12,6 +12,7 @@ import type { DisplayedStatement } from "./policyStatements";
 import { flattenStatements, groupStatements, validateStatements } from "./policyStatements";
 import { usePolicyImportExport } from "./hook/usePolicyImportExport";
 import type { ModuleStatement } from "./hook/useStatement";
+import { idOf } from "../../utils/recordKey";
 
 export type PolicyUpsertInput = {
   name: string;
@@ -42,7 +43,7 @@ const PolicyDrawer = ({
   const [displayedStatements, setDisplayedStatements] = useState<DisplayedStatement[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const isEditMode = selectedPolicy !== null && selectedPolicy._id !== "";
+  const isEditMode = selectedPolicy !== null && !!idOf(selectedPolicy);
 
   useEffect(() => {
     if (!isOpen) return;

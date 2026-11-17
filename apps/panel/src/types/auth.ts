@@ -1,6 +1,7 @@
+import type { SystemRecord } from "../utils/recordKey";
+
 // TODO: update attributes and failedAttempts with appropriate types
-export type AuthTokenJWTPayload = {
-  _id: string;
+export type AuthTokenJWTPayload = SystemRecord & {
   identifier: string;
   policies: string[];
   attributes: {[key: string]: any};

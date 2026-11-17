@@ -3,6 +3,7 @@
  * email: rio.kenan@gmail.com
  */
 
+import { idOf, pickId } from "../../utils/recordKey";
 import {Fragment, useCallback, useEffect, useMemo, useState} from "react";
 import {Popover, Select} from "oziko-ui-kit";
 import {useGetFunctionLogsQuery, useGetFunctionsQuery, useClearFunctionLogsMutation} from "../../store/api/functionApi";
@@ -67,7 +68,7 @@ const FunctionLogPage = () => {
           if (firstKey) handler = firstKey;
         }
         return {
-          id: fn._id!,
+          id: idOf(fn)!,
           name: fn.name,
           handlerName: handler,
         };
@@ -135,7 +136,6 @@ const FunctionLogPage = () => {
       begin: queryRange.begin.toISOString(),
       end: queryRange.end.toISOString(),
       limit: 100,
-      sort: {_id: -1},
       functions: activeFunctionIds.length > 0 ? activeFunctionIds : undefined,
       levels: selectedLevels,
     }
@@ -429,13 +429,13 @@ const FunctionLogPage = () => {
                   const fnName = functionNameMap[log.function] ?? log.function;
                   const handlerName = handlerNameMap[log.function] ?? "default";
                   const severity = getSeverityFilter(log.level);
-                  const expanded = expandedLogIds.includes(log._id);
+                  const expanded = expandedLogIds.includes(idOf(log)!);
 
                   return (
-                    <Fragment key={log._id}>
-                      <tr className={expanded ? styles.rowExpanded : undefined} onClick={() => toggleRow(log._id)}>
+                    <Fragment key={idOf(log)!}>
+                      <tr className={expanded ? styles.rowExpanded : undefined} onClick={() => toggleRow(idOf(log)!)}>
                         <td className={styles.expandColumn}>
-                          <button type="button" className={styles.expandButton} onClick={event => { event.stopPropagation(); toggleRow(log._id); }}>
+                          <button type="button" className={styles.expandButton} onClick={event => { event.stopPropagation(); toggleRow(idOf(log)!); }}>
                             <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" style={{transform: expanded ? "rotate(90deg)" : "none"}}><polyline points="9 18 15 12 9 6" /></svg>
                           </button>
                         </td>
@@ -459,7 +459,7 @@ const FunctionLogPage = () => {
                               <pre className={styles.detailJson}>
                                 {JSON.stringify(
                                   {
-                                    _id: log._id,
+                                    ...pickId(log),
                                     function: log.function,
                                     function_name: fnName,
                                     handler: handlerName,

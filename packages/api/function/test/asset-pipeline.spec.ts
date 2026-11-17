@@ -1,20 +1,17 @@
 import {ObjectId} from "@spica-server/database";
 import {applyAssetChange} from "@spica-server/function/src/asset-pipeline";
 import {hashBuffer} from "@spica-server/function/src/asset-reconciler";
+import {withId, idOf} from "@spica-server/data";
 
 // ---------------------------------------------------------------------------
 // Shared fixtures
 // ---------------------------------------------------------------------------
 
 const makeFn = () =>
-  ({
-    _id: new ObjectId(),
-    name: "my-function",
-    language: "typescript",
-    timeout: 30,
-    triggers: {},
-    env: {}
-  }) as any;
+  withId(
+    {name: "my-function", language: "typescript", timeout: 30, triggers: {}, env: {}},
+    new ObjectId()
+  ) as any;
 
 const makeReconciler = (overrides: Partial<typeof mockReconciler> = {}) => ({
   ...mockReconciler,
@@ -180,7 +177,7 @@ describe("applyAssetChange — happy path", () => {
     );
 
     expect(mockTracker.stamp).toHaveBeenCalledWith({
-      functionId: fn._id.toHexString(),
+      functionId: idOf(fn).toString(),
       filename: "index.ts",
       hash: record.hash
     });

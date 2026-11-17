@@ -18,6 +18,7 @@ import { WebhookLogs } from "./components/WebhookLogs";
 import Confirmation from "../../components/molecules/confirmation/Confirmation";
 import styles from "./Webhook.module.scss";
 import { Button, Drawer, Icon } from "oziko-ui-kit";
+import { idOf } from "../../utils/recordKey";
 
 const Webhook = () => {
   const { webhookId = "" } = useParams<{ webhookId: string }>();
@@ -49,13 +50,13 @@ const Webhook = () => {
   );
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!webhook?._id) return;
+    if (!idOf(webhook)) return;
     try {
-      await deleteWebhook(webhook._id).unwrap();
-      const remaining = allWebhooks.filter((w) => w._id !== webhook._id);
+      await deleteWebhook(idOf(webhook)!).unwrap();
+      const remaining = allWebhooks.filter((w) => idOf(w) !== idOf(webhook));
       const lastWebhook = remaining[remaining.length - 1];
-      if (lastWebhook?._id) {
-        navigate(`/webhook/${lastWebhook._id}`);
+      if (idOf(lastWebhook)) {
+        navigate(`/webhook/${idOf(lastWebhook)!}`);
       } else {
         navigate("/webhook");
       }
@@ -117,7 +118,7 @@ const Webhook = () => {
           </div>
           <div className={styles.drawerBody}>
             <AddWebhookForm
-              key={isEditDrawerOpen ? webhook._id : "closed"}
+              key={isEditDrawerOpen ? idOf(webhook) : "closed"}
               onClose={handleCloseEditDrawer}
               initialWebhook={webhook}
             />

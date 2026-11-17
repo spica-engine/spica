@@ -2,10 +2,10 @@
  * @owner Kanan Gasimov
  * email: rio.kenan@gmail.com
  */
- 
-export function getTimestampFromObjectId(objectId: string | undefined): number {
-  if (!objectId) return 0;
-  return parseInt(objectId.substring(0, 8), 16) * 1000;
+import {timestampFromId} from "../../../../utils/idTimestamp";
+
+export function getTimestampFromId(id: string | undefined): number {
+  return timestampFromId(id) ?? 0;
 }
 
 export function formatFileSize(bytes: number): string {

@@ -9,6 +9,7 @@ import type { Identity } from "../../../store/api/identityApi";
 import type { Policy } from "../../../store/api/policyApi";
 import type { OnResourceChange, OnResourceBatchChange } from "../moduleRendererHelpers";
 import { EntityPairModuleRenderer, type EntityPairConfig } from "./shared/EntityPairModuleRenderer";
+import { idOf } from "../../../utils/recordKey";
 
 export interface IdentityPolicyModuleProps extends BaseModuleContext {
   identities?: Identity[];
@@ -24,8 +25,8 @@ export class IdentityPolicyModuleRenderer implements ModuleRenderer<IdentityPoli
     const config: EntityPairConfig<Identity, Policy> = {
       leftEntities: identities,
       rightEntities: policies,
-      getLeftId: (identity) => identity._id ?? "",
-      getRightId: (policy) => policy._id,
+      getLeftId: (identity) => idOf(identity) ?? "",
+      getRightId: (policy) => idOf(policy)!,
       getLeftLabel: (identity) => identity.identifier,
       getRightLabel: (policy) => policy.name,
       leftPlaceholder: "Select Identity",

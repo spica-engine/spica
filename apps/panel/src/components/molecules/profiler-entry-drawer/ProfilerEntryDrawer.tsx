@@ -1,6 +1,7 @@
 import React from "react";
 import {Drawer} from "oziko-ui-kit";
 import type {ProfilerEntry} from "../../../store/api/userApi";
+import {idOf} from "../../../utils/recordKey";
 import styles from "./ProfilerEntryDrawer.module.scss";
 
 const OP_COLORS: Record<string, string> = {
@@ -91,7 +92,7 @@ const ProfilerEntryDrawer = ({entry, onClose}: Props) => {
             <MetaRow label="Client" value={entry.client || "—"} />
             <MetaRow label="App Name" value={entry.appName || "—"} />
             <MetaRow label="User" value={entry.user || "—"} />
-            {entry._id && <MetaRow label="ID" value={entry._id} />}
+            {idOf(entry) && <MetaRow label="ID" value={idOf(entry)!} />}
           </div>
 
           {/* Command */}

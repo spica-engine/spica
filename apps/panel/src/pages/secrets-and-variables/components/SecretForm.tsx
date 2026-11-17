@@ -8,6 +8,7 @@ import {
 } from "../../../store/api/secretApi";
 import type { Secret } from "../../../store/api/secretApi";
 import styles from "../SecretsAndVariables.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 type SecretFormProps = {
   isOpen: boolean;
@@ -49,7 +50,7 @@ const SecretForm = ({ isOpen, selectedSecret, onClose }: SecretFormProps) => {
         if (isEditMode) {
           if (!selectedSecret) return;
           await updateSecret({
-            id: selectedSecret._id,
+            id: idOf(selectedSecret)!,
             key: values.key,
             value: values.value,
           }).unwrap();

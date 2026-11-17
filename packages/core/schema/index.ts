@@ -1,5 +1,6 @@
 export {Schema} from "./src/pipe.js";
 export {SchemaModule} from "./src/module.js";
+export {SYSTEM_KEY_PLACEHOLDER, hasSystemKey, withSystemKey} from "./src/system-key.js";
 export {applyPasswordPolicy} from "./src/password-policy.utils.js";
 export {
   ValidationError,

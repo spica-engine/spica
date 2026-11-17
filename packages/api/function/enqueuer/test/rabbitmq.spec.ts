@@ -852,7 +852,7 @@ describe("rabbitmq enqueuer", () => {
       }
 
       function settleWith(settle: (channel: amqp.Channel, message: amqp.Message) => void) {
-        rabbitmqQueue.enqueue.mockImplementation((_id, _message, delivery) => {
+        rabbitmqQueue.enqueue.mockImplementation((_event, _message, delivery) => {
           if (delivery) {
             settle(delivery.channel, {fields: {deliveryTag: delivery.deliveryTag}} as any);
           }

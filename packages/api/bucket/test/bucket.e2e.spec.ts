@@ -2,15 +2,18 @@ import {INestApplication, ModuleMetadata} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
+import {keyed} from "./support/bucket-app";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {AssetModule} from "@spica-server/asset";
+import {AssetModule, exporters, operators, validators} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import os from "os";
 import {PreferenceModule} from "@spica-server/preference";
+import {idOf, stripId, systemKeyField} from "@spica-server/data";
 
-describe("Bucket", () => {
+contractSuite("Bucket", engine => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
   }
@@ -31,10 +34,14 @@ describe("Bucket", () => {
   let app: INestApplication;
 
   beforeEach(async () => {
+    validators.clear();
+    operators.clear();
+    exporters.clear();
+
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceModule.forRoot(),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
@@ -51,6 +58,7 @@ describe("Bucket", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
+    bucketId = String(module.get<IdTypes>(ID_TYPES).unscoped().generate());
 
     await app.listen(req.socket);
   });
@@ -67,7 +75,7 @@ describe("Bucket", () => {
 
   let bucketv1Resource;
   let bucketv1;
-  const bucketId = new ObjectId().toString();
+  let bucketId: string;
 
   let bucketv2Resource;
   let bucketv2;
@@ -77,31 +85,27 @@ describe("Bucket", () => {
 
   beforeEach(async () => {
     bucketv1 = {
-      _id: bucketId,
+      [systemKeyField()]: bucketId,
       title: "my_bucket",
       description: "description",
       acl: {
         write: "true==true",
         read: "true==true"
       },
-      properties: {
-        name: {
-          type: "string"
-        }
-      },
+      ...keyed(engine, {name: {type: "string"}}),
       history: false,
       icon: "view_stream"
     };
 
     bucketv1Resource = {
-      _id: bucketId,
+      [systemKeyField()]: bucketId,
       module: "bucket",
       contents: {
         schema: bucketv1
       }
     };
 
-    bucketv2 = {...bucketv1, properties: {title: {type: "string"}}};
+    bucketv2 = {...bucketv1, ...keyed(engine, {title: {type: "string"}})};
 
     bucketv2Resource = {...bucketv1Resource, contents: {schema: bucketv2}};
   });
@@ -123,18 +127,18 @@ describe("Bucket", () => {
   // separating these tests cause them failed
   it("insert, update and delete", async () => {
     // INSERT PREVIEW
-    let preview = await previewAssetInstallation(assetv1._id);
+    let preview = await previewAssetInstallation(idOf(assetv1));
 
     expect(preview).toEqual({insertions: [bucketv1Resource], updations: [], deletions: []});
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
     let buckets = await getBuckets();
     expect(buckets).toEqual([]);
 
     // INSERT
-    await installAsset(assetv1._id);
+    await installAsset(idOf(assetv1));
     buckets = await getBuckets();
     expect(buckets).toEqual([bucketv1]);
 
@@ -144,25 +148,25 @@ describe("Bucket", () => {
     // UPDATE PREVIEW
     assetv2 = await downloadAsset(assetv2);
 
-    preview = await previewAssetInstallation(assetv2._id);
+    preview = await previewAssetInstallation(idOf(assetv2));
     expect(preview).toEqual({insertions: [], updations: [bucketv2Resource], deletions: []});
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("installed");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("downloaded");
 
     buckets = await getBuckets();
     expect(buckets).toEqual([bucketv1]);
 
     // UPDATE
-    await installAsset(assetv2._id);
+    await installAsset(idOf(assetv2));
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("installed");
 
     buckets = await getBuckets();
@@ -170,10 +174,10 @@ describe("Bucket", () => {
 
     // DELETE PREVIEW
     let assetv3 = {...assetv2, resources: []};
-    delete assetv3._id;
+    stripId(assetv3);
     delete assetv3.status;
     assetv3 = await downloadAsset(assetv3);
-    preview = await previewAssetInstallation(assetv3._id);
+    preview = await previewAssetInstallation(idOf(assetv3));
 
     expect(preview).toEqual({
       insertions: [],
@@ -181,28 +185,28 @@ describe("Bucket", () => {
       deletions: [{...bucketv2Resource, installation_status: "installed"}]
     });
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("installed");
 
-    assetv3 = await getAsset(assetv3._id);
+    assetv3 = await getAsset(idOf(assetv3));
     expect(assetv3.status).toEqual("downloaded");
 
     buckets = await getBuckets();
     expect(buckets).toEqual([bucketv2]);
 
     // DELETE
-    await installAsset(assetv3._id);
+    await installAsset(idOf(assetv3));
 
-    assetv1 = await getAsset(assetv1._id);
+    assetv1 = await getAsset(idOf(assetv1));
     expect(assetv1.status).toEqual("downloaded");
 
-    assetv2 = await getAsset(assetv2._id);
+    assetv2 = await getAsset(idOf(assetv2));
     expect(assetv2.status).toEqual("downloaded");
 
-    assetv3 = await getAsset(assetv3._id);
+    assetv3 = await getAsset(idOf(assetv3));
     expect(assetv3.status).toEqual("installed");
 
     buckets = await getBuckets();

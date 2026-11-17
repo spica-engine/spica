@@ -1,10 +1,9 @@
 import {Inject, Injectable, Logger} from "@nestjs/common";
-import {ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {DEFAULT_EVENT_CONCURRENCY} from "@spica-server/interface-function-scheduler";
 import {event} from "@spica-server/function-queue-proto";
 import path from "path";
-import {FunctionService} from "@spica-server/function-services";
+import {COLLECTION_QUERY, CollectionQueryFacade} from "@spica-server/interface-data";
 import {
   Options,
   FUNCTION_OPTIONS,
@@ -21,13 +20,14 @@ import {Secret, SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface
 import * as CRUD from "./crud.js";
 import {TriggerSecretResolver} from "./trigger-secret-resolver.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
+import {idOf} from "@spica-server/data";
 
 @Injectable()
 export class PlanExecutor {
   private readonly logger = new Logger(PlanExecutor.name);
 
   constructor(
-    private fs: FunctionService,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     private scheduler: Scheduler,
     @Inject(SECRET_DECRYPTOR) private secretDecryptor: SecretDecryptor,
     @Inject(FUNCTION_OPTIONS) private options: Options,
@@ -166,7 +166,7 @@ export class PlanExecutor {
     context: event.SchedulingContext
   ): event.Target {
     return new event.Target({
-      id: fn._id.toString(),
+      id: idOf(fn).toString(),
       cwd: path.join(this.options.root, fn.name),
       context
     });
@@ -174,7 +174,7 @@ export class PlanExecutor {
 
   private async findFunctionForRuntime(functionId: string) {
     try {
-      return await CRUD.findOneForRuntime(this.fs, new ObjectId(functionId));
+      return await CRUD.findOneForRuntime(this.queries, CRUD.functionIds().parse(functionId));
     } catch {
       return null;
     }

@@ -10,7 +10,10 @@
       "path": "../../interface/replication"
     },
     {
-      "path": "../../database"
+      "path": "../../interface/data"
+    },
+    {
+      "path": "../../data"
     },
     {
       "path": "../../database/testing"

@@ -3,6 +3,7 @@ import { useCallback, useRef } from 'react';
 import type { PolicyItem } from '../Policy';
 import type { DisplayedStatement, PolicyStatement } from '../policyStatements';
 import { groupStatements, flattenStatements } from '../policyStatements';
+import { pickId } from "../../../utils/recordKey";
 
 interface UsePolicyImportExportProps {
   name: string;
@@ -33,8 +34,8 @@ export const usePolicyImportExport = ({
     };
 
     // Only include optional fields if they exist
-    if (selectedPolicy?._id) {
-      exportPolicy._id = selectedPolicy._id;
+    if (selectedPolicy) {
+      Object.assign(exportPolicy, pickId(selectedPolicy));
     }
     if (selectedPolicy?.system) {
       exportPolicy.system = selectedPolicy.system;

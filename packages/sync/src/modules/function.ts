@@ -19,9 +19,9 @@ import {
 import {diskSource, ResourceSource} from "../source";
 import {sortUnorderedArrays} from "../unordered";
 import {DevEventContext, LocalResource, RemoteResource, ResourceModule} from "../types";
+import {KEY_FIELDS, recordKey} from "../record-key";
 
 interface FunctionSchema {
-  _id?: string;
   name: string;
   language?: string;
   timeout?: number;
@@ -43,19 +43,17 @@ export interface FunctionData {
   dependencies: Record<string, string>;
 }
 
-const SCHEMA_IGNORED = ["_id", "env_vars", "secrets", "order"];
+const SCHEMA_IGNORED = [...KEY_FIELDS, "env_vars", "secrets", "order"];
 const SCHEMA_UNORDERED = ["triggers.*.options.authenticate"];
 
 function indexFilename(language?: string): string {
   return language === "typescript" ? "index.ts" : "index.mjs";
 }
 
-/** Extract an ObjectId string from either a plain string or a resolved object with `_id`. */
+/** Extract an id string from either a plain string or a resolved object that carries its key. */
 function extractId(v: unknown): string {
-  if (v && typeof v === "object" && "_id" in (v as object)) {
-    return String((v as Record<string, unknown>)._id);
-  }
-  return String(v);
+  const key = recordKey(v);
+  return key === undefined ? String(v) : String(key);
 }
 
 function byCodeUnit(a: string, b: string): number {
@@ -131,7 +129,7 @@ export interface FunctionModule extends ResourceModule<FunctionData> {
   readIndex(rootDir: string, slug: string, language?: string, source?: ResourceSource): string;
   readDependencies(rootDir: string, slug: string, source?: ResourceSource): Record<string, string>;
   // ── Granular writes (async) ────────────────────────────────────────────────
-  /** POST schema → returns the new remote _id, or undefined on failure. */
+  /** POST schema → returns the new remote key, or undefined on failure. */
   createSchema(http: SyncHttpClient, schema: FunctionSchema): Promise<string | undefined>;
   /** PUT schema + sync env_vars/secrets. */
   updateSchema(http: SyncHttpClient, remoteId: string, schema: FunctionSchema): Promise<void>;
@@ -194,7 +192,7 @@ export const functionModule: FunctionModule = {
 
     return Promise.all(
       fns.map(async fn => {
-        const id = fn._id!;
+        const id = recordKey(fn)!;
 
         const [indexRes, depsRes] = await Promise.all([
           http.get<{index: string}>(`function/${id}/index`).catch(emptyIfMissing({index: ""})),
@@ -235,7 +233,7 @@ export const functionModule: FunctionModule = {
       "function",
       omit(schema, ["env_vars", "secrets"])
     );
-    const id = (created._id ?? schema._id) as string | undefined;
+    const id = recordKey(created) ?? recordKey(schema);
     if (!id) return undefined;
     const envVarIds: string[] = (schema.env_vars as string[] | undefined) ?? [];
     await Promise.all(envVarIds.map(evId => http.put(`function/${id}/env-var/${evId}`, {})));
@@ -399,7 +397,7 @@ export const functionModule: FunctionModule = {
   },
 
   extractLocalId(data) {
-    return data.schema._id;
+    return recordKey(data.schema);
   },
 
   watchedFiles: ["schema.yaml", "index.ts", "index.mjs", "index.js", "package.json"],
@@ -445,8 +443,8 @@ export const functionModule: FunctionModule = {
       const schema = self.readSchema(rootDir, slug);
       if (!schema) return;
 
-      // Rename detection: _id matches a pending delete → it's a rename, not a create
-      const newLocalId = schema._id as string | undefined;
+      // Rename detection: the key matches a pending delete → it's a rename, not a create
+      const newLocalId = recordKey(schema);
       if (newLocalId) {
         const pending = consumePendingDeleteByRemoteId(newLocalId);
         if (pending) {

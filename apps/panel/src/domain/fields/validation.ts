@@ -2,9 +2,10 @@ import * as Yup from "yup";
 import {FieldKind, type FieldFormState, type FormError} from "./types";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import type {Property} from "src/store/api/bucketApi";
+import {DEFAULT_KEY_FIELD} from "../../utils/recordKey";
 export type ValidationSchema = Yup.ObjectSchema<Record<string, unknown>>;
 
-export const TITLE_REGEX = /^(?!(_id)$)([a-z_0-9]*)+$/; // lowercase, digits, underscore, not _id
+export const TITLE_REGEX = new RegExp(`^(?!(${DEFAULT_KEY_FIELD})$)([a-z_0-9]*)+$`);
 
 const BASE_FIELD_CREATION_FORM_SCHEMA = {
   fieldValues: Yup.object({
@@ -12,7 +13,7 @@ const BASE_FIELD_CREATION_FORM_SCHEMA = {
       .required("Title is required")
       .matches(
         TITLE_REGEX,
-        "Title can be only lowercase letters, numbers, and underscores, and cannot be '_id' or an empty string"
+        `Title can be only lowercase letters, numbers, and underscores, and cannot be '${DEFAULT_KEY_FIELD}' or an empty string`
       ),
     description: Yup.string().optional()
   })

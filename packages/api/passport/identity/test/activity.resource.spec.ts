@@ -1,11 +1,10 @@
 import {Action} from "@spica-server/interface-activity";
 import {createIdentityActivity} from "@spica-server/passport-identity/src/activity.resource";
+import {withId} from "@spica-server/data";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {
-    const res = {
-      _id: "identity_id"
-    };
+    const res = withId({}, "identity_id");
 
     const activities = createIdentityActivity(
       {action: Action.POST, identifier: "test_user"},

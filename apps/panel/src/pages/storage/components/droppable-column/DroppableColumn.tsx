@@ -1,6 +1,6 @@
 import {useRef} from "react";
 import {useDrop} from "react-dnd";
-import {type DirectoryItem, type DragItem} from "../../../../types/storage";
+import {type DirectoryItem, type DragItem, kitFileKey} from "../../../../types/storage";
 import {validateDrop} from "../../utils";
 import styles from "./DroppableColumn.module.scss";
 import {DnDItemTypes} from "../../../../hooks/useTypedDragLayer";
@@ -27,7 +27,7 @@ export function DroppableColumn({folderPath, items, children, onDrop, className}
     accept: DnDItemTypes.STORAGE_ITEM,
     drop: dragItem => {
       const draggedItem: DirectoryItem = {
-        _id: dragItem.id,
+        ...kitFileKey(dragItem.id),
         label: dragItem.name,
         fullPath: dragItem.fullPath,
         content: {
@@ -56,7 +56,7 @@ export function DroppableColumn({folderPath, items, children, onDrop, className}
       const oldParent = dragItem.parentPath;
       const newParent = folderPath.endsWith("/") ? folderPath : folderPath + "/";
       const draggedItem: DirectoryItem = {
-        _id: dragItem.id,
+        ...kitFileKey(dragItem.id),
         label: dragItem.name,
         fullPath: dragItem.fullPath,
         content: {

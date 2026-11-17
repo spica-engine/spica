@@ -1,18 +1,15 @@
 {
   "extends": "../../../../../tsconfig.base.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
       "path": "../../../../interface/function/runtime"
     },
     {
-      "path": "../logger"
+      "path": "../../../../interface/function/log"
     },
     {
-      "path": "../../../../database"
+      "path": "../logger"
     }
   ],
   "compilerOptions": {

@@ -15,6 +15,7 @@ import {
   type OnResourceBatchChange,
   type OnResourceChange
 } from "../moduleRendererHelpers";
+import { idOf } from "../../../utils/recordKey";
 
 export interface PolicyModuleProps extends BaseModuleContext {
   policies?: Policy[];
@@ -56,8 +57,8 @@ export class PolicyModuleRenderer implements ModuleRenderer<PolicyModuleProps> {
             onResourceBatchChange,
             itemConfig: {
               items: policies,
-              getId: policy => policy._id,
-              getKey: policy => policy._id,
+              getId: policy => idOf(policy)!,
+              getKey: policy => idOf(policy)!,
               getLabel: policy => policy.name,
               getIcon: () => <Icon name="lock" size="md" />
             }

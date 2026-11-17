@@ -2,10 +2,12 @@ import os from "os";
 import path from "path";
 import fs from "fs";
 import yaml from "yaml";
-import {envVarModule} from "@spica-server/sync";
+import {envVarModule, SYSTEM_KEY_FIELDS} from "@spica-server/sync";
 import {secretModule} from "@spica-server/sync";
 import {policyModule} from "@spica-server/sync";
 import {resolveModules} from "@spica-server/sync";
+
+const SHAPES = Object.entries(SYSTEM_KEY_FIELDS);
 
 function makeTmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "spica-module-test-"));
@@ -25,7 +27,7 @@ beforeEach(() => jest.clearAllMocks());
 
 // ─── Env-var ──────────────────────────────────────────────────────────────────
 
-describe("envVarModule", () => {
+describe.each(SHAPES)("envVarModule (%s records)", (_shape, key) => {
   it("reads local env-var files", async () => {
     const dir = makeTmpDir();
     try {
@@ -46,7 +48,7 @@ describe("envVarModule", () => {
   });
 
   it("reads remote env-vars and uses key as slug", async () => {
-    mockHttp.get.mockResolvedValue([{_id: "id1", key: "MY_KEY", value: "v"}]);
+    mockHttp.get.mockResolvedValue([{[key]: "id1", key: "MY_KEY", value: "v"}]);
     const result = await envVarModule.readRemote(mockHttp);
     expect(result[0]).toMatchObject({slug: "MY_KEY", id: "id1"});
   });
@@ -99,7 +101,7 @@ describe("envVarModule", () => {
   it("detects value changes in diffFields", () => {
     const changed = envVarModule.diffFields({key: "K", value: "old"}, {key: "K", value: "new"});
     expect(changed).toContain("value");
-    expect(changed).not.toContain("_id");
+    expect(changed).not.toContain(key);
   });
 
   it("ignores server-managed updated_at in diffFields", () => {
@@ -114,7 +116,7 @@ describe("envVarModule", () => {
 
 // ─── Secret ───────────────────────────────────────────────────────────────────
 
-describe("secretModule", () => {
+describe.each(SHAPES)("secretModule (%s records)", (_shape, key) => {
   it("reads local secret files", async () => {
     const dir = makeTmpDir();
     try {
@@ -133,7 +135,7 @@ describe("secretModule", () => {
   });
 
   it("uses /secret endpoint", async () => {
-    mockHttp.get.mockResolvedValue([{_id: "id1", key: "API_KEY", value: "s3cr3t"}]);
+    mockHttp.get.mockResolvedValue([{[key]: "id1", key: "API_KEY", value: "s3cr3t"}]);
     await secretModule.readRemote(mockHttp);
     expect(mockHttp.get).toHaveBeenCalledWith("secret");
   });
@@ -171,7 +173,7 @@ describe("secretModule", () => {
 
 // ─── Policy ───────────────────────────────────────────────────────────────────
 
-describe("policyModule", () => {
+describe.each(SHAPES)("policyModule (%s records)", (_shape, key) => {
   it("reads local policy files", async () => {
     const dir = makeTmpDir();
     try {
@@ -191,8 +193,8 @@ describe("policyModule", () => {
 
   it("uses /passport/policy endpoint and filters out system policies", async () => {
     mockHttp.get.mockResolvedValue([
-      {_id: "id1", name: "User Policy", statement: [], system: false},
-      {_id: "id2", name: "System", statement: [], system: true}
+      {[key]: "id1", name: "User Policy", statement: [], system: false},
+      {[key]: "id2", name: "System", statement: [], system: true}
     ]);
     const result = await policyModule.readRemote(mockHttp);
     expect(result).toHaveLength(1);
@@ -203,8 +205,8 @@ describe("policyModule", () => {
   it("filters out system policies when remote returns paginated {data: [...]}", async () => {
     mockHttp.get.mockResolvedValue({
       data: [
-        {_id: "id1", name: "User Policy", statement: []},
-        {_id: "id2", name: "System", statement: [], system: true}
+        {[key]: "id1", name: "User Policy", statement: []},
+        {[key]: "id2", name: "System", statement: [], system: true}
       ]
     });
     const result = await policyModule.readRemote(mockHttp);

@@ -18,7 +18,7 @@
       "items": {
         "type": "object",
         "properties": {
-          "_id": {
+          "$systemKey": {
             "type": "string",
             "description": "Id of the resource"
           },

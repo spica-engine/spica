@@ -1,10 +1,10 @@
 import {Injectable, OnModuleDestroy} from "@nestjs/common";
-import {BucketService, compile} from "@spica-server/bucket-services";
+import {BucketService, bucketIds, compile} from "@spica-server/bucket-services";
 import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/core-schema";
-import {ObjectId} from "@spica-server/database";
 import {combineLatest, Observable, Subject} from "rxjs";
 import {map, shareReplay, takeUntil} from "rxjs/operators";
 import {Bucket, BucketPreferences} from "@spica-server/interface-bucket";
+import {DataCapabilities} from "@spica-server/data";
 
 @Injectable()
 export class BucketSchemaResolver implements OnModuleDestroy {
@@ -12,7 +12,11 @@ export class BucketSchemaResolver implements OnModuleDestroy {
   bucketWatchers: Map<string, Observable<Bucket>> = new Map();
   onDestroySubject = new Subject();
 
-  constructor(private bucketService: BucketService) {
+  constructor(
+    private bucketService: BucketService,
+    private nullable = false,
+    private relationsByPrimaryKey = false
+  ) {
     this.preferenceWatcher = this.bucketService.watchPreferences(true).pipe(shareReplay(1));
   }
 
@@ -21,7 +25,7 @@ export class BucketSchemaResolver implements OnModuleDestroy {
   }
 
   resolve(uri: string): Observable<object> {
-    if (ObjectId.isValid(uri)) {
+    if (bucketIds().isValid(uri)) {
       let bucketWatcher = this.bucketWatchers.get(uri);
       if (!bucketWatcher) {
         bucketWatcher = this.bucketService.watchBucket(uri, true);
@@ -35,7 +39,10 @@ export class BucketSchemaResolver implements OnModuleDestroy {
             return {};
           }
 
-          let jsonSchema = compile(schema, prefs);
+          let jsonSchema = compile(schema, prefs, {
+            nullable: this.nullable,
+            relationsByPrimaryKey: this.relationsByPrimaryKey
+          });
           jsonSchema.$id = uri;
           return jsonSchema;
         })
@@ -44,8 +51,16 @@ export class BucketSchemaResolver implements OnModuleDestroy {
   }
 }
 
-export function provideBucketSchemaResolver(validator: Validator, bs: BucketService) {
-  const resolver = new BucketSchemaResolver(bs);
+export function provideBucketSchemaResolver(
+  validator: Validator,
+  bs: BucketService,
+  capabilities?: DataCapabilities
+) {
+  const resolver = new BucketSchemaResolver(
+    bs,
+    Boolean(capabilities?.nullableProperties),
+    Boolean(capabilities?.relationsByPrimaryKey)
+  );
   validator.registerUriResolver(uri => resolver.resolve(uri));
   return resolver;
 }

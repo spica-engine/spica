@@ -8,6 +8,7 @@ import {
   getEmptyComponent
 } from "../../../store/api/dashboardApi";
 import styles from "./EditDashboard.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 // ── Visual type definitions for create-mode type cards ──────────────────────
 type VisualTypeKey = "Line" | "Bar" | "Area" | "Pie" | "Stat" | "Table";
@@ -259,7 +260,7 @@ const EditDashboard: FC<EditDashboardProps> = ({
         onCreated?.(result);
       } else {
         await updateDashboard({
-          id: dashboard!._id!,
+          id: idOf(dashboard!)!,
           body: {name: value}
         }).unwrap();
         setIsModalOpen(false);

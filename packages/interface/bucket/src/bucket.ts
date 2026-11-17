@@ -1,9 +1,10 @@
-import {ObjectId} from "@spica-server/database";
+import {Id} from "@spica-server/interface-data";
 import {Preference} from "@spica-server/interface-preference";
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 
 export interface Bucket {
-  _id?: ObjectId;
+  type?: "object";
+  category?: string;
   title?: string;
   icon?: string;
   description?: string;
@@ -39,17 +40,16 @@ interface PropertyOptions {
   options: {
     translate?: boolean;
     history?: boolean;
+    generated?: boolean;
   };
   acl?: string;
 }
 
 export interface BucketDocument {
-  _id?: ObjectId;
   [key: string]: any | undefined;
 }
 
 export interface BucketPreferences extends Preference {
-  _id?: any;
   language: {
     available: {
       [code: string]: string;

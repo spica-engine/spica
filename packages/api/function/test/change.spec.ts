@@ -2,6 +2,7 @@ import {EnvRelation, Function, ChangeKind, SecretRelation} from "@spica-server/i
 import {ObjectId} from "@spica-devkit/database";
 import {deepCopy} from "@spica-server/core-patch";
 import {createPlan, refreshPlan, mergePlans} from "@spica-server/function/src/change";
+import {withId} from "@spica-server/data";
 
 type Fn = Function<EnvRelation.NotResolved, SecretRelation.NotResolved>;
 
@@ -12,15 +13,10 @@ describe("Change", () => {
   let fn: Fn;
 
   beforeEach(() => {
-    fn = {
-      _id: "fn_id",
-      name: "my_fn",
-      env_vars: [],
-      secrets: [],
-      language: "javascript",
-      timeout: 50,
-      triggers: {}
-    };
+    fn = withId(
+      {name: "my_fn", env_vars: [], secrets: [], language: "javascript", timeout: 50, triggers: {}},
+      "fn_id"
+    );
   });
 
   describe("createPlan", () => {
@@ -307,7 +303,10 @@ describe("Change", () => {
   describe("mergePlans", () => {
     it("should concat routing and union outdate/reconcile", () => {
       const a = refreshPlan("a");
-      const b = createPlan(null, {...fn, _id: "b", triggers: {h: {active: true, options: {}, type: "http"}}});
+      const b = createPlan(
+        null,
+        withId({...fn, triggers: {h: {active: true, options: {}, type: "http"}}}, "b")
+      );
       const c = refreshPlan("a"); // duplicate id
 
       expect(mergePlans([a, b, c])).toEqual({
@@ -319,7 +318,7 @@ describe("Change", () => {
     });
 
     it("should concat renames", () => {
-      const previous: Fn = {...fn, _id: "b"};
+      const previous: Fn = withId({...fn}, "b");
       const rename = createPlan(previous, {...previous, name: "renamed_fn"});
 
       expect(mergePlans([refreshPlan("a"), rename]).rename).toEqual([

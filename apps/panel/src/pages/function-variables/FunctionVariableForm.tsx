@@ -17,6 +17,7 @@ import {
 } from "../../store/api/functionApi";
 import type {SpicaFunction} from "../../store/api/functionApi";
 import styles from "./FunctionVariablesPage.module.scss";
+import { idOf } from "../../utils/recordKey";
 
 type FunctionVariableFormProps = {
   isOpen: boolean;
@@ -64,7 +65,7 @@ const FunctionVariableForm = ({
   }, [isOpen, selectedVariable, assignedFunctionIds]);
 
   const functionOptions = useMemo<TypeLabeledValue[]>(
-    () => functionList.map(fn => ({value: fn._id!, label: fn.name})),
+    () => functionList.map(fn => ({value: idOf(fn)!, label: fn.name})),
     [functionList]
   );
 
@@ -93,8 +94,8 @@ const FunctionVariableForm = ({
       let envVarId: string;
 
       if (isEditMode && selectedVariable) {
-        await updateEnvVar({id: selectedVariable._id, key, value}).unwrap();
-        envVarId = selectedVariable._id;
+        await updateEnvVar({id: idOf(selectedVariable)!, key, value}).unwrap();
+        envVarId = idOf(selectedVariable)!;
 
         // Diff function assignments
         const prevSet = new Set(assignedFunctionIds);
@@ -109,7 +110,7 @@ const FunctionVariableForm = ({
         ]);
       } else {
         const created = await createEnvVar({key, value}).unwrap();
-        envVarId = created._id;
+        envVarId = idOf(created)!;
 
         // Inject into all selected functions
         await Promise.all(

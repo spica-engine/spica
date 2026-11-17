@@ -1,5 +1,6 @@
 export interface StorageObject {
-  _id: string;
+  /** @deprecated Read the key with idOf; it is named id on PostgreSQL. */
+  _id?: string;
   name: string;
   url: string;
   content: {

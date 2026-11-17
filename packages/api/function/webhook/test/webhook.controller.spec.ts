@@ -1,38 +1,47 @@
+import {provideRepository, idOf, stripId, withId} from "@spica-server/data";
+import {WEBHOOK_LOG_REPOSITORY, WEBHOOK_REPOSITORY} from "@spica-server/interface-function-webhook";
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {
+  contractSuite,
+  ensureCollections,
+  QuietChangeFeedModule
+} from "@spica-server/database-testing";
+import {COLLECTION_NAMES, CollectionNames, ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {WebhookService, WebhookChangeDispatcher} from "@spica-server/function-webhook";
 import {Webhook} from "@spica-server/interface-function-webhook";
 import {SchemaResolver} from "@spica-server/function-webhook/src/schema";
 import {WebhookController} from "@spica-server/function-webhook/src/webhook.controller";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {WebhookInvoker} from "@spica-server/function-webhook/src/invoker";
-import {WebhookLogService} from "@spica-server/function-webhook/src/log.service";
 import {WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
 
-describe("Webhook Controller", () => {
+contractSuite("Webhook Controller", engine => {
   let app: INestApplication;
   let req: Request;
   let module: TestingModule;
   let webhook: Webhook;
+  let collection: string;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
+        QuietChangeFeedModule,
         CoreTestingModule,
         PassportTestingModule.initialize(),
         SchemaModule.forChild()
       ],
       controllers: [WebhookController],
       providers: [
+        provideRepository(WEBHOOK_REPOSITORY),
         WebhookService,
         WebhookChangeDispatcher,
         SchemaResolver,
         WebhookInvoker,
-        WebhookLogService,
+        provideRepository(WEBHOOK_LOG_REPOSITORY),
         {provide: WEBHOOK_OPTIONS, useValue: {expireAfterSeconds: 60}}
       ]
     }).compile();
@@ -42,9 +51,9 @@ describe("Webhook Controller", () => {
     req.reject = true;
     await app.listen(req.socket);
 
-    const db = module.get(DatabaseService);
-    await db.createCollection("coll1");
-    await db.createCollection("coll2");
+    await ensureCollections(engine, module, ["dashboard", "env_var"]);
+    const names = await module.get<CollectionNames>(COLLECTION_NAMES).list();
+    collection = [...names].sort().find(name => name != "webhook_logs");
 
     webhook = {
       title: "wh1",
@@ -53,7 +62,7 @@ describe("Webhook Controller", () => {
       trigger: {
         name: "database",
         options: {
-          collection: "coll1",
+          collection,
           type: "INSERT"
         }
       }
@@ -73,13 +82,12 @@ describe("Webhook Controller", () => {
   it("should insert a new webhook", async () => {
     const {body: hook} = await req.post("/webhook", webhook);
 
-    const expected = {
-      ...webhook,
-      _id: hook._id
-    };
+    const expected = withId({...webhook}, idOf(hook));
     expected.trigger.active = true;
 
-    expect(ObjectId.isValid(expected._id)).toEqual(true);
+    expect(module.get<IdTypes>(ID_TYPES).forCollection("webhook").isValid(idOf(expected))).toEqual(
+      true
+    );
     expect(hook).toEqual(expected);
   });
 
@@ -87,8 +95,8 @@ describe("Webhook Controller", () => {
     const {body: hook} = await req.post("/webhook", webhook);
 
     const body = {...hook, title: "wh2"};
-    const id = body._id;
-    delete body._id;
+    const id = idOf(body);
+    stripId(body);
 
     const {body: updatedHook} = await req.put(`/webhook/${id}`, body);
 
@@ -98,7 +106,7 @@ describe("Webhook Controller", () => {
   it("should delete existing webhook", async () => {
     const {body: hook} = await req.post("/webhook", webhook);
 
-    const result = await req.delete(`/webhook/${hook._id}`);
+    const result = await req.delete(`/webhook/${idOf(hook)}`);
 
     expect(result.body).not.toBeTruthy();
     expect(result.statusCode).toBe(204);
@@ -107,22 +115,18 @@ describe("Webhook Controller", () => {
   it("should show existing webhook", async () => {
     const {body: hook} = await req.post("/webhook", webhook);
 
-    const {body: existingWebhook} = await req.get(`/webhook/${hook._id}`, undefined);
+    const {body: existingWebhook} = await req.get(`/webhook/${idOf(hook)}`, undefined);
     expect(existingWebhook).toEqual(hook);
   });
 
   it("should list collections", async () => {
+    const names = await module.get<CollectionNames>(COLLECTION_NAMES).list();
     const {body: collections} = await req.get("/webhook/collections", undefined);
-    expect(collections.map(c => c.id).sort((a, b) => a.localeCompare(b))).toEqual([
-      "coll1",
-      "coll2",
-      "webhook_logs"
-    ]);
-    expect(collections.map(c => c.slug).sort((a, b) => a.localeCompare(b))).toEqual([
-      "coll1",
-      "coll2",
-      "webhook_logs"
-    ]);
+
+    const ids = collections.map(c => c.id).sort((a, b) => a.localeCompare(b));
+    expect(ids).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+    expect(ids).toContain(collection);
+    expect(collections.map(c => c.slug).sort((a, b) => a.localeCompare(b))).toEqual(ids);
   });
 
   describe("validation", () => {
@@ -159,8 +163,8 @@ describe("Webhook Controller", () => {
       const {body: insertedWh} = await req.post("/webhook", webhook);
 
       insertedWh.body = "{{invali_body}";
-      const id = insertedWh._id;
-      delete insertedWh._id;
+      const id = idOf(insertedWh);
+      stripId(insertedWh);
 
       const {body: validationErrors} = await req.put(`/webhook/${id}`, insertedWh).catch(e => e);
       expect(validationErrors.statusCode).toBe(400);

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { TypeRepresenterValue } from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import { useGetPoliciesQuery } from "../store/api/policyApi";
+import { idOf } from "../utils/recordKey";
 
 export function usePolicyOptions() {
   const { data: policies } = useGetPoliciesQuery();
@@ -13,17 +14,17 @@ export function usePolicyOptions() {
     const labelById = new Map<string, string>();
     const idByLabel = new Map<string, string>();
     list.forEach((p) => {
-      const label = nameCounts.get(p.name)! > 1 ? `${p.name} (${p._id})` : p.name;
-      labelById.set(p._id, label);
-      idByLabel.set(label, p._id);
+      const label = nameCounts.get(p.name)! > 1 ? `${p.name} (${idOf(p)})` : p.name;
+      labelById.set(idOf(p)!, label);
+      idByLabel.set(label, idOf(p)!);
     });
 
     const idsToLabels = (ids: string[]) => ids.map((id) => labelById.get(id) ?? id);
     const labelsToIds = (labels: string[]) => labels.map((label) => idByLabel.get(label) ?? label);
 
     return {
-      policyOptions: list.map((p) => p._id),
-      policyLabels: list.map((p) => labelById.get(p._id)!),
+      policyOptions: list.map((p) => idOf(p)!),
+      policyLabels: list.map((p) => labelById.get(idOf(p)!)!),
       toInputValues: (values: TypeRepresenterValue) => ({
         ...values,
         policies: idsToLabels((values.policies as string[]) ?? []),

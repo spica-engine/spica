@@ -3,9 +3,6 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../database"
-    },
-    {
       "path": "../../secret/services"
     },
     {
@@ -18,7 +15,16 @@
       "path": "../../../interface/function"
     },
     {
+      "path": "../../../interface/env_var"
+    },
+    {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../env_var/services"
+    },
+    {
+      "path": "../../../data"
     }
   ],
   "compilerOptions": {

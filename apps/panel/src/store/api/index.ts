@@ -208,7 +208,6 @@ export type {
   Activity,
   ActivityListResponse,
   ActivityOptions,
-  ActivityFilterResource,
 } from './activitiesApi';
 
 export {

@@ -9,6 +9,7 @@ import Identity from "./pages/identity/Identity";
 import User from "./pages/user/User";
 import Diagram from "./pages/diagram/Diagram";
 import ProtectedRoute from "./components/guards/ProtectedRoute";
+import RequireFeature from "./components/guards/RequireFeature";
 import Storage from "./pages/storage/Storage";
 import StorageItem from "./pages/storage-view/StorageView";
 import Policy from "./pages/policy/Policy";
@@ -74,7 +75,11 @@ const router = createBrowserRouter(
         },
         {
           path: "passport/user/profile",
-          element: <Navigate to="/passport/observability/bucket" replace />
+          element: (
+            <RequireFeature feature="profiler">
+              <Navigate to="/passport/observability/bucket" replace />
+            </RequireFeature>
+          )
         },
         {
           path: "passport/policy",
@@ -156,11 +161,19 @@ const router = createBrowserRouter(
         },
         {
           path: "passport/observability/bucket",
-          element: <ObservabilityBucket />
+          element: (
+            <RequireFeature feature="profiler">
+              <ObservabilityBucket />
+            </RequireFeature>
+          )
         },
         {
           path: "passport/observability/user",
-          element: <Navigate to="/passport/observability/bucket" replace />
+          element: (
+            <RequireFeature feature="profiler">
+              <Navigate to="/passport/observability/bucket" replace />
+            </RequireFeature>
+          )
         }
       ]
     },

@@ -6,6 +6,7 @@
 import React, { useCallback } from "react";
 import { useUpdateWebhookMutation, type Webhook } from "../../../store/api/webhookApi";
 import styles from "../Webhook.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 type WebhookDetailsProps = {
   webhook: Webhook;
@@ -16,10 +17,10 @@ export const WebhookDetails: React.FC<WebhookDetailsProps> = ({ webhook }) => {
   const [updateWebhook] = useUpdateWebhookMutation();
 
   const handleToggleActive = useCallback(async () => {
-    if (!webhook._id) return;
+    if (!idOf(webhook)) return;
     try {
       await updateWebhook({
-        id: webhook._id,
+        id: idOf(webhook)!,
         body: {
           title: webhook.title,
           url: webhook.url,
@@ -54,7 +55,7 @@ export const WebhookDetails: React.FC<WebhookDetailsProps> = ({ webhook }) => {
       <div className={styles.detailGrid}>
         <div className={styles.detailCell}>
           <span className={styles.dcLabel}>Id</span>
-          <span className={`${styles.dcValue} ${styles.dcMono}`}>{webhook._id ?? "-"}</span>
+          <span className={`${styles.dcValue} ${styles.dcMono}`}>{idOf(webhook) ?? "-"}</span>
         </div>
         <div className={`${styles.detailCell} ${styles.detailCellRight}`}>
           <span className={styles.dcLabel}>Last Edit</span>

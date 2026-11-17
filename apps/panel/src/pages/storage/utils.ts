@@ -1,4 +1,8 @@
 import type {DirectoryItem, TypeDirectories} from "src/types/storage";
+import { idOf } from "../../utils/recordKey";
+import {compileStorageClause, escapeRegex, matchesName} from "../../utils/storageQuery";
+import type {FilterInput} from "../../utils/serializeFilter";
+import type {DataEngine} from "../../store/api/statusApi";
 
 export function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[]): T | undefined {
   return arr.reduce<T | undefined>((max, obj) => {
@@ -82,12 +86,12 @@ export function removeItemFromDirectory(
 ): TypeDirectories[0] {
   if (!dir.items) return dir;
 
-  const hasItem = dir.items.some(i => i._id === itemId);
+  const hasItem = dir.items.some(i => idOf(i) === itemId);
 
   if (hasItem) {
     return {
       ...dir,
-      items: dir.items.filter(i => i._id !== itemId)
+      items: dir.items.filter(i => idOf(i) !== itemId)
     };
   }
 
@@ -136,7 +140,7 @@ export function updateDirectoryLists({
   toPath
 }: DirectoryUpdateParams): TypeDirectories {
   return directory.map(dir => {
-    let updatedDir = removeItemFromDirectory(dir, item._id!);
+    let updatedDir = removeItemFromDirectory(dir, idOf(item)!);
     updatedDir = addItemToDirectory(updatedDir, toPath, item);
 
     if (dir.fullPath === item.fullPath) {
@@ -161,7 +165,8 @@ interface StorageUpdateParams {
   oldFullName: string;
   newFullName: string;
   updateStorageName: (params: {id: string; name: string}) => Promise<any>;
-  getStorageItems: (params: {filter: object}) => Promise<any>;
+  getStorageItems: (params: {filter: FilterInput}) => Promise<any>;
+  engine?: DataEngine;
 }
 
 async function updateDirectoryStorage({
@@ -169,21 +174,20 @@ async function updateDirectoryStorage({
   oldFullName,
   newFullName,
   updateStorageName,
-  getStorageItems
+  getStorageItems,
+  engine
 }: StorageUpdateParams): Promise<void> {
   if (!item.fullPath) return;
   const normalizedPath = oldFullName.startsWith("/") ? oldFullName.slice(1) : oldFullName;
   const subResources =
     (await getStorageItems({
-      filter: {
-        name: {$regex: `^${normalizedPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`}
-      }
+      filter: compileStorageClause(engine, matchesName(`^${escapeRegex(normalizedPath)}`))!
     })) || [];
 
   const updates = subResources.map((storage: any) => {
     const updatedName = storage.name.replace(normalizedPath, newFullName);
     return updateStorageName({
-      id: storage._id,
+      id: idOf(storage)!,
       name: updatedName
     });
   });
@@ -196,10 +200,10 @@ async function updateFileStorage({
   newFullName,
   updateStorageName
 }: Omit<StorageUpdateParams, "oldFullName" | "getStorageItems">): Promise<void> {
-  if (!item._id) return;
+  if (!idOf(item)) return;
 
   await updateStorageName({
-    id: item._id,
+    id: idOf(item)!,
     name: newFullName
   });
 }
@@ -209,7 +213,8 @@ export async function updateStorageNames(
   oldFullName: string,
   newFullName: string,
   updateStorageName: (params: {id: string; name: string}) => Promise<any>,
-  getStorageItems: (params: {filter: object}) => Promise<any>
+  getStorageItems: (params: {filter: FilterInput}) => Promise<any>,
+  engine?: DataEngine
 ): Promise<void> {
   const isDirectory = item.content?.type === "inode/directory";
 
@@ -219,7 +224,8 @@ export async function updateStorageNames(
       oldFullName,
       newFullName,
       updateStorageName,
-      getStorageItems
+      getStorageItems,
+      engine
     });
   } else {
     await updateFileStorage({

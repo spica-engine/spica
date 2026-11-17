@@ -10,6 +10,7 @@ import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import EntryForm from "./EntryForm";
 import DeleteConfirmation from "./DeleteConfirmation";
 import styles from "../SecretsAndVariables.module.scss";
+import { idOf } from "../../../utils/recordKey";
 
 type VariablesTabProps = {
   isNewOpen?: boolean;
@@ -69,7 +70,7 @@ const VariablesTab = ({ isNewOpen, onNewClose, onCountChange }: VariablesTabProp
   const handleConfirmDelete = useCallback(async () => {
     if (!variableToDelete) return;
     try {
-      await deleteEnvVar(variableToDelete._id).unwrap();
+      await deleteEnvVar(idOf(variableToDelete)!).unwrap();
       setVariableToDelete(null);
     } catch {
       // Error handled by RTK Query

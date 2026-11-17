@@ -8,5 +8,9 @@
     "src/**/*.ts",
     "index.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../data"
+    }
+  ]
 }

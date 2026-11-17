@@ -5,12 +5,15 @@ import {Icon, type IconName, createTheme} from "oziko-ui-kit";
 import Logo from "../../atoms/logo/Logo";
 import {getNavigationComponent} from "../../../components/prefabs/navigations/navigation-registry";
 import {sideBarItems, type SideBarItem} from "../../../pages/home/sidebarItems";
+import {useEngine} from "../../../hooks/useEngine";
+import {isFeatureAvailable} from "../../../utils/engineFeatures";
 
 const pathToSidebarId: Array<[RegExp, string]> = [
   [/^\/bucket/, "bucket"],
   [/^\/function/, "function"],
   [/^\/passport\/observability/, "observability"],
   [/^\/activity/, "observability"],
+  [/^\/activity/, "accessManagement"],
   [/^\/passport/, "accessManagement"],
   [/^\/config/, "config"],
   [/^\/webhook/, "webhook"],
@@ -21,14 +24,14 @@ const pathToSidebarId: Array<[RegExp, string]> = [
   [/^\/dashboard/, "dashboard"],
 ];
 
-const getActiveItemFromPath = (pathname: string): SideBarItem => {
+const getActiveItemFromPath = (pathname: string, items: SideBarItem[]): SideBarItem => {
   for (const [pattern, id] of pathToSidebarId) {
     if (pattern.test(pathname)) {
-      const found = sideBarItems.find(i => i.id === id);
+      const found = items.find(i => i.id === id);
       if (found) return found;
     }
   }
-  return sideBarItems.find(i => !i.separator) ?? sideBarItems[0];
+  return items.find(i => !i.separator) ?? items[0];
 };
 
 type TypeSideBar = {
@@ -108,9 +111,14 @@ const SideBar: FC<TypeSideBar> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const engine = useEngine();
+  const availableItems = useMemo(
+    () => sideBarItems.filter(item => !item.feature || isFeatureAvailable(item.feature, engine)),
+    [engine]
+  );
   const [showNavigator, setShowNavigator] = useState(true);
   const [activeSideBarItem, setActiveSideBarItem] = useState<SideBarItem>(
-    () => getActiveItemFromPath(location.pathname)
+    () => getActiveItemFromPath(location.pathname, availableItems)
   );
   const [isDark, setIsDark] = useState<boolean>(
     () => localStorage.getItem("themeMode") === "dark"
@@ -121,13 +129,13 @@ const SideBar: FC<TypeSideBar> = ({
   }, []);
 
   useEffect(() => {
-    setActiveSideBarItem(getActiveItemFromPath(location.pathname));
-  }, [location.pathname]);
+    setActiveSideBarItem(getActiveItemFromPath(location.pathname, availableItems));
+  }, [location.pathname, availableItems]);
 
   const {mainItems, bottomItems} = useMemo(() => {
     const main: SideBarItem[] = [];
     const bottom: SideBarItem[] = [];
-    for (const item of sideBarItems) {
+    for (const item of availableItems) {
       if (item.position === "bottom") {
         bottom.push(item);
       } else {
@@ -135,7 +143,7 @@ const SideBar: FC<TypeSideBar> = ({
       }
     }
     return {mainItems: main, bottomItems: bottom};
-  }, []);
+  }, [availableItems]);
 
   const handleItemClick = (item: SideBarItem) => {
     setShowNavigator(true);

@@ -1,25 +1,34 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {
+  COLLECTION_QUERY,
+  CollectionQueryFacade,
+  ID_TYPES,
+  IdTypes
+} from "@spica-server/interface-data";
+import {contractSuite, waitForMongoIndexes} from "@spica-server/database-testing";
 import {SecretService, ServicesModule} from "@spica-server/secret-services";
 import {isEncryptedData} from "@spica-server/core-encryption";
 import * as CRUD from "../src/crud";
 import {NotFoundException, INestApplication} from "@nestjs/common";
+import {idOf, withId, systemKeyField} from "@spica-server/data";
 
 const ENCRYPTION_SECRET = "test-encryption-secret-32chars!!";
 
-describe("Secret CRUD", () => {
+contractSuite("Secret CRUD", engine => {
   let ss: SecretService;
+  let queries: CollectionQueryFacade;
+  let newId: () => any;
   let app: INestApplication;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [
-        DatabaseTestingModule.standalone(),
-        ServicesModule.forRoot({encryptionSecret: ENCRYPTION_SECRET})
-      ]
+      imports: [engine.module(), ServicesModule.forRoot({encryptionSecret: ENCRYPTION_SECRET})]
     }).compile();
+    await waitForMongoIndexes(engine, module, {secret: ["key_1"]});
 
     ss = module.get(SecretService);
+    queries = module.get(COLLECTION_QUERY);
+    newId = () => module.get<IdTypes>(ID_TYPES).forCollection("secret").generate();
     app = module.createNestApplication();
     await app.init();
   });
@@ -30,7 +39,7 @@ describe("Secret CRUD", () => {
     it("should insert a secret and return it without value", async () => {
       const result = await CRUD.insert(ss, {key: "API_KEY", value: "my-secret-value"});
 
-      expect(result._id).toBeDefined();
+      expect(idOf(result)).toBeDefined();
       expect(result.key).toBe("API_KEY");
       expect((result as any).value).toBeUndefined();
     });
@@ -38,7 +47,7 @@ describe("Secret CRUD", () => {
     it("should store the value as encrypted in the database", async () => {
       const result = await CRUD.insert(ss, {key: "DB_PASS", value: "plaintext-password"});
 
-      const raw = await ss.findOne({_id: result._id});
+      const raw = await ss.findById(idOf(result));
 
       expect(raw.value).toBeDefined();
       expect(raw.value).not.toBe("plaintext-password");
@@ -48,15 +57,11 @@ describe("Secret CRUD", () => {
       expect(raw.value.authTag).toBeDefined();
     });
 
-    it("should accept a custom _id", async () => {
-      const customId = new ObjectId();
-      const result = await CRUD.insert(ss, {
-        _id: customId,
-        key: "CUSTOM_ID_KEY",
-        value: "val"
-      });
+    it("should accept a custom id", async () => {
+      const customId = newId();
+      const result = await CRUD.insert(ss, withId({key: "CUSTOM_ID_KEY", value: "val"}, customId));
 
-      expect(result._id.toHexString()).toBe(customId.toHexString());
+      expect(String(idOf(result))).toBe(String(customId));
       expect(result.key).toBe("CUSTOM_ID_KEY");
       expect((result as any).value).toBeUndefined();
     });
@@ -64,7 +69,7 @@ describe("Secret CRUD", () => {
     it("should set updated_at as a Date on insert", async () => {
       const result = await CRUD.insert(ss, {key: "TS_KEY", value: "val"});
 
-      const raw = await ss.findOne({_id: result._id});
+      const raw = await ss.findById(idOf(result));
       expect(raw.updated_at).toBeInstanceOf(Date);
     });
 
@@ -77,10 +82,12 @@ describe("Secret CRUD", () => {
         injected: "nope"
       } as any);
 
-      const raw = await ss.findOne({_id: result._id});
+      const raw = await ss.findById(idOf(result));
       expect(raw.updated_at).not.toEqual(clientTimestamp);
       expect((raw as any).injected).toBeUndefined();
-      expect(Object.keys(raw).sort()).toEqual(["_id", "key", "updated_at", "value"]);
+      expect(Object.keys(raw).sort()).toEqual(
+        [systemKeyField(), "key", "updated_at", "value"].sort()
+      );
     });
   });
 
@@ -88,17 +95,17 @@ describe("Secret CRUD", () => {
     it("should return a secret by id with value hidden", async () => {
       const inserted = await CRUD.insert(ss, {key: "SECRET_KEY", value: "secret123"});
 
-      const found = await CRUD.findOne(ss, inserted._id);
+      const found = await CRUD.findOne(queries, idOf(inserted));
 
-      expect(found._id).toEqual(inserted._id);
+      expect(idOf(found)).toEqual(idOf(inserted));
       expect(found.key).toBe("SECRET_KEY");
       expect((found as any).value).toBeUndefined();
     });
 
     it("should throw NotFoundException for non-existent id", async () => {
-      const nonExistentId = new ObjectId();
+      const nonExistentId = newId();
 
-      await expect(CRUD.findOne(ss, nonExistentId)).rejects.toThrow(NotFoundException);
+      await expect(CRUD.findOne(queries, nonExistentId)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -110,7 +117,7 @@ describe("Secret CRUD", () => {
     });
 
     it("should return all secrets with values hidden", async () => {
-      const results = (await CRUD.find(ss, {
+      const results = (await CRUD.find(queries, {
         limit: 0,
         skip: 0,
         paginate: false
@@ -120,12 +127,12 @@ describe("Secret CRUD", () => {
       results.forEach(s => {
         expect(s.key).toBeDefined();
         expect(s.value).toBeUndefined();
-        expect(s._id).toBeDefined();
+        expect(idOf(s)).toBeDefined();
       });
     });
 
     it("should support limit and skip", async () => {
-      const results = (await CRUD.find(ss, {
+      const results = (await CRUD.find(queries, {
         limit: 1,
         skip: 1,
         sort: {key: 1},
@@ -138,10 +145,10 @@ describe("Secret CRUD", () => {
     });
 
     it("should support pagination", async () => {
-      const result = (await CRUD.find(ss, {
+      const result = (await CRUD.find(queries, {
         limit: 0,
         skip: 0,
-        sort: {_id: -1},
+        sort: {[systemKeyField()]: -1},
         paginate: true
       })) as any;
 
@@ -153,11 +160,11 @@ describe("Secret CRUD", () => {
     });
 
     it("should filter by key", async () => {
-      const results = (await CRUD.find(ss, {
+      const results = (await CRUD.find(queries, {
         limit: 0,
         skip: 0,
         paginate: false,
-        filter: {key: "KEY_B"}
+        filter: engine.name == "postgresql" ? "document.key == 'KEY_B'" : {key: "KEY_B"}
       })) as any[];
 
       expect(results.length).toBe(1);
@@ -169,12 +176,12 @@ describe("Secret CRUD", () => {
     it("should replace a secret and return it without value", async () => {
       const inserted = await CRUD.insert(ss, {key: "OLD_KEY", value: "old_val"});
 
-      const replaced = await CRUD.replace(ss, inserted._id, {
+      const replaced = await CRUD.replace(ss, idOf(inserted), {
         key: "NEW_KEY",
         value: "new_val"
       });
 
-      expect(replaced._id).toEqual(inserted._id);
+      expect(idOf(replaced)).toEqual(idOf(inserted));
       expect(replaced.key).toBe("NEW_KEY");
       expect((replaced as any).value).toBeUndefined();
     });
@@ -182,16 +189,16 @@ describe("Secret CRUD", () => {
     it("should store replaced value as encrypted in the database", async () => {
       const inserted = await CRUD.insert(ss, {key: "REPLACE_KEY", value: "old_value"});
 
-      await CRUD.replace(ss, inserted._id, {key: "REPLACE_KEY", value: "updated_value"});
+      await CRUD.replace(ss, idOf(inserted), {key: "REPLACE_KEY", value: "updated_value"});
 
-      const raw = await ss.findOne({_id: inserted._id});
+      const raw = await ss.findById(idOf(inserted));
 
       expect(raw.value).not.toBe("updated_value");
       expect(isEncryptedData(raw.value)).toBe(true);
     });
 
     it("should throw NotFoundException for non-existent id", async () => {
-      const nonExistentId = new ObjectId();
+      const nonExistentId = newId();
 
       await expect(CRUD.replace(ss, nonExistentId, {key: "KEY", value: "val"})).rejects.toThrow(
         NotFoundException
@@ -200,10 +207,10 @@ describe("Secret CRUD", () => {
 
     it("should refresh updated_at on replace", async () => {
       const inserted = await CRUD.insert(ss, {key: "TS_KEY", value: "old"});
-      const before = await ss.findOne({_id: inserted._id});
+      const before = await ss.findById(idOf(inserted));
 
-      await CRUD.replace(ss, inserted._id, {key: "TS_KEY", value: "new"});
-      const after = await ss.findOne({_id: inserted._id});
+      await CRUD.replace(ss, idOf(inserted), {key: "TS_KEY", value: "new"});
+      const after = await ss.findById(idOf(inserted));
 
       expect(after.updated_at).toBeInstanceOf(Date);
       expect(after.updated_at.getTime()).toBeGreaterThanOrEqual(before.updated_at.getTime());
@@ -214,9 +221,9 @@ describe("Secret CRUD", () => {
     it("should remove a secret", async () => {
       const inserted = await CRUD.insert(ss, {key: "TO_DELETE", value: "val"});
 
-      await CRUD.remove(ss, inserted._id);
+      await CRUD.remove(ss, idOf(inserted));
 
-      const all = (await CRUD.find(ss, {
+      const all = (await CRUD.find(queries, {
         limit: 0,
         skip: 0,
         paginate: false
@@ -226,7 +233,7 @@ describe("Secret CRUD", () => {
     });
 
     it("should throw NotFoundException for non-existent id", async () => {
-      const nonExistentId = new ObjectId();
+      const nonExistentId = newId();
 
       await expect(CRUD.remove(ss, nonExistentId)).rejects.toThrow(NotFoundException);
     });

@@ -8,6 +8,7 @@ import type {DirectoryItem} from "src/types/storage";
 import {generatePublicFileUrl} from "../utils";
 import {getParentPath} from "../../../../pages/storage/utils";
 import {ROOT_PATH} from "../../../../pages/storage/constants";
+import { idOf } from "../../../../utils/recordKey";
 
 interface FileOperationsConfig {
   serverUrl: string;
@@ -84,9 +85,9 @@ export function useFileActions(
 
   const handleCopyUrl = useCallback(
     async (file: DirectoryItem) => {
-      if (!file._id || !file.url) return;
+      if (!idOf(file) || !file.url) return;
 
-      const publicUrl = generatePublicFileUrl(file._id, file.url, {serverUrl, origin});
+      const publicUrl = generatePublicFileUrl(idOf(file)!, file.url, {serverUrl, origin});
 
       try {
         await navigator.clipboard.writeText(publicUrl);
@@ -101,7 +102,7 @@ export function useFileActions(
     (event: React.ChangeEvent<HTMLInputElement>, originalFile: DirectoryItem) => {
       const files = event.target.files;
       if (!files || files.length === 0) return;
-      if (!originalFile?._id) return;
+      if (!idOf(originalFile)) return;
 
       const newFile = files[0];
       const parentPath = getParentPath(originalFile.fullPath);
@@ -110,7 +111,7 @@ export function useFileActions(
       const temporaryFile = createTemporaryFileItem(originalFile, newFile, fullPath);
       onFileReplaced?.(temporaryFile);
 
-      updateStorageItem({id: originalFile._id, file: uploadFile})
+      updateStorageItem({id: idOf(originalFile)!, file: uploadFile})
         .unwrap()
         .then((updatedFile: any) => {
           if (!updatedFile) {

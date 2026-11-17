@@ -18,6 +18,7 @@ import {
 import type {Dashboard} from "../../../../store/api/dashboardApi";
 import EditDashboard from "../../edit-dashboard/EditDashboard";
 import Confirmation from "../../../molecules/confirmation/Confirmation";
+import { idOf } from "../../../../utils/recordKey";
 
 const DashboardNavigation = () => {
   const navigate = useNavigate();
@@ -39,8 +40,8 @@ const DashboardNavigation = () => {
 
   const handleCreated = useCallback(
     (dashboard: Dashboard) => {
-      if (dashboard._id) {
-        navigate(`/dashboard/${dashboard._id}`);
+      if (idOf(dashboard)) {
+        navigate(`/dashboard/${idOf(dashboard)!}`);
       }
     },
     [navigate]
@@ -54,13 +55,13 @@ const DashboardNavigation = () => {
   }, []);
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!deletingDashboard?._id) return;
+    if (!idOf(deletingDashboard)) return;
     try {
-      await deleteDashboard(deletingDashboard._id).unwrap();
+      await deleteDashboard(idOf(deletingDashboard)!).unwrap();
       setDeletingDashboard(null);
 
       // If we deleted the active dashboard, navigate to home
-      if (deletingDashboard._id === activeDashboardId) {
+      if (idOf(deletingDashboard) === activeDashboardId) {
         navigate("/dashboard");
       }
     } catch (err: any) {
@@ -108,12 +109,12 @@ const DashboardNavigation = () => {
           }
 
           return filteredDashboards.map(dashboard => {
-            const isActive = dashboard._id === activeDashboardId;
+            const isActive = idOf(dashboard) === activeDashboardId;
 
             return (
               <Link
-                key={dashboard._id}
-                to={`/dashboard/${dashboard._id}`}
+                key={idOf(dashboard)!}
+                to={`/dashboard/${idOf(dashboard)!}`}
                 className={`${dashboardStyles.dashboardLink} ${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
               >
                 <Icon name="dashboard" size="md" />

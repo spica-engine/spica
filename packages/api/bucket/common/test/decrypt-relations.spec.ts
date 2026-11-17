@@ -1,10 +1,14 @@
 import {decryptDocumentFields} from "@spica-server/bucket-common";
+import {bindIdTypes} from "@spica-server/data";
 import {encrypt} from "@spica-server/core-schema";
 import {Bucket} from "@spica-server/interface-bucket";
 import {RelationType} from "@spica-server/interface-bucket-common";
+import {IdTypes} from "@spica-server/interface-data";
 
 describe("Decrypt Relations", () => {
   const ENCRYPTION_SECRET = "01234567890123456789012345678901";
+
+  beforeAll(() => bindIdTypes({keyField: () => "ref"} as unknown as IdTypes));
 
   function createSchemaResolver(schemas: Map<string, Bucket>) {
     return (bucketId: string): Bucket => {
@@ -39,10 +43,10 @@ describe("Decrypt Relations", () => {
       const encryptedSSN = encrypt("123-45-6789", ENCRYPTION_SECRET);
 
       const documentWithRelation = {
-        _id: "post1",
+        ref: "post1",
         title: "My Post",
         author: {
-          _id: "user1",
+          ref: "user1",
           name: "John Doe",
           ssn: encryptedSSN
         }
@@ -88,7 +92,7 @@ describe("Decrypt Relations", () => {
       schemas.set("user_bucket_id", userSchema);
 
       const documentWithNullRelation = {
-        _id: "post1",
+        ref: "post1",
         title: "My Post",
         author: null
       };
@@ -129,16 +133,16 @@ describe("Decrypt Relations", () => {
       const encryptedEmail2 = encrypt("jane@example.com", ENCRYPTION_SECRET);
 
       const documentWithRelations = {
-        _id: "post1",
+        ref: "post1",
         title: "My Post",
         comments: [
           {
-            _id: "comment1",
+            ref: "comment1",
             text: "Great post!",
             email: encryptedEmail1
           },
           {
-            _id: "comment2",
+            ref: "comment2",
             text: "Thanks for sharing",
             email: encryptedEmail2
           }
@@ -186,7 +190,7 @@ describe("Decrypt Relations", () => {
       schemas.set("comment_bucket_id", commentSchema);
 
       const documentWithEmptyRelations = {
-        _id: "post1",
+        ref: "post1",
         title: "My Post",
         comments: []
       };
@@ -240,20 +244,20 @@ describe("Decrypt Relations", () => {
       const encryptedCard2 = encrypt("5500-0000-0000-0004", ENCRYPTION_SECRET);
 
       const documentWithNestedRelations = {
-        _id: "post1",
+        ref: "post1",
         title: "My Post",
         author: {
-          _id: "user1",
+          ref: "user1",
           name: "John Doe",
           ssn: encryptedSSN,
           wallets: [
             {
-              _id: "wallet1",
+              ref: "wallet1",
               brand: "Visa",
               card_number: encryptedCard1
             },
             {
-              _id: "wallet2",
+              ref: "wallet2",
               brand: "MasterCard",
               card_number: encryptedCard2
             }
@@ -308,11 +312,11 @@ describe("Decrypt Relations", () => {
       const encryptedEmail = encrypt("author@example.com", ENCRYPTION_SECRET);
 
       const document = {
-        _id: "post1",
+        ref: "post1",
         title: "My Post",
         draft_content: encryptedDraft,
         author: {
-          _id: "user1",
+          ref: "user1",
           name: "John Doe",
           email: encryptedEmail
         }
@@ -361,10 +365,10 @@ describe("Decrypt Relations", () => {
       const encryptedApiKey = encrypt("secret-api-key-12345", ENCRYPTION_SECRET);
 
       const document = {
-        _id: "post1",
+        ref: "post1",
         title: "My Post",
         author: {
-          _id: "user1",
+          ref: "user1",
           name: "John Doe",
           credentials: {
             username: "johndoe",
@@ -403,10 +407,10 @@ describe("Decrypt Relations", () => {
       } as unknown as Bucket;
 
       const document = {
-        _id: "post1",
+        ref: "post1",
         title: "My Post",
         author: {
-          _id: "user1",
+          ref: "user1",
           name: "John Doe",
           ssn: encrypt("123-45-6789", ENCRYPTION_SECRET)
         }
@@ -450,10 +454,10 @@ describe("Decrypt Relations", () => {
       const encryptedSecret = encrypt("my-secret", ENCRYPTION_SECRET);
 
       const document = {
-        _id: "post1",
+        ref: "post1",
         title: "My Post",
         author: {
-          _id: "user1",
+          ref: "user1",
           name: "John Doe",
           secret: encryptedSecret
         }
@@ -493,10 +497,10 @@ describe("Decrypt Relations", () => {
       } as unknown as Bucket;
 
       const document = {
-        _id: "post1",
+        ref: "post1",
         title: "My Post",
         author: {
-          _id: "user1",
+          ref: "user1",
           name: "John Doe",
           secret: {
             encrypted: "invalid-data",

@@ -30,7 +30,7 @@ function planOf(mod: ResourceModule, entries: Partial<PlanEntry>[], kind: Change
 
 describe("function module", () => {
   it("reads every function with at most `concurrency` requests in flight", async () => {
-    const functions = Array.from({length: 12}, (_, i) => ({_id: `id${i}`, name: `fn${i}`}));
+    const functions = Array.from({length: 12}, (_, i) => ({id: `id${i}`, name: `fn${i}`}));
     const tracking = createTrackingHttp((_, url) => {
       if (url === "function") return functions;
       return url.endsWith("/index") ? {index: "export default () => {}"} : [];

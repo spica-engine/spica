@@ -1,24 +1,26 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database-testing";
-import {CommandMemory, CommandService} from "@spica-server/replication";
+import {changeFeedReady, contractSuite} from "@spica-server/database-testing";
+import {CommandMemory} from "@spica-server/replication";
+import {provideRepository, idOf, withId} from "@spica-server/data";
 import {
   COMMAND_MEMORY_OPTIONS,
+  COMMAND_REPOSITORY,
   REPLICATION_SERVICE_OPTIONS
 } from "@spica-server/interface-replication";
 
-describe("Memory", () => {
+contractSuite("Memory", engine => {
   describe("Command", () => {
     let module: TestingModule;
     let memory: CommandMemory;
 
     beforeEach(async () => {
       module = await Test.createTestingModule({
-        imports: [DatabaseTestingModule.replicaSet()],
+        imports: [engine.module()],
         providers: [
           {provide: COMMAND_MEMORY_OPTIONS, useValue: {changeType: ["insert"]}},
           {provide: REPLICATION_SERVICE_OPTIONS, useValue: {expireAfterSeconds: 60}},
           CommandMemory,
-          CommandService
+          provideRepository(COMMAND_REPOSITORY)
         ]
       }).compile();
 
@@ -35,24 +37,28 @@ describe("Memory", () => {
       };
       memory.subscribe({
         next: msg => {
-          expect(ObjectId.isValid(msg._id)).toEqual(true);
-          expect(msg).toEqual({
-            _id: msg._id,
-            created_at: expect.any(Date),
-            source: {
-              id: "replica1",
-              command
-            },
-            target: {
-              commands: [command],
-              id: "replica2"
-            }
-          });
+          expect(idOf(msg)).toBeDefined();
+          expect(msg).toEqual(
+            withId(
+              {
+                created_at: expect.any(Date),
+                source: {
+                  id: "replica1",
+                  command
+                },
+                target: {
+                  commands: [command],
+                  id: "replica2"
+                }
+              },
+              idOf(msg)
+            )
+          );
           done();
         }
       });
 
-      stream.wait().then(() =>
+      changeFeedReady(module).then(() =>
         memory.publish({
           source: {
             id: "replica1",

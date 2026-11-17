@@ -1,0 +1,181 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: engine switch
+templates:
+  - templates/application.yaml
+  - templates/applicationsecrets.yaml
+  - templates/database.yaml
+  - templates/databasesecrets.yaml
+  - templates/databasesrv.yaml
+  - templates/databasereplication.yaml
+  - templates/initdb.yaml
+  - templates/migrate.yaml
+  - templates/postgres.yaml
+  - templates/postgressecrets.yaml
+  - templates/postgresinitdb.yaml
+  - templates/postgressrv.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.masterKey: test-master-key
+  application.publicHost: https://test.example.com
+
+tests:
+  - it: should not pass an engine to the api by default
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-type"
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-replica-set"
+
+  - it: should give the api mongodb credentials by default
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: MONGODB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-spica-credentials
+                key: spicaUsername
+
+  - it: should start the api against the in-cluster postgres service
+    template: templates/application.yaml
+    set:
+      database.type: postgresql
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: postgres://release-name-database.default.svc.cluster.local:5432/spica
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-type"
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: postgresql
+      - notContains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-replica-set"
+
+  - it: should give the api the unprivileged spica credentials
+    template: templates/application.yaml
+    set:
+      database.type: postgresql
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: POSTGRES_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-spica-credentials
+                key: spicaUsername
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-spica-credentials
+                key: spicaPassword
+      - notContains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: MONGODB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-spica-credentials
+                key: spicaUsername
+
+  - it: should keep the mongodb resources when database.type is not set
+    set:
+      database.type: null
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/database.yaml
+      - hasDocuments:
+          count: 3
+        template: templates/databasesecrets.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/databasesrv.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/databasereplication.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/initdb.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/postgres.yaml
+
+  - it: should refuse an unknown engine
+    template: templates/postgressrv.yaml
+    set:
+      database.type: postgres
+    asserts:
+      - failedTemplate:
+          errorPattern: 'database.type must be mongodb or postgresql, got "postgres"'
+
+  - it: should default the mongodb image tag to 8.0.4
+    template: templates/database.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: mongo:8.0.4
+
+  - it: should render no mongodb resources for postgresql
+    set:
+      database.type: postgresql
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/database.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/databasesecrets.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/databasesrv.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/databasereplication.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/initdb.yaml
+
+  - it: should run the migrate job on upgrade for postgresql
+    template: templates/migrate.yaml
+    release:
+      upgrade: true
+    set:
+      database.type: postgresql
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should still run the migrate job on upgrade for mongodb
+    template: templates/migrate.yaml
+    release:
+      upgrade: true
+    asserts:
+      - hasDocuments:
+          count: 1

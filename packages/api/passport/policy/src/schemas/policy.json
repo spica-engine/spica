@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["name", "description", "statement"],
   "properties": {
-    "_id": {
+    "$systemKey": {
       "type": "string",
       "format": "objectid",
       "description": "Unique objectid of the policy"

@@ -1,6 +1,19 @@
+import {provideRepository, withId, idOf} from "@spica-server/data";
+import {
+  COLLECTION_NAMES,
+  COLLECTION_QUERY,
+  CollectionNames,
+  ID_TYPES,
+  IdTypes
+} from "@spica-server/interface-data";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, ObjectId} from "@spica-server/database";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {
+  contractSuite,
+  ensureCollections,
+  QuietChangeFeedModule
+} from "@spica-server/database-testing";
+import {ENV_VAR_REPOSITORY} from "@spica-server/interface-env_var";
+import {SECRET_REPOSITORY} from "@spica-server/interface-secret";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {PlanExecutor} from "@spica-server/function/src/plan-executor";
@@ -9,7 +22,12 @@ import {FunctionPreparationService} from "@spica-server/function/src/function-pr
 import {FunctionService} from "@spica-server/function-services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService, EnvVarChangeDispatcher} from "@spica-server/env_var-services";
-import {ChangeKind} from "@spica-server/interface-function";
+import {
+  ChangeKind,
+  FUNCTION_OPTIONS,
+  FUNCTION_REPOSITORY,
+  FunctionRepository
+} from "@spica-server/interface-function";
 import {SecretService, SecretChangeDispatcher} from "@spica-server/secret-services";
 import {encrypt} from "@spica-server/core-encryption";
 import {getFreeAddress} from "@spica-server/core-testing";
@@ -22,22 +40,23 @@ function envMap(context: any): {[key: string]: unknown} {
   }, {});
 }
 
-describe("Engine", () => {
+contractSuite("Engine", contract => {
   let engine: FunctionEngine;
   let executor: PlanExecutor;
   let subscribeSpy: jest.SpyInstance;
   let unsubscribeSpy: jest.SpyInstance;
 
   let scheduler: Scheduler;
-  let database: DatabaseService;
   let fs: FunctionService;
+  let functions: FunctionRepository;
   let evs: EnvVarService;
   let ss: SecretService;
 
   let module: TestingModule;
   let app: INestApplication;
 
-  const hexString = "507f1f77bcf86cd799439011";
+  let functionKey: any;
+  let functionId: string;
 
   beforeEach(async () => {
     process.env.FUNCTION_GRPC_ADDRESS = await getFreeAddress();
@@ -63,38 +82,57 @@ describe("Engine", () => {
           spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
           tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
         }),
-        DatabaseTestingModule.replicaSet()
+        contract.module(),
+        QuietChangeFeedModule
+      ],
+      providers: [
+        {provide: FUNCTION_OPTIONS, useValue: {entryLimit: 4}},
+        provideRepository(ENV_VAR_REPOSITORY),
+        provideRepository(SECRET_REPOSITORY),
+        provideRepository(FUNCTION_REPOSITORY)
       ]
     }).compile();
 
     app = module.createNestApplication();
 
     scheduler = module.get(Scheduler);
-    database = module.get(DatabaseService);
+    functionKey = module.get<IdTypes>(ID_TYPES).forCollection("function").generate();
+    functionId = String(functionKey);
 
-    evs = new EnvVarService(database, new EnvVarChangeDispatcher());
-    ss = new SecretService(database, "test-encryption-secret", new SecretChangeDispatcher());
+    evs = new EnvVarService(module.get(ENV_VAR_REPOSITORY), new EnvVarChangeDispatcher());
+    ss = new SecretService(
+      module.get(SECRET_REPOSITORY),
+      "test-encryption-secret",
+      new SecretChangeDispatcher()
+    );
 
-    fs = new FunctionService(database, evs, ss, {} as any);
+    functions = module.get(FUNCTION_REPOSITORY);
+    fs = new FunctionService(functions, evs, ss);
 
     const options = {root: "test_root", timeout: 1, outDir: ".build"} as any;
     executor = new PlanExecutor(
-      fs,
+      module.get(COLLECTION_QUERY),
       scheduler,
       (val => val) as any,
       options,
-      new TriggerSecretResolver(fs, (val => val) as any),
+      new TriggerSecretResolver(module.get(COLLECTION_QUERY), (val => val) as any),
       new FunctionPreparationService(scheduler, options)
     );
     engine = new FunctionEngine(
       fs,
-      database,
+      module.get(COLLECTION_NAMES),
       scheduler,
       undefined,
       options,
       undefined,
       undefined,
-      executor
+      executor,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      functions
     );
 
     await app.init();
@@ -114,14 +152,18 @@ describe("Engine", () => {
   });
 
   it("should unregister triggers on module destroy", async () => {
-    await fs.insertOne({
-      _id: new ObjectId(hexString),
-      env_vars: [],
-      language: "js",
-      timeout: 10,
-      name: "my_fn",
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
+    await functions.insert(
+      withId(
+        {
+          env_vars: [],
+          language: "js",
+          timeout: 10,
+          name: "my_fn",
+          triggers: {test_handler: {active: true, options: {}, type: "http"}}
+        },
+        functionKey
+      )
+    );
 
     await engine.onModuleDestroy();
 
@@ -130,7 +172,7 @@ describe("Engine", () => {
       kind: ChangeKind.Removed,
       options: {},
       type: "http",
-      target: {id: hexString, handler: "test_handler", name: "my_fn"}
+      target: {id: functionId, handler: "test_handler", name: "my_fn"}
     });
   });
 
@@ -140,43 +182,51 @@ describe("Engine", () => {
     // fresh replacements warm), not a hard outdateWorkers.
     const supersedeSpy = jest.spyOn(scheduler, "supersedeWorkers");
 
-    const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
-    const fnId = new ObjectId(hexString);
-    await fs.insertOne({
-      _id: fnId,
-      env_vars: [env._id],
-      language: "js",
-      timeout: 10,
-      name: "my_fn",
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
+    const env = await evs.insert(withId({key: "IGNORE_ME", value: "NO"}, undefined));
+    const fnId = functionKey;
+    await functions.insert(
+      withId(
+        {
+          env_vars: [idOf(env)],
+          language: "js",
+          timeout: 10,
+          name: "my_fn",
+          triggers: {test_handler: {active: true, options: {}, type: "http"}}
+        },
+        fnId
+      )
+    );
 
-    await evs.findOneAndUpdate({_id: env._id}, {$set: {value: "YES"}});
+    await evs.updateById(idOf(env), {value: "YES"});
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     expect(subscribeSpy).not.toHaveBeenCalled();
     expect(unsubscribeSpy).not.toHaveBeenCalled();
 
-    expect(supersedeSpy.mock.calls.at(-1)[0].toObject().id).toBe(hexString);
+    expect(supersedeSpy.mock.calls.at(-1)[0].toObject().id).toBe(functionId);
     expect(envMap(contextSpy.mock.calls.at(-1)[1])).toEqual({IGNORE_ME: "YES"});
   });
 
   it("should clear the env relation and context when an env var is removed", async () => {
     const contextSpy = jest.spyOn(scheduler, "reconcileContext");
 
-    const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
-    const fnId = new ObjectId(hexString);
-    await fs.insertOne({
-      _id: fnId,
-      env_vars: [env._id],
-      language: "js",
-      timeout: 10,
-      name: "my_fn",
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
+    const env = await evs.insert(withId({key: "IGNORE_ME", value: "NO"}, undefined));
+    const fnId = functionKey;
+    await functions.insert(
+      withId(
+        {
+          env_vars: [idOf(env)],
+          language: "js",
+          timeout: 10,
+          name: "my_fn",
+          triggers: {test_handler: {active: true, options: {}, type: "http"}}
+        },
+        fnId
+      )
+    );
 
-    await evs.findOneAndDelete({_id: env._id});
+    await evs.deleteById(idOf(env));
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -184,7 +234,7 @@ describe("Engine", () => {
     expect(unsubscribeSpy).not.toHaveBeenCalled();
     expect(envMap(contextSpy.mock.calls.at(-1)[1])).toEqual({});
 
-    const fn = await fs.findOne({_id: fnId});
+    const fn = await functions.findById(fnId);
     expect(fn.env_vars).toEqual([]);
   });
 
@@ -193,24 +243,24 @@ describe("Engine", () => {
 
     const encryptionSecret = "test-encryption-secret";
     const encryptedValue = encrypt("secret_value", encryptionSecret);
-    const secret = await ss.insertOne({
-      _id: undefined,
-      key: "DB_PASSWORD",
-      value: encryptedValue
-    });
-    const fnId = new ObjectId(hexString);
-    await fs.insertOne({
-      _id: fnId,
-      env_vars: [],
-      secrets: [secret._id],
-      language: "js",
-      timeout: 10,
-      name: "my_fn",
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
+    const secret = await ss.insert(withId({key: "DB_PASSWORD", value: encryptedValue}, undefined));
+    const fnId = functionKey;
+    await functions.insert(
+      withId(
+        {
+          env_vars: [],
+          secrets: [idOf(secret)],
+          language: "js",
+          timeout: 10,
+          name: "my_fn",
+          triggers: {test_handler: {active: true, options: {}, type: "http"}}
+        },
+        fnId
+      )
+    );
 
     const newEncryptedValue = encrypt("new_secret_value", encryptionSecret);
-    await ss.findOneAndUpdate({_id: secret._id}, {$set: {value: newEncryptedValue}});
+    await ss.updateById(idOf(secret), {value: newEncryptedValue});
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -224,23 +274,25 @@ describe("Engine", () => {
 
     const encryptionSecret = "test-encryption-secret";
     const encryptedValue = encrypt("secret_value", encryptionSecret);
-    const secret = await ss.insertOne({
-      _id: undefined,
-      key: "REMOVED_SECRET",
-      value: encryptedValue
-    });
-    const fnId = new ObjectId(hexString);
-    await fs.insertOne({
-      _id: fnId,
-      env_vars: [],
-      secrets: [secret._id],
-      language: "js",
-      timeout: 10,
-      name: "my_fn",
-      triggers: {test_handler: {active: true, options: {}, type: "http"}}
-    });
+    const secret = await ss.insert(
+      withId({key: "REMOVED_SECRET", value: encryptedValue}, undefined)
+    );
+    const fnId = functionKey;
+    await functions.insert(
+      withId(
+        {
+          env_vars: [],
+          secrets: [idOf(secret)],
+          language: "js",
+          timeout: 10,
+          name: "my_fn",
+          triggers: {test_handler: {active: true, options: {}, type: "http"}}
+        },
+        fnId
+      )
+    );
 
-    await ss.findOneAndDelete({_id: secret._id});
+    await ss.deleteById(idOf(secret));
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -248,12 +300,13 @@ describe("Engine", () => {
     expect(unsubscribeSpy).not.toHaveBeenCalled();
     expect(envMap(contextSpy.mock.calls.at(-1)[1])).not.toHaveProperty("REMOVED_SECRET");
 
-    const fn = await fs.findOne({_id: fnId});
+    const fn = await functions.findById(fnId);
     expect(fn.secrets).toEqual([]);
   });
 
   it("should get initial schema for database trigger", async () => {
-    await database.createCollection("test");
+    await ensureCollections(contract, module, ["dashboard"]);
+    const [collection] = [...(await module.get<CollectionNames>(COLLECTION_NAMES).list())].sort();
     const expectedSchema: any = {
       $id: "http://spica.internal/function/enqueuer/database",
       type: "object",
@@ -262,15 +315,18 @@ describe("Engine", () => {
         collection: {
           title: "Collection Name",
           type: "string",
-          viewEnum: expect.arrayContaining(["test"]),
-          enum: expect.arrayContaining(["test"]),
+          viewEnum: expect.arrayContaining([collection]),
+          enum: expect.arrayContaining([collection]),
           description: "Collection name that the event will be tracked on"
         },
         type: {
           title: "Operation type",
           description: "Operation type that must be performed in the specified collection",
           type: "string",
-          enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+          enum: module
+            .get<CollectionNames>(COLLECTION_NAMES)
+            .changeOperations()
+            .map(operation => operation.toUpperCase())
         }
       },
       additionalProperties: false
@@ -278,5 +334,15 @@ describe("Engine", () => {
     const schemaPromise = await engine.getSchema("database");
 
     expect(schemaPromise).toEqual(expectedSchema);
+  });
+
+  it("should offer REPLACE for database triggers only on engines that report replacements", async () => {
+    const schema: any = await engine.getSchema("database");
+
+    expect(schema.properties.type.enum).toEqual(
+      contract.name == "mongodb"
+        ? ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+        : ["INSERT", "UPDATE", "DELETE"]
+    );
   });
 });

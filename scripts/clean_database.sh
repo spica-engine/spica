@@ -7,4 +7,4 @@ if [ ! -f nx.json ]; then
     exit 1
 fi
 
-rm -rf ./db/.data ./db/.data1 ./db/.data2 ./db/.data3
+rm -rf ./db/.data ./db/.data1 ./db/.data2 ./db/.data3 ./db/.pgdata

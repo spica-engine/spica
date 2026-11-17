@@ -18,6 +18,9 @@ import Confirmation from "../../molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import type { TableRowClickParams } from "oziko-ui-kit";
 import { CellSelectionProvider } from "./useCellSelection";
+import { idOf, keyOf, DEFAULT_KEY_FIELD } from "../../../utils/recordKey";
+import { useKeyField } from "../../../hooks/useKeyField";
+import { usePrincipalKey } from "../../../hooks/usePrincipalKey";
 
 interface BucketTableNewProps {
   bucket: BucketSchema;
@@ -271,7 +274,11 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   hasMore = false,
   isLoadingMore = false
 }) => {
-  const {selectedEntries, selectEntry, deselectEntry, selectEntries, resetSelection} = useEntrySelection(bucket._id);
+  const principalKey = usePrincipalKey();
+  const keyField = useKeyField(idOf(bucket)!) ?? DEFAULT_KEY_FIELD;
+  const keyIsProperty = keyField in (bucket?.properties ?? {});
+  const rowKey = useCallback((row: BucketDataRow) => keyOf(row, keyField), [keyField]);
+  const {selectedEntries, selectEntry, deselectEntry, selectEntries, resetSelection} = useEntrySelection(idOf(bucket)!);
 
   const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
@@ -349,7 +356,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     reset();
     const id = requestAnimationFrame(reset);
     return () => cancelAnimationFrame(id);
-  }, [bucket._id]);
+  }, [idOf(bucket)!]);
 
   const [editingField, setEditingField] = useState<{
     key: string;
@@ -358,7 +365,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   } | null>(null);
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
-    `${bucket?._id}-fields-order`,
+    `${idOf(bucket)}-fields-order`,
     bucket?.properties ? Object.keys(bucket.properties) : []
   );
 
@@ -407,10 +414,10 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 
   const handleOpenEditField = useCallback(
     (key: string, property: BucketProperty) => {
-      const formState = propertyToFieldFormState(key, property, bucket as unknown as BucketSchema);
+      const formState = propertyToFieldFormState(key, property, bucket as unknown as BucketSchema, principalKey);
       setEditingField({key, kind: formState.type, formState});
     },
-    [bucket]
+    [bucket, principalKey]
   );
 
   const handleEditSaveAndClose = useCallback(
@@ -490,7 +497,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 
       try {
         await deleteBucketField({ 
-          bucketId: bucket._id, 
+          bucketId: idOf(bucket)!, 
           fieldKey, 
           bucket: bucket as unknown as BucketType 
         }).unwrap();
@@ -553,16 +560,16 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       setFieldsOrder([...validKeys, ...newKeys]);
     }
 
-  }, [bucket?.properties, bucket?._id]);
+  }, [bucket?.properties, idOf(bucket)]);
 
 
   const renderIdCell = useCallback((params: { row: BucketDataRow; isFocused: boolean }) => {
     return (
       <div className={styles.readonlyCell}>
-        {params.row._id}
+        {rowKey(params.row)}
       </div>
     );
-  }, []);
+  }, [rowKey]);
 
 
   const createDeleteHandler = useCallback((fieldKey: string, isPrimaryField: boolean) => {
@@ -574,7 +581,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     key: string,
     property: BucketProperty
   ) => {
-    const cellConfig = cellRegistry.get(property.type);
+    const cellConfig = key === keyField ? cellRegistry.readonly() : cellRegistry.get(property.type);
     const CellComponent = cellConfig.component;
 
     return (params: { row: BucketDataRow; isFocused: boolean }) => {
@@ -585,12 +592,12 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           value={structuredClone(value)}
           propertyKey={key}
           property={property}
-          rowId={params.row._id}
-          onChange={(newValue) => handleValueChange(key, params.row._id, newValue)}
+          rowId={rowKey(params.row)}
+          onChange={(newValue) => handleValueChange(key, rowKey(params.row), newValue)}
         />
       );
     };
-  }, [handleValueChange]);
+  }, [handleValueChange, rowKey, keyField]);
 
   const createPropertyColumn = useCallback((
     key: string,
@@ -653,7 +660,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   }, [onExpandRow]);
 
   const renderCheckboxCell = useCallback((params: {row: BucketDataRow; isFocused: boolean}) => {
-    const isChecked = selectedEntries.has(params.row._id);
+    const isChecked = selectedEntries.has(rowKey(params.row));
     return (
       <div className={styles.checkboxCell}>
         <input
@@ -664,15 +671,15 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           onChange={(e) => {
             e.stopPropagation();
             if (isChecked) {
-              deselectEntry(params.row._id);
+              deselectEntry(rowKey(params.row));
             } else {
-              selectEntry(params.row._id);
+              selectEntry(rowKey(params.row));
             }
           }}
         />
       </div>
     );
-  }, [selectedEntries, selectEntry, deselectEntry]);
+  }, [selectedEntries, selectEntry, deselectEntry, rowKey]);
 
   // Hoisted so the CellSelectionProvider and the rendered columns share one
   // ordered source; divergence would desync keyboard nav from the visible grid.
@@ -689,14 +696,14 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       : finalOrderedKeys;
   }, [bucket?.properties, fieldsOrder, visibleColumns]);
 
-  const orderedRowIds = useMemo(() => data.map(r => r._id), [data]);
+  const orderedRowIds = useMemo(() => data.map(rowKey), [data, rowKey]);
 
   const propertyColumns = useMemo((): TableColumn<BucketDataRow>[] => {
     if (!bucket?.properties) return [];
 
     const idColumn: TableColumn<BucketDataRow> = {
-      key: '_id',
-      header: '_id',
+      key: keyField,
+      header: keyField,
       width: '250px',
       minWidth: '250px',
       renderCell: renderIdCell,
@@ -707,18 +714,20 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       return createPropertyColumn(key, property, index, visibleOrderedKeys.length);
     });
 
-    return [idColumn, ...propCols];
+    return keyIsProperty ? propCols : [idColumn, ...propCols];
   }, [
     bucket?.properties,
     visibleOrderedKeys,
     renderIdCell,
-    createPropertyColumn
+    createPropertyColumn,
+    keyField,
+    keyIsProperty
   ]);
 
   const columns = useMemo((): TableColumn<BucketDataRow>[] => {
     const hasData = data.length > 0;
-    const allSelected = hasData && data.every(row => selectedEntries.has(row._id));
-    const someSelected = hasData && !allSelected && data.some(row => selectedEntries.has(row._id));
+    const allSelected = hasData && data.every(row => selectedEntries.has(rowKey(row)));
+    const someSelected = hasData && !allSelected && data.some(row => selectedEntries.has(rowKey(row)));
 
     const checkboxColumn: TableColumn<BucketDataRow> = {
       key: 'checkbox',
@@ -734,7 +743,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
               if (allSelected || someSelected) {
                 resetSelection();
               } else {
-                selectEntries(data.map(row => row._id));
+                selectEntries(data.map(rowKey));
               }
             }}
           />
@@ -754,7 +763,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     };
 
     return [checkboxColumn, expandColumn, ...propertyColumns];
-  }, [data, selectedEntries, selectEntries, resetSelection, propertyColumns, renderCheckboxCell, renderExpandCell]);
+  }, [data, selectedEntries, selectEntries, resetSelection, propertyColumns, renderCheckboxCell, renderExpandCell, rowKey]);
 
 
   if (!bucket?.properties) {
@@ -779,8 +788,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
         columns={columns}
         data={data}
         cellClassName={styles.bucketCell}
-        saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}
-        fixedColumns={['checkbox', '__expand__', '_id']}
+        saveToLocalStorage={{ id: `bucket-table-${idOf(bucket)!}`, save: true }}
+        fixedColumns={['checkbox', '__expand__', keyField]}
         noResizeableColumns={['checkbox', '__expand__']}
         loading={loading}
         skeletonRowCount={10}

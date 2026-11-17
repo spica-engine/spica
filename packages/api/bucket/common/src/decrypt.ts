@@ -1,6 +1,7 @@
 import {decrypt, isEncryptedData, BaseEncryptedData} from "@spica-server/core-encryption";
 import {Bucket} from "@spica-server/interface-bucket";
 import {RelationType} from "@spica-server/interface-bucket-common";
+import {documentKey} from "./document-key.js";
 
 type SchemaResolver = (bucketId: string) => Promise<Bucket> | Bucket;
 
@@ -29,7 +30,7 @@ export function decryptDocumentFields<T extends Record<string, any>>(
     return document;
   }
 
-  const docId = documentId ?? (document._id as string);
+  const docId = documentId ?? String(documentKey(schema, document));
   const result: Record<string, any> = {...document};
 
   for (const [key, propertySchema] of Object.entries(schema.properties)) {
@@ -185,7 +186,7 @@ function decryptRelatedDocument(
     return value;
   }
 
-  return decryptDocumentFields(value, relatedSchema, secret, schemaResolver, value._id);
+  return decryptDocumentFields(value, relatedSchema, secret, schemaResolver);
 }
 
 function decryptWithErrorHandling(

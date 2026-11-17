@@ -1,16 +1,21 @@
-import {LogService} from "@spica-server/function-log/src/log.service";
+import {provideRepository, systemKeyField} from "@spica-server/data";
+import {FUNCTION_LOG_REPOSITORY} from "@spica-server/interface-function-log";
 import {TestingModule, Test} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {DatabaseTestingModule, mongoOnly} from "@spica-server/database-testing";
 import {FUNCTION_LOG_OPTIONS} from "@spica-server/interface-function-log";
+
+mongoOnly(
+  "it inspects MongoDB TTL indexes (listIndexes, upsertTTLIndex); PostgreSQL expires rows with the pg_cron job of Part 4"
+);
 
 describe("Function Log Service", () => {
   let module: TestingModule;
-  let logService: LogService;
+  let logService: any;
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.create()],
       providers: [
-        LogService,
+        provideRepository(FUNCTION_LOG_REPOSITORY),
         {
           provide: FUNCTION_LOG_OPTIONS,
           useValue: {
@@ -19,7 +24,7 @@ describe("Function Log Service", () => {
         }
       ]
     }).compile();
-    logService = module.get(LogService);
+    logService = module.get(FUNCTION_LOG_REPOSITORY);
     await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
   });
 
@@ -39,7 +44,7 @@ describe("Function Log Service", () => {
     const indexes = await logService._coll.listIndexes().toArray();
 
     const listingIndex = indexes.find(index => index.name == "function_1__id_-1");
-    expect(listingIndex.key).toEqual({function: 1, _id: -1});
+    expect(listingIndex.key).toEqual({function: 1, [systemKeyField()]: -1});
   });
 
   it("should update existing ttl index expireAfterSeconds value", async () => {

@@ -1,5 +1,4 @@
 export default {
-  _id: "BucketReadOnlyAccess",
   name: "Bucket Read Only Access",
   description: "Read only access to bucket service.",
   statement: [

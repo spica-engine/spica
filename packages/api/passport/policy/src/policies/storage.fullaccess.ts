@@ -1,7 +1,6 @@
 import StorageReadOnlyAccess from "./storage.readonly.js";
 
 export default {
-  _id: "StorageFullAccess",
   name: "Storage Full Access",
   description: "Full access to storage service.",
   statement: [

@@ -7,11 +7,12 @@ import amqp from "amqplib";
 import {GenericContainer, StartedTestContainer, Wait} from "testcontainers";
 import {FunctionModule} from "@spica-server/function";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
-import {DatabaseTestingModule} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {SchemaModule, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+import {idOf} from "@spica-server/data";
 
 const RABBITMQ_USER = "spica";
 const RABBITMQ_PASSWORD = "spica-secret-password";
@@ -29,7 +30,7 @@ async function waitFor<T>(probe: () => Promise<T | undefined>, timeoutMs: number
   throw new Error(`Condition was not met in ${timeoutMs}ms`);
 }
 
-describe("RabbitMQ trigger with secret placeholders (e2e)", () => {
+contractSuite("RabbitMQ trigger with secret placeholders (e2e)", engine => {
   let container: StartedTestContainer;
   let port: number;
 
@@ -68,7 +69,7 @@ describe("RabbitMQ trigger with secret placeholders (e2e)", () => {
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
@@ -118,10 +119,10 @@ describe("RabbitMQ trigger with secret placeholders (e2e)", () => {
   it("should connect to an authenticated broker with the injected secrets and execute the function", async () => {
     const userId = await request
       .post("/secret", {key: "RABBITMQ_USER", value: RABBITMQ_USER})
-      .then(res => res.body._id);
+      .then(res => idOf(res.body));
     const passwordId = await request
       .post("/secret", {key: "RABBITMQ_PASSWORD", value: RABBITMQ_PASSWORD})
-      .then(res => res.body._id);
+      .then(res => idOf(res.body));
 
     const fn = {
       name: "secret_consumer",
@@ -141,10 +142,10 @@ describe("RabbitMQ trigger with secret placeholders (e2e)", () => {
     };
     const {body: inserted} = await request.post("/function", fn);
 
-    await request.put(`/function/${inserted._id}/secret/${userId}`);
-    await request.put(`/function/${inserted._id}/secret/${passwordId}`);
+    await request.put(`/function/${idOf(inserted)}/secret/${userId}`);
+    await request.put(`/function/${idOf(inserted)}/secret/${passwordId}`);
 
-    await request.post(`/function/${inserted._id}/index`, {
+    await request.post(`/function/${idOf(inserted)}/index`, {
       index: `
         import fs from "fs";
         export default function (message) {
@@ -154,7 +155,7 @@ describe("RabbitMQ trigger with secret placeholders (e2e)", () => {
     });
 
     fn.triggers.default.active = true;
-    const updated = await request.put(`/function/${inserted._id}`, fn);
+    const updated = await request.put(`/function/${idOf(inserted)}`, fn);
     expect(updated.statusCode).toEqual(200);
     expect(updated.body.triggers.default.options.url).toContain("${SECRET.RABBITMQ_PASSWORD}");
 

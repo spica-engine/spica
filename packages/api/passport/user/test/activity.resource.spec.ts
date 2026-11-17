@@ -1,11 +1,10 @@
 import {Action} from "@spica-server/interface-activity";
 import {createUserActivity} from "@spica-server/passport-user/src/activity.resource";
+import {withId} from "@spica-server/data";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {
-    const res = {
-      _id: "user_id"
-    };
+    const res = withId({}, "user_id");
 
     const activities = createUserActivity({action: Action.POST, username: "test_user"}, {}, res);
     expect(activities).toEqual([

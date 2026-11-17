@@ -4,8 +4,10 @@ import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {EnvVarService} from "@spica-server/env_var-services";
 import {EnvVar} from "@spica-server/interface-env_var";
-import {ObjectId} from "@spica-server/database";
 import * as CRUD from "./crud.js";
+import {ids, idOf} from "@spica-server/data";
+
+const envVarIds = () => ids().forCollection("env_var");
 
 const _module = "env_var";
 
@@ -26,21 +28,21 @@ export function registerAssetHandlers(
 
     update: (resource: Resource<EnvVarAsset>) => CRUD.replace(evs, resource.contents.schema),
 
-    delete: (resource: Resource<EnvVarAsset>) => CRUD.remove(evs, resource._id)
+    delete: (resource: Resource<EnvVarAsset>) => CRUD.remove(evs, idOf(resource))
   };
 
   registrar.operator(_module, operator);
 
-  const exporter = async (_id: string) => {
-    if (!ObjectId.isValid(_id)) {
-      return Promise.reject(`${_id} is not a valid object id`);
+  const exporter = async (id: string) => {
+    if (!envVarIds().isValid(id)) {
+      return Promise.reject(`${id} is not a valid object id`);
     }
-    const envVar = await evs.findOne({_id: new ObjectId(_id)});
+    const envVar = await evs.findById(envVarIds().parse(id));
 
     if (!envVar) {
-      return Promise.reject(`Environment variable does not exist with _id ${_id}`);
+      return Promise.reject(`Environment variable does not exist with id ${id}`);
     }
-    return manager.write(_module, _id, "schema", envVar, "yaml");
+    return manager.write(_module, id, "schema", envVar, "yaml");
   };
 
   registrar.exporter(_module, exporter);

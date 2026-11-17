@@ -1,3 +1,4 @@
+import {idOf, systemKeyField} from "@spica-server/data";
 import {replaceFilterDates} from "@spica-server/bucket-common";
 
 describe("Bucket data filter", () => {
@@ -65,7 +66,7 @@ describe("Bucket data filter", () => {
       } as any;
 
       let addressSchema = {
-        _id: "address_bucket_id",
+        [systemKeyField()]: "address_bucket_id",
         properties: {
           built_at: {
             type: "date"
@@ -75,7 +76,7 @@ describe("Bucket data filter", () => {
 
       const schemas = [schema, addressSchema];
       const resolve = id => {
-        return Promise.resolve(schemas.find(s => s._id == id) as any);
+        return Promise.resolve(schemas.find(s => idOf(s) == id) as any);
       };
 
       it("should not construct if value is not a valid date", async () => {

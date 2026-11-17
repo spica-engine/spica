@@ -22,18 +22,30 @@ import {
   Headers
 } from "@nestjs/common";
 import {IdentityService} from "@spica-server/passport-identity";
-import {Identity, LoginCredentials} from "@spica-server/interface-passport-identity";
+import {
+  Identity,
+  IDENTITY_REPOSITORY,
+  IdentityRepository,
+  LoginCredentials
+} from "@spica-server/interface-passport-identity";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body.js";
-import {StrategyService} from "./strategy/services/strategy.service.js";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface-passport";
+import {ID, idOf} from "@spica-server/data";
+import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
+import {
+  STRATEGIES,
+  STRATEGY_REPOSITORY,
+  StrategyRepository,
+  StrategyTypeServices
+} from "@spica-server/interface-passport";
 import {AuthFactor} from "@spica-server/passport-authfactor";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
+
+const STRATEGY_COLLECTION = "strategy";
 
 /**
  * @name passport
@@ -81,9 +93,11 @@ export class PassportIdentityController {
 
   constructor(
     private identityService: IdentityService,
-    private strategyService: StrategyService,
+    @Inject(IDENTITY_REPOSITORY) private identities: IdentityRepository,
+    @Inject(STRATEGY_REPOSITORY) private strategyRepository: StrategyRepository,
     private authFactor: AuthFactor,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices,
+    @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
@@ -146,10 +160,10 @@ export class PassportIdentityController {
       );
     }
 
-    identity = await this.identityService.findOne({identifier: idenfitifer});
+    identity = await this.identities.findByIdentifier(idenfitifer);
 
     if (!identity) {
-      identity = await this.identityService.insertOne({
+      identity = await this.identities.insert({
         identifier: idenfitifer,
         password: undefined,
         policies: [],
@@ -183,7 +197,7 @@ export class PassportIdentityController {
     const tokenSchema = this.identityService.sign(identity, expiresIn);
     const refreshTokenSchema = await this.identityService.signRefreshToken(identity);
 
-    const id = identity._id.toHexString();
+    const id = idOf(identity).toString();
     // Enforce 2FA from the persisted record, not the in-memory AuthFactor map: that map is
     // per-replica and only synced opportunistically, so a replica that missed the registration
     // broadcast would otherwise skip the challenge and let the user bypass 2FA.
@@ -203,7 +217,7 @@ export class PassportIdentityController {
       const challenge = await this.authFactor.start(id);
       const factorRes = {
         challenge,
-        answerUrl: `passport/identify/${identity._id}/factor-authentication`
+        answerUrl: `passport/identify/${idOf(identity)}/factor-authentication`
       };
       return {factorRes};
     } else {
@@ -326,14 +340,15 @@ export class PassportIdentityController {
 
   @Get("identity/strategies")
   async strategies() {
-    return this.strategyService
-      .aggregate([{$match: {type: "saml"}}, {$project: {options: 0}}])
-      .toArray();
+    return this.queries.find(STRATEGY_COLLECTION, {
+      where: {type: {eq: "saml"}},
+      fields: {options: 0}
+    });
   }
 
   @Get("identity/strategy/:id/url")
-  async getUrl(@Param("id", OBJECT_ID) id: ObjectId) {
-    const strategy = await this.strategyService.findOne({_id: id});
+  async getUrl(@Param("id", ID(STRATEGY_COLLECTION)) id: Id) {
+    const strategy = await this.strategyRepository.findById(id);
 
     if (!strategy) {
       throw new BadRequestException("Strategy does not exist.");
@@ -366,7 +381,7 @@ export class PassportIdentityController {
   @UseInterceptors(UrlEncodedBodyParser())
   @HttpCode(HttpStatus.NO_CONTENT)
   async complete(
-    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("id", ID(STRATEGY_COLLECTION)) id: Id,
     @Body() body: unknown,
     @Query("state") stateId: string,
     @Query("code") code: string
@@ -379,7 +394,7 @@ export class PassportIdentityController {
       throw new BadRequestException("Authentication has failed due to invalid state.");
     }
 
-    const strategy = await this.strategyService.findOne({_id: id});
+    const strategy = await this.strategyRepository.findById(id);
 
     if (!strategy) {
       throw new BadRequestException("Strategy does not exist.");

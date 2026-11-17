@@ -1,7 +1,7 @@
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from '../../utils/recordKey';
 
-export interface AuthenticationStrategy {
-  _id: string;
+export interface AuthenticationStrategy extends SystemRecord {
   name: string;
   title: string;
   type: "saml" | "oauth";
@@ -38,7 +38,7 @@ export interface AddStrategyInput {
 }
 
 export interface UpdateStrategyInput extends AddStrategyInput {
-  _id: string;
+  id: string;
 }
 
 type AuthenticationStrategyListApiResponse =
@@ -74,7 +74,7 @@ export const authenticationStrategyApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.length
           ? [
-              ...result.map(({ _id }) => ({ type: STRATEGY_TAG, id: _id })),
+              ...result.map((strategy) => ({ type: STRATEGY_TAG, id: idOf(strategy) })),
               STRATEGY_TAGS.LIST,
             ]
           : [STRATEGY_TAGS.LIST],
@@ -102,7 +102,6 @@ export const authenticationStrategyApi = baseApi.injectEndpoints({
         if (arg._hasChanges === false) {
           return {
             data: {
-              _id: arg._id,
               name: arg.name,
               title: arg.title,
               type: arg.type,
@@ -110,9 +109,9 @@ export const authenticationStrategyApi = baseApi.injectEndpoints({
             } as AuthenticationStrategy,
           };
         }
-        const { _id, _hasChanges, ...body } = arg;
+        const { id, _hasChanges, ...body } = arg;
         const result = await baseQuery({
-          url: `passport/strategy/${_id}`,
+          url: `passport/strategy/${id}`,
           method: "PUT",
           body,
         });
@@ -124,7 +123,7 @@ export const authenticationStrategyApi = baseApi.injectEndpoints({
           ? []
           : [
               STRATEGY_TAGS.LIST,
-              { type: STRATEGY_TAG, id: arg._id },
+              { type: STRATEGY_TAG, id: arg.id },
             ],
     }),
 

@@ -1,7 +1,6 @@
 import EnvVarReadonlyAccess from "./env.var.readonly.js";
 
 export default {
-  _id: "EnvVarFullAccess",
   name: "Environment Variables Full Access",
   description: "Full access to function environment variables service.",
   statement: [

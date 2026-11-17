@@ -1,4 +1,9 @@
 import {useState, useRef, useEffect, useCallback} from "react";
+import {useEngine} from "./useEngine";
+import {keyOf} from "../utils/recordKey";
+import {relationSearchFilter, relationTarget, relationValueId} from "../domain/relationTarget";
+import type {DataEngine} from "../store/api/statusApi";
+import type {FilterInput} from "../utils/serializeFilter";
 import {
   useLazyGetBucketQuery,
   useLazyGetBucketDataQuery,
@@ -17,13 +22,14 @@ export type TypeGetMoreOptionsMap = Record<string, loadMoreOptionsHandler>;
 export type TypeSearchOptionsMap = Record<string, searchOptionsHandler>;
 export type TypeGetOptionsMap = Record<string, getOptionsHandler>;
 
-type FormattedInitialValue = {_id: string; label: string} | {value: string; label: string};
+type FormattedInitialValue = {value: string; label: string};
 
 export type RelationState = {
   skip: number;
   total: number;
   lastSearch: string;
   primaryKey: string;
+  keyField: string;
   initialFormattedValues?: FormattedInitialValue | FormattedInitialValue[];
   stateInitialized: boolean;
 };
@@ -43,37 +49,37 @@ export type TypeInitialValues =
   | FormattedInitialValue
   | Array<FormattedInitialValue>;
 
-const buildQueryParams = (skip = 0, searchValue?: string, primaryKey?: string) => {
+const buildQueryParams = (
+  engine: DataEngine | undefined,
+  target: {keyField: string; labelField?: string},
+  skip = 0,
+  searchValue?: string
+) => {
   const params: {
     paginate: boolean;
     relation: boolean;
     limit: number;
     sort: Record<string, number>;
     skip: number;
-    filter?: Record<string, any>;
+    filter?: FilterInput;
   } = {
     paginate: true,
     relation: true,
     limit: 25,
-    sort: {_id: -1},
+    sort: {[target.keyField]: -1},
     skip
   };
 
-  if (searchValue) {
-    const searchField = primaryKey || "_id";
-    params.filter = {
-      $or: [
-        {
-          [searchField]: {$regex: searchValue, $options: "i"}
-        }
-      ]
-    };
+  const filter = relationSearchFilter(engine, target.labelField, searchValue);
+  if (filter) {
+    params.filter = filter;
   }
 
   return params;
 };
 
 export const useRelationInputHandlers = (): RelationInputHandlers => {
+  const engine = useEngine();
   const [relationStates, setRelationStates] = useState<Record<string, RelationState>>({});
   const relationStatesRef = useRef(relationStates);
 
@@ -89,30 +95,38 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
   const [getBucketData] = useLazyGetBucketDataQuery();
   const [getBucketEntry] = useLazyGetBucketEntryQuery();
 
-  const getPrimaryKey = useCallback(
+  const getTarget = useCallback(
     async (bucketId: string, key: string) => {
-      if (relationStatesRef.current[key]?.primaryKey)
-        return relationStatesRef.current[key].primaryKey;
-      if (!bucketId) return;
+      const known = relationStatesRef.current[key];
+      if (known?.keyField && known?.primaryKey) {
+        return {
+          keyField: known.keyField,
+          labelField: known.primaryKey === known.keyField ? undefined : known.primaryKey
+        };
+      }
+      if (!bucketId || !engine) return;
       try {
         const result = await getBucket(bucketId).unwrap();
-        const bucketPrimaryKey = result?.primary;
-        if (!bucketPrimaryKey) return;
+        const target = relationTarget(engine, result);
+        if (!target) return;
+        const labelField = target.labelField ?? (engine === "postgresql" ? target.keyField : undefined);
+        if (!labelField) return;
         relationStatesRef.current[key] = {
           ...relationStatesRef.current[key],
-          primaryKey: bucketPrimaryKey
+          primaryKey: labelField,
+          keyField: target.keyField
         };
         setRelationStates(prev => ({
           ...prev,
-          [key]: {...prev[key], primaryKey: bucketPrimaryKey, stateInitialized: false}
+          [key]: {...prev[key], primaryKey: labelField, keyField: target.keyField, stateInitialized: false}
         }));
-        return bucketPrimaryKey;
+        return target;
       } catch (e) {
         console.error("Failed to get primary key:", e);
         return undefined;
       }
     },
-    [getBucket, relationStatesRef]
+    [getBucket, relationStatesRef, engine]
   );
 
   const populateGetOptions = useCallback(
@@ -121,10 +135,11 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
 
       getOptionsMap.current[key] = async () => {
         if (!bucketId) return [];
-        const bucketPrimaryKey = await getPrimaryKey(bucketId, key);
-        if (!bucketPrimaryKey) return [];
+        const target = await getTarget(bucketId, key);
+        if (!target) return [];
+        const displayField = target.labelField ?? target.keyField;
         try {
-          const params = buildQueryParams(0, undefined, bucketPrimaryKey);
+          const params = buildQueryParams(engine, target);
           const data = await getBucketData({bucketId, ...params}).unwrap();
           setRelationStates(prev => ({
             ...prev,
@@ -133,13 +148,14 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
               skip: 25,
               total: data?.meta?.total || 0,
               lastSearch: "",
-              primaryKey: bucketPrimaryKey
+              primaryKey: displayField,
+              keyField: target.keyField
             }
           }));
           return (
             data?.data?.map((i: any) => ({
-              label: i[bucketPrimaryKey],
-              value: i._id
+              label: String(i[displayField] ?? ""),
+              value: keyOf(i, target.keyField)
             })) || []
           );
         } catch (e) {
@@ -148,7 +164,7 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
         }
       };
     },
-    [getBucketData, getPrimaryKey]
+    [getBucketData, getTarget, engine]
   );
 
   const populateLoadMoreOptions = useCallback(
@@ -158,19 +174,20 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
         if (!bucketId) return [];
         const currentSkip = relationStatesRef.current?.[key]?.skip || 0;
         const lastSearch = relationStatesRef.current?.[key]?.lastSearch || "";
-        const bucketPrimaryKey = await getPrimaryKey(bucketId, key);
-        if (!bucketPrimaryKey) return [];
+        const target = await getTarget(bucketId, key);
+        if (!target) return [];
+        const displayField = target.labelField ?? target.keyField;
 
         try {
-          const params = buildQueryParams(currentSkip, lastSearch, bucketPrimaryKey);
+          const params = buildQueryParams(engine, target, currentSkip, lastSearch);
           const data = await getBucketData({bucketId, ...params}).unwrap();
 
           setRelationStates(prev => ({...prev, [key]: {...prev[key], skip: currentSkip + 25}}));
 
           return (
             data?.data?.map((i: any) => ({
-              label: i[bucketPrimaryKey] ?? i.title,
-              value: i._id
+              label: String(i[displayField] ?? i.title ?? ""),
+              value: keyOf(i, target.keyField)
             })) || []
           );
         } catch (e) {
@@ -179,7 +196,7 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
         }
       };
     },
-    [getBucketData, getPrimaryKey]
+    [getBucketData, getTarget, engine]
   );
 
   const populateSearchOptions = useCallback(
@@ -188,11 +205,12 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
 
       searchOptionsMap.current[key] = async (search: string) => {
         if (!bucketId) return [];
-        const bucketPrimaryKey = await getPrimaryKey(bucketId, key);
-        if (!bucketPrimaryKey) return [];
+        const target = await getTarget(bucketId, key);
+        if (!target) return [];
+        const displayField = target.labelField ?? target.keyField;
         setRelationStates(prev => ({...prev, [key]: {...prev[key], lastSearch: search}}));
         try {
-          const params = buildQueryParams(0, search, bucketPrimaryKey);
+          const params = buildQueryParams(engine, target, 0, search);
           const data = await getBucketData({bucketId, ...params}).unwrap();
           setRelationStates(prev => ({
             ...prev,
@@ -200,8 +218,8 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
           }));
           return (
             data?.data?.map((i: any) => ({
-              label: i[bucketPrimaryKey] ?? i.title,
-              value: i._id
+              label: String(i[displayField] ?? i.title ?? ""),
+              value: keyOf(i, target.keyField)
             })) || []
           );
         } catch (e) {
@@ -210,7 +228,7 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
         }
       };
     },
-    [getBucketData, getPrimaryKey]
+    [getBucketData, getTarget, engine]
   );
 
   const populateHandlers = useCallback(
@@ -247,13 +265,14 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
 
       let formattedValue: {label: string; value: string} | Array<{label: string; value: string}> | undefined = undefined;
       const primaryKey = relationStatesRef.current[key]?.primaryKey;
+      const relatedKeyField = relationStatesRef.current[key]?.keyField;
       if (Array.isArray(initialValue)) {
         const formattedValues: Array<{label: string; value: string}> = [];
         for (const val of initialValue) {
           try {
             const row = await getBucketEntry({bucketId, entryId: val as string}).unwrap();
             const formatted = {
-              value: (row as any)?._id || "",
+              value: keyOf(row as any, relatedKeyField),
               label: primaryKey ? (row as any)?.[primaryKey] || "" : ""
             };
             formattedValues.push(formatted);
@@ -266,7 +285,7 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
         try {
           const row = await getBucketEntry({bucketId, entryId: initialValue as string}).unwrap();
           formattedValue = {
-            value: (row as any)?._id || "",
+            value: keyOf(row as any, relatedKeyField),
             label: primaryKey ? (row as any)?.[primaryKey] || "" : ""
           };
         } catch (error) {
@@ -283,13 +302,13 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
   );
   const ensureHandlers = useCallback(
     (bucketId: string, key: string, relationValue?: TypeInitialValues) => {
-      if (getOptionsMap.current[key]) return;
-      getPrimaryKey(bucketId, key).then(() => {
+      if (!engine || getOptionsMap.current[key]) return;
+      getTarget(bucketId, key).then(() => {
         ensureInitialValueFormatting(bucketId, key, relationValue);
       });
       populateHandlers(bucketId, key);
     },
-    [getPrimaryKey, populateHandlers]
+    [getTarget, populateHandlers, engine]
   );
 
   const initRelationValue = useCallback(
@@ -299,15 +318,17 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
         ...prev,
         [key]: {...prev[key], initialFormattedValues: undefined, stateInitialized: false}
       }));
-      getPrimaryKey(bucketId, key).then(primaryKey => {
-        if (!primaryKey) return;
+      if (!engine) return;
+      getTarget(bucketId, key).then(target => {
+        if (!target) return;
+        const primaryKey = target.labelField ?? target.keyField;
 
         // When the row was fetched with relation=true the API returns the full related
         // document, not just the ID string. Build initialFormattedValues directly from
         // that object without an extra getBucketEntry round-trip.
         const buildFromRow = (obj: any): {value: string; label: string} | null => {
-          const id: string | undefined = obj?._id ?? obj?.value;
-          if (!id || typeof id !== "string") return null;
+          const id = relationValueId(obj, target.keyField);
+          if (!id) return null;
           return {value: id, label: String(obj[primaryKey] ?? obj.label ?? "")};
         };
 
@@ -330,7 +351,7 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
             }));
             return;
           }
-          if (typeof value[0] === "object" && (value[0] as any)?._id) {
+          if (typeof value[0] === "object" && relationValueId(value[0], target.keyField)) {
             const formatted = (value as any[]).map(buildFromRow).filter(Boolean) as Array<{value: string; label: string}>;
             setRelationStates(prev => ({
               ...prev,
@@ -346,11 +367,10 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
           normalizedValue = value;
         } else if (Array.isArray(value)) {
           normalizedValue = (value as any[])
-            .map((i: any) => (typeof i === "string" ? i : (i?._id ?? i?.value)))
+            .map((i: any) => relationValueId(i, target.keyField))
             .filter(Boolean) as string[];
         } else if (value && typeof value === "object") {
-          const obj = value as any;
-          normalizedValue = obj._id ?? obj.value;
+          normalizedValue = relationValueId(value, target.keyField);
         }
 
         if (normalizedValue) {
@@ -358,7 +378,7 @@ export const useRelationInputHandlers = (): RelationInputHandlers => {
         }
       });
     },
-    [getPrimaryKey, ensureInitialValueFormatting]
+    [getTarget, ensureInitialValueFormatting, engine]
   );
 
   return {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers, initRelationValue};

@@ -7,6 +7,7 @@ import {Enqueuer} from "./enqueuer.js";
 import uniqid from "uniqid";
 import {Description, ScheduleOptions} from "@spica-server/interface-function-enqueuer";
 import {Logger} from "@nestjs/common";
+import {withId} from "@spica-server/data";
 
 export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   type = event.Type.SCHEDULE;
@@ -69,14 +70,16 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
       this.queue.enqueue(ev);
     };
 
-    const meta = {
-      _id: `${target.cwd}-${target.handler}-${options.frequency}-${options.timezone}-${firedAt}`,
-      cwd: target.cwd,
-      handler: target.handler,
-      frequency: options.frequency,
-      timezone: options.timezone,
-      event_id: ev.id
-    };
+    const meta = withId(
+      {
+        cwd: target.cwd,
+        handler: target.handler,
+        frequency: options.frequency,
+        timezone: options.timezone,
+        event_id: ev.id
+      },
+      `${target.cwd}-${target.handler}-${options.frequency}-${options.timezone}-${firedAt}`
+    );
 
     if (this.jobReducer) {
       this.jobReducer.do(meta, enqueue);
@@ -92,7 +95,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
 
     const shiftPromises: Promise<any>[] = [];
     for (const event of events) {
-      const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
+      const shift = this.jobReducer.takeByEventId(event.id).then(job => {
         if (!job) {
           this.logger.error(`Job with event id ${event.id} does not exist!`);
           return;

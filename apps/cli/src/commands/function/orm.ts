@@ -10,6 +10,7 @@ import {green} from "colorette";
 import {FunctionWithIndex} from "../../function/interface";
 import {httpService} from "../../http";
 import {context} from "../../context";
+import {recordKey} from "@spica-server/sync";
 
 async function orm({options}: ActionParameters) {
   const PATH = (options.path as string) || path.join(process.cwd(), "functions");
@@ -26,7 +27,7 @@ async function orm({options}: ActionParameters) {
       const functions = await httpClient.get<FunctionWithIndex[]>("/function").then(r => {
         const fns = r;
         const promises = fns.map(fn =>
-          httpClient.get<any>(`/function/${fn._id}/index`).then(r => {
+          httpClient.get<any>(`/function/${recordKey(fn)}/index`).then(r => {
             fn.index = r.index;
           })
         );

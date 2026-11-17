@@ -7,6 +7,9 @@ import {
   type Storage
 } from "../store/api";
 import type {TypeFile} from "oziko-ui-kit";
+import {kitFileKey} from "../types/storage";
+import {idOf} from "../utils/recordKey";
+import {allOf, anyOf, escapeRegex, matchesName, type StorageClause} from "../utils/storageQuery";
 
 function useStorageService() {
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -84,39 +87,33 @@ function useStorageService() {
     [updateStorageName]
   );
 
-  const buildDirectoryFilter = useCallback((directory: string[] = ["/"]) => {
+  const buildDirectoryClause = useCallback((directory: string[] = ["/"]): StorageClause => {
     const currentDirectory = directory.length === 1 ? "/" : directory.slice(1).join("");
 
     if (currentDirectory === "/") {
-      return {
-        $or: [{name: {$regex: "^[^/]+$"}}, {name: {$regex: "^[^/]+/$"}}]
-      };
-    } else {
-      const escapedDirectory = currentDirectory.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      return {
-        $and: [
-          {name: {$regex: `^${escapedDirectory}`}},
-          {
-            $or: [
-              {name: {$regex: `^${escapedDirectory}[^/]+$`}},
-              {name: {$regex: `^${escapedDirectory}[^/]+/$`}}
-            ]
-          }
-        ]
-      };
+      return anyOf([matchesName("^[^/]+$"), matchesName("^[^/]+/$")]);
     }
+
+    const escapedDirectory = escapeRegex(currentDirectory);
+    return allOf([
+      matchesName(`^${escapedDirectory}`),
+      anyOf([
+        matchesName(`^${escapedDirectory}[^/]+$`),
+        matchesName(`^${escapedDirectory}[^/]+/$`)
+      ])
+    ])!;
   }, []);
 
   const convertStorageToTypeFile = useCallback(
     (storage: Storage): TypeFile => {
       const apiBase = (import.meta.env.VITE_BASE_URL as string) || "/api";
       const base = apiBase.endsWith("/") ? apiBase.slice(0, -1) : apiBase;
-      const viewUrl = storage._id
-        ? `${base}/storage/${storage._id}/view`
+      const viewUrl = idOf(storage)!
+        ? `${base}/storage/${idOf(storage)!}/view`
         : storage.url || "";
 
       return {
-        _id: storage._id || "",
+        ...kitFileKey(idOf(storage)),
         name: storage.name,
         content: {
           type: storage.name.endsWith("/")
@@ -135,7 +132,7 @@ function useStorageService() {
     updateOne,
     deleteOne,
     updateName,
-    buildDirectoryFilter,
+    buildDirectoryClause,
     convertStorageToTypeFile,
 
     uploadLoading: uploadResult.isLoading,

@@ -29,10 +29,19 @@ function apiTypeToFieldKind(apiType: string): FieldKind {
  */
 function innerPropertyToFormState(
   fieldKey: string,
-  property: Record<string, any>
+  property: Record<string, any>,
+  principalKey?: string
 ): InnerFieldFormState {
   const kind = apiTypeToFieldKind(property.type);
-  const partial = buildPartialFormState(fieldKey, property, kind, undefined, undefined);
+  const partial = buildPartialFormState(
+    fieldKey,
+    property,
+    kind,
+    undefined,
+    undefined,
+    undefined,
+    principalKey
+  );
   const merged = initForm(kind, partial as FieldFormState);
   // initForm only carries keys present in the field-kind defaults; securityValues
   // is not seeded there, so re-apply it after the merge (mirrors innerFields).
@@ -53,7 +62,8 @@ function buildPartialFormState(
   kind: FieldKind,
   required: string[] | undefined,
   primary: string | undefined,
-  indexFlags: {index: boolean; uniqueValues: boolean} = {index: false, uniqueValues: false}
+  indexFlags: {index: boolean; uniqueValues: boolean} = {index: false, uniqueValues: false},
+  principalKey?: string
 ): Partial<FieldFormState> {
   const isRequired = required?.includes(fieldKey) ?? false;
   const isPrimary = primary === fieldKey;
@@ -163,7 +173,7 @@ function buildPartialFormState(
       if (itemType === "object" && property.items?.properties) {
         innerFields = Object.entries(
           property.items.properties as Record<string, Record<string, any>>
-        ).map(([key, prop]) => innerPropertyToFormState(key, prop));
+        ).map(([key, prop]) => innerPropertyToFormState(key, prop, principalKey));
       }
       break;
     }
@@ -172,7 +182,7 @@ function buildPartialFormState(
       if (property.properties) {
         innerFields = Object.entries(
           property.properties as Record<string, Record<string, any>>
-        ).map(([key, prop]) => innerPropertyToFormState(key, prop));
+        ).map(([key, prop]) => innerPropertyToFormState(key, prop, principalKey));
       }
       break;
     }
@@ -194,7 +204,7 @@ function buildPartialFormState(
     presetValues,
     defaultValue,
     // No acl yields {mode: "everyone", expression: ""} so the security form is stable.
-    securityValues: inferSecurityFromAcl(property.acl)
+    securityValues: inferSecurityFromAcl(property.acl, principalKey)
   };
 
   if (multipleSelectionTab !== undefined) {
@@ -233,7 +243,8 @@ function fieldIndexFlags(
 export function propertyToFieldFormState(
   fieldKey: string,
   property: BucketProperty,
-  bucket: Pick<BucketSchema, "required" | "primary" | "indexes">
+  bucket: Pick<BucketSchema, "required" | "primary" | "indexes">,
+  principalKey?: string
 ): FieldFormState {
   const kind = apiTypeToFieldKind(property.type);
   const partial = buildPartialFormState(
@@ -242,7 +253,8 @@ export function propertyToFieldFormState(
     kind,
     bucket.required,
     bucket.primary,
-    fieldIndexFlags(bucket.indexes, fieldKey)
+    fieldIndexFlags(bucket.indexes, fieldKey),
+    principalKey
   );
   const merged = initForm(kind, partial as FieldFormState);
   if (partial.innerFields !== undefined) {

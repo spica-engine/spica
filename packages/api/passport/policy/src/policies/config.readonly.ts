@@ -1,5 +1,4 @@
 export default {
-  _id: "ConfigReadOnlyAccess",
   name: "Configuration Read Only Access",
   description: "Read only access to configuration service.",
   statement: [

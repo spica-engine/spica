@@ -1,10 +1,6 @@
 import {Controller} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {
-  DatabaseService,
-  DatabaseTestingModule,
-  getConnectionUri
-} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
 import {ClassCommander, ReplicationModule} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
 
@@ -39,15 +35,10 @@ export class ShiftController {
     this.calls.fn1.push([arg1, arg2]);
   }
 }
-describe("Commander", () => {
-  function getModuleBuilder(controller, connectionUri?: string, dbName?: string) {
+contractSuite("Commander", engine => {
+  function getModuleBuilder(controller, first?: TestingModule) {
     return Test.createTestingModule({
-      imports: [
-        connectionUri
-          ? DatabaseTestingModule.connect(connectionUri, dbName)
-          : DatabaseTestingModule.replicaSet(),
-        ReplicationModule.forRoot()
-      ],
+      imports: [first ? engine.sharing(first) : engine.module(), ReplicationModule.forRoot()],
       controllers: [controller]
     });
   }
@@ -61,10 +52,7 @@ describe("Commander", () => {
     beforeEach(async () => {
       module1 = await getModuleBuilder(SyncController).compile();
       ctrl1 = module1.get(SyncController);
-      const db = module1.get(DatabaseService);
-
-      const connectionUri = getConnectionUri();
-      module2 = await getModuleBuilder(SyncController, connectionUri, db.databaseName).compile();
+      module2 = await getModuleBuilder(SyncController, module1).compile();
       ctrl2 = module2.get(SyncController);
       await wait(5000);
     });
@@ -112,10 +100,7 @@ describe("Commander", () => {
     beforeEach(async () => {
       module1 = await getModuleBuilder(ShiftController).compile();
       ctrl1 = module1.get(ShiftController);
-      const db = module1.get(DatabaseService);
-
-      const connectionUri = getConnectionUri();
-      module2 = await getModuleBuilder(ShiftController, connectionUri, db.databaseName).compile();
+      module2 = await getModuleBuilder(ShiftController, module1).compile();
 
       ctrl2 = module2.get(ShiftController);
       await wait(5000);

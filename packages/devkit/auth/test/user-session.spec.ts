@@ -1,8 +1,8 @@
 import * as Auth from "../";
 import {UserSession} from "../";
-import {Axios} from "@spica-devkit/internal_common";
+import {Axios, KEY_FIELDS} from "@spica-devkit/internal_common";
 
-describe("UserSession", () => {
+describe.each(KEY_FIELDS)("UserSession (%s records)", key => {
   let getSpy: jest.SpyInstance;
   let postSpy: jest.SpyInstance;
   let putSpy: jest.SpyInstance;
@@ -10,9 +10,9 @@ describe("UserSession", () => {
   beforeEach(() => {
     getSpy = jest.spyOn(Axios.prototype, "get").mockImplementation((url: string) => {
       if (url.includes("/verify")) {
-        return Promise.resolve({_id: "user_id_123", username: "testuser"});
+        return Promise.resolve({[key]: "user_id_123", username: "testuser"});
       }
-      return Promise.resolve({_id: "user_id_123", username: "testuser", policies: []});
+      return Promise.resolve({[key]: "user_id_123", username: "testuser", policies: []});
     });
     postSpy = jest.spyOn(Axios.prototype, "post").mockImplementation((url: string) => {
       if (url.includes("/passport/login")) {
@@ -52,7 +52,7 @@ describe("UserSession", () => {
     });
     putSpy = jest
       .spyOn(Axios.prototype, "put")
-      .mockReturnValue(Promise.resolve({_id: "user_id_123", username: "testuser", policies: []}));
+      .mockReturnValue(Promise.resolve({[key]: "user_id_123", username: "testuser", policies: []}));
 
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
     Auth.initialize({apikey: "TEST_APIKEY"});

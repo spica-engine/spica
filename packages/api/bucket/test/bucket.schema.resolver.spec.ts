@@ -2,17 +2,19 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {BucketService} from "@spica-server/bucket-services";
 import {BucketSchemaResolver} from "@spica-server/bucket/src/bucket.schema.resolver";
 import {SchemaModule} from "@spica-server/core-schema";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite} from "@spica-server/database-testing";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {Observable, Subject} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
+import {idOf, withId} from "@spica-server/data";
 
-describe("Bucket Schema Resolver", () => {
+contractSuite("Bucket Schema Resolver", engine => {
   class MockBucketService {
     onLanguageUpdated = new Subject();
     onBucketUpdated = new Subject();
     constructor() {}
-    findOne() {}
+    findById() {}
     getPreferences() {}
     watchBucket(bucketId: string, propagateOnStart: boolean) {
       return new Observable(observer => {
@@ -38,8 +40,9 @@ describe("Bucket Schema Resolver", () => {
   let schemaResolver: BucketSchemaResolver;
   let bs: BucketService;
 
-  const bucket = {
-    _id: new ObjectId(),
+  let bucket: any;
+
+  const bucketFixture = {
     title: "New Bucket",
     description: "Describe your new bucket",
     icon: "view_stream",
@@ -79,11 +82,7 @@ describe("Bucket Schema Resolver", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        DatabaseTestingModule.standalone(),
-        PreferenceTestingModule,
-        SchemaModule.forChild()
-      ],
+      imports: [engine.module(), PreferenceTestingModule, SchemaModule.forChild()],
       providers: [
         {
           provide: BucketService,
@@ -91,9 +90,13 @@ describe("Bucket Schema Resolver", () => {
         }
       ]
     }).compile();
+    bucket = withId(
+      structuredClone(bucketFixture),
+      String(module.get<IdTypes>(ID_TYPES).forCollection("buckets").generate())
+    );
     bs = module.get(BucketService);
     schemaResolver = new BucketSchemaResolver(bs);
-    jest.spyOn(bs, "findOne").mockReturnValue(Promise.resolve({...bucket}) as any);
+    jest.spyOn(bs, "findById").mockReturnValue(Promise.resolve({...bucket}) as any);
     jest.spyOn(bs, "getPreferences").mockReturnValue(Promise.resolve(preference) as any);
   });
 
@@ -114,12 +117,12 @@ describe("Bucket Schema Resolver", () => {
     bs["onBucketUpdated"].next(updatedBucket);
 
     expect(
-      schemaResolver.resolve(bucket._id.toHexString()).pipe(take(3), bufferCount(3)).toPromise()
+      schemaResolver.resolve(idOf(bucket)).pipe(take(3), bufferCount(3)).toPromise()
     ).resolves.toEqual([
       //initial schema
       {
         $schema: "http://spica.internal/bucket/schema",
-        $id: String(bucket._id),
+        $id: String(idOf(bucket)),
         title: "New Bucket",
         description: "Describe your new bucket",
         readOnly: false,
@@ -157,7 +160,7 @@ describe("Bucket Schema Resolver", () => {
       //preference updates
       {
         $schema: "http://spica.internal/bucket/schema",
-        $id: String(bucket._id),
+        $id: String(idOf(bucket)),
         title: "New Bucket",
         description: "Describe your new bucket",
         readOnly: false,
@@ -190,7 +193,7 @@ describe("Bucket Schema Resolver", () => {
       //bucket updates
       {
         $schema: "http://spica.internal/bucket/schema",
-        $id: String(bucket._id),
+        $id: String(idOf(bucket)),
         title: "New Bucket",
         description: "Describe your new bucket",
         readOnly: false,

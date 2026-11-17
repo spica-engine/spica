@@ -1,0 +1,5 @@
+{
+  "name": "interface/data",
+  "sourceRoot": "packages/interface/data/src",
+  "projectType": "library"
+}

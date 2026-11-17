@@ -13,6 +13,9 @@
       "path": "../../../interface/passport/guard"
     },
     {
+      "path": "../../../interface/data"
+    },
+    {
       "path": "../../../interface/core"
     },
     {
@@ -22,10 +25,7 @@
       "path": "../../../interface/bucket"
     },
     {
-      "path": "../../../database"
-    },
-    {
-      "path": "../../../core/differ"
+      "path": "../../../data"
     },
     {
       "path": "../services"

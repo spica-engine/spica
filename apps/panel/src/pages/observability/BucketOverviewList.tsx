@@ -10,6 +10,7 @@ import {
   type BucketHealthStatus,
 } from "./bucketHealth";
 import styles from "./Observability.module.scss";
+import { idOf } from "../../utils/recordKey";
 
 type BucketOverviewListProps = {
   buckets: BucketType[];
@@ -46,7 +47,7 @@ const BucketOverviewList = ({
     const healthCounts: Record<BucketHealthStatus, number> = {...EMPTY_HEALTH};
 
     for (const bucket of buckets) {
-      const count = counts[bucket._id];
+      const count = counts[idOf(bucket)!];
       if (typeof count !== "number") continue;
       countedBuckets += 1;
       totalEntities += count;
@@ -76,7 +77,7 @@ const BucketOverviewList = ({
         width: "160px",
         minWidth: "120px",
         renderCell: ({row}) => (
-          <EntityCountCell bucketId={row._id} onCount={handleCount} />
+          <EntityCountCell bucketId={idOf(row)!} onCount={handleCount} />
         ),
       },
       {
@@ -85,7 +86,7 @@ const BucketOverviewList = ({
         width: "180px",
         minWidth: "140px",
         renderCell: ({row}) => {
-          const count = counts[row._id];
+          const count = counts[idOf(row)!];
           if (typeof count !== "number") return <HealthPill status="healthy" loading />;
           const status = deriveBucketHealth(count, row);
           return <HealthPill status={status} title={healthReason(count, row)} />;
@@ -102,7 +103,7 @@ const BucketOverviewList = ({
         minWidth: "100px",
         renderCell: ({row}) => (
           <FlexElement dimensionX="fill" alignment="rightCenter" direction="horizontal">
-            <Button variant="icon" color="default" onClick={() => onSelectBucket(row._id)}>
+            <Button variant="icon" color="default" onClick={() => onSelectBucket(idOf(row)!)}>
               <Icon name="chevronRight" />
             </Button>
           </FlexElement>
@@ -158,7 +159,7 @@ const BucketOverviewList = ({
             data={buckets}
             loading={isLoading}
             skeletonRowCount={8}
-            onRowClick={({row}) => onSelectBucket(row._id)}
+            onRowClick={({row}) => onSelectBucket(idOf(row)!)}
             emptyState={{
               title: "No buckets",
               description: "There are no buckets to observe yet. Create one to get started.",

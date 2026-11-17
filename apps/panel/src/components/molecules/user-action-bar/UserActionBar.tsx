@@ -4,7 +4,9 @@ import {Button, Icon, Popover} from "oziko-ui-kit";
 import SearchBar from "../../atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import FilterPanel from "../../prefabs/filter-panel/FilterPanel";
-import type {FilterField} from "../../prefabs/filter-panel/types";
+import type {FilterConditionRow, FilterField} from "../../prefabs/filter-panel/types";
+import {useFilterBuilder} from "../../../hooks/useFilterBuilder";
+import type {FilterInput} from "../../../utils/serializeFilter";
 
 const SEARCH_DEBOUNCE_TIME = 500;
 
@@ -18,11 +20,12 @@ const USER_FILTER_FIELDS: FilterField[] = [
 type UserActionBarProps = {
   onSearch: (value: string) => void;
   onNewUser: () => void;
-  onFilter: (filter: Record<string, any> | null) => void;
+  onFilter: (filter: FilterInput | null) => void;
 };
 
 const UserActionBar = ({onSearch, onNewUser, onFilter}: UserActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
+  const buildFilter = useFilterBuilder(USER_FILTER_FIELDS);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeFilterCount, setActiveFilterCount] = useState(0);
 
@@ -53,11 +56,12 @@ const UserActionBar = ({onSearch, onNewUser, onFilter}: UserActionBarProps) => {
   );
 
   const handleFilterApply = useCallback(
-    (filter: Record<string, any> | null) => {
+    (_mongoFilter: Record<string, any> | null, conditions: FilterConditionRow[]) => {
+      const filter = buildFilter(conditions);
       setActiveFilterCount(filter ? 1 : 0);
       onFilter(filter);
     },
-    [onFilter]
+    [buildFilter, onFilter]
   );
 
   const handleFilterClear = useCallback(() => {

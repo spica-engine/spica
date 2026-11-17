@@ -1,3 +1,4 @@
+import {useEngine} from "../../../hooks/useEngine";
 import type { TypeDirectories, DirectoryItem } from "src/types/storage";
 import {
   useUpdateStorageNameMutation,
@@ -11,6 +12,7 @@ export function useDragAndDrop(
 ) {
   const [updateStorageName] = useUpdateStorageNameMutation();
   const [getStorageItems] = useLazyGetStorageItemsQuery();
+  const engine = useEngine();
 
   const handleDrop = async (
     draggedItem: DirectoryItem,
@@ -51,7 +53,8 @@ export function useDragAndDrop(
         async params => {
           const {data} = await getStorageItems(params);
           return data;
-        }
+        },
+        engine
       );
 
       return true;

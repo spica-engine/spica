@@ -1,12 +1,12 @@
 import { baseApi } from './baseApi';
 import { setToken, clearToken } from '../slices/authSlice';
+import type { SystemRecord } from '../../utils/recordKey';
 
-export interface Strategy {
+export interface Strategy extends SystemRecord {
   icon: string;
   name: string;
   title: string;
   type: string;
-  _id: string;
 }
 
 export interface LoginRequest {

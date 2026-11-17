@@ -1,6 +1,7 @@
 import {eliminateNonConfigurables, putConfiguration, replaceValue} from "@spica-server/asset";
 import {ObjectId} from "@spica-server/database";
 import {Asset, Config} from "@spica-server/interface-asset";
+import {withId} from "@spica-server/data";
 
 describe("Helpers", () => {
   describe("replaceValue", () => {
@@ -61,12 +62,12 @@ describe("Helpers", () => {
 
   describe("eliminateNonConfigurables", () => {
     it("should filter configurables", () => {
-      const _id = new ObjectId();
+      const resourceId = new ObjectId();
       const actual: Config[] = [
         {
           title: "Set dashboard name",
           module: "dashboard",
-          resource_id: _id.toString(),
+          resource_id: resourceId.toString(),
           submodule: "schema",
           property: "properties.name",
           value: "your_dashboard",
@@ -78,7 +79,7 @@ describe("Helpers", () => {
         {
           title: "Set dashboard name",
           module: "dashboard",
-          resource_id: _id.toString(),
+          resource_id: resourceId.toString(),
           submodule: "schema",
           property: "properties.name",
           value: "my_dahsboard",
@@ -100,7 +101,7 @@ describe("Helpers", () => {
         {
           title: "Set dashboard name",
           module: "dashboard",
-          resource_id: _id.toString(),
+          resource_id: resourceId.toString(),
           submodule: "schema",
           property: "properties.name",
           // it's important to keep value of desired configuration
@@ -145,34 +146,38 @@ describe("Helpers", () => {
         ],
         status: "downloaded",
         resources: [
-          {
-            _id: bucketId,
-            module: "bucket",
-            contents: {
-              schema: {
-                properties: {
-                  role: {
-                    type: "string",
-                    default: "user"
+          withId(
+            {
+              module: "bucket",
+              contents: {
+                schema: {
+                  properties: {
+                    role: {
+                      type: "string",
+                      default: "user"
+                    }
                   }
                 }
               }
-            }
-          },
-          {
-            _id: fnId,
-            module: "function",
-            contents: {
-              schema: {
-                triggers: {
-                  default: {}
+            },
+            bucketId
+          ),
+          withId(
+            {
+              module: "function",
+              contents: {
+                schema: {
+                  triggers: {
+                    default: {}
+                  }
+                },
+                env: {
+                  CARD: "**** **** **** ****"
                 }
-              },
-              env: {
-                CARD: "**** **** **** ****"
               }
-            }
-          }
+            },
+            fnId
+          )
         ]
       };
     });
@@ -228,34 +233,38 @@ describe("Helpers", () => {
         ],
         status: "downloaded",
         resources: [
-          {
-            _id: bucketId,
-            module: "bucket",
-            contents: {
-              schema: {
-                properties: {
-                  role: {
-                    type: "string",
-                    default: "user"
+          withId(
+            {
+              module: "bucket",
+              contents: {
+                schema: {
+                  properties: {
+                    role: {
+                      type: "string",
+                      default: "user"
+                    }
                   }
                 }
               }
-            }
-          },
-          {
-            _id: fnId,
-            module: "function",
-            contents: {
-              schema: {
-                triggers: {
-                  default: {}
+            },
+            bucketId
+          ),
+          withId(
+            {
+              module: "function",
+              contents: {
+                schema: {
+                  triggers: {
+                    default: {}
+                  }
+                },
+                env: {
+                  CARD: "4242 4242 4242 4242"
                 }
-              },
-              env: {
-                CARD: "4242 4242 4242 4242"
               }
-            }
-          }
+            },
+            fnId
+          )
         ]
       });
     });

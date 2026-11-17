@@ -33,9 +33,15 @@ export abstract class ActivityInterceptor implements NestInterceptor {
     }
     return next.handle().pipe(
       tap(async res => {
-        const activities = createActivity(context.switchToHttp().getRequest(), res, this.predict);
-        if (activities.length) {
-          await this.service.insert(activities);
+        try {
+          const activities = createActivity(context.switchToHttp().getRequest(), res, this.predict);
+          if (activities.length) {
+            await this.service.insert(activities);
+          }
+        } catch (error) {
+          this.logger.error(
+            `Failed to record activity: ${error instanceof Error ? error.message : error}`
+          );
         }
       })
     );

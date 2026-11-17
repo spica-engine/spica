@@ -3,19 +3,31 @@ import {Test} from "@nestjs/testing";
 import {ActivityModule} from "@spica-server/activity";
 import {ActivityService} from "@spica-server/activity-services";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {provideRepository, idOf, withId} from "@spica-server/data";
+import {contractSuite} from "@spica-server/database-testing";
 import {Action} from "@spica-server/interface-activity";
+import {ID_TYPES, IdTypes} from "@spica-server/interface-data";
+import {
+  IDENTITY_OPTIONS,
+  IDENTITY_REPOSITORY,
+  IdentityRepository
+} from "@spica-server/interface-passport-identity";
+import {USER_OPTIONS, USER_REPOSITORY, UserRepository} from "@spica-server/interface-passport-user";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 
-describe("Activity Acceptance", () => {
+contractSuite("Activity Acceptance", engine => {
   let request: Request;
   let app: INestApplication;
   let service: ActivityService;
   let created_at: Date;
-  let databaseService: DatabaseService;
+  let identities: IdentityRepository;
+  let users: UserRepository;
+  let idTypes: IdTypes;
 
   let user1Id;
   let user2Id;
+
+  const isActivityId = (id: unknown) => idTypes.forCollection("activity").isValid(id);
 
   let insertedActivityIds = [];
 
@@ -23,10 +35,16 @@ describe("Activity Acceptance", () => {
     created_at = new Date();
     const module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.create(),
+        engine.module(),
         CoreTestingModule,
         PassportTestingModule.initialize(),
         ActivityModule.forRoot({expireAfterSeconds: 60})
+      ],
+      providers: [
+        {provide: IDENTITY_OPTIONS, useValue: {entryLimit: 5}},
+        {provide: USER_OPTIONS, useValue: {entryLimit: 5}},
+        provideRepository(IDENTITY_REPOSITORY),
+        provideRepository(USER_REPOSITORY)
       ]
     }).compile();
 
@@ -37,15 +55,12 @@ describe("Activity Acceptance", () => {
     await app.listen(request.socket);
 
     service = app.get(ActivityService);
-    databaseService = module.get(DatabaseService);
+    identities = module.get(IDENTITY_REPOSITORY);
+    users = module.get(USER_REPOSITORY);
+    idTypes = module.get(ID_TYPES);
 
-    await databaseService
-      .collection("identity")
-      .insertMany([{identifier: "user1"}, {identifier: "user2"}])
-      .then(res => {
-        user1Id = res.insertedIds[0];
-        user2Id = res.insertedIds[1];
-      });
+    user1Id = idOf(await identities.insert({identifier: "user1"} as any));
+    user2Id = idOf(await identities.insert({identifier: "user2"} as any));
 
     insertedActivityIds = await service.insert([
       {
@@ -74,32 +89,38 @@ describe("Activity Acceptance", () => {
     const {body: activities} = await request.get("/activity", {});
 
     activities.forEach(activity => {
-      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.PUT,
-        identifier: "user2",
-        resource: ["test_module", "test_id3"],
-        created_at: activities[0].created_at
-      },
-      {
-        _id: activities[1]._id,
-        action: Action.POST,
-        identifier: "user2",
-        resource: ["test_module", "test_id2"],
-        created_at: activities[1].created_at
-      },
-      {
-        _id: activities[2]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[2].created_at
-      }
+      withId(
+        {
+          action: Action.PUT,
+          identifier: "user2",
+          resource: ["test_module", "test_id3"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      ),
+      withId(
+        {
+          action: Action.POST,
+          identifier: "user2",
+          resource: ["test_module", "test_id2"],
+          created_at: activities[1].created_at
+        },
+        idOf(activities[1])
+      ),
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[2].created_at
+        },
+        idOf(activities[2])
+      )
     ]);
   });
 
@@ -107,18 +128,20 @@ describe("Activity Acceptance", () => {
     const {body: activities} = await request.get("/activity", {identifier: "user1"});
 
     activities.forEach(activity => {
-      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[0].created_at
-      }
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      )
     ]);
   });
 
@@ -126,18 +149,20 @@ describe("Activity Acceptance", () => {
     const {body: activities} = await request.get("/activity", {action: Action.POST});
 
     activities.forEach(activity => {
-      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.POST,
-        identifier: "user2",
-        resource: ["test_module", "test_id2"],
-        created_at: activities[0].created_at
-      }
+      withId(
+        {
+          action: Action.POST,
+          identifier: "user2",
+          resource: ["test_module", "test_id2"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      )
     ]);
   });
 
@@ -147,54 +172,91 @@ describe("Activity Acceptance", () => {
     });
 
     activities.forEach(activity => {
-      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.POST,
-        identifier: "user2",
-        resource: ["test_module", "test_id2"],
-        created_at: activities[0].created_at
-      },
-      {
-        _id: activities[1]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[1].created_at
-      }
+      withId(
+        {
+          action: Action.POST,
+          identifier: "user2",
+          resource: ["test_module", "test_id2"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      ),
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[1].created_at
+        },
+        idOf(activities[1])
+      )
     ]);
   });
 
   it("should filter activities by resources", async () => {
     const {body: activities} = await request.get("/activity", {
-      resource: JSON.stringify({$all: ["test_module"], $in: ["test_id1", "test_id3"]})
+      resource: ["test_module"],
+      documentId: ["test_id1", "test_id3"]
     });
 
     activities.forEach(activity => {
-      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.PUT,
-        identifier: "user2",
-        resource: ["test_module", "test_id3"],
-        created_at: activities[0].created_at
-      },
-      {
-        _id: activities[1]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[1].created_at
-      }
+      withId(
+        {
+          action: Action.PUT,
+          identifier: "user2",
+          resource: ["test_module", "test_id3"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      ),
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[1].created_at
+        },
+        idOf(activities[1])
+      )
     ]);
+  });
+
+  it("should filter activities by the values their resource holds", async () => {
+    const {body: activities} = await request.get("/activity", {
+      resource: ["test_module", "test_id2"]
+    });
+
+    expect(activities.map(activity => activity.resource)).toEqual([["test_module", "test_id2"]]);
+  });
+
+  it("should filter activities by any of the given document ids", async () => {
+    const {body: activities} = await request.get("/activity", {
+      documentId: ["test_id2", "test_id3"]
+    });
+
+    expect(activities.map(activity => activity.resource)).toEqual([
+      ["test_module", "test_id3"],
+      ["test_module", "test_id2"]
+    ]);
+  });
+
+  it("should answer nothing when no activity holds the given resource", async () => {
+    const {body: activities} = await request.get("/activity", {
+      resource: ["test_module"],
+      documentId: ["missing"]
+    });
+
+    expect(activities).toEqual([]);
   });
 
   it("should skip and limit", async () => {
@@ -204,18 +266,20 @@ describe("Activity Acceptance", () => {
     });
 
     activities.forEach(activity => {
-      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[0].created_at
-      }
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      )
     ]);
   });
 
@@ -227,36 +291,34 @@ describe("Activity Acceptance", () => {
     const {body: activities} = await request.get("/activity");
 
     activities.forEach(activity => {
-      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.POST,
-        identifier: "user2",
-        resource: ["test_module", "test_id2"],
-        created_at: activities[0].created_at
-      },
-      {
-        _id: activities[1]._id,
-        action: Action.DELETE,
-        identifier: "user1",
-        resource: ["test_module", "test_id1"],
-        created_at: activities[1].created_at
-      }
+      withId(
+        {
+          action: Action.POST,
+          identifier: "user2",
+          resource: ["test_module", "test_id2"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      ),
+      withId(
+        {
+          action: Action.DELETE,
+          identifier: "user1",
+          resource: ["test_module", "test_id1"],
+          created_at: activities[1].created_at
+        },
+        idOf(activities[1])
+      )
     ]);
   });
 
   it("should filter activities by username", async () => {
-    let testUser1Id;
-    await databaseService
-      .collection("user")
-      .insertOne({username: "testuser1"})
-      .then(res => {
-        testUser1Id = res.insertedId;
-      });
+    const testUser1Id = idOf(await users.insert({username: "testuser1"} as any));
 
     await service.insert([
       {
@@ -269,18 +331,20 @@ describe("Activity Acceptance", () => {
     const {body: activities} = await request.get("/activity", {username: "testuser1"});
 
     activities.forEach(activity => {
-      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(isActivityId(idOf(activity))).toBe(true);
       expect(typeof new Date(activity.created_at).getTime()).toBe("number");
     });
 
     expect(activities).toEqual([
-      {
-        _id: activities[0]._id,
-        action: Action.POST,
-        username: "testuser1",
-        resource: ["test_module", "test_id_username"],
-        created_at: activities[0].created_at
-      }
+      withId(
+        {
+          action: Action.POST,
+          username: "testuser1",
+          resource: ["test_module", "test_id_username"],
+          created_at: activities[0].created_at
+        },
+        idOf(activities[0])
+      )
     ]);
   });
 

@@ -326,7 +326,7 @@ describe("Entrypoint", () => {
 
     function completion() {
       return new Promise<boolean>(resolve => {
-        queue["_complete"] = (_id: string, succedded: boolean) => resolve(succedded);
+        queue["_complete"] = (_event: string, succedded: boolean) => resolve(succedded);
       });
     }
 
@@ -369,9 +369,9 @@ describe("Entrypoint", () => {
       expect(await failed).toBe(false);
 
       await new Promise(resolve => setTimeout(resolve, 500));
-      expect(
-        writeSpy.mock.calls.map(args => args[0].toString()).join("")
-      ).toContain("rejected after await");
+      expect(writeSpy.mock.calls.map(args => args[0].toString()).join("")).toContain(
+        "rejected after await"
+      );
       expect(exited).toBe(false);
 
       const succeeded = completion();

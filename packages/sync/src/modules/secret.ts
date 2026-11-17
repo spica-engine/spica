@@ -7,9 +7,9 @@ import {
   writeLocalSchema
 } from "../fs-utils";
 import {ResourceModule} from "../types";
+import {KEY_FIELDS, recordKey} from "../record-key";
 
 interface Secret {
-  _id?: string;
   key: string;
   value?: string;
   [key: string]: unknown;
@@ -18,7 +18,7 @@ interface Secret {
 // "value" is excluded from diff/render: the API never returns it (projected out server-side),
 // so comparing or displaying it would cause permanent false-positives and secret leakage.
 // "updated_at" is server-managed, so it must be ignored for the same reason.
-const IGNORED_FIELDS = ["_id", "value", "updated_at"];
+const IGNORED_FIELDS = [...KEY_FIELDS, "value", "updated_at"];
 
 export const secretModule: ResourceModule<Secret> = {
   name: "secret",
@@ -35,7 +35,7 @@ export const secretModule: ResourceModule<Secret> = {
     const items = unwrapList(res);
     return items.map(s => ({
       slug: sanitizeSlug(s.key),
-      id: s._id!,
+      id: recordKey(s)!,
       data: s
     }));
   },
@@ -73,6 +73,6 @@ export const secretModule: ResourceModule<Secret> = {
   },
 
   extractLocalId(data) {
-    return data._id;
+    return recordKey(data);
   }
 };

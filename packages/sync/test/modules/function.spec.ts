@@ -2,7 +2,9 @@ import os from "os";
 import path from "path";
 import fs from "fs";
 import yaml from "yaml";
-import {functionModule} from "@spica-server/sync";
+import {functionModule, SYSTEM_KEY_FIELDS} from "@spica-server/sync";
+
+const SHAPES = Object.entries(SYSTEM_KEY_FIELDS);
 
 function makeTmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "spica-fn-test-"));
@@ -93,11 +95,11 @@ describe("functionModule.readLocal", () => {
   });
 });
 
-describe("functionModule.readRemote", () => {
+describe.each(SHAPES)("functionModule.readRemote (%s records)", (_shape, key) => {
   it("fetches schema, index, and dependencies for each function", async () => {
     mockHttp.get.mockImplementation((url: string) => {
       if (url === "function")
-        return Promise.resolve([{_id: "fn1", name: "MyFn", language: "javascript"}]);
+        return Promise.resolve([{[key]: "fn1", name: "MyFn", language: "javascript"}]);
       if (url === "function/fn1/index") return Promise.resolve({index: "export default () => {};"});
       if (url === "function/fn1/dependencies")
         return Promise.resolve([{name: "lodash", version: "^4.0.0"}]);
@@ -116,11 +118,11 @@ describe("functionModule.readRemote", () => {
       if (url === "function")
         return Promise.resolve([
           {
-            _id: "fn1",
+            [key]: "fn1",
             name: "MyFn",
             language: "javascript",
-            env_vars: [{_id: "ev-id-1", key: "API_KEY", value: "secret"}],
-            secrets: [{_id: "sec-id-1", key: "DB_PASS"}]
+            env_vars: [{[key]: "ev-id-1", key: "API_KEY", value: "secret"}],
+            secrets: [{[key]: "sec-id-1", key: "DB_PASS"}]
           }
         ]);
       if (url === "function/fn1/index") return Promise.resolve({index: ""});
@@ -138,9 +140,9 @@ describe("functionModule.readRemote", () => {
       if (url === "function")
         return Promise.resolve([
           {
-            _id: "fn1",
+            [key]: "fn1",
             name: "MyFn",
-            env_vars: ["ev-c", {_id: "ev-a"}, "ev-b"],
+            env_vars: ["ev-c", {[key]: "ev-a"}, "ev-b"],
             secrets: ["sec-b", "sec-a"]
           }
         ]);
@@ -156,7 +158,7 @@ describe("functionModule.readRemote", () => {
   it("unwraps a paginated {data: [...]} response from the function endpoint", async () => {
     mockHttp.get.mockImplementation((url: string) => {
       if (url === "function")
-        return Promise.resolve({data: [{_id: "fn1", name: "MyFn", language: "javascript"}]});
+        return Promise.resolve({data: [{[key]: "fn1", name: "MyFn", language: "javascript"}]});
       if (url === "function/fn1/index") return Promise.resolve({index: ""});
       if (url === "function/fn1/dependencies") return Promise.resolve([]);
       return Promise.resolve([]);
@@ -184,7 +186,7 @@ describe("functionModule.readRemote", () => {
   // empty index, so `plan` reported changes for functions nobody had touched.
   it("fails naming the function when a detail request fails for any reason but 404", async () => {
     mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve([{_id: "fn1", name: "MyFn"}]);
+      if (url === "function") return Promise.resolve([{[key]: "fn1", name: "MyFn"}]);
       if (url === "function/fn1/index")
         return Promise.reject(Object.assign(new Error("Too Many Requests"), {status: 429}));
       return Promise.resolve([]);
@@ -197,7 +199,7 @@ describe("functionModule.readRemote", () => {
 
   it("treats a 404 as a function that has no index or dependencies yet", async () => {
     mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve([{_id: "fn1", name: "MyFn"}]);
+      if (url === "function") return Promise.resolve([{[key]: "fn1", name: "MyFn"}]);
       return Promise.reject(Object.assign(new Error("Index does not exist."), {status: 404}));
     });
 
@@ -207,10 +209,10 @@ describe("functionModule.readRemote", () => {
   });
 });
 
-describe("functionModule.create", () => {
+describe.each(SHAPES)("functionModule.create (%s records)", (_shape, key) => {
   it("POSTs schema without env_vars, then index, then dependencies", async () => {
     mockHttp.post.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve({_id: "new-id"});
+      if (url === "function") return Promise.resolve({[key]: "new-id"});
       return Promise.resolve({});
     });
     mockHttp.put.mockResolvedValue({});
@@ -237,7 +239,7 @@ describe("functionModule.create", () => {
 
   it("injects env_vars via PUT after create", async () => {
     mockHttp.post.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve({_id: "new-id"});
+      if (url === "function") return Promise.resolve({[key]: "new-id"});
       return Promise.resolve({});
     });
     mockHttp.put.mockResolvedValue({});
@@ -257,7 +259,7 @@ describe("functionModule.create", () => {
 
   it("injects secrets via PUT after create", async () => {
     mockHttp.post.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve({_id: "new-id"});
+      if (url === "function") return Promise.resolve({[key]: "new-id"});
       return Promise.resolve({});
     });
     mockHttp.put.mockResolvedValue({});
@@ -277,7 +279,7 @@ describe("functionModule.create", () => {
 
   it("preserves version range (^) when posting dependencies", async () => {
     mockHttp.post.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve({_id: "new-id"});
+      if (url === "function") return Promise.resolve({[key]: "new-id"});
       return Promise.resolve({});
     });
     mockHttp.put.mockResolvedValue({});
@@ -298,7 +300,7 @@ describe("functionModule.create", () => {
 
   it("sends file: dependencies to the server as-is", async () => {
     mockHttp.post.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve({_id: "new-id"});
+      if (url === "function") return Promise.resolve({[key]: "new-id"});
       return Promise.resolve({});
     });
     mockHttp.put.mockResolvedValue({});
@@ -319,7 +321,7 @@ describe("functionModule.create", () => {
 
   it("skips dependencies POST when there are no dependencies", async () => {
     mockHttp.post.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve({_id: "new-id"});
+      if (url === "function") return Promise.resolve({[key]: "new-id"});
       return Promise.resolve({});
     });
     mockHttp.put.mockResolvedValue({});
@@ -337,13 +339,13 @@ describe("functionModule.create", () => {
   });
 });
 
-describe("functionModule.update", () => {
+describe.each(SHAPES)("functionModule.update (%s records)", (_shape, key) => {
   it("PUTs schema without env_vars and POSTs index", async () => {
     mockHttp.put.mockResolvedValue({});
     mockHttp.post.mockResolvedValue({});
     mockHttp.get.mockImplementation((url: string) => {
       if (url === "function/fn-id")
-        return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: []});
+        return Promise.resolve({[key]: "fn-id", name: "MyFn", env_vars: []});
       return Promise.resolve([]);
     });
 
@@ -373,7 +375,7 @@ describe("functionModule.update", () => {
     mockHttp.delete.mockResolvedValue({});
     mockHttp.get.mockImplementation((url: string) => {
       if (url === "function/fn-id")
-        return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: ["ev-old", "ev-keep"]});
+        return Promise.resolve({[key]: "fn-id", name: "MyFn", env_vars: ["ev-old", "ev-keep"]});
       return Promise.resolve([]); // dependencies
     });
 
@@ -402,7 +404,7 @@ describe("functionModule.update", () => {
     mockHttp.get.mockImplementation((url: string) => {
       if (url === "function/fn-id")
         return Promise.resolve({
-          _id: "fn-id",
+          [key]: "fn-id",
           name: "MyFn",
           env_vars: [],
           secrets: ["sec-old", "sec-keep"]
@@ -434,7 +436,7 @@ describe("functionModule.update", () => {
     mockHttp.delete.mockResolvedValue({});
     mockHttp.get.mockImplementation((url: string) => {
       if (url === "function/fn-id")
-        return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: []});
+        return Promise.resolve({[key]: "fn-id", name: "MyFn", env_vars: []});
       return Promise.resolve([]); // no existing deps
     });
 
@@ -462,7 +464,7 @@ describe("functionModule.update", () => {
     mockHttp.delete.mockResolvedValue({});
     mockHttp.get.mockImplementation((url: string) => {
       if (url === "function/fn-id")
-        return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: []});
+        return Promise.resolve({[key]: "fn-id", name: "MyFn", env_vars: []});
       return Promise.resolve([
         {name: "old-pkg", version: "^1.0.0"},
         {name: "keep-pkg", version: "^2.0.0"}
@@ -489,7 +491,7 @@ describe("functionModule.update", () => {
   });
 });
 
-describe("functionModule.writeLocal", () => {
+describe.each(SHAPES)("functionModule.writeLocal (%s records)", (_shape, key) => {
   it("creates schema.yaml, index.mjs, and package.json", async () => {
     const dir = makeTmpDir();
     try {
@@ -497,7 +499,7 @@ describe("functionModule.writeLocal", () => {
         slug: "MyFn",
         id: "fn1",
         data: {
-          schema: {_id: "fn1", name: "MyFn", language: "javascript"},
+          schema: {[key]: "fn1", name: "MyFn", language: "javascript"},
           index: "export default () => {};",
           dependencies: {}
         }

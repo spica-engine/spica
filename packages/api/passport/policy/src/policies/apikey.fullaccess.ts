@@ -1,7 +1,6 @@
 import ApiKeyReadOnlyAccess from "./apikey.readonly.js";
 
 export default {
-  _id: "ApiKeyFullAccess",
   name: "Api Key Full Access",
   description: "Full access to passport api service.",
   statement: [

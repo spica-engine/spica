@@ -1,11 +1,10 @@
 import {Action} from "@spica-server/interface-activity";
 import {createEnvVarActivity} from "../src/activity.resource";
+import {withId} from "@spica-server/data";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {
-    const res = {
-      _id: "env_var_id"
-    };
+    const res = withId({}, "env_var_id");
 
     const activities = createEnvVarActivity(
       {action: Action.POST, identifier: "test_user"},

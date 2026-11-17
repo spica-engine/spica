@@ -10,6 +10,9 @@
     },
     {
       "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../data/mongodb"
     }
   ],
   "compilerOptions": {

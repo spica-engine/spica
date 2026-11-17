@@ -2,6 +2,7 @@ import {
   registerPolicyAttacher,
   providePolicyFinalizer
 } from "@spica-server/passport-identity/src/utility";
+import {withId} from "@spica-server/data";
 
 describe("Utilities", () => {
   let request;
@@ -11,10 +12,7 @@ describe("Utilities", () => {
       params: {
         id: "test_user"
       },
-      user: {
-        _id: "test_user",
-        policies: []
-      },
+      user: withId({policies: []}, "test_user"),
       body: {},
       method: "PUT"
     };
@@ -40,29 +38,18 @@ describe("Utilities", () => {
   });
 
   it("should pull policy from identity policies", async () => {
-    const IdentityService: any = {
-      updateMany: (filter: object, update: object) => {
-        return Promise.resolve();
+    const identities: any = {
+      removePolicyFromAll: (policyId: string) => {
+        return Promise.resolve(0);
       }
     };
 
-    const updateManySpy = jest.spyOn(IdentityService, "updateMany");
+    const removePolicyFromAllSpy = jest.spyOn(identities, "removePolicyFromAll");
 
-    const factoryFunction = providePolicyFinalizer(IdentityService);
+    const factoryFunction = providePolicyFinalizer(identities);
     await factoryFunction("my_policy");
 
-    expect(updateManySpy).toHaveBeenCalledTimes(1);
-    expect(updateManySpy).toHaveBeenCalledWith(
-      {
-        policies: {
-          $in: ["my_policy"]
-        }
-      },
-      {
-        $pull: {
-          policies: "my_policy"
-        }
-      }
-    );
+    expect(removePolicyFromAllSpy).toHaveBeenCalledTimes(1);
+    expect(removePolicyFromAllSpy).toHaveBeenCalledWith("my_policy");
   });
 });

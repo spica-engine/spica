@@ -1,15 +1,22 @@
 import {Injectable, Inject} from "@nestjs/common";
-import {CommandService} from "../database/command.js";
 import {
+  COMMAND_COLLECTION,
+  COMMAND_REPOSITORY,
   CommandMessage,
+  CommandRepository,
   COMMAND_MEMORY_OPTIONS,
   MemoryOptions
 } from "@spica-server/interface-replication";
-import {MongoMemory} from "./mongo.js";
+import {CHANGE_FEED, ChangeFeed} from "@spica-server/interface-data";
+import {FeedMemory} from "./feed.js";
 
 @Injectable()
-export class CommandMemory extends MongoMemory<CommandMessage> {
-  constructor(cmdService: CommandService, @Inject(COMMAND_MEMORY_OPTIONS) options: MemoryOptions) {
-    super(cmdService, options);
+export class CommandMemory extends FeedMemory<CommandMessage> {
+  constructor(
+    @Inject(CHANGE_FEED) feed: ChangeFeed,
+    @Inject(COMMAND_REPOSITORY) commands: CommandRepository,
+    @Inject(COMMAND_MEMORY_OPTIONS) options: MemoryOptions
+  ) {
+    super(feed, COMMAND_COLLECTION, commands, options);
   }
 }

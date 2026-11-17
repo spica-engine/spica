@@ -5,7 +5,7 @@ import {asyncScheduler, Observable, Subject, Subscriber, Subscription, TeardownL
 import {filter, bufferTime, switchMap, share} from "rxjs/operators";
 import {Readable} from "stream";
 import {DatabaseChange, FindOptions, OperationType} from "@spica-server/interface-database";
-import {levenshtein} from "./levenshtein.js";
+import {levenshtein} from "@spica-server/realtime";
 import {late} from "./operators.js";
 
 export class Emitter<T extends {_id: ObjectId}> {

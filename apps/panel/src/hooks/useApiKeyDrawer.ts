@@ -11,6 +11,7 @@ import {
   type ApiKey,
 } from "../store/api/apiKeyApi";
 import { usePolicyFormBindings } from "./usePolicyFormBindings";
+import { idOf } from "../utils/recordKey";
 
 interface UseApiKeyDrawerConfig {
   isOpen: boolean;
@@ -30,7 +31,7 @@ export function useApiKeyDrawer({
   const [addPolicy, { isLoading: isAddingPolicy }] = useAddApiKeyPolicyMutation();
   const [removePolicy, { isLoading: isRemovingPolicy }] = useRemoveApiKeyPolicyMutation();
 
-  const isEditMode = !!selectedApiKey?._id;
+  const isEditMode = !!idOf(selectedApiKey);
 
   const [formValues, setFormValues] = useState<TypeRepresenterValue>({
     name: "",
@@ -106,8 +107,8 @@ export function useApiKeyDrawer({
         active: formValues.active as boolean,
       };
 
-      if (isEditMode && selectedApiKey?._id) {
-        await updateApiKey({ id: selectedApiKey._id, body }).unwrap();
+      if (isEditMode && selectedApiKey && idOf(selectedApiKey)) {
+        await updateApiKey({ id: idOf(selectedApiKey)!, body }).unwrap();
 
         const currentPolicies = selectedApiKey.policies ?? [];
         const toAdd = selectedPolicies.filter((p) => !currentPolicies.includes(p));
@@ -115,19 +116,19 @@ export function useApiKeyDrawer({
 
         await Promise.all([
           ...toAdd.map((policyId) =>
-            addPolicy({ id: selectedApiKey._id!, policyId }).unwrap()
+            addPolicy({ id: idOf(selectedApiKey)!, policyId }).unwrap()
           ),
           ...toRemove.map((policyId) =>
-            removePolicy({ id: selectedApiKey._id!, policyId }).unwrap()
+            removePolicy({ id: idOf(selectedApiKey)!, policyId }).unwrap()
           ),
         ]);
       } else {
         const created = await createApiKey(body).unwrap();
 
-        if (selectedPolicies.length > 0 && created._id) {
+        if (selectedPolicies.length > 0 && idOf(created)) {
           await Promise.all(
             selectedPolicies.map((policyId) =>
-              addPolicy({ id: created._id!, policyId }).unwrap()
+              addPolicy({ id: idOf(created)!, policyId }).unwrap()
             )
           );
         }

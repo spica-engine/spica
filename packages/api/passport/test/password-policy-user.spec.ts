@@ -1,31 +1,35 @@
 import {INestApplication} from "@nestjs/common";
-import {Test} from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, DatabaseService} from "@spica-server/database-testing";
+import {clearStorage, contractSuite} from "@spica-server/database-testing";
 import {PassportModule} from "@spica-server/passport";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {ConfigModule, ConfigService} from "@spica-server/config";
+import {idOf} from "@spica-server/data";
 
-describe("Password Policy - User", () => {
+contractSuite("Password Policy - User", engine => {
   let app: INestApplication;
   let req: Request;
-  let database: DatabaseService;
+  let module: TestingModule;
   let configService: ConfigService;
   let adminToken: string;
 
+  const clearConfigs = () =>
+    clearStorage(engine, module, {mongodb: ["config"], postgresql: ["configs"]});
+
   function setConfig(module: string, options: object) {
-    return configService.findOneAndReplace({module}, {module, options}, {upsert: true});
+    return configService.replace(module, {module, options});
   }
 
   beforeAll(async () => {
-    const module = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
           formats: [OBJECT_ID, DATE_TIME]
         }),
-        DatabaseTestingModule.replicaSet(),
+        engine.module(),
         PreferenceTestingModule,
         CoreTestingModule,
         ConfigModule.forRoot(),
@@ -75,7 +79,6 @@ describe("Password Policy - User", () => {
 
     app = module.createNestApplication();
     req = module.get(Request);
-    database = module.get(DatabaseService);
     configService = module.get(ConfigService);
 
     await app.listen(req.socket);
@@ -103,7 +106,7 @@ describe("Password Policy - User", () => {
     });
 
     afterAll(async () => {
-      await database.collection("user").deleteMany({});
+      await clearStorage(engine, module, {mongodb: ["user"], postgresql: ["users"]});
     });
   });
 
@@ -121,8 +124,8 @@ describe("Password Policy - User", () => {
     });
 
     afterAll(async () => {
-      await database.collection("config").deleteMany({module: "user"});
-      await database.collection("user").deleteMany({});
+      await clearConfigs();
+      await clearStorage(engine, module, {mongodb: ["user"], postgresql: ["users"]});
     });
 
     it("should reject password shorter than minLength on user create", async () => {
@@ -186,7 +189,7 @@ describe("Password Policy - User", () => {
         {Authorization: `IDENTITY ${adminToken}`}
       );
       expect(createRes.statusCode).toEqual(201);
-      const id = createRes.body._id;
+      const id = idOf(createRes.body);
 
       const updateRes = await req.put(
         `/passport/user/${id}`,
@@ -203,7 +206,7 @@ describe("Password Policy - User", () => {
         {Authorization: `IDENTITY ${adminToken}`}
       );
       expect(createRes.statusCode).toEqual(201);
-      const id = createRes.body._id;
+      const id = idOf(createRes.body);
 
       const updateRes = await req.put(
         `/passport/user/${id}`,
@@ -220,7 +223,7 @@ describe("Password Policy - User", () => {
         {Authorization: `IDENTITY ${adminToken}`}
       );
       expect(createRes.statusCode).toEqual(201);
-      const id = createRes.body._id;
+      const id = idOf(createRes.body);
 
       const loginRes = await req.post("/passport/login", {
         username: "user_self",
@@ -243,7 +246,7 @@ describe("Password Policy - User", () => {
         {Authorization: `IDENTITY ${adminToken}`}
       );
       expect(createRes.statusCode).toEqual(201);
-      const id = createRes.body._id;
+      const id = idOf(createRes.body);
 
       const loginRes = await req.post("/passport/login", {
         username: "user_self2",
@@ -262,8 +265,7 @@ describe("Password Policy - User", () => {
 
   describe("user policy independent from identity policy", () => {
     beforeAll(async () => {
-      await database.collection("config").deleteMany({module: "identity"});
-      await database.collection("config").deleteMany({module: "user"});
+      await clearConfigs();
       await setConfig("identity", {
         password: {
           minLength: 12,
@@ -278,9 +280,8 @@ describe("Password Policy - User", () => {
     });
 
     afterAll(async () => {
-      await database.collection("config").deleteMany({module: "identity"});
-      await database.collection("config").deleteMany({module: "user"});
-      await database.collection("user").deleteMany({});
+      await clearConfigs();
+      await clearStorage(engine, module, {mongodb: ["user"], postgresql: ["users"]});
     });
 
     it("should enforce user policy (minLength 6), not identity policy", async () => {

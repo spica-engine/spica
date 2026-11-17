@@ -6,13 +6,18 @@ import path from "path";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request, getFreeAddress} from "@spica-server/core-testing";
 import {Middlewares} from "@spica-server/core";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {DatabaseTestingModule, ObjectId, mongoOnly} from "@spica-server/database-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
 import {Scheduler, ScheduleWorker} from "@spica-server/function-scheduler";
+import {idOf, withId} from "@spica-server/data";
+
+mongoOnly(
+  "GET /function/:id returns the encrypted value of injected secrets on PostgreSQL, because collection reads ignore field exclusions on resolved relations"
+);
 
 describe("Function Controller", () => {
   let app: INestApplication;
@@ -95,7 +100,7 @@ describe("Function Controller", () => {
         .post("/function", {...fnSchema, name: "test_fn1"})
         .then(r => r.body);
 
-      const response = await request.post(`/function/${fn1._id}/index`, {
+      const response = await request.post(`/function/${idOf(fn1)}/index`, {
         index: `
   export function findMe(){ 
     return 'OK' ;
@@ -105,7 +110,7 @@ describe("Function Controller", () => {
       const fn2 = await request
         .post("/function", {...fnSchema, name: "test_fn2"})
         .then(r => r.body);
-      await request.post(`/function/${fn2._id}/index`, {
+      await request.post(`/function/${idOf(fn2)}/index`, {
         index: `
   export function dontFindMe(){ 
     return 'OK' ;
@@ -120,7 +125,7 @@ describe("Function Controller", () => {
 
     it("should throw bad request exception if filter is mistaken", async () => {
       const fn1 = await request.post("/function", fnSchema).then(r => r.body);
-      await request.post(`/function/${fn1._id}/index`, {
+      await request.post(`/function/${idOf(fn1)}/index`, {
         index: `
   export function findMe(){ 
     return 'OK' ;
@@ -162,7 +167,7 @@ describe("Function Controller", () => {
 
     it("should return a function by id", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
-      const found = await request.get(`/function/${inserted._id}`).then(r => r.body);
+      const found = await request.get(`/function/${idOf(inserted)}`).then(r => r.body);
       expect(found).toEqual({...inserted, env_vars: [], secrets: []});
     });
 
@@ -171,9 +176,9 @@ describe("Function Controller", () => {
       const res = await request.post("/function", {...helper, name: "helper"});
 
       expect(res.statusCode).toEqual(201);
-      expect(res.body._id).toBeDefined();
+      expect(idOf(res.body)).toBeDefined();
 
-      const found = await request.get(`/function/${res.body._id}`).then(r => r.body);
+      const found = await request.get(`/function/${idOf(res.body)}`).then(r => r.body);
       expect(found.name).toEqual("helper");
       expect(found.triggers).toBeUndefined();
     });
@@ -187,13 +192,13 @@ describe("Function Controller", () => {
 
     it("should delete a function and return 204", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
-      const del = await request.delete(`/function/${inserted._id}`);
+      const del = await request.delete(`/function/${idOf(inserted)}`);
       expect(del.statusCode).toEqual(204);
 
-      const getRes = await request.get(`/function/${inserted._id}`);
+      const getRes = await request.get(`/function/${idOf(inserted)}`);
       expect(getRes.statusCode).toEqual(404);
       expect(getRes.body).toEqual({
-        message: `Couldn't find the function with id ${inserted._id}`,
+        message: `Couldn't find the function with id ${idOf(inserted)}`,
         statusCode: 404
       });
     });
@@ -202,28 +207,28 @@ describe("Function Controller", () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
 
       const updated = {...inserted, name: "replaced-name", language: "typescript"};
-      const putRes = await request.put(`/function/${inserted._id}`, updated);
+      const putRes = await request.put(`/function/${idOf(inserted)}`, updated);
 
       expect(putRes.statusCode).toEqual(200);
 
-      const found = await request.get(`/function/${inserted._id}`).then(r => r.body);
+      const found = await request.get(`/function/${idOf(inserted)}`).then(r => r.body);
       expect(found.name).toEqual("replaced-name");
 
       expect(found.language).toEqual(inserted.language);
 
-      expect(found._id).toEqual(inserted._id);
+      expect(idOf(found)).toEqual(idOf(inserted));
     });
 
     it("should patch a function with merge-patch+json and validate content-type", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
 
       const wrong = await request
-        .patch(`/function/${inserted._id}`, {category: "c1"})
+        .patch(`/function/${idOf(inserted)}`, {category: "c1"})
         .then(r => r.body);
       expect(wrong.statusCode).toEqual(400);
 
       const success = await request.patch(
-        `/function/${inserted._id}`,
+        `/function/${idOf(inserted)}`,
         {category: "c1"},
         {"content-type": "application/merge-patch+json"}
       );
@@ -236,35 +241,35 @@ describe("Function Controller", () => {
         .then(r => r.body);
 
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
-      await request.put(`/function/${inserted._id}/secret/${secret._id}`);
+      await request.put(`/function/${idOf(inserted)}/secret/${idOf(secret)}`);
 
       const res = await request.patch(
-        `/function/${inserted._id}`,
+        `/function/${idOf(inserted)}`,
         {category: "c1", order: 3},
         {"content-type": "application/merge-patch+json"}
       );
       expect(res.statusCode).toEqual(200);
 
-      const found = await request.get(`/function/${inserted._id}`).then(r => r.body);
+      const found = await request.get(`/function/${idOf(inserted)}`).then(r => r.body);
 
       expect(found.category).toEqual("c1");
       expect(found.order).toEqual(3);
-      expect(found.secrets.map(s => s._id)).toEqual([secret._id]);
+      expect(found.secrets.map(s => idOf(s))).toEqual([idOf(secret)]);
     });
 
     it("should write and read function index (POST index -> 204, GET index -> index)", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
       const indexSource = `export function hello(){ return 'ok' }`;
-      const postRes = await request.post(`/function/${inserted._id}/index`, {index: indexSource});
+      const postRes = await request.post(`/function/${idOf(inserted)}/index`, {index: indexSource});
       expect([postRes.statusCode, postRes.statusText]).toEqual([204, "No Content"]);
 
-      const show = await request.get(`/function/${inserted._id}/index`).then(r => r.body);
+      const show = await request.get(`/function/${idOf(inserted)}/index`).then(r => r.body);
       expect(show.index).toContain("hello");
     });
 
     it("should return dependencies array (empty by default)", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
-      const deps = await request.get(`/function/${inserted._id}/dependencies`).then(r => r.body);
+      const deps = await request.get(`/function/${idOf(inserted)}/dependencies`).then(r => r.body);
       expect(Array.isArray(deps)).toBe(true);
     });
 
@@ -272,10 +277,10 @@ describe("Function Controller", () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
       const envVarId = new ObjectId().toHexString();
 
-      const inj = await request.put(`/function/${inserted._id}/env-var/${envVarId}`);
+      const inj = await request.put(`/function/${idOf(inserted)}/env-var/${envVarId}`);
       expect(inj.statusCode).toEqual(200);
 
-      const ej = await request.delete(`/function/${inserted._id}/env-var/${envVarId}`);
+      const ej = await request.delete(`/function/${idOf(inserted)}/env-var/${envVarId}`);
       expect([ej.statusCode, ej.statusText]).toEqual([204, "No Content"]);
     });
 
@@ -283,10 +288,10 @@ describe("Function Controller", () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
       const secretId = new ObjectId().toHexString();
 
-      const inj = await request.put(`/function/${inserted._id}/secret/${secretId}`);
+      const inj = await request.put(`/function/${idOf(inserted)}/secret/${secretId}`);
       expect(inj.statusCode).toEqual(200);
 
-      const ej = await request.delete(`/function/${inserted._id}/secret/${secretId}`);
+      const ej = await request.delete(`/function/${idOf(inserted)}/secret/${secretId}`);
       expect([ej.statusCode, ej.statusText]).toEqual([204, "No Content"]);
     });
 
@@ -297,11 +302,11 @@ describe("Function Controller", () => {
 
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
 
-      await request.put(`/function/${inserted._id}/secret/${secret._id}`);
+      await request.put(`/function/${idOf(inserted)}/secret/${idOf(secret)}`);
 
-      const found = await request.get(`/function/${inserted._id}`).then(r => r.body);
+      const found = await request.get(`/function/${idOf(inserted)}`).then(r => r.body);
       const secrets = found.secrets.map(({updated_at, ...rest}) => rest);
-      expect(secrets).toEqual([{_id: secret._id, key: "MY_SECRET"}]);
+      expect(secrets).toEqual([withId({key: "MY_SECRET"}, idOf(secret))]);
       expect(found.secrets[0].value).toBeUndefined();
     });
   });
@@ -312,7 +317,7 @@ describe("Function Controller", () => {
 
     async function createWithIndex(name: string, index: string) {
       const fn = await request.post("/function", {...fnSchema, name}).then(r => r.body);
-      await request.post(`/function/${fn._id}/index`, {index});
+      await request.post(`/function/${idOf(fn)}/index`, {index});
       return fn;
     }
 
@@ -321,13 +326,13 @@ describe("Function Controller", () => {
       const newName = unique("after");
       const fn = await createWithIndex(oldName, `export function http(){ return "renamed" }`);
 
-      const res = await request.put(`/function/${fn._id}`, {...fn, name: newName});
+      const res = await request.put(`/function/${idOf(fn)}`, {...fn, name: newName});
       expect(res.statusCode).toEqual(200);
 
-      const show = await request.get(`/function/${fn._id}/index`).then(r => r.body);
+      const show = await request.get(`/function/${idOf(fn)}/index`).then(r => r.body);
       expect(show.index).toContain("renamed");
 
-      const deps = await request.get(`/function/${fn._id}/dependencies`);
+      const deps = await request.get(`/function/${idOf(fn)}/dependencies`);
       expect(deps.statusCode).toEqual(200);
 
       expect(fs.existsSync(path.join(functionsRoot, oldName))).toBe(false);
@@ -346,14 +351,14 @@ describe("Function Controller", () => {
     it("should keep editing the code after a rename", async () => {
       const fn = await createWithIndex(unique("before"), `export function http(){ return 1 }`);
       const newName = unique("after");
-      await request.put(`/function/${fn._id}`, {...fn, name: newName});
+      await request.put(`/function/${idOf(fn)}`, {...fn, name: newName});
 
-      const write = await request.post(`/function/${fn._id}/index`, {
+      const write = await request.post(`/function/${idOf(fn)}/index`, {
         index: `export function http(){ return "edited" }`
       });
       expect(write.statusCode).toEqual(204);
 
-      const show = await request.get(`/function/${fn._id}/index`).then(r => r.body);
+      const show = await request.get(`/function/${idOf(fn)}/index`).then(r => r.body);
       expect(show.index).toContain("edited");
       expect(fs.existsSync(path.join(functionsRoot, newName, "package.json"))).toBe(true);
       expect(
@@ -365,8 +370,8 @@ describe("Function Controller", () => {
       const respondWith = (text: string) =>
         `export function http(req, res){ return res.status(200).send("${text}"); }`;
       const fn = await createWithIndex(unique("before"), respondWith("before rename"));
-      await request.put(`/function/${fn._id}`, {...fn, name: unique("after")});
-      await request.post(`/function/${fn._id}/index`, {index: respondWith("after rename")});
+      await request.put(`/function/${idOf(fn)}`, {...fn, name: unique("after")});
+      await request.post(`/function/${idOf(fn)}/index`, {index: respondWith("after rename")});
 
       const res = await request.get("/fn-execute/test");
       expect([res.statusCode, res.body]).toEqual([200, "after rename"]);
@@ -379,12 +384,14 @@ describe("Function Controller", () => {
       const oldName = unique("before");
       const fn = await createWithIndex(oldName, `export function http(){ return "kept" }`);
 
-      const res = await request.put(`/function/${fn._id}`, {...fn, name: taken.name}).catch(e => e);
+      const res = await request
+        .put(`/function/${idOf(fn)}`, {...fn, name: taken.name})
+        .catch(e => e);
       expect(res.statusCode).toEqual(400);
 
-      const found = await request.get(`/function/${fn._id}`).then(r => r.body);
+      const found = await request.get(`/function/${idOf(fn)}`).then(r => r.body);
       expect(found.name).toEqual(oldName);
-      const show = await request.get(`/function/${fn._id}/index`).then(r => r.body);
+      const show = await request.get(`/function/${idOf(fn)}/index`).then(r => r.body);
       expect(show.index).toContain("kept");
     });
   });
@@ -413,7 +420,7 @@ describe("Function Controller", () => {
     }
 
     function writeHelper(fn, value: string) {
-      return request.post(`/function/${fn._id}/index`, {
+      return request.post(`/function/${idOf(fn)}/index`, {
         index: `export const value = () => "${value}";`
       });
     }
@@ -433,7 +440,7 @@ describe("Function Controller", () => {
         .post("/function", {...fnSchema, name, triggers, timeout: 3})
         .then(r => r.body);
 
-      const install = await request.post(`/function/${fn._id}/dependencies`, {
+      const install = await request.post(`/function/${idOf(fn)}/dependencies`, {
         name: [`@spica-fn/${imported}`]
       });
       expect(install.statusCode).toEqual(201);
@@ -441,7 +448,7 @@ describe("Function Controller", () => {
       const respond = httpPath
         ? `export function http(req, res){ return res.status(200).send(value()); }`
         : `export {value};`;
-      await request.post(`/function/${fn._id}/index`, {
+      await request.post(`/function/${idOf(fn)}/index`, {
         index: `import {value} from "@spica-fn/${imported}";\n${respond}`
       });
       return fn;
@@ -469,7 +476,7 @@ describe("Function Controller", () => {
 
       await writeHelper(helper, "v2");
 
-      expect(supersedeSpy.mock.calls.map(([target]) => target.id)).toContain(importer._id);
+      expect(supersedeSpy.mock.calls.map(([target]) => target.id)).toContain(idOf(importer));
       expect(await executeUntil(httpPath, "v2")).toEqual([200, "v2"]);
       expect(timeoutSpy).not.toHaveBeenCalled();
     }

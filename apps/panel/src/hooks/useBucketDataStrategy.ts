@@ -17,7 +17,8 @@ export function bucketDataStrategyKey(bucketId: string): string {
 // query is skipped and the realtime socket is never opened.
 export function useBucketDataStrategy(
   bucketId: string,
-  searchQuery: BucketDataQueryType | undefined
+  searchQuery: BucketDataQueryType | undefined,
+  ready = true
 ): UseBucketDataResult {
   const [strategy] = useLocalStorage<BucketDataStrategy>(
     bucketDataStrategyKey(bucketId),
@@ -28,7 +29,7 @@ export function useBucketDataStrategy(
 
   // Relation resolution is an HTTP-only optimization; the realtime transport is
   // left untouched.
-  const {relation, ready} = useRelationQueryParam(bucketId);
+  const {relation, ready: relationReady} = useRelationQueryParam(bucketId);
   const httpSearchQuery = useMemo(() => {
     const merged: BucketDataQueryType = {...searchQuery};
     if (relation !== undefined) merged.relation = relation;
@@ -39,7 +40,7 @@ export function useBucketDataStrategy(
   // Defer the list request until the schema-derived relation param is known, so
   // it fires once with the right value instead of a no-relation fetch + refetch.
   const httpResult = useBucketData(bucketId, httpSearchQuery, {
-    enabled: !isRealtime && ready
+    enabled: !isRealtime && relationReady && ready
   });
   const realtimeResult = useBucketDataRealtime(bucketId, searchQuery, isRealtime);
 

@@ -1,17 +1,28 @@
 import {INestApplication, NestApplicationOptions, ForbiddenException} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {contractSuite, waitForMongoIndexes} from "@spica-server/database-testing";
+import {ID_TYPES, IdType, IdTypes} from "@spica-server/interface-data";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {getMultipartFormDataMeta, StorageModule} from "@spica-server/storage";
 import {Binary, serialize} from "bson";
+import fs from "fs";
+import os from "os";
+import path from "path";
 import {StorageObject} from "@spica-server/interface-storage";
 import {GuardService} from "@spica-server/passport-guard-services";
+import {withId, idOf, stripId, systemKeyField} from "@spica-server/data";
 
-describe("Storage Acceptance", () => {
+contractSuite("Storage Acceptance", engine => {
   let app: INestApplication;
   let req: Request;
   let guardService: GuardService;
+  let ids: IdType;
+
+  const isId = (value: unknown) => ids.isValid(value);
+  const filterOf = (mongodb: object, postgresql: string) =>
+    engine.name == "mongodb" ? JSON.stringify(mongodb) : postgresql;
+  const nameFilter = (name: string) => filterOf({name}, `document.name == '${name}'`);
 
   async function addTextObjects() {
     const first = {
@@ -43,16 +54,24 @@ describe("Storage Acceptance", () => {
     });
   }
 
+  const storagePaths: string[] = [];
+
+  afterAll(() => {
+    storagePaths.forEach(storagePath => fs.rmSync(storagePath, {recursive: true, force: true}));
+  });
+
   const urlRegex = /http:\/\/insteadof\/storage\/.*?\/view/;
 
   async function initModule(options: NestApplicationOptions) {
+    const storagePath = fs.mkdtempSync(path.join(os.tmpdir(), "spica-storage-"));
+    storagePaths.push(storagePath);
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.standalone(),
+        engine.module(),
         StorageModule.forRoot({
-          defaultPath: process.env.TEST_TMPDIR,
+          defaultPath: storagePath,
           defaultPublicUrl: "http://insteadof",
           strategy: "default",
           objectSizeLimit: 0.1,
@@ -66,8 +85,8 @@ describe("Storage Acceptance", () => {
     guardService = module.get(GuardService);
     await app.listen(req.socket);
 
-    // wait for indexes
-    await new Promise((resolve, _) => setTimeout(resolve, 1000));
+    ids = module.get<IdTypes>(ID_TYPES).forCollection("storage");
+    await waitForMongoIndexes(engine, module, {storage: ["name_1"]});
 
     await addTextObjects();
   }
@@ -81,22 +100,24 @@ describe("Storage Acceptance", () => {
       const {body} = await req.get("/storage", {
         paginate: false,
         limit: "1",
-        sort: JSON.stringify({_id: -1})
+        sort: JSON.stringify({[systemKeyField()]: -1})
       });
 
-      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
+      expect(isId(idOf(body[0]))).toEqual(true);
       expect(body).toEqual([
-        {
-          _id: body[0]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(body[0])
+        )
       ]);
     });
 
@@ -104,30 +125,32 @@ describe("Storage Acceptance", () => {
       const {body} = await req.get("/storage", {
         paginate: true,
         limit: "1",
-        sort: JSON.stringify({_id: -1})
+        sort: JSON.stringify({[systemKeyField()]: -1})
       });
 
       expect(body.meta).toEqual({total: 3});
-      expect(ObjectId.isValid(body.data[0]._id)).toEqual(true);
+      expect(isId(idOf(body.data[0]))).toEqual(true);
       expect(body.data).toEqual([
-        {
-          _id: body.data[0]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: body.data[0].created_at,
-          updated_at: body.data[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: body.data[0].created_at,
+            updated_at: body.data[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(body.data[0])
+        )
       ]);
     });
 
     it("should work with paginate true and zero result", async () => {
       const {body} = await req.get("/storage", {
         paginate: true,
-        filter: JSON.stringify({name: "non_exist_name"})
+        filter: nameFilter("non_exist_name")
       });
 
       expect(body.meta).toEqual({total: 0});
@@ -137,7 +160,7 @@ describe("Storage Acceptance", () => {
     it("should work with paginate false and zero result", async () => {
       const {body} = await req.get("/storage", {
         paginate: false,
-        filter: JSON.stringify({name: "non_exist_name"})
+        filter: nameFilter("non_exist_name")
       });
 
       expect(body).toEqual([]);
@@ -147,47 +170,65 @@ describe("Storage Acceptance", () => {
   describe("filter", () => {
     it("should work with filter", async () => {
       const {body} = await req.get("/storage", {
-        filter: JSON.stringify({name: "third.txt"})
+        filter: nameFilter("third.txt")
       });
 
-      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
+      expect(isId(idOf(body[0]))).toEqual(true);
       expect(body).toEqual([
-        {
-          _id: body[0]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(body[0])
+        )
       ]);
     });
 
-    it("should work with _id filter", async () => {
+    it("should answer 404 for a filter in the language of the other engine", async () => {
+      const other =
+        engine.name == "mongodb" ? "document.name == 'third.txt'" : '{"name":"third.txt"}';
+
+      const res = await req.get("/storage", {filter: other});
+      expect(res.statusCode).toEqual(404);
+
+      const browse = await req.get("/storage/browse", {filter: other});
+      expect(browse.statusCode).toEqual(404);
+    });
+
+    it("should work with the key filter", async () => {
       const {body} = await req.get("/storage", {
-        filter: JSON.stringify({name: "third.txt"})
+        filter: nameFilter("third.txt")
       });
 
       const response = await req.get("/storage", {
-        filter: JSON.stringify({_id: body[0]._id})
+        filter: filterOf(
+          {[systemKeyField()]: idOf(body[0])},
+          `document.${systemKeyField()} == '${idOf(body[0])}'`
+        )
       });
 
-      expect(ObjectId.isValid(response.body[0]._id)).toEqual(true);
+      expect(isId(idOf(response.body[0]))).toEqual(true);
       expect(body).toEqual([
-        {
-          _id: response.body[0]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(response.body[0])
+        )
       ]);
     });
 
@@ -208,61 +249,75 @@ describe("Storage Acceptance", () => {
       const body = postRes.body;
 
       const ltRes = await req.get("/storage", {
-        filter: JSON.stringify({created_at: {$lt: body[0].created_at}})
+        filter: filterOf(
+          {created_at: {$lt: body[0].created_at}},
+          `document.created_at < '${body[0].created_at}'`
+        )
       });
 
       const gteRes = await req.get("/storage", {
-        filter: JSON.stringify({created_at: {$gte: body[0].created_at}})
+        filter: filterOf(
+          {created_at: {$gte: body[0].created_at}},
+          `document.created_at >= '${body[0].created_at}'`
+        )
       });
 
       expect(gteRes.body).toEqual([
-        {
-          _id: gteRes.body[0]._id,
-          name: "newData.txt",
-          url: `http://insteadof/storage/newData.txt/view`,
-          created_at: gteRes.body[0].created_at,
-          updated_at: gteRes.body[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 7
-          }
-        }
+        withId(
+          {
+            name: "newData.txt",
+            url: `http://insteadof/storage/newData.txt/view`,
+            created_at: gteRes.body[0].created_at,
+            updated_at: gteRes.body[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 7
+            }
+          },
+          idOf(gteRes.body[0])
+        )
       ]);
 
       expect(ltRes.body).toEqual([
-        {
-          _id: ltRes.body[0]._id,
-          name: "first.txt",
-          url: `http://insteadof/storage/first.txt/view`,
-          created_at: ltRes.body[0].created_at,
-          updated_at: ltRes.body[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        },
-        {
-          _id: ltRes.body[1]._id,
-          name: "second.txt",
-          url: `http://insteadof/storage/second.txt/view`,
-          created_at: ltRes.body[1].created_at,
-          updated_at: ltRes.body[1].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 6
-          }
-        },
-        {
-          _id: ltRes.body[2]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: ltRes.body[2].created_at,
-          updated_at: ltRes.body[2].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "first.txt",
+            url: `http://insteadof/storage/first.txt/view`,
+            created_at: ltRes.body[0].created_at,
+            updated_at: ltRes.body[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(ltRes.body[0])
+        ),
+        withId(
+          {
+            name: "second.txt",
+            url: `http://insteadof/storage/second.txt/view`,
+            created_at: ltRes.body[1].created_at,
+            updated_at: ltRes.body[1].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 6
+            }
+          },
+          idOf(ltRes.body[1])
+        ),
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: ltRes.body[2].created_at,
+            updated_at: ltRes.body[2].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(ltRes.body[2])
+        )
       ]);
     });
   });
@@ -271,56 +326,70 @@ describe("Storage Acceptance", () => {
     it("should work with limit", async () => {
       const {
         body: {meta, data}
-      } = await req.get("/storage", {paginate: true, limit: "1", sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        limit: "1",
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
 
       expect(meta.total).toBe(3);
-      expect(ObjectId.isValid(data[0]._id)).toEqual(true);
+      expect(isId(idOf(data[0]))).toEqual(true);
       expect(data).toEqual([
-        {
-          _id: data[0]._id,
-          name: "third.txt",
-          url: `http://insteadof/storage/third.txt/view`,
-          created_at: data[0].created_at,
-          updated_at: data[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "third.txt",
+            url: `http://insteadof/storage/third.txt/view`,
+            created_at: data[0].created_at,
+            updated_at: data[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(data[0])
+        )
       ]);
     });
 
     it("should work with skip", async () => {
       const {
         body: {meta, data}
-      } = await req.get("/storage", {paginate: true, skip: "1", sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        skip: "1",
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
 
       expect(meta.total).toBe(3);
-      expect(ObjectId.isValid(data[0]._id)).toEqual(true);
-      expect(ObjectId.isValid(data[1]._id)).toEqual(true);
+      expect(isId(idOf(data[0]))).toEqual(true);
+      expect(isId(idOf(data[1]))).toEqual(true);
       expect(data).toEqual([
-        {
-          _id: data[0]._id,
-          name: "second.txt",
-          url: `http://insteadof/storage/second.txt/view`,
-          created_at: data[0].created_at,
-          updated_at: data[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 6
-          }
-        },
-        {
-          _id: data[1]._id,
-          name: "first.txt",
-          url: `http://insteadof/storage/first.txt/view`,
-          created_at: data[1].created_at,
-          updated_at: data[1].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "second.txt",
+            url: `http://insteadof/storage/second.txt/view`,
+            created_at: data[0].created_at,
+            updated_at: data[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 6
+            }
+          },
+          idOf(data[0])
+        ),
+        withId(
+          {
+            name: "first.txt",
+            url: `http://insteadof/storage/first.txt/view`,
+            created_at: data[1].created_at,
+            updated_at: data[1].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(data[1])
+        )
       ]);
     });
 
@@ -331,23 +400,25 @@ describe("Storage Acceptance", () => {
         paginate: true,
         skip: "1",
         limit: "1",
-        sort: JSON.stringify({_id: -1})
+        sort: JSON.stringify({[systemKeyField()]: -1})
       });
 
       expect(meta.total).toBe(3);
-      expect(ObjectId.isValid(data[0]._id)).toEqual(true);
+      expect(isId(idOf(data[0]))).toEqual(true);
       expect(data).toEqual([
-        {
-          _id: data[0]._id,
-          name: "second.txt",
-          url: `http://insteadof/storage/second.txt/view`,
-          created_at: data[0].created_at,
-          updated_at: data[0].updated_at,
-          content: {
-            type: `text/plain`,
-            size: 6
-          }
-        }
+        withId(
+          {
+            name: "second.txt",
+            url: `http://insteadof/storage/second.txt/view`,
+            created_at: data[0].created_at,
+            updated_at: data[0].updated_at,
+            content: {
+              type: `text/plain`,
+              size: 6
+            }
+          },
+          idOf(data[0])
+        )
       ]);
     });
     describe("sort", () => {
@@ -360,43 +431,49 @@ describe("Storage Acceptance", () => {
         });
 
         expect(meta.total).toBe(3);
-        expect(ObjectId.isValid(data[0]._id)).toEqual(true);
-        expect(ObjectId.isValid(data[1]._id)).toEqual(true);
-        expect(ObjectId.isValid(data[2]._id)).toEqual(true);
+        expect(isId(idOf(data[0]))).toEqual(true);
+        expect(isId(idOf(data[1]))).toEqual(true);
+        expect(isId(idOf(data[2]))).toEqual(true);
         expect(data).toEqual([
-          {
-            _id: data[0]._id,
-            name: "first.txt",
-            url: `http://insteadof/storage/first.txt/view`,
-            created_at: data[0].created_at,
-            updated_at: data[0].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 5
-            }
-          },
-          {
-            _id: data[1]._id,
-            name: "second.txt",
-            url: `http://insteadof/storage/second.txt/view`,
-            created_at: data[1].created_at,
-            updated_at: data[1].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 6
-            }
-          },
-          {
-            _id: data[2]._id,
-            name: "third.txt",
-            url: `http://insteadof/storage/third.txt/view`,
-            created_at: data[2].created_at,
-            updated_at: data[2].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 5
-            }
-          }
+          withId(
+            {
+              name: "first.txt",
+              url: `http://insteadof/storage/first.txt/view`,
+              created_at: data[0].created_at,
+              updated_at: data[0].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 5
+              }
+            },
+            idOf(data[0])
+          ),
+          withId(
+            {
+              name: "second.txt",
+              url: `http://insteadof/storage/second.txt/view`,
+              created_at: data[1].created_at,
+              updated_at: data[1].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 6
+              }
+            },
+            idOf(data[1])
+          ),
+          withId(
+            {
+              name: "third.txt",
+              url: `http://insteadof/storage/third.txt/view`,
+              created_at: data[2].created_at,
+              updated_at: data[2].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 5
+              }
+            },
+            idOf(data[2])
+          )
         ]);
       });
 
@@ -409,43 +486,49 @@ describe("Storage Acceptance", () => {
         });
 
         expect(meta.total).toBe(3);
-        expect(ObjectId.isValid(data[0]._id)).toEqual(true);
-        expect(ObjectId.isValid(data[1]._id)).toEqual(true);
-        expect(ObjectId.isValid(data[2]._id)).toEqual(true);
+        expect(isId(idOf(data[0]))).toEqual(true);
+        expect(isId(idOf(data[1]))).toEqual(true);
+        expect(isId(idOf(data[2]))).toEqual(true);
         expect(data).toEqual([
-          {
-            _id: data[0]._id,
-            name: "third.txt",
-            url: `http://insteadof/storage/third.txt/view`,
-            created_at: data[0].created_at,
-            updated_at: data[0].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 5
-            }
-          },
-          {
-            _id: data[1]._id,
-            name: "second.txt",
-            url: `http://insteadof/storage/second.txt/view`,
-            created_at: data[1].created_at,
-            updated_at: data[1].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 6
-            }
-          },
-          {
-            _id: data[2]._id,
-            name: "first.txt",
-            url: `http://insteadof/storage/first.txt/view`,
-            created_at: data[2].created_at,
-            updated_at: data[2].updated_at,
-            content: {
-              type: `text/plain`,
-              size: 5
-            }
-          }
+          withId(
+            {
+              name: "third.txt",
+              url: `http://insteadof/storage/third.txt/view`,
+              created_at: data[0].created_at,
+              updated_at: data[0].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 5
+              }
+            },
+            idOf(data[0])
+          ),
+          withId(
+            {
+              name: "second.txt",
+              url: `http://insteadof/storage/second.txt/view`,
+              created_at: data[1].created_at,
+              updated_at: data[1].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 6
+              }
+            },
+            idOf(data[1])
+          ),
+          withId(
+            {
+              name: "first.txt",
+              url: `http://insteadof/storage/first.txt/view`,
+              created_at: data[2].created_at,
+              updated_at: data[2].updated_at,
+              content: {
+                type: `text/plain`,
+                size: 5
+              }
+            },
+            idOf(data[2])
+          )
         ]);
       });
     });
@@ -458,8 +541,8 @@ describe("Storage Acceptance", () => {
           data: [row]
         }
       } = await req.get("/storage", {paginate: true});
-      const {body: response} = await req.get(`/storage/${row._id}`);
-      expect(response._id).toEqual(row._id);
+      const {body: response} = await req.get(`/storage/${idOf(row)}`);
+      expect(idOf(response)).toEqual(idOf(row));
       expect(response.url).toEqual(row.url);
       expect(response.name).toEqual(row.name);
     });
@@ -471,10 +554,13 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
-      const {headers: initialHeaders} = await req.get(`/storage/${row._id}/view`);
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
+      const {headers: initialHeaders} = await req.get(`/storage/${idOf(row)}/view`);
       const {statusCode, statusText} = await req.get(
-        `/storage/${row._id}/view`,
+        `/storage/${idOf(row)}/view`,
         {},
         {"If-None-Match": initialHeaders["etag"]}
       );
@@ -487,9 +573,12 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
       const {headers, body} = await req.get(
-        `/storage/${row._id}/view`,
+        `/storage/${idOf(row)}/view`,
         {},
         {"If-None-Match": '"stale-etag"'}
       );
@@ -503,8 +592,11 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
-      const {headers} = await req.get(`/storage/${row._id}/view`);
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
+      const {headers} = await req.get(`/storage/${idOf(row)}/view`);
       expect(headers["content-type"]).toBe("text/plain; charset=utf-8");
       expect(headers["etag"]).toBeDefined();
     });
@@ -516,12 +608,15 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
 
       row.content.data = new Binary(Buffer.from("new data"));
 
-      const id = row._id;
-      delete row._id;
+      const id = idOf(row);
+      stripId(row);
       delete row.url;
       delete row.created_at;
       delete row.updated_at;
@@ -540,18 +635,21 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
       const {
         statusCode,
         statusText,
         body: __
-      } = await req.put(`/storage/${row._id}`, serialize(row), {
+      } = await req.put(`/storage/${idOf(row)}`, serialize(row), {
         "Content-Type": "application/bson"
       });
       expect(statusCode).toEqual(400);
       expect(statusText).toEqual("Bad Request");
 
-      const {body} = await req.get(`/storage/${row._id}/view`);
+      const {body} = await req.get(`/storage/${idOf(row)}/view`);
       expect(body).toBe("third");
     });
 
@@ -563,7 +661,7 @@ describe("Storage Acceptance", () => {
       } = await req.get("/storage", {paginate: true});
       const size = 0.2 * 1024 * 1024;
       row.content.data = new Binary(Buffer.alloc(size, "f"));
-      const {statusCode, statusText} = await req.put(`/storage/${row._id}`, serialize(row), {
+      const {statusCode, statusText} = await req.put(`/storage/${idOf(row)}`, serialize(row), {
         "Content-Type": "application/bson"
       });
       expect(statusCode).toBe(413);
@@ -580,37 +678,43 @@ describe("Storage Acceptance", () => {
       const {
         body: [first]
       } = await req.get("/storage", {
-        filter: JSON.stringify({name: "first.txt"})
+        filter: nameFilter("first.txt")
       });
 
-      let res = await req.patch(`/storage/${first._id}`, {name: "updated_first.txt"});
-      const expectedObject = {
-        _id: res.body._id,
-        name: "updated_first.txt",
-        url: `http://insteadof/storage/updated_first.txt/view`,
-        created_at: res.body.created_at,
-        updated_at: res.body.updated_at,
-        content: {
-          type: `text/plain`,
-          size: 5
-        }
-      };
-      expect(ObjectId.isValid(res.body._id)).toEqual(true);
+      let res = await req.patch(`/storage/${idOf(first)}`, {name: "updated_first.txt"});
+      const expectedObject = withId(
+        {
+          name: "updated_first.txt",
+          url: `http://insteadof/storage/updated_first.txt/view`,
+          created_at: res.body.created_at,
+          updated_at: res.body.updated_at,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        },
+        idOf(res.body)
+      );
+      expect(isId(idOf(res.body))).toEqual(true);
       expect(res.body).toEqual(expectedObject);
 
-      res = await req.get(`storage/${first._id}`);
-      expect(ObjectId.isValid(res.body._id)).toEqual(true);
-      expect(res.body).toEqual({
-        _id: res.body._id,
-        name: "updated_first.txt",
-        url: `http://insteadof/storage/updated_first.txt/view`,
-        created_at: res.body.created_at,
-        updated_at: res.body.updated_at,
-        content: {
-          type: `text/plain`,
-          size: 5
-        }
-      });
+      res = await req.get(`storage/${idOf(first)}`);
+      expect(isId(idOf(res.body))).toEqual(true);
+      expect(res.body).toEqual(
+        withId(
+          {
+            name: "updated_first.txt",
+            url: `http://insteadof/storage/updated_first.txt/view`,
+            created_at: res.body.created_at,
+            updated_at: res.body.updated_at,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          idOf(res.body)
+        )
+      );
     });
   });
 
@@ -618,7 +722,7 @@ describe("Storage Acceptance", () => {
     afterEach(async () => {
       const res = await req.get("/storage");
       for (let obj of res.body) {
-        await req.delete("/storage", obj._id);
+        await req.delete("/storage", idOf(obj));
       }
     });
 
@@ -638,20 +742,22 @@ describe("Storage Acceptance", () => {
         }
       );
 
-      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
+      expect(isId(idOf(body[0]))).toEqual(true);
       expect(urlRegex.test(body[0].url)).toEqual(true);
       expect(body).toEqual([
-        {
-          _id: body[0]._id,
-          name: "remoteconfig.json",
-          url: body[0].url,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            type: "application/json",
-            size: 2
-          }
-        }
+        withId(
+          {
+            name: "remoteconfig.json",
+            url: body[0].url,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              type: "application/json",
+              size: 2
+            }
+          },
+          idOf(body[0])
+        )
       ]);
       expect(statusCode).toBe(201);
       expect(statusText).toBe("Created");
@@ -682,35 +788,39 @@ describe("Storage Acceptance", () => {
         }
       );
 
-      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
-      expect(ObjectId.isValid(body[1]._id)).toEqual(true);
+      expect(isId(idOf(body[0]))).toEqual(true);
+      expect(isId(idOf(body[1]))).toEqual(true);
 
       expect(urlRegex.test(body[0].url)).toEqual(true);
       expect(urlRegex.test(body[1].url)).toEqual(true);
 
       expect(body).toEqual([
-        {
-          _id: body[0]._id,
-          name: "remote config.json",
-          url: body[0].url,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            size: 2,
-            type: "application/json"
-          }
-        },
-        {
-          _id: body[1]._id,
-          name: "remote config backup.json",
-          url: body[1].url,
-          created_at: body[1].created_at,
-          updated_at: body[1].updated_at,
-          content: {
-            size: 2,
-            type: "application/json"
-          }
-        }
+        withId(
+          {
+            name: "remote config.json",
+            url: body[0].url,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              size: 2,
+              type: "application/json"
+            }
+          },
+          idOf(body[0])
+        ),
+        withId(
+          {
+            name: "remote config backup.json",
+            url: body[1].url,
+            created_at: body[1].created_at,
+            updated_at: body[1].updated_at,
+            content: {
+              size: 2,
+              type: "application/json"
+            }
+          },
+          idOf(body[1])
+        )
       ]);
 
       expect(statusCode).toBe(201);
@@ -799,7 +909,7 @@ describe("Storage Acceptance", () => {
         }
       } = await req.get("/storage", {paginate: true});
 
-      const response = await req.delete(`/storage/${row._id}`);
+      const response = await req.delete(`/storage/${idOf(row)}`);
       expect(response.statusCode).toBe(204);
       expect(response.statusText).toBe("No Content");
       expect(response.body).toBe(undefined);
@@ -808,7 +918,7 @@ describe("Storage Acceptance", () => {
       expect(storageObjects.meta.total).toBe(2);
       expect(storageObjects.data.length).toEqual(2);
 
-      const deletedStorageObjectResponse = await req.get(`/storage/${row._id}`);
+      const deletedStorageObjectResponse = await req.get(`/storage/${idOf(row)}`);
       expect(deletedStorageObjectResponse.statusCode).toBe(404);
       expect(deletedStorageObjectResponse.statusText).toBe("Not Found");
     });
@@ -845,7 +955,7 @@ describe("Storage Acceptance", () => {
         body: {data: objects}
       } = await req.get("/storage", {paginate: true});
 
-      const idsToDelete = [objects[0]._id.toString(), objects[1]._id.toString()];
+      const idsToDelete = [idOf(objects[0]).toString(), idOf(objects[1]).toString()];
       const response = await req.delete("/storage", idsToDelete);
 
       expect(response.statusCode).toBe(204);
@@ -855,7 +965,7 @@ describe("Storage Acceptance", () => {
       const {body: storageObjects} = await req.get("/storage", {paginate: true});
       expect(storageObjects.meta.total).toBe(objects.length - 2);
 
-      const remainingIds = storageObjects.data.map((obj: any) => obj._id.toString());
+      const remainingIds = storageObjects.data.map((obj: any) => idOf(obj).toString());
       expect(remainingIds.some((id: string) => idsToDelete.includes(id))).toBe(false);
     });
 
@@ -883,7 +993,7 @@ describe("Storage Acceptance", () => {
         body: {data: objects}
       } = await req.get("/storage", {paginate: true});
 
-      const mixedIdentifiers = [objects[0]._id.toString(), objects[1].name];
+      const mixedIdentifiers = [idOf(objects[0]).toString(), objects[1].name];
       const response = await req.delete("/storage", mixedIdentifiers);
 
       expect(response.statusCode).toBe(204);
@@ -894,10 +1004,12 @@ describe("Storage Acceptance", () => {
       expect(storageObjects.meta.total).toBe(objects.length - 2);
 
       const remainingData = storageObjects.data.map((obj: any) => ({
-        id: obj._id.toString(),
+        id: idOf(obj).toString(),
         name: obj.name
       }));
-      expect(remainingData.some((item: any) => item.id === objects[0]._id.toString())).toBe(false);
+      expect(remainingData.some((item: any) => item.id === idOf(objects[0]).toString())).toBe(
+        false
+      );
       expect(remainingData.some((item: any) => item.name === objects[1].name)).toBe(false);
     });
 
@@ -928,8 +1040,8 @@ describe("Storage Acceptance", () => {
         body: {data: objects}
       } = await req.get("/storage", {paginate: true});
 
-      const unauthorizedId = new ObjectId().toString();
-      const idsToDelete = [objects[0]._id.toString(), unauthorizedId];
+      const unauthorizedId = String(ids.generate());
+      const idsToDelete = [idOf(objects[0]).toString(), unauthorizedId];
 
       const originalCheckAuthorization = guardService.checkAuthorization;
       jest.spyOn(guardService, "checkAuthorization").mockImplementation((args: any) => {
@@ -964,7 +1076,7 @@ describe("Storage Acceptance", () => {
 
       const originalCheckAuthorization = guardService.checkAuthorization;
       jest.spyOn(guardService, "checkAuthorization").mockImplementation((args: any) => {
-        if (args.request?.params?.id === objects[1]._id.toString()) {
+        if (args.request?.params?.id === idOf(objects[1]).toString()) {
           throw new ForbiddenException(
             `You don't have permission to delete storage object: ${unauthorizedName}`
           );
@@ -997,21 +1109,23 @@ describe("Storage Acceptance", () => {
       };
       const {body, statusCode, statusText} = await req.post("/storage", [object]);
 
-      expect(ObjectId.isValid(body[0]._id)).toEqual(true);
+      expect(isId(idOf(body[0]))).toEqual(true);
       expect(urlRegex.test(body[0].url)).toEqual(true);
 
       expect(body).toEqual([
-        {
-          _id: body[0]._id,
-          name: "remoteconfig.json",
-          url: body[0].url,
-          created_at: body[0].created_at,
-          updated_at: body[0].updated_at,
-          content: {
-            type: "application/json",
-            size: 2
-          }
-        }
+        withId(
+          {
+            name: "remoteconfig.json",
+            url: body[0].url,
+            created_at: body[0].created_at,
+            updated_at: body[0].updated_at,
+            content: {
+              type: "application/json",
+              size: 2
+            }
+          },
+          idOf(body[0])
+        )
       ]);
       expect(statusCode).toBe(201);
       expect(statusText).toBe("Created");
@@ -1023,12 +1137,15 @@ describe("Storage Acceptance", () => {
           data: [row]
         },
         headers: {["etag"]: prevETag}
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
 
       row.content.data = Buffer.from("new data").toString("base64");
 
-      const id = row._id;
-      delete row._id;
+      const id = idOf(row);
+      stripId(row);
       delete row.url;
       delete row.created_at;
       delete row.updated_at;
@@ -1052,7 +1169,7 @@ describe("Storage Acceptance", () => {
       } = await req.get("/storage", {paginate: true});
       const size = 0.2 * 1024 * 1024;
       row.content.data = Buffer.alloc(size, "f").toString("base64");
-      const {statusCode, statusText, body} = await req.put(`/storage/${row._id}`, [row]);
+      const {statusCode, statusText, body} = await req.put(`/storage/${idOf(row)}`, [row]);
       expect(statusCode).toBe(413);
       expect(statusText).toBe("Payload Too Large");
     });
@@ -1085,35 +1202,39 @@ describe("Storage Acceptance", () => {
       );
       const {body: resBody, statusCode, statusText} = await req.post("/storage", body, headers);
 
-      expect(ObjectId.isValid(resBody[0]._id)).toEqual(true);
-      expect(ObjectId.isValid(resBody[1]._id)).toEqual(true);
+      expect(isId(idOf(resBody[0]))).toEqual(true);
+      expect(isId(idOf(resBody[1]))).toEqual(true);
 
       expect(urlRegex.test(resBody[0].url)).toEqual(true);
       expect(urlRegex.test(resBody[1].url)).toEqual(true);
 
       expect(resBody).toEqual([
-        {
-          _id: resBody[0]._id,
-          name: "data.json",
-          url: resBody[0].url,
-          created_at: resBody[0].created_at,
-          updated_at: resBody[0].updated_at,
-          content: {
-            type: "application/json",
-            size: 2
-          }
-        },
-        {
-          _id: resBody[1]._id,
-          name: "test.txt",
-          url: resBody[1].url,
-          created_at: resBody[1].created_at,
-          updated_at: resBody[1].updated_at,
-          content: {
-            type: "text/plain",
-            size: 5
-          }
-        }
+        withId(
+          {
+            name: "data.json",
+            url: resBody[0].url,
+            created_at: resBody[0].created_at,
+            updated_at: resBody[0].updated_at,
+            content: {
+              type: "application/json",
+              size: 2
+            }
+          },
+          idOf(resBody[0])
+        ),
+        withId(
+          {
+            name: "test.txt",
+            url: resBody[1].url,
+            created_at: resBody[1].created_at,
+            updated_at: resBody[1].updated_at,
+            content: {
+              type: "text/plain",
+              size: 5
+            }
+          },
+          idOf(resBody[1])
+        )
       ]);
       expect(statusCode).toBe(201);
       expect(statusText).toBe("Created");
@@ -1125,7 +1246,10 @@ describe("Storage Acceptance", () => {
           data: [row]
         },
         headers: {["etag"]: prevETag}
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
 
       const {body, headers} = getMultipartFormDataMeta(
         [
@@ -1138,7 +1262,7 @@ describe("Storage Acceptance", () => {
         "put"
       );
 
-      const id = row._id;
+      const id = idOf(row);
 
       await req.put(`/storage/${id}`, body, headers);
 
@@ -1155,7 +1279,7 @@ describe("Storage Acceptance", () => {
   describe("resumable upload", () => {
     beforeEach(async () => {
       const res = await req.get("/storage");
-      await Promise.all(res.body.map((obj: any) => req.delete("/storage", obj._id)));
+      await Promise.all(res.body.map((obj: any) => req.delete("/storage", idOf(obj))));
     });
 
     it("should return upload url", async () => {
@@ -1208,7 +1332,7 @@ describe("Storage Acceptance", () => {
       const uploadedObject = body.at(-1);
       expect(uploadedObject.name).toBe(object.name);
 
-      const {body: obj} = await req.get(`/storage/${uploadedObject._id}/view`);
+      const {body: obj} = await req.get(`/storage/${idOf(uploadedObject)}/view`);
       expect(obj).toBe("new data");
     });
 
@@ -1394,7 +1518,7 @@ describe("Storage Acceptance", () => {
         }
       } = await req.get("/storage", {paginate: true});
       const {body: response} = await req.get(`/storage/${row.name}`);
-      expect(response._id).toEqual(row._id);
+      expect(idOf(response)).toEqual(idOf(row));
       expect(response.url).toEqual(row.url);
       expect(response.name).toEqual(row.name);
     });
@@ -1404,7 +1528,10 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      } = await req.get("/storage", {
+        paginate: true,
+        sort: JSON.stringify({[systemKeyField()]: -1})
+      });
       const {headers, body} = await req.get(`/storage/${row.name}/view`);
       expect(headers["content-type"]).toEqual("text/plain; charset=utf-8");
       expect(headers["etag"]).toBeDefined();
@@ -1452,9 +1579,9 @@ describe("Storage Acceptance", () => {
 
     it("should rename the folder and its children based on new name", async () => {
       const {body: folderResponse} = await req.get("/storage", {
-        filter: JSON.stringify({name: "folder/subfolder/"})
+        filter: nameFilter("folder/subfolder/")
       });
-      const subfolderId = folderResponse[0]._id;
+      const subfolderId = idOf(folderResponse[0]);
 
       await req.patch(`/storage/${subfolderId}`, {
         name: "folder/subfolder_renamed/"

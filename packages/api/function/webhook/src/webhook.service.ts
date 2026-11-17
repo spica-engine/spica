@@ -1,53 +1,56 @@
-import {Injectable, Logger} from "@nestjs/common";
-import {
-  BaseCollection,
-  DatabaseService,
-  Filter,
-  FindOneAndDeleteOptions,
-  FindOneAndReplaceOptions,
-  OptionalUnlessRequiredId,
-  WithId
-} from "@spica-server/database";
+import {Inject, Injectable, Logger} from "@nestjs/common";
+import {Id} from "@spica-server/interface-data";
 import {Observable} from "rxjs";
-import {Webhook, TargetChange, ChangeKind} from "@spica-server/interface-function-webhook";
+import {
+  Webhook,
+  TargetChange,
+  ChangeKind,
+  WEBHOOK_REPOSITORY,
+  WebhookRepository
+} from "@spica-server/interface-function-webhook";
 import {WebhookChangeDispatcher} from "./change-dispatcher.js";
+import {idOf, withId} from "@spica-server/data";
 
 @Injectable()
-export class WebhookService extends BaseCollection<Webhook>("webhook") {
+export class WebhookService {
   private readonly logger = new Logger(WebhookService.name);
 
   constructor(
-    database: DatabaseService,
+    @Inject(WEBHOOK_REPOSITORY) private readonly webhooks: WebhookRepository,
     private readonly changeDispatcher: WebhookChangeDispatcher
-  ) {
-    super(database);
+  ) {}
+
+  findById(id: Id) {
+    return this.webhooks.findById(id);
   }
 
-  async insertOne(doc: OptionalUnlessRequiredId<Webhook>): Promise<WithId<Webhook>> {
-    const result = await super.insertOne(doc);
-    this.changeDispatcher.dispatch({operationType: "insert", documentKey: {_id: result._id}});
+  async insert(webhook: Webhook): Promise<Webhook> {
+    const result = await this.webhooks.insert(webhook);
+    this.changeDispatcher.dispatch({
+      operationType: "insert",
+      documentKey: withId({}, idOf(result))
+    });
     return result;
   }
 
-  async findOneAndReplace(
-    filter: Filter<Webhook>,
-    doc: Webhook,
-    options?: FindOneAndReplaceOptions
-  ): Promise<WithId<Webhook>> {
-    const result = await super.findOneAndReplace(filter, doc, options);
+  async replaceById(id: Id, webhook: Webhook): Promise<Webhook | null> {
+    const result = await this.webhooks.replaceById(id, webhook);
     if (result) {
-      this.changeDispatcher.dispatch({operationType: "replace", documentKey: {_id: result._id}});
+      this.changeDispatcher.dispatch({
+        operationType: "replace",
+        documentKey: withId({}, idOf(result))
+      });
     }
     return result;
   }
 
-  async findOneAndDelete(
-    filter: Filter<Webhook>,
-    options?: FindOneAndDeleteOptions
-  ): Promise<WithId<Webhook>> {
-    const result = await super.findOneAndDelete(filter, options);
+  async deleteById(id: Id): Promise<Webhook | null> {
+    const result = await this.webhooks.deleteById(id);
     if (result) {
-      this.changeDispatcher.dispatch({operationType: "delete", documentKey: {_id: result._id}});
+      this.changeDispatcher.dispatch({
+        operationType: "delete",
+        documentKey: withId({}, idOf(result))
+      });
     }
     return result;
   }
@@ -57,7 +60,7 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
       const emitHook = (hook: Webhook, kind: ChangeKind) => {
         const change: TargetChange = {
           kind: hook.trigger.active ? kind : ChangeKind.Removed,
-          target: hook._id.toHexString()
+          target: idOf(hook).toString()
         };
         if (change.kind != ChangeKind.Removed) {
           change.webhook = {
@@ -74,8 +77,8 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
           `webhook target watch failed: ${error instanceof Error ? error.message : error}`
         );
 
-      let chain: Promise<unknown> = super
-        .find()
+      let chain: Promise<unknown> = this.webhooks
+        .findAll()
         .then(hooks => {
           for (const hook of hooks) {
             if (!hook.trigger.active) {
@@ -94,14 +97,14 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
       const sub = this.changeDispatcher.watch().subscribe(change => {
         chain = chain.then(async () => {
           try {
-            const _id = change.documentKey._id;
+            const id = idOf(change.documentKey);
             if (change.operationType === "delete") {
-              observer.next({kind: ChangeKind.Removed, target: _id.toHexString()});
+              observer.next({kind: ChangeKind.Removed, target: id.toString()});
               return;
             }
-            const hook = await super.findOne({_id});
+            const hook = await this.webhooks.findById(id);
             if (!hook) {
-              observer.next({kind: ChangeKind.Removed, target: _id.toHexString()});
+              observer.next({kind: ChangeKind.Removed, target: id.toString()});
               return;
             }
             emitHook(

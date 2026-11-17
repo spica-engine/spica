@@ -22,9 +22,6 @@
       "path": "../../../../interface/passport/apikey"
     },
     {
-      "path": "../../../../database/realtime"
-    },
-    {
       "path": "../../../../core/schema"
     },
     {

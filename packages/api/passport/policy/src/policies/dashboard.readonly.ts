@@ -1,5 +1,4 @@
 export default {
-  _id: "DashboardReadOnlyAccess",
   name: "Dashboard Read Only Access",
   description: "Read only access to dashboard service.",
   statement: [

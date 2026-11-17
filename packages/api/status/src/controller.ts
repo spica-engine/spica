@@ -12,17 +12,18 @@ import {
 } from "@nestjs/common";
 import {DATE} from "@spica-server/core";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
-import {StatusProvider} from "@spica-server/interface-status";
-import {DatabaseService} from "@spica-server/database";
-
-export const providers = new Set<StatusProvider>();
+import {providers} from "./providers.js";
+import {DATA_ENGINE, DATA_HEALTH, DataHealth} from "@spica-server/interface-data";
 
 @Controller("status")
 export class StatusController {
-  constructor(@Inject(DatabaseService) private readonly db: DatabaseService) {}
+  constructor(
+    @Inject(DATA_HEALTH) private readonly health: DataHealth,
+    @Inject(DATA_ENGINE) private readonly engine: string
+  ) {}
 
   private get providers() {
-    return Array.from(providers);
+    return Array.from(providers.values());
   }
 
   @Get("live")
@@ -35,7 +36,7 @@ export class StatusController {
   @HttpCode(HttpStatus.OK)
   async readiness() {
     try {
-      await this.db.command({ping: 1});
+      await this.health.ping();
       return {status: "ok"};
     } catch {
       throw new ServiceUnavailableException("Database is not ready");
@@ -63,6 +64,12 @@ export class StatusController {
         })
         .map(p => p.provide())
     );
+  }
+
+  @Get("engine")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
+  findEngine() {
+    return {engine: this.engine};
   }
 
   @Get(":module")

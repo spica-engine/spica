@@ -15,7 +15,10 @@
       "path": "../../../interface/function"
     },
     {
-      "path": "../../../database"
+      "path": "../../../interface/data"
+    },
+    {
+      "path": "../../../data"
     },
     {
       "path": "../../../core/schema"
@@ -25,6 +28,12 @@
     },
     {
       "path": "../../passport/testing"
+    },
+    {
+      "path": "../../../interface/bucket/common"
+    },
+    {
+      "path": "../../../interface/bucket"
     },
     {
       "path": "../../../database/testing"

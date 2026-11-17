@@ -1,3 +1,4 @@
+import { idOf, pickId } from "../../../utils/recordKey";
 import {Fragment} from "react";
 import type {FunctionLog} from "../../../store/api/functionApi";
 import {
@@ -137,18 +138,18 @@ const FunctionLogTable = ({
             ) : (
               logs.map(log => {
                 const rowSeverity = getSeverityFilter(log.level);
-                const expanded = expandedLogIds.includes(log._id);
+                const expanded = expandedLogIds.includes(idOf(log)!);
 
                 return (
-                  <Fragment key={log._id}>
-                    <tr className={`${styles.logRow} ${expanded ? styles.logRowExpanded : ""}`} onClick={() => onToggleRow(log._id)}>
+                  <Fragment key={idOf(log)!}>
+                    <tr className={`${styles.logRow} ${expanded ? styles.logRowExpanded : ""}`} onClick={() => onToggleRow(idOf(log)!)}>
                       <td className={styles.expandColumn}>
                         <button
                           type="button"
                           className={styles.expandButton}
                           onClick={event => {
                             event.stopPropagation();
-                            onToggleRow(log._id);
+                            onToggleRow(idOf(log)!);
                           }}
                         >
                           <svg
@@ -199,7 +200,7 @@ const FunctionLogTable = ({
                             <pre className={styles.detailJson}>
                               {JSON.stringify(
                                 {
-                                  _id: log._id,
+                                  ...pickId(log),
                                   function: log.function,
                                   function_name: functionName,
                                   handler: defaultHandlerName,

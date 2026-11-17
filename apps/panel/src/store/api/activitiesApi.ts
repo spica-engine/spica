@@ -1,7 +1,7 @@
 import { baseApi } from './baseApi';
+import { idOf, type SystemRecord } from '../../utils/recordKey';
 
-export interface Activity {
-  _id?: string;
+export interface Activity extends SystemRecord {
   [key: string]: any;
 }
 
@@ -12,16 +12,10 @@ export interface ActivityListResponse {
   };
 }
 
-export interface ActivityFilterResource {
-  $all?: string[];
-  $in?: string[];
-}
-
 export interface ActivityOptions {
   limit?: number;
   skip?: number;
   sort?: Record<string, 1 | -1>;
-  filter?: Record<string, any>;
   /** Filter by identifier (e.g. User.0.xxx) */
   identifier?: string;
   /** Filter by action types: 1=Insert, 2=Update, 3=Delete */
@@ -30,8 +24,10 @@ export interface ActivityOptions {
   begin?: string | Date;
   /** End of date range (ISO string) */
   end?: string | Date;
-  /** Resource filter: { $all: [module, bucketId?], $in: [documentIds] } */
-  resource?: ActivityFilterResource;
+  /** Values the activity's resource must hold: [module, bucketId?] */
+  resource?: string[];
+  /** Document ids of which the activity's resource must hold at least one */
+  documentId?: string[];
 }
 
 const ACTIVITY_TAG = 'Activity' as const;
@@ -46,63 +42,17 @@ const toIsoString = (value?: string | Date) => {
   return value.toISOString();
 };
 
-/**
- * Builds activity filter options from form values.
- * Matches the /api/activity query params: identifier, action, begin, end, resource.
- */
-export function buildActivityFilterOptions(values: {
-  identifier?: string;
-  actionTypes?: number[];
-  module?: string | null;
-  bucketId?: string | null;
-  documentIds?: string[];
-  dateRange?: { from: Date | null; to: Date | null };
-}): ActivityOptions {
-  const opts: ActivityOptions = { limit: 20, skip: 0 };
-
-  if (values.identifier?.trim()) {
-    opts.identifier = values.identifier.trim();
-  }
-
-  if (values.actionTypes?.length) {
-    opts.action = values.actionTypes;
-  }
-
-  if (values.dateRange?.from) {
-    opts.begin = values.dateRange.from;
-  }
-  if (values.dateRange?.to) {
-    opts.end = values.dateRange.to;
-  }
-
-  const resource: ActivityFilterResource = {};
-  if (values.module) {
-    resource.$all = [values.module];
-    if (values.module === 'bucket' && values.bucketId) {
-      resource.$all.push(values.bucketId);
-    }
-  }
-  if (values.documentIds?.length) {
-    resource.$in = values.documentIds;
-  }
-  if (resource.$all?.length || resource.$in?.length) {
-    opts.resource = resource;
-  }
-
-  return opts;
-}
-
 export const activitiesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getActivities: builder.query<Activity[], ActivityOptions | void>({
       query: (options: ActivityOptions = {}) => {
         const params = new URLSearchParams();
-        const { limit, skip, sort, filter, identifier, action, begin, end, resource } = options;
+        const { limit, skip, sort, identifier, action, begin, end, resource, documentId } =
+          options;
 
         if (limit != null) params.append('limit', String(limit));
         if (skip != null) params.append('skip', String(skip));
         if (sort) params.append('sort', JSON.stringify(sort));
-        if (filter) params.append('filter', JSON.stringify(filter));
         if (identifier?.trim()) params.append('identifier', identifier.trim());
         if (action != null) {
           const actions = Array.isArray(action) ? action : [action];
@@ -112,9 +62,8 @@ export const activitiesApi = baseApi.injectEndpoints({
         const endIso = toIsoString(end);
         if (beginIso) params.append('begin', beginIso);
         if (endIso) params.append('end', endIso);
-        if (resource && (resource.$all?.length || resource.$in?.length)) {
-          params.append('resource', JSON.stringify(resource));
-        }
+        resource?.forEach((value) => params.append('resource', value));
+        documentId?.forEach((value) => params.append('documentId', value));
 
         const qs = params.toString();
         return qs ? `/activity?${qs}` : `/activity`;
@@ -124,7 +73,7 @@ export const activitiesApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.length
           ? [
-              ...result.map(({ _id }) => ({ type: ACTIVITY_TAG, id: _id })),
+              ...result.map((item) => ({ type: ACTIVITY_TAG, id: idOf(item) })),
               ACTIVITY_TAGS.LIST,
             ]
           : [ACTIVITY_TAGS.LIST],

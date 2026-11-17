@@ -1,7 +1,6 @@
 import UserReadOnlyAccess from "./user.readonly.js";
 
 export default {
-  _id: "UserFullAccess",
   name: "User Full Access",
   description: "Full access to passport user service.",
   statement: [

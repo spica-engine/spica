@@ -1,5 +1,6 @@
+import {Inject} from "@nestjs/common";
+import {REALTIME, Realtime} from "@spica-server/interface-realtime";
 import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
-import {RealtimeDatabaseService} from "@spica-server/database-realtime";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {getConnectionHandlers} from "@spica-server/realtime";
 import {LogOptionsBuilder} from "./log-options.builder.js";
@@ -10,7 +11,10 @@ import {LogOptionsBuilder} from "./log-options.builder.js";
 export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
   readonly COLLECTION = "function_logs";
 
-  constructor(private realtime: RealtimeDatabaseService, private guardService: GuardService) {}
+  constructor(
+    @Inject(REALTIME) private realtime: Realtime,
+    private guardService: GuardService
+  ) {}
 
   private handlers = getConnectionHandlers(
     this.guardService,
@@ -32,6 +36,6 @@ export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async prepareOptions(_client, req) {
-    return LogOptionsBuilder.fromLogQuery(req);
+    return LogOptionsBuilder.fromLogQuery(req, this.realtime.filterLanguage);
   }
 }

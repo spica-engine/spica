@@ -1,7 +1,6 @@
 import PolicyReadOnlyAccess from "./policy.readonly.js";
 
 export default {
-  _id: "PolicyFullAccess",
   name: "Policy Full Access",
   description: "Full access to passport policy service.",
   statement: [
