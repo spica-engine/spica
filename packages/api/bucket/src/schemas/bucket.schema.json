@@ -199,7 +199,8 @@
       }
     },
     "indexes": {
-      "$ref": "#/definitions/indexes"
+      "$ref": "#/definitions/indexes",
+      "default": []
     },
     "title": {
       "type": "string",
