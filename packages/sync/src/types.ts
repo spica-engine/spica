@@ -127,6 +127,8 @@ export interface ResourceModule<T = any> {
    */
   extractLocalId?(data: T): string | undefined;
 
+  missingValue?(local: T, remote: T | undefined): boolean;
+
   /** Read all local resources from the project directory (on disk unless a source is given) */
   readLocal(rootDir: string, source?: ResourceSource): Promise<LocalResource<T>[]>;
   /** Fetch all remote resources from the Spica API */

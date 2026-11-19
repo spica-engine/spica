@@ -3,12 +3,14 @@ import {ActionParameters, Command, Program} from "@caporal/core";
 import caporalCore from "@caporal/core";
 const {CaporalValidator} = caporalCore;
 import {httpService} from "../../http";
+import {resolveSyncModules} from "../../value-store";
 import {
   buildPlan,
   renderPlan,
-  resolveModules,
   DEFAULT_CONCURRENCY,
-  MODULE_NAMES
+  MODULE_NAMES,
+  PLAN_EXIT_CODE,
+  planExitCode
 } from "@spica-server/sync";
 import {cliReporter} from "./reporter";
 
@@ -22,7 +24,7 @@ async function plan({args, options}: ActionParameters) {
       ? (Array.isArray(options.module) ? options.module : [options.module]).map(String)
       : undefined;
 
-    const modules = resolveModules(moduleFilter);
+    const modules = await resolveSyncModules(moduleFilter, rootDir);
     const http = await httpService.createFromCurrentCtx();
 
     const p = await buildPlan(modules, http, rootDir, {
@@ -32,11 +34,11 @@ async function plan({args, options}: ActionParameters) {
     });
     renderPlan(p, {detailed, json});
 
-    process.exitCode = 0;
+    process.exitCode = options.detailedExitcode ? planExitCode(p) : PLAN_EXIT_CODE.NoChanges;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(msg);
-    process.exitCode = 1;
+    process.exitCode = PLAN_EXIT_CODE.Error;
   }
 }
 
@@ -53,6 +55,11 @@ export default function (program: Program): Command {
       {default: false}
     )
     .option("--json", "Output the plan as JSON (machine-readable).", {default: false})
+    .option(
+      "--detailed-exitcode",
+      "Exit with 0 when there are no changes, 1 on error and 2 when changes are planned.",
+      {default: false}
+    )
     .option("--concurrency <n>", "Maximum parallel API requests.", {
       default: DEFAULT_CONCURRENCY as number,
       validator: CaporalValidator.NUMBER

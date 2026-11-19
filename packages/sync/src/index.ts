@@ -13,6 +13,7 @@ export * from "./fs-utils";
 export * from "./source";
 export * from "./planner";
 export * from "./record-key";
+export * from "./values";
 export * from "./modules/index";
 
 // Individual resource modules (the barrel above only exposes the aggregate

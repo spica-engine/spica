@@ -19,6 +19,7 @@ import plan from "./src/commands/sync/plan";
 import apply from "./src/commands/sync/apply";
 import fetch from "./src/commands/sync/fetch";
 import dev from "./src/commands/sync/dev";
+import {envSet, secretSet} from "./src/commands/value/set";
 import {readPackageVersion} from "./src/version";
 
 export function run(argv?: string[]) {
@@ -45,6 +46,8 @@ export function run(argv?: string[]) {
   apply(program);
   fetch(program);
   dev(program);
+  envSet(program);
+  secretSet(program);
 
   return program.run(argv);
 }
