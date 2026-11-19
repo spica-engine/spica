@@ -6,7 +6,7 @@ import {
   unwrapList,
   writeLocalSchema
 } from "../fs-utils";
-import {ResourceModule} from "../types";
+import {LocalResource, ResourceModule} from "../types";
 import {KEY_FIELDS, recordKey} from "../record-key";
 
 interface Secret {
@@ -20,14 +20,23 @@ interface Secret {
 // "updated_at" is server-managed, so it must be ignored for the same reason.
 const IGNORED_FIELDS = [...KEY_FIELDS, "value", "updated_at"];
 
+function assertNoCommittedValue({slug, data}: LocalResource<Secret>): void {
+  if (data.value === undefined) return;
+  throw new Error(
+    `secret/${slug}/schema.yaml must not contain "value". Remove it and run "spica secret ${data.key}" instead.`
+  );
+}
+
 export const secretModule: ResourceModule<Secret> = {
   name: "secret",
   displayName: "Secret",
   identityField: "key",
   ignoredFields: IGNORED_FIELDS,
 
-  readLocal(rootDir, source) {
-    return readLocalSchemas<Secret>(rootDir, "secret", source);
+  async readLocal(rootDir, source) {
+    const locals = await readLocalSchemas<Secret>(rootDir, "secret", source);
+    locals.forEach(assertNoCommittedValue);
+    return locals;
   },
 
   async readRemote(http) {
@@ -61,7 +70,8 @@ export const secretModule: ResourceModule<Secret> = {
   },
 
   diffFields(local, remote) {
-    return diffSchemaFields(local, remote, IGNORED_FIELDS);
+    const changed = diffSchemaFields(local, remote, IGNORED_FIELDS);
+    return local.value === undefined ? changed : [...changed, "value"];
   },
 
   renderDetail(local, remote) {

@@ -8,6 +8,7 @@ import {SyncReporter, silentReporter} from "./reporter";
 import {omit} from "./fs-utils";
 import {sortUnorderedArrays} from "./unordered";
 import {ResourceSource} from "./source";
+import {MissingValuesError} from "./values";
 import {
   ChangeKind,
   DEFAULT_CONCURRENCY,
@@ -45,6 +46,7 @@ export async function buildPlan(
   } = options;
   const http = limitConcurrency(unlimitedHttp, concurrency);
   const modulePlans: ModulePlan[] = [];
+  const missingValues: string[] = [];
 
   for (const mod of modules) {
     const [locals, remotes] = await Promise.all([
@@ -58,6 +60,7 @@ export async function buildPlan(
 
     const localBySlug = new Map(locals.map(l => [l.slug, l]));
     const remoteBySlug = new Map(remotes.map(r => [r.slug, r]));
+    missingValues.push(...findMissingValues(mod, locals, remoteBySlug));
 
     const creates: PlanEntry[] = [];
     const updates: PlanEntry[] = [];
@@ -145,7 +148,33 @@ export async function buildPlan(
     modulePlans.push({module: mod, creates, updates, deletes});
   }
 
+  if (missingValues.length) throw new MissingValuesError(missingValues);
+
   return {modules: modulePlans};
+}
+
+function findMissingValues(
+  mod: ResourceModule,
+  locals: LocalResource[],
+  remoteBySlug: Map<string, RemoteResource>
+): string[] {
+  if (!mod.missingValue) return [];
+  return locals
+    .filter(local => mod.missingValue!(local.data, remoteBySlug.get(local.slug)?.data))
+    .map(local => `${mod.name}/${local.slug}`);
+}
+
+export function countChanges(plan: Plan): number {
+  return plan.modules.reduce(
+    (n, m) => n + m.creates.length + m.updates.length + m.deletes.length,
+    0
+  );
+}
+
+export const PLAN_EXIT_CODE = {NoChanges: 0, Error: 1, HasChanges: 2} as const;
+
+export function planExitCode(plan: Plan): number {
+  return countChanges(plan) > 0 ? PLAN_EXIT_CODE.HasChanges : PLAN_EXIT_CODE.NoChanges;
 }
 
 export interface RenderOptions {

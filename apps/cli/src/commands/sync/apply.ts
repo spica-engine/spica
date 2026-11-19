@@ -4,7 +4,8 @@ import caporalCore from "@caporal/core";
 const {CaporalValidator} = caporalCore;
 import {bold, green, red, yellow} from "colorette";
 import {httpService} from "../../http";
-import {applyPlan, buildPlan, renderPlan, resolveModules, MODULE_NAMES} from "@spica-server/sync";
+import {resolveSyncModules} from "../../value-store";
+import {applyPlan, buildPlan, countChanges, renderPlan, MODULE_NAMES} from "@spica-server/sync";
 import {confirm} from "./prompt";
 import {cliReporter} from "./reporter";
 
@@ -18,7 +19,7 @@ async function apply({args, options}: ActionParameters) {
     ? (Array.isArray(options.module) ? options.module : [options.module]).map(String)
     : undefined;
 
-  const modules = resolveModules(moduleFilter);
+  const modules = await resolveSyncModules(moduleFilter, rootDir);
   const http = await httpService.createFromCurrentCtx();
 
   console.log(bold("\nBuilding plan…"));
@@ -28,14 +29,9 @@ async function apply({args, options}: ActionParameters) {
     concurrency
   });
 
-  const totalChanges = p.modules.reduce(
-    (n, m) => n + m.creates.length + m.updates.length + m.deletes.length,
-    0
-  );
-
   renderPlan(p, {detailed});
 
-  if (totalChanges === 0) {
+  if (countChanges(p) === 0) {
     process.exitCode = 0;
     return;
   }
