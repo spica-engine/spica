@@ -20,7 +20,11 @@ const collection = "function";
 
 export const functionIds = () => ids().forCollection(collection);
 
-const HIDDEN_SECRET_VALUES = {"secrets.value": 0} as const;
+const HIDDEN_SECRET_FIELDS = {
+  "secrets.value": 0,
+  "secrets.salt": 0,
+  "secrets.value_hash": 0
+} as const;
 
 function relations(env: EnvRelation, secret: SecretRelation): string[] {
   return [
@@ -75,7 +79,7 @@ export async function find<
   let fns = await queries.find<Function<ER, SR>>(collection, {
     resourceFilter: options?.filter?.resources,
     relations: relations(options?.resolveEnvRelations, options?.resolveSecretRelations),
-    fields: HIDDEN_SECRET_VALUES
+    fields: HIDDEN_SECRET_FIELDS
   });
 
   if (options?.filter?.index) {
@@ -98,7 +102,7 @@ export async function findOne<
   const res = await queries.findOne<Function<ER, SR>>(collection, {
     id,
     relations: relations(options.resolveEnvRelations, options.resolveSecretRelations),
-    fields: HIDDEN_SECRET_VALUES
+    fields: HIDDEN_SECRET_FIELDS
   });
   if (!res) {
     throw new NotFoundException(`Couldn't find the function with id ${id}`);
