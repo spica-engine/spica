@@ -174,6 +174,48 @@ describe("HttpTracker access log", () => {
     }
   });
 
+  it("writes the caller resolved by authentication, never the credential", async () => {
+    const authenticate =
+      (user: object): express.RequestHandler =>
+      (req, _, next) => {
+        (req as any).user = user;
+        next();
+      };
+    const url = await start({}, (app, tracker) => {
+      app.use(tracker.handler);
+      app.get("/identity", authenticate({identifier: "admin"}), (_, res) => res.end("ok"));
+      app.get("/apikey", authenticate({name: "my-key", key: "secret-key"}), (_, res) =>
+        res.end("ok")
+      );
+      app.get("/anonymous", (_, res) => res.end("ok"));
+    });
+
+    await fetch(`${url}/identity`, {headers: {authorization: "IDENTITY header.payload.sig"}});
+    await fetch(`${url}/apikey`, {headers: {authorization: "APIKEY secret-key"}});
+    await fetch(`${url}/anonymous`);
+
+    expect(accessLog[0]).toContain('auth="IDENTITY:admin"');
+    expect(accessLog[1]).toContain('auth="APIKEY:my-key"');
+    expect(accessLog[2]).toContain('auth="-"');
+    expect(accessLog.join("\n")).not.toContain("secret-key");
+    expect(accessLog.join("\n")).not.toContain("header.payload.sig");
+  });
+
+  it("sanitizes a crafted identifier so it cannot add fields to the line", async () => {
+    const url = await start({}, (app, tracker) => {
+      app.use(tracker.handler);
+      app.get("/things", (req, res) => {
+        (req as any).user = {identifier: 'evil" spica_request_id=forged'};
+        res.end("ok");
+      });
+    });
+
+    await fetch(`${url}/things`);
+
+    expect(accessLog[0]).toContain('auth="evil__spica_request_id_forged"');
+    expect(accessLog[0]).not.toContain("spica_request_id=forged");
+  });
+
   it("applies the url and status code filters", async () => {
     const url = await start(
       {accessLogsUrlFilter: "^/logged", accessLogsStatusCodeFilter: "^2"},
