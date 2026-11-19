@@ -7,6 +7,7 @@ import {
   fromMap,
   memorySource,
   secretModule,
+  SYSTEM_KEY_FIELDS,
   withValues
 } from "@spica-server/sync";
 
@@ -34,9 +35,11 @@ async function planWith(
   return buildPlan(modules, http, "", {source: projectWith(files)});
 }
 
-describe("sync with resolved values", () => {
+const SHAPES = Object.entries(SYSTEM_KEY_FIELDS);
+
+describe.each(SHAPES)("sync with resolved values (%s records)", (_shape, keyField) => {
   it("updates an env var whose resolved value differs from the instance", async () => {
-    const http = httpWith({"env-var": [{_id: "1", key: "API_URL", value: "old"}]});
+    const http = httpWith({"env-var": [{[keyField]: "1", key: "API_URL", value: "old"}]});
 
     const plan = await planWith(
       {API_URL: "new"},
@@ -72,7 +75,7 @@ describe("sync with resolved values", () => {
   });
 
   it("re-applies an existing secret that has a local value", async () => {
-    const http = httpWith({secret: [{_id: "7", key: "TOKEN"}]});
+    const http = httpWith({secret: [{[keyField]: "7", key: "TOKEN"}]});
 
     const plan = await planWith({TOKEN: "s3"}, {"secret/TOKEN/schema.yaml": {key: "TOKEN"}}, http);
     await applyPlan(plan, http);
@@ -81,7 +84,7 @@ describe("sync with resolved values", () => {
   });
 
   it("leaves an existing secret without a local value alone", async () => {
-    const http = httpWith({secret: [{_id: "7", key: "TOKEN"}]});
+    const http = httpWith({secret: [{[keyField]: "7", key: "TOKEN"}]});
 
     const plan = await planWith({}, {"secret/TOKEN/schema.yaml": {key: "TOKEN"}}, http);
 

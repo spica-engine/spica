@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 import {ActionParameters, Command, Program} from "@caporal/core";
 import {listFolders, sanitizeSlug} from "@spica-server/sync";
 import {config} from "../../config";

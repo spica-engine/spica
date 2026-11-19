@@ -1,5 +1,5 @@
 import readline from "readline";
-import {Writable} from "stream";
+import {Writable} from "node:stream";
 
 /**
  * Ask a yes/no question on stdin/stdout.

@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import {
   chain,
   fromEnv,
@@ -27,10 +27,14 @@ export function formatEntry(key: string, value: string): string {
   return `${key}=${quote(value)}`;
 }
 
+function escapeLineBreaks(value: string): string {
+  return value.replace(/\r/g, String.raw`\r`).replace(/\n/g, String.raw`\n`);
+}
+
 function quote(value: string): string {
   if (BARE_VALUE.test(value)) return value;
   if (!/['\r\n]/.test(value)) return `'${value}'`;
-  if (!/["\\]/.test(value)) return `"${value.replace(/\r/g, "\\r").replace(/\n/g, "\\n")}"`;
+  if (!/["\\]/.test(value)) return `"${escapeLineBreaks(value)}"`;
   throw new Error("Values mixing quotes or backslashes with line breaks are not supported.");
 }
 

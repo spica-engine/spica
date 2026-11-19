@@ -48,7 +48,8 @@ export function fromMap(values: Record<string, string | undefined>): ValueHandle
 
 export function chain(...handlers: ValueHandler[]): ValueHandler {
   const [first = new LookupHandler(() => undefined), ...rest] = handlers;
-  rest.reduce((previous, handler) => previous.setNext(handler), first);
+  let last = first;
+  for (const handler of rest) last = last.setNext(handler);
   return first;
 }
 
