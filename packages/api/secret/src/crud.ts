@@ -1,6 +1,7 @@
 import {SecretService} from "@spica-server/secret-services";
 import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface-secret";
-import {encrypt} from "@spica-server/core-encryption";
+import {encrypt, hash} from "@spica-server/core-encryption";
+import {randomBytes} from "node:crypto";
 import {NotFoundException} from "@nestjs/common";
 import {PaginationResponse} from "@spica-server/interface-passport-identity";
 import {ids, idOf, withId, assignId} from "@spica-server/data";
@@ -16,6 +17,22 @@ const collection = "secret";
 const secretIds = () => ids().forCollection(collection);
 
 const HIDDEN_VALUE = {value: 0} as const;
+
+const SALT_BYTES = 16;
+
+function fingerprint(value: string) {
+  const salt = randomBytes(SALT_BYTES).toString("hex");
+  return {salt, value_hash: hash(value, salt)};
+}
+
+function toStored(body: DecryptedSecret, encryptionSecret: string): Secret {
+  return {
+    key: body.key,
+    value: encrypt(body.value, encryptionSecret),
+    ...fingerprint(body.value),
+    updated_at: new Date()
+  };
+}
 
 export async function find(
   queries: CollectionQueryFacade,
@@ -49,11 +66,7 @@ export async function findOne(queries: CollectionQueryFacade, id: Id): Promise<H
 }
 
 export async function insert(ss: SecretService, body: DecryptedSecret): Promise<HiddenSecret> {
-  const secret: Secret = {
-    key: body.key,
-    value: encrypt(body.value, ss.encryptionSecret),
-    updated_at: new Date()
-  };
+  const secret = toStored(body, ss.encryptionSecret);
 
   if (idOf(body)) {
     assignId(secret, secretIds().parse(idOf(body)));
@@ -69,12 +82,7 @@ export async function replace(
   id: Id,
   body: DecryptedSecret
 ): Promise<HiddenSecret> {
-  const encrypted = encrypt(body.value, ss.encryptionSecret);
-
-  const result = await ss.replaceById(
-    id,
-    withId({key: body.key, value: encrypted, updated_at: new Date()}, id)
-  );
+  const result = await ss.replaceById(id, withId(toStored(body, ss.encryptionSecret), id));
 
   if (!result) {
     throw new NotFoundException(`Secret with ID ${id} not found`);
