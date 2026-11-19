@@ -3,6 +3,7 @@ import {Secret, SECRET_REPOSITORY, SecretRepository} from "@spica-server/interfa
 import {Observable} from "rxjs";
 import {SecretChangeDispatcher, SecretChangeEvent} from "./change-dispatcher.js";
 import {Id} from "@spica-server/interface-data";
+import {decrypt} from "@spica-server/core-encryption";
 import {idOf, withId} from "@spica-server/data";
 
 export const SECRET_ENCRYPTION_SECRET = Symbol.for("SECRET_ENCRYPTION_SECRET");
@@ -31,7 +32,7 @@ export class SecretService {
       return previous;
     }
     const current = withId({...secret}, idOf(previous));
-    this.dispatchChange("replace", idOf(previous), [previous, current]);
+    this.dispatchIfConsumersAffected("replace", idOf(previous), previous, current);
     return current;
   }
 
@@ -41,7 +42,7 @@ export class SecretService {
       return previous;
     }
     const current = await this.secrets.findById(idOf(previous));
-    this.dispatchChange("update", idOf(previous), [previous, current]);
+    this.dispatchIfConsumersAffected("update", idOf(previous), previous, current);
     return current;
   }
 
@@ -55,6 +56,34 @@ export class SecretService {
 
   watchChanges(): Observable<SecretChangeEvent> {
     return this.changeDispatcher.watch();
+  }
+
+  private dispatchIfConsumersAffected(
+    operationType: "update" | "replace",
+    id: Id,
+    previous: Secret,
+    current: Secret | null
+  ) {
+    if (current && !this.affectsConsumers(previous, current)) {
+      return;
+    }
+    this.dispatchChange(operationType, id, [previous, current]);
+  }
+
+  private affectsConsumers(previous: Secret, current: Secret): boolean {
+    return previous.key !== current.key || !this.hasSameValue(previous, current);
+  }
+
+  private hasSameValue(previous: Secret, current: Secret): boolean {
+    try {
+      return (
+        decrypt(previous.value, this.encryptionSecret) ===
+        decrypt(current.value, this.encryptionSecret)
+      );
+    } catch {
+      // An undecryptable value must still propagate, otherwise replacing a broken secret would never reach its consumers.
+      return false;
+    }
   }
 
   private dispatchChange(
