@@ -18,6 +18,8 @@ export const secrets = defineEntity<Secret>({
   columns: {
     key: {type: "text", notNull: true},
     value: {embedded: {encrypted: {type: "text"}, iv: {type: "text"}, authTag: {type: "text"}}},
+    salt: {type: "text"},
+    value_hash: {type: "text"},
     updated_at: {type: "timestamptz"}
   },
   indexes: [{columns: ["key"], unique: true}]
