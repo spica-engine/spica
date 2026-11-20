@@ -135,34 +135,34 @@ export class FunctionController {
     });
   }
 
-  /**
-   * @description Removes the function object along with its index and dependencies.
-   * @param id Identifier of the function
-   */
-  @UseInterceptors(activity(createFunctionActivity))
-  @Delete(":id")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:delete"))
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOne(@Param("id", ID(FUNCTION_COLLECTION)) id: Id) {
-    return CRUD.remove(this.functions, this.engine, this.logs, id);
-  }
+  // /**
+  //  * @description Removes the function object along with its index and dependencies.
+  //  * @param id Identifier of the function
+  //  */
+  // @UseInterceptors(activity(createFunctionActivity))
+  // @Delete(":id")
+  // @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:delete"))
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async deleteOne(@Param("id", ID(FUNCTION_COLLECTION)) id: Id) {
+  //   return CRUD.remove(this.functions, this.engine, this.logs, id);
+  // }
 
-  /**
-   * @description Replaces a function object and returns the latest committed version of function object.<br>
-   * Keep in mind that `language` is immutable and ignored silently if present
-   * @param id Identifier of the function
-   */
-  @UseInterceptors(activity(createFunctionActivity))
-  @Put(":id")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update"))
-  async replaceOne(
-    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
-    @Body(Schema.validate(generate)) fn: Function
-  ) {
-    return CRUD.replace(this.functions, this.engine, withId({...fn}, id)).catch(error => {
-      throw new HttpException(error.message, error.status || 500);
-    });
-  }
+  // /**
+  //  * @description Replaces a function object and returns the latest committed version of function object.<br>
+  //  * Keep in mind that `language` is immutable and ignored silently if present
+  //  * @param id Identifier of the function
+  //  */
+  // @UseInterceptors(activity(createFunctionActivity))
+  // @Put(":id")
+  // @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update"))
+  // async replaceOne(
+  //   @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+  //   @Body(Schema.validate(generate)) fn: Function
+  // ) {
+  //   return CRUD.replace(this.functions, this.engine, withId({...fn}, id)).catch(error => {
+  //     throw new HttpException(error.message, error.status || 500);
+  //   });
+  // }
 
   /**
    * Updates the schema partially. The provided body has to be a `json merge patch`.
@@ -175,72 +175,72 @@ export class FunctionController {
    * }
    * ```
    */
-  @UseInterceptors()
-  @Patch(":id")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update"))
-  async updateOne(
-    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
-    @Headers("content-type") contentType: string,
-    @Body(
-      Schema.validate({
-        type: "object",
-        properties: {
-          category: {
-            type: ["string", "null"]
-          },
-          order: {
-            type: ["number", "null"]
-          }
-        },
-        additionalProperties: false
-      })
-    )
-    patch: object
-  ) {
-    if (contentType != "application/merge-patch+json") {
-      throw new BadRequestException(`Content type '${contentType}' is not supported.`);
-    }
+  // @UseInterceptors()
+  // @Patch(":id")
+  // @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update"))
+  // async updateOne(
+  //   @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+  //   @Headers("content-type") contentType: string,
+  //   @Body(
+  //     Schema.validate({
+  //       type: "object",
+  //       properties: {
+  //         category: {
+  //           type: ["string", "null"]
+  //         },
+  //         order: {
+  //           type: ["number", "null"]
+  //         }
+  //       },
+  //       additionalProperties: false
+  //     })
+  //   )
+  //   patch: object
+  // ) {
+  //   if (contentType != "application/merge-patch+json") {
+  //     throw new BadRequestException(`Content type '${contentType}' is not supported.`);
+  //   }
 
-    const previousFn = await this.functions.findById(id);
-    if (!previousFn) {
-      throw new NotFoundException(`Function with id ${id} does not exist.`);
-    }
+  //   const previousFn = await this.functions.findById(id);
+  //   if (!previousFn) {
+  //     throw new NotFoundException(`Function with id ${id} does not exist.`);
+  //   }
 
-    const patchedFn = applyPatch(previousFn, patch);
-    stripId(patchedFn);
+  //   const patchedFn = applyPatch(previousFn, patch);
+  //   stripId(patchedFn);
 
-    const updatedFn = await this.functions.applyMergePatch(id, patch, patchedFn);
+  //   const updatedFn = await this.functions.applyMergePatch(id, patch, patchedFn);
 
-    return updatedFn === undefined ? previousFn : updatedFn;
-  }
+  //   return updatedFn === undefined ? previousFn : updatedFn;
+  // }
 
-  /**
-   * @description Adds the function object present in the body and returns the inserted function object.
-   * @param id Identifier of the function
-   */
-  @UseInterceptors(activity(createFunctionActivity))
-  @Post()
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:create"))
-  async insertOne(@Body(Schema.validate(generate)) fn: Function) {
-    return CRUD.insert(this.functions, this.engine, fn).catch(error => {
-      throw new HttpException(error.message, error.status || 500);
-    });
-  }
+  // /**
+  //  * @description Adds the function object present in the body and returns the inserted function object.
+  //  * @param id Identifier of the function
+  //  */
+  // @UseInterceptors(activity(createFunctionActivity))
+  // @Post()
+  // @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:create"))
+  // async insertOne(@Body(Schema.validate(generate)) fn: Function) {
+  //   return CRUD.insert(this.functions, this.engine, fn).catch(error => {
+  //     throw new HttpException(error.message, error.status || 500);
+  //   });
+  // }
 
-  /**
-   * @description Replaces index(code) of the function with the index in the body. <br>
-   * Also, it compiles the index to make it ready for execution.
-   * @param id Identifier of the function
-   */
-  @UseInterceptors(activity(createFunctionIndexActivity))
-  @Post(":id/index")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
-  async updateIndex(@Param("id", ID(FUNCTION_COLLECTION)) id: Id, @Body("index") index: string) {
-    return CRUD.index
-      .write(this.functions, this.engine, id, index)
-      .catch(diagnostics => Promise.reject(new HttpException(diagnostics, 422)));
-  }
+  // /**
+  //  * @description Replaces index(code) of the function with the index in the body. <br>
+  //  * Also, it compiles the index to make it ready for execution.
+  //  * @param id Identifier of the function
+  //  */
+  // @UseInterceptors(activity(createFunctionIndexActivity))
+  // @Post(":id/index")
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
+  // async updateIndex(@Param("id", ID(FUNCTION_COLLECTION)) id: Id, @Body("index") index: string) {
+  //   return CRUD.index
+  //     .write(this.functions, this.engine, id, index)
+  //     .catch(diagnostics => Promise.reject(new HttpException(diagnostics, 422)));
+  // }
 
   /**
    * @description Returns index(code) of the function
@@ -266,105 +266,105 @@ export class FunctionController {
     });
   }
 
-  /**
-   * @description Adds one or more dependency to the function
-   * @param progress When true, installation progress is reported.
-   * @param id Identifier of the function
-   */
-  @UseInterceptors(activity(createFunctionDependencyActivity))
-  @Post(":id/dependencies")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
-  @Header("X-Content-Type-Options", "nosniff")
-  async addDependency(
-    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
-    @Body("name", DEFAULT([]), ARRAY(String)) name: string[]
-  ) {
-    const fn = await this.functions.findById(id);
+  // /**
+  //  * @description Adds one or more dependency to the function
+  //  * @param progress When true, installation progress is reported.
+  //  * @param id Identifier of the function
+  //  */
+  // @UseInterceptors(activity(createFunctionDependencyActivity))
+  // @Post(":id/dependencies")
+  // @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
+  // @Header("X-Content-Type-Options", "nosniff")
+  // async addDependency(
+  //   @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+  //   @Body("name", DEFAULT([]), ARRAY(String)) name: string[]
+  // ) {
+  //   const fn = await this.functions.findById(id);
 
-    return CRUD.dependencies.install(this.engine, fn, name).catch(error => {
-      throw new HttpException(error.message, error.status || 500);
-    });
-  }
+  //   return CRUD.dependencies.install(this.engine, fn, name).catch(error => {
+  //     throw new HttpException(error.message, error.status || 500);
+  //   });
+  // }
 
-  /**
-   * @description Removes a dependency from the function
-   * @param id Identifier of the function
-   * @param name Name of the dependency to remove
-   */
-  @UseInterceptors(activity(createFunctionDependencyActivity))
-  @Delete(":id/dependencies/:name(*)")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteDependency(
-    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
-    @Param("name") name: string
-  ) {
-    const fn = await this.functions.findById(id);
+  // /**
+  //  * @description Removes a dependency from the function
+  //  * @param id Identifier of the function
+  //  * @param name Name of the dependency to remove
+  //  */
+  // @UseInterceptors(activity(createFunctionDependencyActivity))
+  // @Delete(":id/dependencies/:name(*)")
+  // @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async deleteDependency(
+  //   @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+  //   @Param("name") name: string
+  // ) {
+  //   const fn = await this.functions.findById(id);
 
-    return CRUD.dependencies.uninstall(this.engine, fn, [name]).catch(error => {
-      throw new HttpException(error.message, error.status || 500);
-    });
-  }
+  //   return CRUD.dependencies.uninstall(this.engine, fn, [name]).catch(error => {
+  //     throw new HttpException(error.message, error.status || 500);
+  //   });
+  // }
 
-  /**
-   * Inject the environment variable to function.
-   * @param id identifier of the function.
-   * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
-   */
-  @UseInterceptors(activity(createFunctionEnvVarActivity))
-  @Put(":id/env-var/:envVarId")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:env-var:inject"))
-  async injectEnvironmentVariable(
-    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
-    @Param("envVarId", ID(ENV_VAR_COLLECTION)) envVarId: Id
-  ) {
-    return CRUD.environment.inject(this.functions, id, this.engine, envVarId);
-  }
+  // /**
+  //  * Inject the environment variable to function.
+  //  * @param id identifier of the function.
+  //  * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
+  //  */
+  // @UseInterceptors(activity(createFunctionEnvVarActivity))
+  // @Put(":id/env-var/:envVarId")
+  // @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:env-var:inject"))
+  // async injectEnvironmentVariable(
+  //   @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+  //   @Param("envVarId", ID(ENV_VAR_COLLECTION)) envVarId: Id
+  // ) {
+  //   return CRUD.environment.inject(this.functions, id, this.engine, envVarId);
+  // }
 
-  /**
-   * Eject the environment variable from function.
-   * @param id identifier of the function.
-   * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
-   */
-  @UseInterceptors(activity(createFunctionEnvVarActivity))
-  @Delete(":id/env-var/:envVarId")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:env-var:eject"))
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async ejectEnvironmentVariable(
-    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
-    @Param("envVarId", ID(ENV_VAR_COLLECTION)) envVarId: Id
-  ) {
-    return CRUD.environment.eject(this.functions, id, this.engine, envVarId);
-  }
+  // /**
+  //  * Eject the environment variable from function.
+  //  * @param id identifier of the function.
+  //  * @param envVarId identifier of the environment variable. Example: `5f31002e4a51a68d6fec4d3f`
+  //  */
+  // @UseInterceptors(activity(createFunctionEnvVarActivity))
+  // @Delete(":id/env-var/:envVarId")
+  // @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:env-var:eject"))
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async ejectEnvironmentVariable(
+  //   @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+  //   @Param("envVarId", ID(ENV_VAR_COLLECTION)) envVarId: Id
+  // ) {
+  //   return CRUD.environment.eject(this.functions, id, this.engine, envVarId);
+  // }
 
-  /**
-   * Inject the secret to function.
-   * @param id identifier of the function.
-   * @param secretId identifier of the secret.
-   */
-  @UseInterceptors(activity(createFunctionSecretActivity))
-  @Put(":id/secret/:secretId")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:secret:inject"))
-  async injectSecret(
-    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
-    @Param("secretId", ID(SECRET_COLLECTION)) secretId: Id
-  ) {
-    return CRUD.secret.inject(this.functions, this.ss, id, this.engine, secretId);
-  }
+  // /**
+  //  * Inject the secret to function.
+  //  * @param id identifier of the function.
+  //  * @param secretId identifier of the secret.
+  //  */
+  // @UseInterceptors(activity(createFunctionSecretActivity))
+  // @Put(":id/secret/:secretId")
+  // @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:secret:inject"))
+  // async injectSecret(
+  //   @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+  //   @Param("secretId", ID(SECRET_COLLECTION)) secretId: Id
+  // ) {
+  //   return CRUD.secret.inject(this.functions, this.ss, id, this.engine, secretId);
+  // }
 
-  /**
-   * Eject the secret from function.
-   * @param id identifier of the function.
-   * @param secretId identifier of the secret.
-   */
-  @UseInterceptors(activity(createFunctionSecretActivity))
-  @Delete(":id/secret/:secretId")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:secret:eject"))
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async ejectSecret(
-    @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
-    @Param("secretId", ID(SECRET_COLLECTION)) secretId: Id
-  ) {
-    return CRUD.secret.eject(this.functions, this.ss, id, this.engine, secretId);
-  }
+  // /**
+  //  * Eject the secret from function.
+  //  * @param id identifier of the function.
+  //  * @param secretId identifier of the secret.
+  //  */
+  // @UseInterceptors(activity(createFunctionSecretActivity))
+  // @Delete(":id/secret/:secretId")
+  // @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:secret:eject"))
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async ejectSecret(
+  //   @Param("id", ID(FUNCTION_COLLECTION)) id: Id,
+  //   @Param("secretId", ID(SECRET_COLLECTION)) secretId: Id
+  // ) {
+  //   return CRUD.secret.eject(this.functions, this.ss, id, this.engine, secretId);
+  // }
 }
