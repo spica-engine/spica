@@ -36,7 +36,7 @@ function resolveAuthLabel(req: IncomingMessage & {user?: any}) {
   const user = req.user;
   const label = user && (user.identifier ?? user.username ?? user.name);
   if (typeof label !== "string" || !label) {
-    return header ? header.replace(UNSAFE_HEADER_CHARS, "_").slice(0, 100) : "-";
+    return header ? header.replace(UNSAFE_HEADER_CHARS, "_") : "-";
   }
   const scheme = header.split(" ")[0];
   return `${scheme ? scheme + ":" : ""}${label}`.replace(UNSAFE_LABEL_CHARS, "_").slice(0, 100);

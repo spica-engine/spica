@@ -216,6 +216,18 @@ describe("HttpTracker access log", () => {
     expect(accessLog[1].match(/spica_request_id=/g)).toHaveLength(2);
   });
 
+  it("writes the full unresolved authorization header without truncation", async () => {
+    const url = await start({}, (app, tracker) => {
+      app.use(tracker.handler);
+      app.get("/long", (_, res) => res.status(401).end());
+    });
+    const header = `IDENTITY ${"a".repeat(500)}`;
+
+    await fetch(`${url}/long`, {headers: {authorization: header}});
+
+    expect(accessLog[0]).toContain(`auth="${header}"`);
+  });
+
   it("sanitizes a crafted identifier so it cannot add fields to the line", async () => {
     const url = await start({}, (app, tracker) => {
       app.use(tracker.handler);
