@@ -201,25 +201,40 @@ describe("HttpTracker access log", () => {
     expect(accessLog.join("\n")).not.toContain("header.payload.sig");
   });
 
-  it("writes the authorization header itself only when authentication did not resolve a caller", async () => {
+  it("writes the authorization header itself only when an auth guard ran and rejected it", async () => {
+    const guardRan: express.RequestHandler = (req, _, next) => {
+      (req as any).strategyType = "APIKEY";
+      next();
+    };
     const url = await start({}, (app, tracker) => {
       app.use(tracker.handler);
-      app.get("/rejected", (_, res) => res.status(401).end());
-      app.get("/crafted", (_, res) => res.status(401).end());
+      app.get("/rejected", guardRan, (_, res) => res.status(401).end());
+      app.get("/crafted", guardRan, (_, res) => res.status(401).end());
+      app.get("/unguarded", (_, res) => res.end("ok"));
     });
 
     await fetch(`${url}/rejected`, {headers: {authorization: "APIKEY wrong-key"}});
     await fetch(`${url}/crafted`, {headers: {authorization: 'APIKEY x" spica_request_id=forged'}});
+    await fetch(`${url}/unguarded`, {headers: {authorization: "IDENTITY valid.token.value"}});
 
     expect(accessLog[0]).toContain('auth="APIKEY wrong-key"');
     expect(accessLog[1]).toContain('auth="APIKEY x_ spica_request_id=forged"');
     expect(accessLog[1].match(/spica_request_id=/g)).toHaveLength(2);
+    expect(accessLog[2]).toContain('auth="-"');
+    expect(accessLog[2]).not.toContain("valid.token.value");
   });
 
   it("writes the full unresolved authorization header without truncation", async () => {
     const url = await start({}, (app, tracker) => {
       app.use(tracker.handler);
-      app.get("/long", (_, res) => res.status(401).end());
+      app.get(
+        "/long",
+        (req, _, next) => {
+          (req as any).strategyType = "IDENTITY";
+          next();
+        },
+        (_, res) => res.status(401).end()
+      );
     });
     const header = `IDENTITY ${"a".repeat(500)}`;
 

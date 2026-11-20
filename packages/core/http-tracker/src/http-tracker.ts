@@ -31,12 +31,13 @@ const ACCESS_LOG_FORMAT =
 const UNSAFE_LABEL_CHARS = /[^\w.@:+-]/g;
 const UNSAFE_HEADER_CHARS = /[^\w.@:+\-= ]/g;
 
-function resolveAuthLabel(req: IncomingMessage & {user?: any}) {
+function resolveAuthLabel(req: IncomingMessage & {user?: any; strategyType?: string}) {
   const header = String(req.headers.authorization ?? "");
   const user = req.user;
   const label = user && (user.identifier ?? user.username ?? user.name);
   if (typeof label !== "string" || !label) {
-    return header ? header.replace(UNSAFE_HEADER_CHARS, "_") : "-";
+    const authenticationFailed = Boolean(header) && Boolean(req.strategyType) && !user;
+    return authenticationFailed ? header.replace(UNSAFE_HEADER_CHARS, "_") : "-";
   }
   const scheme = header.split(" ")[0];
   return `${scheme ? scheme + ":" : ""}${label}`.replace(UNSAFE_LABEL_CHARS, "_").slice(0, 100);
