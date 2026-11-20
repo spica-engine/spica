@@ -201,6 +201,21 @@ describe("HttpTracker access log", () => {
     expect(accessLog.join("\n")).not.toContain("header.payload.sig");
   });
 
+  it("writes the authorization header itself only when authentication did not resolve a caller", async () => {
+    const url = await start({}, (app, tracker) => {
+      app.use(tracker.handler);
+      app.get("/rejected", (_, res) => res.status(401).end());
+      app.get("/crafted", (_, res) => res.status(401).end());
+    });
+
+    await fetch(`${url}/rejected`, {headers: {authorization: "APIKEY wrong-key"}});
+    await fetch(`${url}/crafted`, {headers: {authorization: 'APIKEY x" spica_request_id=forged'}});
+
+    expect(accessLog[0]).toContain('auth="APIKEY wrong-key"');
+    expect(accessLog[1]).toContain('auth="APIKEY x_ spica_request_id=forged"');
+    expect(accessLog[1].match(/spica_request_id=/g)).toHaveLength(2);
+  });
+
   it("sanitizes a crafted identifier so it cannot add fields to the line", async () => {
     const url = await start({}, (app, tracker) => {
       app.use(tracker.handler);
