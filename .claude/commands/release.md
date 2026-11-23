@@ -84,18 +84,19 @@ Analyse the failure, explain the root cause to the user, and suggest a fix. Do n
 Once the workflow completes successfully, verify all three artifacts are actually live:
 
 ### Docker Hub
-Check all four images exist at the new version:
+Check all five images exist at the new version (`postgres` is tagged `18-$ARGUMENTS`, not `$ARGUMENTS`):
 ```bash
 curl -s "https://hub.docker.com/v2/repositories/spicaengine/api/tags/$ARGUMENTS" | python3 -c "import json,sys; d=json.load(sys.stdin); print('api:', d.get('name','NOT FOUND'))"
 curl -s "https://hub.docker.com/v2/repositories/spicaengine/panel/tags/$ARGUMENTS" | python3 -c "import json,sys; d=json.load(sys.stdin); print('panel:', d.get('name','NOT FOUND'))"
 curl -s "https://hub.docker.com/v2/repositories/spicaengine/migrate/tags/$ARGUMENTS" | python3 -c "import json,sys; d=json.load(sys.stdin); print('migrate:', d.get('name','NOT FOUND'))"
 curl -s "https://hub.docker.com/v2/repositories/spicaengine/mongoreplicationcontroller/tags/$ARGUMENTS" | python3 -c "import json,sys; d=json.load(sys.stdin); print('mongoreplicationcontroller:', d.get('name','NOT FOUND'))"
+curl -s "https://hub.docker.com/v2/repositories/spicaengine/postgres/tags/18-$ARGUMENTS" | python3 -c "import json,sys; d=json.load(sys.stdin); print('postgres:', d.get('name','NOT FOUND'))"
 ```
 
 ### npm packages
-Check all six packages are published at the new version:
+Check all eight packages are published at the new version:
 ```bash
-for pkg in "@spica/cli" "@spica-devkit/auth" "@spica-devkit/bucket" "@spica-devkit/database" "@spica-devkit/identity" "@spica-devkit/storage"; do
+for pkg in "@spica/cli" "@spica-devkit/auth" "@spica-devkit/bucket" "@spica-devkit/database" "@spica-devkit/identity" "@spica-devkit/storage" "@spica-devkit/sync" "@spica-devkit/testing"; do
   ver=$(npm view "$pkg" version 2>/dev/null || echo "NOT FOUND")
   echo "$pkg: $ver"
 done
