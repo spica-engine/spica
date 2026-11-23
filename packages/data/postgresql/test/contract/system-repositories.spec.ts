@@ -104,6 +104,20 @@ contractSuite("system repositories", engine => {
       expect(await secrets.findById(missingId())).toBeNull();
     });
 
+    it("round-trips the salt and value_hash", async () => {
+      const inserted = await secrets.insert({
+        key: "S",
+        value: encrypted("x"),
+        salt: "salt",
+        value_hash: "hash"
+      });
+
+      expect(await secrets.findById(idOf(inserted))).toMatchObject({
+        salt: "salt",
+        value_hash: "hash"
+      });
+    });
+
     it("reports duplicate keys as DuplicateKeyError", async () => {
       await secrets.insert({key: "S", value: encrypted("x")});
       const id = idOf(await secrets.insert({key: "T", value: encrypted("y")}));

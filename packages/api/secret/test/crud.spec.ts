@@ -7,7 +7,7 @@ import {
 } from "@spica-server/interface-data";
 import {contractSuite, waitForMongoIndexes} from "@spica-server/database-testing";
 import {SecretService, ServicesModule} from "@spica-server/secret-services";
-import {isEncryptedData} from "@spica-server/core-encryption";
+import {hash, isEncryptedData} from "@spica-server/core-encryption";
 import * as CRUD from "../src/crud";
 import {NotFoundException, INestApplication} from "@nestjs/common";
 import {idOf, withId, systemKeyField} from "@spica-server/data";
@@ -86,8 +86,39 @@ contractSuite("Secret CRUD", engine => {
       expect(raw.updated_at).not.toEqual(clientTimestamp);
       expect((raw as any).injected).toBeUndefined();
       expect(Object.keys(raw).sort()).toEqual(
-        [systemKeyField(), "key", "updated_at", "value"].sort()
+        [systemKeyField(), "key", "salt", "updated_at", "value", "value_hash"].sort()
       );
+    });
+
+    it("should store a salted hash of the value", async () => {
+      const result = await CRUD.insert(ss, {key: "HASHED", value: "plaintext"});
+
+      const raw = await ss.findById(idOf(result));
+
+      expect(raw.salt).toMatch(/^[0-9a-f]{32}$/);
+      expect(raw.value_hash).toBe(hash("plaintext", raw.salt));
+    });
+
+    it("should use a different salt and hash per secret", async () => {
+      const first = await ss.findById(idOf(await CRUD.insert(ss, {key: "A", value: "same"})));
+      const second = await ss.findById(idOf(await CRUD.insert(ss, {key: "B", value: "same"})));
+
+      expect(first.salt).not.toBe(second.salt);
+      expect(first.value_hash).not.toBe(second.value_hash);
+    });
+
+    it("should ignore a client-sent salt and value_hash", async () => {
+      const result = await CRUD.insert(ss, {
+        key: "FORGED",
+        value: "val",
+        salt: "client-salt",
+        value_hash: "client-hash"
+      });
+
+      const raw = await ss.findById(idOf(result));
+
+      expect(raw.salt).not.toBe("client-salt");
+      expect(raw.value_hash).toBe(hash("val", raw.salt));
     });
   });
 
@@ -100,6 +131,14 @@ contractSuite("Secret CRUD", engine => {
       expect(idOf(found)).toEqual(idOf(inserted));
       expect(found.key).toBe("SECRET_KEY");
       expect((found as any).value).toBeUndefined();
+    });
+
+    it("should expose the salt and value_hash", async () => {
+      const inserted = await CRUD.insert(ss, {key: "SECRET_KEY", value: "secret123"});
+
+      const found = await CRUD.findOne(queries, idOf(inserted));
+
+      expect(found.value_hash).toBe(hash("secret123", found.salt));
     });
 
     it("should throw NotFoundException for non-existent id", async () => {
@@ -195,6 +234,17 @@ contractSuite("Secret CRUD", engine => {
 
       expect(raw.value).not.toBe("updated_value");
       expect(isEncryptedData(raw.value)).toBe(true);
+    });
+
+    it("should refresh the salt and value_hash on replace", async () => {
+      const inserted = await CRUD.insert(ss, {key: "ROTATE", value: "old"});
+      const before = await ss.findById(idOf(inserted));
+
+      await CRUD.replace(ss, idOf(inserted), {key: "ROTATE", value: "new"});
+      const after = await ss.findById(idOf(inserted));
+
+      expect(after.salt).not.toBe(before.salt);
+      expect(after.value_hash).toBe(hash("new", after.salt));
     });
 
     it("should throw NotFoundException for non-existent id", async () => {

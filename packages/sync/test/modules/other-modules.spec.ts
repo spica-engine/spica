@@ -184,6 +184,30 @@ describe.each(SHAPES)("secretModule (%s records)", (_shape, key) => {
     expect(changed).not.toContain("updated_at");
     expect(changed).toHaveLength(0);
   });
+
+  it("ignores server-computed salt and value_hash in diffFields", () => {
+    const local = {key: "API_KEY"};
+    const remote = {key: "API_KEY", salt: "ab", value_hash: "cd"};
+    expect(secretModule.diffFields(local, remote)).toEqual([]);
+  });
+
+  it("does not write salt and value_hash to schema.yaml on writeLocal", async () => {
+    const dir = makeTmpDir();
+    try {
+      await secretModule.writeLocal(dir, {
+        slug: "API_KEY",
+        id: "id1",
+        data: {key: "API_KEY", salt: "ab", value_hash: "cd"}
+      });
+
+      const written = yaml.parse(
+        fs.readFileSync(path.join(dir, "secret", "API_KEY", "schema.yaml"), "utf-8")
+      );
+      expect(written).toEqual({key: "API_KEY"});
+    } finally {
+      cleanup(dir);
+    }
+  });
 });
 
 // ─── Policy ───────────────────────────────────────────────────────────────────
