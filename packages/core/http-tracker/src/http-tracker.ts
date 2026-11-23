@@ -25,7 +25,23 @@ export interface HttpTracker {
 
 const ACCESS_LOG_FORMAT =
   ':prefix :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ' +
+  'auth=":auth" ' +
   "spica_request_id=:spica-request-id spica_hop_id=:spica-hop-id spica_parent_hop_id=:spica-parent-hop-id proxy_request_id=:proxy-request-id started_at=:started-at duration_ms=:total-time[0]";
+
+const UNSAFE_LABEL_CHARS = /[^\w.@:+-]/g;
+const UNSAFE_HEADER_CHARS = /[^\w.@:+\-= ]/g;
+
+function resolveAuthLabel(req: IncomingMessage & {user?: any; strategyType?: string}) {
+  const header = String(req.headers.authorization ?? "");
+  const user = req.user;
+  const label = user && (user.identifier ?? user.username ?? user.name);
+  if (typeof label !== "string" || !label) {
+    const authenticationFailed = Boolean(header) && Boolean(req.strategyType) && !user;
+    return authenticationFailed ? header.replace(UNSAFE_HEADER_CHARS, "_") : "-";
+  }
+  const scheme = header.split(" ")[0];
+  return `${scheme ? scheme + ":" : ""}${label}`.replace(UNSAFE_LABEL_CHARS, "_").slice(0, 100);
+}
 
 function registerAccessLogTokens() {
   const token = (read: (trace: HopTrace) => string | undefined) => (req: IncomingMessage) => {
@@ -34,6 +50,7 @@ function registerAccessLogTokens() {
   };
 
   morgan.token("prefix", () => "access-log:");
+  morgan.token("auth", (req: IncomingMessage) => resolveAuthLabel(req));
   morgan.token(
     "spica-request-id",
     token(trace => trace.requestId)
