@@ -1,6 +1,7 @@
 import {diffSchemaFields, renderSchemaDetail} from "../planner";
 import {
   deleteLocalSchema,
+  omit,
   readLocalSchemas,
   sanitizeSlug,
   unwrapList,
@@ -18,7 +19,10 @@ interface Secret {
 // "value" is excluded from diff/render: the API never returns it (projected out server-side),
 // so comparing or displaying it would cause permanent false-positives and secret leakage.
 // "updated_at" is server-managed, so it must be ignored for the same reason.
-const IGNORED_FIELDS = [...KEY_FIELDS, "value", "updated_at"];
+// "salt" and "value_hash" are server-computed from the value, so they must neither be diffed nor
+// written to the repository.
+const HASH_FIELDS = ["salt", "value_hash"];
+const IGNORED_FIELDS = [...KEY_FIELDS, "value", "updated_at", ...HASH_FIELDS];
 
 export const secretModule: ResourceModule<Secret> = {
   name: "secret",
@@ -53,7 +57,7 @@ export const secretModule: ResourceModule<Secret> = {
   },
 
   async writeLocal(rootDir, remote) {
-    writeLocalSchema(rootDir, "secret", remote);
+    writeLocalSchema(rootDir, "secret", {...remote, data: omit(remote.data, HASH_FIELDS)});
   },
 
   async deleteLocal(rootDir, slug) {

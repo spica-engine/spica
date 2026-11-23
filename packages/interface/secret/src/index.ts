@@ -4,6 +4,8 @@ import {DeletableById, Id, Repository} from "@spica-server/interface-data";
 export interface Secret {
   key: string;
   value: EncryptedData<false>;
+  salt?: string;
+  value_hash?: string;
   updated_at?: Date;
 }
 
