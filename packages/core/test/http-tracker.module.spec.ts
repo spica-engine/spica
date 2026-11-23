@@ -10,6 +10,7 @@ import {
 } from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {Test} from "@nestjs/testing";
+import {Middlewares} from "@spica-server/core/src/middlewares";
 import {getCurrentTrace} from "@spica-server/core-trace";
 import {HTTP_TRACKER, HttpTracker, HttpTrackerModule} from "@spica-server/core-http-tracker";
 import express from "express";
@@ -177,5 +178,57 @@ describe("HttpTrackerModule", () => {
     expect(JSON.parse(await response.text())).toEqual({
       requestId: "11111111-2222-3333-4444-555555555555"
     });
+  });
+});
+
+describe("HttpTrackerModule with the tracker ahead of the preflight middleware", () => {
+  let app: INestApplication;
+  let baseUrl: string;
+  let accessLog: string[];
+
+  beforeEach(async () => {
+    accessLog = [];
+    const moduleRef = await Test.createTestingModule({
+      imports: [
+        HttpTrackerModule.forRoot({
+          accessLogs: true,
+          accessLogsStream: {write: line => accessLog.push(String(line).trim())}
+        }),
+        ProbeModule
+      ]
+    }).compile();
+    app = moduleRef.createNestApplication({bodyParser: false});
+    app.use(
+      app.get<HttpTracker>(HTTP_TRACKER).handler,
+      Middlewares.Preflight({
+        allowedOrigins: ["*"],
+        allowedMethods: ["*"],
+        allowedHeaders: ["*"],
+        allowCredentials: false
+      })
+    );
+    await app.listen(0, "127.0.0.1");
+    baseUrl = `http://127.0.0.1:${(app.getHttpServer().address() as AddressInfo).port}`;
+  });
+
+  afterEach(() => app.close());
+
+  it("logs a preflight request that the preflight middleware answers", async () => {
+    const response = await fetch(baseUrl + "/bucket", {
+      method: "OPTIONS",
+      headers: {origin: "http://example.com", "access-control-request-method": "GET"}
+    });
+
+    expect(response.status).toBe(200);
+    expect(accessLog).toHaveLength(1);
+    expect(accessLog[0]).toContain('"OPTIONS /bucket HTTP/1.1" 200');
+    expect(accessLog[0]).toMatch(/spica_request_id=[0-9a-f-]{36}/);
+  });
+
+  it("logs a regular request once", async () => {
+    await fetch(baseUrl + "/ctl");
+
+    expect(accessLog).toHaveLength(1);
+    expect(accessLog[0]).toContain('"GET /ctl HTTP/1.1" 200');
   });
 });

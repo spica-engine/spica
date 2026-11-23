@@ -7,7 +7,7 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {WsAdapter} from "@spica-server/core-websocket";
-import {HttpTrackerModule} from "@spica-server/core-http-tracker";
+import {HTTP_TRACKER, HttpTracker, HttpTrackerModule} from "@spica-server/core-http-tracker";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DataModule} from "@spica-server/data";
 import {MongoDataAdapter} from "@spica-server/data-mongodb";
@@ -1115,6 +1115,7 @@ NestFactory.create(RootModule, {
   console.log("PROXY at main.ts", app.getHttpAdapter().getInstance().get("trust proxy"));
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
+    app.get<HttpTracker>(HTTP_TRACKER).handler,
     Middlewares.Headers(responseHeaders),
     Middlewares.Preflight({
       allowedOrigins: args["cors-allowed-origins"],
