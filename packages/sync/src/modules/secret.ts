@@ -1,3 +1,4 @@
+import {createHmac} from "node:crypto";
 import {diffSchemaFields, renderSchemaDetail} from "../planner";
 import {
   deleteLocalSchema,
@@ -23,6 +24,17 @@ interface Secret {
 // written to the repository.
 const HASH_FIELDS = ["salt", "value_hash"];
 const IGNORED_FIELDS = [...KEY_FIELDS, "value", "updated_at", ...HASH_FIELDS];
+
+function hashValue(value: string, salt: string): string {
+  return createHmac("sha256", salt).update(value).digest("hex");
+}
+
+function hasChangedValue(local: Secret, remote: Secret): boolean {
+  if (local.value === undefined) return false;
+  const {salt, value_hash} = remote;
+  if (typeof salt !== "string" || typeof value_hash !== "string") return true;
+  return hashValue(local.value, salt) !== value_hash;
+}
 
 function assertNoCommittedValue({slug, data}: LocalResource<Secret>): void {
   if (data.value === undefined) return;
@@ -75,7 +87,7 @@ export const secretModule: ResourceModule<Secret> = {
 
   diffFields(local, remote) {
     const changed = diffSchemaFields(local, remote, IGNORED_FIELDS);
-    return local.value === undefined ? changed : [...changed, "value"];
+    return hasChangedValue(local, remote) ? [...changed, "value"] : changed;
   },
 
   renderDetail(local, remote) {

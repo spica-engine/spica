@@ -1,8 +1,10 @@
+import {createHmac} from "node:crypto";
 import {
   MissingValuesError,
   applyPlan,
   buildPlan,
   chain,
+  countChanges,
   envVarModule,
   fromMap,
   memorySource,
@@ -74,13 +76,24 @@ describe.each(SHAPES)("sync with resolved values (%s records)", (_shape, keyFiel
     expect(http.post).toHaveBeenCalledWith("secret", {key: "TOKEN", value: "s3"});
   });
 
-  it("re-applies an existing secret that has a local value", async () => {
+  it("re-applies an existing secret that has no remote hash yet", async () => {
     const http = httpWith({secret: [{[keyField]: "7", key: "TOKEN"}]});
 
     const plan = await planWith({TOKEN: "s3"}, {"secret/TOKEN/schema.yaml": {key: "TOKEN"}}, http);
     await applyPlan(plan, http);
 
     expect(http.put).toHaveBeenCalledWith("secret/7", {key: "TOKEN", value: "s3"});
+  });
+
+  it("leaves an existing secret whose local value matches the remote hash", async () => {
+    const value_hash = createHmac("sha256", "salt").update("s3").digest("hex");
+    const http = httpWith({secret: [{[keyField]: "7", key: "TOKEN", salt: "salt", value_hash}]});
+
+    const plan = await planWith({TOKEN: "s3"}, {"secret/TOKEN/schema.yaml": {key: "TOKEN"}}, http);
+    await applyPlan(plan, http);
+
+    expect(countChanges(plan)).toBe(0);
+    expect(http.put).not.toHaveBeenCalled();
   });
 
   it("leaves an existing secret without a local value alone", async () => {

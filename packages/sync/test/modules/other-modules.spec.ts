@@ -2,6 +2,7 @@ import os from "os";
 import path from "path";
 import fs from "fs";
 import yaml from "yaml";
+import {createHmac} from "crypto";
 import {envVarModule, SYSTEM_KEY_FIELDS} from "@spica-server/sync";
 import {secretModule} from "@spica-server/sync";
 import {policyModule} from "@spica-server/sync";
@@ -189,6 +190,34 @@ describe.each(SHAPES)("secretModule (%s records)", (_shape, key) => {
     const local = {key: "API_KEY"};
     const remote = {key: "API_KEY", salt: "ab", value_hash: "cd"};
     expect(secretModule.diffFields(local, remote)).toEqual([]);
+  });
+
+  describe("value comparison against the remote hash", () => {
+    const remoteWith = (value: string) => ({
+      key: "API_KEY",
+      salt: "ab12",
+      value_hash: createHmac("sha256", "ab12").update(value).digest("hex")
+    });
+
+    it("reports no change when the local value matches the remote hash", () => {
+      expect(secretModule.diffFields({key: "API_KEY", value: "s3"}, remoteWith("s3"))).toEqual([]);
+    });
+
+    it("reports value as changed when the local value differs from the remote hash", () => {
+      expect(secretModule.diffFields({key: "API_KEY", value: "s4"}, remoteWith("s3"))).toEqual([
+        "value"
+      ]);
+    });
+
+    it("reports value as changed when the remote has no hash yet", () => {
+      expect(secretModule.diffFields({key: "API_KEY", value: "s3"}, {key: "API_KEY"})).toEqual([
+        "value"
+      ]);
+    });
+
+    it("reports no change when there is no local value", () => {
+      expect(secretModule.diffFields({key: "API_KEY"}, remoteWith("s3"))).toEqual([]);
+    });
   });
 
   it("does not write salt and value_hash to schema.yaml on writeLocal", async () => {
