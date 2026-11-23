@@ -2,6 +2,7 @@ import os from "os";
 import path from "path";
 import fs from "fs";
 import yaml from "yaml";
+import {createHmac} from "crypto";
 import {envVarModule, SYSTEM_KEY_FIELDS} from "@spica-server/sync";
 import {secretModule} from "@spica-server/sync";
 import {policyModule} from "@spica-server/sync";
@@ -122,13 +123,26 @@ describe.each(SHAPES)("secretModule (%s records)", (_shape, key) => {
     try {
       const secDir = path.join(dir, "secret", "API_KEY");
       fs.mkdirSync(secDir, {recursive: true});
+      fs.writeFileSync(path.join(secDir, "schema.yaml"), yaml.stringify({key: "API_KEY"}));
+
+      const result = await secretModule.readLocal(dir);
+      expect(result[0].slug).toBe("API_KEY");
+    } finally {
+      cleanup(dir);
+    }
+  });
+
+  it("rejects a committed value in schema.yaml", async () => {
+    const dir = makeTmpDir();
+    try {
+      const secDir = path.join(dir, "secret", "API_KEY");
+      fs.mkdirSync(secDir, {recursive: true});
       fs.writeFileSync(
         path.join(secDir, "schema.yaml"),
         yaml.stringify({key: "API_KEY", value: "s3cr3t"})
       );
 
-      const result = await secretModule.readLocal(dir);
-      expect(result[0].slug).toBe("API_KEY");
+      await expect(secretModule.readLocal(dir)).rejects.toThrow(/spica secret API_KEY/);
     } finally {
       cleanup(dir);
     }
@@ -146,12 +160,14 @@ describe.each(SHAPES)("secretModule (%s records)", (_shape, key) => {
     expect(mockHttp.delete).toHaveBeenCalledWith("secret/id1");
   });
 
-  it("does not flag value as changed when remote omits value (API hides it server-side)", () => {
+  it("flags value as changed whenever a local value is present (remote value is hidden)", () => {
     const local = {key: "API_KEY", value: "s3cr3t"};
-    const remote = {key: "API_KEY"}; // value stripped by server
-    const changed = secretModule.diffFields(local, remote);
-    expect(changed).not.toContain("value");
-    expect(changed).toHaveLength(0);
+    const remote = {key: "API_KEY"};
+    expect(secretModule.diffFields(local, remote)).toEqual(["value"]);
+  });
+
+  it("reports no change when there is no local value", () => {
+    expect(secretModule.diffFields({key: "API_KEY"}, {key: "API_KEY"})).toEqual([]);
   });
 
   it("does not include value in renderDetail diff", () => {
@@ -163,7 +179,7 @@ describe.each(SHAPES)("secretModule (%s records)", (_shape, key) => {
   });
 
   it("ignores server-managed updated_at in diffFields", () => {
-    const local = {key: "API_KEY", value: "s3cr3t"};
+    const local = {key: "API_KEY"};
     const remote = {key: "API_KEY", updated_at: "2020-01-01T00:00:00.000Z"};
     const changed = secretModule.diffFields(local, remote);
     expect(changed).not.toContain("updated_at");
@@ -174,6 +190,34 @@ describe.each(SHAPES)("secretModule (%s records)", (_shape, key) => {
     const local = {key: "API_KEY"};
     const remote = {key: "API_KEY", salt: "ab", value_hash: "cd"};
     expect(secretModule.diffFields(local, remote)).toEqual([]);
+  });
+
+  describe("value comparison against the remote hash", () => {
+    const remoteWith = (value: string) => ({
+      key: "API_KEY",
+      salt: "ab12",
+      value_hash: createHmac("sha256", "ab12").update(value).digest("hex")
+    });
+
+    it("reports no change when the local value matches the remote hash", () => {
+      expect(secretModule.diffFields({key: "API_KEY", value: "s3"}, remoteWith("s3"))).toEqual([]);
+    });
+
+    it("reports value as changed when the local value differs from the remote hash", () => {
+      expect(secretModule.diffFields({key: "API_KEY", value: "s4"}, remoteWith("s3"))).toEqual([
+        "value"
+      ]);
+    });
+
+    it("reports value as changed when the remote has no hash yet", () => {
+      expect(secretModule.diffFields({key: "API_KEY", value: "s3"}, {key: "API_KEY"})).toEqual([
+        "value"
+      ]);
+    });
+
+    it("reports no change when there is no local value", () => {
+      expect(secretModule.diffFields({key: "API_KEY"}, remoteWith("s3"))).toEqual([]);
+    });
   });
 
   it("does not write salt and value_hash to schema.yaml on writeLocal", async () => {

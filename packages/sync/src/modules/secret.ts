@@ -1,3 +1,4 @@
+import {createHmac} from "node:crypto";
 import {diffSchemaFields, renderSchemaDetail} from "../planner";
 import {
   deleteLocalSchema,
@@ -7,7 +8,7 @@ import {
   unwrapList,
   writeLocalSchema
 } from "../fs-utils";
-import {ResourceModule} from "../types";
+import {LocalResource, ResourceModule} from "../types";
 import {KEY_FIELDS, recordKey} from "../record-key";
 
 interface Secret {
@@ -24,14 +25,34 @@ interface Secret {
 const HASH_FIELDS = ["salt", "value_hash"];
 const IGNORED_FIELDS = [...KEY_FIELDS, "value", "updated_at", ...HASH_FIELDS];
 
+function hashValue(value: string, salt: string): string {
+  return createHmac("sha256", salt).update(value).digest("hex");
+}
+
+function hasChangedValue(local: Secret, remote: Secret): boolean {
+  if (local.value === undefined) return false;
+  const {salt, value_hash} = remote;
+  if (typeof salt !== "string" || typeof value_hash !== "string") return true;
+  return hashValue(local.value, salt) !== value_hash;
+}
+
+function assertNoCommittedValue({slug, data}: LocalResource<Secret>): void {
+  if (data.value === undefined) return;
+  throw new Error(
+    `secret/${slug}/schema.yaml must not contain "value". Remove it and run "spica secret ${data.key}" instead.`
+  );
+}
+
 export const secretModule: ResourceModule<Secret> = {
   name: "secret",
   displayName: "Secret",
   identityField: "key",
   ignoredFields: IGNORED_FIELDS,
 
-  readLocal(rootDir, source) {
-    return readLocalSchemas<Secret>(rootDir, "secret", source);
+  async readLocal(rootDir, source) {
+    const locals = await readLocalSchemas<Secret>(rootDir, "secret", source);
+    locals.forEach(assertNoCommittedValue);
+    return locals;
   },
 
   async readRemote(http) {
@@ -65,7 +86,8 @@ export const secretModule: ResourceModule<Secret> = {
   },
 
   diffFields(local, remote) {
-    return diffSchemaFields(local, remote, IGNORED_FIELDS);
+    const changed = diffSchemaFields(local, remote, IGNORED_FIELDS);
+    return hasChangedValue(local, remote) ? [...changed, "value"] : changed;
   },
 
   renderDetail(local, remote) {

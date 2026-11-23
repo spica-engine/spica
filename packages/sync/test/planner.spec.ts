@@ -5,6 +5,9 @@ import {
   diffObjectFields,
   buildUnifiedDiff,
   renderPlan,
+  countChanges,
+  planExitCode,
+  MissingValuesError,
   SYSTEM_KEY_FIELDS
 } from "@spica-server/sync";
 import {
@@ -619,5 +622,76 @@ describe("applyPlan scheduling", () => {
     expect(mod.create).toHaveBeenCalledTimes(6);
     expect(errors).toHaveLength(1);
     warn.mockRestore();
+  });
+});
+
+describe("buildPlan — missing values", () => {
+  const http = {} as any;
+  const local = (slug: string, data: object = {}): LocalResource => ({
+    slug,
+    data: {key: slug, ...data}
+  });
+  const remote = (slug: string): RemoteResource => ({slug, id: `id-${slug}`, data: {key: slug}});
+
+  function moduleWithRule(name: string, locals: LocalResource[], remotes: RemoteResource[]) {
+    const mod = makeMockModule(name, locals, remotes);
+    mod.missingValue = (l: any) => l.value === undefined;
+    return mod;
+  }
+
+  it("throws one error listing the missing keys of every module", async () => {
+    const first = moduleWithRule("env-var", [local("A"), local("B", {value: "1"})], []);
+    const second = moduleWithRule("secret", [local("C")], []);
+
+    const error = await buildPlan([first, second], http, "/root").catch(e => e);
+
+    expect(error).toBeInstanceOf(MissingValuesError);
+    expect(error.missing).toEqual(["env-var/A", "secret/C"]);
+  });
+
+  it("passes the remote resource to the rule", async () => {
+    const mod = makeMockModule("secret", [local("S")], [remote("S")]);
+    mod.missingValue = jest.fn().mockReturnValue(false);
+
+    await buildPlan([mod], http, "/root");
+
+    expect(mod.missingValue).toHaveBeenCalledWith({key: "S"}, {key: "S"});
+  });
+
+  it("skips modules without a rule", async () => {
+    const mod = makeMockModule("bucket", [local("X")], []);
+    await expect(buildPlan([mod], http, "/root")).resolves.toBeDefined();
+  });
+});
+
+describe("planExitCode", () => {
+  const planWith = (creates: number, updates = 0, deletes = 0) => {
+    const entries = (n: number) => Array(n).fill({}) as any[];
+    return {
+      modules: [
+        {
+          module: {} as ResourceModule,
+          creates: entries(creates),
+          updates: entries(updates),
+          deletes: entries(deletes)
+        }
+      ]
+    };
+  };
+
+  it("is 0 when nothing changes", () => {
+    expect(planExitCode(planWith(0))).toBe(0);
+  });
+
+  it.each([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]
+  ])("is 2 for creates/updates/deletes %i/%i/%i", (c, u, d) => {
+    expect(planExitCode(planWith(c, u, d))).toBe(2);
+  });
+
+  it("counts changes across kinds", () => {
+    expect(countChanges(planWith(1, 2, 3))).toBe(6);
   });
 });
