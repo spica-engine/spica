@@ -1,7 +1,10 @@
-import {mkdirSync, mkdtempSync, realpathSync, rmSync} from "node:fs";
+import {mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync} from "node:fs";
 import os, {tmpdir} from "node:os";
 import {join} from "node:path";
 import {guard} from "../../../src/guard";
+import guardSet from "../../../src/commands/guard/set";
+import guardShow from "../../../src/commands/guard/show";
+import guardRemove from "../../../src/commands/guard/remove";
 
 describe("guard", () => {
   let home: string;
@@ -64,5 +67,64 @@ describe("guard", () => {
     process.chdir(project);
 
     expect(() => guard.assert(project)).not.toThrow();
+  });
+
+  it("should throw a clear error when the guard file is corrupted", () => {
+    writeFileSync(guard.filePath(), "{not json");
+
+    expect(() => guard.load()).toThrow('Run "spica guard remove"');
+    expect(() => guard.assert(project)).toThrow('Run "spica guard remove"');
+  });
+
+  describe("commands", () => {
+    function run(register: (program: any) => any, options: Record<string, unknown> = {}) {
+      let action: (params: any) => Promise<void>;
+      const command: any = {
+        option: () => command,
+        action: (fn: typeof action) => ((action = fn), command)
+      };
+      register({command: () => command});
+      return action({options});
+    }
+
+    beforeEach(() => {
+      jest.spyOn(console, "info").mockImplementation();
+      jest.spyOn(console, "warn").mockImplementation();
+      jest.spyOn(console, "error").mockImplementation();
+      process.exitCode = undefined;
+    });
+
+    afterEach(() => {
+      process.exitCode = undefined;
+    });
+
+    it("set should save the guard with unique trimmed folders", async () => {
+      await run(guardSet, {path: project, folders: "bucket, function,bucket"});
+
+      expect(guard.load()).toEqual({path: project, folders: ["bucket", "function"]});
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("bucket, function"));
+    });
+
+    it("set should fail when the path is not a directory", async () => {
+      await run(guardSet, {path: join(project, "missing")});
+
+      expect(process.exitCode).toBe(1);
+      expect(guard.load()).toBeUndefined();
+    });
+
+    it("show should print the saved guard", async () => {
+      guard.save({path: project, folders: ["bucket"]});
+      await run(guardShow);
+
+      expect(console.info).toHaveBeenCalledWith(`Path:    ${project}`);
+      expect(console.info).toHaveBeenCalledWith("Folders: bucket");
+    });
+
+    it("remove should delete the guard", async () => {
+      guard.save({path: project, folders: []});
+      await run(guardRemove);
+
+      expect(guard.load()).toBeUndefined();
+    });
   });
 });

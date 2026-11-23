@@ -18,7 +18,13 @@ export namespace guard {
       return undefined;
     }
 
-    return JSON.parse(fs.readFileSync(file).toString());
+    try {
+      return JSON.parse(fs.readFileSync(file).toString());
+    } catch {
+      throw new Error(
+        `Guard file "${file}" is not valid JSON. Run "spica guard remove" and set the guard again.`
+      );
+    }
   }
 
   export function save(data: Guard) {
@@ -53,10 +59,6 @@ export namespace guard {
     }
   }
 
-  /**
-   * Throws when a guard is set and plan/apply is not run from the guarded directory,
-   * or when one of the guard's required folders is missing. Does nothing when no guard is set.
-   */
   export function assert(rootDir: string) {
     const current = load();
     if (!current) {
