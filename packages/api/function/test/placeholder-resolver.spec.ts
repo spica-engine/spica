@@ -51,6 +51,7 @@ describe("FunctionPlaceholderResolver", () => {
         "warmWorkers",
         {prefix: "ENV", key: "MISSING"}
       );
+      expect(diagnostics.warnInvalidNumber).not.toHaveBeenCalled();
     });
 
     it("should fall back and warn when the value is not numeric", () => {

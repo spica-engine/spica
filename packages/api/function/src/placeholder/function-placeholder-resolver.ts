@@ -74,11 +74,13 @@ export class FunctionPlaceholderResolver {
     }
     const resolved = substitute(raw, this.createLookup(fn, field));
     const parsed = parseNumber(resolved, rule);
-    if (parsed === undefined) {
-      this.diagnostics.warnInvalidNumber(fn, field, resolved, fallback);
-      return fallback;
+    if (parsed !== undefined) {
+      return parsed;
     }
-    return parsed;
+    if (!isStillPlaceholder(resolved)) {
+      this.diagnostics.warnInvalidNumber(fn, field, resolved, fallback);
+    }
+    return fallback;
   }
 
   private createLookup(fn: RuntimeFunction, field: string): PlaceholderLookup {
@@ -101,6 +103,10 @@ export class FunctionPlaceholderResolver {
       return null;
     }
   }
+}
+
+function isStillPlaceholder(value: unknown) {
+  return extractPlaceholders(value).length > 0;
 }
 
 function parseIds(ids: string[]) {
