@@ -1,9 +1,10 @@
 import {Logger} from "@nestjs/common";
+import {withId} from "@spica-server/data";
 import {LogChannels, LogLevels} from "@spica-server/interface-function-runtime";
 import {PlaceholderDiagnostics} from "@spica-server/function/src/placeholder";
 
 describe("PlaceholderDiagnostics", () => {
-  const fn: any = {_id: "fn-id", name: "my-fn"};
+  const fn: any = withId({name: "my-fn"}, "fn-id");
   const placeholder = {prefix: "ENV" as const, key: "WARM"};
 
   let insert: jest.Mock;
