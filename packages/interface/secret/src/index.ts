@@ -1,5 +1,10 @@
 import {EncryptedData} from "@spica-server/core-encryption";
-import {DeletableById, Id, Repository} from "@spica-server/interface-data";
+import {
+  DeletableById,
+  ReplaceableById,
+  Repository,
+  UpdatableById
+} from "@spica-server/interface-data";
 
 export interface Secret {
   key: string;
@@ -17,15 +22,15 @@ export const SECRET_DECRYPTOR = Symbol.for("SECRET_DECRYPTOR");
 
 export type SecretDecryptor = (secret: Secret) => DecryptedSecret;
 
-export interface SecretRepository extends Repository<Secret>, DeletableById<Secret | null> {
-  /**
-   * Resolves to the secret as it was before the replacement, or null when there is none with the id.
-   */
-  replaceById(id: Id, secret: Secret): Promise<Secret | null>;
-  /**
-   * Resolves to the secret as it was before the update, or null when there is none with the id.
-   */
-  updateById(id: Id, fields: Partial<Secret>): Promise<Secret | null>;
-}
+/**
+ * `replaceById` and `updateById` resolve to the secret as it was before the write, or null when
+ * there is none with the id.
+ */
+export interface SecretRepository
+  extends
+    Repository<Secret>,
+    ReplaceableById<Secret>,
+    UpdatableById<Secret>,
+    DeletableById<Secret | null> {}
 
 export const SECRET_REPOSITORY = Symbol.for("SECRET_REPOSITORY");
