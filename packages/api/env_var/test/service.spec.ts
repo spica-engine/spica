@@ -10,12 +10,12 @@ function repositoryHolding(initial: EnvVar | null) {
   let stored = initial;
   return {
     findById: async () => stored,
-    replaceById: async (_id: unknown, envVar: EnvVar) => {
+    replaceById: async (_target: unknown, envVar: EnvVar) => {
       const previous = stored;
       if (previous) stored = envVar;
       return previous;
     },
-    updateById: async (_id: unknown, fields: Partial<EnvVar>) => {
+    updateById: async (_target: unknown, fields: Partial<EnvVar>) => {
       const previous = stored;
       if (previous) stored = {...previous, ...fields};
       return previous;
