@@ -25,7 +25,7 @@ export class MongoEnvVarRepository
 
   replaceById(id: Id, envVar: EnvVar) {
     return this.findOneAndReplace({_id: id}, envVar, {
-      returnDocument: ReturnDocument.AFTER
+      returnDocument: ReturnDocument.BEFORE
     }).catch(translateWriteError);
   }
 
@@ -33,7 +33,7 @@ export class MongoEnvVarRepository
     return this.findOneAndUpdate(
       {_id: id},
       {$set: fields},
-      {returnDocument: ReturnDocument.AFTER}
+      {returnDocument: ReturnDocument.BEFORE}
     ).catch(translateWriteError);
   }
 

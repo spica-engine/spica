@@ -18,11 +18,11 @@ export class PostgresEnvVarRepository implements EnvVarRepository {
   }
 
   replaceById(id: Id, envVar: EnvVar) {
-    return this.orm.replaceById(envVars, id, envVar);
+    return this.orm.replaceById(envVars, id, envVar, {returning: "before"});
   }
 
   updateById(id: Id, fields: Partial<EnvVar>) {
-    return this.orm.updateById(envVars, id, fields);
+    return this.orm.updateById(envVars, id, fields, {returning: "before"});
   }
 
   deleteById(id: Id) {

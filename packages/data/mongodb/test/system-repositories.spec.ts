@@ -56,15 +56,15 @@ describe("system repositories", () => {
     });
   });
 
-  it("should resolve env var writes to the document after them", async () => {
+  it("should resolve env var writes to the document before them", async () => {
     const envVars = new MongoEnvVarRepository(db);
     const {_id} = await envVars.insert({key: "a", value: "1"});
 
-    expect(await envVars.updateById(_id, {value: "2"})).toEqual({_id, key: "a", value: "2"});
+    expect(await envVars.updateById(_id, {value: "2"})).toEqual({_id, key: "a", value: "1"});
     expect(await envVars.replaceById(_id, {key: "b", value: "3"})).toEqual({
       _id,
-      key: "b",
-      value: "3"
+      key: "a",
+      value: "2"
     });
     expect(await envVars.updateById(new ObjectId(), {value: "x"})).toBeNull();
   });
