@@ -78,7 +78,7 @@ export class FunctionPlaceholderResolver {
       return parsed;
     }
     if (!isStillPlaceholder(resolved)) {
-      this.diagnostics.warnInvalidNumber(fn, field, resolved, fallback);
+      this.diagnostics.warnInvalidNumber(fn, field, raw, fallback);
     }
     return fallback;
   }

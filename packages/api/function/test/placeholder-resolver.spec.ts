@@ -59,7 +59,7 @@ describe("FunctionPlaceholderResolver", () => {
       expect(diagnostics.warnInvalidNumber).toHaveBeenCalledWith(
         expect.objectContaining({name: "fn"}),
         "concurrencyPerWorker",
-        "abc",
+        "${ENV.BAD}",
         1
       );
     });

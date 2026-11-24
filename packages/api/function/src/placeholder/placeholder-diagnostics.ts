@@ -23,10 +23,10 @@ export class PlaceholderDiagnostics {
     );
   }
 
-  warnInvalidNumber(fn: RuntimeFunction, field: string, value: unknown, fallback: number) {
+  warnInvalidNumber(fn: RuntimeFunction, field: string, template: unknown, fallback: number) {
     this.warn(
       fn,
-      `Resolved an invalid value ${JSON.stringify(value)} for ${field}, falling back to ${fallback}.`
+      `${field} (${JSON.stringify(template)}) does not resolve to a valid number, falling back to ${fallback}.`
     );
   }
 

@@ -35,12 +35,12 @@ describe("PlaceholderDiagnostics", () => {
   });
 
   it("should write an invalid number to the function logs as a warning", () => {
-    diagnostics(["database"]).warnInvalidNumber(fn, "warmWorkers", "abc", 0);
+    diagnostics(["database"]).warnInvalidNumber(fn, "warmWorkers", "${ENV.WARM}", 0);
 
     expect(insert).toHaveBeenCalledWith(
       expect.objectContaining({
         level: LogLevels.WARN,
-        content: 'Resolved an invalid value "abc" for warmWorkers, falling back to 0.'
+        content: 'warmWorkers ("${ENV.WARM}") does not resolve to a valid number, falling back to 0.'
       })
     );
   });
