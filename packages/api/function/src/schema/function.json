@@ -30,8 +30,11 @@
       "items": {"type": "string"}
     },
     "timeout": {
-      "type": "number",
-      "description": "Value in seconds that function should be completed"
+      "description": "Value in seconds that function should be completed",
+      "oneOf": [
+        {"type": "number"},
+        {"type": "string", "pattern": "^\\$\\{(SECRET|ENV)\\.[^{}\\s]+\\}$"}
+      ]
     },
     "language": {
       "type": "string",
@@ -43,16 +46,20 @@
       "description": "Order of the function"
     },
     "warmWorkers": {
-      "type": "number",
-      "minimum": 0,
       "default": 0,
-      "description": "Number of pre-warmed workers kept ready for this function so events skip the cold module load"
+      "description": "Number of pre-warmed workers kept ready for this function so events skip the cold module load",
+      "oneOf": [
+        {"type": "number", "minimum": 0},
+        {"type": "string", "pattern": "^\\$\\{(SECRET|ENV)\\.[^{}\\s]+\\}$"}
+      ]
     },
     "concurrencyPerWorker": {
-      "type": "number",
-      "minimum": 1,
       "default": 1,
-      "description": "Number of events this function runs in parallel per worker. Raise it only for I/O-bound handlers; clamped to the deployment's maximum."
+      "description": "Number of events this function runs in parallel per worker. Raise it only for I/O-bound handlers; clamped to the deployment's maximum.",
+      "oneOf": [
+        {"type": "number", "minimum": 1},
+        {"type": "string", "pattern": "^\\$\\{(SECRET|ENV)\\.[^{}\\s]+\\}$"}
+      ]
     },
     "category": {
       "type": "string",

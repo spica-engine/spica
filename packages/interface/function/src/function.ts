@@ -23,10 +23,10 @@ export interface Function<
   env_vars?: ER extends EnvRelation.Resolved ? EnvVar[] : Id[];
   secrets?: SR extends SecretRelation.Resolved ? Secret[] : Id[];
   triggers?: Triggers;
-  timeout: number;
+  timeout: number | string;
   language: string;
-  warmWorkers?: number;
-  concurrencyPerWorker?: number;
+  warmWorkers?: number | string;
+  concurrencyPerWorker?: number | string;
   order?: number;
   category?: string;
 }

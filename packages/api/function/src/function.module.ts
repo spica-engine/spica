@@ -6,10 +6,22 @@ import {WebhookModule} from "@spica-server/function-webhook";
 import path from "path";
 import {FunctionEngine} from "./engine.js";
 import {PlanExecutor} from "./plan-executor.js";
-import {TriggerSecretResolver} from "./trigger-secret-resolver.js";
+import {
+  EnvVarSource,
+  FunctionPlaceholderResolver,
+  PLACEHOLDER_SOURCES,
+  PlaceholderDiagnostics,
+  SecretSource,
+  WORKER_LOG_OUTPUT
+} from "./placeholder/index.js";
 import {FunctionController} from "./function.controller.js";
 import {LogModule} from "@spica-server/function-log";
-import {FUNCTION_LOG_REPOSITORY, LogRepository} from "@spica-server/interface-function-log";
+import {
+  FUNCTION_LOG_REPOSITORY,
+  FUNCTION_LOG_SINK,
+  LogRepository
+} from "@spica-server/interface-function-log";
+import {provideRepository} from "@spica-server/data";
 import {ServicesModule} from "@spica-server/function-services";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver.js";
 import {Http} from "./services/interface.js";
@@ -99,7 +111,17 @@ export class FunctionModule {
       providers: [
         FunctionEngine,
         PlanExecutor,
-        TriggerSecretResolver,
+        FunctionPlaceholderResolver,
+        PlaceholderDiagnostics,
+        provideRepository(FUNCTION_LOG_SINK),
+        {provide: WORKER_LOG_OUTPUT, useValue: options.workerLogOutput},
+        EnvVarSource,
+        SecretSource,
+        {
+          provide: PLACEHOLDER_SOURCES,
+          useFactory: (env: EnvVarSource, secret: SecretSource) => [env, secret],
+          inject: [EnvVarSource, SecretSource]
+        },
         {
           provide: FUNCTION_OPTIONS,
           useValue: {

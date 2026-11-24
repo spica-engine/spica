@@ -18,7 +18,7 @@ import {
 import {EnvVar} from "@spica-server/interface-env_var";
 import {Secret, SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
 import * as CRUD from "./crud.js";
-import {TriggerSecretResolver} from "./trigger-secret-resolver.js";
+import {FunctionPlaceholderResolver} from "./placeholder/index.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
 import {idOf} from "@spica-server/data";
 
@@ -31,14 +31,14 @@ export class PlanExecutor {
     private scheduler: Scheduler,
     @Inject(SECRET_DECRYPTOR) private secretDecryptor: SecretDecryptor,
     @Inject(FUNCTION_OPTIONS) private options: Options,
-    private secretResolver: TriggerSecretResolver,
+    private placeholderResolver: FunctionPlaceholderResolver,
     private preparationService: FunctionPreparationService
   ) {}
 
   async apply(plan: FunctionChangePlan): Promise<void> {
     await this.renameDirectories(plan.rename ?? []);
 
-    const routing = await this.secretResolver.resolve(plan.routing);
+    const routing = await this.placeholderResolver.resolveRouting(plan.routing);
 
     for (const change of routing) {
       switch (change.kind) {
@@ -125,17 +125,15 @@ export class PlanExecutor {
       return;
     }
 
-    const context = this.buildSchedulingContext(fn);
+    const config = this.placeholderResolver.resolveRuntimeConfig(fn);
+    const context = this.buildSchedulingContext(fn, config.timeout);
     const target = this.buildRuntimeTarget(fn, context);
 
     const triggers = fn.triggers || {};
     const hasActiveTrigger = Object.keys(triggers).some(handler => triggers[handler]?.active);
 
     this.scheduler.reconcileContext(target, context);
-    this.scheduler.reconcileConcurrency(
-      target,
-      fn.concurrencyPerWorker ?? DEFAULT_EVENT_CONCURRENCY
-    );
+    this.scheduler.reconcileConcurrency(target, config.concurrencyPerWorker);
 
     if (toSupersede.has(functionId)) {
       if (hasActiveTrigger) {
@@ -145,11 +143,12 @@ export class PlanExecutor {
       }
     }
 
-    this.scheduler.reconcileWarmWorkers(target, hasActiveTrigger ? (fn.warmWorkers ?? 0) : 0);
+    this.scheduler.reconcileWarmWorkers(target, hasActiveTrigger ? config.warmWorkers : 0);
   }
 
   private buildSchedulingContext(
-    fn: Function<EnvRelation.Resolved, SecretRelation.Resolved>
+    fn: Function<EnvRelation.Resolved, SecretRelation.Resolved>,
+    timeout: number
   ): event.SchedulingContext {
     const env = {
       ...normalizeEnvVars(fn.env_vars as EnvVar[]),
@@ -157,7 +156,7 @@ export class PlanExecutor {
     };
     return new event.SchedulingContext({
       env: Object.keys(env).map(key => new event.SchedulingContext.Env({key, value: env[key]})),
-      timeout: fn.timeout
+      timeout
     });
   }
 
