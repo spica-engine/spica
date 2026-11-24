@@ -39,6 +39,9 @@
       "path": "../../interface/function/scheduler"
     },
     {
+      "path": "../../interface/function/runtime"
+    },
+    {
       "path": "../../interface/function/pkgmanager"
     },
     {

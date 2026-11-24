@@ -6,7 +6,7 @@ import {ENV_VAR_REPOSITORY} from "@spica-server/interface-env_var";
 import {SECRET_REPOSITORY} from "@spica-server/interface-secret";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {PlanExecutor} from "@spica-server/function/src/plan-executor";
-import {FunctionPlaceholderResolver} from "@spica-server/function/src/placeholder";
+import {FunctionPlaceholderResolver, PlaceholderDiagnostics} from "@spica-server/function/src/placeholder";
 import {FunctionPreparationService} from "@spica-server/function/src/function-preparation.service";
 import {FunctionService} from "@spica-server/function-services";
 import {INestApplication} from "@nestjs/common";
@@ -100,7 +100,12 @@ contractSuite("PlanExecutor", engine => {
       scheduler,
       (val => val) as any,
       options,
-      new FunctionPlaceholderResolver(module.get(COLLECTION_QUERY), [], options),
+      new FunctionPlaceholderResolver(
+        module.get(COLLECTION_QUERY),
+        [],
+        options,
+        new PlaceholderDiagnostics({insert: async () => undefined}, [])
+      ),
       new FunctionPreparationService(scheduler, options)
     );
 

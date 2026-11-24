@@ -7,7 +7,7 @@ import * as CRUD from "../crud.js";
 import {NumericRule, parseNumber} from "./numeric-coercion.js";
 import {PLACEHOLDER_SOURCES, PlaceholderSource, RuntimeFunction} from "./placeholder-source.js";
 import {Placeholder, PlaceholderLookup, extractPlaceholders, substitute} from "./placeholder-text.js";
-import {warnInvalidNumber, warnLookupFailure, warnUnresolved} from "./placeholder-diagnostics.js";
+import {PlaceholderDiagnostics} from "./placeholder-diagnostics.js";
 
 export interface RuntimeConfig {
   timeout: number;
@@ -24,7 +24,8 @@ export class FunctionPlaceholderResolver {
   constructor(
     @Inject(COLLECTION_QUERY) private queries: CollectionQueryFacade,
     @Inject(PLACEHOLDER_SOURCES) private sources: PlaceholderSource[],
-    @Inject(FUNCTION_OPTIONS) private options: Options
+    @Inject(FUNCTION_OPTIONS) private options: Options,
+    private diagnostics: PlaceholderDiagnostics
   ) {}
 
   async resolveRouting(routing: TargetChange[]): Promise<TargetChange[]> {
@@ -74,7 +75,7 @@ export class FunctionPlaceholderResolver {
     const resolved = substitute(raw, this.createLookup(fn, field));
     const parsed = parseNumber(resolved, rule);
     if (parsed === undefined) {
-      warnInvalidNumber(fn.name, field, resolved, fallback);
+      this.diagnostics.warnInvalidNumber(fn, field, resolved, fallback);
       return fallback;
     }
     return parsed;
@@ -85,7 +86,7 @@ export class FunctionPlaceholderResolver {
     return (placeholder: Placeholder) => {
       const value = values.get(placeholder.prefix)?.get(placeholder.key);
       if (value === undefined) {
-        warnUnresolved(fn.name, field, placeholder);
+        this.diagnostics.warnUnresolved(fn, field, placeholder);
       }
       return value;
     };
@@ -96,7 +97,7 @@ export class FunctionPlaceholderResolver {
       const fns = await CRUD.findManyForRuntime(this.queries, parseIds(ids));
       return new Map(fns.map(fn => [idOf(fn).toString(), fn]));
     } catch (error) {
-      warnLookupFailure(error);
+      this.diagnostics.warnLookupFailure(error);
       return null;
     }
   }

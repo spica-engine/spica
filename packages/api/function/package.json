@@ -112,6 +112,7 @@
     "@spica-server/interface-function-asset-storage": "workspace:*",
     "@spica-server/interface-function-log": "workspace:*",
     "@spica-server/interface-function-pkgmanager": "workspace:*",
+    "@spica-server/interface-function-runtime": "workspace:*",
     "@spica-server/interface-function-scheduler": "workspace:*",
     "@spica-server/interface-replication": "workspace:*",
     "@spica-server/interface-representative": "workspace:*",

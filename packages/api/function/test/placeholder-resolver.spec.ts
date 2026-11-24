@@ -1,6 +1,5 @@
-import {Logger} from "@nestjs/common";
 import {ChangeKind} from "@spica-server/interface-function";
-import {FunctionPlaceholderResolver} from "@spica-server/function/src/placeholder";
+import {FunctionPlaceholderResolver, PlaceholderDiagnostics} from "@spica-server/function/src/placeholder";
 
 describe("FunctionPlaceholderResolver", () => {
   const source = (prefix: string, values: Record<string, string>) => ({
@@ -11,14 +10,16 @@ describe("FunctionPlaceholderResolver", () => {
   const options: any = {timeout: 60};
 
   let resolver: FunctionPlaceholderResolver;
-  let warn: jest.SpyInstance;
+  let diagnostics: jest.Mocked<PlaceholderDiagnostics>;
 
   beforeEach(() => {
-    resolver = new FunctionPlaceholderResolver({} as any, sources, options);
-    warn = jest.spyOn(Logger.prototype, "warn").mockImplementation();
+    diagnostics = {
+      warnUnresolved: jest.fn(),
+      warnInvalidNumber: jest.fn(),
+      warnLookupFailure: jest.fn()
+    } as any;
+    resolver = new FunctionPlaceholderResolver({} as any, sources, options, diagnostics);
   });
-
-  afterEach(() => jest.restoreAllMocks());
 
   describe("resolveRuntimeConfig", () => {
     const config = (fn: object) => resolver.resolveRuntimeConfig({name: "fn", ...fn} as any);
@@ -45,12 +46,21 @@ describe("FunctionPlaceholderResolver", () => {
 
     it("should fall back and warn when the key is missing", () => {
       expect(config({timeout: 5, warmWorkers: "${ENV.MISSING}"}).warmWorkers).toEqual(0);
-      expect(warn).toHaveBeenCalled();
+      expect(diagnostics.warnUnresolved).toHaveBeenCalledWith(
+        expect.objectContaining({name: "fn"}),
+        "warmWorkers",
+        {prefix: "ENV", key: "MISSING"}
+      );
     });
 
     it("should fall back and warn when the value is not numeric", () => {
       expect(config({timeout: 5, concurrencyPerWorker: "${ENV.BAD}"}).concurrencyPerWorker).toEqual(1);
-      expect(warn).toHaveBeenCalled();
+      expect(diagnostics.warnInvalidNumber).toHaveBeenCalledWith(
+        expect.objectContaining({name: "fn"}),
+        "concurrencyPerWorker",
+        "abc",
+        1
+      );
     });
 
     it("should fall back to the deployment timeout", () => {

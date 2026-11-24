@@ -10,11 +10,18 @@ import {
   EnvVarSource,
   FunctionPlaceholderResolver,
   PLACEHOLDER_SOURCES,
-  SecretSource
+  PlaceholderDiagnostics,
+  SecretSource,
+  WORKER_LOG_OUTPUT
 } from "./placeholder/index.js";
 import {FunctionController} from "./function.controller.js";
 import {LogModule} from "@spica-server/function-log";
-import {FUNCTION_LOG_REPOSITORY, LogRepository} from "@spica-server/interface-function-log";
+import {
+  FUNCTION_LOG_REPOSITORY,
+  FUNCTION_LOG_SINK,
+  LogRepository
+} from "@spica-server/interface-function-log";
+import {provideRepository} from "@spica-server/data";
 import {ServicesModule} from "@spica-server/function-services";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver.js";
 import {Http} from "./services/interface.js";
@@ -105,6 +112,9 @@ export class FunctionModule {
         FunctionEngine,
         PlanExecutor,
         FunctionPlaceholderResolver,
+        PlaceholderDiagnostics,
+        provideRepository(FUNCTION_LOG_SINK),
+        {provide: WORKER_LOG_OUTPUT, useValue: options.workerLogOutput},
         EnvVarSource,
         SecretSource,
         {

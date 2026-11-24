@@ -136,6 +136,7 @@ contractSuite("Function schema placeholders", engine => {
           entryLimit: 20,
           maxConcurrency: 1,
           maxWarmWorkers: 0,
+          workerLogOutput: ["database"],
           debug: false,
           realtimeLogs: false,
           logger: false,
@@ -405,6 +406,17 @@ contractSuite("Function schema placeholders", engine => {
       await attachEnvVar(fnId, "WARM", "many");
 
       expect(lastWarmWorkers()).toEqual(0);
+    });
+
+    it("should write a warning to the function logs when the value cannot be resolved", async () => {
+      const fnId = await insertFunctionWith({warmWorkers: "${ENV.MISSING}"});
+      await attachEnvVar(fnId, "UNRELATED", "1");
+
+      const {body} = await request.get("/function-logs", {functions: fnId});
+
+      expect(body.map(log => log.content)).toContain(
+        "Failed to resolve ${ENV.MISSING} in warmWorkers, falling back to defaults."
+      );
     });
 
     it("should reject a string that is not a whole placeholder", async () => {
