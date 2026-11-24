@@ -161,7 +161,7 @@
 .timeoutHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-bottom: 8px;
 }
 
@@ -196,6 +196,10 @@
 }
 
 .warmPoolHint {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
   font-size: var(--font-size-xs, 11px);
   color: var(--color-font-secondary, rgba(255, 255, 255, 0.5));
   line-height: 1.35;

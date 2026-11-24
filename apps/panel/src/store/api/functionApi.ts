@@ -15,9 +15,9 @@ export interface SpicaFunction extends SystemRecord {
   description?: string;
   language: 'javascript' | 'typescript';
   runtime?: 'nodejs' | 'deno';
-  timeout?: number;
-  warmWorkers?: number;
-  concurrencyPerWorker?: number;
+  timeout?: number | string;
+  warmWorkers?: number | string;
+  concurrencyPerWorker?: number | string;
   env?: Record<string, string>;
   env_vars?: ResolvedEnvVar[];
   secrets?: ResolvedSecret[];
@@ -105,9 +105,9 @@ export interface CreateFunctionRequest {
   description?: string;
   language: 'javascript' | 'typescript';
   runtime?: 'nodejs' | 'deno';
-  timeout?: number;
-  warmWorkers?: number;
-  concurrencyPerWorker?: number;
+  timeout?: number | string;
+  warmWorkers?: number | string;
+  concurrencyPerWorker?: number | string;
   env?: Record<string, string>;
   dependencies?: Record<string, string>;
   triggers?: TriggerMap;
@@ -119,9 +119,9 @@ export interface UpdateFunctionRequest {
   description?: string;
   language?: 'javascript' | 'typescript';
   runtime?: 'nodejs' | 'deno';
-  timeout?: number;
-  warmWorkers?: number;
-  concurrencyPerWorker?: number;
+  timeout?: number | string;
+  warmWorkers?: number | string;
+  concurrencyPerWorker?: number | string;
   triggers?: TriggerMap;
   category?: string;
 }

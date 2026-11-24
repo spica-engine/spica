@@ -3,7 +3,7 @@
  * email: rio.kenan@gmail.com
  */
 
-import React, {memo, useCallback, useEffect, useState} from "react";
+import React, {memo, useCallback, useEffect, useMemo, useState} from "react";
 import {Button, Drawer, FlexElement, Icon, NumberInput, Select, StringInput, Text} from "oziko-ui-kit";
 import {
   useCreateFunctionMutation,
@@ -11,6 +11,9 @@ import {
   useUpdateFunctionIndexMutation,
   useGetFunctionInformationQuery
 } from "../../../../store/api/functionApi";
+import DynamicValueField from "../../../molecules/dynamic-value-field/DynamicValueField";
+import {useFunctionPlaceholderSources} from "../../../../hooks/useFunctionPlaceholderSources";
+import {isPlaceholder} from "../../../../domain/placeholder";
 import type {SpicaFunction, TriggerMap} from "../../../../store/api/functionApi";
 import styles from "./FunctionModal.module.scss";
 import { idOf } from "../../../../utils/recordKey";
@@ -34,14 +37,17 @@ const TRIGGER_EXAMPLES: Record<string, string> = {
 };
 
 const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModalProps) => {
-  const isEditMode = !!functionToEdit;
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [language, setLanguage] = useState<string>("javascript");
-  const [timeout, setTimeout] = useState(10);
-  const [warmWorkers, setWarmWorkers] = useState(0);
-  const [concurrencyPerWorker, setConcurrencyPerWorker] = useState(1);
+  const [timeout, setTimeout] = useState<number | string>(10);
+  const [warmWorkers, setWarmWorkers] = useState<number | string>(0);
+  const [concurrencyPerWorker, setConcurrencyPerWorker] = useState<number | string>(1);
   const [error, setError] = useState("");
+  const [createdFunction, setCreatedFunction] = useState<SpicaFunction>();
+  const target = functionToEdit ?? createdFunction;
+  const isEditMode = !!target;
+  const {fieldSources, attach} = useFunctionPlaceholderSources(target);
 
   const {data: information} = useGetFunctionInformationQuery();
   const [createFunction, {isLoading: isCreating}] = useCreateFunctionMutation();
@@ -60,6 +66,7 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
     setWarmWorkers(0);
     setConcurrencyPerWorker(1);
     setError("");
+    setCreatedFunction(undefined);
   }, []);
 
   useEffect(() => {
@@ -82,6 +89,11 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
     onClose();
   }, [resetForm, onClose]);
 
+  const dynamicValues = useMemo(
+    () => [timeout, warmWorkers, concurrencyPerWorker],
+    [timeout, warmWorkers, concurrencyPerWorker]
+  );
+
   const handleSave = useCallback(async () => {
     setError("");
     const trimmed = name.trim();
@@ -99,12 +111,18 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
       return;
     }
 
+    if (dynamicValues.includes("")) {
+      setError("Select an environment variable or secret for every dynamic field.");
+      return;
+    }
+
     const trimmedCategory = category.trim();
 
     try {
-      if (isEditMode && idOf(functionToEdit)) {
+      if (isEditMode && idOf(target)) {
+        await attach(idOf(target)!, dynamicValues);
         const result = await updateFunction({
-          id: idOf(functionToEdit)!,
+          id: idOf(target)!,
           body: {
             name: trimmed,
             language: language as "javascript" | "typescript",
@@ -115,7 +133,7 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
             // PUT /function/:id validates against the full function schema, which
             // requires `triggers`. It merges via $set, so echoing the existing
             // triggers back keeps them unchanged while satisfying validation.
-            triggers: functionToEdit.triggers as TriggerMap
+            triggers: target.triggers as TriggerMap
           }
         }).unwrap();
         onSaved(result);
@@ -132,10 +150,12 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
             default: {type: "http", active: true, options: {method: "All"}}
           }
         }).unwrap();
+        setCreatedFunction(result);
 
         const exampleCode = TRIGGER_EXAMPLES.http;
         if (idOf(result)) {
           await updateIndex({id: idOf(result)!, index: exampleCode}).unwrap();
+          await attach(idOf(result)!, dynamicValues);
         }
 
         resetForm();
@@ -153,7 +173,9 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
     warmWorkers,
     concurrencyPerWorker,
     isEditMode,
-    functionToEdit,
+    target,
+    dynamicValues,
+    attach,
     createFunction,
     updateFunction,
     updateIndex,
@@ -210,71 +232,93 @@ const FunctionModal = ({isOpen, onClose, functionToEdit, onSaved}: FunctionModal
             />
           </FlexElement>
 
-          <div className={styles.timeoutField}>
-            <div className={styles.timeoutHeader}>
-              <Text size="small" className={styles.fieldLabel}>Timeout</Text>
-              <div className={styles.timeoutValue}>
-                <span className={styles.timeoutNumber}>{timeout}</span>
-                <span className={styles.timeoutUnit}>seconds</span>
+          <DynamicValueField
+            label="Timeout"
+            value={timeout}
+            defaultStaticValue={10}
+            {...fieldSources}
+            onChange={setTimeout}
+            renderStatic={value => (
+              <div className={styles.timeoutField}>
+                <div className={styles.timeoutHeader}>
+                  <div className={styles.timeoutValue}>
+                    <span className={styles.timeoutNumber}>{value}</span>
+                    <span className={styles.timeoutUnit}>seconds</span>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  className={styles.slider}
+                  min={1}
+                  max={maxTimeout}
+                  step={1}
+                  value={value}
+                  style={{"--pct": `${((value - 1) / (maxTimeout - 1)) * 100}%`} as React.CSSProperties}
+                  onChange={e => setTimeout(Number(e.target.value))}
+                />
+                <div className={styles.timeoutRange}>
+                  <span className={styles.timeoutRangeLabel}>1s</span>
+                  <span className={styles.timeoutRangeLabel}>{maxTimeout}s</span>
+                </div>
               </div>
-            </div>
-            <input
-              type="range"
-              className={styles.slider}
-              min={1}
-              max={maxTimeout}
-              step={1}
-              value={timeout}
-              style={{"--pct": `${((timeout - 1) / (maxTimeout - 1)) * 100}%`} as React.CSSProperties}
-              onChange={e => setTimeout(Number(e.target.value))}
-            />
-            <div className={styles.timeoutRange}>
-              <span className={styles.timeoutRangeLabel}>1s</span>
-              <span className={styles.timeoutRangeLabel}>{maxTimeout}s</span>
-            </div>
-          </div>
+            )}
+          />
 
-          <div className={styles.timeoutField}>
-            <div className={styles.timeoutHeader}>
-              <Text size="small" className={styles.fieldLabel}>Warm Pool</Text>
-              <div className={styles.timeoutValue}>
-                <span className={styles.timeoutNumber}>{warmWorkers}</span>
-                <span className={styles.timeoutUnit}>{warmWorkers === 1 ? "worker" : "workers"}</span>
+          <DynamicValueField
+            label="Warm Pool"
+            value={warmWorkers}
+            defaultStaticValue={0}
+            {...fieldSources}
+            onChange={setWarmWorkers}
+            renderStatic={value => (
+              <div className={styles.timeoutField}>
+                <div className={styles.timeoutHeader}>
+                  <div className={styles.timeoutValue}>
+                    <span className={styles.timeoutNumber}>{value}</span>
+                    <span className={styles.timeoutUnit}>{value === 1 ? "worker" : "workers"}</span>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  className={styles.slider}
+                  min={0}
+                  max={WARM_POOL_MAX}
+                  step={1}
+                  value={value}
+                  style={{"--pct": `${(value / WARM_POOL_MAX) * 100}%`} as React.CSSProperties}
+                  onChange={e => setWarmWorkers(Number(e.target.value))}
+                />
+                <div className={styles.timeoutRange}>
+                  <span className={styles.timeoutRangeLabel}>Off</span>
+                  <span className={styles.timeoutRangeLabel}>{WARM_POOL_MAX}</span>
+                </div>
+                <Text size="small" className={styles.warmPoolHint}>
+                  Pre-loaded workers kept ready so events skip the cold start. 0 disables warm workers.
+                </Text>
               </div>
-            </div>
-            <input
-              type="range"
-              className={styles.slider}
-              min={0}
-              max={WARM_POOL_MAX}
-              step={1}
-              value={warmWorkers}
-              style={{"--pct": `${(warmWorkers / WARM_POOL_MAX) * 100}%`} as React.CSSProperties}
-              onChange={e => setWarmWorkers(Number(e.target.value))}
-            />
-            <div className={styles.timeoutRange}>
-              <span className={styles.timeoutRangeLabel}>Off</span>
-              <span className={styles.timeoutRangeLabel}>{WARM_POOL_MAX}</span>
-            </div>
-            <Text size="small" className={styles.warmPoolHint}>
-              Pre-loaded workers kept ready so events skip the cold start. 0 disables warm workers.
-            </Text>
-          </div>
+            )}
+          />
 
-          <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
-            <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-              Concurrency per worker
-            </Text>
-            <NumberInput
-              value={concurrencyPerWorker}
-              onChange={v => setConcurrencyPerWorker(v && v >= 1 ? Math.floor(v) : 1)}
-              inputProps={{min: 1, step: 1}}
-              dimensionX="fill"
-            />
-            <Text size="small" className={styles.warmPoolHint}>
-              Events this function runs in parallel per worker. Raise it only for I/O-bound handlers.
-            </Text>
-          </FlexElement>
+          <DynamicValueField
+            label="Concurrency per worker"
+            value={concurrencyPerWorker}
+            defaultStaticValue={1}
+            {...fieldSources}
+            onChange={setConcurrencyPerWorker}
+            renderStatic={value => (
+              <div className={styles.timeoutField}>
+                <NumberInput
+                  value={value}
+                  onChange={v => setConcurrencyPerWorker(v && v >= 1 ? Math.floor(v) : 1)}
+                  inputProps={{min: 1, step: 1}}
+                  dimensionX="fill"
+                />
+                <Text size="small" className={styles.warmPoolHint}>
+                  Events this function runs in parallel per worker. Raise it only for I/O-bound handlers.
+                </Text>
+              </div>
+            )}
+          />
 
           {error && (
             <Text variant="danger" className={styles.errorText}>
