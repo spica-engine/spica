@@ -291,7 +291,11 @@ contractSuite("Function RabbitMQ Trigger Schema", engine => {
     });
 
     it.each([
-      ["prefetch", {prefetch: "many"}, ".triggers.default.options.prefetch must be integer"],
+      [
+        "prefetch",
+        {prefetch: "many"},
+        '.triggers.default.options.prefetch must match pattern "^\\$\\{(SECRET|ENV)\\.([^{}\\s]+)\\}$"'
+      ],
       ["negative prefetch", {prefetch: -1}, ".triggers.default.options.prefetch must be >= 0"],
       [
         "queue arguments",
@@ -318,7 +322,11 @@ contractSuite("Function RabbitMQ Trigger Schema", engine => {
         {exchange: {name: "e", type: "topic", pattern: [1]}},
         ".triggers.default.options.exchange.pattern.0 must be string"
       ],
-      ["noAck", {noAck: "no"}, ".triggers.default.options.noAck must be boolean"]
+      [
+        "noAck",
+        {noAck: "no"},
+        '.triggers.default.options.noAck must match pattern "^\\$\\{(SECRET|ENV)\\.([^{}\\s]+)\\}$"'
+      ]
     ])("should reject an invalid %s", async (place, options, message) => {
       const res = await request.post(
         "/function",

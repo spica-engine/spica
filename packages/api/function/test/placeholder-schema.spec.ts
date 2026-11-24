@@ -1,9 +1,6 @@
 import {allowPlaceholders} from "@spica-server/function/src/schema/placeholder-schema";
 
-const WHOLE_PLACEHOLDER = {
-  type: "string",
-  pattern: "^\\$\\{(SECRET|ENV)\\.([^{}\\s]+)\\}$"
-};
+const WHOLE_PLACEHOLDER_PATTERN = "^\\$\\{(SECRET|ENV)\\.([^{}\\s]+)\\}$";
 
 describe("allowPlaceholders", () => {
   it("should accept a whole placeholder in place of a number", () => {
@@ -11,7 +8,7 @@ describe("allowPlaceholders", () => {
 
     expect(allowPlaceholders(schema)).toEqual({
       properties: {
-        port: {oneOf: [{type: "number", minimum: 1}, WHOLE_PLACEHOLDER]}
+        port: {type: ["number", "string"], minimum: 1, pattern: WHOLE_PLACEHOLDER_PATTERN}
       }
     });
   });
@@ -21,24 +18,22 @@ describe("allowPlaceholders", () => {
 
     expect(allowPlaceholders(schema)).toEqual({
       properties: {
-        retries: {oneOf: [{type: "integer"}, WHOLE_PLACEHOLDER]},
-        tls: {oneOf: [{type: "boolean"}, WHOLE_PLACEHOLDER]}
+        retries: {type: ["integer", "string"], pattern: WHOLE_PLACEHOLDER_PATTERN},
+        tls: {type: ["boolean", "string"], pattern: WHOLE_PLACEHOLDER_PATTERN}
       }
     });
   });
 
-  it("should keep default, description and title outside of oneOf", () => {
-    const schema = {
-      properties: {port: {type: "number", default: 5, description: "Port", title: "Port"}}
-    };
+  it("should keep default and description untouched", () => {
+    const schema = {properties: {port: {type: "number", default: 5, description: "Port"}}};
 
     expect(allowPlaceholders(schema)).toEqual({
       properties: {
         port: {
+          type: ["number", "string"],
           default: 5,
           description: "Port",
-          title: "Port",
-          oneOf: [{type: "number"}, WHOLE_PLACEHOLDER]
+          pattern: WHOLE_PLACEHOLDER_PATTERN
         }
       }
     });
@@ -46,6 +41,12 @@ describe("allowPlaceholders", () => {
 
   it("should leave string properties untouched", () => {
     const schema = {properties: {url: {type: "string", format: "uri"}}};
+
+    expect(allowPlaceholders(schema)).toEqual(schema);
+  });
+
+  it("should leave enumerated properties untouched", () => {
+    const schema = {properties: {level: {type: "integer", enum: [1, 2]}}};
 
     expect(allowPlaceholders(schema)).toEqual(schema);
   });
@@ -61,7 +62,9 @@ describe("allowPlaceholders", () => {
       properties: {
         connection: {
           type: "object",
-          properties: {retries: {oneOf: [{type: "integer"}, WHOLE_PLACEHOLDER]}}
+          properties: {
+            retries: {type: ["integer", "string"], pattern: WHOLE_PLACEHOLDER_PATTERN}
+          }
         }
       }
     });

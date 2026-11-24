@@ -1,7 +1,6 @@
 import {WHOLE_PLACEHOLDER_PATTERN} from "../placeholder/placeholder-text.js";
 
 const NON_STRING_SCALARS = ["number", "integer", "boolean"];
-const HOISTED_KEYWORDS = ["default", "description", "title"];
 
 export function allowPlaceholders<T extends object>(schema: T): T {
   return visit(schema) as T;
@@ -26,15 +25,8 @@ function visitChild(keyword: string, value: any) {
 }
 
 function relax(property: any) {
-  if (!property || !NON_STRING_SCALARS.includes(property.type)) {
+  if (!property || !NON_STRING_SCALARS.includes(property.type) || "enum" in property) {
     return property;
   }
-  const hoisted = Object.fromEntries(
-    HOISTED_KEYWORDS.filter(k => k in property).map(k => [k, property[k]])
-  );
-  const inner = Object.fromEntries(Object.entries(property).filter(([k]) => !(k in hoisted)));
-  return {
-    ...hoisted,
-    oneOf: [inner, {type: "string", pattern: WHOLE_PLACEHOLDER_PATTERN}]
-  };
+  return {...property, type: [property.type, "string"], pattern: WHOLE_PLACEHOLDER_PATTERN};
 }
