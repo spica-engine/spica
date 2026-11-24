@@ -9950,6 +9950,7 @@ __metadata:
     "@spica-server/data-mongodb": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
+    "@spica-server/env_var": "workspace:*"
     "@spica-server/env_var-services": "workspace:*"
     "@spica-server/function-asset-storage": "workspace:*"
     "@spica-server/function-log": "workspace:*"

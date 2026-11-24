@@ -11,9 +11,10 @@ import {SchemaModule, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schem
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SecretModule} from "@spica-server/secret";
+import {EnvVarModule} from "@spica-server/env_var";
 import {idOf} from "@spica-server/data";
 
-contractSuite("Function trigger secret placeholders", engine => {
+contractSuite("Function schema placeholders", engine => {
   let app: INestApplication;
   let request: Request;
   let scheduler: Scheduler;
@@ -21,6 +22,7 @@ contractSuite("Function trigger secret placeholders", engine => {
   let subscribe: jest.SpyInstance;
   let unsubscribe: jest.SpyInstance;
   let reconcileContext: jest.SpyInstance;
+  let reconcileWarmWorkers: jest.SpyInstance;
 
   let functionsPath: string;
   const assetsPath = fs.mkdtempSync(path.join(os.tmpdir(), "spica-fn-assets-"));
@@ -97,6 +99,7 @@ contractSuite("Function trigger secret placeholders", engine => {
     subscribe.mockClear();
     unsubscribe.mockClear();
     reconcileContext.mockClear();
+    reconcileWarmWorkers.mockClear();
   }
 
   beforeEach(async () => {
@@ -110,6 +113,7 @@ contractSuite("Function trigger secret placeholders", engine => {
         PreferenceTestingModule,
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
+        EnvVarModule.forRoot({realtime: false}),
         SecretModule.forRoot({
           realtime: false,
           encryptionSecret: "test-encryption-secret-32chars!!"
@@ -152,6 +156,7 @@ contractSuite("Function trigger secret placeholders", engine => {
     subscribe = jest.spyOn(rabbitmq, "subscribe").mockImplementation(() => undefined);
     unsubscribe = jest.spyOn(rabbitmq, "unsubscribe").mockImplementation(() => undefined);
     reconcileContext = jest.spyOn(scheduler, "reconcileContext");
+    reconcileWarmWorkers = jest.spyOn(scheduler, "reconcileWarmWorkers");
   });
 
   afterEach(async () => {
@@ -332,6 +337,83 @@ contractSuite("Function trigger secret placeholders", engine => {
       await waitForRefreshOf(fnId);
 
       expectNotResubscribed();
+    });
+  });
+
+  describe("env var placeholders", () => {
+    let fnId: string;
+    let hostId: string;
+
+    async function insertEnvVar(key: string, value: string) {
+      const res = await request.post("/env-var", {key, value});
+      expect(res.statusCode).toEqual(201);
+      return idOf(res.body).toString();
+    }
+
+    beforeEach(async () => {
+      hostId = await insertEnvVar("BROKER_HOST", "broker-a");
+      const res = await request.post(
+        "/function",
+        rabbitmqFunction("amqp://${ENV.BROKER_HOST}:5672")
+      );
+      fnId = idOf(res.body).toString();
+      resetSpies();
+    });
+
+    it("should re-subscribe with the resolved value when the env var is injected", async () => {
+      await request.put(`/function/${fnId}/env-var/${hostId}`);
+
+      expectResubscribed("amqp://broker-a:5672");
+    });
+
+    it("should re-subscribe with the new value when the env var is updated", async () => {
+      await request.put(`/function/${fnId}/env-var/${hostId}`);
+      resetSpies();
+
+      await request.put(`/env-var/${hostId}`, {key: "BROKER_HOST", value: "broker-b"});
+      await waitForRefreshOf(fnId);
+
+      expectResubscribed("amqp://broker-b:5672");
+    });
+  });
+
+  describe("numeric config placeholders", () => {
+    async function insertFunctionWith(config: Record<string, unknown>) {
+      const res = await request.post("/function", rabbitmqFunction("amqp://localhost", config));
+      expect(res.statusCode).toEqual(201);
+      return idOf(res.body).toString();
+    }
+
+    async function attachEnvVar(fnId: string, key: string, value: string) {
+      const created = await request.post("/env-var", {key, value});
+      await request.put(`/function/${fnId}/env-var/${idOf(created.body)}`);
+    }
+
+    function lastWarmWorkers() {
+      return reconcileWarmWorkers.mock.calls.at(-1)[1];
+    }
+
+    it("should reconcile warm workers with the resolved number", async () => {
+      const fnId = await insertFunctionWith({warmWorkers: "${ENV.WARM}"});
+      await attachEnvVar(fnId, "WARM", "2");
+
+      expect(lastWarmWorkers()).toEqual(2);
+    });
+
+    it("should fall back to the default when the value is not numeric", async () => {
+      const fnId = await insertFunctionWith({warmWorkers: "${ENV.WARM}"});
+      await attachEnvVar(fnId, "WARM", "many");
+
+      expect(lastWarmWorkers()).toEqual(0);
+    });
+
+    it("should reject a string that is not a whole placeholder", async () => {
+      const res = await request.post(
+        "/function",
+        rabbitmqFunction("amqp://localhost", {warmWorkers: "two"})
+      );
+
+      expect(res.statusCode).toEqual(400);
     });
   });
 });

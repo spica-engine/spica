@@ -87,6 +87,9 @@
       "path": "../env_var/services"
     },
     {
+      "path": "../env_var"
+    },
+    {
       "path": "../../database"
     },
     {

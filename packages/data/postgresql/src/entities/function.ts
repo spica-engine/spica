@@ -13,10 +13,10 @@ export const functions = defineEntity<Function & {id?: Id}>({
     env_vars: {type: "uuid[]", notNull: true, default: []},
     secrets: {type: "uuid[]", notNull: true, default: []},
     triggers: {type: "jsonb"},
-    timeout: {type: "integer"},
+    timeout: {type: "jsonb"},
     language: {type: "text"},
-    warmWorkers: {type: "integer"},
-    concurrencyPerWorker: {type: "integer"},
+    warmWorkers: {type: "jsonb"},
+    concurrencyPerWorker: {type: "jsonb"},
     order: {type: "double precision", column: "display_order"},
     category: {type: "text"}
   },

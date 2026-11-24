@@ -32,13 +32,13 @@
       "types": "./src/plan-executor.ts",
       "default": "./dist/src/plan-executor.js"
     },
-    "./src/secret-placeholder": {
-      "types": "./src/secret-placeholder.ts",
-      "default": "./dist/src/secret-placeholder.js"
+    "./src/placeholder": {
+      "types": "./src/placeholder/index.ts",
+      "default": "./dist/src/placeholder/index.js"
     },
-    "./src/trigger-secret-resolver": {
-      "types": "./src/trigger-secret-resolver.ts",
-      "default": "./dist/src/trigger-secret-resolver.js"
+    "./src/schema/placeholder-schema": {
+      "types": "./src/schema/placeholder-schema.ts",
+      "default": "./dist/src/schema/placeholder-schema.js"
     },
     "./src/synchronizer/dependency": {
       "types": "./src/synchronizer/dependency/index.ts",
@@ -95,6 +95,7 @@
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/data": "workspace:*",
     "@spica-server/database": "workspace:*",
+    "@spica-server/env_var": "workspace:*",
     "@spica-server/env_var-services": "workspace:*",
     "@spica-server/function-asset-storage": "workspace:*",
     "@spica-server/function-log": "workspace:*",

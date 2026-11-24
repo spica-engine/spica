@@ -7,7 +7,7 @@ import {
   FunctionWithDependencies,
   SecretRelation
 } from "@spica-server/interface-function";
-import {createPlan, refreshPlan, secretRefreshPlan} from "./change.js";
+import {createPlan, refreshPlan, placeholderRefreshPlan} from "./change.js";
 import {DuplicateKeyError, ids, idOf, stripId, assignId, systemKeyField} from "@spica-server/data";
 import {CollectionQueryFacade, Id, Keyed, ResourceFilterSpec} from "@spica-server/interface-data";
 import {FunctionEngine} from "./engine.js";
@@ -380,7 +380,7 @@ export namespace environment {
       throw new NotFoundException(`Function with ID ${fnId} not found`);
     }
 
-    return reload(fnId, engine);
+    return reload(functions, fnId, engine);
   }
 
   export async function removeReference(functions: FunctionRepository, fnId: Id, envVarId: Id) {
@@ -397,11 +397,12 @@ export namespace environment {
     envVarId: Id
   ) {
     await removeReference(functions, fnId, envVarId);
-    return reload(fnId, engine);
+    return reload(functions, fnId, engine);
   }
 
-  export async function reload(fnId: Id, engine: FunctionEngine) {
-    return engine.applyChangePlan(refreshPlan(fnId.toString()));
+  export async function reload(functions: FunctionRepository, fnId: Id, engine: FunctionEngine) {
+    const fn = await functions.findById(fnId);
+    return engine.applyChangePlan(placeholderRefreshPlan(fn, "ENV"));
   }
 }
 
@@ -443,7 +444,7 @@ export namespace secret {
   async function reload(fn: Function, ss: SecretService, engine: FunctionEngine, secretId: Id) {
     const secret = await ss.findById(secretId);
     const secretKeys = secret ? [secret.key] : [];
-    return engine.applyChangePlan(secretRefreshPlan(fn, secretKeys));
+    return engine.applyChangePlan(placeholderRefreshPlan(fn, "SECRET", secretKeys));
   }
 }
 
@@ -462,12 +463,12 @@ export async function findOneForRuntime(
   return res;
 }
 
-export function findWithSecrets(
+export function findManyForRuntime(
   queries: CollectionQueryFacade,
   ids: Id[]
-): Promise<Function<EnvRelation.NotResolved, SecretRelation.Resolved>[]> {
-  return queries.find<Function<EnvRelation.NotResolved, SecretRelation.Resolved>>(collection, {
+): Promise<Function<EnvRelation.Resolved, SecretRelation.Resolved>[]> {
+  return queries.find<Function<EnvRelation.Resolved, SecretRelation.Resolved>>(collection, {
     where: ids.length ? {[systemKeyField()]: {in: ids}} : undefined,
-    relations: relations(EnvRelation.NotResolved, SecretRelation.Resolved)
+    relations: relations(EnvRelation.Resolved, SecretRelation.Resolved)
   });
 }

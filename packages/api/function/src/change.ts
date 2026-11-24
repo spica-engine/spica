@@ -8,7 +8,7 @@ import {
   EnvRelation,
   SecretRelation
 } from "@spica-server/interface-function";
-import {hasSecretPlaceholder} from "./secret-placeholder.js";
+import {PlaceholderPrefix, references} from "./placeholder/placeholder-text.js";
 import {idOf} from "@spica-server/data";
 
 type FunctionDocument = Function<EnvRelation.NotResolved, SecretRelation.NotResolved>;
@@ -62,10 +62,14 @@ export function refreshPlan(id: string, dependents: string[] = []): FunctionChan
   return {routing: [], outdate: ids, reconcile: ids};
 }
 
-export function secretRefreshPlan(fn: FunctionDocument, secretKeys: string[]): FunctionChangePlan {
+export function placeholderRefreshPlan(
+  fn: FunctionDocument,
+  prefix: PlaceholderPrefix,
+  keys?: string[]
+): FunctionChangePlan {
   const referencingTriggers: Triggers = {};
   for (const [handler, trigger] of Object.entries(fn.triggers || {})) {
-    if (trigger.active && hasSecretPlaceholder(trigger.options, secretKeys)) {
+    if (trigger.active && references(trigger.options, prefix, keys)) {
       referencingTriggers[handler] = trigger;
     }
   }

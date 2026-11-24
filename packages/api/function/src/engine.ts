@@ -27,7 +27,7 @@ import {
   SchemaWithName
 } from "@spica-server/interface-function";
 
-import {createPlan, mergePlans, refreshPlan, secretRefreshPlan} from "./change.js";
+import {createPlan, mergePlans, refreshPlan, placeholderRefreshPlan} from "./change.js";
 import {PlanExecutor} from "./plan-executor.js";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
@@ -109,7 +109,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       if (operationType == "delete") {
         await CRUD.environment.removeReference(this.functions, idOf(fn), envVarId);
       }
-      await this.refreshLocally(idOf(fn).toString());
+      await this.applyLocally(placeholderRefreshPlan(fn, "ENV"));
     });
   }
 
@@ -118,7 +118,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       if (operationType == "delete") {
         await CRUD.secret.removeReference(this.functions, idOf(fn), secretId);
       }
-      await this.applyLocally(secretRefreshPlan(fn, secretKeys));
+      await this.applyLocally(placeholderRefreshPlan(fn, "SECRET", secretKeys));
     });
   }
 
