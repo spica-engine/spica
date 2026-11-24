@@ -10,9 +10,9 @@
     }
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.12.7",
+    "@grpc/grpc-js": "^1.14.5",
     "@spica-server/function-queue-proto": "workspace:*",
-    "qs": "^6.14.2"
+    "qs": "^6.16.1"
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.8"
