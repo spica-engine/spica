@@ -74,11 +74,11 @@ contractSuite("system repositories", engine => {
       }
     });
 
-    it("resolves to the env var as it is after a replacement or an update", async () => {
+    it("resolves to the env var as it was before a replacement or an update", async () => {
       const id = idOf(await envVars.insert({key: "A", value: "1"}));
 
-      expect(await envVars.replaceById(id, {key: "A", value: "2"})).toMatchObject({value: "2"});
-      expect(await envVars.updateById(id, {value: "3"})).toMatchObject({key: "A", value: "3"});
+      expect(await envVars.replaceById(id, {key: "A", value: "2"})).toMatchObject({value: "1"});
+      expect(await envVars.updateById(id, {value: "3"})).toMatchObject({key: "A", value: "2"});
       expect(await envVars.replaceById(missingId(), {key: "Z", value: "1"})).toBeNull();
       expect(await envVars.updateById(missingId(), {value: "1"})).toBeNull();
     });

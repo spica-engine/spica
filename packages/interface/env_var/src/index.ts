@@ -10,6 +10,10 @@ export interface EnvVar {
   updated_at?: Date;
 }
 
+/**
+ * `replaceById` and `updateById` resolve to the env var as it was before the write, or null when
+ * there is none with the id.
+ */
 export interface EnvVarRepository
   extends
     Repository<EnvVar>,

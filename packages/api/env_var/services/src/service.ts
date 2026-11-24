@@ -27,25 +27,23 @@ export class EnvVarService {
   }
 
   async replaceById(id: Id, envVar: EnvVar): Promise<EnvVar | null> {
-    const result = await this.envVars.replaceById(id, envVar);
-    if (result) {
-      this.changeDispatcher.dispatch({
-        operationType: "replace",
-        documentKey: withId({}, idOf(result))
-      });
+    const previous = await this.envVars.replaceById(id, envVar);
+    if (!previous) {
+      return previous;
     }
-    return result;
+    const current = withId({...envVar}, idOf(previous));
+    this.dispatchIfConsumersAffected("replace", previous, current);
+    return current;
   }
 
   async updateById(id: Id, fields: Partial<EnvVar>): Promise<EnvVar | null> {
-    const result = await this.envVars.updateById(id, fields);
-    if (result) {
-      this.changeDispatcher.dispatch({
-        operationType: "update",
-        documentKey: withId({}, idOf(result))
-      });
+    const previous = await this.envVars.updateById(id, fields);
+    if (!previous) {
+      return previous;
     }
-    return result;
+    const current = await this.envVars.findById(idOf(previous));
+    this.dispatchIfConsumersAffected("update", previous, current);
+    return current;
   }
 
   async deleteById(id: Id): Promise<EnvVar | null> {
@@ -61,5 +59,19 @@ export class EnvVarService {
 
   watchChanges(): Observable<CollectionChangeEvent> {
     return this.changeDispatcher.watch();
+  }
+
+  private dispatchIfConsumersAffected(
+    operationType: "update" | "replace",
+    previous: EnvVar,
+    current: EnvVar | null
+  ) {
+    if (current && previous.key === current.key && previous.value === current.value) {
+      return;
+    }
+    this.changeDispatcher.dispatch({
+      operationType,
+      documentKey: withId({}, idOf(previous))
+    });
   }
 }
