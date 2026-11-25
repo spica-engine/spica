@@ -1,4 +1,4 @@
-import {All, Controller, Get, INestApplication, ModuleMetadata, Req, Res} from "@nestjs/common";
+import {All, Controller, Get, INestApplication, ModuleMetadata, Req} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {SchemaModule, hash, OBJECT_ID, DATE_TIME} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
@@ -12,12 +12,12 @@ import jsQR from "jsqr";
 import {PNG} from "pngjs";
 import speakeasy from "speakeasy";
 import {parse} from "url";
-import samlp from "samlp";
 
 import cookieParser from "cookie-parser";
 import {jwtDecode} from "jwt-decode";
 import {ConfigModule} from "@spica-server/config";
 import {idOf, stripId, withId} from "@spica-server/data";
+import {createSamlResponse, parseAuthnRequest} from "./saml-idp";
 
 const EXPIRES_IN = 60_000;
 
@@ -77,79 +77,24 @@ L8zbxHMyoqGgYWRxwfMS7J526C/frNi7NhVtfCUnfzVSSAPXEKChmRKzbVHlr7Fd
 vwjkmUIrTPIh/PepTqXqV4F8
 -----END PRIVATE KEY-----`;
 
-enum ClaimNamespaces {
-  nameIdentifier = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier",
-  email = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
-  name = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
-  givenname = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname",
-  surname = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname",
-  upn = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn",
-  groups = "http://schemas.xmlsoap.org/claims/Group"
-}
-
 @Controller("idp")
 export class SAMLController {
-  constructor() {}
-
+  // actual implementation sends template to the user and redirects user to the spica home page as logged in
+  // But we will return saml response and send the response to the strategy complete endpoint to complete the SSO flow.
   @Get("login")
-  async login(@Req() req, @Res() res) {
-    req.query["SAMLRequest"] = decodeURIComponent(req.query["SAMLRequest"]);
+  login(@Req() req) {
+    const {issuer, assertionConsumerServiceUrl} = parseAuthnRequest(
+      decodeURIComponent(req.query["SAMLRequest"])
+    );
 
-    const authorization = req.headers["authorization"] || "";
-
-    req.user = {
-      identifier: authorization
-    };
-
-    const claims = this.getClaims(req.user);
-
-    // SAMLP only conforms with express like response objects.
-    res.set = (k, v) => {
-      res.header(k, v);
-    };
-
-    samlp.auth({
-      issuer: "spica",
-      sessionIndex: -1,
-      profileMapper: () => {
-        return {
-          getClaims: () => claims,
-          getNameIdentifier: () => this.getNameIdentifier(claims)
-        };
-      },
-      cert: CERTIFICATE,
-      key: PRIVATE_KEY,
-      getPostURL: function (wtrealm, wreply, req, callback) {
-        const authnRequest = wreply.getElementsByTagName("AuthnRequest")[0];
-        const callbackUrl = authnRequest?.getAttribute("AssertionConsumerServiceURL");
-
-        return callback(null, callbackUrl);
-      },
-      // actual implementation sends template to the user and redirects user to the spica home page as logged in
-      // But we will return saml response and send the response to the strategy complete endpoint to complete the SSO flow.
-      responseHandler: function (response, opts, req, res, next) {
-        res.send({url: opts.postUrl, SAMLResponse: response.toString("base64")});
-      }
-    })(req, res, () => {});
-  }
-
-  getClaims(user) {
     return {
-      [ClaimNamespaces.upn]: user.identifier,
-      [ClaimNamespaces.nameIdentifier]: user.identifier,
-      [ClaimNamespaces.email]: user.identifier,
-      [ClaimNamespaces.name]: user.identifier,
-      [ClaimNamespaces.givenname]: user.identifier,
-      [ClaimNamespaces.surname]: user.identifier
-    };
-  }
-
-  getNameIdentifier(claims) {
-    return {
-      nameIdentifier:
-        claims[ClaimNamespaces.nameIdentifier] ||
-        claims[ClaimNamespaces.name] ||
-        claims[ClaimNamespaces.email]
+      url: assertionConsumerServiceUrl,
+      SAMLResponse: createSamlResponse({
+        identifier: req.headers["authorization"],
+        audience: issuer,
+        certificate: CERTIFICATE,
+        privateKey: PRIVATE_KEY
+      })
     };
   }
 }
