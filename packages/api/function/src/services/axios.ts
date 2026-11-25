@@ -15,16 +15,16 @@ export class Axios implements Http {
   }
 
   get<T>(url: string, options?: any): Promise<T> {
-    return this.instance.get(url, options);
+    return this.instance.get(url, options) as Promise<T>;
   }
   post<T>(url: string, body: any, options?: any): Promise<T> {
-    return this.instance.post(url, body, options);
+    return this.instance.post(url, body, options) as Promise<T>;
   }
   put<T>(url: string, body: any, options?: any): Promise<T> {
-    return this.instance.put(url, body, options);
+    return this.instance.put(url, body, options) as Promise<T>;
   }
   patch<T>(url: string, body: any, options?: any): Promise<T> {
-    return this.instance.patch(url, body, options);
+    return this.instance.patch(url, body, options) as Promise<T>;
   }
   delete(url: string, options?: any) {
     return this.instance.delete(url, options);
