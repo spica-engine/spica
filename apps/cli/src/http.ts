@@ -38,7 +38,7 @@ export namespace httpService {
     );
     instance.defaults.headers.common["Authorization"] = authorization;
 
-    return instance;
+    return instance as Client;
   }
 
   export async function createFromCurrentCtx() {
