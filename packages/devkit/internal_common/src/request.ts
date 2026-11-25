@@ -82,19 +82,19 @@ export class Axios implements HttpService {
   }
 
   get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.instance.get(url, config);
+    return this.instance.get(url, config) as Promise<T>;
   }
 
   post<T>(url: string, body: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.instance.post(url, body, config);
+    return this.instance.post(url, body, config) as Promise<T>;
   }
 
   put<T>(url: string, body: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.instance.put(url, body, config);
+    return this.instance.put(url, body, config) as Promise<T>;
   }
 
   patch<T>(url: string, body: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.instance.patch(url, body, config);
+    return this.instance.patch(url, body, config) as Promise<T>;
   }
 
   delete(url: string, config?: AxiosRequestConfig): Promise<any> {
@@ -102,7 +102,7 @@ export class Axios implements HttpService {
   }
 
   request<T>(config: AxiosRequestConfig): Promise<T> {
-    return this.instance.request(config);
+    return this.instance.request(config) as Promise<T>;
   }
 }
 
