@@ -54,6 +54,6 @@
     "@spica-server/preference": "workspace:*",
     "@spica-server/preference-testing": "workspace:*",
     "jsqr": "^1.4.0",
-    "samlp": "^3.0.1"
+    "xml-crypto": "^6.1.2"
   }
 }
