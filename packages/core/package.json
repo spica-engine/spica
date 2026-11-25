@@ -25,7 +25,7 @@
     "type-is": "^1.6.18"
   },
   "devDependencies": {
-    "@nestjs/core": "^10.4.22",
+    "@nestjs/core": "^12.6.1",
     "@nestjs/platform-express": "^10.4.22",
     "@nestjs/testing": "^10.4.22",
     "@spica-server/core-http-tracker": "workspace:*",
