@@ -10475,9 +10475,8 @@ __metadata:
     "@nestjs/common": "npm:^10.4.22"
     "@nestjs/testing": "npm:^10.4.22"
     "@spica-server/interface-mailer": "workspace:*"
-    "@types/nodemailer": "npm:^6.4.24"
     node-fetch: "npm:^3.3.2"
-    nodemailer: "npm:^8.0.11"
+    nodemailer: "npm:^10.6.1"
     testcontainers: "npm:^10.0.2"
   languageName: unknown
   linkType: soft
@@ -12402,15 +12401,6 @@ __metadata:
   dependencies:
     undici-types: "npm:~6.21.0"
   checksum: 10c0/55d78223205bd5f81f043d71b7a5c8d8854b9ef44ef81291680943adb27fa5ba1f092658c87183d5bc8cf6baf6a57b81dad966eb3afa452cc301a615b6d9b20e
-  languageName: node
-  linkType: hard
-
-"@types/nodemailer@npm:^6.4.24":
-  version: 6.4.24
-  resolution: "@types/nodemailer@npm:6.4.24"
-  dependencies:
-    "@types/node": "npm:*"
-  checksum: 10c0/7e500ee7f34b3e7ea88e7363a1dc9d93ca70d762db42e729604805e9ce576d25bd2f3c92342506625e09a3a9fd9788502457356e94d054c17c553ab3575091db
   languageName: node
   linkType: hard
 
@@ -24818,10 +24808,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemailer@npm:^8.0.11":
-  version: 8.0.11
-  resolution: "nodemailer@npm:8.0.11"
-  checksum: 10c0/19229216c63a32eae59d7b39f3dffeba20be317f2335d08d86fb70bd01845a1bf108fecd019c0e90ef186e3d9177cf478192b333cf38620ad0f8c7a6e1e5ae05
+"nodemailer@npm:^10.6.1":
+  version: 10.6.1
+  resolution: "nodemailer@npm:10.6.1"
+  checksum: 10c0/a050116bf03e84cfd1d391ae010f8f5067c8caaab9e908bbf7e3b2de49e7d6471fa739c8a126c3ea57fa927c962c7533848d22df0641f3b7c64ec2c5f888ae92
   languageName: node
   linkType: hard
 
