@@ -35,6 +35,6 @@
     "@spica-server/database-testing": "workspace:*",
     "@types/lodash": "^4.17.24",
     "mongodb-memory-server": "^10.1.4",
-    "testcontainers": "^10.0.2"
+    "testcontainers": "^11.14.0"
   }
 }

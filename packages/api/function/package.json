@@ -143,6 +143,6 @@
     "@spica-server/preference": "workspace:*",
     "@spica-server/preference-testing": "workspace:*",
     "@types/json-schema": "^7.0.15",
-    "testcontainers": "^10.0.2"
+    "testcontainers": "^11.14.0"
   }
 }
