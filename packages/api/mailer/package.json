@@ -17,6 +17,6 @@
   "devDependencies": {
     "@nestjs/testing": "^10.4.22",
     "node-fetch": "^3.3.2",
-    "testcontainers": "^10.0.2"
+    "testcontainers": "^11.14.0"
   }
 }
