@@ -22,8 +22,6 @@ export class StorageObjectPolicy {
     @Optional() @Inject(POLICY_RESOLVER) private resolver: PolicyResolver<any>
   ) {}
 
-  // An object is addressable by id and by name, while ActionGuard only matches the one in the
-  // request. This runs after it and can only narrow access.
   async assert(request: any, action: ObjectAction, idOrName: string): Promise<void> {
     if (request.TESTING_SKIP_CHECK) {
       return;
