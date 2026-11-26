@@ -22,9 +22,9 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.22",
-    "@nestjs/jwt": "^10.2.0",
-    "@nestjs/passport": "^10.0.3",
+    "@nestjs/common": "^11.2.12",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/passport": "^11.0.5",
     "@spica-server/activity-services": "workspace:*",
     "@spica-server/asset": "workspace:*",
     "@spica-server/config": "workspace:*",

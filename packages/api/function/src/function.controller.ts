@@ -22,7 +22,7 @@ import {
   Headers
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
+import {ARRAY, BOOLEAN, DEFAULT, JSONP, joinWildcardParam} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ID, withId, stripId} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
@@ -292,8 +292,12 @@ export class FunctionController {
    * @param name Name of the dependency to remove
    */
   @UseInterceptors(activity(createFunctionDependencyActivity))
-  @Delete(":id/dependencies/:name(*)")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
+  @Delete(":id/dependencies/*name")
+  @UseGuards(
+    joinWildcardParam("name"),
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("function:update", "function/:id")
+  )
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDependency(
     @Param("id", ID(FUNCTION_COLLECTION)) id: Id,

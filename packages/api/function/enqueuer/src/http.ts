@@ -20,6 +20,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     description: "Designed for APIs and Http Streaming"
   };
 
+  // The HTTP server runs on Express 5, but trigger paths are written by users in Express 4 syntax.
   private router = express.Router({mergeParams: true});
   private rateLimitService = new HttpRateLimitService();
   private unhandledLayer: any;
@@ -46,11 +47,9 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     );
     this.router.use(this.handleUnhandled);
     this.unhandledLayer = this.router.stack[this.router.stack.length - 1];
-    const stack = httpServer._router.stack;
     httpServer.use("/fn-execute", this.router);
-    const expressInitIndex = stack.findIndex(l => l.name === "expressInit");
-    const layer = stack.splice(stack.length - 1, 1)[0];
-    stack.splice(expressInitIndex + 1, 0, layer);
+    const stack = (httpServer as any).router.stack;
+    stack.unshift(stack.pop());
   }
 
   private handleUnhandled(req, res) {
