@@ -42,6 +42,7 @@ import {
 } from "./body.js";
 import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interface-storage";
 import {StorageService} from "./storage.service.js";
+import {StorageObjectPolicy, storageObjectPolicy} from "./object-policy.js";
 import {GuardService} from "@spica-server/passport-guard-services";
 
 const STORAGE_COLLECTION = "storage";
@@ -56,7 +57,8 @@ const STORAGE_ID_OR_NAME = OR(v => storageIds().isValid(v), idTransform("storage
 export class StorageController {
   constructor(
     private storage: StorageService,
-    private guardService: GuardService
+    private guardService: GuardService,
+    private objectPolicy: StorageObjectPolicy
   ) {}
 
   /**
@@ -96,7 +98,11 @@ export class StorageController {
 
   @UseInterceptors(activity(createStorageActivity))
   @Patch(":id")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update", "storage/:id"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:update", "storage/:id"),
+    storageObjectPolicy("storage:update", "id")
+  )
   async patch(
     @Param("id", ID(STORAGE_COLLECTION)) id: Id,
     @Body(
@@ -137,7 +143,11 @@ export class StorageController {
     activity(createStorageActivity)
   )
   @Put(":id")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:update"),
+    storageObjectPolicy("storage:update", "id")
+  )
   async updateOne(
     @Param("id", ID(STORAGE_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/storage/body/single"))
@@ -199,7 +209,11 @@ export class StorageController {
   @UseInterceptors(activity(createStorageActivity))
   @Delete(":idOrName")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:delete"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:delete"),
+    storageObjectPolicy("storage:delete", "idOrName")
+  )
   async deleteOne(@Param("idOrName", STORAGE_ID_OR_NAME) idOrName: Id | string) {
     return this.storage.delete(idOrName);
   }
@@ -263,7 +277,11 @@ export class StorageController {
    * @param id Identifier of the object
    */
   @Get(":id(*)/view")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:show", "storage/:id"),
+    storageObjectPolicy("storage:show", "id")
+  )
   async view(@Req() req, @Res() res, @Param("id", STORAGE_ID_OR_NAME) idOrName: Id | string) {
     const FORWARDED_HEADERS = [
       "range",
@@ -294,7 +312,11 @@ export class StorageController {
    * @param id Identifier of the object
    */
   @Get(":id(*)")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:show", "storage/:id"),
+    storageObjectPolicy("storage:show", "id")
+  )
   async findOne(@Param("id", STORAGE_ID_OR_NAME) idOrName: Id | string) {
     let object;
     if (storageIds().is(idOrName)) {
@@ -328,7 +350,7 @@ export class StorageController {
         actions: ["storage:delete"],
         options: {resourceFilter: false}
       });
-      promises.push(promise);
+      promises.push(promise.then(() => this.objectPolicy.assert(req, "storage:delete", id)));
     }
     await Promise.all(promises);
   }
