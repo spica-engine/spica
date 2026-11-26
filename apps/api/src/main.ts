@@ -1109,8 +1109,10 @@ for (const [name, value] of deprecatedHeaders) {
 
 NestFactory.create(RootModule, {
   httpsOptions,
-  bodyParser: false
+  bodyParser: false,
+  moduleIdGeneratorAlgorithm: "deep-hash"
 }).then(async app => {
+  app.getHttpAdapter().getInstance().set("query parser", "extended");
   app.getHttpAdapter().getInstance().set("trust proxy", args["trust-proxy"]);
   console.log("PROXY at main.ts", app.getHttpAdapter().getInstance().get("trust proxy"));
   app.useWebSocketAdapter(new WsAdapter(app));

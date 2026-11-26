@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.7",
-    "@nestjs/common": "^10.4.22",
+    "@nestjs/common": "^11.2.12",
     "@spica-server/bucket-hooks-proto": "workspace:*",
     "@spica-server/bucket-services": "workspace:*",
     "@spica-server/function-enqueuer": "workspace:*",

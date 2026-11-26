@@ -28,8 +28,8 @@ export class BucketCacheService {
     return this.buckets.findReferencing(bucketId);
   }
 
-  reset() {
-    return this.cacheManager.reset();
+  async reset() {
+    await this.cacheManager.clear();
   }
 
   async invalidate(bucketId: string) {
@@ -41,10 +41,10 @@ export class BucketCacheService {
       await this.invalidate(id);
     }
 
-    const keys: string[] = await this.cacheManager.store.keys();
-    const targets = keys.filter(key => key.startsWith(`/bucket/${bucketId}`));
+    const store = this.cacheManager.stores[0].store as Map<string, unknown>;
+    const targets = [...store.keys()].filter(key => key.startsWith(`/bucket/${bucketId}`));
     for (const target of targets) {
-      await this.cacheManager.store.del(target);
+      await this.cacheManager.del(target);
     }
     this.invalidatedBucketIds.delete(bucketId);
   }

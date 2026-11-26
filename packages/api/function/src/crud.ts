@@ -1,3 +1,4 @@
+import {serializeError} from "@spica-server/core";
 import {SecretService} from "@spica-server/secret-services";
 import {
   Dependency,
@@ -58,7 +59,7 @@ function toWriteException(error: any) {
       `Value of the property .${Object.keys(error.keyValue)[0]} should unique across all documents.`
     );
   }
-  return new InternalServerErrorException(error?.message || error);
+  return new InternalServerErrorException(serializeError(error?.message || error));
 }
 
 export async function find<
@@ -205,7 +206,7 @@ export namespace index {
       if (e == "Not Found") {
         throw new NotFoundException("Index does not exist.");
       }
-      throw new InternalServerErrorException(e);
+      throw new InternalServerErrorException(serializeError(e));
     });
     return {index};
   }

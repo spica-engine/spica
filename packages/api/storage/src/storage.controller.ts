@@ -21,7 +21,15 @@ import {
   Req
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {BOOLEAN, FILTER, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
+import {
+  BOOLEAN,
+  FILTER,
+  JSONP,
+  NUMBER,
+  DEFAULT,
+  ARRAY,
+  joinWildcardParam
+} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ID, idTransform, ids, assignId, idOf} from "@spica-server/data";
 import {Id, ResourceFilterSpec} from "@spica-server/interface-data";
@@ -262,8 +270,12 @@ export class StorageController {
    * When `if-none-match` header is present and matches, the strategy responds with 304.
    * @param id Identifier of the object
    */
-  @Get(":id(*)/view")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
+  @Get("*id/view")
+  @UseGuards(
+    joinWildcardParam("id"),
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:show", "storage/:id")
+  )
   async view(@Req() req, @Res() res, @Param("id", STORAGE_ID_OR_NAME) idOrName: Id | string) {
     const FORWARDED_HEADERS = [
       "range",
@@ -293,8 +305,12 @@ export class StorageController {
    * Returns metadata of the object size, content-type and url.
    * @param id Identifier of the object
    */
-  @Get(":id(*)")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
+  @Get("*id")
+  @UseGuards(
+    joinWildcardParam("id"),
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:show", "storage/:id")
+  )
   async findOne(@Param("id", STORAGE_ID_OR_NAME) idOrName: Id | string) {
     let object;
     if (storageIds().is(idOrName)) {

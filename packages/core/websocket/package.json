@@ -10,7 +10,7 @@
     }
   },
   "dependencies": {
-    "@nestjs/platform-ws": "^10.4.22",
+    "@nestjs/platform-ws": "^11.2.12",
     "path-to-regexp": "^8.2.0",
     "ws": "^8.18.3"
   },

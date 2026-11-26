@@ -39,7 +39,6 @@ describe("http enqueuer", () => {
   let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
   let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
 
-
   let corsOptions = {
     allowCredentials: true,
     allowedHeaders: ["*"],
@@ -78,6 +77,64 @@ describe("http enqueuer", () => {
 
   afterEach(() => {
     app.close();
+  });
+
+  describe("trigger paths on the Express 5 server", () => {
+    let received: Http.Request;
+
+    beforeEach(() => {
+      httpQueue.enqueue.mockImplementation((_, request, response) => {
+        received = request;
+        response.end();
+      });
+    });
+
+    const paramsOf = (request: Http.Request) =>
+      Object.fromEntries(request.params.map(param => [param.key, param.value]));
+
+    const subscribe = (path: string, method = HttpMethod.Get) =>
+      httpEnqueuer.subscribe(noopTarget, {method, path, preflight: false});
+
+    it("should keep supporting an unnamed wildcard", async () => {
+      subscribe("/files/*");
+
+      const response = await req.get("/fn-execute/files/a/b.txt");
+
+      expect(response.statusCode).toEqual(200);
+      expect(paramsOf(received)).toEqual({"0": "a/b.txt"});
+    });
+
+    it("should keep supporting an optional parameter", async () => {
+      subscribe("/users/:id?");
+
+      expect((await req.get("/fn-execute/users/7")).statusCode).toEqual(200);
+      expect(paramsOf(received)).toEqual({id: "7"});
+
+      expect((await req.get("/fn-execute/users")).statusCode).toEqual(200);
+    });
+
+    it("should keep parsing nested query parameters", async () => {
+      subscribe("/search");
+
+      await req.get("/fn-execute/search?filter[name]=spica&tag[]=a&tag[]=b");
+
+      expect(JSON.parse(received.query)).toEqual({filter: {name: "spica"}, tag: ["a", "b"]});
+    });
+
+    it("should pass the raw body through", async () => {
+      subscribe("/echo", HttpMethod.Post);
+
+      await req.post("/fn-execute/echo", {name: "spica"});
+
+      expect(JSON.parse(Buffer.from(received.body).toString())).toEqual({name: "spica"});
+    });
+
+    it("should answer 404 for a path without a trigger", async () => {
+      const response = await req.get("/fn-execute/unknown");
+
+      expect(response.statusCode).toEqual(404);
+      expect(response.body.engine).toEqual("Function");
+    });
   });
 
   it("should subscribe", () => {
@@ -415,7 +472,6 @@ describe("http enqueuer with authentication and authorization", () => {
   let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
   let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
 
-
   let guardService: {
     checkAuthentication: jest.Mock;
     checkAuthorization: jest.Mock;
@@ -743,7 +799,6 @@ describe("http enqueuer with rate limiting", () => {
 
   let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
   let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
-
 
   let guardService: {
     checkAuthentication: jest.Mock;

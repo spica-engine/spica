@@ -10,12 +10,12 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.22",
+    "@nestjs/common": "^11.2.12",
     "@spica-server/interface-mailer": "workspace:*",
     "nodemailer": "^10.6.1"
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.4.22",
+    "@nestjs/testing": "^11.2.12",
     "node-fetch": "^3.3.2",
     "testcontainers": "^11.14.0"
   }

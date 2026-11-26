@@ -236,7 +236,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@nestjs/testing": "^10.4.22",
+    "@nestjs/testing": "^11.2.12",
     "@nx/esbuild": "23.3.3",
     "@nx/jest": "23.3.3",
     "@nx/js": "23.3.3",
@@ -280,7 +280,6 @@
   "packageManager": "yarn@4.13.0",
   "resolutions": {
     "underscore": "1.13.8",
-    "body-parser": "1.20.9",
     "undici@npm:7.29.0": "7.30.2",
     "js-yaml@npm:3.14.0": "3.15.2"
   }

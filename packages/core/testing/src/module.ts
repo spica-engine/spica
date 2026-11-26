@@ -1,4 +1,5 @@
-import {Module} from "@nestjs/common";
+import {Module, OnModuleInit} from "@nestjs/common";
+import {HttpAdapterHost} from "@nestjs/core";
 import {Request} from "./request";
 import {Websocket} from "./websocket";
 import fs from "fs";
@@ -15,4 +16,10 @@ import path from "path";
   ],
   exports: [Request, Websocket]
 })
-export class CoreTestingModule {}
+export class CoreTestingModule implements OnModuleInit {
+  constructor(private adapterHost: HttpAdapterHost) {}
+
+  onModuleInit() {
+    this.adapterHost.httpAdapter?.getInstance().set?.("query parser", "extended");
+  }
+}
