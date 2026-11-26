@@ -8691,7 +8691,7 @@ __metadata:
     "@spica-server/realtime": "workspace:*"
     "@types/pg": "npm:^8.15.5"
     pg: "npm:^8.16.3"
-    uuid: "npm:^11.0.5"
+    uuid: "npm:^14.0.0"
   languageName: unknown
   linkType: soft
 
@@ -8754,7 +8754,7 @@ __metadata:
     pg: "npm:^8.16.3"
     rxjs: "npm:^7.8.2"
     testcontainers: "npm:^11.14.0"
-    uuid: "npm:^11.0.5"
+    uuid: "npm:^14.0.0"
   languageName: unknown
   linkType: soft
 
@@ -9745,7 +9745,7 @@ __metadata:
     bcryptjs: "npm:^2.4.3"
     passport-jwt: "npm:^4.0.1"
     rxjs: "npm:^7.8.2"
-    uuid: "npm:^11.0.5"
+    uuid: "npm:^14.0.0"
   languageName: unknown
   linkType: soft
 
@@ -9906,7 +9906,7 @@ __metadata:
     bcryptjs: "npm:^2.4.3"
     passport-jwt: "npm:^4.0.1"
     rxjs: "npm:^7.8.2"
-    uuid: "npm:^11.0.5"
+    uuid: "npm:^14.0.0"
   languageName: unknown
   linkType: soft
 
@@ -9951,7 +9951,7 @@ __metadata:
     qs: "npm:^6.14.2"
     rxjs: "npm:^7.8.2"
     saml2-js: "npm:^4.0.4"
-    uuid: "npm:^11.0.5"
+    uuid: "npm:^14.0.0"
     xml-crypto: "npm:^6.1.2"
   languageName: unknown
   linkType: soft
@@ -30198,12 +30198,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^11.0.5":
-  version: 11.1.1
-  resolution: "uuid@npm:11.1.1"
+"uuid@npm:^14.0.0":
+  version: 14.0.0
+  resolution: "uuid@npm:14.0.0"
   bin:
-    uuid: dist/esm/bin/uuid
-  checksum: 10c0/9e3af58eba872ece5a5e76f4773a94fc78a0ef2c2444c38dbe6b42f41dadf76c01850fd783604f27986f6195e6286aef064d45987d401b2a33127b98ddf7c0c5
+    uuid: dist-node/bin/uuid
+  checksum: 10c0/a57ae7794c45005c1a9208989196c5baf79a7679c30f43c1bee9033a2c4d113a2cea216fa6fcc9663b08b0d55635df1a7c6eb7e7f3d21c3e50688c698fa39a50
   languageName: node
   linkType: hard
 
