@@ -31,7 +31,7 @@ import {
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body.js";
-import {NUMBER} from "@spica-server/core";
+import {NUMBER, serializeError} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ID, idOf} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
@@ -302,7 +302,7 @@ export class PassportIdentityController {
     const isAuthenticated = await this.authFactor.authenticate(id, answer).catch(e => {
       this.deleteIdentityToken(id);
       this.deleteRefreshToken(id);
-      throw new BadRequestException(e);
+      throw new BadRequestException(serializeError(e));
     });
 
     if (!isAuthenticated) {
@@ -333,7 +333,7 @@ export class PassportIdentityController {
     try {
       tokenSchema = await this.identityService.refreshToken(accessToken, refreshToken);
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new BadRequestException(serializeError(error));
     }
     res.status(200).json(tokenSchema);
   }

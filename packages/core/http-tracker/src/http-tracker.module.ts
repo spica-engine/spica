@@ -27,6 +27,6 @@ export class HttpTrackerModule implements NestModule, OnModuleInit {
   }
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(HttpTrackerMiddleware).forRoutes("*");
+    consumer.apply(HttpTrackerMiddleware).forRoutes("{*splat}");
   }
 }

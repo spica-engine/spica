@@ -7,7 +7,7 @@ import {
 } from "@spica-server/bucket-cache";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {Test} from "@nestjs/testing";
-import {Store} from "cache-manager";
+import {Cache} from "cache-manager";
 import {contractSuite} from "@spica-server/database-testing";
 
 @Controller("bucket/:bucketId/data")
@@ -38,7 +38,9 @@ contractSuite("Bucket Cache Integration", engine => {
     let app: INestApplication;
     let service: BucketCacheService;
     let getSpy: jest.Mock;
-    let store: Store;
+    let store: Cache;
+
+    const storedKeys = () => [...(store.stores[0].store as Map<string, unknown>).keys()].sort();
 
     beforeEach(async () => {
       const module = await Test.createTestingModule({
@@ -53,7 +55,7 @@ contractSuite("Bucket Cache Integration", engine => {
       await app.listen(req.socket);
 
       service = module.get(BucketCacheService);
-      store = service["cacheManager"].store;
+      store = service["cacheManager"];
 
       getSpy = module.get(TestController).getSpy;
     });
@@ -68,7 +70,7 @@ contractSuite("Bucket Cache Integration", engine => {
     it("should register cache", async () => {
       await req.get("bucket/bucket_id/data");
 
-      const cachedKeys = await store.keys();
+      const cachedKeys = storedKeys();
       expect(cachedKeys).toEqual(["/bucket/bucket_id/data&accept-language=undefined"]);
 
       const cachedResponse = await store.get(cachedKeys[0]);
@@ -82,12 +84,12 @@ contractSuite("Bucket Cache Integration", engine => {
 
       expect(getSpy).toHaveBeenCalledTimes(3);
 
-      const cachedKeys = await store.keys();
+      const cachedKeys = storedKeys();
 
       expect(cachedKeys).toEqual([
         "/bucket/bucket_id/data&accept-language=en-US",
-        "/bucket/bucket_id/data?limit=5&accept-language=undefined",
-        "/bucket/bucket_id/data&accept-language=undefined"
+        "/bucket/bucket_id/data&accept-language=undefined",
+        "/bucket/bucket_id/data?limit=5&accept-language=undefined"
       ]);
 
       const cachedResponses = await Promise.all([
@@ -109,13 +111,13 @@ contractSuite("Bucket Cache Integration", engine => {
 
       await waitForCacheInvalidation();
 
-      let cachedKeys = await store.keys();
+      let cachedKeys = storedKeys();
 
       expect(cachedKeys).toEqual([]);
 
       await req.get("bucket/bucket_id/data");
 
-      cachedKeys = await store.keys();
+      cachedKeys = storedKeys();
       expect(cachedKeys).toEqual(["/bucket/bucket_id/data&accept-language=undefined"]);
 
       const cachedResponse = await store.get(cachedKeys[0]);
@@ -126,7 +128,7 @@ contractSuite("Bucket Cache Integration", engine => {
       await req.get("bucket/bucket_id/data");
       expect(getSpy).toHaveBeenCalledTimes(1);
 
-      let cachedKeys = await store.keys();
+      let cachedKeys = storedKeys();
       expect(cachedKeys.length).toEqual(1);
 
       await new Promise(r => setTimeout(r, 1000));
@@ -136,7 +138,7 @@ contractSuite("Bucket Cache Integration", engine => {
       // if it calls this spy one more time we can consider old cache cleared and new cache will be registered
       expect(getSpy).toHaveBeenCalledTimes(2);
 
-      cachedKeys = await store.keys();
+      cachedKeys = storedKeys();
       expect(cachedKeys.length).toEqual(1);
     });
   });

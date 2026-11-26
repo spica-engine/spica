@@ -64,10 +64,9 @@ class ProbeModule implements OnModuleInit {
     const router = express.Router();
     router.use(this.tracker.handler);
     router.get("/x", (_req, res) => res.end("hoisted"));
-    const stack = (app as any)._router.stack;
     app.use("/hoisted", router);
-    const layer = stack.splice(stack.length - 1, 1)[0];
-    stack.splice(stack.findIndex((l: any) => l.name === "expressInit") + 1, 0, layer);
+    const stack = (app as any).router.stack;
+    stack.unshift(stack.pop());
   }
 }
 

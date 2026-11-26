@@ -29,7 +29,7 @@ import {
 } from "@spica-server/interface-asset";
 import {exporters, operators, validators} from "./registration.js";
 import {putConfiguration} from "./helpers.js";
-import {BOOLEAN, FILTER} from "@spica-server/core";
+import {BOOLEAN, FILTER, serializeError} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {AssetRepManager} from "./representative.js";
@@ -149,7 +149,7 @@ export class AssetController {
     try {
       changes = strategy.getChanges();
     } catch (error) {
-      throw new BadRequestException(error.message || error);
+      throw new BadRequestException(serializeError(error.message || error));
     }
 
     if (preview) {
