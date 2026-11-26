@@ -20,7 +20,6 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     description: "Designed for APIs and Http Streaming"
   };
 
-  // The HTTP server runs on Express 5, but trigger paths are written by users in Express 4 syntax.
   private router = express.Router({mergeParams: true});
   private rateLimitService = new HttpRateLimitService();
   private unhandledLayer: any;
