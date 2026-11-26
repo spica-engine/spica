@@ -22,7 +22,14 @@ import {
   Headers
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {ARRAY, BOOLEAN, DEFAULT, JSONP, joinWildcardParam} from "@spica-server/core";
+import {
+  ARRAY,
+  BOOLEAN,
+  DEFAULT,
+  JSONP,
+  joinWildcardParam,
+  serializeError
+} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ID, withId, stripId} from "@spica-server/data";
 import {COLLECTION_QUERY, CollectionQueryFacade, Id} from "@spica-server/interface-data";
@@ -116,7 +123,7 @@ export class FunctionController {
       resolveEnvRelations: EnvRelation.Resolved,
       resolveSecretRelations: SecretRelation.Resolved
     }).catch(e => {
-      throw new BadRequestException(e);
+      throw new BadRequestException(serializeError(e));
     });
   }
 
@@ -239,7 +246,7 @@ export class FunctionController {
   async updateIndex(@Param("id", ID(FUNCTION_COLLECTION)) id: Id, @Body("index") index: string) {
     return CRUD.index
       .write(this.functions, this.engine, id, index)
-      .catch(diagnostics => Promise.reject(new HttpException(diagnostics, 422)));
+      .catch(diagnostics => Promise.reject(new HttpException(serializeError(diagnostics), 422)));
   }
 
   /**
