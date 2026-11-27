@@ -2,6 +2,7 @@ import {Injectable, Logger} from "@nestjs/common";
 import {Validator} from "@spica-server/core-schema";
 import {FunctionEngine} from "../engine.js";
 import {Function} from "@spica-server/interface-function";
+import {allowPlaceholders} from "./placeholder-schema.js";
 
 @Injectable()
 export class EnqueuerSchemaResolver {
@@ -21,7 +22,7 @@ export class EnqueuerSchemaResolver {
       return this.registry.getSchema(match[1]).then(schema => {
         // remove schema right after it's used.
         setImmediate(() => this.validator.removeSchema(schema.$id));
-        return schema;
+        return allowPlaceholders(schema);
       });
     } else {
       this.logger.warn(`Couldn't find the enqueuer with name ${match[1]}`);

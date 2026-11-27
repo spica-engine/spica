@@ -32,13 +32,13 @@
       "types": "./src/plan-executor.ts",
       "default": "./dist/src/plan-executor.js"
     },
-    "./src/secret-placeholder": {
-      "types": "./src/secret-placeholder.ts",
-      "default": "./dist/src/secret-placeholder.js"
+    "./src/placeholder": {
+      "types": "./src/placeholder/index.ts",
+      "default": "./dist/src/placeholder/index.js"
     },
-    "./src/trigger-secret-resolver": {
-      "types": "./src/trigger-secret-resolver.ts",
-      "default": "./dist/src/trigger-secret-resolver.js"
+    "./src/schema/placeholder-schema": {
+      "types": "./src/schema/placeholder-schema.ts",
+      "default": "./dist/src/schema/placeholder-schema.js"
     },
     "./src/synchronizer/dependency": {
       "types": "./src/synchronizer/dependency/index.ts",
@@ -82,10 +82,10 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.22",
-    "@nestjs/core": "^10.4.22",
-    "@nestjs/platform-express": "^10.4.22",
-    "@nestjs/websockets": "^10.4.22",
+    "@nestjs/common": "^11.2.12",
+    "@nestjs/core": "^11.2.12",
+    "@nestjs/platform-express": "^11.2.12",
+    "@nestjs/websockets": "^11.2.12",
     "@spica-server/activity-services": "workspace:*",
     "@spica-server/asset": "workspace:*",
     "@spica-server/core": "workspace:*",
@@ -95,6 +95,7 @@
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/data": "workspace:*",
     "@spica-server/database": "workspace:*",
+    "@spica-server/env_var": "workspace:*",
     "@spica-server/env_var-services": "workspace:*",
     "@spica-server/function-asset-storage": "workspace:*",
     "@spica-server/function-log": "workspace:*",
@@ -111,6 +112,7 @@
     "@spica-server/interface-function-asset-storage": "workspace:*",
     "@spica-server/interface-function-log": "workspace:*",
     "@spica-server/interface-function-pkgmanager": "workspace:*",
+    "@spica-server/interface-function-runtime": "workspace:*",
     "@spica-server/interface-function-scheduler": "workspace:*",
     "@spica-server/interface-replication": "workspace:*",
     "@spica-server/interface-representative": "workspace:*",
@@ -121,7 +123,7 @@
     "@spica-server/secret": "workspace:*",
     "@spica-server/secret-services": "workspace:*",
     "@spica-server/status": "workspace:*",
-    "axios": "^1.8.4",
+    "axios": "^1.20.0",
     "bson": "^6.10.4",
     "rimraf": "^6.0.1",
     "rxjs": "^7.8.2",
@@ -129,7 +131,7 @@
     "yaml": "^2.7.1"
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.4.22",
+    "@nestjs/testing": "^11.2.12",
     "@spica-devkit/database": "*",
     "@spica-server/bucket": "workspace:*",
     "@spica-server/core-testing": "workspace:*",
@@ -141,6 +143,6 @@
     "@spica-server/preference": "workspace:*",
     "@spica-server/preference-testing": "workspace:*",
     "@types/json-schema": "^7.0.15",
-    "testcontainers": "^10.0.2"
+    "testcontainers": "^11.14.0"
   }
 }

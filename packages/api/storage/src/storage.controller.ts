@@ -21,7 +21,15 @@ import {
   Req
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {BOOLEAN, FILTER, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
+import {
+  BOOLEAN,
+  FILTER,
+  JSONP,
+  NUMBER,
+  DEFAULT,
+  ARRAY,
+  joinWildcardParam
+} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {ID, idTransform, ids, assignId, idOf} from "@spica-server/data";
 import {Id, ResourceFilterSpec} from "@spica-server/interface-data";
@@ -42,6 +50,7 @@ import {
 } from "./body.js";
 import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interface-storage";
 import {StorageService} from "./storage.service.js";
+import {StorageObjectPolicy, storageObjectPolicy} from "./object-policy.js";
 import {GuardService} from "@spica-server/passport-guard-services";
 
 const STORAGE_COLLECTION = "storage";
@@ -56,7 +65,8 @@ const STORAGE_ID_OR_NAME = OR(v => storageIds().isValid(v), idTransform("storage
 export class StorageController {
   constructor(
     private storage: StorageService,
-    private guardService: GuardService
+    private guardService: GuardService,
+    private objectPolicy: StorageObjectPolicy
   ) {}
 
   /**
@@ -96,7 +106,11 @@ export class StorageController {
 
   @UseInterceptors(activity(createStorageActivity))
   @Patch(":id")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update", "storage/:id"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:update", "storage/:id"),
+    storageObjectPolicy("storage:update", "id")
+  )
   async patch(
     @Param("id", ID(STORAGE_COLLECTION)) id: Id,
     @Body(
@@ -137,7 +151,11 @@ export class StorageController {
     activity(createStorageActivity)
   )
   @Put(":id")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:update"),
+    storageObjectPolicy("storage:update", "id")
+  )
   async updateOne(
     @Param("id", ID(STORAGE_COLLECTION)) id: Id,
     @Body(Schema.validate("http://spica.internal/storage/body/single"))
@@ -199,7 +217,11 @@ export class StorageController {
   @UseInterceptors(activity(createStorageActivity))
   @Delete(":idOrName")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:delete"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:delete"),
+    storageObjectPolicy("storage:delete", "idOrName")
+  )
   async deleteOne(@Param("idOrName", STORAGE_ID_OR_NAME) idOrName: Id | string) {
     return this.storage.delete(idOrName);
   }
@@ -262,8 +284,13 @@ export class StorageController {
    * When `if-none-match` header is present and matches, the strategy responds with 304.
    * @param id Identifier of the object
    */
-  @Get(":id(*)/view")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
+  @Get("*id/view")
+  @UseGuards(
+    joinWildcardParam("id"),
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:show", "storage/:id"),
+    storageObjectPolicy("storage:show", "id")
+  )
   async view(@Req() req, @Res() res, @Param("id", STORAGE_ID_OR_NAME) idOrName: Id | string) {
     const FORWARDED_HEADERS = [
       "range",
@@ -293,8 +320,13 @@ export class StorageController {
    * Returns metadata of the object size, content-type and url.
    * @param id Identifier of the object
    */
-  @Get(":id(*)")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
+  @Get("*id")
+  @UseGuards(
+    joinWildcardParam("id"),
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("storage:show", "storage/:id"),
+    storageObjectPolicy("storage:show", "id")
+  )
   async findOne(@Param("id", STORAGE_ID_OR_NAME) idOrName: Id | string) {
     let object;
     if (storageIds().is(idOrName)) {
@@ -328,7 +360,7 @@ export class StorageController {
         actions: ["storage:delete"],
         options: {resourceFilter: false}
       });
-      promises.push(promise);
+      promises.push(promise.then(() => this.objectPolicy.assert(req, "storage:delete", id)));
     }
     await Promise.all(promises);
   }

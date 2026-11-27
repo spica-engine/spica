@@ -55,7 +55,7 @@ const ConfigurationDialog = ({
   const [language, setLanguage] = useState<"javascript" | "typescript">(
     initialFunction?.language ?? "javascript"
   );
-  const [timeout, setTimeout] = useState(initialFunction?.timeout ?? 10);
+  const [timeout, setTimeout] = useState(typeof initialFunction?.timeout === "number" ? initialFunction.timeout : 10);
   const [triggerType, setTriggerType] = useState<FunctionTrigger["type"]>("http");
   const [error, setError] = useState<string | null>(null);
 

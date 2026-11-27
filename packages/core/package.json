@@ -18,16 +18,16 @@
     }
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.22",
+    "@nestjs/common": "^11.2.12",
     "@spica-server/interface-core": "workspace:*",
     "body-parser": "^1.20.5",
     "matcher": "^5.0.0",
     "type-is": "^1.6.18"
   },
   "devDependencies": {
-    "@nestjs/core": "^10.4.22",
-    "@nestjs/platform-express": "^10.4.22",
-    "@nestjs/testing": "^10.4.22",
+    "@nestjs/core": "^11.2.12",
+    "@nestjs/platform-express": "^11.2.12",
+    "@nestjs/testing": "^11.2.12",
     "@spica-server/core-http-tracker": "workspace:*",
     "@spica-server/core-trace": "workspace:*",
     "@types/body-parser": "^1.19.6",

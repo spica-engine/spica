@@ -350,7 +350,7 @@ export class StorageService {
     return objectWithData;
   }
 
-  private getMeta(idOrName: Id | string): Promise<StorageObjectMeta | null> {
+  getMeta(idOrName: Id | string): Promise<StorageObjectMeta | null> {
     return storageIds().is(idOrName)
       ? this.objects.findById(storageIds().parse(idOrName))
       : this.objects.findByName(idOrName as string);

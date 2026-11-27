@@ -1,0 +1,43 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label {
+  color: var(--color-font-secondary);
+  font-weight: 500;
+}
+
+.mode {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hint {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: var(--font-size-xs, 11px);
+  color: var(--color-font-secondary, rgba(255, 255, 255, 0.5));
+  line-height: 1.35;
+}
+
+.warning {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: var(--font-size-xs, 11px);
+  color: var(--color-danger, #e5484d);
+  line-height: 1.35;
+}

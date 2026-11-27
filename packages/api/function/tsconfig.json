@@ -39,6 +39,9 @@
       "path": "../../interface/function/scheduler"
     },
     {
+      "path": "../../interface/function/runtime"
+    },
+    {
       "path": "../../interface/function/pkgmanager"
     },
     {
@@ -85,6 +88,9 @@
     },
     {
       "path": "../env_var/services"
+    },
+    {
+      "path": "../env_var"
     },
     {
       "path": "../../database"

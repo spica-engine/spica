@@ -4,6 +4,7 @@ import {StorageOptions, STORAGE_OPTIONS, STORAGE_REPOSITORY} from "@spica-server
 import {provideRepository} from "@spica-server/data";
 import {StorageController} from "./storage.controller.js";
 import {StorageService} from "./storage.service.js";
+import {StorageObjectPolicy} from "./object-policy.js";
 import {Default} from "./strategy/default.js";
 import {GCloud} from "./strategy/gcloud.js";
 import {Strategy} from "./strategy/strategy.js";
@@ -41,6 +42,7 @@ export class StorageModule {
         },
         provideRepository(STORAGE_REPOSITORY),
         StorageService,
+        StorageObjectPolicy,
         {
           provide: Strategy,
           useFactory: (options: StorageOptions) => {

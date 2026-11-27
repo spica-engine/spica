@@ -10,6 +10,8 @@ contractSuite("Bucket Cache Service", engine => {
   let cacheManager: Cache;
   let buckets: BucketRepository;
 
+  const storedKeys = () => [...(cacheManager.stores[0].store as Map<string, unknown>).keys()];
+
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [BucketCacheModule.register({ttl: null}), engine.module()],
@@ -30,7 +32,7 @@ contractSuite("Bucket Cache Service", engine => {
 
     await service.invalidate("bucket1");
 
-    const cacheKeys = await cacheManager.store.keys();
+    const cacheKeys = storedKeys();
     expect(cacheKeys).toEqual(["/bucket/bucket2/data"]);
 
     const cacheResponses = await cacheManager.get(cacheKeys[0]);
@@ -78,11 +80,23 @@ contractSuite("Bucket Cache Service", engine => {
 
     await service.invalidate(String(bucket1));
 
-    const cacheKeys = await cacheManager.store.keys();
+    const cacheKeys = storedKeys();
     expect(cacheKeys).toEqual([`/bucket/${bucket3}/data`]);
 
     const cacheResponses = await cacheManager.get(cacheKeys[0]);
     expect(cacheResponses).toEqual([{title: "test3"}]);
+  });
+
+  it("should keep only the 100 most recently used entries", async () => {
+    for (let i = 0; i < 100; i++) {
+      await cacheManager.set(`/bucket/bucket1/data/${i}`, i);
+    }
+    await cacheManager.get("/bucket/bucket1/data/0");
+    await cacheManager.set("/bucket/bucket1/data/100", 100);
+
+    expect(storedKeys().length).toEqual(100);
+    expect(await cacheManager.get("/bucket/bucket1/data/0")).toEqual(0);
+    expect(await cacheManager.get("/bucket/bucket1/data/1")).toBeUndefined();
   });
 
   //@TODO: cron job does not fire the onTick method.
@@ -95,7 +109,7 @@ contractSuite("Bucket Cache Service", engine => {
 
     jest.advanceTimersByTime(1000);
 
-    const cacheKeys = await cacheManager.store.keys();
+    const cacheKeys = storedKeys();
     expect(cacheKeys).toEqual([]);
 
     jest.useRealTimers();

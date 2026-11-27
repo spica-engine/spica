@@ -22,7 +22,7 @@ import {
   Logger
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
-import {DEFAULT, FILTER, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
+import {DEFAULT, FILTER, NUMBER, JSONP, BOOLEAN, serializeError} from "@spica-server/core";
 import {Schema} from "@spica-server/core-schema";
 import {DuplicateKeyError, ID, idOf} from "@spica-server/data";
 import {
@@ -61,7 +61,7 @@ export class IdentityController {
     try {
       factor = this.authFactor.getFactor(meta);
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new BadRequestException(serializeError(error));
     }
 
     this.identityFactors.set(id, factor);
@@ -303,7 +303,7 @@ export class IdentityController {
     }
 
     const isVerified = await factor.authenticate(answer).catch(e => {
-      throw new BadRequestException(e);
+      throw new BadRequestException(serializeError(e));
     });
 
     this.deleteIdentityFactor(id.toString());
@@ -323,7 +323,7 @@ export class IdentityController {
         };
       })
       .catch(e => {
-        throw new InternalServerErrorException(e);
+        throw new InternalServerErrorException(serializeError(e));
       });
   }
 
