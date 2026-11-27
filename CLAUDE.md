@@ -96,7 +96,7 @@ Use `/release <version>` (`.claude/commands/release.md`) to execute a full relea
 
 | Artifact      | Where                                                                                    | Tag format  |
 | ------------- | ---------------------------------------------------------------------------------------- | ----------- |
-| Docker images | Docker Hub `spicaengine/{api,panel,migrate,mongoreplicationcontroller}`                  | `<version>` |
+| Docker images | Docker Hub `spicaengine/{api,panel,migrate,mongoreplicationcontroller,postgres}`         | `<version>` (`postgres`: `18-<version>`) |
 | npm packages  | npmjs.com `@spica/cli` + `@spica-devkit/{auth,bucket,database,identity,storage,sync,testing}` | `<version>` |
 | Helm chart    | GCS bucket `gs://spica-charts` / `https://spica-charts.storage.googleapis.com`           | `<version>` |
 
